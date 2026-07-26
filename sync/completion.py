@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import streamlit as st
 
-from shared import theme
 from core.sync_manager import SyncManager
 from shared.helpers import (
     render_sync_wizard,
@@ -34,70 +33,17 @@ def show_sync_cancelled():
     """Render the sync-cancelled screen (summary card only, no error list)."""
     render_sync_wizard(st, 3)
 
-    # macOS: tidy Office the moment the user lands on the cancelled screen,
-    # mirroring the completion screen. quit_idle_office_apps() first force-
-    # closes any staged document the cancelled conversion left open in a hidden
-    # Office process (marker-matched - user docs untouchable), then quits the
-    # now-idle apps and purges our Recents entries. One-shot per run.
-    import sys as _sys_qc
-    if _sys_qc.platform == 'darwin' and not st.session_state.get('_office_quit_fired'):
-        st.session_state['_office_quit_fired'] = True
-        try:
-            from engine.applescript_bridge import quit_idle_office_apps
-            quit_idle_office_apps()
-        except Exception:
-            pass
+    from shared.components import quit_office_once, render_cancelled_card
+    quit_office_once()
 
-    cancelled_count = st.session_state.get('sync_cancelled_file_count', 0)
-    total_files = sum(
-        len(sel['new']) + len(sel['updates']) + len(sel['redownload'])
-        for sel in st.session_state.get('sync_selections', [])
+    render_cancelled_card(
+        "Sync",
+        done=st.session_state.get('sync_cancelled_file_count', 0),
+        total=sum(
+            len(sel['new']) + len(sel['updates']) + len(sel['redownload'])
+            for sel in st.session_state.get('sync_selections', [])
+        ),
     )
-
-    # Dynamic text: "course" during scanning, "file" during download, post-processing status
-    if st.session_state.get('is_post_processing', False):
-        cancel_summary_msg = "Cancelled during post-processing."
-    else:
-        is_file_phase = total_files > 0
-        if is_file_phase:
-            cancel_summary_msg = f"Cancelled after {cancelled_count} of {total_files} {'file' if total_files == 1 else 'files'}."
-        else:
-            cancel_summary_msg = "Cancelled during Course Analysis."
-
-    # Premium styled cancellation card
-    st.markdown(f"""
-    <div style="
-        background: linear-gradient(135deg, {theme.ERROR_BG} 0%, {theme.BG_PAGE} 100%);
-        border: 1px solid {theme.ERROR};
-        border-radius: 12px;
-        padding: 28px 32px;
-        margin: 20px 0;
-        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
-    ">
-        <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px;">
-            <span style="font-size: 2rem;">🛑</span>
-            <h2 style="margin: 0; color: {theme.ERROR}; font-size: 1.5rem; font-weight: 700;">Sync Cancelled</h2>
-        </div>
-        <p style="color: {theme.TEXT_LIGHT}; font-size: 1rem; margin: 0 0 8px 0;">
-            {'Sync was cancelled.'}
-        </p>
-        <div style="
-            background: rgba(239, 68, 68, 0.08);
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-top: 12px;
-            display: inline-block;
-        ">
-            <span style="color: {theme.ERROR_LIGHT}; font-size: 0.9rem; font-weight: 600;">
-                {cancel_summary_msg}
-            </span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Deliberately NO error list here (mirrors the download cancelled screen):
-    # the user cancelled, so partial-run errors are noise. Errors are only
-    # surfaced on the completion screen, where they're actionable.
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     col_front, _ = st.columns([0.35, 0.65])
@@ -320,15 +266,8 @@ def show_sync_complete():
             has_retriable_errors=_has_sync_retry,
             retry_failed=_sync_retry_failed,
         )
-
-        # Amber notice when all retries exhausted - guide user to manual download
-        if _sync_retry_failed:
-            from ui.amber_notice import render_amber_notice
-            render_amber_notice(
-                "Retry didn't work - these files may be temporarily unavailable.",
-                detail="Check your internet connection and try again later, or download them directly from Canvas.",
-                margin="12px 0 2px 0",
-            )
+        # (The "Retry didn't work" guidance now lives inside render_error_section
+        #  itself, so download mode gets it too - see that function.)
 
     # Folders updated - card style with filetype summary
     file_dropdown_details = {}

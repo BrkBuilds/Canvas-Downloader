@@ -71,6 +71,39 @@ _SEARCH_ICON = (
     "%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E"
 )
 
+# ── Toolbar divider geometry (course-list action row) ──
+# The row is a flex box with a fixed gap. Each divider is drawn as a ::before at
+# the LEFT edge of the element it precedes, so the space BEFORE a divider is
+# (row gap + that element's margin-left) while the space AFTER it is that
+# element's padding-left. Those two must come out equal or the control between a
+# pair of dividers sits visibly off-centre - which is exactly how the Refresh
+# button ended up 7px from its left divider and 14px from its right one.
+# Deriving _TB_PRE from the other two keeps them in step if the gap ever changes.
+_TB_GAP = 5     # must match the `gap` on the row's flex container
+_TB_PAD = 10    # breathing room on EACH side of every divider
+_TB_PRE = _TB_PAD - _TB_GAP
+
+# ── Toolbar glyphs, used as CSS MASKS (not background-images) ──
+# A mask paints with `background-color: currentColor`, so these inherit the
+# button's own text colour and brighten on hover along with it. The stroke colour
+# baked into the SVG is therefore irrelevant - only the shape matters.
+# lucide "list-restart".
+_REFRESH_MASK = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
+    "viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' "
+    "stroke-linecap='round' stroke-linejoin='round'%3E"
+    "%3Cpath d='M21 5H3'/%3E%3Cpath d='M7 12H3'/%3E%3Cpath d='M7 19H3'/%3E"
+    "%3Cpath d='M12 18a5 5 0 0 0 9-3 4.5 4.5 0 0 0-4.5-4.5c-1.33 0-2.54.54-3.41 1.41L11 14'/%3E"
+    "%3Cpath d='M11 10v4h4'/%3E%3C/svg%3E"
+)
+# lucide "x".
+_CLEAR_X_MASK = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' "
+    "viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' "
+    "stroke-linecap='round' stroke-linejoin='round'%3E"
+    "%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E"
+)
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # Smart course search (relevance ranking)
@@ -230,10 +263,15 @@ def _course_search_field_css(key: str, prefix: str = "") -> str:
     {p}div.st-key-{k} div[data-baseweb="input"]:focus-within::before {{
         opacity: 0.9 !important;
     }}
-    /* The input field itself: transparent, with room for the icon. */
+    /* The input field itself: transparent, with room for the magnifier on the
+       left and the injected clear-"X" on the right (see the clear-button block
+       in inject_course_selector_css + inject_search_live_bridge). The right
+       padding is reserved unconditionally so the text does not reflow when the
+       X appears and disappears. */
     {p}div.st-key-{k} div[data-baseweb="input"] input {{
         background-color: transparent !important;
         padding-left: 42px !important;
+        padding-right: 34px !important;
         font-size: 0.95rem !important;
         color: #e2e8f0 !important;
         outline: none !important;
@@ -927,7 +965,8 @@ def inject_search_live_bridge(namespace: str = "course_search", debounce_ms: int
     var NS = {ns!r};
     var root = win._cdSearchLive || (win._cdSearchLive = {{}});
     var reg = root[NS] || (root[NS] =
-        {{listeners: [], timer: null, last: null, composing: false}});
+        {{listeners: [], timer: null, last: null, composing: false,
+          observer: null, healing: false}});
     var SELECTOR = 'div[class*="st-key-{ns}"] input';
     var DEBOUNCE = {int(debounce_ms)};
 
@@ -957,12 +996,171 @@ def inject_search_live_bridge(namespace: str = "course_search", debounce_ms: int
 
     function bind(type, fn) {{ doc.addEventListener(type, fn, true); reg.listeners.push([type, fn]); }}
 
-    bind('input', function(ev) {{ if (isField(ev.target)) schedule(ev.target); }});
+    bind('input', function(ev) {{ if (isField(ev.target)) {{ schedule(ev.target); syncClear(ev.target); }} }});
     // Don't commit while composing accented/IME text; resume once it finishes.
     bind('compositionstart', function(ev) {{ if (isField(ev.target)) reg.composing = true; }});
     bind('compositionend', function(ev) {{
         if (isField(ev.target)) {{ reg.composing = false; schedule(ev.target); }}
     }});
+
+    // ── Clear-search "X" ──
+    // Streamlit has no clear affordance for text_input, so one real <button> is
+    // injected into the field's shell. Styling lives in CSS (button.cs-clear-search).
+    function clearValue(inp) {{
+        // Assigning .value directly does NOT notify React - it tracks the last
+        // value it set and would treat the change as a no-op. Go through the
+        // native setter and dispatch a bubbling 'input' event, exactly as a real
+        // keystroke does, then blur to trigger Streamlit's onBlur commit.
+        try {{
+            var d = Object.getOwnPropertyDescriptor(win.HTMLInputElement.prototype, 'value');
+            if (d && d.set) {{ d.set.call(inp, ''); }} else {{ inp.value = ''; }}
+        }} catch (_e) {{ inp.value = ''; }}
+        inp.dispatchEvent(new win.Event('input', {{bubbles: true}}));
+        win.clearTimeout(reg.timer);
+        reg.last = '';
+        inp.blur();
+        inp.focus({{preventScroll: true}});
+        syncClear(inp);
+    }}
+
+    function syncClear(inp) {{
+        var shell = inp.closest('div[data-baseweb="input"]');
+        if (!shell) return;
+        var btn = shell.querySelector('button.cs-clear-search');
+        if (!btn) {{
+            btn = doc.createElement('button');
+            btn.type = 'button';
+            btn.className = 'cs-clear-search';
+            btn.setAttribute('aria-label', 'Clear search');
+            btn.title = 'Clear search';
+            // Keep focus in the field: mousedown default would blur it first,
+            // which fires an extra Streamlit commit before the click lands.
+            btn.addEventListener('mousedown', function(e) {{ e.preventDefault(); }});
+            btn.addEventListener('click', function(e) {{
+                e.preventDefault(); e.stopPropagation();
+                clearValue(inp);
+            }});
+            shell.appendChild(btn);
+        }}
+        btn.setAttribute('data-visible', inp.value ? '1' : '0');
+    }}
+
+    // ── Keep the X attached ──
+    // The button must be SELF-HEALING, not attached once. It is injected into a
+    // React-owned subtree (BaseWeb's input shell), so React discards it on its
+    // next render pass - which is every Streamlit rerun. A one-shot attach (or
+    // even a retry loop) therefore only appears to work right after an event that
+    // happens to re-create it; on a cold load the X was measurably absent.
+    //
+    // A MutationObserver on the field's own subtree re-adds it whenever it goes
+    // missing, and keeps data-visible in sync when Streamlit re-renders the input
+    // with a value already in it. Observer + listeners are rebound on every
+    // injection per the components.html rule (a callback created in an iframe
+    // realm Streamlit later destroys stops firing), with the previous observer
+    // disconnected first so they cannot pile up.
+    function heal() {{
+        var field = doc.querySelector(SELECTOR);
+        if (field) syncClear(field);
+    }}
+
+    try {{ if (reg.observer) reg.observer.disconnect(); }} catch (_e) {{}}
+    reg.observer = new win.MutationObserver(function() {{
+        // Guard against reacting to our own insertion.
+        if (reg.healing) return;
+        reg.healing = true;
+        try {{ heal(); }} finally {{ reg.healing = false; }}
+    }});
+    reg.observer.observe(doc.body, {{childList: true, subtree: true}});
+    heal();
+    bind('focusin', function(ev) {{ if (isField(ev.target)) syncClear(ev.target); }});
+}})();
+</script>""",
+        height=0,
+    )
+
+
+def _gate_actions_on_selection(*button_keys: str) -> None:
+    """Paint the given buttons as unavailable while no course is selected.
+
+    Reads ``#cdp_selected_courses_count``, the hidden marker the course-list
+    fragment already re-emits on every checkbox click, and mirrors it onto a
+    ``data-cd-has-sel`` attribute on each button plus a live ``title`` tooltip.
+
+    Why not Streamlit's ``disabled=``: the course list is an ``@st.fragment``, so
+    a checkbox click reruns the fragment only. These buttons are rendered OUTSIDE
+    it, so their ``disabled=`` would be evaluated from the selection as it was at
+    the last FULL-page rerun and would stay stale after the user selects a course.
+    ``shared.components.live_enable_button`` documents the same hazard for
+    text-input-gated buttons; this is the checkbox-gated sibling.
+
+    A MutationObserver on the marker keeps the paint in sync without polling.
+    Following the CLAUDE.md rule for ``components.html`` bridges, the observer and
+    listeners are rebound on EVERY injection (a listener created inside an iframe
+    realm that Streamlit later destroys silently stops firing), with the previous
+    observer disconnected first so they cannot pile up.
+    """
+    import json
+    import streamlit.components.v1 as components
+
+    keys = [k.lower() for k in button_keys]
+    selectors = ', '.join(f'div[class*="st-key-{k}"] button' for k in keys)
+    # Same recipe as global.css `button[disabled]` and live_enable_button, so the
+    # app has exactly ONE way of looking unavailable. These three used to differ:
+    # this one and live_enable_button painted a flat rgba(255,255,255,0.075) slab
+    # while native disabled desaturated the real colours.
+    #
+    # A `filter` on the button also dims its ::before icon glyphs, so the separate
+    # opacity rule those needed under the old flat-slab approach is now redundant.
+    css = (
+        f'{", ".join(f"""div[class*="st-key-{k}"] button[data-cd-has-sel="0"]""" for k in keys)} {{'
+        '  filter: brightness(0.5) saturate(0.5) !important;'
+        '  box-shadow: none !important;'
+        '  cursor: not-allowed !important;'
+        '  pointer-events: none !important;'
+        '}'
+        # cursor must also sit on the wrapper - pointer-events:none on the button
+        # stops it resolving there, and it carries the explanatory title.
+        f'{", ".join(f"""div[class*="st-key-{k}"]:has(button[data-cd-has-sel="0"])""" for k in keys)} {{'
+        '  cursor: not-allowed !important;'
+        '}'
+    )
+
+    components.html(
+        f"""<script>
+(function(){{
+    var win = window.parent, doc = win.document;
+    var SEL = {json.dumps(selectors)};
+    var TIP = "Select at least one course to continue.";
+    var reg = win._cdSelGate || (win._cdSelGate = {{observer: null, styleId: 'cd-sel-gate-css'}});
+
+    var st = doc.getElementById(reg.styleId);
+    if (!st) {{
+        st = doc.createElement('style'); st.id = reg.styleId; doc.head.appendChild(st);
+    }}
+    st.textContent = {json.dumps(css)};
+
+    function apply() {{
+        var marker = doc.getElementById('cdp_selected_courses_count');
+        // No marker yet (list still loading) - treat as "no selection" so the
+        // buttons never flash enabled before the real count arrives.
+        var n = marker ? parseInt(marker.getAttribute('data-count') || '0', 10) : 0;
+        var has = (n > 0) ? '1' : '0';
+        doc.querySelectorAll(SEL).forEach(function(b) {{
+            if (b.getAttribute('data-cd-has-sel') !== has) {{
+                b.setAttribute('data-cd-has-sel', has);
+            }}
+            if (has === '0') {{ b.setAttribute('title', TIP); }}
+            else {{ b.removeAttribute('title'); }}
+        }});
+    }}
+
+    // Rebind: disconnect the previous observer (its realm may be dead) and
+    // observe the CURRENT document subtree for the marker being replaced.
+    try {{ if (reg.observer) reg.observer.disconnect(); }} catch (_e) {{}}
+    reg.observer = new win.MutationObserver(function() {{ apply(); }});
+    reg.observer.observe(doc.body, {{childList: true, subtree: true, attributes: true,
+                                    attributeFilter: ['data-count']}});
+    apply();
 }})();
 </script>""",
         height=0,
@@ -1019,9 +1217,12 @@ def _render_search_empty_notice(
 
 @st.fragment
 def _course_list_section(
-    courses: list, all_courses: list, favorites_only: bool
+    courses: list, all_courses: list, favorites_only: bool, fetch_courses_fn=None
 ) -> None:
-    """Fragment: CBS filters + Select All/Clear + search + checkbox list.
+    """Fragment: CBS filters + Select All/Clear + count + refresh + search + list.
+
+    ``fetch_courses_fn`` is the cached fetcher from render_course_selector; the
+    Refresh button needs it to invalidate the cache before re-fetching.
 
     Scopes checkbox-click and search reruns to this fragment only, keeping the
     wizard header and page chrome stable.
@@ -1043,12 +1244,34 @@ def _course_list_section(
     with st.container(key="action_btns_row", border=True):
         select_all_clicked = st.button('Select All', key="btn_course_select_all")
         clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection")
+        # Live selection count, grouped with the controls that change it.
+        # A PLACEHOLDER, filled at the very end of this fragment: the checkbox
+        # list below reconciles `selected_course_ids` as it renders, so anything
+        # written here directly would show the count from BEFORE the user's click
+        # (verified: the marker div at the bottom read 1 while the top read 0).
+        _count_slot = st.empty()
+        refresh_clicked = st.button(
+            "​", key="btn_course_refresh",
+            help="Refresh the course list from Canvas.",
+        )
         query = st.text_input(
             "Search courses",
             key="course_search",
             placeholder="Search courses by name or code…",
             label_visibility="collapsed",
         )
+
+    if refresh_clicked:
+        # Drop the cached course list and re-fetch. scope="app" (not "fragment"):
+        # the fetch happens in render_course_selector, ABOVE this fragment, so a
+        # fragment-scoped rerun would re-render the stale list.
+        try:
+            fetch_courses_fn.clear()
+        except Exception:
+            # A non-cached callable (or a Streamlit version without .clear) must
+            # not break the button - the rerun below still re-renders.
+            pass
+        st.rerun(scope="app")
 
     # Relevance-rank the visible courses against the search query.
     displayed_courses = _filter_and_rank_courses(filtered_courses, query)
@@ -1105,10 +1328,18 @@ def _course_list_section(
     sel_count = len(st.session_state.get('selected_course_ids', []))
     st.html(f"<div id='cdp_selected_courses_count' data-count='{sel_count}' style='display:none;'></div>")
 
-    # Clear the warning notice immediately when a course is selected.
-    if sel_count > 0 and st.session_state.get('course_selection_warning_shown', False):
-        st.session_state['course_selection_warning_shown'] = False
-        st.rerun()
+    # Fill the toolbar's count slot now that the list has reconciled the
+    # selection (see the placeholder above for why this cannot be written inline).
+    _count_slot.markdown(
+        f"<div class='cs-sel-count'>"
+        f"<b>{sel_count}</b> of {len(displayed_courses)} selected</div>",
+        unsafe_allow_html=True,
+    )
+
+    # (The old 'course_selection_warning_shown' latch is gone: the Custom/Quick
+    #  Download buttons are now disabled with an explanatory tooltip while nothing
+    #  is selected, so there is no after-the-fact notice left to clear - and no
+    #  extra rerun needed to clear it.)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -1233,12 +1464,19 @@ def render_course_selector(fetch_courses_fn):
         width: auto !important;
         flex: 0 0 auto !important;
     }}
-    /* Button base styles */
+    /* Button base styles. Refresh is included so it reads as the same kind of
+       borderless, chrome-free control as its text siblings - without it the
+       button keeps Streamlit's default secondary border/background and looks
+       like a boxed-in outlier in the middle of the row. (Its explicit width is
+       set further down; it is deliberately kept out of global.css's full-width
+       button rules, which would stretch it across the row.) */
     div.st-key-btn_course_select_all button,
-    div.st-key-btn_course_clear_selection button {{
+    div.st-key-btn_course_clear_selection button,
+    div.st-key-btn_course_refresh button {{
         background-color: rgba(255, 255, 255, 0) !important;
         border-radius: 8px !important;
         border: 0px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: none !important;
         min-height: 38px !important;
         height: 38px !important;
         padding-left: 8px !important;
@@ -1248,8 +1486,18 @@ def render_course_selector(fetch_courses_fn):
         min-width: max-content !important;
     }}
     div.st-key-btn_course_select_all button:hover,
-    div.st-key-btn_course_clear_selection button:hover {{
+    div.st-key-btn_course_clear_selection button:hover,
+    div.st-key-btn_course_refresh button:hover {{
         background-color: rgba(255, 255, 255, 0.02) !important;
+        border-color: rgba(255, 255, 255, 0.00) !important;
+    }}
+    /* Kill the focus ring too - a lingering outline after clicking Refresh would
+       re-introduce exactly the boxed look this section removes. */
+    div.st-key-btn_course_refresh button:focus,
+    div.st-key-btn_course_refresh button:focus-visible,
+    div.st-key-btn_course_refresh button:active {{
+        outline: none !important;
+        box-shadow: none !important;
         border-color: rgba(255, 255, 255, 0.00) !important;
     }}
     div.st-key-btn_course_select_all button > div,
@@ -1338,13 +1586,40 @@ def render_course_selector(fetch_courses_fn):
         width: auto !important;
         min-width: 150px !important;
     }}
-    /* Short vertical divider between the buttons and the search field. */
-    div.st-key-course_search {{
-        position: relative !important;
-        padding-left: 7px !important;
-        margin-left: 9px !important;
+    /* ── Live selection count ──
+       Sits with the Select All / Clear Selection controls it describes. Fixed
+       to shrink-to-fit so it never competes with the flexible search field. */
+    div[data-testid="stVerticalBlock"]:has(> div.st-key-btn_course_select_all) > div:has(> div > div > .cs-sel-count) {{
+        flex: 0 0 auto !important;
+        width: auto !important;
     }}
-    div.st-key-course_search::before {{
+    /* Height 38px matches the buttons exactly, so the row's `align-items:center`
+       lands the text on the same optical baseline as its neighbours instead of
+       letting a short text box float above them.
+
+       It draws only its LEFT divider. The divider on its right is the one the
+       Refresh button already draws - reusing it keeps every divider in the row
+       identical (a ::before at the left edge of the element it precedes) and
+       avoids stacking two 1px lines into a double rule. */
+    /* Vertical centring is done with `line-height: height`, NOT `display:flex`.
+       Flex would turn the bold count element and the text node after it into two
+       separate flex items, and whitespace BETWEEN flex items is discarded - the
+       label rendered as "0of 15 selected". Matching line-height to height keeps
+       the content in normal inline flow (space intact) while still centring it
+       against the 38px buttons. */
+    .cs-sel-count {{
+        position: relative !important;
+        display: block !important;
+        height: 38px !important;
+        line-height: 38px !important;
+        font-size: 0.9rem !important;
+        color: #ffffff !important;
+        white-space: nowrap !important;
+        margin: 0 0 0 {_TB_PRE}px !important;
+        padding: 0 0 0 {_TB_PAD}px !important;
+    }}
+    .cs-sel-count b {{ color: #ffffff !important; font-weight: 700 !important; }}
+    .cs-sel-count::before {{
         content: "" !important;
         position: absolute !important;
         left: 0 !important;
@@ -1355,6 +1630,94 @@ def render_course_selector(fetch_courses_fn):
         background-color: rgba(255, 255, 255, 0.15) !important;
         pointer-events: none !important;
     }}
+
+    /* ── Refresh button (icon-only) ──
+       An empty zero-width-space label + a masked lucide list-restart glyph, so
+       the icon inherits the row's text colour and brightens on hover exactly
+       like the neighbouring text buttons. */
+    div.st-key-btn_course_refresh button {{
+        min-width: 34px !important;
+        width: 34px !important;
+        padding: 0 !important;
+    }}
+    div.st-key-btn_course_refresh button p {{
+        margin: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }}
+    div.st-key-btn_course_refresh button p::after {{
+        content: "" !important;
+        width: 17px !important;
+        height: 17px !important;
+        flex-shrink: 0 !important;
+        background-color: currentColor !important;
+        -webkit-mask-image: url("{_REFRESH_MASK}");
+        mask-image: url("{_REFRESH_MASK}");
+        -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+        -webkit-mask-position: center;  mask-position: center;
+        -webkit-mask-size: contain;    mask-size: contain;
+    }}
+
+    /* Short vertical dividers split the row into four groups:
+           [Select All · Clear Selection] │ [count] │ [Refresh] │ [search]
+       Every divider is the same thing - a ::before at the left edge of the
+       element it precedes - so the count's right-hand divider is simply the one
+       Refresh draws.
+
+       Spacing is symmetric BY CONSTRUCTION: _TB_PRE of margin sits before the
+       divider (the row's own flex gap tops that up to _TB_PAD) and _TB_PAD of
+       padding sits after it. Previously these were 9px and 7px, which - once the
+       5px row gap is added - left the Refresh button 7px from its left divider
+       and 14px from its right one, i.e. visibly off-centre between them. */
+    div.st-key-course_search,
+    div.st-key-btn_course_refresh {{
+        position: relative !important;
+        padding-left: {_TB_PAD}px !important;
+        margin-left: {_TB_PRE}px !important;
+    }}
+    div.st-key-course_search::before,
+    div.st-key-btn_course_refresh::before {{
+        content: "" !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        width: 1px !important;
+        height: 20px !important;
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        pointer-events: none !important;
+    }}
+
+    /* ── Clear-search "X" (injected by inject_search_live_bridge) ── */
+    button.cs-clear-search {{
+        position: absolute !important;
+        top: 50% !important;
+        right: 8px !important;
+        transform: translateY(-50%) !important;
+        width: 20px !important; height: 20px !important;
+        padding: 0 !important; margin: 0 !important;
+        border: none !important; border-radius: 4px !important;
+        background: transparent !important;
+        cursor: pointer !important;
+        display: none;
+        align-items: center !important; justify-content: center !important;
+        z-index: 5 !important;
+    }}
+    button.cs-clear-search[data-visible="1"] {{ display: flex !important; }}
+    button.cs-clear-search::after {{
+        content: "" !important;
+        width: 12px !important; height: 12px !important;
+        background-color: rgba(255, 255, 255, 0.55) !important;
+        -webkit-mask-image: url("{_CLEAR_X_MASK}");
+        mask-image: url("{_CLEAR_X_MASK}");
+        -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+        -webkit-mask-position: center;  mask-position: center;
+        -webkit-mask-size: contain;    mask-size: contain;
+    }}
+    button.cs-clear-search:hover {{ background: rgba(255, 255, 255, 0.10) !important; }}
+    button.cs-clear-search:hover::after {{ background-color: #ffffff !important; }}
     /* Shared borderless field + magnifier visuals. */
     {_course_search_field_css('course_search')}
     </style>""")
@@ -1411,7 +1774,7 @@ def render_course_selector(fetch_courses_fn):
 
     # --- Replace spinner with fragment: CBS filters + action buttons + course list ---
     with _courses_area.container():
-        _course_list_section(courses, all_courses, favorites_only)
+        _course_list_section(courses, all_courses, favorites_only, fetch_courses_fn)
 
     # --- Continue ---
     error_container = st.empty()
@@ -1517,26 +1880,45 @@ def render_course_selector(fetch_courses_fn):
     }}
     </style>""")
 
-    col_custom, col_or, col_quick, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small", vertical_alignment="center")
-    with col_custom:
-        advanced_clicked = st.button('Custom Download', type="primary", use_container_width=True, key="btn_custom_download")
-    with col_or:
-        st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap; word-break:keep-all;'>OR</div>", unsafe_allow_html=True)
-    with col_quick:
-        quick_clicked = st.button('Quick Download', type="primary", use_container_width=True, key="btn_quick_download")
+    # `sticky_actions_` prefix = the shared sticky bottom bar (styled once in
+    # global.css). This list is the page that needs it most: "All Courses" runs to
+    # 30+ rows, and without it the two primary actions sit far below the fold.
+    # Native `position: sticky`, so it self-disables on a page short enough not to
+    # scroll - no JS, no scroll listeners.
+    with st.container(key="sticky_actions_courses"):
+        col_custom, col_or, col_quick, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small", vertical_alignment="center")
+        with col_custom:
+            advanced_clicked = st.button('Custom Download', type="primary", use_container_width=True,
+                                         key="btn_custom_download")
+        with col_or:
+            st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap; word-break:keep-all;'>OR</div>", unsafe_allow_html=True)
+        with col_quick:
+            quick_clicked = st.button('Quick Download', type="primary", use_container_width=True,
+                                      key="btn_quick_download")
+
+    # Paint both actions as unavailable (and unclickable) until a course is
+    # selected, replacing the old after-the-fact "Please select at least one
+    # course" amber notice.
+    #
+    # NOT `disabled=`: the course list is a FRAGMENT, so ticking a checkbox
+    # reruns only the fragment - these buttons live outside it and would keep
+    # their stale disabled state until some unrelated full-page rerun. (Measured:
+    # checkbox ticked, marker div read 1, buttons still disabled.) This is the
+    # same trap shared.components.live_enable_button documents for text inputs,
+    # so the same remedy applies: keep the buttons genuinely enabled server-side
+    # and gate appearance + pointer-events client-side off the live count marker.
+    _gate_actions_on_selection("btn_custom_download", "btn_quick_download")
 
     st.html("<div style='height: 20px;'></div>")
 
     if quick_clicked or advanced_clicked:
-        if not st.session_state['selected_course_ids']:
-            st.session_state['course_selection_warning_shown'] = True
-            with error_container.container():
-                from ui.amber_notice import render_amber_notice
-                render_amber_notice('Please select at least one course.', margin="-45px 0 20px 0")
-        else:
-            if quick_clicked:
-                # Always start Quick Download with no preset selected.
-                st.session_state.pop('quick_preset_id', None)
-            st.session_state['quick_download_mode'] = quick_clicked
-            st.session_state['step'] = 2
+        # Defensive: the client-side gate sets pointer-events:none while nothing
+        # is selected, but never trust the DOM for correctness.
+        if not st.session_state.get('selected_course_ids'):
             st.rerun()
+        if quick_clicked:
+            # Always start Quick Download with no preset selected.
+            st.session_state.pop('quick_preset_id', None)
+        st.session_state['quick_download_mode'] = quick_clicked
+        st.session_state['step'] = 2
+        st.rerun()

@@ -106,10 +106,8 @@ div.st-key-today_courses_head [data-testid="stMarkdownContainer"] {
     margin-bottom: 0 !important;
 }
 
-/* ── Today's files header row ───────────────────────────── */
-div.st-key-today_files_head {
-    margin-top: 12px !important;
-}
+/* (Removed: div.st-key-today_files_head margin rule - that container key is not
+   created anywhere; the live header container is `today_courses_head`.) */
 
 /* Keep the toggle button vertically centred against the 2-line label block. */
 div.st-key-today_courses_head [data-testid="stHorizontalBlock"] {
@@ -708,7 +706,7 @@ div.st-key-today_notice_close_btn button:hover p::before {
    The bounding box for the editable course list, mirroring the collapsed chip
    box so the section keeps its box in both views. */
 div.st-key-today_list_outline {
-    background: #0e1015 !important;
+    background: #0d1117 !important;
     border: 1px solid #262b3a !important;
     border-radius: 10px !important;
     padding: 10px 12px !important;
@@ -985,26 +983,22 @@ div.st-key-today_list_outline div.st-key-today_add_courses_btn [data-testid="stB
 }
 
 
-/* ── Empty states ───────────────────────────────────────── */
-div.st-key-today_empty_container,
-div.st-key-today_files_empty_container {
-    background: #1A1D27 !important;
-    border: 1px solid #2D3248 !important;
-    border-radius: 10px !important;
-    padding: 24px 22px 20px 22px !important;
-    text-align: center !important;
-    color: #8A91A6 !important;
-    line-height: 1.6 !important;
-}
-
-div.st-key-today_empty_container div.st-key-today_add_courses_btn {
-    margin-top: 18px !important;
-}
-
+/* ── Empty states ─────────────────────────────────────────
+   The empty states are plain st.markdown blocks (.today-empty-inner) rendered
+   INSIDE the section's own card, not in a keyed wrapper - the former
+   `today_empty_container` / `today_files_empty_container` containers no longer
+   exist in the Python, so their card skin here was dead and is removed (a
+   nested card inside the section card would be redundant anyway). The one thing
+   that block really provided was breathing room above the "Add courses" CTA;
+   that now hangs off the empty state's own live class instead. */
 .today-empty-inner {
     text-align: center;
     color: #8A91A6;
     line-height: 1.6;
+}
+
+.today-courses-empty {
+    margin-bottom: 18px;
 }
 
 .today-courses-empty-title {
@@ -1028,15 +1022,8 @@ div.st-key-today_empty_container div.st-key-today_add_courses_btn {
     color: #b9c0d0;
 }
 
-/* Overrides for today_files_empty_container to make top and bottom spacing symmetric */
-div.st-key-today_files_empty_container {
-    padding: 24px 22px 24px 22px !important;
-}
-
-div.st-key-today_files_empty_container .stMarkdown,
-div.st-key-today_files_empty_container [data-testid="stMarkdownContainer"] {
-    margin-bottom: 0 !important;
-}
+/* (Removed: three today_files_empty_container overrides - that container key is
+   not created anywhere in the Python, so all of them were inert.) */
 
 /* ── Import dialog: whole-card toggle buttons ──────────────────────────────
    Mirrors the "Canvas Content" card-toggle pattern in ui/download_settings.py
@@ -1203,7 +1190,7 @@ div.st-key-today_courses_summary {
     align-items: flex-start !important;
     /* A darker, recessed "crevasse" the chips float on top of - clearly darker
        than the outer card so the box reads as inset, not flat. */
-    background: #0e1015 !important;
+    background: #0d1117 !important;
     border: 1px solid #262b3a !important;
     border-radius: 10px !important;
     padding: 11px 12px !important;
@@ -1291,7 +1278,7 @@ div[class*="st-key-today_chip_"] button:disabled {
    panel of per-course expanders. */
 div.st-key-today_files_hero {
     position: relative !important;
-    background: #20242e !important;
+    background: #21252e !important;
     border: 1px solid #3a4055 !important;
     border-radius: 16px !important;
     padding: 20px 22px 22px 22px !important;
@@ -1435,7 +1422,7 @@ div.st-key-today_files_inner div[data-testid="stVerticalBlock"]:has(div[class*="
 div.st-key-today_qs_section {
     background:
         linear-gradient(135deg, rgba(30, 58, 138, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%),
-        #171a23;
+        #171a22;
     border: 1px solid #2b3346;
     border-radius: 14px;
     padding: 15px 20px !important;

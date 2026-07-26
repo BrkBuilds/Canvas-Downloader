@@ -137,8 +137,10 @@ def _save_config_dialog():
         unsafe_allow_html=True,
     )
 
+    # The asterisk is not decoration: Save Preset is greyed out until this field
+    # has a value, so the field has to say up-front that it is what unlocks it.
     preset_name = st.text_input(
-        "Preset title:",
+        "Preset title: :red[*]",
         placeholder="Your preset title here",
         key="preset_save_name_input",
     )
@@ -190,7 +192,8 @@ def _save_config_dialog():
                     st.rerun()  # audit-ignore
 
     # Enable Save Preset the instant a title is typed (no blur required).
-    live_enable_button("preset_save_name_input", "preset_save_create")
+    live_enable_button("preset_save_name_input", "preset_save_create",
+                       reason="Enter a preset title first.")
 
 
 @st.dialog("\u200b", width="large")

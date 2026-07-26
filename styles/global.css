@@ -107,7 +107,28 @@ div[data-testid="stAppViewBlockContainer"] {
     max-width: 100% !important;
 }
 
-/* 2. Hunt down and collapse invisible CSS injection wrappers */
+/* 2. Hunt down and collapse invisible CSS injection wrappers.
+
+   DELIBERATELY INERT - DO NOT "FIX" THE SELECTOR.  audit-ignore
+
+   The hyphenated TESTID data-testid="element-container" matches nothing in
+   1.51 (measured: 0 nodes). The element still exists - it renders as
+   data-testid="stElementContainer" with class="stElementContainer
+   element-container ...", so `div.element-container`, `.stElementContainer`
+   and `[data-testid="stElementContainer"]` would ALL make this live again.
+
+   That is exactly what must not happen. Every main-app screen has since been
+   hand-tuned WITH these ghost slots present (each style injection occupies one
+   full 16px flex gap; download step 2 alone carries 7 of them = 112px). The
+   dead space is real, intentional, and already accounted for in the spacing of
+   screens the maintainer has visually signed off. Making this rule live would
+   silently collapse all of it at once.
+
+   Note this is NOT true of the sibling rule in completion.css: that one names
+   the LIVE stElementContainer testid and genuinely does collapse style-only
+   markdown - the completion screens were tuned WITH collapse, the main-app
+   screens WITHOUT. The two are correct precisely because they differ. */
+/* audit-ignore - inert on purpose, see above */
 div[data-testid="element-container"]:has(> div[data-testid="stMarkdownContainer"] style) {
     display: none !important;
     height: 0px !important;
@@ -121,8 +142,22 @@ div[data-testid="stHtml"] {
     margin-bottom: 0px !important;
 }
 
-/* Default button sizing */
-.stButton>button {
+/* Default button sizing.
+
+   The SECOND selector is what makes `help=` safe to add anywhere. Streamlit
+   inserts a stTooltipHoverTarget between .stButton and <button> for any button
+   with a tooltip, which breaks the direct-child match above - the button then
+   loses width:100% and min-height:3em and renders ~3/4 height. Matching through
+   the optional wrapper applies the SAME defaults either way, so a tooltip never
+   changes a button's size.
+
+   This replaces what used to be a hand-maintained per-key allow-list further
+   down. That list only worked if whoever added a tooltip remembered to register
+   the key, and forgetting produced a silently shrunken button - the exact bug it
+   existed to prevent. Buttons with their own explicit sizing still win on
+   specificity, so icon-only controls are unaffected. */
+.stButton>button,
+.stButton > [data-testid="stTooltipHoverTarget"] > button {
     width: 100%;
     border-radius: 5px;
     height: auto !important;
@@ -131,21 +166,31 @@ div[data-testid="stHtml"] {
     padding-bottom: 0.5rem !important;
 }
 
-/* When a button has help=, Streamlit wraps the <button> in a
-   stTooltipHoverTarget, so it is no longer a DIRECT child of .stButton and the
-   `.stButton>button` height rule above stops applying - the button shrinks to
-   ~3/4 height. live_enable_button() keeps such a button visible while it is
-   still help-wrapped (the JS flips it enabled before Streamlit reruns and drops
-   the wrapper), exposing the shrink as height jank. Re-apply full sizing for
-   ONLY these two full-width dialog Save buttons. Scoped by key so it never
-   touches small icon buttons that also use help= (e.g. the save_pair_N floppy
-   on pair cards) or buttons with their own explicit height (hub_save_name). */
+/* The wrapper must fill .stButton or the button's width:100% resolves against a
+   shrink-wrapped box. Height stays auto so it never stretches a short button. */
+.stButton > [data-testid="stTooltipHoverTarget"] {
+    display: block;
+    width: 100%;
+}
+
+/* SUPERSEDED, kept as belt-and-braces - do NOT add new keys here.
+   The `.stButton > [data-testid="stTooltipHoverTarget"] > button` selector added
+   to the default-sizing rule above now handles every help-wrapped button
+   generically, so a new tooltip no longer needs registering anywhere. These
+   per-key rules survive only because they carry `!important` on width, which
+   still beats Streamlit's disabled-primary CSS in the specific spots below;
+   they are otherwise redundant with the generic rule. */
 div[class*="st-key-save_group_create"] [data-testid="stTooltipHoverTarget"],
 div[class*="st-key-preset_save_create"] [data-testid="stTooltipHoverTarget"],
 div.st-key-confirm_pair [data-testid="stTooltipHoverTarget"],
 div.st-key-sync_confirm_btn [data-testid="stTooltipHoverTarget"],
 div[class*="st-key-hub_save_edit_"] [data-testid="stTooltipHoverTarget"],
-div.st-key-hub_cs_confirm_btn [data-testid="stTooltipHoverTarget"] {
+div.st-key-hub_cs_confirm_btn [data-testid="stTooltipHoverTarget"],
+div.st-key-hub_rescue_confirm [data-testid="stTooltipHoverTarget"],
+div.st-key-btn_inline_new_confirm [data-testid="stTooltipHoverTarget"],
+div.st-key-btn_dev_gpu [data-testid="stTooltipHoverTarget"],
+div[class*="st-key-pan_model_dl_"] [data-testid="stTooltipHoverTarget"],
+div.st-key-stg_btn_clear [data-testid="stTooltipHoverTarget"] {
     width: 100% !important;
 }
 
@@ -154,7 +199,12 @@ div[class*="st-key-preset_save_create"] [data-testid="stTooltipHoverTarget"]>but
 div.st-key-confirm_pair [data-testid="stTooltipHoverTarget"]>button,
 div.st-key-sync_confirm_btn [data-testid="stTooltipHoverTarget"]>button,
 div[class*="st-key-hub_save_edit_"] [data-testid="stTooltipHoverTarget"]>button,
-div.st-key-hub_cs_confirm_btn [data-testid="stTooltipHoverTarget"]>button {
+div.st-key-hub_cs_confirm_btn [data-testid="stTooltipHoverTarget"]>button,
+div.st-key-hub_rescue_confirm [data-testid="stTooltipHoverTarget"]>button,
+div.st-key-btn_inline_new_confirm [data-testid="stTooltipHoverTarget"]>button,
+div.st-key-btn_dev_gpu [data-testid="stTooltipHoverTarget"]>button,
+div[class*="st-key-pan_model_dl_"] [data-testid="stTooltipHoverTarget"]>button,
+div.st-key-stg_btn_clear [data-testid="stTooltipHoverTarget"]>button {
     width: 100% !important;
     height: auto !important;
     min-height: 3em !important;
@@ -168,7 +218,12 @@ div.st-key-hub_cs_confirm_btn [data-testid="stTooltipHoverTarget"]>button {
 div.st-key-confirm_pair button,
 div.st-key-sync_confirm_btn button,
 div[class*="st-key-hub_save_edit_"] button,
-div.st-key-hub_cs_confirm_btn button {
+div.st-key-hub_cs_confirm_btn button,
+div.st-key-hub_rescue_confirm button,
+div.st-key-btn_inline_new_confirm button,
+div.st-key-btn_dev_gpu button,
+div[class*="st-key-pan_model_dl_"] button,
+div.st-key-stg_btn_clear button {
     min-height: 3em !important;
     height: auto !important;
     padding-top: 0.5rem !important;
@@ -183,6 +238,23 @@ div.st-key-hub_cs_confirm_btn button {
     overflow-wrap: break-word !important;
     white-space: normal !important;
     line-height: 1.2 !important;
+}
+
+/* Opt-out for buttons with a FIXED height, where wrapping clips instead of
+   growing. "Clear History" sits in the narrow right-hand column of the sync
+   history filter row (widened from [3,1] to [7,1] for the course dropdown) and
+   broke onto two lines inside a 38px-tall button, reading as clipped next to its
+   single-line "View All" / "By Course" siblings.
+
+   This exception MUST live here, immediately after the rule it overrides. An
+   equally-!important, MORE-specific rule in a separate later st.markdown(<style>)
+   injection did not win (verified in the live DOM: font-size from the same block
+   applied, white-space did not), so per-page inline CSS cannot be relied on to
+   override this base rule - keep the pair together in one stylesheet. */
+div.st-key-btn_sync_hist_clear button p,
+div.st-key-btn_sync_hist_clear button div[data-testid="stMarkdownContainer"]>p {
+    white-space: nowrap !important;
+    font-size: 0.86rem !important;
 }
 
 /* Global Primary Button Styles - Solid Physical Volume & Glow Hover */
@@ -242,27 +314,9 @@ div[data-testid="stSelectbox"]>div {
     background-color: rgba(255, 75, 75, 0.1) !important;
 }
 
-/* ═══════════════════════════════════════════════
-   Flex Row Hack (Standardizing Side-by-Side Buttons)
-   ═══════════════════════════════════════════════ */
-div.st-key-action_buttons_row,
-div.st-key-action_buttons_row>div,
-div.st-key-action_buttons_row>div>div,
-div.st-key-action_buttons_row>div>div>div {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    gap: 12px !important;
-    flex-wrap: wrap !important;
-    width: 100% !important;
-}
-
-div.st-key-action_buttons_row div[data-testid="element-container"],
-div.st-key-action_buttons_row div.stElementContainer {
-    width: auto !important;
-    flex: 0 0 auto !important;
-    margin-bottom: 0px !important;
-}
+/* (Removed: the "Flex Row Hack" block for st-key-action_buttons_row. No widget
+   has ever used that key - side-by-side buttons are built with st.columns +
+   use_container_width, per the CLAUDE.md rule.) */
 
 
 /* ═══════════════════════════════════════════════
@@ -388,26 +442,15 @@ section[data-testid="stSidebar"] div[data-testid="stSidebarUserContent"]>div[dat
     /* Reserve space for absolute-positioned bottom block */
 }
 
-/* ═══════════════════════════════════════════════
-   Nuclear Container Padding Purge
-   ═══════════════════════════════════════════════
-   Kill ALL internal padding on every container/wrapper inside the sidebar. */
-section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"] {
-    border: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    overflow: visible !important;
-}
-
-/* Kill the padding shim div between BorderWrapper and VerticalBlock */
-section[data-testid="stSidebar"] [data-testid="stVerticalBlockBorderWrapper"]>div {
-    padding: 0 !important;
-}
+/* (Removed: the two-rule "Nuclear Container Padding Purge" that stripped
+   border/radius/shadow/background/padding from every sidebar
+   stVerticalBlockBorderWrapper, plus its inner padding shim. 1.51 renders no
+   such wrapper - the sidebar's containers come through stLayoutWrapper, which
+   was measured carrying border:0 padding:0 radius:0, so there is nothing left
+   to purge. Do NOT "restore" this against stLayoutWrapper or the keyed div:
+   it would start stripping backgrounds the sidebar cards now set themselves. */
 
 /* Kill all element-container margins in the sidebar */
-section[data-testid="stSidebar"] div[data-testid="element-container"],
 section[data-testid="stSidebar"] div.stElementContainer {
     padding-left: 0 !important;
     padding-right: 0 !important;
@@ -879,10 +922,20 @@ div[data-testid="column"] {
     justify-content: center;
 }
 
-/* Universal disabled button dimming */
+/* Universal disabled button dimming.
+
+   brightness(0.5) saturate(0.5) - NOT grayscale(100%). Full desaturation made a
+   disabled button read as a flat grey slab that sank into the dark page and
+   stopped looking like a button at all; halving brightness and saturation keeps
+   enough of its own hue to stay legible as "this control, currently off".
+   Deliberately no `opacity` on top: stacking opacity on the filter dimmed it
+   back into the background, which is the thing being fixed.
+
+   `shared/components.py:live_enable_button` MUST mirror this exactly - it paints
+   a genuinely-enabled button as disabled, and the two states have to be
+   indistinguishable or the same dialog shows two different "off" styles. */
 button[disabled] {
-    opacity: 0.4 !important;
-    filter: grayscale(100%) !important;
+    filter: brightness(0.5) saturate(0.5) !important;
     cursor: not-allowed !important;
     box-shadow: none !important;
 }
@@ -904,9 +957,10 @@ div[class*="st-key-remove_pair_"] button {
     padding-bottom: 8px !important;
 }
 
-/* Restore neutral grey hover for inline non-destructive cancel buttons in Sync UI */
-div[class*="st-key-cancel_pair"] button:hover,
-div[class*="st-key-cancel_add"] button:hover {
+/* Restore neutral grey hover for inline non-destructive cancel buttons in Sync UI.
+   (st-key-cancel_add was dropped - no widget uses that key; `cancel_add` exists
+   only as the Python column variable `col_cancel_add` in ui/hub_dialog.py.) */
+div[class*="st-key-cancel_pair"] button:hover {
     border-color: rgba(255, 255, 255, 0.2) !important;
     background-color: rgba(255, 255, 255, 0.1) !important;
     color: #ffffff !important;
@@ -1005,9 +1059,10 @@ div[class*="st-key-cancel_add"] button:hover {
     min-height: 50vh !important;
 }
 
-.st-key-sync_list_outline>div[data-testid="stVerticalBlockBorderWrapper"] {
-    padding-top: 16px !important;
-}
+/* (Removed: a padding-top:16px on a child stVerticalBlockBorderWrapper. 1.51
+   renders no such child, so the sync list has been rendering without that pad
+   for as long as 1.51 has shipped - and is signed off looking that way. Adding
+   it to .st-key-sync_list_outline now would be a regression, not a repair.) */
 
 /* 12. Sync Pair Cards Gradient Styling */
 div[class*="st-key-sync_pair_card_"] {
@@ -1024,8 +1079,7 @@ div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] {
     background: linear-gradient(180deg, #181a1f 0%, #1e2126 100%) !important;
 }
 
-div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"],
-div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="stVerticalBlockBorderWrapper"] {
+div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] {
     border: 1px solid rgba(202, 138, 4, 0.85) !important;
     box-shadow: none !important;
 }
@@ -1038,15 +1092,77 @@ div[class*="st-key-sync_pair_card_missing_"][class*="st-key-"] div[data-testid="
 }
 
 /* 13b. Transcription-setup-needed pair cards - amber border (softer than missing-folder) */
-div[class*="st-key-sync_pair_card_txsetup_"][class*="st-key-"],
-div[class*="st-key-sync_pair_card_txsetup_"][class*="st-key-"] div[data-testid="stVerticalBlockBorderWrapper"] {
+div[class*="st-key-sync_pair_card_txsetup_"][class*="st-key-"] {
     border: 1px solid rgba(234, 179, 8, 0.55) !important;
     box-shadow: 0 0 8px rgba(234, 179, 8, 0.08) !important;
 }
-/* 14. Fix summary marker (chevron) size and spacing in WebKit (Safari/macOS) */
+/* ═══════════════════════════════════════════════
+   14. Custom chevron for hand-written <details> help panels
+   ═══════════════════════════════════════════════
+   The app has a complete custom chevron system (Streamlit expanders get
+   keyboard_arrow_right/down; dialogs get inline SVG chevrons), but the ~89
+   hand-written help/FAQ panels rendered as raw HTML details/summary were still
+   showing the BROWSER's default disclosure triangle. Previously this section only
+   resized that native marker instead of replacing it.
+
+   Implementation notes:
+   - `list-style: none` + the -webkit pseudo-element covers every engine.
+   - The glyph is a mask, not a background-image, so `background-color:
+     currentColor` makes it inherit each summary's own text colour instead of
+     hard-coding white. (Same technique as the trash glyph on Clear History.)
+   - `display` is deliberately NOT changed: these 89 summaries carry hand-tuned
+     inline styles, and switching them to flex would reflow all of them. An
+     inline-block ::before flows ahead of the text and leaves the rest alone.
+   - Excluded below: Streamlit expanders and the three panels that already ship
+     their own chevron span. */
+summary {
+    list-style: none;
+}
+
 summary::-webkit-details-marker {
-    margin-right: 8px;
-    font-size: 115%;
+    display: none;
+}
+
+summary::before {
+    content: "";
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    margin-right: 6px;
+    vertical-align: -0.15em;
+    flex-shrink: 0;
+    background-color: currentColor;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    transition: transform 0.18s ease;
+}
+
+details[open] > summary::before {
+    transform: rotate(90deg);
+}
+
+/* Opt-outs: these already have their own chevron/icon, so a second one would
+   double up. Streamlit's expanders use keyboard_arrow_* icons; the completion
+   screen's error/skip panels use .chevron / .sp-chevron; sync history uses
+   .sync-history-chevron. */
+[data-testid="stExpander"] summary::before,
+summary.error-panel-header::before,
+summary.skip-panel-header::before,
+.sync-history-details > summary::before {
+    content: none;
+    display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    summary::before {
+        transition: none;
+    }
 }
 
 /* 15. Scale down Apple Emojis (~15-20%) globally without breaking layout */
@@ -1511,4 +1627,67 @@ div[class*="_fda_close_btn"] button p::before {
 
 div[class*="_fda_close_btn"] button:hover p::before {
     background-color: #ffffff;
+}
+
+/* ═══════════════════════════════════════════════
+   Sticky action bar
+   ═══════════════════════════════════════════════
+   Opt in from Python with `st.container(key="sticky_actions_<page>")` wrapping a
+   page's primary action row. No per-page CSS needed.
+
+   WHY THE WRAPPER, NOT THE KEYED DIV (measured 2026-07-26): a sticky element can
+   only travel inside its own containing block, and Streamlit shrink-wraps every
+   element in a `stLayoutWrapper` that is exactly as tall as its child. Applying
+   `position: sticky` to the keyed container therefore has ZERO slack and does
+   nothing - the row scrolls away normally (verified: its top tracked scroll
+   1:1). The wrapper one level up sits inside the page's tall vertical block, so
+   that is the element that can actually float. `:has(> ...)` is the direct-child
+   form on purpose - the descendant form would also match every ancestor
+   wrapper and try to stick the whole page.
+
+   Behaviour comes free from native sticky, no scroll listeners:
+     - long page  -> the bar is caught at the viewport bottom while scrolling,
+                     then RELEASED into place when the page end scrolls in.
+     - short page -> nothing to travel, so it simply sits where it is.
+   Measured on a 2201px page in a 909px viewport: pinned at scrollTop 0 and 600
+   (bottom == 909), released at max scroll (bottom == 825, its natural spot).
+
+   Requires no `overflow: hidden` between here and the scrollport. That holds:
+   stMain is the scroller (overflow-y:auto) and every wrapper between is
+   overflow:visible. If a future ancestor gets clipped, sticky silently stops
+   working - which is why the geometry above is written down. */
+div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-sticky_actions_"]),
+/* Second opt-in path, for action rows whose `with col:` blocks also contain
+   their click handlers. Wrapping those in Python would render any error notice
+   they emit INSIDE the floating bar, so they are matched by their button key
+   instead. `:has(> A B)` is a single :has() with a compound argument - it picks
+   only the wrapper whose DIRECT child is that horizontal block. It is NOT the
+   descendant form `:has(A)`, which would match every ancestor wrapper too and
+   try to stick the entire page. (:has() cannot be nested inside :has().) */
+div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-action_dl_back"]),
+div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"]) {
+    position: sticky;
+    bottom: 0;
+    z-index: 20;
+    /* Must equal .streamlit/config.toml `backgroundColor` or a seam shows where
+       the bar meets the page while it floats. Kept literal (not theme.BG_TERMINAL,
+       which is 0.47 CIEDE2000 away) precisely so the two cannot drift apart.
+       audit-ignore */
+    background-color: #0e1117;
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    /* Reads as lifted off the content it floats over. Sits above the border so
+       the seam stays crisp. */
+    box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35);
+    padding-top: 14px;
+    padding-bottom: 14px;
+    margin-top: 8px;
+}
+
+/* The bar's own container must not add a second surface or extra gap - the
+   wrapper above owns the whole skin. */
+div[class*="st-key-sticky_actions_"] {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }

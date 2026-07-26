@@ -58,7 +58,7 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
             'Save your selected course/folder pair to the "Saved Groups & Pairs" tab, '
             'so you can quickly add it to the sync list later.'
         )
-        input_label = "Give your pair a name:"
+        input_label = "Give your pair a name: :red[*]"
         input_placeholder = "e.g., Programming (for NotebookLM)"
         entity = "Pair"
     else:
@@ -66,7 +66,7 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
             'Save your current list of course/folder pairs as a group, so you can '
             'quickly bulk-add them to the sync list from "Saved Groups & Pairs".'
         )
-        input_label = "Give your group a name:"
+        input_label = "Give your group a name: :red[*]"
         input_placeholder = "e.g., 1st Semester"
         entity = "Group"
 
@@ -112,7 +112,8 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
                 st.rerun(scope="app")
 
     # Enable the Save button the instant a name is typed (no blur required).
-    live_enable_button("save_group_name_input", "save_group_create")
+    live_enable_button("save_group_name_input", "save_group_create",
+                       reason=f"Give this {entity.lower()} a name first.")
 
 
 
@@ -873,7 +874,8 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                               use_container_width=True, key="hub_save_name", on_click=_save_name_cb)
             # Enable Save the instant the name changes to something new (no blur required).
             live_enable_button("hub_rename_name_input", "hub_save_name",
-                               require_change_from=group['group_name'])
+                               require_change_from=group['group_name'],
+                               reason="Enter a new, different name to save.")
 
         st.markdown("")
 
@@ -1018,7 +1020,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                             _save_help = (
                                 "This pair already exists in this group - cancel to go back."
                                 if is_hub_dup_edit else
-                                None if has_changes else "Change the course or folder to save"
+                                None if has_changes else "Change the course or folder to save."
                             )
                             st.button("Save Changes", type="primary", use_container_width=True,
                                       key=f"hub_save_edit_{p_idx}", disabled=_save_disabled,
@@ -1187,6 +1189,19 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     # --- Add / Cancel ---
                     can_add = bool(add_folder) and bool(add_course_id) and not is_hub_dup_add
                     add_cname_final = add_course_name if add_course_name else course_names.get(add_course_id, '')
+                    # Name the specific blocker - "Add to Group" has three
+                    # independent reasons to be disabled and the user cannot tell
+                    # them apart from the greyed-out button alone.
+                    if is_hub_dup_add:
+                        _add_help = "This pair is already in this group."
+                    elif not add_course_id and not add_folder:
+                        _add_help = "Select a course and a folder to add it to the group."
+                    elif not add_course_id:
+                        _add_help = "Select a course to continue."
+                    elif not add_folder:
+                        _add_help = "Select a folder to continue."
+                    else:
+                        _add_help = None
                     col_cancel_add, col_add, _ = st.columns([1, 1, 3])
                     with col_cancel_add:
                         st.button("Cancel", key="btn_inline_new_cancel",
@@ -1194,6 +1209,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     with col_add:
                         st.button("Add to Group", use_container_width=True,
                                   key="btn_inline_new_confirm", disabled=not can_add,
+                                  help=_add_help,
                                   on_click=save_inline_add_cb,
                                   args=(mgr, gid, add_folder, add_course_id, add_cname_final))
 
@@ -1277,11 +1293,12 @@ def saved_groups_hub_dialog_inner(courses, course_names):
             max-height: 25vh !important;
             min-height: 20vh !important;
         }
-        /* Reduce dialog scrollable body top padding so "Back to Edit" sits close
-           to the dialog title bar. */
-        div[role="dialog"] [data-testid="stDialogScrollableBody"] {
-            padding-top: 0.25rem !important;
-        }
+        /* (Removed: a padding-top:0.25rem on stDialogScrollableBody, meant to pull
+           "Back to Edit" up under the title bar. 1.51 has no padded body wrapper,
+           so it has been inert. Deliberately NOT migrated to the live
+           `div[role="dialog"] > div:first-child`: that element's top padding must
+           stay >= ~1.5rem or the -70px custom header clips against the dialog
+           edge (CLAUDE.md), so applying 0.25rem there would break the title. */
         </style>""")
 
         # --- Favorites / All Courses pill toggle ---
@@ -1351,6 +1368,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     selected_cname = friendly_course_name(c_obj.name)
         st.button("Confirm Selection", key="hub_cs_confirm_btn", type="primary",
                   use_container_width=True, disabled=not bool(selected_cid),
+                  help=None if selected_cid else "Select a course to continue.",
                   on_click=confirm_course_selection_cb,
                   args=(selected_cid, selected_cname, course_names, courses))
 
@@ -1408,7 +1426,9 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         confirm_disabled = not all_remapped
         if st.button("\u2705 Confirm & Add Group", type="primary",
                      use_container_width=True, key="hub_rescue_confirm",
-                     disabled=confirm_disabled):
+                     disabled=confirm_disabled,
+                     help=None if all_remapped else
+                          "Locate every missing folder above to continue."):
             # Apply remapped paths to the pairs
             final_pairs = list(rescue_pairs)
             for mi, new_path in rescue_paths.items():

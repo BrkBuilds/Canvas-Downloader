@@ -154,7 +154,6 @@ def _get_pan_layout_segmented_css() -> str:
         display: flex !important;
         flex-direction: column !important;
     }}
-    div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
     div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stVerticalBlock"],
     div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stElementContainer"],
     div[class*="st-key-pan_layout_segmented_wrapper"] [data-testid="stColumn"] div[data-testid="stButton"] {{
@@ -226,7 +225,10 @@ def _get_pan_layout_segmented_css() -> str:
         filter: grayscale(100%) !important;
     }}
     div.st-key-btn_pan_layout_match button::after {{ content: "Save recordings alongside your course files." !important; }}
-    div.st-key-btn_pan_layout_separate button::after {{ content: "A \\201CPanopto Recordings\\201D folder in each course." !important; }}
+    /* Literal curly quotes, NOT \\201C / \\201D escapes: a CSS hex escape consumes
+       one following whitespace as its terminator, so "\\201D folder" rendered as
+       "folder with no space before the word. */
+    div.st-key-btn_pan_layout_separate button::after {{ content: "A “Panopto Recordings” folder in each course." !important; }}
     div[class*="st-key-btn_pan_layout_"] button::after {{
         text-align: center !important;
         width: 100% !important;
@@ -707,7 +709,6 @@ def render_download_settings(fetch_courses_fn):
                 display: flex !important;
                 flex-direction: column !important;
             }}
-            div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
             div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stVerticalBlock"],
             div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stElementContainer"],
             div[class*="st-key-sec_org_segmented_wrapper"] [data-testid="stColumn"] div[data-testid="stButton"] {{
@@ -888,6 +889,31 @@ def render_download_settings(fetch_courses_fn):
         flex: 1 !important;
     }
 
+    /* ...but flex:1 on the card and its immediate wrapper is NOT enough. Measured
+       2026-07-26 (1309px, Card 2 expanded): both stColumns were 789px - the row is
+       align-items:stretch, so the COLUMNS were already equal - yet Card 1 rendered
+       676px against Card 2's 774px. The break was two levels up: the intermediate
+       stLayoutWrapper between the column's vertical block and the card carries
+       `flex: 0 1 auto`, so it sized to its content (692px) inside the 789px column.
+       Card 2 only looked right because its content happened to fill the column.
+
+       EVERY wrapper between the column and the card has to grow, not just the
+       innermost one. The descendant `:has()` (no `>`) is deliberate here - it
+       matches the whole ancestor chain, which is exactly what is needed. Scoped to
+       `stColumn` so it cannot leak past the row.
+
+       CARD 1 ONLY. Card 2 sets the height and must stay content-sized: applying
+       the same rule to card_native_content made the COLLAPSED Canvas Content card
+       stretch from a slim 74px header into a ~590px empty box. Card 1 growing is
+       enough, because the column is sized by whichever card is taller.
+
+       Verified 0px bottom-edge delta at zoom 0.67 / 0.8 / 1 / 1.25 / 1.5 and at
+       1000px / 1309px / 1455px wide, with Card 2 both collapsed and expanded. */
+    div[data-testid="stColumn"] div[data-testid="stLayoutWrapper"]:has(div[class*="st-key-card_core_files"]),
+    div[data-testid="stColumn"] div[data-testid="stVerticalBlock"]:has(div[class*="st-key-card_core_files"]) {
+        flex: 1 1 auto !important;
+    }
+
     /* Vertical alignment shim - Card 2's trojan div has a more aggressive
        negative margin-top (-25px) than Card 1's (-10px), which makes its
        outer container collapse 15px higher up. Use padding-top (not margin-top)
@@ -976,7 +1002,6 @@ def render_download_settings(fetch_courses_fn):
                 display: flex !important;
                 flex-direction: column !important;
             }}
-            div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
             div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stVerticalBlock"],
             div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stElementContainer"],
             div[class*="st-key-include_files_segmented_wrapper"] [data-testid="stColumn"] div[data-testid="stButton"] {{
@@ -1145,10 +1170,15 @@ def render_download_settings(fetch_courses_fn):
                 active_mode = st.session_state.get('download_mode', 'modules')
                 active_btn_key = "subfolders" if active_mode == 'modules' else "flat"
 
-                try:
-                    border_color = theme.PRIMARY_BLUE if hasattr(theme, 'PRIMARY_BLUE') else theme.ACCENT_LINK
-                except Exception:
-                    border_color = "#007bff"
+                # NOTE: this line used to read `theme.PRIMARY_BLUE if hasattr(...)
+                # else theme.ACCENT_LINK`. There is no PRIMARY_BLUE token - the
+                # token is BLUE_PRIMARY - so the hasattr never passed and this has
+                # ALWAYS rendered ACCENT_LINK. Kept as ACCENT_LINK deliberately:
+                # that is the colour this control is signed off with, and the two
+                # blues are 20.6 CIEDE2000 apart, so "fixing" the name would be a
+                # visible restyle, not a repair. Switch to theme.BLUE_PRIMARY only
+                # as an intentional design change.
+                border_color = theme.ACCENT_LINK
 
                 st.markdown(f'''
                 <style>
@@ -1169,7 +1199,6 @@ def render_download_settings(fetch_courses_fn):
                     display: flex !important;
                     flex-direction: column !important;
                 }}
-                div[class*="st-key-org_segmented_wrapper"] [data-testid="stColumn"] > div[data-testid="stVerticalBlockBorderWrapper"],
                 div[class*="st-key-org_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stVerticalBlock"],
                 div[class*="st-key-org_segmented_wrapper"] [data-testid="stColumn"] [data-testid="stElementContainer"],
                 div[class*="st-key-org_segmented_wrapper"] [data-testid="stColumn"] div[data-testid="stButton"] {{
@@ -1343,15 +1372,15 @@ def render_download_settings(fetch_courses_fn):
                     padding-bottom: 0px !important;
                     margin-top: -35px !important;
                 }}
-                div.st-key-header_wrap_card2 > div[data-testid="element-container"] {{
+                div.st-key-header_wrap_card2 > div[data-testid="stElementContainer"] {{
                     margin-bottom: 0px !important;
                 }}
-                div.st-key-header_wrap_card2 > div[data-testid="element-container"]:nth-child(1) {{
+                div.st-key-header_wrap_card2 > div[data-testid="stElementContainer"]:nth-child(1) {{
                     width: 24px !important;
                     min-width: 24px !important;
                     flex: 0 0 24px !important;
                 }}
-                div.st-key-header_wrap_card2 > div[data-testid="element-container"]:nth-child(2) {{
+                div.st-key-header_wrap_card2 > div[data-testid="stElementContainer"]:nth-child(2) {{
                     flex: 1 1 auto !important;
                     width: 100% !important;
                 }}
@@ -1429,7 +1458,7 @@ def render_download_settings(fetch_courses_fn):
                     ('dl_quizzes', 'Quizzes', 'Save quiz questions and answers as HTML.', 'icon_quizzes.png'),
                     ('dl_syllabus', 'Syllabus', 'Save the course syllabus page as HTML.', 'icon_syllabus.png'),
                     ('dl_discussions', 'Discussions', 'Save discussion threads as HTML.', 'icon_discussions.png'),
-                    ('dl_submissions', 'Submissions (Results)', 'Save feedback & grades from your submissions.', 'icon_submissions.png')
+                    ('dl_submissions', 'Submissions (Results)', 'Save grades, rubric scores and teacher comments. Not your own uploaded files.', 'icon_submissions.png')
                 ]
 
                 css_blocks.append('''
@@ -1599,6 +1628,9 @@ def render_download_settings(fetch_courses_fn):
                         c1, c2 = st.columns(2, gap="small")
 
                         is_disabled = (_sec_active == 0)
+                        # Only while disabled - see _NAV_LOCKED_HELP note in ui/auth.py.
+                        _sec_org_help = ("Select at least one Canvas Content type above "
+                                         "to choose how it is organized.") if is_disabled else None
 
                         with c1:
                             st.button(
@@ -1607,7 +1639,8 @@ def render_download_settings(fetch_courses_fn):
                                 on_click=_set_isolate_secondary, 
                                 args=(False,), 
                                 use_container_width=True,
-                                disabled=is_disabled
+                                disabled=is_disabled,
+                                help=_sec_org_help,
                             )
                         with c2:
                             st.button(
@@ -1616,7 +1649,8 @@ def render_download_settings(fetch_courses_fn):
                                 on_click=_set_isolate_secondary, 
                                 args=(True,), 
                                 use_container_width=True,
-                                disabled=is_disabled
+                                disabled=is_disabled,
+                                help=_sec_org_help,
                             )
 
 
@@ -1733,15 +1767,15 @@ def render_download_settings(fetch_courses_fn):
                 padding-bottom: 0px !important;
                 margin-top: -35px !important;
             }}
-            div.st-key-header_wrap_card3 > div[data-testid="element-container"] {{
+            div.st-key-header_wrap_card3 > div[data-testid="stElementContainer"] {{
                 margin-bottom: 0px !important;
             }}
-            div.st-key-header_wrap_card3 > div[data-testid="element-container"]:nth-child(1) {{
+            div.st-key-header_wrap_card3 > div[data-testid="stElementContainer"]:nth-child(1) {{
                 width: 24px !important;
                 min-width: 24px !important;
                 flex: 0 0 24px !important;
             }}
-            div.st-key-header_wrap_card3 > div[data-testid="element-container"]:nth-child(2) {{
+            div.st-key-header_wrap_card3 > div[data-testid="stElementContainer"]:nth-child(2) {{
                 flex: 1 1 auto !important;
                 width: 100% !important;
             }}
@@ -1912,11 +1946,11 @@ def render_download_settings(fetch_courses_fn):
                     padding-bottom: 0px !important;
                     margin-top: -35px !important;
                 }}
-                div.st-key-header_wrap_panopto > div[data-testid="element-container"] {{ margin-bottom: 0px !important; }}
-                div.st-key-header_wrap_panopto > div[data-testid="element-container"]:nth-child(1) {{
+                div.st-key-header_wrap_panopto > div[data-testid="stElementContainer"] {{ margin-bottom: 0px !important; }}
+                div.st-key-header_wrap_panopto > div[data-testid="stElementContainer"]:nth-child(1) {{
                     width: 24px !important; min-width: 24px !important; flex: 0 0 24px !important;
                 }}
-                div.st-key-header_wrap_panopto > div[data-testid="element-container"]:nth-child(2) {{
+                div.st-key-header_wrap_panopto > div[data-testid="stElementContainer"]:nth-child(2) {{
                     flex: 1 1 auto !important; width: 100% !important;
                 }}
                 div.st-key-toggle_panopto div[data-testid="stButton"]:focus-within,
@@ -2242,16 +2276,18 @@ def render_download_settings(fetch_courses_fn):
                 <p style='font-size: 0.9rem; font-weight: 600; color: {_pan_org_label_color}; margin-top: 15px; margin-bottom: 0px;'>Choose how to organize Panopto Recordings:</p>
                 {_get_pan_layout_segmented_css()}
                 """, unsafe_allow_html=True)
+                _pan_layout_help = ("Select at least one Panopto output above to choose "
+                                    "how recordings are organized.") if _pan_layout_disabled else None
                 with st.container(key="pan_layout_segmented_wrapper"):
                     _pl1, _pl2 = st.columns(2, gap="small")
                     with _pl1:
                         st.button("Match Course Folder structure", key="btn_pan_layout_match",
                                   on_click=_set_pan_layout, args=("match",), use_container_width=True,
-                                  disabled=_pan_layout_disabled)
+                                  disabled=_pan_layout_disabled, help=_pan_layout_help)
                     with _pl2:
                         st.button("In Separate Folders", key="btn_pan_layout_separate",
                                   on_click=_set_pan_layout, args=("separate",), use_container_width=True,
-                                  disabled=_pan_layout_disabled)
+                                  disabled=_pan_layout_disabled, help=_pan_layout_help)
 
         _render_card_panopto()
 
@@ -2379,14 +2415,14 @@ div.st-key-review_browse_folder button:hover {
     details.unified-course-dropdown summary::-webkit-details-marker {{
         display: none;
     }}
-    .summary-chevron {{
+    /* The chevron comes from global.css's `summary::before` (a masked lucide
+       glyph that rotates on [open]) - this panel must NOT draw its own. It used
+       to hard-code a "\\25B8" div, which since the global chevron system landed
+       rendered TWO chevrons side by side: the stroke-style one plus a blunt
+       Unicode triangle. `currentColor` makes the masked glyph inherit this
+       colour, so setting it on the summary tints the chevron. */
+    details.unified-course-dropdown summary {{
         color: #a0a0a0;
-        font-size: 1.3rem;
-        line-height: 1;
-        transition: transform 0.2s ease;
-    }}
-    details.unified-course-dropdown[open] .summary-chevron {{
-        transform: rotate(90deg);
     }}
     .summary-text {{
         color: #ffffff;
@@ -2478,7 +2514,6 @@ div.st-key-review_browse_folder button:hover {
 
     <details class="unified-course-dropdown">
     <summary>
-    <div class="summary-chevron">▸</div>
     <div class="summary-text">Courses selected for download <span class="count-tag">{_dl_count}</span></div>
     </summary>
     <div class="dropdown-body">

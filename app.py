@@ -10,7 +10,6 @@ import time
 from datetime import datetime
 
 from shared import theme
-import version
 
 logger = logging.getLogger(__name__)
 from pathlib import Path
@@ -32,6 +31,7 @@ from engine.progress_dashboard import (
     render_progress_header, render_progress_bar, render_custom_metrics,
     render_terminal_log, PHASE_BAR_COLOR,
     log_line, log_divider, log_meta, file_icon_svg, entity_icon_svg,
+    analyzing_heading_html,
 )
 from engine.post_processing_bridge import invoke_post_processing, build_conversion_contract
 from engine.notifications import play_completion_beep, request_macos_notification_permission
@@ -117,7 +117,7 @@ components.html("""<script>
         p.el=doc.createElement('div');
         p.el.id='_cdOv';
         p.el.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;'
-            +'background:#0e1117;z-index:99999;display:none;flex-direction:column;'
+            +'background:#0d1117;z-index:99999;display:none;flex-direction:column;'
             +'align-items:center;justify-content:center;gap:16px';
         p.el.innerHTML=
             '<div style="width:30px;height:30px;border:2.5px solid rgba(255,255,255,.07);'
@@ -294,14 +294,12 @@ components.html("""<script>
         'div[class*="st-key-nav_btn_today"]',     // sidebar: Today dashboard
         'div[class*="st-key-nav_btn_download"]',  // sidebar: Download Courses
         'div[class*="st-key-nav_btn_sync"]',      // sidebar: Sync Course Folders
-        'div[class*="st-key-nav_btn_panopto"]',   // sidebar: Panopto Recordings
         'div[class*="st-key-nav_btn_logout"]',    // sidebar: Logout
         'div[class*="st-key-login_submit_btn"]',  // login submission button
         'div[class*="st-key-btn_analyze_sync"]',  // Analyze, Review & Sync
         'div[class*="st-key-btn_quick_sync"]',    // Quick Sync All
         'div[class*="st-key-btn_custom_download"]',// Course Selector: Custom Download
         'div[class*="st-key-btn_quick_download"]', // Course Selector: Quick Download
-        'div[class*="st-key-sync_back"]',         // Back in sync review (container-keyed)
         'div[class*="st-key-action_dl_back"]',    // Back in download settings
         'div[class*="st-key-qd_goto_advanced"]'   // Customize configuration in Quick Download
     ].join(',');
@@ -382,13 +380,13 @@ components.html("""<script>
         try{if(p.safeT){clearTimeout(p.safeT);}p.el.style.display='none';p.vis=false;}catch(_){}
         var ov=doc.createElement('div');
         ov.id='_cdClosed';
-        ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:#0e1117;'
+        ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:#0d1117;'
             +'z-index:2147483647;display:flex;flex-direction:column;align-items:center;'
             +'justify-content:center;gap:18px;font-family:-apple-system,BlinkMacSystemFont,'
             +'"Segoe UI",sans-serif;text-align:center;padding:24px';
         ov.innerHTML=
             '""" + _app_logo_html + """'
-            +'<div style="color:#fafafa;font-size:1.25rem;font-weight:600">Canvas Downloader has been closed</div>'
+            +'<div style="color:#ffffff;font-size:1.25rem;font-weight:600">Canvas Downloader has been closed</div>'
             +'<div style="color:rgba(255,255,255,.45);font-size:.95rem;line-height:1.6;max-width:420px">'
             +'The app was shut down, so this window is no longer connected.<br>'
             +'You can safely close it. To start again, open the Canvas Downloader app.</div>';
@@ -433,7 +431,7 @@ components.html("""<script>
             e=doc.createElement('div');
             e.id='_cdPanMaskOv';
             e.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;'
-                +'background:#0e1117;z-index:99999;display:none;flex-direction:column;'
+                +'background:#0d1117;z-index:99999;display:none;flex-direction:column;'
                 +'align-items:center;justify-content:center;gap:16px';
             e.innerHTML=
                 '<div style="width:30px;height:30px;border:2.5px solid rgba(255,255,255,.07);'
@@ -683,16 +681,10 @@ if not st.session_state.get('_auto_sync_checked'):
         except Exception:
             logger.warning("Daily auto-sync launch check failed", exc_info=True)
 
-# --- Panopto transcription-config dialog: centralized host ---
-# Rendered once at the top script level (not inside a fragment or any single
-# page) so it can be opened from ANY page OR from the global Settings dialog in
-# the sidebar - and so its internal model-download auto-rerun loop keeps the
-# modal alive across reruns. The flag is cleared on close/dismiss. Do NOT also
-# host this inside individual page modules: a second call in the same run crashes
-# Streamlit ("only one dialog allowed open at a time").
-if st.session_state.get('_pan_dialog_open'):
-    from ui.panopto_page import render_transcription_dialog
-    render_transcription_dialog()
+# (The Panopto transcription-config dialog and the global Settings dialog are
+#  hosted at the BOTTOM of this file - see "Deferred dialog hosts". They must be
+#  emitted after the main page or they shift its element indices and the page
+#  behind them renders mis-styled for a few frames.)
 
 # --- Wizard Steps ---
 # Wrap in st.empty().container() to prevent stale elements from previous steps
@@ -700,8 +692,9 @@ if st.session_state.get('_pan_dialog_open'):
 _main_content = st.empty()
 with _main_content.container():
 
-    # Preset Dialogs (delegated to ui.presets)
-    from ui.presets import _save_config_dialog, _presets_hub_dialog
+    # (No preset-dialog import here: ui/download_settings.py opens them at its
+    #  own call sites, so importing them into this scope bound two names that
+    #  nothing in app.py ever referenced.)
 
     # NOTE: Panopto is no longer a standalone page. Its output formats + layout are
     # configured per-download in Section 4 of the download settings, and its engine
@@ -851,7 +844,7 @@ with _main_content.container():
                     mod_percent = int((current_mod / total_mods) * 100) if total_mods > 0 else 0
                     analysis_ui_placeholder.markdown(f"""
                     <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-bottom: 20px;">
-                        <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                        {analyzing_heading_html()}
                         <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {current_course_num} of {total_courses}: <b>{esc(course.name)}</b></p>
                         <p style="color: {theme.ACCENT_BLUE}; font-size: 0.8rem; margin-bottom: 5px;">{mod_status_text}</p>
                         <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
@@ -866,7 +859,7 @@ with _main_content.container():
                 # Render initial modern loading UI
                 analysis_ui_placeholder.markdown(f"""
                 <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-bottom: 20px;">
-                    <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                    {analyzing_heading_html()}
                     <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {current_course_num} of {total_courses}: <b>{esc(course.name)}</b></p>
                     <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; margin-top: 10px; overflow: hidden;">
                         <div style="background-color: {theme.ACCENT_BLUE}; width: 0%; height: 100%; transition: width 0.3s ease;"></div>
@@ -2076,8 +2069,16 @@ with _main_content.container():
                     try:
                         _pan_sm._save_metadata(
                             'panopto_contract', _json.dumps(extract_contract(pan_settings)))
-                    except Exception:
-                        pass
+                    except Exception as _seed_err:
+                        # Not fatal - sync/analysis.py can recover the contract from
+                        # the folder's panopto_manifest - but it must not be silent:
+                        # this write is the ONLY thing that carries the Panopto setup
+                        # from a download into future syncs of the same folder.
+                        logger.warning(
+                            "Could not seed panopto_contract for '%s': %s. A later "
+                            "sync will infer it from the folder's artifacts.",
+                            _pan_course_folder, _seed_err,
+                        )
                     _pan_rec = _make_rec(_pan_sm, _pan_course_folder)
                     _pan_ign = _make_ign(_pan_sm)
                 except Exception:
@@ -2308,6 +2309,10 @@ with _main_content.container():
                     key_prefix='dl',
                     retry_btn_callback=_do_retry if has_retriable_errors and not retry_attempted else None,
                     has_retriable_errors=has_retriable_errors,
+                    # Parity with the sync completion screen: _retry_failed was
+                    # already computed above but never passed, so a download user
+                    # whose retry was spent saw a dead button and no next step.
+                    retry_failed=_retry_failed,
                 )
 
             # 4. Per-course folder cards with filetype summary
@@ -2320,69 +2325,18 @@ with _main_content.container():
             render_folder_cards(file_details, folder_paths, key_prefix='dl')
         
         elif st.session_state.get('download_status') == 'cancelled':
-            # macOS: the user expects Office gone the moment they land here, same
-            # as on the completion screen. quit_idle_office_apps() first force-
-            # closes any staged document a cancelled conversion left open in a
-            # hidden Office process (marker-matched - user docs untouchable),
-            # then quits the now-idle apps and purges our Recents entries.
-            import sys as _sys_qx
-            if _sys_qx.platform == 'darwin' and not st.session_state.get('_office_quit_fired'):
-                st.session_state['_office_quit_fired'] = True
-                try:
-                    from engine.applescript_bridge import quit_idle_office_apps
-                    quit_idle_office_apps()
-                except Exception:
-                    pass
+            # Both the Office tidy-up and the card itself are shared with the sync
+            # cancelled screen (shared/components.py). They used to be duplicated
+            # here, with a comment claiming this copy "matches sync_ui.py design" -
+            # two copies of one visual is how the two modes drift apart.
+            from shared.components import quit_office_once, render_cancelled_card
+            quit_office_once()
+            render_cancelled_card(
+                "Download",
+                done=st.session_state.get('downloaded_items', 0),
+                total=st.session_state.get('total_items', 0),
+            )
 
-            # Premium styled cancellation card (matches sync_ui.py design)
-            downloaded_count = st.session_state.get('downloaded_items', 0)
-            total_items_count = st.session_state.get('total_items', 0)
-            
-            # Dynamic text: "course" during scanning, "file" during download, post-processing status
-            if st.session_state.get('is_post_processing', False):
-                cancel_summary_msg = "Cancelled during post-processing."
-            else:
-                is_file_phase = total_items_count > 0
-                if is_file_phase:
-                    cancel_summary_msg = f"Cancelled after {downloaded_count} of {total_items_count} file{'s' if total_items_count != 1 else ''}."
-                else:
-                    cancel_summary_msg = "Cancelled during Course Analysis."
-            
-            st.markdown(f"""
-            <div style="
-                background: linear-gradient(135deg, {theme.ERROR_BG} 0%, {theme.BG_PAGE} 100%);
-                border: 1px solid {theme.ERROR};
-                border-radius: 12px;
-                padding: 28px 32px;
-                margin: 20px 0;
-                box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
-            ">
-                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 12px;">
-                    <span style="font-size: 2rem;">🛑</span>
-                    <h2 style="margin: 0; color: {theme.ERROR}; font-size: 1.5rem; font-weight: 700;">Download Cancelled</h2>
-                </div>
-                <p style="color: {theme.TEXT_LIGHT}; font-size: 1rem; margin: 0 0 8px 0;">
-                    {'Download was cancelled.'}
-                </p>
-                <div style="
-                    background: rgba(239, 68, 68, 0.08);
-                    border-radius: 8px;
-                    padding: 12px 16px;
-                    margin-top: 12px;
-                    display: inline-block;
-                ">
-                    <span style="color: {theme.ERROR_LIGHT}; font-size: 0.9rem; font-weight: 600;">
-                        {cancel_summary_msg}
-                    </span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Deliberately NO error list here: the user cancelled, so partial-run
-            # errors are noise (and this ad-hoc expander didn't match the app's
-            # error UI). Errors are only surfaced on the completion screen via
-            # render_error_section, which is the one place they're actionable.
-        
         if st.session_state['download_status'] in ['done', 'cancelled']:
             st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
             button_text = 'Go to front page'
@@ -2405,3 +2359,31 @@ with _main_content.container():
             render_today_dashboard(fetch_courses)
         else:
             render_sync_step4()
+
+
+# ─── Deferred dialog hosts ────────────────────────────────────────────────────
+# Both modals are hosted here, at the very END of the script and at module level
+# (never inside a fragment or a page module), for two reasons:
+#
+#  1. ORDERING - measured 2026-07-26. A dialog emitted BEFORE the main page
+#     inserts its elements ahead of every main-page st.html(<style>) block.
+#     Streamlit reuses the existing style hosts and reconciles them by INDEX, so
+#     each host gets rewritten with its NEIGHBOUR's stylesheet: for ~110ms the
+#     page behind the modal is not unstyled but *mis*-styled - titles collapse
+#     (a 287px column snapped to 39px), negative margins reset, icons vanish.
+#     Emitting them last means no main-page index moves and nothing restyles.
+#     (A plain rerun with the identical CSS produces zero bad frames, so this is
+#     an ordering bug, not an st.html-vs-st.markdown one.)
+#  2. The transcription dialog runs an internal model-download auto-rerun loop,
+#     which needs the modal re-emitted at top script level on every rerun.
+#
+# Only ONE may open per run - Streamlit crashes with "only one dialog allowed
+# open at a time". The two flags are mutually exclusive by construction: opening
+# transcription from Settings pops _stg_dialog_open, and panopto_page's close
+# handler sets _stg_reopen_dialog to bring Settings back afterwards.
+if st.session_state.get('_pan_dialog_open'):
+    from ui.panopto_page import render_transcription_dialog
+    render_transcription_dialog()
+else:
+    from ui.auth import open_pending_global_dialog
+    open_pending_global_dialog()

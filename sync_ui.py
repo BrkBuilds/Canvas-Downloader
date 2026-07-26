@@ -40,10 +40,7 @@ from core.state_registry import ensure_sync_state, cleanup_sync_state
 from core.cancellation import cancel_sync
 from sync.persistence import (
     load_persistent_pairs as _load_persistent_pairs_impl,
-    add_pair as _add_pair_impl,
-    add_pairs_batch as _add_pairs_batch_impl,
     remove_pairs_by_signature as _remove_pairs_by_signature_impl,
-    update_pair_by_signature as _update_pair_by_signature_impl,
     update_last_synced_batch as _update_last_synced_batch_impl,
 )
 from sync.analysis import run_analysis as _run_analysis_impl
@@ -514,24 +511,9 @@ def _load_persistent_pairs():
     _load_persistent_pairs_impl()
 
 
-def _add_pair(new_pair):
-    """Delegate to sync.persistence.add_pair."""
-    _add_pair_impl(new_pair)
-
-
-def _add_pairs_batch(new_pairs_list):
-    """Delegate to sync.persistence.add_pairs_batch."""
-    _add_pairs_batch_impl(new_pairs_list)
-
-
 def _remove_pairs_by_signature(signatures_to_remove):
     """Delegate to sync.persistence.remove_pairs_by_signature."""
     _remove_pairs_by_signature_impl(signatures_to_remove)
-
-
-def _update_pair_by_signature(old_signature, new_pair_data):
-    """Delegate to sync.persistence.update_pair_by_signature."""
-    _update_pair_by_signature_impl(old_signature, new_pair_data)
 
 
 def _update_last_synced_batch(updates_list):
@@ -542,14 +524,6 @@ def _update_last_synced_batch(updates_list):
 # ---------------------------------------------------------------------------
 # Folder picker  (tkinter, reused from app.py)
 # ---------------------------------------------------------------------------
-
-def _select_sync_folder():
-    """Open native folder picker and store result in pending_sync_folder."""
-    from shared.helpers import native_folder_picker
-    folder_path = native_folder_picker(initial_dir=st.session_state.get('pending_sync_folder') or None)
-    if folder_path:
-        st.session_state['pending_sync_folder'] = folder_path
-
 
 # ===================================================================
 # ===================================================================
@@ -574,72 +548,6 @@ def _save_pair_dialog(pair_data: dict):
     _save_group_or_pair_inner([], is_pair=True, pair_data=pair_data)
 
 
-def _hub_select_folder():
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import hub_select_folder
-    hub_select_folder()
-
-
-def _rescue_select_folder(pair_idx):
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import rescue_select_folder
-    rescue_select_folder(pair_idx)
-
-
-def _change_hub_layer(target_layer, _pop_keys=None, **kwargs):
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import change_hub_layer
-    change_hub_layer(target_layer, _pop_keys, **kwargs)
-
-
-def _delete_group_callback(mgr, group_id, group_name, is_single_pair=False):
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import delete_group_callback
-    delete_group_callback(mgr, group_id, group_name, is_single_pair)
-
-
-def _remove_pair_from_group(mgr, group_id, pair_idx):
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import remove_pair_from_group
-    remove_pair_from_group(mgr, group_id, pair_idx)
-
-
-def _hub_start_edit_pair(p_idx, pair):
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import hub_start_edit_pair
-    hub_start_edit_pair(p_idx, pair)
-
-
-def _hub_cancel_edit():
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import hub_cancel_edit
-    hub_cancel_edit()
-
-
-def _hub_pick_folder_cb():
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import hub_pick_folder_cb
-    hub_pick_folder_cb()
-
-
-def _save_inline_edit_cb(mgr, gid, p_idx, new_folder, new_cid, new_cname):
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import save_inline_edit_cb
-    save_inline_edit_cb(mgr, gid, p_idx, new_folder, new_cid, new_cname)
-
-
-def _save_inline_add_cb(mgr, gid, new_folder, new_cid, new_cname):
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import save_inline_add_cb
-    save_inline_add_cb(mgr, gid, new_folder, new_cid, new_cname)
-
-
-def _confirm_course_selection_cb(cid, cname, course_names_map, courses_list):
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import confirm_course_selection_cb
-    confirm_course_selection_cb(cid, cname, course_names_map, courses_list)
-
-
 # on_dismiss="rerun": a dialog reruns like a fragment, so deleting/renaming
 # saved groups inside the hub only reruns the dialog - the main page's floppy
 # "Save as Pair" / "Save as Group" disabled states (computed from load_groups()
@@ -653,22 +561,10 @@ def _saved_groups_hub_dialog(courses, course_names):
     saved_groups_hub_dialog_inner(courses, course_names)
 
 
-def _render_hub_config(pair):
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import render_hub_config
-    render_hub_config(pair)
-
-
 def _reset_hub_state():
     """Delegate to ui.hub_dialog."""
     from ui.hub_dialog import reset_hub_state
     reset_hub_state()
-
-
-def _hub_cleanup():
-    """Delegate to ui.hub_dialog."""
-    from ui.hub_dialog import hub_cleanup
-    hub_cleanup()
 
 
 def _inject_hub_global_css():
@@ -960,7 +856,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                         _save_help = (
                             "This pair is saved - go to Saved Groups & Pairs to see, rename, or edit."
                             if _pair_already_saved
-                            else "Save as Pair"
+                            else "Save as Pair."
                         )
 
                     # Card container with Save button INSIDE
@@ -974,7 +870,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                         _card_key = f"sync_pair_card_{idx}"
                     with st.container(border=True, key=_card_key):
                         # Title rendered first, naturally
-                        st.markdown(f"**{'Course: '} {display_name}**")
+                        st.markdown(f"**Course: {display_name}**")
                         # Save button rendered after - CSS absolute-positions it to top-right
                         if st.button("\u200b", key=f"save_pair_{idx}", disabled=_is_save_disabled,
                                      help=_save_help):
@@ -1645,6 +1541,19 @@ def _inject_shist_height_bridge():
     )
 
 
+def _toggle_shist_run(open_key: str) -> None:
+    """Flip one sync-history run card open/closed.
+
+    Deliberately an ``on_click`` callback rather than the
+    ``if st.button(): ...; st.rerun()`` form: the click already schedules a
+    rerun, so an explicit ``st.rerun()`` makes the page render TWICE and the
+    browser drops its scroll anchor - the intermittent "expanding an entry
+    scrolls me back to the top" bug. A callback mutates state before the single
+    rerun, so scroll position survives.
+    """
+    st.session_state[open_key] = not st.session_state.get(open_key, False)
+
+
 def _render_sync_history():
     """Render sync history in an expander at the bottom of step 1."""
     history_mgr = None
@@ -1805,7 +1714,7 @@ def _render_sync_history():
             color: rgba(255, 255, 255, 0.88) !important;
             min-height: 38px !important;
             height: 38px !important;
-            padding: 0 12px !important;
+            padding: 0 8px !important;
             transition: all 0.2s ease !important;
             display: flex !important;
             align-items: center !important;
@@ -1831,6 +1740,12 @@ def _render_sync_history():
             display: inline-flex !important;
             align-items: center !important;
             margin: 0 !important;
+            /* NOTE: white-space:nowrap + the reduced font-size for this label live
+               in styles/global.css, immediately after the `.stButton>button p`
+               rule they override. Putting them here did NOT work - that base rule
+               is equally !important and an inline block loaded later could not
+               beat it (font-size applied, white-space did not). Do not move them
+               back. */
         }
         div.st-key-btn_sync_hist_clear button p::after {
             content: '';
@@ -2316,9 +2231,18 @@ def _render_sync_history():
                                 # course pills wrap onto, which CSS cannot know - so
                                 # _inject_shist_height_bridge() measures each header
                                 # and copies its height onto this button.
-                                if st.button("​", key=f"shist_btn_{run_seq}", use_container_width=True):
-                                    st.session_state[open_key] = not is_open
-                                    st.rerun()
+                                # Toggle via on_click, NEVER `if st.button(): ...
+                                # st.rerun()`. The click already schedules a rerun,
+                                # so an explicit st.rerun() forces a SECOND one - the
+                                # page renders twice and the browser loses its scroll
+                                # anchor, which is what made expanding a history entry
+                                # intermittently jump the page back to the top. The
+                                # double render also explains the "sometimes": it only
+                                # showed when the second pass changed enough height to
+                                # invalidate the restored position.
+                                st.button("​", key=f"shist_btn_{run_seq}",
+                                          use_container_width=True,
+                                          on_click=_toggle_shist_run, args=(open_key,))
                                 st.markdown(header_html, unsafe_allow_html=True)
 
                                 if is_open:
@@ -2574,9 +2498,10 @@ def render_sync_step4( main_placeholder=None):
             # watchdog only ticked if something ELSE happened to rerun the
             # script - a dead bridge otherwise stranded the user here.
             import time as _time
+            from engine.progress_dashboard import analyzing_heading_html
             st.markdown(f"""
             <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
-                <h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0;">🔍 Analyzing Course Data...</h4>
+                {analyzing_heading_html()}
                 <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Please wait a moment while Canvas is queried.</p>
                 <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
                     <div style="background-color: {theme.ACCENT_BLUE}; width: 5%; height: 100%;"></div>

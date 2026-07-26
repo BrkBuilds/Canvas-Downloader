@@ -40,6 +40,42 @@ except Exception:
     CONFIG_FILE = os.path.join(tempfile.gettempdir(), 'canvas_downloader_settings.json')
 KEYRING_SERVICE = "CanvasDownloader"
 
+# ── Config migration ─────────────────────────────────────────────────────────
+# Settings keys belonging to features that have been REMOVED, plus legacy secret
+# fields. Without a migration these live forever in a long-lived config file:
+# `numbering_enabled` was still sitting in real user configs long after the
+# file-numbering feature was pulled, where it reads like an active option to
+# anyone who opens the JSON.
+#
+# Deliberately a DENY-list, never an allow-list. This file is CO-OWNED:
+# panopto/settings.py writes the entire "panopto" subtree into it independently
+# of this module (see panopto/settings.SETTINGS_KEY), so an allow-list here would
+# silently delete the user's transcription engine config - model, device,
+# language - on their next login. A deny-list can only ever drop a key we have
+# explicitly retired, so an unknown key owned by another module is always safe.
+RETIRED_CONFIG_KEYS = {
+    'numbering_enabled',  # file-number prefixes: shipped, worked badly, removed
+    'api_token',          # legacy plaintext token - now the OS keyring
+    'mac_api_token',      # ditto, the macOS-specific variant
+}
+
+
+def _migrate_config(cfg: dict) -> dict:
+    """Drop retired keys from a loaded config, in place. Returns the same dict.
+
+    Cheap and idempotent, so it is safe to call on every read. The pruned dict is
+    what the write paths persist, which is how the keys actually leave the file.
+    """
+    if not isinstance(cfg, dict):
+        return {}
+    dropped = [k for k in RETIRED_CONFIG_KEYS if k in cfg]
+    for k in dropped:
+        cfg.pop(k, None)
+    if dropped:
+        logger.info("Config migration: removed retired setting(s) %s",
+                    ", ".join(sorted(dropped)))
+    return cfg
+
 # Watchdog timeout for keyring operations.
 # macOS: Keychain access can legitimately BLOCK on an interactive prompt
 # ("Canvas Downloader wants to use your confidential information... enter the
@@ -516,7 +552,7 @@ def render_login_page(fetch_courses_fn):
         if os.path.exists(CONFIG_FILE):
             try:
                 with open(CONFIG_FILE, "r", encoding='utf-8') as f:
-                    config = json.load(f)
+                    config = _migrate_config(json.load(f))
                     st.session_state['api_url'] = config.get('api_url', '')
                     # A URL only gets persisted to config after a successful
                     # login, so a saved api_url is implicitly verified. This is
@@ -664,7 +700,7 @@ def render_login_page(fetch_courses_fn):
 
     /* The "Physical Volume" card tray */
     div[class*="st-key-login_card_wrapper"] {
-        background: #151c24 !important; /* Shade or two lighter than #0e1117, teal-ish blue */
+        background: #151c24 !important; /* Shade or two lighter than #0d1117, teal-ish blue */
         border: none !important;
         border-radius: 12px !important;
         box-shadow: 0 0px 50px rgba(0, 0, 0, 0.5) !important;
@@ -672,7 +708,6 @@ def render_login_page(fetch_courses_fn):
         width: 100% !important;
     }
 
-    div[class*="st-key-login_card_wrapper"] > div[data-testid="stVerticalBlockBorderWrapper"],
     div[class*="st-key-login_card_wrapper"] > div[data-testid="stVerticalBlock"] {
         border: none !important;
         background: transparent !important;
@@ -1356,7 +1391,7 @@ def render_login_page(fetch_courses_fn):
                     if os.path.exists(CONFIG_FILE):
                         try:
                             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                                config_data = json.load(f)
+                                config_data = _migrate_config(json.load(f))
                         except Exception:
                             pass
 
@@ -1419,12 +1454,24 @@ def render_login_page(fetch_courses_fn):
                             "Invalid URL Format",
                             detail="Please ensure your Canvas URL starts with 'https://' (e.g., https://canvas.schoolname.edu or https://schoolname.instructure.com)."
                         )
+                    # Expiry is checked FIRST because it is the more specific
+                    # diagnosis, and it must stay specific: `validate_token`
+                    # deliberately does NOT put the word "expired" in its generic
+                    # Unauthorized text, or every revoked/deleted token would be
+                    # mis-reported here as "Token Expired".
                     elif "expired" in err_text_lower:
                         render_amber_notice(
                             "Token Expired",
                             detail="Your Canvas Access Token has expired. Access tokens are set to expire periodically for security. Please generate a new token (see 'How to get a Canvas Access Token?' below) and paste it here."
                         )
-                    elif any(kw in err_text_lower for kw in ["revoked", "invalid token", "unauthorized", "401"]):
+                    # "invalid access token" is Canvas's OWN wording and contains
+                    # none of "invalid token"/"unauthorized"/"401" - without it here
+                    # a revoked token fell through to the generic branch below and
+                    # printed the raw error payload as "Technical Details".
+                    elif any(kw in err_text_lower for kw in [
+                        "revoked", "invalid token", "invalid access token",
+                        "access token is invalid", "unauthorized", "401",
+                    ]):
                         render_amber_notice(
                             "Authentication Failed",
                             detail="Your Canvas Access Token is invalid or has been revoked. Please expand the 'How to get a Canvas Access Token?' section below to generate a new one."
@@ -1649,6 +1696,10 @@ def _render_authenticated_nav_top():
     # The running operation's own Cancel button stays the one deliberate exit.
     from core.cancellation import is_operation_in_progress
     _locked = is_operation_in_progress()
+    # Passed as help= ONLY while locked - a tooltip that stays on an enabled
+    # button would claim the button is unavailable when it plainly is not.
+    _NAV_LOCKED_HELP = ("Switching pages is locked while a download or sync is "
+                        "running. Use the run's own Cancel button to stop it.")
 
     # Expose current mode+step for the JS overlay logic (read via doc.getElementById).
     st.html(f"<span id='cdp_nav_state' data-mode='{mode}' data-step='{step}' style='display:none;position:absolute;pointer-events:none'></span>")
@@ -1703,7 +1754,8 @@ def _render_authenticated_nav_top():
         </style>""")
 
     # Download mode button - always navigates to download step 1.
-    if st.button('Download Courses', use_container_width=True, key="nav_btn_download", disabled=_locked) and not _locked:
+    if st.button('Download Courses', use_container_width=True, key="nav_btn_download", disabled=_locked,
+                 help=_NAV_LOCKED_HELP if _locked else None) and not _locked:
         if mode != 'download' or step != 1:
             from core.state_registry import cleanup_download_state
             cleanup_download_state()
@@ -1714,7 +1766,8 @@ def _render_authenticated_nav_top():
             st.rerun()
 
     # Sync mode button - always navigates to sync step 1.
-    if st.button('Sync Course Folders', use_container_width=True, key="nav_btn_sync", disabled=_locked) and not _locked:
+    if st.button('Sync Course Folders', use_container_width=True, key="nav_btn_sync", disabled=_locked,
+                 help=_NAV_LOCKED_HELP if _locked else None) and not _locked:
         if mode != 'sync' or step != 1:
             from core.state_registry import cleanup_sync_state
             cleanup_sync_state()
@@ -1729,7 +1782,8 @@ def _render_authenticated_nav_top():
     # `disabled=_locked` blocks the click in the browser; the extra `not _locked`
     # guard is defense-in-depth so a click queued in the instant before the run
     # began can never fire cleanup_*_state() and abandon the in-flight operation.
-    if st.button("Today's files", use_container_width=True, key="nav_btn_today", disabled=_locked) and not _locked:
+    if st.button("Today's files", use_container_width=True, key="nav_btn_today", disabled=_locked,
+                 help=_NAV_LOCKED_HELP if _locked else None) and not _locked:
         if mode != 'today' or step != 1:
             from core.state_registry import cleanup_sync_state
             cleanup_sync_state()
@@ -1743,6 +1797,46 @@ def _render_authenticated_nav_top():
     # NOTE: Panopto no longer has a standalone nav entry. It is configured
     # per-download in Section 4 of the download settings, and its transcription
     # engine setup is a dialog opened from there.
+
+
+def open_pending_global_dialog() -> None:
+    """Open the global Settings dialog, AFTER the main page has rendered.
+
+    Why this exists - measured in-browser 2026-07-26:
+
+    Opening a dialog from the sidebar made the whole page behind it flash
+    mis-styled for ~110ms: titles collapsed (a 287px column snapped to 39px),
+    negative margins reset to 0, icons vanished and came back.
+
+    The cause is NOT that CSS is "re-applied". A plain main-page rerun (toggling
+    a card) produces zero bad frames with exactly the same stylesheets. What
+    breaks is ORDERING. ``render_sidebar()`` runs before the main page, so a
+    dialog opened from it inserts its own elements ahead of every main-page
+    ``st.html(<style>)`` block. Streamlit reuses the existing style hosts and
+    reconciles them by INDEX, so each host is rewritten with its neighbour's
+    stylesheet - for a few frames the page is not unstyled, it is *mis*-styled
+    with the CSS of the block next to it. (Verified: a dialog opened from inside
+    the main page - Presets - shifts nothing and produces zero bad frames.)
+
+    Deferring the call to the end of the script puts the dialog's elements after
+    every main-page block, so no index shifts and nothing is restyled. The main
+    page genuinely does not change while a dialog is open - which is the point.
+    """
+    if not st.session_state.get('_stg_dialog_open'):
+        return
+    dialog_fn = st.session_state.get('_stg_dialog_fn')
+    if dialog_fn is None:
+        # Should be unreachable: the sidebar publishes the closure in the same
+        # run that can set the flag, and app.py st.stop()s before reaching here
+        # when unauthenticated. Guard anyway - a set flag with no callable would
+        # otherwise be UNRECOVERABLE: every later click just re-sets an
+        # already-true flag, so Settings would look permanently dead. Clearing it
+        # costs one click instead.
+        st.session_state.pop('_stg_dialog_open', None)
+        logger.warning("Settings dialog was requested but no dialog callable was "
+                       "published; cleared the flag so the button works again.")
+        return
+    dialog_fn()
 
 
 def _render_authenticated_nav_bottom(fetch_courses_fn):
@@ -1773,7 +1867,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     # linger and look applied when the dialog is reopened. Passing a callable to
     # on_dismiss both reruns the app and runs this cleanup first.
     def _stg_dismiss_cleanup():
-        for _k in ('_temp_default_path', '_stg_reopen_dialog',
+        for _k in ('_temp_default_path', '_stg_reopen_dialog', '_stg_dialog_open',
                    'temp_max_downloads', 'temp_max_size_enabled', 'temp_max_size_mb',
                    'temp_error_log_enabled', 'temp_debug_mode',
                    'temp_notifications_enabled', 'temp_cbs_filters',
@@ -1795,21 +1889,58 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         st.html("""<style>
         div[data-testid="stDialog"] button[aria-label="Close"] { display: none !important; }
 
-        /* Tight dialog body padding */
-        div[data-testid="stDialog"] [data-testid="stDialogScrollableBody"] {
-            padding-top: 0.1rem !important; padding-bottom: 0.25rem !important;
-        }
+        /* NOTE (Streamlit 1.51): stDialogScrollableBody no longer exists, and there
+           is no separate padded body wrapper left to compact - the content
+           stVerticalBlock scrolls directly and carries no padding of its own.
+           `div[role="dialog"] > div:first-child` is the HEADER (it holds the title),
+           so squeezing its padding clips the custom -70px header. Nothing to do here. */
+
         /* Tight global vertical gap */
         div[data-testid="stDialog"] [data-testid="stVerticalBlock"] { gap: 0.3rem !important; }
 
-        /* ── Cards ── */
-        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] [data-testid="stVerticalBlockBorderWrapper"] {
-            background: #2D3248 !important;
-            border: 1px solid rgba(255,255,255,0.14) !important;
+        /* ── Cards ──
+           1.51 puts the st-key-* class directly ON the container's stVerticalBlock
+           (the old stVerticalBlockBorderWrapper element no longer exists), so the
+           card skin goes on the keyed div itself. Streamlit's own border=True
+           border/radius/padding lives on the same element but loses to !important.
+
+           The surface is the app's standard card idiom - a faint white wash over
+           the dark ground, measured off the Custom Download cards - NOT the navy
+           BG_CARD. (An earlier pass keyed this rule off the retired
+           stVerticalBlockBorderWrapper, so it never applied; moving it onto the
+           keyed div switched a #2D3248 navy on for the first time and every card
+           went grey-purple.) */
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] {
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(250,250,250,0.2) !important;
             border-radius: 10px !important;
             box-shadow: 0 2px 8px rgba(0,0,0,0.35) !important;
             position: relative !important;
             padding: 11px !important;
+            gap: 0.25rem !important;
+        }
+
+        /* The transcription card is a PANOPTO surface, so it wears the same
+           purple as every other Panopto card (pan_info_card on Custom Download,
+           the tx_setup_card notice). Must come AFTER the blanket rule above -
+           "stg_card_pan" contains "stg_card_", so the generic selector matches it
+           too and would otherwise win on source order. */
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_pan"] {
+            background: rgba(176,157,254,0.06) !important;
+            border: 1px solid rgba(176,157,254,0.28) !important;
+        }
+        div[data-testid="stDialog"] div.st-key-stg_btn_pan button {
+            background: rgba(176,157,254,0.10) !important;
+            border: 1px solid rgba(176,157,254,0.35) !important;
+            color: #d8caff !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+        }
+        div[data-testid="stDialog"] div.st-key-stg_btn_pan button:hover {
+            background-color: rgba(176,157,254,0.18) !important;
+            border-color: #b89dfe !important;
+            color: #ffffff !important;
         }
         div[data-testid="stDialog"] div[class*="st-key-stg_card_"] [data-testid="stVerticalBlock"] {
             gap: 0.25rem !important;
@@ -1822,9 +1953,9 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         div[class*="st-key-stg_card_speed"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
         div[class*="st-key-stg_card_maxsize"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
         div[class*="st-key-stg_card_errlog"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
-        div[class*="st-key-stg_card_speed"] [data-testid="stVerticalBlockBorderWrapper"],
-        div[class*="st-key-stg_card_maxsize"] [data-testid="stVerticalBlockBorderWrapper"],
-        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] { height: 100% !important; }
+        div[class*="st-key-stg_card_speed"],
+        div[class*="st-key-stg_card_maxsize"],
+        div[class*="st-key-stg_card_errlog"] { height: 100% !important; }
         div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has([class*="st-key-stg_card_speed"]) {
             align-items: stretch !important;
         }
@@ -1836,28 +1967,50 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         div[class*="st-key-stg_card_sound"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
         div[class*="st-key-stg_card_cbs"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
         div[class*="st-key-stg_card_time"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
-        div[class*="st-key-stg_card_sound"] [data-testid="stVerticalBlockBorderWrapper"],
-        div[class*="st-key-stg_card_cbs"] [data-testid="stVerticalBlockBorderWrapper"],
-        div[class*="st-key-stg_card_time"] [data-testid="stVerticalBlockBorderWrapper"] { height: 100% !important; }
+        div[class*="st-key-stg_card_sound"],
+        div[class*="st-key-stg_card_cbs"],
+        div[class*="st-key-stg_card_time"] { height: 100% !important; }
         div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has([class*="st-key-stg_card_sound"]) {
             align-items: stretch !important;
         }
 
-        /* ── Toggles ── */
-        div[data-testid="stDialog"] [data-testid="stToggle"] { width: 100% !important; }
-        div[data-testid="stDialog"] [data-testid="stToggle"] label {
+        /* ── Toggles ──
+           st.toggle renders through [data-testid="stCheckbox"] in 1.51; there is no
+           stToggle testid. Label sits left, the switch is pinned to the card's right
+           edge.
+
+           Two traps, both learned by measuring the live DOM:
+           (a) EVERY label selector must use the DIRECT-CHILD form '> label'. A plain
+               descendant '[data-testid="stCheckbox"] label' ALSO matches the nested
+               label element that wraps a help= tooltip icon; forcing that one to
+               width:100% makes it consume the whole row and starves the real label
+               text, which then wraps one word per line (or clips to an ellipsis).
+               (Never write a literal angle-bracket tag name in a comment inside an
+               st.html style block - it terminates the style element and silently
+               kills every rule in it.)
+           (b) A toggle's element-container gets a CONTENT-based explicit width in
+               1.51, so without the width:100% chain below the switch never reaches
+               the card's right edge and space-between squeezes the text instead. */
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] > div[data-testid="stElementContainer"]:has([data-testid="stCheckbox"]),
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"],
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"] > label {
+            width: 100% !important; max-width: 100% !important;
+        }
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"] > label {
             display: flex !important; flex-direction: row-reverse !important;
             justify-content: space-between !important; align-items: center !important;
-            width: 100% !important; padding: 2px 0 0 0 !important; cursor: pointer !important;
-            font-size: 0.66rem !important; color: #64748b !important; font-weight: 400 !important;
+            padding: 2px 0 0 0 !important; cursor: pointer !important; gap: 8px !important;
         }
-        div[data-testid="stDialog"] [data-testid="stToggle"] label > div,
-        div[data-testid="stDialog"] [data-testid="stToggle"] label > div p,
-        div[data-testid="stDialog"] [data-testid="stToggle"] label p,
-        div[data-testid="stDialog"] [data-testid="stToggle"] label > p,
-        div[data-testid="stDialog"] [data-testid="stToggle"] p {
-            font-size: 0.66rem !important; color: #64748b !important;
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"] p {
+            font-size: 0.8rem !important; color: #94a3b8 !important;
             font-weight: 400 !important; margin: 0 !important; line-height: 1.3 !important;
+        }
+        /* The label text takes the free space; the tooltip icon keeps its own size. */
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] [data-testid="stWidgetLabel"] {
+            align-items: center !important; gap: 5px !important; min-width: 0 !important;
+        }
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] [data-testid="stWidgetLabel"] > label {
+            flex: 0 0 auto !important; width: auto !important;
         }
 
         /* ── Number input ── */
@@ -1871,24 +2024,25 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             pointer-events: none !important;
         }
 
-        /* ── Debug toggle: push to bottom of errlog card + dim ── */
-        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] {
-            display: flex !important;
-            flex-direction: column !important;
-        }
-        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] > [data-testid="stVerticalBlock"] {
-            flex: 1 !important;
-        }
-        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] > [data-testid="stVerticalBlock"] > div:last-child {
+        /* ── Debug toggle: pinned to the bottom of the errlog card, dimmed until on ──
+           The card itself is the flex column (see the equal-height rules above), so
+           margin-top:auto goes on the debug row's own element-container. The dim is
+           state-aware rather than a flat 0.4: off = recessed, hover/on = full. */
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_errlog"] > div.st-key-temp_debug_mode {
             margin-top: auto !important;
             padding-top: 8px !important;
             border-top: 1px solid rgba(255,255,255,0.08) !important;
         }
-        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] > [data-testid="stVerticalBlock"] > div:last-child [data-testid="stToggle"] {
-            opacity: 0.4 !important;
+        div[data-testid="stDialog"] div.st-key-temp_debug_mode [data-testid="stCheckbox"] {
+            opacity: 0.5 !important;
+            transition: opacity 0.15s ease !important;
         }
-        div[class*="st-key-stg_card_errlog"] [data-testid="stVerticalBlockBorderWrapper"] > [data-testid="stVerticalBlock"] > div:last-child [data-testid="stToggle"] label {
-            font-size: 0.58rem !important;
+        div[data-testid="stDialog"] div.st-key-temp_debug_mode [data-testid="stCheckbox"]:hover,
+        div[data-testid="stDialog"] div.st-key-temp_debug_mode [data-testid="stCheckbox"]:has(input:checked) {
+            opacity: 1 !important;
+        }
+        div[data-testid="stDialog"] div.st-key-temp_debug_mode [data-testid="stCheckbox"] p {
+            font-size: 0.72rem !important;
         }
 
         /* ── Folder buttons ── */
@@ -2029,7 +2183,9 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                             st.rerun(scope="app")
                 with _pc2:
                     if st.button("Clear", key="stg_btn_clear", use_container_width=True,
-                                 disabled=not st.session_state['_temp_default_path']):
+                                 disabled=not st.session_state['_temp_default_path'],
+                                 help=None if st.session_state['_temp_default_path'] else
+                                      "No custom folder is set, so there is nothing to clear."):
                         st.session_state['_temp_default_path'] = ''
                         st.session_state['_stg_reopen_dialog'] = True
                         st.rerun(scope="app")
@@ -2092,6 +2248,11 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 if st.button("Configure transcription", key="stg_btn_pan", use_container_width=True):
                     st.session_state['_pan_dialog_open'] = True
                     st.session_state['_pan_return_to_settings'] = True
+                    # Settings must close FIRST - Streamlit crashes with "only one
+                    # dialog allowed open at a time" if both flags survive the
+                    # rerun. panopto_page's close handler sets _stg_reopen_dialog
+                    # to bring Settings back.
+                    st.session_state.pop('_stg_dialog_open', None)
                     st.rerun(scope="app")
 
             # ── MACOS PERMISSIONS (Full Disk Access status card) ──────
@@ -2111,6 +2272,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         with c_cancel:
             if st.button("Cancel", use_container_width=True):
                 st.session_state.pop('_temp_default_path', None)
+                st.session_state.pop('_stg_dialog_open', None)
                 st.rerun(scope="app")
         with c_save:
             if st.button("Save Settings", type="primary", use_container_width=True):
@@ -2150,7 +2312,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 if os.path.exists(CONFIG_FILE):
                     try:
                         with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                            config_data = json.load(f)
+                            config_data = _migrate_config(json.load(f))
                     except Exception:
                         config_data = {}
                 else:
@@ -2187,6 +2349,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     render_error_notice(f"Could not save settings: {e}")
 
                 st.session_state.pop('_temp_default_path', None)
+                st.session_state.pop('_stg_dialog_open', None)
                 if _changed:
                     st.session_state['_stg_saved_toast'] = True
                 st.rerun(scope="app")
@@ -2208,9 +2371,15 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             disabled=_is_executing,
             help="Settings are unavailable while a download or sync is running" if _is_executing else None,
         ) and not _is_executing:
-            _global_settings_dialog()
+            st.session_state['_stg_dialog_open'] = True
         elif not _is_executing and st.session_state.pop('_stg_reopen_dialog', False):
-            _global_settings_dialog()
+            st.session_state['_stg_dialog_open'] = True
+
+        # The dialog is NOT opened here - see open_pending_global_dialog(). The
+        # freshly-built closure is published so the deferred opener at the end of
+        # the script can invoke it. Session state (not a module global) because a
+        # Streamlit server shares module globals across ALL user sessions.
+        st.session_state['_stg_dialog_fn'] = _global_settings_dialog
 
         if st.session_state.pop('_stg_saved_toast', False):
             st.toast("✅ Settings saved")
@@ -2282,9 +2451,9 @@ section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled::afte
                 if os.path.exists(CONFIG_FILE):
                     try:
                         with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                            config_data = json.load(f)
-                        config_data.pop('api_token', None)
-                        config_data.pop('mac_api_token', None)
+                            config_data = _migrate_config(json.load(f))
+                        # (api_token / mac_api_token are in RETIRED_CONFIG_KEYS,
+                        #  so _migrate_config has already removed them.)
                         tmp_path = CONFIG_FILE + '.tmp'
                         with open(tmp_path, 'w', encoding='utf-8') as f:
                             json.dump(config_data, f)

@@ -47,8 +47,11 @@ MODEL_REGISTRY: list[dict] = [
         "label": "Small",
         "repo": "Systran/faster-whisper-small",
         "size_mb": 484,
-        "note": "Balanced speed/accuracy on CPU. Recommended default.",
-        "recommended": True,
+        # No static "recommended" flag on any model - see recommend_model().
+        # Previously this said "Recommended default." while the UI separately
+        # computed its own recommendation, so on a GPU machine BOTH Small and
+        # Large v3 Turbo appeared recommended at the same time.
+        "note": "Balanced speed/accuracy, but noticeably weaker on non-English audio.",
         "speed": 3, "accuracy": 3,
     },
     {
@@ -78,6 +81,95 @@ MODEL_REGISTRY: list[dict] = [
 ]
 
 _REGISTRY_BY_ID = {m["id"]: m for m in MODEL_REGISTRY}
+
+# Preference order, best first: accuracy leads, speed breaks ties. Turbo outranks
+# Large v3 deliberately - it is nearly as accurate and several times faster, so
+# there is no machine on which plain Large v3 is the better *recommendation*
+# (it stays selectable for anyone who wants the last sliver of accuracy).
+_PREFERENCE_ORDER = ("turbo", "large-v3", "medium", "small", "base", "tiny")
+
+# What a model needs to be a sensible recommendation, per device.
+#   gpu_vram_mb: free-ish VRAM needed for float16 inference, with headroom.
+#   cpu_cores:   cores below which the model is too slow to recommend. CPU
+#                inference is int8 and memory-light, so wall-clock time - not
+#                memory - is the real constraint here.
+_MODEL_REQUIREMENTS = {
+    "turbo":    {"gpu_vram_mb": 4000, "cpu_cores": 8},
+    "large-v3": {"gpu_vram_mb": 6000, "cpu_cores": 999},  # never recommended on CPU
+    "medium":   {"gpu_vram_mb": 3000, "cpu_cores": 6},
+    "small":    {"gpu_vram_mb": 2000, "cpu_cores": 2},
+    "base":     {"gpu_vram_mb": 1500, "cpu_cores": 1},
+    "tiny":     {"gpu_vram_mb": 1000, "cpu_cores": 1},
+}
+
+
+def recommend_model(hw: dict | None = None) -> str:
+    """Return the model id that best fits *this* machine. Single source of truth.
+
+    There is no static "recommended" flag in the registry: a fixed recommendation
+    is wrong on most hardware. Small used to be flagged in the registry AND the
+    UI computed its own answer, so a GPU machine showed two "Recommended" badges
+    at once - and Small's transcription quality on Danish lecture audio is poor
+    enough that recommending it is bad advice regardless.
+
+    Picks the highest-preference model the machine can actually run well:
+    VRAM decides on a GPU, core count on a CPU (int8 CPU inference is
+    memory-light, so time is the binding constraint). Falls back to the smallest
+    model rather than raising, so a failed probe can never leave the UI without
+    a recommendation.
+
+    Args:
+        hw: a ``detect_compute_hardware()`` dict. Probed on demand when omitted.
+    """
+    if hw is None:
+        try:
+            from panopto.hardware import detect_compute_hardware
+            hw = detect_compute_hardware()
+        except Exception:
+            hw = {}
+    hw = hw or {}
+
+    on_gpu = bool(hw.get("gpu_available"))
+    if on_gpu:
+        # An unknown VRAM figure (nvidia-smi did not report it) should not veto
+        # the GPU path - assume enough for Turbo, the intended GPU default.
+        vram = hw.get("gpu_vram_mb")
+        budget = int(vram) if isinstance(vram, (int, float)) and vram else 10**9
+        for mid in _PREFERENCE_ORDER:
+            need = _MODEL_REQUIREMENTS.get(mid, {}).get("gpu_vram_mb", 0)
+            if budget >= need:
+                return mid
+    else:
+        cores = int(hw.get("cpu_cores") or 0) or 4  # unknown -> assume a modest quad-core
+        for mid in _PREFERENCE_ORDER:
+            need = _MODEL_REQUIREMENTS.get(mid, {}).get("cpu_cores", 10**9)
+            if cores >= need:
+                return mid
+    return "tiny"
+
+
+def recommendation_reason(hw: dict | None = None) -> str:
+    """One short sentence explaining why recommend_model() picked what it did."""
+    if hw is None:
+        try:
+            from panopto.hardware import detect_compute_hardware
+            hw = detect_compute_hardware()
+        except Exception:
+            hw = {}
+    hw = hw or {}
+    mid = recommend_model(hw)
+    label = (get_model(mid) or {}).get("label", mid)
+    if hw.get("gpu_available"):
+        vram = hw.get("gpu_vram_mb")
+        gpu = hw.get("gpu_name") or "your GPU"
+        if vram:
+            return f"{label} is recommended for {gpu} ({int(vram) // 1024} GB VRAM)."
+        return f"{label} is recommended for {gpu}."
+    cores = int(hw.get("cpu_cores") or 0)
+    if cores:
+        return (f"{label} is recommended for CPU transcription on "
+                f"{cores} cores. A GPU would allow a larger model.")
+    return f"{label} is recommended for CPU transcription."
 
 # Essential filenames for a faster-whisper CT2 model (repos vary on vocabulary.*).
 _ESSENTIAL_NAMES = {
@@ -240,13 +332,14 @@ def transcription_status() -> dict:
     """
     from panopto.settings import load_settings
     try:
-        model_id = load_settings().get("model", "small")
+        # Fall back to the hardware-appropriate model, not a fixed 'small'.
+        model_id = load_settings().get("model") or recommend_model()
         engine = whisper_available()
         installed = is_installed(model_id)
         any_inst = any(is_installed(m["id"]) for m in MODEL_REGISTRY)
     except Exception:
         return {
-            "ready": False, "engine_available": False, "model_id": "small",
+            "ready": False, "engine_available": False, "model_id": "",
             "any_installed": False,
             "reason": "the local transcription engine isn't available yet",
         }

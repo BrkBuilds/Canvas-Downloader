@@ -28,7 +28,7 @@
 
 .completion-card .card-subtitle {
     font-size: 0.85em;
-    color: #d3d3d3;
+    color: #d1d1d1;
     margin-top: -5px;
     /* Pull closer to title */
     margin-bottom: 0;
@@ -236,7 +236,7 @@ details[open]>.error-panel-header .chevron {
 .error-panel-header .ep-title {
     font-weight: 500;
     font-size: 0.95em;
-    color: #fafafa;
+    color: #ffffff;
     flex: 1;
 }
 
@@ -559,9 +559,14 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button p::before {
    blanket `:has(style)` form also hid every block that bundles real content
    WITH a trailing <style> - which silently blanked the whole Panopto results
    card on the completion screens (2026-07-10 sync run: an empty half-width
-   box where "Panopto Recordings · 1 processed" should have been). */
-div[data-testid="stElementContainer"]:has(div[data-testid="stMarkdownContainer"] > style:only-child),
-div[data-testid="element-container"]:has(div[data-testid="stMarkdownContainer"] > style:only-child) {
+   box where "Panopto Recordings · 1 processed" should have been).
+
+   This rule IS live (verified 2026-07-25: stElementContainer resolves to 61
+   nodes and .matches() returns true against a real style-only container), and
+   the completion screens are tuned WITH the collapse. Its near-twin in
+   global.css names the retired hyphenated testid and is deliberately inert -
+   the main-app screens are tuned WITHOUT collapse. Do not unify them. */
+div[data-testid="stElementContainer"]:has(div[data-testid="stMarkdownContainer"] > style:only-child) {
     display: none !important;
 }
 
@@ -588,11 +593,20 @@ div[class*="st-key-panopto_summary_dashboard"] .completion-stats-grid {
     margin-top: 5px;
 }
 
-/* --- Custom Folder Cards --- */
-/* --- Custom Folder Cards --- */
-div[class*="st-key-dl_fc_"] div[data-testid="stVerticalBlockBorderWrapper"],
-div[class*="st-key-sync_fc_"] div[data-testid="stVerticalBlockBorderWrapper"],
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) {
+/* --- Custom Folder Cards ---
+   The cards come from `st.container(border=True, key=f"{key_prefix}_fc_{idx}")`
+   in shared/components.render_folder_cards, so in Streamlit 1.51 the st-key-*
+   class sits directly ON the container's stVerticalBlock. The old intermediate
+   [data-testid="stVerticalBlockBorderWrapper"] no longer exists (nor does the
+   `:has(.fc-title)` fallback that targeted the same element), so the skin goes
+   on the keyed div itself and Streamlit's own border=True border/radius/padding
+   loses to !important.
+
+   Both live prefixes must be listed: download mode renders `dl_fc_*` and sync
+   completion renders `sync_complete_fc_*`. `sync_fc_` matches NEITHER - it is
+   not a contiguous substring of `sync_complete_fc_`. */
+div[class*="st-key-dl_fc_"],
+div[class*="st-key-sync_complete_fc_"] {
     border-radius: 10px !important;
     background: linear-gradient(145deg, #1e293b, #0f172a) !important;
     border: 1px solid #334155 !important;
@@ -600,21 +614,14 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) {
     transition: all 0.2s ease !important;
     margin-bottom: 8px !important;
     overflow: hidden !important;
+    padding: 14px 18px !important;
 }
 
-div[class*="st-key-dl_fc_"] div[data-testid="stVerticalBlockBorderWrapper"]:hover,
-div[class*="st-key-sync_fc_"] div[data-testid="stVerticalBlockBorderWrapper"]:hover,
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title):hover {
+div[class*="st-key-dl_fc_"]:hover,
+div[class*="st-key-sync_complete_fc_"]:hover {
     border-color: #475569 !important;
     background: linear-gradient(145deg, #334155, #1e293b) !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-}
-
-/* override Streamlit container padding */
-div[class*="st-key-dl_fc_"] div[data-testid="stVerticalBlockBorderWrapper"]>div>div,
-div[class*="st-key-sync_fc_"] div[data-testid="stVerticalBlockBorderWrapper"]>div>div,
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title)>div>div {
-    padding: 14px 18px !important;
 }
 
 /* Custom Title */
@@ -632,8 +639,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title)>div>div {
 
 /* Open Folder Button - Dark Ghost Style with outlined blue folder icon */
 div[class*="st-key-dl_fc_"] button,
-div[class*="st-key-sync_complete_fc_"] button,
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button {
+div[class*="st-key-sync_complete_fc_"] button {
     background: rgba(255, 255, 255, 0.07) !important;
     color: #ffffff !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -653,8 +659,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button {
 }
 
 div[class*="st-key-dl_fc_"] button:hover,
-div[class*="st-key-sync_complete_fc_"] button:hover,
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button:hover {
+div[class*="st-key-sync_complete_fc_"] button:hover {
     background: rgba(255, 255, 255, 0.13) !important;
     color: #f1f5f9 !important;
     border-color: rgba(255, 255, 255, 0.45) !important;
@@ -662,8 +667,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button:hover {
 }
 
 div[class*="st-key-dl_fc_"] button:active,
-div[class*="st-key-sync_complete_fc_"] button:active,
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button:active {
+div[class*="st-key-sync_complete_fc_"] button:active {
     background: rgba(0, 0, 0, 0.4) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
     transform: translateY(1px) !important;
@@ -671,8 +675,7 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button:active {
 }
 
 div[class*="st-key-dl_fc_"] button p,
-div[class*="st-key-sync_complete_fc_"] button p,
-div[data-testid="stVerticalBlockBorderWrapper"]:has(.fc-title) button p {
+div[class*="st-key-sync_complete_fc_"] button p {
     margin: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -923,7 +926,7 @@ details[open] > .skip-panel-header .sp-chevron {
 .skip-panel-header .sp-title {
     font-weight: 500;
     font-size: 0.95em;
-    color: #fafafa;
+    color: #ffffff;
     flex: 1;
 }
 

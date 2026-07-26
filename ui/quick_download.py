@@ -663,7 +663,18 @@ div.st-key-qd_courses_dropdown [data-testid="stExpander"] details summary p code
     margin-left: 8px !important;
     font-family: inherit !important;
 }}
-/* Bottom "Customize" Button - Match Description Text */
+/* Bottom "Customize" Button - Match Description Text.
+
+   The margin-top is NOT cosmetic padding: Streamlit gives every
+   stMarkdownContainer a `margin-bottom: -16px`, so the badge grid's
+   element-container measures 16px SHORTER than the grid actually drawn inside
+   it (measured: container 268px vs grid 279px). Without compensation this
+   button is pulled up 11px INTO the last row of badges and overlaps the
+   Quizzes/Submissions tags. 16px cancels Streamlit's negative margin and the
+   remainder is the visual breathing room under the tags. */
+div.st-key-qd_goto_advanced {{
+    margin-top: 30px !important;
+}}
 div.st-key-qd_goto_advanced button {{
     background: transparent !important;
     border: none !important;
@@ -1062,6 +1073,8 @@ div.st-key-page_nav_quick_start button:active {{
                     key="qd_goto_advanced",
                     use_container_width=True,
                     disabled=(active_preset is None),
+                    help=None if active_preset is not None else
+                         "Choose a preset above to customize its settings.",
                 ):
                     # Pre-populate all download settings from the active preset
                     _s = dict(active_preset['settings'])  # type: ignore[index]
@@ -1115,14 +1128,20 @@ div.st-key-page_nav_quick_start button:active {{
             from shared.components import render_fda_nudge
             render_fda_nudge("qdl_fda")
 
-        act_back, _spacer, act_start = st.columns([1, 3.5, 1.5])
-        with act_back:
-            back_clicked = st.button("Go back", key="page_nav_quick_back", use_container_width=True)
-        with act_start:
-            start_clicked = st.button(
-                "Confirm and Download", key="page_nav_quick_start", type="primary",
-                use_container_width=True, disabled=(selected_id is None),
-            )
+        # Sticky bottom bar (see global.css "Sticky action bar"). Only the buttons
+        # go inside - the click handlers below stay out, so an error notice they
+        # render never appears inside the floating bar.
+        with st.container(key="sticky_actions_quick"):
+            act_back, _spacer, act_start = st.columns([1, 3.5, 1.5])
+            with act_back:
+                back_clicked = st.button("Go back", key="page_nav_quick_back", use_container_width=True)
+            with act_start:
+                start_clicked = st.button(
+                    "Confirm and Download", key="page_nav_quick_start", type="primary",
+                    use_container_width=True, disabled=(selected_id is None),
+                    help=None if selected_id is not None else
+                         "Choose one of the presets above to start the download.",
+                )
 
         if back_clicked:
             # Reset preset so re-entering Quick Download from Course Selector starts fresh.

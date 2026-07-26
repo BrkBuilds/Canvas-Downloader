@@ -202,7 +202,13 @@ _ENTITY_ROUTING = {
     'discussion':   {'folder': 'Discussions',   'prefix': 'Discussion'},
     'quiz':         {'folder': 'Quizzes',       'prefix': 'Quiz'},
     'rubric':       {'folder': 'Rubrics',       'prefix': 'Rubric'},
-    'submission':   {'folder': 'Submissions',   'prefix': 'Submission'},
+    # "Submission Feedback", not "Submissions": the app deliberately does NOT
+    # download the student's own uploaded files (they already have those on the
+    # machine they submitted from). What this entity carries is the FEEDBACK on a
+    # submission - grade, rubric assessment, teacher comments, and any files the
+    # teacher attached to a comment. A folder called "Submissions" would promise
+    # the opposite of what is inside it.
+    'submission':   {'folder': 'Submission Feedback', 'prefix': 'Feedback'},
     'page':         {'folder': 'Pages',         'prefix': 'Page'},
     'link':         {'folder': 'Links',         'prefix': 'Link'},
 }
@@ -272,7 +278,126 @@ def compute_entity_content_sig(entity_type: str, obj) -> str:
         return secondary_content_sig('page', g('title'), g('updated_at'))
     if entity_type == 'rubric':
         return secondary_content_sig('rubric', g('title'), g('updated_at'))
+    if entity_type == 'submission':
+        # Feedback only. Deliberately EXCLUDES the student's own submission
+        # fields (submitted_at, attempt, body, their attachments): re-submitting
+        # must not present itself as "the teacher's feedback changed". What does
+        # define this entity is the grade, when it was graded, the rubric
+        # assessment, and the comment thread - so a new comment or a regrade
+        # moves the signature and nothing else does.
+        _comments = g('submission_comments') or []
+        _rubric = g('rubric_assessment') or {}
+        return secondary_content_sig(
+            'submission',
+            g('entered_grade') or g('grade'),
+            g('entered_score') if g('entered_score') is not None else g('score'),
+            g('graded_at'), g('workflow_state'),
+            len(_comments),
+            # comment identity AND text, so an edited comment is detected
+            '|'.join(f"{_comment_field(c, 'id')}:{_comment_field(c, 'comment')}"
+                     for c in _comments),
+            # rubric criteria ratings, order-independent
+            '|'.join(f"{k}:{(v or {}).get('points')}:{(v or {}).get('comments')}"
+                     for k, v in sorted(_rubric.items())) if isinstance(_rubric, dict) else '',
+        )
     return ''
+
+
+def _comment_field(comment, field: str):
+    """Read *field* off a submission comment, which Canvas returns as a dict but
+    canvasapi may hand back as an object depending on the endpoint."""
+    if isinstance(comment, dict):
+        return comment.get(field, '')
+    return getattr(comment, field, '')
+
+
+def _submission_has_feedback(sub) -> bool:
+    """True when a submission carries anything worth saving.
+
+    A submission with no grade, no rubric assessment and no comments has no
+    feedback in it - saving a file that says "not graded yet" for every
+    assignment in the course would be noise. This is the same hide-until-relevant
+    rule the Panopto summary uses.
+    """
+    if sub is None:
+        return False
+    g = lambda a: getattr(sub, a, None)  # noqa: E731
+    if g('entered_grade') or g('grade'):
+        return True
+    if g('entered_score') is not None or g('score') is not None:
+        return True
+    if g('rubric_assessment'):
+        return True
+    for c in (g('submission_comments') or []):
+        if str(_comment_field(c, 'comment') or '').strip():
+            return True
+    return False
+
+
+def _submission_comment_attachments(sub) -> list:
+    """Every file a teacher attached to a comment, as attachment dicts.
+
+    Only COMMENT attachments. ``submission.attachments`` - the student's own
+    uploaded files - is deliberately never returned: the app's standing decision
+    is that the student already has what they handed in, and re-downloading it
+    wastes bandwidth and clutters the folder. Teacher attachments are the
+    opposite: an annotated PDF of your own essay usually exists nowhere else.
+    """
+    out, seen = [], set()
+    for c in (getattr(sub, 'submission_comments', None) or []):
+        atts = _comment_field(c, 'attachments') or []
+        if not isinstance(atts, list):
+            continue
+        for a in atts:
+            if not isinstance(a, dict):
+                a = {k: getattr(a, k, None) for k in
+                     ('id', 'url', 'filename', 'display_name', 'size',
+                      'updated_at', 'content-type', 'content_type')}
+            aid, url = a.get('id'), a.get('url')
+            if not aid or not url or aid in seen:
+                continue
+            seen.add(aid)
+            out.append({
+                'id': aid,
+                'url': url,
+                'filename': a.get('filename') or a.get('display_name') or f"attachment-{aid}",
+                'display_name': a.get('display_name') or a.get('filename') or f"attachment-{aid}",
+                'size': a.get('size', 0) or 0,
+                'modified_at': a.get('updated_at', '') or '',
+                'content-type': a.get('content-type') or a.get('content_type') or '',
+            })
+    return out
+
+
+def _submission_entity_id(sub):
+    """The assignment id a submission's feedback is filed under, or ``None``.
+
+    Returns None rather than falling back to 0. Fabricating 0 is actively
+    harmful: ``make_secondary_id('submission', 0)`` is the SAME value for every
+    id-less submission, so two of them would collide onto one manifest row and
+    one feedback file would overwrite the other - and 0 lands exactly on a
+    synthetic-id range boundary.
+
+    The sync enumerator (``get_secondary_content_metadata``) and the downloader
+    (``_fetch_and_save_submissions``) must both use this. If one included a
+    submission the other skipped, sync would list a file that never arrives and
+    re-list it on every run.
+    """
+    a = getattr(sub, 'assignment', None)
+    if isinstance(a, dict):
+        inlined = a.get('id')
+    elif a is not None:
+        inlined = getattr(a, 'id', None)
+    else:
+        inlined = None
+    for candidate in (getattr(sub, 'assignment_id', None), inlined):
+        try:
+            value = int(candidate)
+        except (TypeError, ValueError):
+            continue
+        if value:
+            return abs(value)
+    return None
 
 
 def link_content_sig(title: str, url: str) -> str:
@@ -335,6 +460,109 @@ def _apply_page_stub_upgrades(slug_groups, stub_results, module_map, sanitize) -
 # the metadata-listing path used by sync analysis AND the secondary-content
 # download path used by Download mode are gated on this single flag).
 RUBRICS_ENABLED = False
+
+# Re-enabling rubrics takes MORE than flipping the flag above. There are two
+# independent gates, and this one is the easy half:
+#
+#   1. This flag (checked in the metadata enumerator and the download path).
+#   2. `persistent_dl_rubrics`, which is READ at four sites (app.py:886 and :1213,
+#      sync/analysis.py:141, sync/execution.py:787) and WRITTEN NOWHERE - because
+#      'dl_rubrics' was removed from SECONDARY_CONTENT_KEYS (core/state_registry.py)
+#      and from the Card 2 toggle list (ui/download_settings.py). Every one of
+#      those reads therefore returns its False default, so `download_rubrics` is
+#      False in every composed settings dict regardless of this flag.
+#
+# So a full re-enable is: flip this flag, restore 'dl_rubrics' to
+# SECONDARY_CONTENT_KEYS, and restore the Card 2 toggle (its icon is still
+# shipped as assets/icon_rubrics.png, deliberately kept for exactly this).
+
+
+# Guards for humanize_canvas_error's payload parsing. A Canvas error body is a
+# few hundred bytes; anything vastly larger is an HTML error page or a truncated
+# stream, never something with a 'message' worth extracting.
+_ERR_PAYLOAD_MAX_CHARS = 64_000
+_ERR_PAYLOAD_MAX_DEPTH = 40
+
+
+def humanize_canvas_error(exc) -> str:
+    """Turn a Canvas/canvasapi exception into text that is safe to show a user.
+
+    canvasapi raises ``CanvasException`` subclasses whose ``message`` is the
+    PARSED JSON error body, so ``str(exc)`` is a Python **repr** of a dict::
+
+        {'errors': [{'message': 'Invalid access token.'}]}
+
+    Rendering that verbatim leaked into the login screen for the single most
+    common failure in the app's lifetime (an expired saved token). It is also
+    actively harmful: the repr contains "invalid access token" but none of
+    "invalid token" / "unauthorized" / "401", so the login screen's keyword
+    routing fell through to its generic branch and printed the repr as
+    "Technical Details".
+
+    Returns the innermost human message(s), joined; falls back to ``str(exc)``
+    when the payload is not a recognised Canvas error shape. Never raises.
+    """
+    raw = str(exc) if exc is not None else ''
+    if not raw:
+        return ''
+
+    payload = getattr(exc, 'message', None)
+    if not isinstance(payload, (dict, list, tuple)):
+        # canvasapi stringifies the payload, so parse the repr back. literal_eval
+        # (not json.loads) because a Python repr uses single quotes. The leading
+        # '(' matters: plain CanvasException wraps its body in a TUPLE, as in
+        # ("Something went wrong. ", {'message': ...}).
+        #
+        # Size cap + bare `except Exception`: this runs INSIDE except blocks all
+        # over the engine, so it must honour its "never raises" contract
+        # absolutely - raising here would replace the real error with a confusing
+        # one. literal_eval cannot execute code, but it CAN hit RecursionError on
+        # a deeply nested payload (not covered by ValueError/SyntaxError), and it
+        # is pointlessly slow on a megabyte of HTML.
+        if raw.startswith(('{', '[', '(')) and len(raw) <= _ERR_PAYLOAD_MAX_CHARS:
+            try:
+                import ast as _ast
+                payload = _ast.literal_eval(raw)
+            except Exception:
+                payload = None
+        else:
+            payload = None
+
+    def _messages(node, depth: int = 0) -> list[str]:
+        """Depth-first collect of every 'message' string in a nested payload.
+
+        Depth-capped for the same reason as the parse above - an adversarial or
+        merely odd payload must not be able to raise RecursionError out of an
+        exception handler.
+        """
+        found: list[str] = []
+        if depth > _ERR_PAYLOAD_MAX_DEPTH:
+            return found
+        if isinstance(node, dict):
+            for key, val in node.items():
+                if key == 'message' and isinstance(val, str) and val.strip():
+                    found.append(val.strip())
+                else:
+                    found.extend(_messages(val, depth + 1))
+        elif isinstance(node, (list, tuple)):
+            for item in node:
+                found.extend(_messages(item, depth + 1))
+        elif isinstance(node, str) and node.strip():
+            found.append(node.strip())
+        return found
+
+    if payload is not None:
+        msgs, seen = [], set()
+        for m in _messages(payload):
+            low = m.lower()
+            if low not in seen:
+                seen.add(low)
+                msgs.append(m)
+        if msgs:
+            return ' '.join(msgs)
+
+    return raw
+
 
 def _format_canvas_date(date_str):
     """
@@ -555,7 +783,21 @@ class CanvasManager:
         return canvas
 
     def validate_token(self):
-        """Checks if the token is valid by attempting to fetch the current user."""
+        """Checks if the token is valid by attempting to fetch the current user.
+
+        Returns ``(ok, message)``. On failure the message is always
+        human-readable - never a raw Python repr (see humanize_canvas_error).
+        Auth failures are normalised so the login UI's keyword routing can
+        recognise them: canvasapi's own text is "Invalid access token.", which
+        matches none of the obvious keywords.
+
+        The normalised text deliberately avoids the word "expired". The login
+        screen routes an EXPIRED token to its own "Token Expired" notice by
+        matching that word, and `is_auth_error` matches it too - so listing it
+        here as one of several possibilities would make every revoked or deleted
+        token report itself as expired. Canvas says "expired" when it means it;
+        this wording covers only what the exception actually proves.
+        """
         if not self.api_url or not self.canvas:
             return False, 'Login failed. Please check that your Canvas URL and Canvas Access Token are correct.'
 
@@ -563,10 +805,19 @@ class CanvasManager:
             # We attempt to fetch the user. This validates both the URL and Token.
             self.user = self.canvas.get_current_user()
             return True, f'Logged in as: {self.user.name}'
+        except Unauthorized as e:
+            # The single most common failure over the app's lifetime: the saved
+            # token is no longer accepted. Lead with a phrase the UI matches, and
+            # let Canvas's own text (appended in the parentheses) be the thing
+            # that says "expired" when that is genuinely the cause.
+            return False, (
+                'Unauthorized - your Canvas Access Token is not valid or '
+                f'has been revoked. ({humanize_canvas_error(e)})'
+            )
         except Exception as e:
-            # Return specific message if possible, else generic
-            msg = str(e) if str(e) else 'Login failed. Please check that your Canvas URL and Canvas Access Token are correct.'
-            return False, msg
+            msg = humanize_canvas_error(e)
+            return False, msg or ('Login failed. Please check that your Canvas URL '
+                                  'and Canvas Access Token are correct.')
 
     def get_courses(self, favorites_only=True):
         """
@@ -1727,6 +1978,51 @@ class CanvasManager:
             except Exception as e:
                 logger.warning(f"Fetching rubrics failed for course {getattr(course, 'id', '?')}: {e}")
                 fetch_success['rubric'] = False
+
+        # Submission feedback (grade + rubric + teacher comments). Enumerated here
+        # so SYNC mode sees the same entities the download engine writes - the
+        # analyzer keys off this list, so an entity missing here would be reported
+        # as locally-deleted on every sync. Attachments on comments are real
+        # Canvas files and are enumerated by the attachment path, not here.
+        if settings.get('download_submissions'):
+            try:
+                isolate = settings.get('isolate_secondary_content', True)
+                routing = _ENTITY_ROUTING['submission']
+                for sub in self._fetch_submissions_with_feedback(course, None):
+                    s_id = _submission_entity_id(sub)
+                    if s_id is None:
+                        continue    # unidentifiable - see _submission_entity_id
+                    a_name = (self._submission_assignment_field(sub, 'name')
+                              or f"Assignment {s_id}").strip()
+                    safe_title = self._sanitize_filename(a_name)
+                    has_attachments = bool(_submission_comment_attachments(sub))
+                    if isolate:
+                        if has_attachments:
+                            sub_filename = f"{routing['folder']}/{safe_title}/{safe_title}.html"
+                        else:
+                            sub_filename = f"{routing['folder']}/{safe_title}.html"
+                    else:
+                        sub_filename = f"{routing['prefix']}: {safe_title}.html"
+                    items.append(CanvasFileInfo(
+                        id=make_secondary_id('submission', s_id),
+                        filename=sub_filename,
+                        display_name=a_name,
+                        size=0,
+                        modified_at=getattr(sub, 'graded_at', '') or '',
+                        url=self._submission_assignment_field(sub, 'html_url') or '',
+                        content_type='text/html',
+                        content_sig=compute_entity_content_sig('submission', sub),
+                        name_locked=True,
+                    ))
+                fetch_success['submission'] = True
+            except (Unauthorized, ResourceDoesNotExist, CanvasException) as e:
+                logger.debug(f"Submission feedback not accessible for course "
+                             f"{getattr(course, 'id', '?')}: {humanize_canvas_error(e)}")
+                fetch_success['submission'] = False
+            except Exception as e:
+                logger.warning(f"Fetching submission feedback failed for course "
+                               f"{getattr(course, 'id', '?')}: {humanize_canvas_error(e)}")
+                fetch_success['submission'] = False
 
         return items, fetch_success
 
@@ -3809,10 +4105,15 @@ class CanvasManager:
             if formatted_items:
                 meta_section = f'<div class="meta-box">{"".join(formatted_items)}</div>'
 
-        # Inject modern styling with 60% layout parity
+        # Inject modern styling with 60% layout parity.
+        # NOTE: this is the palette of the EXPORTED HTML DOCUMENT - a light theme
+        # the user opens in a browser - not the app's dark UI. It is deliberately
+        # NOT built from shared/theme.py, and Rule 8 is suppressed for it below:
+        # matching an exported page to the app's dark tokens would be wrong.
         css = """
         <style>
             :root {
+                /* # audit-ignore - exported-document light theme, not app tokens */
                 --bg-canvas: #f9fafb;
                 --bg-card: #ffffff;
                 --text-main: #374151;
@@ -4551,6 +4852,7 @@ class CanvasManager:
                 
                 formatted_date = _format_canvas_date(created_at) if created_at else ""
                 
+                # Exported-document (light) palette, not the app's dark tokens.  # audit-ignore
                 html_out.append(f"<div style='margin-left: {margin}px; padding: 15px; margin-bottom: 12px; background-color: #f4f4f5; border-left: 3px solid #3b82f6; border-radius: 4px;'>")
                 html_out.append(f"<div style='margin-bottom: 8px;'><strong>{esc(author)}</strong> <span style='color: #71717a; font-size: 0.9em; margin-left: 8px;'>{esc(formatted_date)}</span></div>")
                 
@@ -5005,6 +5307,281 @@ class CanvasManager:
                 progress_callback(err, progress_type='error')
             self._log_error(error_root_path, err)
 
+    def _fetch_submissions_with_feedback(self, course, debug_file):
+        """Return this student's submissions that carry feedback.
+
+        One bulk call for the whole course, with a per-assignment fallback.
+        ``GET /courses/:id/students/submissions?student_ids[]=self`` is the cheap
+        path (one paginated request regardless of assignment count), but some
+        Canvas instances restrict it for student tokens - in which case we fall
+        back to asking each assignment for its own submission. Never raises.
+        """
+        include = ['submission_comments', 'rubric_assessment', 'assignment']
+        subs = []
+        try:
+            for sub in course.get_multiple_submissions(
+                    student_ids=['self'], include=include):
+                subs.append(sub)
+            log_debug(f"Secondary: bulk submissions fetch returned {len(subs)}", debug_file)
+        except Exception as e:
+            log_debug(f"Secondary: bulk submissions fetch failed ({e}); "
+                      f"falling back to per-assignment", debug_file)
+            subs = []
+            try:
+                for assignment in course.get_assignments():
+                    try:
+                        sub = assignment.get_submission('self', include=include)
+                    except (Unauthorized, ResourceDoesNotExist):
+                        continue
+                    except Exception as inner:
+                        log_debug(f"    submission for assignment "
+                                  f"{getattr(assignment, 'id', '?')}: {inner}", debug_file)
+                        continue
+                    # The per-assignment endpoint does not always inline the
+                    # assignment, so attach it for the title/points below.
+                    if getattr(sub, 'assignment', None) is None:
+                        try:
+                            sub.assignment = {
+                                'id': assignment.id,
+                                'name': getattr(assignment, 'name', ''),
+                                'points_possible': getattr(assignment, 'points_possible', None),
+                                'html_url': getattr(assignment, 'html_url', ''),
+                            }
+                        except Exception:
+                            pass
+                    subs.append(sub)
+            except Exception as outer:
+                log_debug(f"Secondary: per-assignment submission fallback failed: {outer}",
+                          debug_file)
+                return []
+
+        return [s for s in subs if _submission_has_feedback(s)]
+
+    @staticmethod
+    def _submission_assignment_field(sub, field, default=None):
+        """Read a field off a submission's inlined assignment (dict or object)."""
+        a = getattr(sub, 'assignment', None)
+        if a is None:
+            return default
+        if isinstance(a, dict):
+            return a.get(field, default)
+        return getattr(a, field, default)
+
+    def _build_submission_feedback_html(self, sub) -> str:
+        """Render the rubric assessment and the comment thread as HTML."""
+        parts = []
+
+        rubric = getattr(sub, 'rubric_assessment', None) or {}
+        if isinstance(rubric, dict) and rubric:
+            rows = []
+            for crit_id, val in rubric.items():
+                val = val or {}
+                pts = val.get('points')
+                comment = str(val.get('comments') or '').strip()
+                rows.append(
+                    '<tr>'
+                    f'<td>{html.escape(str(crit_id))}</td>'
+                    f'<td>{html.escape("" if pts is None else str(pts))}</td>'
+                    f'<td>{html.escape(comment)}</td>'
+                    '</tr>'
+                )
+            if rows:
+                parts.append(
+                    '<h3>Rubric assessment</h3>'
+                    '<table border="1" cellpadding="6" cellspacing="0">'
+                    '<tr><th>Criterion</th><th>Points</th><th>Comment</th></tr>'
+                    + ''.join(rows) + '</table>'
+                )
+
+        comments = getattr(sub, 'submission_comments', None) or []
+        rendered = []
+        for c in comments:
+            text = str(_comment_field(c, 'comment') or '').strip()
+            if not text:
+                continue
+            author = _comment_field(c, 'author_name') or ''
+            if not author:
+                author_obj = _comment_field(c, 'author') or {}
+                author = (author_obj.get('display_name')
+                          if isinstance(author_obj, dict) else '') or 'Unknown'
+            created = _format_canvas_date(_comment_field(c, 'created_at') or '')
+            atts = _comment_field(c, 'attachments') or []
+            att_note = ''
+            if isinstance(atts, list) and atts:
+                names = [html.escape(str((a.get('display_name') or a.get('filename'))
+                                         if isinstance(a, dict)
+                                         else getattr(a, 'display_name', '')) or '')
+                         for a in atts]
+                att_note = ('<div class="meta-item"><span class="meta-label">Attached:</span> '
+                            f'<span class="meta-value">{", ".join(n for n in names if n)}'
+                            '</span></div>')
+            rendered.append(
+                '<div class="reply">'
+                f'<p><b>{html.escape(str(author))}</b>'
+                f'{f" &middot; {html.escape(str(created))}" if created else ""}</p>'
+                f'<p>{html.escape(text)}</p>'
+                f'{att_note}'
+                '</div>'
+            )
+        if rendered:
+            parts.append('<h3>Comments</h3>' + ''.join(rendered))
+
+        if not parts:
+            # Graded with no rubric and no comments - the metadata block above
+            # already carries the grade, so say so rather than render an empty page.
+            parts.append('<p><i>Graded, with no rubric assessment or comments.</i></p>')
+        return ''.join(parts)
+
+    def _fetch_and_save_submissions(self, course, base_path, sem, session,
+                                    progress_callback, mb_tracker,
+                                    check_cancellation, settings,
+                                    error_root_path, debug_file,
+                                    sync_manager, download_tasks):
+        """Save the FEEDBACK on this student's submissions - grade, rubric,
+        comments - plus any files a teacher attached to a comment.
+
+        Deliberately does NOT download the student's own submitted files: they
+        already have those locally. Assignments with no feedback yet produce no
+        file at all, so enabling this on a course that has never been graded is a
+        silent no-op rather than a folder of "not graded yet" stubs.
+        """
+        from core.sync_manager import make_secondary_id
+        isolate = settings.get('isolate_secondary_content', True)
+        log_debug("Secondary: Fetching submission feedback...", debug_file)
+
+        try:
+            subs = self._fetch_submissions_with_feedback(course, debug_file)
+            log_debug(f"Secondary: {len(subs)} submission(s) carry feedback", debug_file)
+
+            for sub in subs:
+                if check_cancellation and check_cancellation():
+                    break
+
+                s_id = _submission_entity_id(sub)
+                if s_id is None:
+                    # Must match get_secondary_content_metadata's skip exactly,
+                    # or sync lists a file this never writes.
+                    log_debug("Secondary: skipping submission with no resolvable "
+                              "assignment id", debug_file)
+                    continue
+                a_name = (self._submission_assignment_field(sub, 'name')
+                          or f"Assignment {s_id}").strip()
+                points_possible = self._submission_assignment_field(sub, 'points_possible')
+                a_url = self._submission_assignment_field(sub, 'html_url') or ''
+
+                grade = getattr(sub, 'entered_grade', None) or getattr(sub, 'grade', None)
+                score = getattr(sub, 'entered_score', None)
+                if score is None:
+                    score = getattr(sub, 'score', None)
+                score_text = None
+                if score is not None:
+                    score_text = (f"{score} / {points_possible}"
+                                  if points_possible is not None else str(score))
+
+                status_bits = [getattr(sub, 'workflow_state', '') or '']
+                if getattr(sub, 'late', False):
+                    status_bits.append('late')
+                if getattr(sub, 'missing', False):
+                    status_bits.append('missing')
+                if getattr(sub, 'excused', False):
+                    status_bits.append('excused')
+                status = ', '.join(b for b in status_bits if b)
+
+                attachments = _submission_comment_attachments(sub)
+                has_attachments = bool(attachments)
+
+                body_html = self._build_submission_feedback_html(sub)
+
+                filepath, syn_id, canvas_updated = self._save_secondary_entity(
+                    'submission', a_name, body_html, base_path,
+                    course_base_path=base_path, sync_manager=sync_manager,
+                    canvas_entity_id=s_id,
+                    canvas_updated_at=getattr(sub, 'graded_at', '') or '',
+                    progress_callback=progress_callback,
+                    debug_file=debug_file,
+                    error_root_path=error_root_path,
+                    course_name=course.name, isolate=isolate,
+                    content_sig=compute_entity_content_sig('submission', sub),
+                    has_attachments=has_attachments,
+                    metadata_pairs=[
+                        ('Assignment', a_name),
+                        ('Grade', grade),
+                        ('Score', score_text),
+                        ('Status', status),
+                        ('Graded', getattr(sub, 'graded_at', None)),
+                        ('URL', a_url or None),
+                    ],
+                )
+
+                if filepath and sync_manager:
+                    try:
+                        rel_path = str(Path(filepath).relative_to(Path(base_path))).replace('\\', '/')
+                        sync_manager.record_downloaded_file(
+                            canvas_file_id=syn_id,
+                            canvas_filename=Path(filepath).name,
+                            local_path=rel_path,
+                            canvas_updated_at=canvas_updated,
+                            original_size=0,
+                            content_sig=compute_entity_content_sig('submission', sub),
+                        )
+                    except Exception as e:
+                        logger.warning(f"Manifest write failed for submission feedback "
+                                       f"'{a_name}': {e}")
+
+                # Teacher comment attachments: real Canvas files with real ids.
+                if filepath and attachments:
+                    attach_dir = filepath.parent
+                    for att in attachments:
+                        raw_id = att.get('id')
+                        att_url = att.get('url', '')
+                        att_filename = att.get('filename') or 'attachment'
+                        if not att_url or not raw_id:
+                            continue
+
+                        att_id = make_secondary_id('attachment', raw_id) if isolate else raw_id
+                        if not isolate:
+                            routing = _ENTITY_ROUTING['submission']
+                            att_filename = (f"{routing['prefix']}: "
+                                            f"{self._sanitize_filename(a_name)} - {att_filename}")
+
+                        att_file_obj = types.SimpleNamespace(
+                            id=att_id,
+                            url=att_url,
+                            filename=att_filename,
+                            display_name=att.get('display_name', att_filename),
+                            size=att.get('size', 0),
+                            modified_at=att.get('modified_at', ''),
+                            md5=None,
+                            content_type=att.get('content-type', ''),
+                            folder_id=None,
+                            name_locked=True,
+                        )
+                        att_filepath = attach_dir / self._sanitize_filename(att_filename)
+                        if progress_callback:
+                            progress_callback(att_filename,
+                                              progress_type='attachment_discovered',
+                                              size=att.get('size', 0))
+                        download_tasks.append(asyncio.create_task(self._download_file_async(
+                            sem, session, att_file_obj, attach_dir,
+                            progress_callback, mb_tracker, 'attachment',
+                            error_root_path=error_root_path,
+                            course_name=course.name, debug_file=debug_file,
+                            sync_manager=sync_manager,
+                            course_base_path=base_path,
+                            explicit_filepath=att_filepath,
+                        )))
+
+        except (Unauthorized, ResourceDoesNotExist) as e:
+            log_debug(f"Submission feedback not accessible: {e}", debug_file)
+        except Exception as e:
+            err = DownloadError(
+                course.name, "Submission Feedback", "Canvas Content Error",
+                humanize_canvas_error(e), raw_error=e,
+            )
+            if progress_callback:
+                progress_callback(err, progress_type='error')
+            self._log_error(error_root_path, err)
+
     def _fetch_and_save_discussions(self, course, base_path,
                                     progress_callback, check_cancellation,
                                     settings, error_root_path, debug_file,
@@ -5385,7 +5962,17 @@ class CanvasManager:
                 sync_manager, module_handled_ids,
             )
 
-        # 6. Rubrics (temporarily disabled via RUBRICS_ENABLED - see flag definition)
+        # 6. Submission feedback (grade, rubric, teacher comments + their files).
+        #    NOT the student's own uploads - see _fetch_and_save_submissions.
+        if settings.get('download_submissions'):
+            self._fetch_and_save_submissions(
+                course, base_path, sem, session,
+                progress_callback, mb_tracker, check_cancellation,
+                settings, error_root_path, debug_file,
+                sync_manager, download_tasks,
+            )
+
+        # 7. Rubrics (temporarily disabled via RUBRICS_ENABLED - see flag definition)
         if RUBRICS_ENABLED and settings.get('download_rubrics'):
             self._fetch_and_save_rubrics(
                 course, base_path, progress_callback,

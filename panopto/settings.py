@@ -30,7 +30,13 @@ PANOPTO_DEFAULTS: dict = {
     "output_srt": True,        # timestamped subtitles
     "output_mp4": False,       # full video (combined MP4, stream-copied)
     # Transcription.
-    "model": "small",          # faster-whisper model id (see panopto.models)
+    # faster-whisper model id (see panopto.models). This static value is only a
+    # schema placeholder / last-resort fallback: the effective default for a
+    # machine with nothing persisted yet comes from
+    # ``panopto.models.recommend_model()``, which reads the actual GPU VRAM or CPU
+    # core count. A fixed default is wrong on most hardware - 'small' in
+    # particular transcribes non-English lecture audio poorly.
+    "model": "small",
     "language": "auto",        # 'auto' | ISO code ('da', 'en', ...)
     "device": "cpu",           # 'cpu' | 'cuda'
     # Output organization. Both layouts keep recordings INSIDE the course folder.
@@ -170,6 +176,58 @@ def make_contract(*, mp4: bool, mp3: bool, txt: bool, srt: bool,
         "output_srt": bool(srt),
         "layout": layout if layout in ("match", "separate") else "match",
     }
+
+
+def infer_contract_from_manifest(manifest: dict | None) -> dict | None:
+    """Reconstruct a contract from Panopto artifacts already on disk.
+
+    Recovery path for a folder whose stored ``panopto_contract`` is missing. That
+    happens when the download-mode seed write fails (it is a best-effort
+    ``_save_metadata``), and the consequence used to be severe and silent: sync
+    fell back to the ``persistent_pan_out_*`` session toggles, which are
+    session-only and reset to False on every app launch, so ``is_enabled()``
+    returned False and the entire Panopto pass was skipped on every future sync.
+    The user's Panopto setup appeared to have vanished, with no message.
+
+    A folder that already contains produced artifacts is proof that Panopto WAS
+    configured for it, which makes the all-False fallback provably wrong. The
+    kinds present tell us which outputs were wanted, and a recorded path under
+    "Panopto Recordings/" tells us the layout.
+
+    Args:
+        manifest: ``{video_id: {kind: rel_path}}`` from
+            ``SyncManager.get_panopto_manifest()``.
+
+    Returns:
+        A contract dict, or ``None`` when the manifest is empty (nothing to infer
+        from - a folder that never had Panopto must stay disabled).
+    """
+    if not manifest:
+        return None
+
+    kinds: set[str] = set()
+    separate = False
+    for per_video in manifest.values():
+        if not isinstance(per_video, dict):
+            continue
+        for kind, rel in per_video.items():
+            if kind in ("mp4", "mp3", "txt", "srt"):
+                kinds.add(kind)
+            if isinstance(rel, str) and "panopto recordings/" in rel.replace("\\", "/").lower():
+                separate = True
+
+    if not kinds:
+        return None
+
+    # A transcript on disk implies the audio step ran, but the user may have since
+    # had mp3 output turned off - only assert what the artifacts actually show.
+    return make_contract(
+        mp4="mp4" in kinds,
+        mp3="mp3" in kinds,
+        txt="txt" in kinds,
+        srt="srt" in kinds,
+        layout="separate" if separate else "match",
+    )
 
 
 def extract_contract(settings: dict) -> dict:

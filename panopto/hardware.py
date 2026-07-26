@@ -398,9 +398,19 @@ def device_advisory(device: str, model_id: str, hw: dict | None = None) -> tuple
     if device == "cpu":
         cores = hw.get("cpu_cores", 0)
         if model_id in big_models:
+            # Name the model panopto.models actually recommends for THIS machine
+            # rather than hard-coding 'Small' - that was a third, contradicting
+            # recommendation on top of the registry flag and the UI's own logic,
+            # and Small's accuracy on non-English lecture audio is poor.
+            try:
+                from panopto.models import get_model, recommend_model
+                _rec = get_model(recommend_model(hw)) or {}
+                _rec_label = _rec.get("label", "a smaller model")
+            except Exception:
+                _rec_label = "a smaller model"
             return ("warn",
                     "Large models are slow on the CPU - expect long transcription "
-                    "times. The 'Small' model is recommended for CPU"
+                    f"times. '{_rec_label}' is the best fit for this machine"
                     + (", or switch to GPU." if hw.get("gpu_available") else "."))
         if cores and cores < 4 and model_id != "tiny":
             return ("info",

@@ -56,14 +56,37 @@ def _gear_svg(color: str) -> str:
     )
 
 
-def _search_svg(color: str) -> str:
+def search_svg(color: str, size: int = 13) -> str:
+    """The app's magnifying-glass icon. Public so the analysis screens can reuse
+    the SAME glyph the phase stepper uses, instead of a lookalike emoji."""
     return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" '
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" '
         f'fill="none" stroke="{color}" stroke-width="2.5" stroke-linecap="round" '
         f'stroke-linejoin="round" style="display:inline-block;vertical-align:middle;'
         f'flex-shrink:0;margin-top:-1px">'
         f'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>'
         f'</svg>'
+    )
+
+
+# Back-compat alias for the PHASE_* tables below.
+_search_svg = search_svg
+
+
+def analyzing_heading_html(label: str = "Analyzing Course Data...") -> str:
+    """The analysis screens' h4 heading, with the app's SVG search icon.
+
+    Single source of truth on purpose: this exact heading is rendered from FOUR
+    call sites (app.py x2, sync_ui.py, sync/analysis.py) and each one carried a
+    hard-coded magnifying-glass EMOJI - the only emoji left in an otherwise
+    all-SVG icon system, sitting directly under a stepper that used the proper
+    SVG glyph for the very same concept.
+    """
+    return (
+        f'<h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0; display: flex; '
+        f'align-items: center; gap: 8px;">'
+        f'{search_svg(theme.TEXT_PRIMARY, size=17)}'
+        f'<span>{label}</span></h4>'
     )
 
 
@@ -126,7 +149,7 @@ _LOG_MAX_LINES = 200
 
 # -- Palette (status drives the single color cue) --------------------------------
 _ICON_NEUTRAL = '#9aa3b2'   # content-type icons (subtle, never the focal color)
-_DETAIL_COLOR = '#7d8597'   # dim right-aligned detail (sizes, retry counts, errors)
+_DETAIL_COLOR = '#7c8496'   # dim right-aligned detail (sizes, retry counts, errors)
 _DIVIDER_LINE = 'rgba(255,255,255,0.10)'
 
 _STATUS_STYLE = {
@@ -328,23 +351,6 @@ class DashboardPlaceholders:
     log: object             # st.empty() - terminal log widget
 
 
-@dataclass
-class DashboardMetrics:
-    """Pure-data container holding all values needed to render a single
-    frame of the dashboard.
-    """
-    current_files: int = 0
-    total_files: int = 1
-    downloaded_mb: float = 0.0
-    total_mb: float = 0.0
-    speed_mb_s: float = 0.0
-    eta_string: str = "--:--"
-    percent: int = 0
-    # Header content
-    header_label: str = "Downloading Courses"
-    course_name: str = ""
-
-
 # ═══════════════════════════════════════════════
 # Render Functions
 # ═══════════════════════════════════════════════
@@ -449,6 +455,32 @@ def render_metrics_row(
     ''', unsafe_allow_html=True)
 
 
+def _format_eta(remaining_mb: float, speed_mb_s: float,
+                total_mb: float, percent: int) -> str:
+    """Human ETA for the metrics row.
+
+    Two things this deliberately avoids:
+
+    * **"00:00" before the run has moved any bytes.** With no speed sample yet
+      the naive ``remaining / speed`` guard yields 0, which renders as "00:00" -
+      i.e. "finishing right now" - at the exact moment we know least. Say
+      "Estimating" instead, and only show a clock once there is a real sample.
+    * **Silently wrapping at one hour.** ``strftime('%M:%S')`` on a 90-minute
+      estimate prints "30:00", understating it by an hour. Anything from an hour
+      up gets an H:MM:SS clock.
+    """
+    if percent >= 100 or remaining_mb <= 0:
+        return "00:00"
+    if speed_mb_s <= 0 or total_mb <= 0:
+        return "Estimating"
+    eta_seconds = max(0.0, remaining_mb / speed_mb_s)
+    if eta_seconds >= 3600:
+        hours, rem = divmod(int(eta_seconds), 3600)
+        minutes, seconds = divmod(rem, 60)
+        return f"{hours}:{minutes:02d}:{seconds:02d}"
+    return time.strftime('%M:%S', time.gmtime(eta_seconds))
+
+
 def build_custom_metrics_html(metrics: list) -> str:
     """Return a metrics-row HTML string from arbitrary (label, value, color) cells.
 
@@ -517,8 +549,7 @@ def render_full_dashboard(
     elapsed = time.time() - start_time
     speed_mb_s = (downloaded_mb / elapsed) if elapsed > 0 else 0.0
     remaining_mb = max(0, total_mb - downloaded_mb)
-    eta_seconds = (remaining_mb / speed_mb_s) if speed_mb_s > 0 else 0
-    eta_string = time.strftime('%M:%S', time.gmtime(max(0, eta_seconds)))
+    eta_string = _format_eta(remaining_mb, speed_mb_s, total_mb, percent)
 
     render_progress_header(placeholders, header_label, course_name)
     render_progress_bar(placeholders, percent)

@@ -272,8 +272,14 @@ def _log_error_to_file(error_log_path: Path | None, filename: str, error_msg: st
             with open(err_file, "a", encoding="utf-8") as f:
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 f.write(f"[{timestamp}] [Post-Processing] {filename}: {error_msg}\n")
-    except OSError:
-        pass
+    except OSError as e:
+        # The UI tells the user "Check download_errors.txt for details", so a
+        # dropped line means they open a file that does not contain their error.
+        # Mirror it into the application log so the detail still exists somewhere.
+        logger.warning(
+            "Could not append to %s (%s). Post-processing error for '%s' was: %s",
+            err_file, e, filename, error_msg,
+        )
 
 
 def _applescript_last_error() -> tuple[str, str | None]:

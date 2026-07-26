@@ -434,7 +434,7 @@ if __name__ == "__main__":
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #0f1117;
+      background: #0d1117;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; flex-direction: column; gap: 28px;
@@ -479,13 +479,13 @@ if __name__ == "__main__":
   <style>
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
     body {{
-      background: #0f1117; color: #e0e0e0;
+      background: #0d1117; color: #e0e0e0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       display: flex; align-items: center; justify-content: center;
       min-height: 100vh; padding: 2rem;
     }}
     .card {{
-      background: #1e2130; border: 1px solid #2d3148;
+      background: #1e2130; border: 1px solid #2d3248;
       border-radius: 12px; padding: 2.5rem 3rem;
       max-width: 560px; text-align: center;
     }}
@@ -516,7 +516,7 @@ if __name__ == "__main__":
     webview.create_window(
         'Canvas Downloader', html=_LOADING_HTML,
         maximized=True, min_size=(1024, 700),
-        background_color='#0f1117'
+        background_color='#0d1117'
     )
 
     def _boot() -> None:

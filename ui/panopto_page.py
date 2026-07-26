@@ -11,6 +11,7 @@ button (download_settings hosts it at the main script level via the
 
 from __future__ import annotations
 
+import logging
 import time
 import streamlit as st
 
@@ -18,6 +19,9 @@ from panopto import models as pmodels
 from panopto import cuda_provision
 from panopto.hardware import detect_compute_hardware, device_advisory
 from panopto.settings import PANOPTO_DEFAULTS, load_settings, save_settings
+from shared.helpers import esc
+
+logger = logging.getLogger(__name__)
 
 # session_state widget key -> settings key.
 # Only the ENGINE config is persisted from this dialog now. Output formats and
@@ -560,13 +564,18 @@ def _render_model_manager() -> bool:
     any_downloading = False
 
     hw = detect_compute_hardware()
-    gpu_ok = bool(hw.get("gpu_available"))
-    recommended_id = "turbo" if gpu_ok else "small"
+    # Single source of truth (panopto.models). This used to be a local
+    # "turbo if gpu else small", which both ignored VRAM/core count AND clashed
+    # with a hard-coded "recommended" flag in the model registry - so a GPU
+    # machine rendered two Recommended badges at once.
+    recommended_id = pmodels.recommend_model(hw)
+    _rec_reason = pmodels.recommendation_reason(hw)
 
     st.markdown(
         "<div style='font-weight:700;color:#e2e8f0;font-size:1.0rem;margin-bottom:1px;margin-top:15px;'>Available Models</div>"
         "<div style='color:#94a3b8;font-size:0.82rem;margin-bottom:2px;'>"
-        "Download a model to enable transcription - bigger is more accurate but slower.</div>",
+        "Download a model to enable transcription - bigger is more accurate but slower. "
+        f"{esc(_rec_reason)}</div>",
         unsafe_allow_html=True
     )
 
@@ -615,8 +624,15 @@ def _render_model_manager() -> bool:
                     f'</div>'
                 )
 
+                # Real on-disk size once installed (the registry figure is an
+                # estimate of the essential CT2 files only, so the actual folder is
+                # usually larger); the estimate is all we have before download.
                 size_mb = m["size_mb"]
-                size_str = f"{size_mb/1024:.1f} GB" if size_mb >= 1024 else f"{size_mb} MB"
+                if installed:
+                    _actual = pmodels.installed_size_mb(mid)
+                    if _actual:
+                        size_mb = _actual
+                size_str = f"{size_mb/1024:.1f} GB" if size_mb >= 1024 else f"{size_mb:.0f} MB"
                 # size_str is an app-built number string.
                 # audit-ignore
                 c2.html(f"<div style='color:#cbd5e1;font-size:0.82rem;'>{size_str}</div>")
@@ -651,17 +667,32 @@ def _render_model_manager() -> bool:
                                 _set_radio_card("pan_model", mid)
                                 st.rerun(scope="fragment")
                         with ac2:
-                            if st.button("", key=f"pan_model_del_{mid}", help="Remove model", use_container_width=True):
+                            if st.button("", key=f"pan_model_del_{mid}", help="Remove model.", use_container_width=True):
                                 pmodels.delete_model(mid)
                                 pmodels.clear_download_state(mid)
+                                # Drop the in-process handle too. faster-whisper
+                                # caches a loaded model keyed by (id, device,
+                                # compute_type); without this the cache keeps
+                                # serving a model whose files have just been
+                                # deleted from disk, so a transcription started
+                                # after a delete could still use the removed model
+                                # (or fail deep inside CTranslate2) until restart.
+                                try:
+                                    from panopto.transcribe import clear_model_cache
+                                    clear_model_cache()
+                                except Exception:
+                                    pass
                                 if st.session_state.get("pan_model") == mid:
-                                    st.session_state["pan_model"] = PANOPTO_DEFAULTS["model"]
+                                    st.session_state["pan_model"] = pmodels.recommend_model()
                                     _persist()
                                 st.rerun(scope="fragment")
                     else:
                         disabled = not pmodels.hf_available()
                         if st.button("Download", key=f"pan_model_dl_{mid}", use_container_width=True,
-                                     type="primary", disabled=disabled):
+                                     type="primary", disabled=disabled,
+                                     help=None if not disabled else (
+                                         "Model downloads need the huggingface-hub package, "
+                                         "which is not available in this build.")):
                             pmodels.start_download(mid)
                             st.rerun(scope="fragment")
 
@@ -745,6 +776,43 @@ def _render_compute_hardware_status(hw: dict) -> None:
         f"{gpu_row}{cpu_row}</div>",
         unsafe_allow_html=True,
     )
+
+    # ── App-provisioned CUDA libraries: show what is installed, offer removal ──
+    # Only when WE installed them (is_provisioned() checks our own lib dir, so a
+    # system-wide CUDA install is never offered for deletion). ~1.3 GB is a lot of
+    # disk to have no way of reclaiming from inside the app.
+    try:
+        if cuda_provision.is_provisioned():
+            _ver = cuda_provision.provisioned_version()
+            _ver_txt = f" ({_esc(_ver)})" if _ver else ""
+            st.markdown(
+                "<div style='margin-top:8px;font-size:0.8rem;color:#94a3b8;'>"
+                f"CUDA libraries installed by Canvas Downloader{_ver_txt}."
+                "</div>",
+                unsafe_allow_html=True,
+            )
+            if st.button("Remove CUDA libraries", key="pan_cuda_remove",
+                         use_container_width=False,
+                         help="Frees about 1.3 GB. GPU transcription falls back to "
+                              "the CPU until you install them again."):
+                if cuda_provision.remove_provision():
+                    # The removed libs are still on this process's DLL search path
+                    # and the hardware probe is cached, so both must be refreshed
+                    # or the UI would keep claiming the GPU is ready.
+                    detect_compute_hardware(force=True)
+                    if st.session_state.get("pan_device") == "cuda":
+                        st.session_state["pan_device"] = "cpu"
+                        _persist()
+                    st.rerun(scope="fragment")
+                else:
+                    from ui.amber_notice import render_amber_notice
+                    render_amber_notice(
+                        "Could not remove the CUDA libraries.",
+                        detail="They may be in use. Close the app and try again.",
+                        margin="8px 0 0 0",
+                    )
+    except Exception as e:
+        logger.debug(f"CUDA provisioning status row failed: {e}")
 
 
 def _render_gpu_enablement(hw: dict) -> bool:
@@ -946,7 +1014,12 @@ def render_transcription_dialog() -> None:
                 # GPU only selectable when CTranslate2 can actually use a CUDA device.
                 with d2:
                     st.button("GPU", key="btn_dev_gpu", on_click=_set_radio_card,
-                              args=("pan_device", "cuda"), use_container_width=True, disabled=not gpu_ok)
+                              args=("pan_device", "cuda"), use_container_width=True,
+                              disabled=not gpu_ok,
+                              help=None if gpu_ok else (
+                                  "GPU transcription needs an NVIDIA GPU with the CUDA "
+                                  "runtime libraries. See the detected hardware below - "
+                                  "the app can download the missing libraries for you."))
 
     # Detected-hardware status (GPU + CPU), then GPU remediation (one-click CUDA
     # library download or driver guidance) when present-but-not-usable.
