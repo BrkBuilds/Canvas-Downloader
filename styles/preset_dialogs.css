@@ -104,10 +104,9 @@ div[data-testid="stDialog"] div.st-key-preset_save_create button:hover {
     color: #ffffff !important;
 }
 
-div[data-testid="stDialog"] div.st-key-preset_save_create button[disabled] {
-    opacity: 0.4 !important;
-    pointer-events: none !important;
-}
+/* Disabled state: none here - global.css's `button[disabled]` recipe owns it.
+   (`opacity: 0.4` multiplied with that filter; a natively disabled button
+   already swallows pointer events.) */
 
 /* Delete buttons - recessed dark default, danger red hover */
 div[data-testid="stDialog"] div[class*="st-key-preset_delete_"] button {

@@ -19,6 +19,7 @@ import logging
 import time
 import traceback
 from pathlib import Path
+from urllib.parse import unquote_plus
 
 import streamlit as st
 
@@ -29,6 +30,17 @@ from core.state_registry import NOTEBOOK_SUB_KEYS
 from core.sync_manager import SyncManager
 from shared.helpers import render_sync_wizard, friendly_course_name, esc
 from engine.notifications import play_completion_beep
+# MODULE level on purpose. These used to be imported ONLY inside the Today-mode
+# branch of sync_progress_hook, so the regular full-page branch below - which
+# needs them too - raised NameError on every single tick. The hook wraps its
+# whole body in `except Exception`, so the failure was silent and the analysis
+# panel simply never painted: a bare "Cancel Sync" button on an otherwise empty
+# page until the review screen appeared.
+from engine.estimation import stepwise_estimator
+from engine.progress_dashboard import (
+    DashboardPlaceholders, build_progress_bar_html, metric_count, metric_eta,
+    render_analysis_dashboard, analysis_percent,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -159,11 +171,16 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
     progress_hook(0, 1, "Fetching files from Canvas...")
     _t_fetch = time.perf_counter()
     _fetch_timings: dict = {}
+    # The mode this folder was BUILT in, read from its own contract - not the
+    # mode a fresh download would pick. It decides where an isolated Page is
+    # expected to sit, so guessing it wrong makes every page read as new.
+    _built_mode = sync_mgr._load_metadata('download_mode') or None
     canvas_files, sec_fetch_status, module_map = cm.get_course_files_metadata(
         course,
         progress_callback=progress_hook,
         secondary_content_settings=_secondary_settings,
         timings=_fetch_timings,
+        download_mode=_built_mode,
     )
     if debug_file:
         _fetch_ms = int((time.perf_counter() - _t_fetch) * 1000)
@@ -231,21 +248,59 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             f"{_lc} deleted locally",
             debug_file,
         )
+        # One line per file, for EVERY category the analyzer produced. The
+        # categories are the whole product of this phase, so a log that covers
+        # only some of them cannot answer the question a support case actually
+        # asks - "why did it not re-download X?" - about the rest.
+        #
+        # Two details that make these lines usable rather than merely present:
+        #
+        #   * ``canvas_filename`` is stored URL-ENCODED (it comes straight off
+        #     the Canvas API), so a Danish name logged raw reads
+        #     `Eksamen+2023E+Ordin%C3%A6r+Klasse+opgave.pdf` while the review
+        #     screen shows `Eksamen 2023E Ordinær Klasse opgave.pdf`. Nobody can
+        #     match those by eye, and no tooling can match them without knowing
+        #     to decode. The UI already decodes with unquote_plus; so does this.
+        #   * the local path is appended where it differs from the name, because
+        #     post-processing renames files (`x.js` -> `x_js.txt`) and the
+        #     Canvas-side name alone will not be found on disk.
+        def _row(tag: str, name: str, local: str = '') -> None:
+            _disp = unquote_plus(str(name or ''))
+            _loc = str(local or '')
+            _suffix = f"   -> {_loc}" if _loc and Path(_loc).name != _disp else ""
+            log_debug(f"  [{tag}]{' ' * max(1, 14 - len(tag))}{_disp}{_suffix}", debug_file)
+
         for _f in (getattr(result, 'new_files', []) or []):
             _fn = getattr(_f, 'display_name', None) or getattr(_f, 'filename', str(_f))
-            log_debug(f"  [NEW]          {_fn}", debug_file)
-        for _f, _ in (getattr(result, 'updated_clean_files', []) or []):
+            _row('NEW', _fn, getattr(_f, 'target_local_path', ''))
+        for _f, _si in (getattr(result, 'updated_clean_files', []) or []):
             _fn = getattr(_f, 'display_name', None) or getattr(_f, 'filename', str(_f))
-            log_debug(f"  [UPDATE-CLEAN] {_fn}", debug_file)
-        for _f, _ in (getattr(result, 'updated_modified_files', []) or []):
+            _row('UPDATE-CLEAN', _fn, getattr(_si, 'local_path', ''))
+        for _f, _si in (getattr(result, 'updated_modified_files', []) or []):
             _fn = getattr(_f, 'display_name', None) or getattr(_f, 'filename', str(_f))
-            log_debug(f"  [UPDATE-EDIT]  {_fn}", debug_file)
+            _row('UPDATE-EDIT', _fn, getattr(_si, 'local_path', ''))
         for _si in (getattr(result, 'deleted_on_canvas', []) or []):
-            _fn = getattr(_si, 'canvas_filename', str(_si))
-            log_debug(f"  [CANVAS-DEL]   {_fn}", debug_file)
+            _row('CANVAS-DEL', getattr(_si, 'canvas_filename', str(_si)),
+                 getattr(_si, 'local_path', ''))
         for _si in (getattr(result, 'locally_deleted_files', []) or []):
-            _fn = getattr(_si, 'canvas_filename', str(_si))
-            log_debug(f"  [LOCAL-DEL]    {_fn}", debug_file)
+            _row('LOCAL-DEL', getattr(_si, 'canvas_filename', str(_si)),
+                 getattr(_si, 'local_path', ''))
+        # Ignored files were previously counted nowhere and listed nowhere, so a
+        # file the user had suppressed simply vanished from the log - the one
+        # category where "it is missing on purpose" is the answer, and the log
+        # could not give it.
+        _ign = getattr(result, 'ignored_files', []) or []
+        if _ign:
+            log_debug(f"Ignored (excluded from sync): {len(_ign)} file(s)", debug_file)
+            for _si in _ign:
+                _row('IGNORED', getattr(_si, 'canvas_filename', str(_si)),
+                     getattr(_si, 'local_path', ''))
+        # Up-to-date files are deliberately summarised rather than listed: on a
+        # healthy folder they are every file in the course, and 200 lines of
+        # "nothing happened" would bury the ~10 lines that matter.
+        _utd = len(getattr(result, 'uptodate_files', []) or [])
+        if _utd:
+            log_debug(f"Up to date (no action): {_utd} file(s)", debug_file)
 
     # ── Panopto recordings (discovered + disk-compared, like any other file) ──
     # Only when the premium feature is enabled. Discovery is slow (per-recording
@@ -487,7 +542,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
 
     # Step wizard
     if not _today_minimal:
-        render_sync_wizard(st, 2)
+        render_sync_wizard(st, 'analyze')
 
     # (The old sync_single_pair_idx single-pair filter was dead code - nothing
     # in the app ever set the key - and has been removed.)
@@ -552,8 +607,27 @@ def run_analysis(sync_pairs, main_placeholder=None):
     if main_placeholder:
         main_placeholder.empty()
 
-    # Clean progress display - no stale cards
-    analysis_ui_placeholder = st.empty()
+    # Clean progress display - no stale cards. Today mode keeps the single slim
+    # placeholder (its own card is already the frame); everywhere else the
+    # analysis renders through the SAME dashboard chrome as the sync itself.
+    if _today_minimal:
+        analysis_ui_placeholder = st.empty()
+        analysis_dp = None
+    else:
+        with st.container(key="progress_dashboard"):
+            _an_header = st.empty(); _an_progress = st.empty()
+            _an_metrics = st.empty(); _an_active = st.empty()
+        analysis_ui_placeholder = None
+        analysis_dp = DashboardPlaceholders(
+            header=_an_header, progress=_an_progress,
+            metrics=_an_metrics, active_file=_an_active,
+        )
+        st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+
+    # Courses are the unit of work. ~5 s each is the opening guess; the measured
+    # rate replaces it as soon as the first course finishes.
+    analysis_eta = stepwise_estimator(5.0)
+    analysis_changes = [0]   # cumulative changes found, for the metrics row
 
     if _today_minimal:
         # The Today running-sync card sets its own flex `gap: 0` (see
@@ -603,15 +677,13 @@ def run_analysis(sync_pairs, main_placeholder=None):
             try:
                 if is_sync_cancelled():
                     return
-                percent = int((current / total) * 100) if total > 0 else 0
+                analysis_eta.update(units_done=_pair_num - 1, units_total=total_pairs)
                 if _today_minimal:
                     # Today dashboard: the surrounding card already shows the
                     # title + phase description, so render only a slim course
                     # line + an animated bar (the analysis sub-steps mostly
                     # report total=1, so an indeterminate sweep reads better
                     # than a bar frozen near 0%).
-                    from engine.progress_dashboard import (
-                        build_progress_bar_html, analyzing_heading_html)
                     _course_line = (
                         f"Course {_pair_num} of {total_pairs}: <b>{esc(_display_name)}</b>"
                         if total_pairs > 1 else f"<b>{esc(_display_name)}</b>"
@@ -624,23 +696,50 @@ def run_analysis(sync_pairs, main_placeholder=None):
                     )
                     time.sleep(0.05)
                     return
-                analysis_ui_placeholder.markdown(f"""
-                <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
-                    {analyzing_heading_html()}
-                    <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {_pair_num} of {total_pairs}: <b>{esc(_display_name)}</b></p>
-                    <p style="color: {theme.ACCENT_BLUE}; font-size: 0.8rem; margin-bottom: 5px;">{status_text}</p>
-                    <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
-                        <div style="background-color: {theme.ACCENT_BLUE}; width: {percent}%; height: 100%; transition: width 0.1s ease;"></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+                render_analysis_dashboard(
+                    analysis_dp,
+                    course_label=(f"Analyzing Course {_pair_num}/{total_pairs}"
+                                  if total_pairs > 1 else "Analyzing Course"),
+                    course_name=_display_name,
+                    status_text=status_text,
+                    # Courses are the unit the row counts, so they are the unit
+                    # the bar measures too - the analysis sub-step only supplies
+                    # the fraction of the course in hand. Passing the sub-step's
+                    # own ratio straight through put a 100% bar above
+                    # "COURSES 0 / 2" every time a sub-step finished.
+                    percent=analysis_percent(_pair_num - 1, total_pairs,
+                                             current, total),
+                    # Most analysis sub-steps report total=1, where a bar pinned
+                    # near 0% reads as a hang rather than as work in progress.
+                    indeterminate=total <= 1,
+                    metrics=[
+                        metric_count('Courses', _pair_num - 1, total_pairs),
+                        metric_count('Changes Found', analysis_changes[0],
+                                     color=theme.SUCCESS_STAT),
+                        metric_eta(analysis_eta.eta_text()),
+                    ],
+                )
                 time.sleep(0.05)
-            except Exception:
-                pass
+            except Exception as _hook_err:
+                # Swallowed on purpose - a progress repaint must never abort an
+                # analysis - but LOGGED, because a silent swallow here hid a
+                # NameError that blanked this panel entirely (see the
+                # analyzing_heading_html import at the top of this module).
+                logger.warning(f"Analysis progress repaint failed: {_hook_err}",
+                               exc_info=True)
 
         local_folder = pair['local_folder']
         course_id = pair['course_id']
         course_name = pair['course_name']
+
+        # Paint the panel BEFORE blocking. `analysis_ui_placeholder` is created
+        # empty and only ever filled from sync_progress_hook, which cannot fire
+        # until the worker thread has reached Canvas - so until now there was a
+        # window where the screen showed the Cancel button and nothing else. On
+        # a course with no changes the whole analysis could finish inside that
+        # window, and the user never saw the analysis panel at all. Seeding it
+        # through the same hook keeps one renderer for one visual.
+        sync_progress_hook(0, 1, "Connecting to Canvas…")
 
         try:
             # Offload blocking API work to the shared background thread so
@@ -707,6 +806,17 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 'detected_structure': detected,
                 'panopto': panopto_payload,
             })
+
+            # Credit the finished course to the estimator, and roll its findings
+            # into the running "Changes Found" figure.
+            analysis_changes[0] += (
+                len(getattr(result, 'new_files', []) or [])
+                + len(getattr(result, 'updated_clean_files', []) or [])
+                + len(getattr(result, 'updated_modified_files', []) or [])
+                + len(getattr(result, 'deleted_on_canvas', []) or [])
+                + len(getattr(result, 'locally_deleted_files', []) or [])
+            )
+            analysis_eta.update(units_done=pair_num, units_total=total_pairs)
         except Exception as e:
             traceback.print_exc()
             # exc_info=True: the canvas_debug logging bridge formats the full
@@ -725,7 +835,11 @@ def run_analysis(sync_pairs, main_placeholder=None):
         _analysis_pool.shutdown(wait=False)
 
     # Clean up the UI when all courses are done analyzing
-    analysis_ui_placeholder.empty()
+    if analysis_ui_placeholder is not None:
+        analysis_ui_placeholder.empty()
+    else:
+        _an_header.empty(); _an_progress.empty()
+        _an_metrics.empty(); _an_active.empty()
 
     st.session_state['sync_analysis_results'] = all_results
 
@@ -1002,6 +1116,26 @@ def run_analysis(sync_pairs, main_placeholder=None):
             # M-1: Persist auto-discovered / healed entries even though no
             # download will run, so an up-to-date folder builds its sync memory.
             _persist_discovered_entries(all_results)
+
+            # Record WHAT was compared. "Nothing to sync" on its own reads like
+            # the app might not have looked; "checked 412 files across 3
+            # courses" is the same outcome with the evidence attached, and it is
+            # the only number the user cannot get anywhere else once the run is
+            # over. Panopto recordings are counted separately because they are
+            # a different unit of work, not files.
+            _checked_files = 0
+            _checked_recordings = 0
+            for _res in all_results:
+                _r = _res.get('result')
+                if _r is not None:
+                    _checked_files += len(getattr(_r, 'uptodate_files', []) or [])
+                _checked_recordings += len((_res.get('panopto') or {}).get('videos', []) or [])
+            st.session_state['sync_uptodate_stats'] = {
+                'files': _checked_files,
+                'recordings': _checked_recordings,
+                'courses': len(all_results),
+            }
+
             # Nothing to review - skip review step, go straight to completion
             st.session_state['synced_count'] = 0
             st.session_state['download_status'] = 'sync_complete'
@@ -1009,7 +1143,12 @@ def run_analysis(sync_pairs, main_placeholder=None):
             # M-3: Gate the beep on notifications_enabled so users who disabled
             # notifications don't still hear the sound.
             if st.session_state.get('notifications_enabled', True):
-                play_completion_beep(mode='sync_uptodate', summary='All files are up to date - nothing to download.')
+                _n_sum = (
+                    f"Checked {_checked_files} file{'s' if _checked_files != 1 else ''} "
+                    f"across {len(all_results)} course{'s' if len(all_results) != 1 else ''} "
+                    "- nothing to download."
+                ) if _checked_files else 'All files are up to date - nothing to download.'
+                play_completion_beep(mode='sync_uptodate', summary=_n_sum)
             st.session_state['completion_beep_fired'] = True
             st.rerun()
 

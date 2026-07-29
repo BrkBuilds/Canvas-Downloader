@@ -52,6 +52,91 @@ def _match_key(name: str) -> str:
     return _FS_UNSAFE_RE.sub('', robust_filename_normalize(name))
 
 
+# Auto-discovery tier (c) name floor.
+#
+# The shorter stem must be at least this many characters, and at least this
+# fraction of the longer one, before containment counts as evidence. Without a
+# floor, a two-character stem is contained in almost anything and "containment"
+# stops meaning anything at all.
+_TIER_C_MIN_STEM = 4
+_TIER_C_MIN_RATIO = 0.30
+
+
+# Separators a rename freely swaps without changing which file it is.
+_SEP_RUN_RE = re.compile(r'[\s_\-.]+')
+
+
+def _stem_key(name: str) -> str:
+    """Normalized filename stem - the unit tier (c) compares on.
+
+    Separator runs are collapsed on top of ``_match_key``'s normalisation, so
+    "SQL Opgave Vejl" and "sql_opgave_vejl" compare as the same stem. Swapping
+    spaces for underscores or hyphens is the most common benign rename there is,
+    and tier (a)'s exact-name match cannot see through it.
+
+    Collapsing is deliberately wider than tier (a), and safe here because this
+    only feeds a CONTAINMENT test that still has to hold: removing separators
+    from "kotterkap1" and "kotterkap2", or from "gavelistenopgave" and
+    "decoy0unrelated", leaves neither containing the other.
+    """
+    return _SEP_RUN_RE.sub('', _match_key(Path(str(name)).stem))
+
+
+def _name_floor_reject(c_file, candidate) -> str:
+    """Reason tier (c) must NOT bind *candidate* to *c_file*, or '' to allow.
+
+    Tier (c) matches on unique size + extension, which is evidence that two
+    files are the same SIZE, not that they are the same FILE. Tier (b) was meant
+    to supply the content evidence, but it needs an md5 from Canvas and this
+    instance publishes none (0 of 140 files on course 43660), so tier (c) runs
+    unaccompanied. This floor is the missing corroboration.
+
+    The rule is **stem containment**, not a similarity ratio, and that choice is
+    measured rather than inherited. ``heal_manifest`` Tier 3 pairs containment
+    with ``ratio >= 0.90``; sampling real rename shapes shows the ratio is the
+    wrong instrument here:
+
+        Intro           -> Intro_v2                 contained,     ratio 0.857
+        Lecture 1       -> Lecture 1 (annotated)    contained,     ratio 0.684
+        Forelaesning13  -> Uge 7 Forelaesning13     contained,     ratio 0.864
+        Lecture1        -> Lecture2                 NOT contained, ratio 0.917
+        Kotter kap 1    -> Kotter kap 2             NOT contained, ratio 0.938
+
+    A 0.90 floor rejects all three genuine renames - including the one Tier 3's
+    own docstring cites as a match - while passing both single-character
+    substitutions, which are the classic mis-bind. Containment gets every case
+    right on its own, so that is what this uses.
+
+    Both Canvas-side names are tried, mirroring tier (a): a folder built by an
+    older version carries the raw ``filename`` while a fresh download carries
+    the display name.
+    """
+    cand_stem = _stem_key(Path(candidate['path']).name)
+    if not cand_stem:
+        return "candidate has no comparable name"
+
+    best = ""
+    for raw in (preferred_disk_name(c_file), getattr(c_file, 'filename', '')):
+        canvas_stem = _stem_key(raw)
+        if not canvas_stem:
+            continue
+        short, long = sorted((cand_stem, canvas_stem), key=len)
+        if short not in long:
+            best = best or (f"name '{cand_stem}' is not a rename of '{canvas_stem}' "
+                            f"(neither stem contains the other)")
+            continue
+        if len(short) < _TIER_C_MIN_STEM:
+            best = (f"shared stem '{short}' is too short to be evidence "
+                    f"(< {_TIER_C_MIN_STEM} chars)")
+            continue
+        if len(short) / len(long) < _TIER_C_MIN_RATIO:
+            best = (f"shared stem '{short}' is only "
+                    f"{len(short) / len(long):.0%} of '{long}' - too little in common")
+            continue
+        return ""       # this Canvas name vouches for the candidate
+    return best or "no Canvas name to compare against"
+
+
 # --- Data Classes ---
 
 @dataclass
@@ -279,6 +364,26 @@ def secondary_id_type(canvas_file_id: int) -> str:
         if abs_id >= offset:
             return etype
     return 'module_item'
+
+
+def secondary_raw_id(canvas_file_id: int) -> int:
+    """Inverse of :func:`make_secondary_id` - the id the synthetic was built from.
+
+    >>> secondary_raw_id(make_secondary_id('attachment', 1784620))
+    1784620
+    >>> secondary_raw_id(1784620)
+    1784620
+
+    Note what the returned number MEANS depends on the range: only the
+    ``attachment`` band re-keys a real Canvas **file** id. Every other band
+    holds an ENTITY id (assignment, quiz, ...) from a different namespace, so
+    the two must never be compared with each other. Callers that dedupe files
+    gate on ``secondary_id_type(...) == 'attachment'`` first.
+    """
+    if canvas_file_id >= 0:
+        return canvas_file_id
+    return abs(canvas_file_id) - SECONDARY_ID_OFFSETS.get(
+        secondary_id_type(canvas_file_id), 0)
 
 
 # Sentinel returned by peek_bound_course_id when a DB exists but could not be
@@ -1122,16 +1227,63 @@ class SyncManager:
                                 _matched_tier = 'md5'
                                 break
                     if matched_cand is None and c_ext:
-                        # Exactly one same-size, same-extension orphan is almost
-                        # certainly this file under a new name. Uniqueness is
-                        # required so we never bind a coincidentally same-sized file.
+                        # Exactly one same-size, same-extension orphan is
+                        # PROBABLY this file under a new name - but size and
+                        # extension say nothing about content, so uniqueness
+                        # alone is not enough to bind on.
+                        #
+                        # Why this needs a name guard at all: tier (b) above is
+                        # the content check, and it can only run when Canvas
+                        # exposes an md5. Measured 2026-07-27 on course 43660:
+                        # Canvas returns md5 for 0 of 140 files, so tier (b)
+                        # never fires against this instance and tier (c) is
+                        # doing all the work with no content evidence behind it.
+                        # A live audit planted a same-size, same-extension file
+                        # of entirely unrelated content and watched it get bound
+                        # to a deleted Canvas file: the real file was never
+                        # re-offered and the user silently kept junk under its
+                        # manifest row.
                         ext_pool = [
                             cand for cand in size_pool
                             if Path(cand['path']).suffix.lower() == c_ext
                         ]
                         if len(ext_pool) == 1:
-                            matched_cand = ext_pool[0]
-                            _matched_tier = 'size_ext'
+                            cand = ext_pool[0]
+                            _why = _name_floor_reject(c_file, cand)
+                            if _why:
+                                # Not adopted -> the file falls through to
+                                # "new" and is re-downloaded. The student keeps
+                                # their renamed copy AND gets the real file:
+                                # a duplicate, never a loss. Logged because a
+                                # silent refusal is as hard to diagnose as a
+                                # silent binding.
+                                logger.info(
+                                    "Auto-discovery tier (c) refused '%s' for "
+                                    "canvas_file_id=%s ('%s'): %s. The file will "
+                                    "be re-downloaded.",
+                                    Path(cand['path']).name, c_file.id,
+                                    getattr(c_file, 'filename', '?'), _why)
+                                # Carry the near-miss to the review screen. A
+                                # refusal is the safe choice, but from the
+                                # student's side it looks like the app offering
+                                # a file they believe they already have - so the
+                                # UI has to be able to say "this may be the
+                                # local file you renamed" and let them decide.
+                                try:
+                                    c_file.local_lookalike = str(
+                                        Path(cand['path']).relative_to(self.local_path)
+                                    ).replace('\\', '/')
+                                except ValueError:
+                                    c_file.local_lookalike = Path(cand['path']).name
+                            else:
+                                matched_cand = cand
+                                _matched_tier = 'size_ext'
+                                logger.info(
+                                    "Auto-discovery tier (c) adopted '%s' as "
+                                    "canvas_file_id=%s ('%s') on unique size+ext "
+                                    "with a matching name stem.",
+                                    Path(cand['path']).name, c_file.id,
+                                    getattr(c_file, 'filename', '?'))
 
                 if matched_cand is not None:
                     # Auto-discover the file and count it as up-to-date.
@@ -2101,7 +2253,15 @@ class SyncManager:
                 # while still letting the NEXT update of the same source
                 # overwrite its own product in place (no ' (1)' churn).
                 try:
-                    self._record_conversion_product(canvas_file_id, new_file_path)
+                    # The product's md5 goes in with its path. Without it there
+                    # is no way, on a LATER sync, to tell the app's own output
+                    # from one the student has since annotated - the manifest
+                    # row itself has by then been re-pointed at the freshly
+                    # downloaded SOURCE, so its md5 describes the source. That
+                    # gap let a re-conversion overwrite a locally edited
+                    # product; see _resolve_conversion_target.
+                    self._record_conversion_product(canvas_file_id, new_file_path,
+                                                    new_md5)
                 except Exception as _prod_err:
                     logger.debug(f"conversion-product record failed: {_prod_err}")
 
@@ -2130,11 +2290,44 @@ class SyncManager:
         except Exception:
             return {}
 
-    def _record_conversion_product(self, canvas_file_id: int, rel_path: str) -> None:
-        """Merge one entry's conversion-product path into the metadata map."""
+    def _record_conversion_product(self, canvas_file_id: int, rel_path: str,
+                                   md5: str = "") -> None:
+        """Merge one entry's conversion-product path (and hash) into the map.
+
+        Stored as ``{"path": rel, "md5": hex}``. The bare string form written
+        by older versions is still read (see ``conversion_product``); an entry
+        without a hash simply cannot be checked for local edits, which is the
+        pre-existing behaviour rather than a new risk.
+        """
         products = self.get_conversion_products()
-        products[str(canvas_file_id)] = rel_path
+        products[str(canvas_file_id)] = {"path": rel_path, "md5": md5 or ""}
         self._save_metadata(self._CONVERSION_PRODUCTS_KEY, json.dumps(products))
+
+    @staticmethod
+    def conversion_product(entry) -> tuple[str, str]:
+        """``(rel_path, md5)`` from either the new dict or the legacy string."""
+        if isinstance(entry, dict):
+            return entry.get("path", ""), entry.get("md5", "")
+        return (entry or ""), ""
+
+    # Conversion outputs the student has edited, for THIS run. In memory and
+    # deliberately not persisted: it is a fact about one sync, established by
+    # the analyzer, and re-deriving it later is exactly what cannot be done -
+    # once the download re-points the manifest row at the source, nothing on
+    # disk still says what the product's hash used to be.
+    def protect_conversion_target(self, path) -> None:
+        """Mark a converted file as locally edited: do not overwrite it."""
+        if not hasattr(self, '_protected_outputs'):
+            self._protected_outputs = set()
+        self._protected_outputs.add(
+            os.path.normcase(str(Path(path).resolve())))
+
+    def is_conversion_target_protected(self, path) -> bool:
+        try:
+            return os.path.normcase(str(Path(path).resolve())) in \
+                getattr(self, '_protected_outputs', set())
+        except OSError:
+            return False
 
     def get_ignored_files(self) -> list[SyncFileInfo]:
         """Return a list of all files currently marked as ignored in the DB."""

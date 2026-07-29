@@ -23,15 +23,53 @@ from shared.helpers import (
 from shared.components import (
     render_completion_card, render_folder_cards,
     render_pp_warning, render_error_section,
-    error_log_dialog,
+    error_log_dialog, fresh_container,
 )
 from core.state_registry import cleanup_sync_state
 from engine.notifications import play_completion_beep
 
 
+def build_newversion_notice(records) -> dict | None:
+    """Copy for "we saved a second copy instead of overwriting yours".
+
+    Returns ``None`` when there is nothing to say, so the caller never renders
+    an empty card.
+
+    This is the one sync outcome that silently ADDS a file to the user's folder,
+    and the copy that keeps the familiar name is the OLD one. Two routes reach
+    it - the file was open in another program, or the user had edited it - and
+    the folder looks identical either way, so one notice covers both. It is
+    INFO, not a warning: nothing failed, the app protected work in progress.
+
+    The copy states three things in order, because that is the order the
+    questions occur: what happened, how to recognise the new file, and what to
+    do about it. It deliberately does not explain WHY per file - the reason
+    ("open" vs "edited") is not something the user needs in order to act, and
+    splitting the notice in two would make a tidy outcome look like two
+    problems.
+    """
+    records = [r for r in (records or []) if isinstance(r, dict)]
+    n = len(records)
+    if not n:
+        return None
+    example = next((r.get("name") for r in records if r.get("name")), "")
+    one = n == 1
+    message = (f"{n} {'file was' if one else 'files were'} saved as a separate "
+               f"copy so we didn't overwrite your version.")
+    detail = (
+        f"You had {'this file' if one else 'these files'} open or edited, so the "
+        f"new version from Canvas was saved next to {'it' if one else 'them'} "
+        f"with \"_NewVersion\" in the name"
+        + (f" (for example: {example})." if example else ".")
+        + " Your copy is untouched — compare the two and keep whichever you "
+          "want, then delete the other."
+    )
+    return {"message": message, "detail": detail, "count": n, "example": example}
+
+
 def show_sync_cancelled():
     """Render the sync-cancelled screen (summary card only, no error list)."""
-    render_sync_wizard(st, 3)
+    render_sync_wizard(st, 'sync')
 
     from shared.components import quit_office_once, render_cancelled_card
     quit_office_once()
@@ -86,7 +124,7 @@ def show_sync_complete():
             pass
 
     # Step wizard
-    render_sync_wizard(st, 4)
+    render_sync_wizard(st, 'complete')
     st.markdown('<h2 class="step-header">Sync Complete!</h2>', unsafe_allow_html=True)
 
     synced_count = st.session_state.get('synced_count', 0)
@@ -100,7 +138,20 @@ def show_sync_complete():
     size_skipped = st.session_state.get('size_skipped_files', [])
     limit_mb = st.session_state.get('max_file_size_mb', 0)
 
-    with st.container(border=True, key='completion_dashboard'):
+    # The run screens put their progress dashboard right about here, and
+    # Streamlit hands a block landing on another block's index that block's
+    # CHILDREN - the run's metrics row + terminal log rendered inside the
+    # completion card until the run ended (measured pre-fix: card 537px
+    # mid-run, 157px after). These empties tear those nodes down instead, and
+    # cost nothing: the screen measures identically with and without them. See
+    # shared.components.fresh_container for the full mechanism.
+    #
+    # TWO slots because run_sync has one CONDITIONAL element before its
+    # dashboard: the macOS first-run permission notice (_tcc_batch_active).
+    # Without the notice the dashboard sits on the first empty, with it on the
+    # second - covered either way.
+    st.empty()
+    with fresh_container(border=True, key='completion_dashboard'):
         # L-3: sync_errors is consistently list[str] - all entries are retriable.
         # The hasattr/isinstance chain that tried to classify error objects was dead
         # code; simplify to a direct count.
@@ -199,14 +250,28 @@ def show_sync_complete():
 
         retry_selections = st.session_state.get('retry_selections', [])
 
-        # Ignored files note
+        # Ignored files note. INFO, not a warning: files are only in this state
+        # because the user deliberately put them there, so the sync did exactly
+        # what was asked. An amber "⚠️" implied something had gone wrong.
         if st.session_state.get('sync_has_ignored_files'):
-            from ui.amber_notice import render_amber_notice
-            render_amber_notice(
-                "Some files were ignored and not synced.",
+            from ui.amber_notice import render_info_notice
+            render_info_notice(
+                "Some files were skipped because you ignored them.",
                 detail="You can manage ignored files from the Sync Hub.",
                 margin="12px 0 2px 0",
             )
+
+        # "_NewVersion" note. INFO for the same reason as the one above: nothing
+        # went wrong - the app protected a file the user was working on. But it
+        # is the one outcome that silently ADDS a file to their folder, and the
+        # copy keeping the familiar name is the OLD one, so saying nothing left
+        # them to discover a duplicate and guess which was current.
+        _newver = build_newversion_notice(
+            st.session_state.get('sync_newversion_files'))
+        if _newver:
+            from ui.amber_notice import render_info_notice
+            render_info_notice(_newver["message"], detail=_newver["detail"],
+                               margin="12px 0 2px 0")
 
         # Build error log paths for the error section
         _sync_error_log_paths = []
@@ -327,14 +392,21 @@ def show_sync_errors():
                 st.markdown(f"❌ {err}")
             if len(sync_errors) > 20:
                 st.caption(f"  ... and {len(sync_errors) - 20} more")
-            
+
             if st.session_state.get('error_log_enabled', False):
                 st.caption('📄 Full error details are saved in `download_errors.txt` in each course folder.')
-        
-        # In-App Error Log Viewer button
-        sync_selections = st.session_state.get('sync_selections', [])
+
+    # In-App Error Log Viewer button.
+    #
+    # Deliberately OUTSIDE the `if sync_errors:` block. A post-processing
+    # failure increments pp_failure_count, not sync_errors, so a run where only
+    # a conversion failed used to print "Check download_errors.txt for details"
+    # with no way to open it - an instruction pointing at a destination the
+    # screen would not take you to. Measured on a real run: 2 conversion
+    # failures, 0 sync errors, no button.
+    if sync_errors or st.session_state.get('pp_failure_count', 0):
         error_log_paths = []
-        for sel in sync_selections:
+        for sel in st.session_state.get('sync_selections', []):
             try:
                 sm = sel.get('res_data', {}).get('sync_manager')
                 if sm and sm.local_path.exists():
@@ -343,12 +415,8 @@ def show_sync_errors():
                         error_log_paths.append(log_file)
             except Exception:
                 pass
-        
-        if error_log_paths:
-            col_log, _ = st.columns([0.3, 0.7])
-            with col_log:
-                if st.button("📄 View Full Error Log", key="sync_view_error_log", use_container_width=True):
-                    error_log_dialog(error_log_paths)
+        from shared.components import render_error_log_button
+        render_error_log_button(error_log_paths, key_prefix='sync')
 
 
 def _cleanup_sync_state():

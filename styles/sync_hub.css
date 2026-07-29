@@ -122,13 +122,9 @@ div.st-key-btn_save_group_main button p::before {
     background-position: center;
 }
 
-/* Disabled state for Save Group button */
-div.st-key-btn_save_group_main button[disabled] {
-    background-color: rgba(95, 100, 200, 0.1) !important;
-    border: 1px solid rgba(95, 100, 200, 0.3) !important;
-    color: rgba(255, 255, 255, 0.3) !important;
-    cursor: not-allowed !important;
-}
+/* Disabled state: none here - global.css's `button[disabled]` recipe owns it.
+   This used to repaint the button a washed-out lilac, which read as a different
+   "off" style from every other disabled control on the same screen. */
 
 /* ---------------------------------------------------------
    ALL DIALOG CSS (Layer 1, Layer 2, action buttons, etc.)
@@ -172,13 +168,11 @@ div[data-testid="stDialog"] button[kind="primary"]:hover {
     background-color: #60a5fa !important;
 }
 
-div[data-testid="stDialog"] button[kind="primary"][disabled] {
-    background-color: #1e3a8a !important;
-    opacity: 1 !important;
-    color: rgba(255, 255, 255, 0.5) !important;
-    cursor: not-allowed !important;
-    box-shadow: none !important;
-}
+/* Disabled primary buttons in dialogs: no paint here. This was the single
+   broadest offender - it repainted EVERY disabled primary button in EVERY
+   dialog to a flat navy, so a dialog with two disabled controls of different
+   kinds showed two unrelated "off" styles. global.css's `button[disabled]`
+   recipe (brightness/saturate + not-allowed + no shadow) owns them all. */
 
 /* Secondary button baseline */
 div[data-testid="stDialog"] button[kind="secondary"] {
@@ -244,10 +238,8 @@ div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button:hover {
     color: #ffffff !important;
 }
 
-/* Disabled state for "Add to Sync List" */
-div[data-testid="stDialog"] div[class*="st-key-hub_add_"] button[disabled] {
-    box-shadow: none !important;
-}
+/* Disabled state for "Add to Sync List": none here - the shared
+   `button[disabled]` recipe in global.css already clears the box-shadow. */
 
 /* 4. Default state for "Delete" (Dark Grey / Recessed) */
 div[data-testid="stDialog"] div[class*="st-key-btn_hub_delete_"] button {
@@ -578,11 +570,7 @@ div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button:hover {
     transition: all 0.2s ease-in-out;
 }
 
-div[data-testid="stDialog"] div.st-key-btn_inline_new_confirm button[disabled] {
-    background-color: rgba(0, 0, 0, 0.3) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: rgba(255, 255, 255, 0.3) !important;
-}
+/* Disabled state: none here - global.css's `button[disabled]` recipe owns it. */
 
 /* =========================================
    LAYER 1: PAIR CARDS (Single Pairs)
@@ -648,10 +636,10 @@ div[class*="st-key-save_pair_"] button:hover {
     color: inherit !important;
 }
 
-div[class*="st-key-save_pair_"] button:disabled {
-    opacity: 0.3 !important;
-    filter: grayscale(100%);
-}
+/* Disabled state: none here - global.css's `button[disabled]` recipe owns it.
+   `opacity: 0.3` multiplied with that filter, and the local `grayscale(100%)`
+   REPLACED it (filter is one property), so this icon button was both flat grey
+   and near-invisible. */
 
 /* =========================================
    TAB NAVIGATION STYLING

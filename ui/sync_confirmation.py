@@ -171,7 +171,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         lbl_value = f"{count} file{'s' if count != 1 else ''}"
     sorted_folders = sorted(list(folder_set))
     _folder_lis = "".join(
-        f"<li>{SVG_FOLDER_YELLOW}<span class='li-text'>" + esc(p) + "</span></li>"
+        f"<li class='li-folder'>{SVG_FOLDER_YELLOW}<span class='li-text'>" + esc(p) + "</span></li>"
         for p in sorted_folders
     )
     folder_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{_folder_lis}</ul>"
@@ -197,7 +197,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             f'<details>'
             f'<summary>'
             f'<div class="stat-left" style="display: flex; align-items: center;">{SVG_FOLDER_YELLOW} <span class="stat-label">Destination:</span></div>'
-            f'<div class="stat-value">{len(folder_set)} courses <span class="arrow-icon"></span></div>'
+            f'<div class="stat-value"><span class="arrow-icon"></span>{len(folder_set)} courses</div>'
             f'</summary>'
             f'<div class="dropdown-list">{folder_list_html}</div>'
             f'</details>'
@@ -275,13 +275,31 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'align-items: center;'
         f'gap: 8px;'
         f'}}'
+        # The app's chevron - the same masked lucide glyph global.css draws on
+        # every other <summary> - rendered as a mask so `background-color`
+        # recolours it. It sits BEFORE the value ("> 23 files"), not after:
+        # trailing it left a lone glyph hard against the card's right padding.
+        # The old `▸`/`▾` unicode pair was the last of the pre-SVG chevrons.
         f'.arrow-icon {{'
-        f'font-size: 0.75rem;'
-        f'color: rgba(255, 255, 255, 0.4);;'
-        f'margin-left: 2px;'
+        f'width: 0.95em;'
+        f'height: 0.95em;'
+        f'flex-shrink: 0;'
+        f'background-color: rgba(255, 255, 255, 0.45);'
+        f"-webkit-mask-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E\");"
+        f"mask-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E\");"
+        f'-webkit-mask-repeat: no-repeat;'
+        f'mask-repeat: no-repeat;'
+        f'-webkit-mask-position: center;'
+        f'mask-position: center;'
+        f'-webkit-mask-size: contain;'
+        f'mask-size: contain;'
+        f'transition: transform 0.18s ease, background-color 0.18s ease;'
         f'}}'
-        f'.arrow-icon::before {{ content: "▸"; }}'
-        f'details[open] summary .arrow-icon::before {{ content: "▾"; color: {theme.WHITE}; }}'
+        f'details[open] summary .arrow-icon {{'
+        f'transform: rotate(90deg);'
+        f'background-color: {theme.WHITE};'
+        f'}}'
+        f'@media (prefers-reduced-motion: reduce) {{ .arrow-icon {{ transition: none; }} }}'
         f'.dropdown-list {{'
         f'background: rgba(0, 0, 0, 0.3);'
         f'border-radius: 8px;'
@@ -348,13 +366,23 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'display: flex !important;'
         f'align-items: center !important;'
         f'justify-content: center !important;'
-        f'gap: 8px !important;'
+        # The back-arrow is positioned OUT OF FLOW below, so this button's label
+        # centres on the same axis its neighbour's does. In flow, the arrow was a
+        # flex sibling and the browser centred (arrow + gap + label) as one
+        # block, pushing "No, Go back" 15px right of the button's centre while
+        # "Yes, Start Sync" sat dead centre - measured, and the reason the pair
+        # read as misaligned.
+        f'position: relative !important;'
         f'transition: all 0.15s ease !important;'
         f'box-shadow: none !important;'
         f'}}'
         f'div[data-testid="stDialog"] div.st-key-cancel_sync_dialog_btn button::before {{'
         f'content: "" !important;'
         f'display: block !important;'
+        f'position: absolute !important;'
+        f'left: 18px !important;'
+        f'top: 50% !important;'
+        f'transform: translateY(-50%) !important;'
         f'width: 17px !important;'
         f'height: 17px !important;'
         f'min-width: 17px !important;'
@@ -414,6 +442,23 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'padding-left: 19px !important;'
         f'opacity: 0.85 !important;'
         f'}}'
+        # Destination rows: centre the folder glyph ON the course name's line.
+        # The list's base rule is `align-items: flex-start`, which is right for
+        # FILE rows (a long filename wraps and its icon must stay on the first
+        # line) but wrong here - these are single-line labels, and a 1.4em glyph
+        # top-aligned against a 0.8rem line sat visibly high. SVG_FOLDER_YELLOW's
+        # own `vertical-align: -0.2em` does nothing once it is a flex item, so
+        # it is neutralised rather than left to look like it is doing something.
+        f'.dropdown-list ul li.li-folder {{'
+        f'align-items: center !important;'
+        f'}}'
+        f'.dropdown-list ul li.li-folder svg {{'
+        f'width: 1.15em !important;'
+        f'height: 1.15em !important;'
+        f'vertical-align: 0 !important;'
+        f'margin-right: 3px !important;'
+        f'flex-shrink: 0 !important;'
+        f'}}'
         f'.dropdown-list ul {{ margin: 0 !important; padding: 0 !important; }}'
         f'</style>'
     )
@@ -436,7 +481,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'<details>'
         f'<summary>'
         f'<div class="stat-left"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:1.45em;height:1.45em;vertical-align:-0.3em;display:inline-block;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" fill="rgba(255,255,255,0.85)"/><path d="M14 2v6h6" fill="rgba(255,255,255,0.4)"/></svg> <span class="stat-label">Files:</span></div>'
-        f'<div class="stat-value">{lbl_value} <span class="arrow-icon"></span></div>'
+        f'<div class="stat-value"><span class="arrow-icon"></span>{lbl_value}</div>'
         f'</summary>'
         f'<div class="dropdown-list">{file_list_html}</div>'
         f'</details>'

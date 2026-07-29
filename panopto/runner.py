@@ -54,6 +54,7 @@ from panopto.stream import (
 )
 from panopto.transcribe import (
     PanoptoCancelled, TranscriptionEngineCrash, transcribe_in_subprocess,
+    _clean_part_files,
 )
 from panopto.settings import wants_transcription
 
@@ -932,6 +933,33 @@ def _run_panopto_batch(
                 _record_now(t)
                 i += 1
         progress("transcribe_done", total=len(tx_tasks), ok=_ok)
+
+        # Sweep any half-written .part sidecars, whatever ended the phase.
+        #
+        # The loop has SEVERAL exits and only one of them used to clean up: the
+        # `except PanoptoCancelled` branch, via transcribe_in_subprocess. The
+        # `if is_cancelled() or engine_failed: break` at the loop head does not,
+        # and neither does an engine failure - so a cancel caught at the top of
+        # the loop left `<name>.txt.part` and `<name>.srt.part` sitting in the
+        # user's course folder. Measured twice: the two exits produce visibly
+        # different logs (one writes "Transcription cancelled by user", the other
+        # writes nothing) and only the logged one cleaned up.
+        #
+        # They are invisible to the app afterwards - the engine deliberately
+        # ignores .part artifacts everywhere (never healed onto a manifest row,
+        # never auto-discovered, never counted as study material), so nothing
+        # would ever remove or even mention them again.
+        #
+        # Sweeping HERE rather than at each exit is the point: it covers every
+        # route out of the phase, including ones added later. Committed outputs
+        # have already been renamed off the .part path, so this can only ever
+        # remove genuinely abandoned work.
+        for _t in tx_tasks:
+            try:
+                if _t.tx_source:
+                    _clean_part_files(str(_t.tx_source), _t.want_txt, _t.want_srt)
+            except Exception:
+                pass
 
     # If the engine died mid-phase, retain audio for every not-yet-processed
     # recording too (so nothing is silently deleted as a stale intermediate).

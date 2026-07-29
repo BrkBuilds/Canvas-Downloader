@@ -17,23 +17,27 @@ CODE_EXTENSIONS = {
     '.env', '.log', '.mdx', '.vue', '.svelte'
 }
 
-def convert_code_to_txt(file_path: str | Path) -> str | None:
+def convert_code_to_txt(file_path: str | Path, dst=None) -> str | None:
     """
     Converts a code/data file to a .txt file by renaming the extension to _ext.txt
     and prepending a header. It explicitly writes in UTF-8 and deletes the original file.
-    
+
+    *dst* overrides the destination. The caller passes one so this converter goes
+    through the same collision/ownership resolver as every other - without it,
+    a re-conversion wrote straight over a .txt the student had annotated.
+
     Returns the absolute path of the new .txt file as a string if successful, else None.
     """
     original_path = Path(file_path)
-    
+
     # Check if the suffix is in our supported list
     if original_path.suffix.lower() not in CODE_EXTENSIONS:
         return None
-        
+
     # Construct new name: filename.py -> filename_py.txt
     clean_suffix = original_path.suffix.replace('.', '_')
     new_name = f"{original_path.stem}{clean_suffix}.txt"
-    txt_path = original_path.with_name(new_name)
+    txt_path = Path(dst) if dst is not None else original_path.with_name(new_name)
     
     try:
         # Read the original file safely, replacing bad characters

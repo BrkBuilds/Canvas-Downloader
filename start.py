@@ -41,11 +41,23 @@ _HEALTH_TIMEOUT_SECS  = 60 # seconds to wait for each attempt
 # ── Port Discovery ────────────────────────────────────────────────
 
 def _find_free_port(preferred: int = 8501) -> int:
-    """Return the preferred port if free, otherwise the first free port in 8502-8600."""
+    """Return the preferred port if free, otherwise the first free port in 8502-8600.
+
+    ``SO_REUSEADDR`` is set on POSIX only, and that asymmetry is load-bearing.
+    On Windows the flag does not mean "reuse a TIME_WAIT port" as it does on
+    Unix - it means "bind even if another socket is actively LISTENING there",
+    so the probe reported an occupied port as free.  Measured 2026-07-27: with a
+    server already on 8501, this returned 8501, Streamlit bound it a second time,
+    and the health check was answered by the OTHER server - the window then
+    loaded whatever that process was serving.  Tornado itself skips SO_REUSEADDR
+    on Windows for exactly this reason (``netutil.bind_sockets``), so probing
+    without it also makes the probe agree with what the server can actually bind.
+    """
     for port in [preferred, *range(8502, 8601)]:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                if os.name != 'nt':
+                    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 s.bind(('127.0.0.1', port))
                 return port
         except OSError:
@@ -100,6 +112,13 @@ def _start_streamlit_server(port: str, failed_event: threading.Event) -> None:
             "--browser.gatherUsageStats=false",
         ]
 
+        # A packaged app's sources cannot change while it runs, so Streamlit's
+        # source watcher is pure overhead here: it installs a watchdog observer
+        # per local module and re-walks sys.modules after every rerun. Left ON
+        # only for the dev `python start.py` path, where hot reload is useful.
+        if getattr(sys, "frozen", False):
+            sys.argv.append("--server.fileWatcherType=none")
+
         # Scope the monkeypatch: Streamlit's threading.Thread context
         # cannot register signal handlers; suppress harmlessly.
         if threading.current_thread() is not threading.main_thread():
@@ -141,6 +160,195 @@ def _wait_for_server(health_url: str, failed_event: threading.Event,
             pass
         time.sleep(0.1)
     return False
+
+
+# ── Cold-start prewarm ────────────────────────────────────────────
+#
+# Nothing here changes what the app does - it only moves work off the critical
+# path.  The startup is three serial waits: the server has to boot before the
+# window can navigate, the 7 MB frontend bundle has to load before a session can
+# open, and the app's whole module graph has to import before the first script
+# run can render.  The middle two are I/O the process is otherwise idle for, and
+# on a fresh install (Microsoft Store) every one of those reads is uncached and
+# pays a first-run virus scan - which is where 10-20 seconds comes from.
+#
+# Both prewarms are daemon threads started once the splash is already on screen,
+# so any CPU they steal is invisible, and both are best-effort: a failure here
+# can only cost the time it was meant to save.
+
+# What script run #1 needs. Ordered roughly by cost; `app.py` itself is NEVER
+# imported (it calls st.set_page_config at module level and belongs to the
+# ScriptRunner). Verified 2026-07-27: no module-level st.* calls anywhere in the
+# package graph, and zero module-level import cycles across 68 modules - so
+# importing this concurrently with the ScriptRunner can only ever make the
+# second thread WAIT on a per-module lock, never deadlock.
+_PREWARM_CRITICAL = (
+    "shared.helpers", "shared.components", "styles",
+    "core.state_registry", "core.cancellation", "core.canvas_logic",
+    "engine.estimation", "engine.progress_dashboard",
+    "engine.post_processing_bridge", "engine.notifications",
+    "sync_ui", "ui.auth", "ui.course_selector",
+)
+
+# The screens one click away. Imported after the critical set so they can never
+# delay it.
+_PREWARM_SECONDARY = (
+    "ui.download_settings", "ui.quick_download", "ui.today_dashboard",
+    "ui.presets", "ui.sync_review", "ui.sync_confirmation",
+)
+
+
+def _prewarm_app_modules() -> None:
+    """Import the app's module graph while the server is still booting."""
+    t0 = time.perf_counter()
+    for group in (_PREWARM_CRITICAL, _PREWARM_SECONDARY):
+        for name in group:
+            try:
+                __import__(name)
+            except Exception as e:
+                logger.debug(f"prewarm: {name} failed ({e})")
+    logger.info(f"prewarm: app modules ready in {time.perf_counter() - t0:.2f}s")
+
+
+def _prewarm_frontend_assets() -> None:
+    """Pull Streamlit's static bundle into the OS page cache.
+
+    The WebView requests a 7 MB entry bundle the instant it navigates. Reading
+    the files here means that request is served from memory instead of from a
+    cold read of the install directory. Frozen builds only - a dev machine has
+    had these pages cached since the first `streamlit run`.
+    """
+    if not getattr(sys, "frozen", False):
+        return
+    static_dir = resolve_path(os.path.join("streamlit", "static"))
+    index_html = os.path.join(static_dir, "index.html")
+    if not os.path.isfile(index_html):
+        return
+    t0 = time.perf_counter()
+
+    def _read(path: str) -> int:
+        try:
+            with open(path, "rb") as fh:
+                n = 0
+                while True:
+                    chunk = fh.read(1 << 20)
+                    if not chunk:
+                        return n
+                    n += len(chunk)
+        except OSError:
+            return 0
+
+    # The entry bundle and stylesheet index.html names are the files that block
+    # React from mounting, so warm those FIRST - the WebView may well start
+    # asking for them before this walk finishes.
+    ordered: list[str] = [index_html]
+    try:
+        import re
+        html = open(index_html, "r", encoding="utf-8", errors="replace").read()
+        for rel in re.findall(r'(?:src|href)="\./([^"]+\.(?:js|css))"', html):
+            p = os.path.join(static_dir, rel.replace("/", os.sep))
+            if os.path.isfile(p):
+                ordered.append(p)
+    except OSError:
+        pass
+    for root, _dirs, files in os.walk(static_dir):
+        ordered.extend(os.path.join(root, fn) for fn in files)
+
+    read = 0
+    seen: set[str] = set()
+    budget = 64 * 1024 * 1024          # never churn the disk for a runaway dir
+    for path in ordered:
+        if path in seen:
+            continue
+        seen.add(path)
+        read += _read(path)
+        if read >= budget:
+            break
+    logger.info(f"prewarm: {read / 1e6:.1f} MB of frontend assets "
+                f"in {time.perf_counter() - t0:.2f}s")
+
+
+def _terminate_child_processes(grace: float = 2.0, kill_wait: float = 1.5) -> None:
+    """Take the whole process tree down with us before the hard exit.
+
+    ``os._exit`` skips interpreter teardown, and Windows does not kill a
+    process's children when it dies - so anything still running when we exit is
+    ORPHANED, permanently.  Three things can be in flight:
+
+      * **the WebView2 browser process** (Windows).  This is the one that was
+        actually biting.  A Store user's 2026-07-15 hang (WER MoAppHangXProc
+        against ``BrkBuilds.CanvasDownloader_2.0.0.0_x64``) is
+        msedgewebview2.exe stuck FOREVER on its own shutdown::
+
+            Windows_Media!dllmain_crt_process_detach
+              -> ucrtbase!execute_onexit_table
+                -> ComPtr<..ClosedCaptioning..IClosedCaptionBrokerStatics>::InternalRelease
+                  -> combase!CStdMarshal::Disconnect -> RemoteReleaseRifRef
+                    -> win32u!NtUserMsgWaitForMultipleObjectsEx   <- blocked
+
+        Windows.Media.dll releases a cached WinRT activation factory from its
+        DLL_PROCESS_DETACH handler.  Under MSIX that factory is **brokered**, so
+        the release is a cross-process COM call to the package's RuntimeBroker
+        (spawned in the same second as the browser process - PID 28936 in the
+        dump, still alive and still not answering 2h later), made while the
+        loader lock is held and with exactly ONE thread left in the process
+        (``CrBrowserMain``).  It never returns.  Calling COM from DllMain is a
+        documented deadlock and Windows.Media.dll is not ours to fix - but a
+        process that is TERMINATED never runs DLL_PROCESS_DETACH at all, so
+        reaping it here removes the hang, the ~75 MB it strands until reboot,
+        and the failure report filed against our package.
+
+        This is packaged-build-only: unpackaged there is no package RuntimeBroker
+        and the release resolves locally.  Measured 2026-07-27 on the dev build,
+        a healthy close has already torn all six WebView2 processes down by the
+        time ``webview.start()`` returns, so the grace loop below finds nothing
+        and costs nothing.  It only spends time on the broken path.
+      * **a Panopto transcription worker** - holding a whole Whisper model,
+        gigabytes, which would keep running to the end of the recording.
+      * **an ffmpeg remux/extract** (``panopto.stream``, ``converters.video``).
+
+    pywebview does give the browser process 3s of its own
+    (``edgechromium.clear_user_data`` -> ``Dispose()`` + ``WaitForExit(3000)``,
+    private mode only) but then simply walks away from whatever is left, which
+    is exactly how the hung process came to be orphaned.
+
+    Best-effort by construction: every failure path falls through to the exit.
+    """
+    try:
+        import psutil
+    except Exception:
+        return
+
+    try:
+        # Snapshot while we are still their parent - once os._exit runs the
+        # ppid links walked here are gone.  psutil.Process pins the pid's
+        # creation time, so a pid recycled between now and the kill below is
+        # recognised as a different process and left alone.
+        doomed = psutil.Process().children(recursive=True)
+    except Exception:
+        return
+    if not doomed:
+        return
+
+    try:
+        _exited, alive = psutil.wait_procs(doomed, timeout=grace)
+        if not alive:
+            return
+        names = []
+        for proc in alive:
+            try:
+                names.append(proc.name())     # read BEFORE the kill
+            except Exception:
+                names.append("?")
+            try:
+                proc.kill()                   # TerminateProcess: no DLL_PROCESS_DETACH
+            except Exception:
+                pass
+        psutil.wait_procs(alive, timeout=kill_wait)
+        logger.info("shutdown: force-terminated %d orphaned child process(es): %s",
+                    len(alive), ", ".join(sorted(set(names))))
+    except Exception:
+        pass
 
 
 def _launch_streamlit(port: int | None = None) -> tuple[bool, str, threading.Event]:
@@ -447,7 +655,11 @@ if __name__ == "__main__":
     }
     .logo svg { width: 36px; height: 36px; }
     .label {
-      font-size: 1.05rem; font-weight: 600;
+      /* px + explicit line-height so this is byte-for-byte the same box as the
+         boot overlay the Streamlit page paints when we navigate away from here
+         (scripts/patch_streamlit_boot.py). Any difference between the two shows
+         up as the label twitching at the hand-off. */
+      font-size: 16.8px; line-height: normal; font-weight: 600;
       color: rgba(255,255,255,0.55);
       letter-spacing: 0.01em;
     }
@@ -525,6 +737,24 @@ if __name__ == "__main__":
         Called by pywebview in a background thread after the GUI starts,
         so blocking here does not freeze the window.
         """
+        # Open the health record: reports on how the LAST session ended (the
+        # Store buckets our failures as "Uncategorized" with no stack, so this
+        # local file is the only post-mortem we actually get), clears any
+        # WebView2 process a pre-fix build stranded, and starts memory
+        # sampling. Runs here - on pywebview's background thread, after the
+        # splash is already up - so it cannot cost a single frame at launch.
+        try:
+            from core.health_log import session_start
+            session_start()
+        except Exception:
+            pass
+
+        # Overlap the two big cold-start reads with the server boot. Started
+        # here rather than before webview.start() so they cannot compete with
+        # getting the splash on screen.
+        for _fn in (_prewarm_frontend_assets, _prewarm_app_modules):
+            threading.Thread(target=_fn, daemon=True).start()
+
         for _attempt in range(1, _MAX_LAUNCH_ATTEMPTS + 1):
             logger.info(f"Streamlit launch attempt {_attempt}/{_MAX_LAUNCH_ATTEMPTS}...")
             ok, url, failed = _launch_streamlit()
@@ -559,8 +789,35 @@ if __name__ == "__main__":
     # produced a SECOND, duplicate Edit title in the menu bar whose actions were
     # no-ops (they did nothing on click and broke ⌘-shortcut routing). Relying on
     # the built-in menu gives one Edit menu that actually copies and pastes.
-    webview.start(_boot)
-        
+    _exit_reason = "clean"
+    try:
+        webview.start(_boot)
+    # BaseException is the POINT here, and nothing is swallowed: this re-raises
+    # on the next line. SystemExit and KeyboardInterrupt derive from
+    # BaseException, not Exception (the same reason RerunException slips past
+    # `except Exception` elsewhere in this codebase), so catching only Exception
+    # would let a Ctrl-C or a sys.exit() record itself as a CLEAN shutdown - and
+    # the absence of that marker is the entire signal the health log carries.
+    except BaseException:  # audit-ignore - deliberate, and re-raised immediately
+        _exit_reason = "crashed"
+        raise
+    finally:
+        # Close the health record FIRST, while the children are still alive and
+        # measurable - this marker is what the next launch reads to decide
+        # whether the app died or exited.
+        try:
+            from core.health_log import session_end
+            session_end(_exit_reason)
+        except Exception:
+            pass
+
+        # Reap the process tree BEFORE the hard exit below - see the function
+        # docstring for the Store hang this fixes. In the `finally` so a crash
+        # inside webview.start() cannot strand a WebView2/ffmpeg/transcription
+        # child either; on that path the exception still propagates normally
+        # (traceback + non-zero exit) instead of being swallowed by os._exit.
+        _terminate_child_processes()
+
     # Hard-exit instead of sys.exit: a sync/analysis worker thread that is
     # mid-API-call (non-daemon ThreadPoolExecutor thread) would otherwise
     # keep the process alive for up to a minute after the window closes.

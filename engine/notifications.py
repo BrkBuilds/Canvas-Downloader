@@ -654,14 +654,18 @@ def play_completion_beep(
         title = 'Sync Complete'
     elif mode == 'sync_review':
         title = 'Sync Review Ready'
+    # These three are worded to MATCH the completion card the user sees at the
+    # same moment (shared/components.render_completion_card). They used to say
+    # "Sync done! All files up to date" while the card said something slightly
+    # different, so the toast and the screen disagreed on the same event.
     elif mode == 'sync_uptodate':
-        title = 'Sync done! All files up to date'
+        title = 'Sync done - everything up to date'
     elif mode == 'quick_sync_uptodate':
-        title = 'Quick Sync done! All files up to date'
+        title = 'Quick Sync done - everything up to date'
     elif mode == 'daily_sync':
         title = 'Daily Sync Complete'
     elif mode == 'daily_sync_uptodate':
-        title = 'Daily sync done! All files up to date'
+        title = 'Daily sync done - everything up to date'
     else:
         title = 'Download Complete'
 

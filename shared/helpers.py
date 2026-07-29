@@ -187,7 +187,27 @@ def get_config_dir() -> str:
     On macOS frozen bundles:  ~/Library/Application Support/CanvasDownloader/
     On Windows frozen EXEs:   %APPDATA%/CanvasDownloader/
     When running as script:   same directory as this source file
+
+    ``CANVAS_DL_CONFIG_DIR`` overrides all of the above. It exists for ONE
+    caller - the live-audit harness in ``tests/audit`` - and it is the reason
+    that suite can drive the real app without touching the developer's own
+    settings, sync pairs, history, saved groups or Today list, all of which a
+    dev run otherwise writes straight into the repo root. Checked first and
+    unconditionally, because a half-redirected config dir (settings isolated,
+    history not) is worse than none: the audit would report against state it
+    had itself polluted. Unset in every shipped build, so behaviour there is
+    byte-identical to before this seam existed.
+
+    The override must name a directory that already exists - the harness
+    creates and provisions it (see ``tests/audit/harness/state.py``). A missing
+    or unusable path falls through to the normal resolution rather than
+    silently creating an empty config dir, which would look to the app exactly
+    like a fresh install and would sign the user out.
     """
+    _override = os.environ.get('CANVAS_DL_CONFIG_DIR', '').strip()
+    if _override and os.path.isdir(_override):
+        return _override
+
     if getattr(sys, 'frozen', False) and platform.system() == 'Darwin':
         base = Path.home() / 'Library' / 'Application Support' / 'CanvasDownloader'
         try:
@@ -212,6 +232,33 @@ def get_config_dir() -> str:
         return os.path.dirname(sys.executable)
     else:
         return _REPO_ROOT
+
+
+def help_text_enabled() -> bool:
+    """True when optional explanatory copy should be rendered.
+
+    Backs the Settings toggle "Show help text" (default ON). It gates exactly
+    one category: **copy that explains the UI and occupies permanent screen
+    space** - the Help buttons/cards (``shared.components.render_help_card``),
+    the one-line captions under the primary action buttons, and the sync page's
+    intro line.
+
+    It deliberately does NOT gate:
+      * anything operational - errors, warnings, empty states, "folder not
+        found", counts and statuses. Those are results, not tuition.
+      * the reason a control is unavailable ("Select at least one course above
+        first"). Hiding that turns a disabled button into a dead end.
+      * option labels and card descriptions in the download settings. Those are
+        how you know what a toggle does; without them the page is unusable.
+      * ``help=`` tooltips. They cost no space until asked for, so there is
+        nothing to reclaim by hiding them.
+
+    The distinction that decides it: would a power user who already knows the
+    app still need this on screen? If no, it is help text.
+    """
+    import streamlit as st
+    return bool(st.session_state.get('show_help_text', True))
+
 
 def format_time_display(time_str: str) -> str:
     """Format a 24-hour HH:MM time string respecting the user's 12h/24h preference.
@@ -864,205 +911,144 @@ def render_progress_bar(container, current: int, total: int,
 
 
 # --- Step Wizard ---
+#
+# Steps are identified by a STRING id, never by their position. Two things made
+# the old integer contract untenable:
+#   * the sync flow rendered the ANALYSIS phase and the REVIEW screen both as
+#     "step 2", so the whole analysis phase sat under the label "Review
+#     Changes" - it was describing a screen the user had not reached yet;
+#   * Quick Sync never visits review at all (``sync/analysis.py`` jumps straight
+#     to the sync), yet the tracker advertised it as the next thing to happen.
+# An id also lets a step be INSERTED - the download flow's scan phase, which
+# used to hide inside "Downloading" - without renumbering eleven call sites.
+#
+# Every glyph, colour and size lives in the "Step wizard" block of
+# ``styles/global.css``, selected off each button's key. Nothing here injects
+# CSS, and that is deliberate: a ``<style>`` element is a flex item in the page's
+# vertical block (the ghost-box purge rule in global.css is inert - see
+# CLAUDE.md), and this tracker is the FIRST element on six screens, so a single
+# injection above it would push every one of them down by a full gap slot.
 
-# SVG icon paths (Lucide/Heroicons style, 24×24 viewBox).
-# Shapes that should be filled use the placeholder __FILL__ - replaced at render time
-# with the cutout colour so they appear as solid filled shapes inside the circle.
-_ICON_FOLDER = (
-    '<path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>'
-)
-_ICON_SEARCH = (
-    '<circle cx="11" cy="11" r="8"/>'
-    '<line x1="21" y1="21" x2="16.65" y2="16.65"/>'
-)
-_ICON_SYNC = (
-    '<polyline points="1 4 1 10 7 10"/>'
-    '<polyline points="23 20 23 14 17 14"/>'
-    '<path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/>'
-)
-_ICON_CHECK_CIRCLE = (
-    '<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>'
-    '<polyline points="22 4 12 14.01 9 11.01"/>'
-)
+# (step id, label). Display numbers are the position + 1, so a skipped step
+# still occupies its number - see ``render_wizard_step``.
+SYNC_WIZARD_STEPS = [
+    ('select',   'Select Courses'),
+    ('analyze',  'Analyzing'),
+    ('review',   'Review Changes'),
+    ('sync',     'Download & Sync'),
+    ('complete', 'Complete'),
+]
 
-_ICON_DOC = (
-    '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>'
-    '<polyline points="14 2 14 8 20 8"/>'
-    '<line x1="16" y1="13" x2="8" y2="13"/>'
-    '<line x1="16" y1="17" x2="8" y2="17"/>'
-)
-# _ICON_GEAR - standard 24×24 sliders icon (Feather/Lucide, fully stroke-based)
-_ICON_GEAR = (
-    '<line x1="4" y1="21" x2="4" y2="14"/>'
-    '<line x1="4" y1="10" x2="4" y2="3"/>'
-    '<line x1="12" y1="21" x2="12" y2="12"/>'
-    '<line x1="12" y1="8" x2="12" y2="3"/>'
-    '<line x1="20" y1="21" x2="20" y2="16"/>'
-    '<line x1="20" y1="12" x2="20" y2="3"/>'
-    '<line x1="1" y1="14" x2="7" y2="14"/>'
-    '<line x1="9" y1="8" x2="15" y2="8"/>'
-    '<line x1="17" y1="16" x2="23" y2="16"/>'
-)
-_ICON_DOWNLOAD = (
-    '<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>'
-    '<polyline points="7 10 12 15 17 10"/>'
-    '<line x1="12" y1="15" x2="12" y2="3"/>'
-)
-# List icon: three bullet dots + horizontal lines (from user-supplied SVG)
-# The x1=x2 zero-length lines render as round dots via stroke-linecap="round".
-_ICON_LIST = (
-    '<line x1="4" y1="6" x2="4.01" y2="6"/>'
-    '<line x1="4" y1="12" x2="4.01" y2="12"/>'
-    '<line x1="4" y1="18" x2="4.01" y2="18"/>'
-    '<line x1="9" y1="6" x2="21" y2="6"/>'
-    '<line x1="9" y1="12" x2="21" y2="12"/>'
-    '<line x1="9" y1="18" x2="21" y2="18"/>'
-)
+DOWNLOAD_WIZARD_STEPS = [
+    ('select',    'Select Courses'),
+    ('configure', 'Configure Download'),
+    ('analyze',   'Analyzing'),
+    ('download',  'Downloading'),
+    ('complete',  'Complete'),
+]
 
 
-def _wizard_icon_bg(icon_svg, color: str, size: int = 15, circle_bg: str = None) -> str:
-    """Return a CSS background-image value for an SVG icon encoded as a base64 data URI.
+def render_wizard_step(container, flow: str, steps: list, current: str,
+                       *, nav: dict | None = None, skipped=()) -> None:
+    """Render the horizontal step tracker as a row of native Streamlit buttons.
 
-    Using CSS background-image bypasses Streamlit's HTML sanitiser which strips
-    inline <svg> child elements from st.html() content.
+    No circles, no pill shape. Each step is [icon] N. Label. Separator lines
+    flex-grow to fill the page width evenly.
 
-    icon_svg may be:
-      - a plain string  → standard 0 0 24 24 viewBox
-      - a (svg_inner, viewbox) tuple → custom viewBox (e.g. the settings-sliders icon)
+    States (all painted from global.css off the button's key):
+      done    - soft light-blue, slightly faded: "already visited"
+      active  - cool near-white, bold, larger icon, drop-shadow glow
+      idle    - medium-dark blue-grey: visible but clearly still ahead
+      skipped - struck through: a step this MODE does not visit at all
 
-    Placeholder substitutions applied to the SVG inner content:
-      __FILL__      → *color*      (solid cutout colour for filled shapes)
-      __CIRCLE_BG__ → *circle_bg*  (circle background colour, used for centre holes)
-    """
-    if isinstance(icon_svg, tuple):
-        svg_inner, viewbox = icon_svg
-    else:
-        svg_inner, viewbox = icon_svg, '0 0 24 24'
+    Why native buttons rather than the HTML this used to be
+    ------------------------------------------------------
+    Users try to click the previous step - so it has to be clickable, and the
+    tracker was an ``st.html`` block, i.e. a shadow root that outside CSS and
+    JS cannot reasonably reach. The obvious alternative - keep the HTML and have
+    a ``components.html`` bridge click a hidden button - is a mechanism this
+    codebase has already removed once for being silently unreliable (see the
+    two-pass comment in ``sync_ui.py``): its iframe realm is destroyed on every
+    rerun, and a dead bridge fails without a trace. A real button needs no
+    bridge, is keyboard-reachable, and cannot fall out of sync with the page.
 
-    hole = circle_bg if circle_bg else color
-    resolved = svg_inner.replace('__FILL__', color).replace('__CIRCLE_BG__', hole)
-    svg = (
-        f'<svg xmlns="http://www.w3.org/2000/svg" '
-        f'width="{size}" height="{size}" viewBox="{viewbox}" '
-        f'fill="none" stroke="{color}" stroke-width="3" '
-        f'stroke-linecap="round" stroke-linejoin="round">'
-        f'{resolved}</svg>'
-    )
-    b64 = base64.b64encode(svg.encode('utf-8')).decode('ascii')
-    return f"url('data:image/svg+xml;base64,{b64}')"
-
-
-def render_wizard_step(container, current_step: int, steps: list):
-    """Render a horizontal step tracker.
-
-    No circles, no pill shape.  Each step is [icon] N. Label - purely informational.
-    Renders flush to the top of the page (global.css padding-top:0 on the block container).
-    Separator lines flex-grow to fill full page width evenly.
-
-    States:
-      done  - soft light-blue; icon + text, slightly faded to signal "already visited"
-      active - cool near-white, bold, icon slightly larger; drop-shadow glow below
-      idle  - medium-dark blue-grey; visible but clearly inactive
+    Non-navigable steps are rendered ``disabled`` - they are INFORMATION, not
+    controls the user has failed to unlock, which is why global.css exempts them
+    from the app's disabled-button paint (the same exemption the card-header
+    rerun locks carry).
 
     Args:
-        container:    Streamlit container to render into.
-        current_step: Current active step number.
-        steps:        List of (step_num, label, svg_path) tuples.
+        container: the Streamlit container to render into (always ``st``).
+        flow:      'sync' | 'download' - namespaces the widget keys.
+        steps:     list of (step_id, label).
+        current:   the id of the step in progress.
+        nav:       {step_id: callable} for steps the user may click back to.
+                   Wired as ``on_click``, so the handler mutates session state
+                   and the click's own rerun does the rest - an explicit
+                   ``st.rerun()`` here would render the page twice and drop the
+                   browser's scroll anchor.
+        skipped:   ids this run will never visit (Quick Sync skips 'review').
     """
-    DONE_COLOR   = '#8dbecc'   # completed - soft accent blue
-    ACTIVE_COLOR = '#cce0e8'   # current    - cool near-white (slightly muted)
-    IDLE_COLOR   = '#607d8b'   # future     - medium-dark blue-grey, legible but receded
-    DONE_SEP     = '#3a6070'   # separator after a completed step
-    IDLE_SEP     = '#1a2d3d'   # separator before a future step
+    nav = nav or {}
+    skipped = set(skipped)
+    ids = [s[0] for s in steps]
+    cur_idx = ids.index(current) if current in ids else 0
 
-    parts = [
-        '<style>:host{display:block!important;margin:0!important;padding:0!important}</style>'
-        '<div style="width:100%;display:flex;align-items:center;">'
-    ]
-
-    for i, (step_num, label, icon_svg) in enumerate(steps):
-        if step_num < current_step:
+    slot = container.container(key=f"cd_wizard_{flow}")
+    for idx, (step_id, label) in enumerate(steps):
+        if step_id in skipped:
+            state = 'skipped'
+        elif idx < cur_idx:
             state = 'done'
-        elif step_num == current_step:
+        elif idx == cur_idx:
             state = 'active'
         else:
             state = 'idle'
 
-        if state == 'done':
-            icon_size   = '13px'
-            icon_color  = DONE_COLOR
-            text_color  = DONE_COLOR
-            font_size   = '0.87rem'
-            font_weight = '500'
-            opacity     = '0.75'
-            extra_style = ''
-        elif state == 'active':
-            icon_size   = '15px'
-            icon_color  = ACTIVE_COLOR
-            text_color  = ACTIVE_COLOR
-            font_size   = '0.92rem'
-            font_weight = '700'
-            opacity     = '1'
-            # Centered drop-shadow glow - blurry bright spot at 37.5% opacity
-            extra_style = 'filter:drop-shadow(0px 0px 14px rgba(141,190,204,0.375));'
-        else:
-            icon_size   = '12px'
-            icon_color  = IDLE_COLOR
-            text_color  = IDLE_COLOR
-            font_size   = '0.83rem'
-            font_weight = '400'
-            opacity     = '0.65'
-            extra_style = ''
+        # The separator LEAVING a step tracks progress, not the skip: the line
+        # after a skipped step still joins two steps the run has passed.
+        lead = 'donesep' if idx < cur_idx else 'idlesep'
 
-        icon_bg = _wizard_icon_bg(icon_svg, icon_color)
+        # Only a settled, already-visited screen is a destination. The current
+        # step is never a link to itself, and a running phase is left via Cancel.
+        handler = nav.get(step_id) if idx < cur_idx else None
 
-        parts.append(
-            f'<div style="display:inline-flex;align-items:center;gap:5px;'
-            f'flex-shrink:0;opacity:{opacity};{extra_style}">'
-            f'<div style="width:{icon_size};height:{icon_size};flex-shrink:0;'
-            f'background-image:{icon_bg};background-size:contain;'
-            f'background-repeat:no-repeat;background-position:center;"></div>'
-            f'<span style="font-size:{font_size};color:{text_color};'
-            f'font-weight:{font_weight};white-space:nowrap;letter-spacing:0.01em;">'
-            f'{step_num}. {label}</span>'
-            f'</div>'
+        # The backslash is load-bearing: a button label is MARKDOWN, and a bare
+        # "1. Select Courses" is an ordered-list item - Streamlit swallowed the
+        # number and rendered just the label. `1\.` is the CommonMark escape.
+        text = (f"{idx + 1}\\. ~~{label}~~ (skipped)" if state == 'skipped'
+                else f"{idx + 1}\\. {label}")
+
+        # The key carries the step id AND the state: that is what lets the whole
+        # stylesheet be static (see the note above about injecting CSS here).
+        slot.button(
+            text,
+            key=f"cd_wiz_{flow}_{idx}_{step_id}_st_{state}_{lead}",
+            disabled=handler is None,
+            on_click=handler,
+            use_container_width=False,
         )
 
-        if i < len(steps) - 1:
-            if step_num < current_step:
-                # Gradient: fades from transparent at the done end to solid at the active end
-                sep_bg = f'linear-gradient(to right,{DONE_SEP}80,{DONE_SEP})'
-            else:
-                sep_bg = IDLE_SEP
-            parts.append(
-                f'<div style="flex:1;height:2px;background:{sep_bg};'
-                f'margin:0 12px;min-width:8px;"></div>'
-            )
 
-    parts.append('</div>')
-    container.html(''.join(parts))
+def render_sync_wizard(container, current: str, *, nav: dict | None = None,
+                       quick: bool | None = None) -> None:
+    """Render the wizard for the Sync flow.
 
-
-def render_sync_wizard(container, current_step: int):
-    """Render the wizard for the Sync flow."""
-    steps = [
-        (1, 'Select Courses', _ICON_LIST),
-        (2, 'Review Changes',  _ICON_SEARCH),
-        (3, 'Syncing',         _ICON_SYNC),
-        (4, 'Complete',        _ICON_CHECK_CIRCLE),
-    ]
-    render_wizard_step(container, current_step, steps)
+    ``quick`` defaults to the live Quick Sync flag. On step 1 the mode has not
+    been chosen yet and the flag is absent, so every phase is shown - which is
+    the point: the tracker states what the flow CAN do before it states what
+    this particular run will do.
+    """
+    if quick is None:
+        import streamlit as st
+        quick = bool(st.session_state.get('sync_quick_mode'))
+    render_wizard_step(container, 'sync', SYNC_WIZARD_STEPS, current,
+                       nav=nav, skipped=('review',) if quick else ())
 
 
-def render_download_wizard(container, current_step: int):
+def render_download_wizard(container, current: str, *, nav: dict | None = None) -> None:
     """Render the wizard for the Download flow."""
-    steps = [
-        (1, 'Select Courses',    _ICON_LIST),
-        (2, 'Download Settings', _ICON_GEAR),
-        (3, 'Downloading',       _ICON_DOWNLOAD),
-        (4, 'Complete',          _ICON_CHECK_CIRCLE),
-    ]
-    render_wizard_step(container, current_step, steps)
+    render_wizard_step(container, 'download', DOWNLOAD_WIZARD_STEPS, current, nav=nav)
 
 
 # --- CBS Metadata Parser ---
@@ -1172,3 +1158,43 @@ def effective_ext(filename: str, contract: dict | None) -> str:
     return ext
 
 
+
+
+# ── Cross-run ETA calibration ───────────────────────────────────────────────
+# The estimator learns this machine's per-item overhead and sustained transfer
+# rate during a run. Those numbers are far better starting points for the NEXT
+# phase or run than the module's generic defaults, and carrying them forward is
+# the difference between a first estimate that is roughly right and one that
+# has to converge from scratch every single time. Session-scoped on purpose:
+# these describe the current network and machine, not a durable preference, so
+# persisting them to disk would just let a stale campus-wifi number follow the
+# user home.
+
+_ETA_PRIORS_KEY = '_eta_learned_transfer_priors'
+
+
+def learned_transfer_priors() -> dict:
+    """Priors measured by an earlier transfer in this session (``{}`` if none)."""
+    try:
+        import streamlit as st
+        priors = st.session_state.get(_ETA_PRIORS_KEY) or {}
+        return dict(priors) if isinstance(priors, dict) else {}
+    except Exception:
+        return {}
+
+
+def remember_transfer_priors(estimator) -> None:
+    """Store what *estimator* measured, for the next transfer to start from.
+
+    A no-op when the estimator never gathered real evidence - otherwise a phase
+    that finished before it learned anything would pass its own defaults on as
+    if they had been measured.
+    """
+    try:
+        priors = estimator.export_priors()
+        if not priors:
+            return
+        import streamlit as st
+        st.session_state[_ETA_PRIORS_KEY] = priors
+    except Exception as e:
+        logger.debug(f"remember_transfer_priors skipped: {e}")

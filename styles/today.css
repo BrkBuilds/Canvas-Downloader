@@ -55,7 +55,11 @@ div.st-key-today_subtitle_help_row div[class*="st-key-today_help_explainer_help_
     margin-left: 0 !important;
 }
 
-div.st-key-today_subtitle_help_row div[class*="st-key-today_help_explainer_help_btn"] button {
+/* The Help trigger is a <label>, not a button (shared/components.py:
+   render_help_card renders a pure-CSS toggle so opening the card does not
+   rerun the page). Both are matched so this stays correct either way. */
+div.st-key-today_subtitle_help_row div[class*="st-key-today_help_explainer_help_btn"] button,
+div.st-key-today_subtitle_help_row div[class*="st-key-today_help_explainer_help_btn"] .cd-help-trigger {
     padding: 2px 8px !important;
     min-height: 22px !important;
     height: 22px !important;
@@ -651,6 +655,21 @@ div.st-key-today_sync_notice_card [data-testid="stMarkdownContainer"] {
     margin-top: 2px;
 }
 
+/* "Course X was skipped - folder could not be located." Same amber family as
+   the error line (both are "the run did not fully cover your list"), one step
+   softer because a skip is a setup problem, not a failed download. */
+.today-notice-skipped {
+    color: rgba(253, 230, 138, 0.82);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin-top: 4px;
+}
+
+.today-notice-skipped b {
+    color: #fbbf24;
+    font-weight: 700;
+}
+
 /* Close button: compact ghost square with a masked X glyph (zero-width-space
    label, so the glyph is pure CSS - mirrors the trash/pencil mask pattern). */
 div.st-key-today_notice_close_btn button {
@@ -775,6 +794,42 @@ div[class*="st-key-today_pair_card_"] .today-pair-folder svg {
     width: 15px !important;
     height: 15px !important;
     flex-shrink: 0;
+}
+
+/* ── Unreachable pair cards (folder deleted/moved) ──────────────────────────
+   Deliberately IDENTICAL to the Sync page's missing-folder pair cards
+   (global.css "13. Missing-folder pair cards"): same amber border, same
+   darkened background, no shadow. A broken pair should look the same wherever
+   the user meets it. `st-key-today_pair_card_missing_N` also matches the
+   `today_pair_card_` prefix above, so it inherits the layout and only the skin
+   is overridden here.
+
+   NOTE: unlike the Sync page's version, the TEXT is not dimmed - global.css
+   greys missing cards' text to read as disabled, but this card carries the
+   instruction for fixing it, which has to stay legible. */
+div[class*="st-key-today_pair_card_missing_"] {
+    background: linear-gradient(180deg, #181a1f 0%, #1e2126 100%) !important;
+    border: 1px solid rgba(202, 138, 4, 0.85) !important;
+    box-shadow: none !important;
+}
+
+.today-pair-folder-missing {
+    color: #fbbf24 !important;
+    text-decoration: line-through;
+    text-decoration-color: rgba(251, 191, 36, 0.55);
+}
+
+/* The one line that says what to do about it. */
+.today-pair-fix {
+    color: rgba(253, 230, 138, 0.82);
+    font-size: 0.78rem;
+    line-height: 1.45;
+    margin-top: 2px;
+}
+
+.today-pair-fix b {
+    color: #fbbf24;
+    font-weight: 700;
 }
 
 /* Remove button - EXACT match to the Sync UI 'Remove' button (remove_pair_):
@@ -1267,9 +1322,42 @@ div[class*="st-key-today_chip_"] button:hover {
     border-color: rgba(255, 255, 255, 0.34) !important;
 }
 
-div[class*="st-key-today_chip_"] button:disabled {
-    opacity: 0.5 !important;
-    cursor: not-allowed !important;
+/* Disabled state: none here - global.css's `button[disabled]` recipe owns it
+   (it sets cursor: not-allowed too). `opacity: 0.5` multiplied with the filter. */
+
+/* ── Unreachable course chips (folder deleted/moved) ────────────────────────
+   The collapsed view is what the user sees every day, so a pair that can't
+   sync has to be visible HERE - one that only surfaced behind "Manage" would
+   stay invisible indefinitely. Amber border + amber glyph, matching the pair
+   card and the Sync page's missing-folder cards.
+
+   These chips are `disabled=True` (there is no folder to open), so global.css's
+   shared `button[disabled] { filter: brightness(0.5) saturate(0.5) }` applies -
+   and it is deliberately NOT overridden here. That recipe is the app's single
+   disabled paint (CLAUDE.md: "Disabled buttons: ONE recipe, and nothing on top
+   of it"); the chip stays legibly amber against the neutral grey ones after the
+   filter, and the row's real explanation lives in the tooltip and in the amber
+   card behind "Manage". */
+div[class*="st-key-today_chip_missing_"] button {
+    background: linear-gradient(180deg, #23201a 0%, #2b2620 100%) !important;
+    border: 1px solid rgba(202, 138, 4, 0.85) !important;
+}
+
+div[class*="st-key-today_chip_missing_"] button p {
+    color: #fbbf24 !important;
+}
+
+/* Swap the book glyph for an amber warning triangle.
+   NOT a struck-through folder: a CSS mask UNIONS its paths, so a diagonal bar
+   drawn over a folder silhouette just merges into it and reads as a plain
+   folder - the strike is invisible. The triangle needs no cut-out, and it also
+   says "problem" rather than "folder", which is the actual message. (The
+   inner exclamation IS a cut-out and works, because `fill-rule: evenodd`
+   punches it out of the same path.) */
+div[class*="st-key-today_chip_missing_"] button p::before {
+    background-color: #fbbf24 !important;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M12 2.6 23 21.4H1Z M11.1 8.6H12.9V14.4H11.1Z M11.1 16.2H12.9V18.4H11.1Z'/%3E%3C/svg%3E") no-repeat center / contain !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'%3E%3Cpath fill-rule='evenodd' d='M12 2.6 23 21.4H1Z M11.1 8.6H12.9V14.4H11.1Z M11.1 16.2H12.9V18.4H11.1Z'/%3E%3C/svg%3E") no-repeat center / contain !important;
 }
 
 /* ── "Today's files" — the HERO card (the page highlight) ────────────────────
@@ -1301,7 +1389,10 @@ div.st-key-today_files_hero {
 div.st-key-today_files_hero [data-testid="stElementContainer"]:has(.today-files-hero-head),
 div.st-key-today_files_hero [data-testid="stMarkdownContainer"]:has(.today-files-hero-head),
 div.st-key-today_files_hero [data-testid="stElementContainer"]:has(.today-files-empty),
-div.st-key-today_files_hero [data-testid="stMarkdownContainer"]:has(.today-files-empty) {
+div.st-key-today_files_hero [data-testid="stMarkdownContainer"]:has(.today-files-empty),
+div.st-key-today_files_hero [data-testid="stElementContainer"]:has(.today-files-offlist),
+div.st-key-today_files_hero [data-testid="stMarkdownContainer"]:has(.today-files-offlist),
+div.st-key-today_files_hero [data-testid="stElementContainer"]:has(div.st-key-today_offlist_card) {
     margin-bottom: 0 !important;
 }
 
@@ -1413,6 +1504,92 @@ div.st-key-today_files_inner div[data-testid="stVerticalBlock"]:has(div[class*="
 .today-files-empty-sub {
     color: #6f7689;
     font-size: 0.9rem;
+}
+
+/* Footnote under the file list: today's arrivals this page is NOT showing,
+   because their course isn't in the daily sync. Quiet by design - it explains
+   the page's scope, it isn't a warning. Sits below both the list and either
+   empty state, so it carries its own top spacing (the hero card is gap:0).
+
+   The card chrome lives on the CONTAINER, not on the text block, so the
+   dismiss button sits INSIDE the border and the padding is symmetric around
+   both. */
+div.st-key-today_offlist_card {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+}
+
+/* The text column and the close column are a single row - kill Streamlit's
+   default block gap so the padding above is the only vertical spacing. */
+div.st-key-today_offlist_card [data-testid="stHorizontalBlock"] {
+    gap: 8px !important;
+}
+
+div.st-key-today_offlist_card [data-testid="stElementContainer"],
+div.st-key-today_offlist_card [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
+
+.today-files-offlist {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: #8b949e;
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.today-files-offlist b {
+    color: #b1bac4;
+    font-weight: 600;
+}
+
+/* Dismiss button: compact ghost square with a masked X glyph (zero-width-space
+   label, so the glyph is pure CSS - same pattern as today_notice_close_btn). */
+div.st-key-today_offlist_close_btn button {
+    width: 26px !important;
+    min-width: 26px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    padding: 0 !important;
+    border-radius: 7px !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.15s ease !important;
+}
+
+div.st-key-today_offlist_close_btn button:hover {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+div.st-key-today_offlist_close_btn button p {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    line-height: 0 !important;
+}
+
+div.st-key-today_offlist_close_btn button p::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 13px !important;
+    height: 13px !important;
+    background-color: #8b949e !important;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E") no-repeat center / contain !important;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E") no-repeat center / contain !important;
+    transition: background-color 0.15s ease !important;
+}
+
+div.st-key-today_offlist_close_btn button:hover p::before {
+    background-color: #e2e8f0 !important;
 }
 
 /* ── Quick Sync section: an integrated "sync on demand" action card ─────────── */

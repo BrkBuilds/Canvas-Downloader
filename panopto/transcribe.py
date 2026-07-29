@@ -249,14 +249,41 @@ def _worker_command() -> list[str]:
 
 
 def _clean_part_files(mp3_path: str, want_txt: bool, want_srt: bool) -> None:
-    """Remove any half-written .part sidecars left by a killed/crashed worker."""
+    """Remove any half-written .part sidecars left by a killed/crashed worker.
+
+    Retries briefly because the caller has just killed the worker and a kill is
+    ASYNCHRONOUS: on Windows the dying process still holds its output handles
+    for a short while, so the first ``os.remove`` raises ``PermissionError``
+    (an ``OSError``) and used to be swallowed silently. The files then stayed in
+    the user's course folder for good - and because the engine deliberately
+    ignores ``.part`` artifacts everywhere else, nothing would ever clean or
+    even mention them. Measured after a real cancel: two leftovers,
+    ``<name>.txt.part`` and ``<name>.srt.part``.
+
+    Still never raises - a leftover is untidy, not dangerous - but a persistent
+    failure is now logged so it is diagnosable rather than invisible.
+    """
+    import time as _time
     base, _ = os.path.splitext(mp3_path)
     for ext, want in ((".txt", want_txt), (".srt", want_srt)):
-        if want:
+        if not want:
+            continue
+        target = base + ext + ".part"
+        last_err = None
+        for attempt in range(6):
             try:
-                os.remove(base + ext + ".part")
-            except OSError:
-                pass
+                os.remove(target)
+                last_err = None
+                break
+            except FileNotFoundError:
+                last_err = None
+                break
+            except OSError as e:
+                last_err = e
+                _time.sleep(0.25)
+        if last_err is not None:
+            logger.warning("Could not remove partial transcript %s: %s",
+                           target, last_err)
 
 
 def transcribe_in_subprocess(
@@ -388,6 +415,14 @@ def transcribe_in_subprocess(
             if is_cancelled and is_cancelled():
                 try:
                     proc.kill()
+                except Exception:
+                    pass
+                # WAIT for it to actually die before cleaning up. kill() only
+                # requests termination; the worker keeps its output handles open
+                # until the OS finishes reaping it, so cleaning immediately hit
+                # a locked file every time and left the .part sidecars behind.
+                try:
+                    proc.wait(timeout=10)
                 except Exception:
                     pass
                 _clean_part_files(mp3_path, want_txt, want_srt)

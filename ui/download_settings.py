@@ -216,14 +216,12 @@ def _get_pan_layout_segmented_css() -> str:
         opacity: 1 !important;
         color: #ffffff !important;
     }}
-    /* Disabled State Overrides (no Panopto output selected). The [disabled]
-       attribute selector outranks the active-pill rule, so the whole control -
-       including the default 'match' pill - dims, mirroring Canvas Content. */
-    div[class*="st-key-btn_pan_layout_"] button[disabled] {{
-        opacity: 0.4 !important;
-        pointer-events: none !important;
-        filter: grayscale(100%) !important;
-    }}
+    /* Disabled State (no Panopto output selected): global.css's
+       `button[disabled]` recipe owns the paint, and because it is an attribute
+       selector on the button it still outranks nothing - it simply applies to
+       BOTH pills, including the active 'match' one, which is the intent.
+       The local `filter: grayscale(100%)` used to REPLACE the shared filter
+       (filter is one property) and flatten these to grey slabs. */
     div.st-key-btn_pan_layout_match button::after {{ content: "Save recordings alongside your course files." !important; }}
     /* Literal curly quotes, NOT \\201C / \\201D escapes: a CSS hex escape consumes
        one following whitespace as its terminator, so "\\201D folder" rendered as
@@ -274,6 +272,22 @@ def _get_chevron_base64(is_expanded):
     return f"url('data:image/svg+xml;base64,{b64_str}')"
 
 
+def _dl_settings_go_back():
+    """Leave Configure Download for the course list.
+
+    ONE handler for both ways out of this page - the Go back button and the step
+    tracker's "Select Courses" - so the ``came_from_quick_dl`` hand-back can
+    never be honoured by one and dropped by the other. Mutates session state
+    only: it runs as an ``on_click`` callback, before the rerun the click
+    already scheduled.
+    """
+    if st.session_state.get('came_from_quick_dl', False):
+        st.session_state['quick_download_mode'] = True
+        st.session_state.pop('came_from_quick_dl', None)
+    else:
+        st.session_state['step'] = 1
+
+
 def render_download_settings(fetch_courses_fn):
     """Render the full Step 2 download settings page.
 
@@ -283,7 +297,12 @@ def render_download_settings(fetch_courses_fn):
     # Import preset dialogs from extracted module
     from ui.presets import _save_config_dialog, _presets_hub_dialog
 
-    render_download_wizard(st, 2)
+    # The tracker's "1. Select Courses" is a live back-link, wired to the SAME
+    # handler as the Go back button at the bottom of the page - the quick-download
+    # branch included - so a click here can never reach a state the button could
+    # not. ``on_click`` and not ``if st.button()``: the click already schedules a
+    # rerun, and a second one loses the browser's scroll anchor.
+    render_download_wizard(st, 'configure', nav={'select': _dl_settings_go_back})
 
     # Pre-warm Panopto hardware detection in background so the transcription
     # dialog opens without the ~5s delay on first click. backend_import_ok()
@@ -679,6 +698,15 @@ def render_download_settings(fetch_courses_fn):
                 st.session_state[k] = new_state and (k in sel)
             st.session_state['pan_master'] = new_state and bool(sel)
 
+        def _toggle_pan_info():
+            # Collapse/expand the transcription status card. A CALLBACK, not
+            # `if st.button(): ...; st.rerun()` - the click already schedules a
+            # rerun, and an explicit one renders the page twice and drops the
+            # browser's scroll anchor. It also means the chevron's rotation is
+            # correct on the first pass instead of drawing its old state once.
+            st.session_state['pan_info_open'] = not bool(
+                st.session_state.get('pan_info_open', True))
+
         def _set_pan_layout(value: str):
             st.session_state['pan_layout'] = value if value in ('match', 'separate') else 'match'
 
@@ -773,12 +801,9 @@ def render_download_settings(fetch_courses_fn):
                 color: #ffffff !important;
             }}
 
-            /* Disabled State Overrides */
-            div[class*="st-key-btn_sec_org_"] button[disabled] {{
-                opacity: 0.4 !important;
-                pointer-events: none !important;
-                filter: grayscale(100%) !important;
-            }}
+            /* Disabled State: global.css's `button[disabled]` recipe owns it
+               (the local `filter: grayscale(100%)` replaced the shared filter
+               rather than adding to it). */
 
             div.st-key-btn_sec_org_inline button::after {{ content: "Place Canvas Content alongside your other downloaded files." !important; }}
             div.st-key-btn_sec_org_subfolders button::after {{ content: "Create folders for each type (e.g. Assignments/, Quizzes/)" !important; }}
@@ -1433,13 +1458,19 @@ def render_download_settings(fetch_courses_fn):
                     border: none !important;
                     transform: none !important;
                 }}
-                /* RERUN LOCK */
+                /* RERUN LOCK - the sanctioned exemption from global.css's
+                   `button[disabled]` recipe. This button IS the card header's
+                   surface, and it is only `disabled` for the duration of a
+                   rerun, so the shared brightness(0.5) filter would flash the
+                   whole card header dark on every toggle. It is a lock, not an
+                   affordance the user reads as unavailable. */
                 div.st-key-toggle_card2 button[disabled] {{
                     box-shadow: none !important;
                     outline: none !important;
                     border: none !important;
                     background-color: {c2_base_color} !important;
                     opacity: 0.8 !important;
+                    filter: none !important;
                 }}
                 </style>''', unsafe_allow_html=True)
 
@@ -1828,13 +1859,15 @@ def render_download_settings(fetch_courses_fn):
                 border: none !important;
                 transform: none !important;
             }}
-            /* RERUN LOCK */
+            /* RERUN LOCK - sanctioned exemption from the shared
+               `button[disabled]` recipe; see the Card 2 note. */
             div.st-key-toggle_card3 button[disabled] {{
                 box-shadow: none !important;
                 outline: none !important;
                 border: none !important;
                 background-color: {c3_base_color} !important;
                 opacity: 0.8 !important;
+                filter: none !important;
             }}
             </style>''', unsafe_allow_html=True)
 
@@ -1983,9 +2016,12 @@ def render_download_settings(fetch_courses_fn):
                 }}
                 div.st-key-toggle_panopto button:hover {{ background-color: {cp_hover_color} !important; box-shadow: none !important; }}
                 div.st-key-toggle_panopto button:active {{ box-shadow: none !important; outline: none !important; border: none !important; transform: none !important; }}
+                /* RERUN LOCK - sanctioned exemption from the shared
+                   `button[disabled]` recipe; see the Card 2 note. */
                 div.st-key-toggle_panopto button[disabled] {{
                     box-shadow: none !important; outline: none !important; border: none !important;
                     background-color: {cp_base_color} !important; opacity: 0.8 !important;
+                    filter: none !important;
                 }}
                 </style>''', unsafe_allow_html=True)
 
@@ -2119,40 +2155,152 @@ def render_download_settings(fetch_courses_fn):
                     {check}
                     ''')
 
-                if not ready:
-                    pan_css.append('''
-                    div.st-key-btn_pan_out_txt button[disabled],
-                    div.st-key-btn_pan_out_srt button[disabled] {
-                        opacity: 0.4 !important; filter: grayscale(85%) !important; cursor: not-allowed !important;
-                    }
-                    ''')
+                # No `if not ready:` disabled block any more. When the engine
+                # isn't set up, Transcript/Subtitles render with `disabled=True`
+                # and global.css's single `button[disabled]` recipe paints them.
+                # The rule that used to live here declared its own
+                # `filter: grayscale(85%)`, which REPLACED the shared filter
+                # (filter is one property) and flattened both pills to grey.
 
-                # Info card container (purple-tinted border/bg) and compact gear-icon button.
-                # Uses the outer keyed-div directly - stVerticalBlockBorderWrapper does not
-                # exist in Streamlit 1.51; the key class reliably lands on the outer wrapper div.
+                # Info card as a COLLAPSIBLE card whose open/closed state PERSISTS.
+                # It is NOT an st.expander: `expanded=` is a render-time value with
+                # no state behind it and Streamlit gives no callback on an expander,
+                # so a collapse was undone by the very next rerun (toggling an output,
+                # changing the layout, ...). Instead the header is a native st.button
+                # with an `on_click` toggle - a callback, never `if st.button(): ...;
+                # st.rerun()`, which renders twice and drops the scroll anchor.
+                #
+                # The body is ALWAYS rendered and hidden with CSS when collapsed.
+                # Removing it from the tree instead would shorten this section by one
+                # element on every collapse, and Streamlit reconciles by position - the
+                # keyed containers below would inherit each other's nodes and children.
+                # A hidden `display: none` body also can't be clicked, so the action
+                # button inside it is genuinely unreachable while collapsed.
+                _pan_dot = "#22c55e" if ready else ("#f59e0b" if any_installed else "#ef4444")
+                _pan_dot_glow = (
+                    "rgba(34,197,94,0.5)" if ready else
+                    ("rgba(245,158,11,0.5)" if any_installed else "rgba(239,68,68,0.5)")
+                )
+                _pan_info_open = bool(st.session_state.get('pan_info_open', True))
                 pan_css.append(f'''
+                /* ── pan_info_card: collapsible card shell ─────────────────── */
+                /* The keyed wrapper IS the card surface. The header button and the
+                   body sit inside it carrying no chrome of their own, so there is
+                   one border and one background - and therefore no hairline
+                   between the header and the body. */
                 div[class*="st-key-pan_info_card"] {{
+                    margin-bottom: 0px !important;
                     border: 1px solid rgba(176,157,254,0.28) !important;
                     border-radius: 10px !important;
                     background: rgba(176,157,254,0.06) !important;
-                    margin-bottom: 0px !important;
-                    padding: 12px 15px 12px 15px !important;
+                    box-shadow: none !important;
+                    padding: 0 !important;
+                    gap: 0 !important;
+                    overflow: hidden !important;
                 }}
-                /* Streamlit leaves trailing space below the last child (the button)
-                   inside a container; the outer keyed wrapper's `padding-bottom: 0`
-                   alone does NOT remove it. Strip the inner stVerticalBlock's bottom
-                   padding AND the last element-container's margin so the purple
-                   border hugs the button - killing the empty band above the divider. */
-                div[class*="st-key-pan_info_card"] div[data-testid="stVerticalBlock"] {{
-                    padding-bottom: 0 !important;
+                /* ── Header row: a native st.button styled as the summary ──── */
+                div.st-key-pan_info_hdr {{ margin: 0 !important; }}
+                div.st-key-pan_info_hdr button {{
+                    width: 100% !important;
+                    background: transparent !important;
+                    border: none !important;
+                    border-radius: 10px !important;
+                    box-shadow: none !important;
+                    padding: 8px 14px !important;
+                    min-height: 0 !important;
+                    height: auto !important;
+                    display: flex !important;
+                    flex-direction: row !important;
+                    align-items: center !important;
+                    justify-content: flex-start !important;
+                    text-align: left !important;
+                    cursor: pointer !important;
                 }}
-                div[class*="st-key-pan_info_card"] div[data-testid="stElementContainer"]:last-child {{
+                div.st-key-pan_info_hdr button:hover {{
+                    background: rgba(176,157,254,0.10) !important;
+                }}
+                /* The purple chevron, rotated when the card is open. It is a
+                   normal in-flow flex item, which is safe here only because the
+                   row is left-aligned - on a CENTRED button a leading icon shifts
+                   the label off the button's axis. */
+                div.st-key-pan_info_hdr button::before {{
+                    content: "" !important;
+                    display: inline-block !important;
+                    width: 0.85em !important;
+                    height: 0.85em !important;
+                    margin-right: 8px !important;
+                    flex-shrink: 0 !important;
+                    background-color: #b89dfe !important;
+                    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") !important;
+                    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") !important;
+                    -webkit-mask-repeat: no-repeat !important;
+                    mask-repeat: no-repeat !important;
+                    -webkit-mask-position: center !important;
+                    mask-position: center !important;
+                    -webkit-mask-size: contain !important;
+                    mask-size: contain !important;
+                    transform: rotate({90 if _pan_info_open else 0}deg) !important;
+                    transition: transform 0.18s ease !important;
+                }}
+                /* Label + status dot. A plain-text button label renders with NO
+                   <p> in 1.51 - the text sits directly in stMarkdownContainer -
+                   so the layout and the dot both hang off the container, never
+                   off `p`. The `p` rule below only covers a label that happens
+                   to contain inline markup. */
+                div.st-key-pan_info_hdr button [data-testid="stMarkdownContainer"] {{
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    gap: 10px !important;
+                    font-size: 0.88rem !important;
+                    font-weight: 600 !important;
+                    color: #e2e8f0 !important;
+                    line-height: 1.3 !important;
+                    margin: 0 !important;
+                }}
+                div.st-key-pan_info_hdr button [data-testid="stMarkdownContainer"] p {{
+                    margin: 0 !important;
+                    font-size: 0.88rem !important;
+                    font-weight: 600 !important;
+                    color: #e2e8f0 !important;
+                    line-height: 1.3 !important;
+                }}
+                /* Status dot. Colour is dynamic per render. */
+                div.st-key-pan_info_hdr button [data-testid="stMarkdownContainer"]::after {{
+                    content: "" !important;
+                    display: inline-block !important;
+                    width: 10px !important;
+                    height: 10px !important;
+                    border-radius: 50% !important;
+                    background: {_pan_dot} !important;
+                    box-shadow: 0 0 6px {_pan_dot_glow} !important;
+                    flex-shrink: 0 !important;
+                }}
+                /* ── Collapsible body ─────────────────────────────────────── */
+                /* Always rendered; hidden with `display: none` when collapsed so
+                   the element count of this section never changes. */
+                div[class*="st-key-pan_info_body"] {{
+                    display: {"flex" if _pan_info_open else "none"} !important;
+                    padding: 0 15px 12px 15px !important;
+                    gap: 0 !important;
+                }}
+                /* Streamlit's stMarkdownContainer carries margin-bottom: -16px.
+                   With the body's gap at 0 that pulled the action button UP into
+                   the description line and the two overlapped. Cancel it here so
+                   the button's own margin-top is the only spacing that lands. */
+                div[class*="st-key-pan_info_body"] div[data-testid="stMarkdownContainer"] {{
                     margin-bottom: 0 !important;
                 }}
+                div[class*="st-key-pan_info_body"] div[data-testid="stElementContainer"]:last-child {{
+                    margin-bottom: 0 !important;
+                }}
+                /* ── Action button inside the body ────────────────────────── */
+                /* The body's own padding-bottom is the space under the button -
+                   a margin here would stack on top of it and the gap under the
+                   button would no longer match the card's other insets. */
                 div.st-key-pan_open_dialog_btn {{
-                    margin-left: 32px !important;
-                    margin-top: 6px !important;
-                    margin-bottom: 18px !important;
+                    margin-left: 0px !important;
+                    margin-top: 8px !important;
+                    margin-bottom: 0px !important;
                 }}
                 div.st-key-pan_open_dialog_btn button {{
                     background: rgba(176,157,254,0.10) !important;
@@ -2197,10 +2345,11 @@ def render_download_settings(fetch_courses_fn):
                 st.markdown(f"""{pan_css_html}
 <p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 12px;'>Download your Canvas Panopto lecture recordings - as video, audio, transcripts or subtitles - saved into your course folders like every other file.</p>""", unsafe_allow_html=True)
 
-                # ── Element 0: transcription status card with embedded action button ──
-                # Lives ABOVE the separator, inside the top description section. The
-                # separator below it divides description+notice from the toggles.
-                # Card container styled purple via pan_css (stVerticalBlockBorderWrapper override).
+                # ── Element 0: transcription status card (collapsible) ──
+                # Header button shows the status headline + CSS-injected dot; the
+                # body has the full description and the action button. Open by
+                # default so setup guidance is visible on a first visit; after
+                # that the user's choice persists in `pan_info_open`.
                 with st.container(key="pan_info_card"):
                     if ready:
                         _m = None
@@ -2210,43 +2359,43 @@ def render_download_settings(fetch_courses_fn):
                         except Exception:
                             _m = None
                         _mlabel = (_m or {}).get('label', model_id)
-                        st.markdown(
-                            f"<div style='display:flex; align-items:center; gap:12px;'>"
-                            # PAN_ACCENT is a trusted module constant (hex color), not external data.
-                            # audit-ignore
-                            f"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='{PAN_ACCENT}' stroke-width='2.4' "
-                            f"stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0;'><path d='M20 6 9 17l-5-5'/></svg>"
-                            f"<div style='flex:1; color:#cbd5e1; font-size:0.86rem;'>Transcription is ready - "
-                            f"using the <b style='color:#e2e8f0;'>{esc(_mlabel)}</b> model. Transcript &amp; Subtitles are available.</div>"
-                            f"</div>", unsafe_allow_html=True)
+                        # A button label is markdown, not HTML - esc() here would
+                        # print a literal "&amp;" rather than escaping anything.
+                        _exp_label = f"Transcription ready \u2013 {_mlabel} model"
                         _dlg_label = "Manage transcription models"
                     else:
-                        _why = ("The local transcription engine isn't available yet."
-                                if not engine_avail else
-                                "A model is installed but not activated yet."
-                                if any_installed else
-                                "No transcription model is installed yet.")
-                        st.markdown(
-                            f"<div style='display:flex; align-items:flex-start; gap:12px;'>"
-                            # PAN_ACCENT is a trusted module constant (hex color), not external data.
-                            # audit-ignore
-                            f"<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='{PAN_ACCENT}' stroke-width='2' "
-                            f"stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0; margin-top:1px;'>"
-                            f"<circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/></svg>"
-                            f"<div style='flex:1;'>"
-                            f"<div style='color:#e2e8f0; font-weight:600; font-size:0.9rem;'>Transcripts &amp; Subtitles need a one-time setup</div>"
-                            f"<div style='color:#94a3b8; font-size:0.84rem; margin-top:2px; line-height:1.45;'>{esc(_why)} "
-                            f"Download a transcription model to unlock the <b>Transcript</b> &amp; <b>Subtitles</b> formats. "
-                            f"Video &amp; Audio work without it.</div></div></div>", unsafe_allow_html=True)
+                        _exp_label = "Transcripts & Subtitles need a one-time setup"
                         _dlg_label = "Set up transcription"
 
-                    # Button at the bottom of the card - content-sized, indented via CSS
-                    # margin-left on stButton wrapper (32px = info icon + gap).
-                    # A full-app rerun is forced so the main-level dialog host renders it
-                    # (dialog runs an internal auto-rerun loop, so it must persist).
-                    if st.button(_dlg_label, key="pan_open_dialog_btn", use_container_width=False):
-                        st.session_state['_pan_dialog_open'] = True
-                        st.rerun(scope="app")
+                    st.button(_exp_label, key="pan_info_hdr",
+                              on_click=_toggle_pan_info, use_container_width=True)
+
+                    with st.container(key="pan_info_body"):
+                        # Detail text inside the collapsible body.
+                        if ready:
+                            st.markdown(
+                                f"<div style='color:#cbd5e1; font-size:0.84rem; line-height:1.45; margin-top:0;'>"
+                                f"Using the <b style='color:#e2e8f0;'>{esc(_mlabel)}</b> model. "
+                                f"Transcript &amp; Subtitles are available.</div>",
+                                unsafe_allow_html=True)
+                        else:
+                            if not engine_avail:
+                                _why = "The local transcription engine isn't available yet."
+                            elif any_installed:
+                                _why = "A model is installed but not activated yet."
+                            else:
+                                _why = "No transcription model is installed yet."
+                            st.markdown(
+                                f"<div style='color:#94a3b8; font-size:0.84rem; line-height:1.45; margin-top:0;'>"
+                                f"{esc(_why)} Download a transcription model to unlock the "
+                                f"<b>Transcript</b> &amp; <b>Subtitles</b> formats. "
+                                f"Video &amp; Audio work without it.</div>",
+                                unsafe_allow_html=True)
+
+                        # Action button at the bottom of the body.
+                        if st.button(_dlg_label, key="pan_open_dialog_btn", use_container_width=False):
+                            st.session_state['_pan_dialog_open'] = True
+                            st.rerun(scope="app")
 
                 # ── Element 1: separator + choose what to download ──
                 # The <hr> is merged into the same st.markdown so it shares one flex
@@ -2592,7 +2741,7 @@ div.st-key-review_browse_folder button:hover {
                         'isolated_retry_queue', 'retry_downloaded_items', 'retry_failed_items',
                         'retry_isolated_details', 'retry_mb_tracker', 'is_post_processing',
                         'start_time', 'total_items', 'total_mb',
-                        'sync_has_ignored_files',
+                        'sync_has_ignored_files', 'sync_newversion_files',
                     ]:
                         st.session_state.pop(_stale_key, None)
 
@@ -2654,10 +2803,6 @@ div.st-key-review_browse_folder button:hover {
 
         with col_back:
             if st.button('Go back', use_container_width=True, key='action_dl_back'):
-                if st.session_state.get('came_from_quick_dl', False):
-                    st.session_state['quick_download_mode'] = True
-                    st.session_state.pop('came_from_quick_dl', None)
-                else:
-                    st.session_state['step'] = 1
+                _dl_settings_go_back()
                 st.rerun()
 

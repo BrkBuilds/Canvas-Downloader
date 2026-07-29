@@ -37,6 +37,83 @@ def resolve_today_pairs() -> list[dict]:
     ]
 
 
+def unreachable_today_pairs() -> list[dict]:
+    """The curated pairs the daily sync will SKIP - folder no longer on disk.
+
+    The complement of :func:`resolve_today_pairs`. A missing folder never stops
+    the run: the rest of the list syncs normally and the skipped courses are
+    reported afterwards (see ``build_today_sync_notice``), because only the user
+    can decide whether that folder should be re-linked or the pair dropped.
+    """
+    from pathlib import Path
+    from core.today_store import load_today_config
+
+    return [
+        p for p in load_today_config().get("pairs", [])
+        if not (p.get("local_folder") and Path(p["local_folder"]).exists())
+    ]
+
+
+def reconcile_daily_list_with_hub() -> int:
+    """Re-point or drop daily-sync courses to match Saved Groups & Pairs.
+
+    The daily list stores standalone COPIES of each pair so the daily sync is
+    self-contained. That is what let it hold courses the user had already
+    deleted from the hub: the copies outlived their source, and with their
+    folders gone too they became permanently unsyncable entries that could not
+    be fixed from anywhere.
+
+    The hub is the source of truth for what a saved pair IS, so after any hub
+    edit this reconciles the copies against it:
+
+    * the pair still exists with the same folder -> untouched;
+    * the course is still in the hub under a DIFFERENT folder (the user used
+      "Edit Pair" to re-link it) -> the daily copy adopts the new folder, so
+      re-linking in one place fixes it everywhere;
+    * the course is no longer in the hub at all (pair/group deleted) -> dropped
+      from the daily list too. Deleting a saved pair is the user saying they are
+      done with that course; it must not linger in a second list.
+
+    Returns the number of daily entries changed (re-pointed or dropped).
+    """
+    from core.sync_manager import SavedGroupsManager
+    from core.today_store import load_today_config, set_today_pairs
+    from shared.helpers import get_config_dir
+
+    daily = load_today_config().get("pairs", [])
+    if not daily:
+        return 0
+
+    # course_id -> folder, across every saved group and pair in the hub.
+    hub_folders: dict = {}
+    hub_sigs: set = set()
+    try:
+        for group in SavedGroupsManager(get_config_dir()).load_groups():
+            for p in group.get("pairs", []) or []:
+                cid, folder = p.get("course_id"), p.get("local_folder")
+                if not folder:
+                    continue
+                hub_sigs.add((cid, folder))
+                hub_folders.setdefault(cid, folder)
+    except Exception:
+        # Never let a hub read failure silently empty the user's daily list.
+        return 0
+
+    out, changed = [], 0
+    for p in daily:
+        sig = (p.get("course_id"), p.get("local_folder"))
+        if sig in hub_sigs:
+            out.append(p)
+        elif p.get("course_id") in hub_folders:
+            out.append({**p, "local_folder": hub_folders[p["course_id"]]})
+            changed += 1
+        else:
+            changed += 1   # gone from the hub -> gone from the daily list
+    if changed:
+        set_today_pairs(out)
+    return changed
+
+
 def should_auto_sync() -> bool:
     """True when the daily auto-sync should fire on this launch.
 
@@ -88,12 +165,25 @@ def build_today_sync_notice() -> dict:
     # synced_count is the engine's own tally - trust whichever saw more.
     total = max(total, files_in_groups)
 
+    # Courses the run SKIPPED because their folder could not be located. Read
+    # here, at completion, rather than stored at launch: this is the only moment
+    # the user is guaranteed to be looking, and a skip is otherwise invisible -
+    # the run just quietly covers fewer courses than the list says it does.
+    try:
+        skipped = [
+            friendly_course_name(p.get("course_name", "") or "Course")
+            for p in unreachable_today_pairs()
+        ]
+    except Exception:
+        skipped = []
+
     return {
         "is_auto": bool(st.session_state.get("today_sync_is_auto")),
         "completed_at": datetime.now().strftime("%H:%M"),
         "total_files": total,
         "courses": courses,
         "errors": len(st.session_state.get("sync_errors") or []),
+        "skipped": skipped,
     }
 
 

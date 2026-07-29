@@ -98,12 +98,26 @@ header[data-testid="stHeader"] {
     display: none !important;
 }
 
+/* 0. The page's side padding, owned by us.
+   Streamlit computes it as `spacing.lg` (1rem), swapped for `wideSidePadding`
+   (5rem) above the wide-mode threshold - `contentMaxWidth (46rem) + 2 * (5rem -
+   1rem) = 54rem` (see applyWideModePadding() in Streamlit 1.51's bundle).
+   Restating it here as a variable is what lets the sticky action bar bleed out
+   to the true page edges: it can subtract exactly the padding that is applied,
+   with no chance of the two drifting apart (and no chance of a media query
+   evaluating differently under the app's zoom setting, since BOTH sides read
+   the same variable). */
+:root { --cd-page-pad: 5rem; }
+@media (max-width: 53.999rem) { :root { --cd-page-pad: 1rem; } }
+
 /* 1. Step tracker sits flush at the top edge - no top padding */
 .block-container,
 div[data-testid="stMainBlockContainer"],
 div[data-testid="stAppViewBlockContainer"] {
     padding-top: 0 !important;
     padding-bottom: 2rem !important;
+    padding-left: var(--cd-page-pad) !important;
+    padding-right: var(--cd-page-pad) !important;
     max-width: 100% !important;
 }
 
@@ -155,8 +169,18 @@ div[data-testid="stHtml"] {
    down. That list only worked if whoever added a tooltip remembered to register
    the key, and forgetting produced a silently shrunken button - the exact bug it
    existed to prevent. Buttons with their own explicit sizing still win on
-   specificity, so icon-only controls are unaffected. */
+   specificity, so icon-only controls are unaffected.
+
+   stDownloadButton is included for the same reason. It is a SEPARATE Streamlit
+   component from stButton (its own wrapper class and testid, both live in 1.51 -
+   counted in the DOM, not assumed), so it inherited none of the above and
+   rendered 40px next to a 48px st.button beside it in the same st.columns row -
+   measured 2026-07-27 on the Settings > Diagnostics card, which is the app's
+   only download button. Registering it here rather than scoping a fix to that
+   one key means the next st.download_button cannot reintroduce the mismatch. */
 .stButton>button,
+.stDownloadButton>button,
+.stDownloadButton > [data-testid="stTooltipHoverTarget"] > button,
 .stButton > [data-testid="stTooltipHoverTarget"] > button {
     width: 100%;
     border-radius: 5px;
@@ -490,6 +514,181 @@ div[data-testid="stDialog"] [data-testid="stElementContainer"]:has(iframe[height
     pointer-events: none !important;
 }
 
+/* ═══════════════════════════════════════════════
+   Don't fade the page behind an open modal
+   ═══════════════════════════════════════════════
+   Streamlit marks every element of a previous run `data-stale="true"` and
+   applies STALE_STYLES = `opacity: .33` with `transition: opacity 1s ease-in
+   0.5s` (read out of the 1.51 bundle). That is a useful "this is being
+   recomputed" signal for a page you are looking at - and pure noise for a page
+   you are NOT: while a modal is open the background is inert, un-scrollable and
+   unclickable, so fading it just makes the whole app look like it is reloading.
+
+   It bites hardest on the Settings -> "Configure transcription" -> back round
+   trip: swapping which dialog is open REQUIRES an app-scoped rerun (Streamlit
+   allows only one dialog at a time), and that rerun is slow enough - the
+   transcription dialog warms a hardware probe - to clear the 0.5s delay, so the
+   entire page behind the modal visibly dimmed and came back on every hop.
+
+   Scoped to stMain/stSidebar, so an element going stale INSIDE the dialog still
+   shows its own feedback normally. */
+div[data-testid="stApp"]:has(div[data-testid="stDialog"]) section[data-testid="stMain"] [data-stale="true"],
+div[data-testid="stApp"]:has(div[data-testid="stDialog"]) section[data-testid="stSidebar"] [data-stale="true"] {
+    opacity: 1 !important;
+    transition: none !important;
+}
+
+/* …and don't fade during a HANDOFF between two dialogs either.
+   The rule above needs a dialog to be mounted, and there is a window in the
+   middle of a swap where the old one has been torn down and the new one has not
+   rendered yet - so it does not match. That window is short going Panopto ->
+   Settings, but going Settings -> Panopto the transcription dialog warms a
+   hardware probe first, which is long enough to cross the 0.5s delay: the page
+   behind visibly went dark and came back on that hop and not the other, which
+   is exactly the asymmetry that was reported.
+
+   Pushing the delay out to 2.5s covers every dialog swap without removing the
+   signal: an operation that genuinely takes longer than that still fades, and
+   everything in this app that CAN take longer already has purpose-built
+   progress UI (analysis panel, download dashboard, per-list spinners).
+
+   ── Why this is an ANIMATION and not `transition-delay` ──
+   It was a bare `transition-delay: 2.5s !important` until 2026-07-27, and a
+   transition turned out to be the wrong instrument twice over. Both failures
+   are invisible in review and were found by sampling computed styles per frame
+   in the running app.
+
+   1. A delay only delays a TRANSITION, and an element only transitions the
+      properties named in its own `transition-property`. A component that
+      declares `transition: <not-opacity> !important` silently drops opacity
+      out of that list, and Streamlit's fade stops being a transition at all -
+      it becomes an INSTANT jump to .33 that no delay can reach. The
+      course-list rows carry `transition: background-color 0.2s !important`
+      (their hover/checked tint) and were measured snapping to .33 for ~37ms on
+      every checkbox click, while a plain button beside them never moved:
+          row     opacity 0.33  transition-property background-color  delay 2.5s
+          button  opacity 1     transition-property all               delay 2.5s
+      That dip across 43 elements is the reported "the course list dips to
+      black when I toggle a checkbox - it didn't use to".
+
+   2. A transition can never run on a NEWLY INSERTED element - there is no
+      previous value to animate from, so its first computed style is painted as
+      is. Search-as-you-type re-creates the course rows on every keystroke, so
+      any row that arrives already marked stale paints .33 immediately. Even
+      after fixing (1), typing still produced dip frames for exactly this
+      reason.
+
+   An animation fixes both, because it runs from the moment the element is
+   rendered and it outranks every non-`!important` declaration while it runs:
+   `both` fill-mode applies the `from` keyframe during the 2.5s delay, so a
+   fresh node paints at opacity 1 (verified: a stale node created from scratch
+   computes to 1). After 2.5s it eases to .33 and holds, which is the same
+   long-operation signal as before (verified: 1 → 1 → 1 → .94 → .75 → .33
+   sampled at 0/1.5/2.4/2.7/3.0/3.6s).
+
+   ── It must cover DIALOGS too, and that is a separate selector ──
+   `st.dialog` renders into its own portal, NOT inside `stMain`, so the two
+   selectors above miss it entirely and every in-dialog list kept the raw
+   Streamlit behaviour. Measured in the "Select Course to sync" dialog before
+   this line existed — `opacity 0.33 / transition-property background-color /
+   transition-delay 0s / animation-name none` — i.e. the exact instant snap the
+   main page used to have, because `_render_single_select_list` injects the same
+   `transition: background-color 0.2s !important` as its multi-select twin.
+   A dialog checkbox click is a FULL-page rerun (a dialog is not a fragment),
+   so it is not even a fast one.
+
+   Note this does NOT undo the "no fade behind an open modal" rule above, which
+   is deliberately scoped to stMain/stSidebar so that an element going stale
+   INSIDE a dialog still shows its own feedback. It keeps that promise: a dialog
+   operation slower than 2.5s still fades, exactly like everywhere else. What it
+   removes is the sub-second strobe, which was never feedback.
+
+   `!important` sits on `animation`, NOT on `opacity`: an `!important` opacity
+   would outrank the animation and freeze the fade off entirely. That is also
+   exactly why the dialog rule above still wins - `opacity: 1 !important` beats
+   an animation by spec (verified in-browser). */
+@keyframes cd-stale-fade {
+    from { opacity: 1; }
+    to   { opacity: 0.33; }
+}
+section[data-testid="stMain"] [data-stale="true"],
+section[data-testid="stSidebar"] [data-stale="true"],
+div[data-testid="stDialog"] [data-stale="true"] {
+    animation: cd-stale-fade 1s ease-in 2.5s both !important;
+}
+
+/* ═══════════════════════════════════════════════
+   The dialog scrim: ONE layer, not two
+   ═══════════════════════════════════════════════
+   Reported as "a white flash when a dialog opens - everything goes grey, then
+   brighter, covering the dialog too, then back down to normal". Measured
+   in-browser 2026-07-27: it is Streamlit's own modal chrome, not this app's
+   CSS, and it fires on EVERY dialog because every dialog is an @st.dialog.
+
+   st.dialog renders three stacked boxes, and TWO of them paint the page behind
+   the modal:
+
+       div[data-testid="stDialog"]      background rgba(156,169,196,.25)  LIGHT
+         > div                          background rgba(0,0,0,.5)         DARK
+             > div[role="dialog"]       the modal surface itself
+
+   The dark one is the real backdrop: it fades in with the modal
+   (transition: opacity .4s cubic-bezier(.2,.8,.4,1)). The LIGHT one sits on
+   baseweb's Modal ROOT, carries NO transition (computed `all 0s`), and so
+   lands at full strength on the very frame the dialog mounts - ~400ms before
+   the layer that is meant to cancel most of it has any opacity to give.
+
+   For those 400ms the whole viewport is washed with 25% of a pale blue-grey
+   and nothing pulls it back. The dialog is included in the wash, because it is
+   still at opacity 0 itself - which is why the flash reads as covering it.
+   Composited against the app's #0e1117 ground:
+
+       first frame   rgb(50,55,66)   luminance 54.6   3.25x the bare page
+       settled       rgb(25,28,33)   luminance 27.3   1.63x the bare page
+
+   It spikes to exactly TWICE its own final brightness, then decays. That
+   ratio is the flash.
+
+   ── The fix: delete the un-animated layer, fold it into the animated one ──
+   Do NOT instead animate the light layer in as well. That was built and
+   measured first: two independently-started animations do not begin on the
+   same frame, and this ease-out curve is steep enough at the front that a
+   ~30ms lead still overshot the settled value by 27% (peak 34.7 vs 27.3). A
+   hand-synced second animation also silently drifts the day Streamlit retunes
+   its own transition.
+
+   With ONE layer there is nothing left to synchronise: the alpha ramp is
+   Streamlit's own transition, so it is in step with the modal by construction
+   and cannot overshoot. The colour below is the exact composite of the two
+   layers it replaces, so the settled appearance does not change. For any
+   pixel P behind the modal, with L = rgb(156,169,196):
+
+       before   0.5 * (0.75*P + 0.25*L)  =  0.375*P + 0.125*L
+       after    (1-a)*P + a*C            ->  a = 0.625, C = 0.2*L = 31.2,33.8,39.2
+
+   Rounding C to whole channels costs 0.125/255 per channel - far below both
+   perception and Rule 8's tolerance - and holds for EVERY pixel behind the
+   modal, not just the flat background. Verified in the running app: settled
+   composite rgb(25,28,33) before and after, and the entrance is now strictly
+   monotonic (16.8 - 19.4 - 23.0 - 25.1 - 26.2 - 26.8 - 27.4), peak/settled
+   1.00 where it was 2.00.
+
+   This is deliberately NOT a palette token: it is derived arithmetic from two
+   Streamlit values whose only job is to leave the composite exactly where it
+   already was. Closing needs no counterpart - Streamlit unmounts the modal in
+   a single frame, so there is nothing to un-fade.
+
+   The `:not([role="dialog"])` guard is insurance only. Today the backdrop is
+   the Root's ONLY child and the modal surface is a grandchild, so it cannot
+   match; if a future Streamlit flattens that nesting, the guard keeps this
+   from repainting the modal surface itself. */
+div[data-testid="stDialog"] {
+    background-color: transparent !important;
+}
+div[data-testid="stDialog"] > div:not([role="dialog"]) {
+    background-color: rgba(31, 34, 39, 0.625) !important;
+}
+
 /* course_selector.inject_shift_select_bridge() injects the same kind of
    0-height components.html iframe on the main download page (Shift-click range
    select). Collapse its element container so it adds no gap above the download
@@ -811,7 +1010,7 @@ div[class*="st-key-btn_convert_"] button div[data-testid="stMarkdownContainer"] 
     text-align: left !important;
 }
 
-div[class*="st-key-btn_convert_"] button p {
+div[class*="st-key-btn_convert_"] button [data-testid="stMarkdownContainer"] {
     text-align: left !important;
     width: 100% !important;
     margin-top: 0px !important;
@@ -922,18 +1121,39 @@ div[data-testid="column"] {
     justify-content: center;
 }
 
-/* Universal disabled button dimming.
+/* ═══════════════════════════════════════════════
+   THE disabled-button recipe - the ONLY one in the app
+   ═══════════════════════════════════════════════
 
    brightness(0.5) saturate(0.5) - NOT grayscale(100%). Full desaturation made a
    disabled button read as a flat grey slab that sank into the dark page and
    stopped looking like a button at all; halving brightness and saturation keeps
    enough of its own hue to stay legible as "this control, currently off".
-   Deliberately no `opacity` on top: stacking opacity on the filter dimmed it
-   back into the background, which is the thing being fixed.
 
-   `shared/components.py:live_enable_button` MUST mirror this exactly - it paints
-   a genuinely-enabled button as disabled, and the two states have to be
-   indistinguishable or the same dialog shows two different "off" styles. */
+   THREE THINGS THAT MUST NEVER BE ADDED ON TOP, anywhere in the app:
+     1. `opacity` - it MULTIPLIES with the filter. The sync-history Open/Reveal
+        icon buttons carried `opacity: 0.3` on top of this and were effectively
+        invisible (0.5 x 0.3 = 15% of their enabled paint). Same story for the
+        sidebar nav (0.4), logout (0.35), model Download (0.45), GPU (0.38).
+     2. A second `filter` - `filter` is ONE property, so a local
+        `filter: grayscale(100%)` with higher specificity REPLACES this rule
+        instead of adding to it, and the button reverts to exactly the flat grey
+        slab this recipe exists to avoid.
+     3. A flat background/colour repaint (`background: #3a3a3a; color: #6b6b6b`)
+        - the two primary sync buttons did this and, being different base
+        colours when enabled, ended up looking like two unrelated controls when
+        disabled. That is the bug this rule was written to kill.
+
+   Both JS-side gates MUST mirror this exactly - they paint a genuinely-enabled
+   button as disabled, and the two states have to be indistinguishable or the
+   same screen shows two different "off" styles:
+     - `shared/components.py:live_enable_button`
+     - `ui/course_selector.py:_gate_actions_on_selection`
+
+   The ONE sanctioned exemption is a "rerun lock" - an invisible full-card hit
+   target that is `disabled=True` only for the duration of a rerun (the Card
+   2/3/4 header toggles). Those are not an affordance the user reads as
+   unavailable, so they opt out with an explicit `filter: none`. */
 button[disabled] {
     filter: brightness(0.5) saturate(0.5) !important;
     cursor: not-allowed !important;
@@ -1150,11 +1370,20 @@ details[open] > summary::before {
 /* Opt-outs: these already have their own chevron/icon, so a second one would
    double up. Streamlit's expanders use keyboard_arrow_* icons; the completion
    screen's error/skip panels use .chevron / .sp-chevron; sync history uses
-   .sync-history-chevron. */
+   .sync-history-chevron.
+
+   `.stat-row-dropdown` (the Confirm Sync dialog's Files / Destination rows) is
+   here for a different reason: its summary is a `justify-content: space-between`
+   flex row of exactly TWO items, so an injected ::before became a THIRD flex
+   item that took the left slot and shoved the row's icon+label into the middle
+   of the dialog - the "Files:" row visibly out of line with the "Total Size:"
+   and "Destination:" rows below it. That row carries its own chevron next to
+   its value (`.arrow-icon`, ui/sync_confirmation.py). */
 [data-testid="stExpander"] summary::before,
 summary.error-panel-header::before,
 summary.skip-panel-header::before,
-.sync-history-details > summary::before {
+.sync-history-details > summary::before,
+.stat-row-dropdown > details > summary::before {
     content: none;
     display: none;
 }
@@ -1352,7 +1581,7 @@ div[class*="st-key-open_token_settings_btn"] button [data-testid="stMarkdownCont
     display: flex !important;
     align-items: center !important;
 }
-div[class*="st-key-open_token_settings_btn"] button p {
+div[class*="st-key-open_token_settings_btn"] button [data-testid="stMarkdownContainer"] {
     display: inline-flex !important;
     align-items: center !important;
     gap: 8px !important;
@@ -1361,7 +1590,7 @@ div[class*="st-key-open_token_settings_btn"] button p {
 }
 /* External-link glyph drawn as a currentColor mask so it follows the
    button's enabled (white) / disabled (grey) text colour. */
-div[class*="st-key-open_token_settings_btn"] button p::before {
+div[class*="st-key-open_token_settings_btn"] button [data-testid="stMarkdownContainer"]::before {
     content: "" !important;
     display: inline-block !important;
     width: 15px !important;
@@ -1371,14 +1600,10 @@ div[class*="st-key-open_token_settings_btn"] button p::before {
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3Cpolyline points='15 3 21 3 21 9'/%3E%3Cline x1='10' y1='14' x2='21' y2='3'/%3E%3C/svg%3E") no-repeat center / contain !important;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3Cpolyline points='15 3 21 3 21 9'/%3E%3Cline x1='10' y1='14' x2='21' y2='3'/%3E%3C/svg%3E") no-repeat center / contain !important;
 }
-/* Disabled (no URL entered yet): greyed, not-allowed cursor. The native
-   help= tooltip explains why it's disabled. */
-div[class*="st-key-open_token_settings_btn"] button:disabled {
-    background: #283139 !important;
-    color: #5b6775 !important;
-    cursor: not-allowed !important;
-    opacity: 1 !important;
-}
+/* Disabled (no URL entered yet): no paint here - the single `button[disabled]`
+   recipe above owns it (and sets the not-allowed cursor). The native help=
+   tooltip explains why it's disabled. This used to repaint a flat #283139 slab,
+   i.e. a second "off" style. */
 
 /* ═══════════════════════════════════════════════
    macOS Full Disk Access nudge (shared component)
@@ -1524,7 +1749,7 @@ div[class*="_fda_link_btn"] button:hover {
     color: #9ec1ff !important;
 }
 
-div[class*="_fda_link_btn"] button p {
+div[class*="_fda_link_btn"] button [data-testid="stMarkdownContainer"] {
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
@@ -1536,7 +1761,7 @@ div[class*="_fda_link_btn"] button p {
 /* Small shield-check glyph left of the link text (every nudge surface) -
    masked box painted with currentColor so it follows the text's rest/hover
    color exactly. Sized to the 0.8rem label. */
-div[class*="_fda_link_btn"] button p::before {
+div[class*="_fda_link_btn"] button [data-testid="stMarkdownContainer"]::before {
     content: '';
     display: inline-block;
     width: 13px;
@@ -1600,14 +1825,14 @@ div[class*="_fda_close_btn"] button:hover {
     border-color: rgba(255, 255, 255, 0.22) !important;
 }
 
-div[class*="_fda_close_btn"] button p {
+div[class*="_fda_close_btn"] button [data-testid="stMarkdownContainer"] {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
 }
 
-div[class*="_fda_close_btn"] button p::before {
+div[class*="_fda_close_btn"] button [data-testid="stMarkdownContainer"]::before {
     content: '';
     display: inline-block;
     width: 14px;
@@ -1674,13 +1899,77 @@ div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] di
        which is 0.47 CIEDE2000 away) precisely so the two cannot drift apart.
        audit-ignore */
     background-color: #0e1117;
-    border-top: 1px solid rgba(255, 255, 255, 0.10);
-    /* Reads as lifted off the content it floats over. Sits above the border so
-       the seam stays crisp. */
-    box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.35);
     padding-top: 14px;
     padding-bottom: 14px;
     margin-top: 8px;
+    /* NO border and NO shadow at rest. A full-width rule with an upward shadow
+       under a bar that is sitting still reads as a floating panel over content
+       it is not actually floating over - the surface + padding alone is enough
+       separation. The rule below adds a hairline ONLY while the bar is really
+       pinned. */
+
+    /* FULL BLEED. The bar lives inside the block container, so without this its
+       separator started at the left button and stopped at the right one - about
+       83% of the page width, measured - and read as a stray rule floating over
+       the content instead of a footer. Cancelling exactly `--cd-page-pad` on
+       each side and adding it back as padding puts the border and the surface on
+       the true page edges while the buttons stay on the content grid. No
+       overflow: the negative margin only reclaims padding the parent already
+       reserved. */
+    margin-left: calc(-1 * var(--cd-page-pad));
+    margin-right: calc(-1 * var(--cd-page-pad));
+    padding-left: var(--cd-page-pad);
+    padding-right: var(--cd-page-pad);
+    /* Width AND max-width must both be restated, in that order of discovery:
+       `width: 100%` resolves against the containing block's CONTENT box and
+       ignores margins, so the negative margin alone only slid the bar 80px left
+       (measured: x reached the page edge, width unchanged) - it overhung one
+       side instead of bleeding on both. Adding `width` was then silently
+       clamped back to 847px by Streamlit's `max-width: 100%` on the same
+       element; even an inline `width: 1007px` measured 847px until that was
+       lifted too. */
+    width: calc(100% + 2 * var(--cd-page-pad));
+    max-width: calc(100% + 2 * var(--cd-page-pad));
+
+    transition: box-shadow 0.18s ease;
+}
+
+/* Separator, PINNED STATE ONLY - a hairline, no shadow.
+   `data-cd-stuck` is set on <body> by shared.components.inject_app_shell_bridge()
+   with a pure IntersectionObserver (threshold 1 + a -1px bottom root margin):
+   while pinned the bar's bottom edge is flush with the scrollport bottom, so
+   shrinking the root by one pixel clips it. No scroll listener, no polling, and
+   it survives reruns because the bridge rebinds on every injection. Measured
+   2026-07-26: 1 at the top of the page, 0 at max scroll, 1 again on the way
+   back. If the bridge ever fails to run, the bar simply never shows a line -
+   the safe direction to fail in.
+
+   IT LIVES ON <body>, NOT ON THE BAR (changed 2026-07-26). Streamlit replaces
+   the bar's wrapper element on every rerun, so an attribute set there was lost
+   for ~50 measured milliseconds after each one and the separator blinked off
+   and back on for any full-page rerun. <body> is never replaced. A page hosts
+   at most one action bar, so one flag is exact.
+   (CSS `@container scroll-state(stuck:)` does this natively but is
+   Chromium-only, and the macOS build renders in WKWebView.)
+
+   TO REMOVE THE LINE IN EVERY STATE: delete this one rule. Nothing else
+   references data-cd-stuck. */
+body[data-cd-stuck="1"] div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-sticky_actions_"]),
+body[data-cd-stuck="1"] div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-action_dl_back"]),
+body[data-cd-stuck="1"] div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"]) {
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Identical air above the buttons on EVERY page that uses the bar.
+   Custom Download pulls its action row up by -15px (a rule that predates the
+   bar), which ate the 14px padding above and left the separator sitting on the
+   buttons' own top border. The bar owns its vertical rhythm - page-local
+   margins on the row it wraps are neutralised here rather than page by page. */
+div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-sticky_actions_"]) > div[class*="st-key-sticky_actions_"],
+div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-action_dl_back"]) > div[data-testid="stHorizontalBlock"],
+div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"]) > div[data-testid="stHorizontalBlock"] {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 /* The bar's own container must not add a second surface or extra gap - the
@@ -1690,4 +1979,332 @@ div[class*="st-key-sticky_actions_"] {
     border: none !important;
     padding: 0 !important;
     margin: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════
+   Primary-action captions (.cd-action-hint)
+   ═══════════════════════════════════════════════
+   One centred line under each primary action saying what it does. These
+   replaced hover tooltips on the same buttons: a tooltip fires every single
+   time you move the pointer to click, which a user who already knows the app
+   reads as nagging. A caption is there while you are choosing and silent
+   afterwards. Gated app-wide by Settings -> "Show help text"
+   (shared/helpers.py:help_text_enabled).
+
+   THEY SIT OUTSIDE THE STICKY BAR, in a row of their own directly after it
+   (see ui/course_selector.py). They used to live inside it and be faded to
+   `opacity: 0` while it floated - which reserved their height in the pinned
+   bar for nothing, pushing the two primary buttons 41 measured pixels up the
+   screen and eating a row of the course list. `display: none` was not an
+   option there either: removing them from the bar's flow changes its height,
+   which moves the point at which sticky releases, which flips data-cd-stuck,
+   which puts them back - a two-state oscillation at the release threshold.
+
+   Rendering them after the bar removes the whole problem instead of trading
+   between its halves. The bar's height no longer depends on them at all, so
+   the pinned bar is exactly as tall as it is with help text turned off, and
+   the captions simply sit below the fold while it is pinned and scroll into
+   view - underneath the buttons, where they belong - as it releases. */
+.cd-action-hint {
+    margin: 7px 0 0 0 !important;
+    text-align: center;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: rgba(226, 232, 240, 0.45);
+}
+/* The caption row is a continuation of the bar above it, not a new section, so
+   it gives back the 1rem block gap Streamlit puts between them AND its own
+   7px - measured, the two stacked with the bar's 14px bottom padding to put
+   the captions 37px under the buttons, which read as unrelated. Landing the
+   row flush with the bar's bottom edge leaves exactly that 14px, so the
+   captions sit one bar-padding under their button and can never overlap the
+   bar (which is opaque and z-index 20, so an overlap would simply hide them). */
+div[class*="st-key-action_hints_"] {
+    margin-top: -1rem !important;
+    padding-top: 0 !important;
+}
+div[class*="st-key-action_hints_"] .cd-action-hint {
+    margin-top: 0 !important;
+}
+/* The "OR" separator has to align with the BUTTONS, and its column is
+   vertical_alignment="top" like its neighbours. 3.2rem == the primary
+   buttons' measured 51px box (min-height: 3em + border); deliberately `rem`
+   and not `em`, which would resolve against the "OR" span's own 0.9em and
+   land 5px short. */
+.cd-action-or {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 3.2rem !important;
+}
+
+/* ═══════════════════════════════════════════════
+   Run dashboard card (download + sync + Panopto)
+   ═══════════════════════════════════════════════
+   The five progress slots - phase label, course name, progress bar, metrics
+   row, active file, terminal log - are one readout of one running job, and
+   they were floating as loose elements straight on the page: only the metrics
+   row and the log carried a surface, so the bar and the phase header had
+   nothing holding them together and the whole screen read as fragments.
+
+   They are wrapped in `st.container(key="progress_dashboard")` at every call
+   site EXCEPT Today mode, where the page already hosts them inside its own
+   titled card and a second frame would nest. In 1.51 `st-key-*` lands directly
+   on the container's stVerticalBlock, so the skin goes on the keyed div.
+
+   Same surface + border as every other card in the app (theme.BG_DARK on
+   theme.BORDER_DEFAULT) - deliberately NOT a new colour. */
+div[class*="st-key-progress_dashboard"] {
+    background: #1a1d27 !important;
+    border: 1px solid #2d3248 !important;
+    border-radius: 10px !important;
+    /* Even inset on all four sides. The terminal log is the last child and
+       carries no margin of its own, so the bottom padding is the ONLY thing
+       between it and the card edge - at 4px it read as a clipped panel next to
+       18px sides. */
+    padding: 18px !important;
+    gap: 0 !important;
+    margin-bottom: 4px !important;
+}
+
+/* Streamlit gives every stMarkdownContainer `margin-bottom: -16px` further up
+   this file; with the card's `gap: 0` that pulls each row 16px up into the one
+   above it (the same trap documented on the Panopto hardware card). The rows
+   carry their own explicit margins instead. */
+div[class*="st-key-progress_dashboard"] [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
+
+/* Safety net for an inherited ghost card.
+   Streamlit reconciles by POSITION, so when a phase change shifts the elements
+   after this card by one slot, the card's DOM node - class list and all - gets
+   handed to whatever element inherits its index. On the download screen that
+   inheritor was the empty post-processing cancel placeholder, which then
+   rendered as a stray 38px empty card below the Cancel button that no Python
+   code was drawing. The cause is fixed at the source (scanning and downloading
+   now build ONE card between them, so no index moves), but this class of ghost
+   is invisible in code review and silent at runtime, so hide any instance that
+   carries no rendered content. Every real card always contains markdown - the
+   phase header at minimum - so it can never match this. */
+div[class*="st-key-progress_dashboard"]:not(:has([data-testid="stMarkdownContainer"])) {
+    display: none !important;
+}
+
+/* The metrics row deliberately keeps a surface of its own inside this card.
+   It used to be stripped flat here, on the reasoning that a bordered box inside
+   a bordered card reads as two unrelated panels - true of the old opaque box
+   with a hard border, and the reason it was flattened. The row is now a RAISED
+   panel instead: a translucent lift plus an outward shadow, mirroring the
+   terminal log directly below it, which is recessed behind an inset shadow. The
+   two read as one instrument with a lit readout and a sunken console, and the
+   numbers - the thing you actually watch during a run - get an edge.
+
+   Nothing to override here: the base style in engine/progress_dashboard.py
+   builds it from a white overlay, so it composes over this card, over Today's
+   card and over the bare page without a per-host rule. This block stays as the
+   place to look when the row's spacing inside the card needs tuning. */
+
+
+/* ═══════════════════════════════════════════════
+   Step wizard (the horizontal step tracker)
+   ═══════════════════════════════════════════════
+   Rendered by shared/helpers.py:render_wizard_step as a row of NATIVE
+   st.buttons inside one keyed container. It used to be a single `st.html`
+   block - i.e. a shadow root - which is exactly why nobody could click it:
+   users kept trying to click the previous step and nothing outside that root
+   could hear them. Read the docstring there for why a real button beats the
+   obvious "hidden button + components.html bridge" alternative.
+
+   EVERYTHING about a step's appearance is selected off its widget key, which
+   encodes the step id and its state:
+
+       cd_wiz_<flow>_<idx>_<step id>_st_<state>_<separator>
+
+   That is what keeps this stylesheet STATIC. The tracker is the first element
+   on six screens, and an st.markdown style injection above it would be a flex
+   item in the page's vertical block (global.css's ghost-box purge rule is
+   inert - see CLAUDE.md), pushing every one of those screens down by a whole
+   gap slot.
+
+   The key class lands on the button's element-container in some Streamlit
+   builds and on .stButton in others, so every state rule below matches it as a
+   DESCENDANT selector, which is true either way. The two rules that must
+   anchor to the flex item itself go through :is(X, :has(X)) for the same
+   reason. */
+
+div[class*="st-key-cd_wizard_"] {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Each step is one flex item holding [label][growing separator]. The separator
+   is a pseudo-element rather than its own widget: a real element per gap would
+   double the widget count and put four more reconciliation slots at the top of
+   every screen. */
+div[class*="st-key-cd_wizard_"] > div[data-testid="stElementContainer"] {
+    display: flex !important;
+    align-items: center !important;
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+}
+div[class*="st-key-cd_wizard_"] > div[data-testid="stElementContainer"]:last-child {
+    flex: 0 0 auto !important;
+}
+div[class*="st-key-cd_wizard_"] > div[data-testid="stElementContainer"]::after {
+    content: "";
+    flex: 1 1 auto;
+    height: 2px;
+    min-width: 8px;
+    margin: 0 12px;
+    background: #1a2d3d;
+}
+div[class*="st-key-cd_wizard_"] > div[data-testid="stElementContainer"]:last-child::after {
+    display: none;
+}
+/* Fades from transparent at the completed end to solid at the active end. */
+div[class*="st-key-cd_wizard_"] > div[data-testid="stElementContainer"]:is([class*="_donesep"], :has([class*="_donesep"]))::after {
+    background: linear-gradient(to right, rgba(58, 96, 112, 0.5), #3a6070);
+}
+
+/* Strip every trace of Streamlit's button chrome - the step IS the label. */
+div[class*="st-key-cd_wizard_"] [data-testid="stButton"] {
+    width: auto !important;
+    flex: 0 0 auto !important;
+}
+div[class*="st-key-cd_wizard_"] button {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    width: auto !important;
+    line-height: normal !important;
+    cursor: default !important;
+    /* Sanctioned exemption from the app's ONE disabled recipe
+       (button[disabled] { filter: brightness(.5) saturate(.5) } further up this
+       file). Every step but one is disabled here BY DESIGN - they are
+       information, not controls the user has failed to unlock - and the state
+       they are in is already carried by colour, weight and size. Dimming them a
+       second time would make the whole tracker read as broken. Same call as the
+       card-header rerun locks. */
+    filter: none !important;
+}
+div[class*="st-key-cd_wizard_"] button:not([disabled]) {
+    cursor: pointer !important;
+}
+div[class*="st-key-cd_wizard_"] button [data-testid="stMarkdownContainer"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    letter-spacing: 0.01em !important;
+    transition: color 0.15s ease, opacity 0.15s ease;
+}
+div[class*="st-key-cd_wizard_"] button [data-testid="stMarkdownContainer"]::before {
+    content: "";
+    display: inline-block;
+    flex-shrink: 0;
+    /* The glyph is a MASK, not a background image, so its colour is simply the
+       label's colour - which is what lets one rule per step id cover all four
+       states instead of one encoded SVG per (step x state). */
+    background-color: currentColor;
+    -webkit-mask-repeat: no-repeat;   mask-repeat: no-repeat;
+    -webkit-mask-position: center;    mask-position: center;
+    -webkit-mask-size: contain;       mask-size: contain;
+}
+
+/* -- States ------------------------------------------------------------- */
+
+/* done - already visited, soft accent blue, slightly faded */
+div[class*="st-key-cd_wiz_"][class*="_st_done_"] button [data-testid="stMarkdownContainer"] {
+    color: #8dbecc !important;
+    font-size: 0.87rem !important;
+    font-weight: 500 !important;
+    opacity: 0.75;
+}
+div[class*="st-key-cd_wiz_"][class*="_st_done_"] button [data-testid="stMarkdownContainer"]::before { width: 13px; height: 13px; }
+
+/* active - cool near-white, bold, with the centred glow */
+div[class*="st-key-cd_wiz_"][class*="_st_active_"] button [data-testid="stMarkdownContainer"] {
+    color: #cce0e8 !important;
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+    opacity: 1;
+    filter: drop-shadow(0px 0px 14px rgba(141, 190, 204, 0.375));
+}
+div[class*="st-key-cd_wiz_"][class*="_st_active_"] button [data-testid="stMarkdownContainer"]::before { width: 15px; height: 15px; }
+
+/* idle - still ahead: legible but clearly receded */
+div[class*="st-key-cd_wiz_"][class*="_st_idle_"] button [data-testid="stMarkdownContainer"] {
+    color: #607d8b !important;
+    font-size: 0.83rem !important;
+    font-weight: 400 !important;
+    opacity: 0.65;
+}
+div[class*="st-key-cd_wiz_"][class*="_st_idle_"] button [data-testid="stMarkdownContainer"]::before { width: 12px; height: 12px; }
+
+/* skipped - a step THIS MODE never visits (Quick Sync does not review). It
+   keeps its number and its place so both sync modes share one skeleton; the
+   strikethrough comes from the label itself (markdown), so the "(skipped)" note
+   stays readable. Dimmer than idle: idle means "not yet", this means "not at
+   all". */
+div[class*="st-key-cd_wiz_"][class*="_st_skipped_"] button [data-testid="stMarkdownContainer"] {
+    color: #607d8b !important;
+    font-size: 0.83rem !important;
+    font-weight: 400 !important;
+    opacity: 0.42;
+}
+div[class*="st-key-cd_wiz_"][class*="_st_skipped_"] button [data-testid="stMarkdownContainer"]::before { width: 12px; height: 12px; }
+
+/* Hover: the only affordance that teaches the tracker is clickable at all.
+   Applies solely to steps the page passed a handler for, so it can never
+   promise navigation that will not happen. */
+div[class*="st-key-cd_wizard_"] button:not([disabled]):hover [data-testid="stMarkdownContainer"] {
+    color: #cce0e8 !important;
+    opacity: 1 !important;
+}
+div[class*="st-key-cd_wizard_"] button:focus:not(:focus-visible) {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* -- Per-step glyphs ---------------------------------------------------- */
+
+div[class*="st-key-cd_wiz_"][class*="_select_st_"] button [data-testid="stMarkdownContainer"]::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='4.01' y2='6'/%3E%3Cline x1='4' y1='12' x2='4.01' y2='12'/%3E%3Cline x1='4' y1='18' x2='4.01' y2='18'/%3E%3Cline x1='9' y1='6' x2='21' y2='6'/%3E%3Cline x1='9' y1='12' x2='21' y2='12'/%3E%3Cline x1='9' y1='18' x2='21' y2='18'/%3E%3C/svg%3E");
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='6' x2='4.01' y2='6'/%3E%3Cline x1='4' y1='12' x2='4.01' y2='12'/%3E%3Cline x1='4' y1='18' x2='4.01' y2='18'/%3E%3Cline x1='9' y1='6' x2='21' y2='6'/%3E%3Cline x1='9' y1='12' x2='21' y2='12'/%3E%3Cline x1='9' y1='18' x2='21' y2='18'/%3E%3C/svg%3E");
+}
+div[class*="st-key-cd_wiz_"][class*="_configure_st_"] button [data-testid="stMarkdownContainer"]::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='21' x2='4' y2='14'/%3E%3Cline x1='4' y1='10' x2='4' y2='3'/%3E%3Cline x1='12' y1='21' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12' y2='3'/%3E%3Cline x1='20' y1='21' x2='20' y2='16'/%3E%3Cline x1='20' y1='12' x2='20' y2='3'/%3E%3Cline x1='1' y1='14' x2='7' y2='14'/%3E%3Cline x1='9' y1='8' x2='15' y2='8'/%3E%3Cline x1='17' y1='16' x2='23' y2='16'/%3E%3C/svg%3E");
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='4' y1='21' x2='4' y2='14'/%3E%3Cline x1='4' y1='10' x2='4' y2='3'/%3E%3Cline x1='12' y1='21' x2='12' y2='12'/%3E%3Cline x1='12' y1='8' x2='12' y2='3'/%3E%3Cline x1='20' y1='21' x2='20' y2='16'/%3E%3Cline x1='20' y1='12' x2='20' y2='3'/%3E%3Cline x1='1' y1='14' x2='7' y2='14'/%3E%3Cline x1='9' y1='8' x2='15' y2='8'/%3E%3Cline x1='17' y1='16' x2='23' y2='16'/%3E%3C/svg%3E");
+}
+div[class*="st-key-cd_wiz_"][class*="_analyze_st_"] button [data-testid="stMarkdownContainer"]::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+}
+div[class*="st-key-cd_wiz_"][class*="_review_st_"] button [data-testid="stMarkdownContainer"]::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 11 12 14 22 4'/%3E%3Cpath d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'/%3E%3C/svg%3E");
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 11 12 14 22 4'/%3E%3Cpath d='M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11'/%3E%3C/svg%3E");
+}
+div[class*="st-key-cd_wiz_"][class*="_sync_st_"] button [data-testid="stMarkdownContainer"]::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='1 4 1 10 7 10'/%3E%3Cpolyline points='23 20 23 14 17 14'/%3E%3Cpath d='M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15'/%3E%3C/svg%3E");
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='1 4 1 10 7 10'/%3E%3Cpolyline points='23 20 23 14 17 14'/%3E%3Cpath d='M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15'/%3E%3C/svg%3E");
+}
+div[class*="st-key-cd_wiz_"][class*="_download_st_"] button [data-testid="stMarkdownContainer"]::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='7 10 12 15 17 10'/%3E%3Cline x1='12' y1='15' x2='12' y2='3'/%3E%3C/svg%3E");
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/%3E%3Cpolyline points='7 10 12 15 17 10'/%3E%3Cline x1='12' y1='15' x2='12' y2='3'/%3E%3C/svg%3E");
+}
+div[class*="st-key-cd_wiz_"][class*="_complete_st_"] button [data-testid="stMarkdownContainer"]::before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/%3E%3Cpolyline points='22 4 12 14.01 9 11.01'/%3E%3C/svg%3E");
+            mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/%3E%3Cpolyline points='22 4 12 14.01 9 11.01'/%3E%3C/svg%3E");
 }

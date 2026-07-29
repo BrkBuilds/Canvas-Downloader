@@ -26,6 +26,35 @@ from version import __version__
 logger = logging.getLogger(__name__)
 
 
+# Streamlit's own tooltip glyph, byte-for-byte: the 16x16 lucide help-circle,
+# stroke-width 2, at #fafafa - read off the live [data-testid="stTooltipIcon"]
+# svg on 2026-07-26 so an inline help icon in raw card HTML is
+# indistinguishable from the one a `help=` argument renders right beside it.
+#
+# Shipped as an <img> data URI, NOT an inline <svg>: st.html() sanitises its
+# input and DROPS svg elements (measured - the span rendered with an empty
+# innerHTML), while <img> survives. That is also how every card icon in this
+# dialog is already drawn. Paired with the `.stg-help` wrapper in the CSS.
+_STG_HELP_GLYPH = (
+    '<img alt="" width="16" height="16" src="data:image/svg+xml;base64,'
+    + base64.b64encode(
+        # #fafafa is 1.00 CIEDE2000 from theme.WHITE and Rule 8 flags it. It is
+        # NOT drift: it is the literal colour Streamlit paints its own tooltip
+        # icon (config.toml `textColor`), read off the live DOM. The whole point
+        # of this glyph is to be indistinguishable from the native one sitting
+        # in the neighbouring card, so it must track Streamlit, not our palette.
+        b'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" '
+        # audit-ignore
+        b'viewBox="0 0 24 24" fill="none" stroke="#fafafa" stroke-width="2" '
+        b'stroke-linecap="round" stroke-linejoin="round">'
+        b'<circle cx="12" cy="12" r="10"/>'
+        b'<path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>'
+        b'<line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+    ).decode()
+    + '" />'
+)
+
+
 def _get_config_path() -> str:
     """Return the path to the persistent config JSON file (lazy import)."""
     from shared.helpers import get_config_dir
@@ -332,6 +361,9 @@ def force_reauth(reason: str = "") -> None:
         pass
     st.session_state['api_token'] = ''
     st.session_state['is_authenticated'] = False
+    # Re-arm the course selector's cold-boot spinner: the next fetch after a
+    # reconnect is a genuine first load with nothing on screen to preserve.
+    st.session_state.pop('_dl_courses_loaded_once', None)
     # Skip the login page's one-shot token auto-load so we don't immediately
     # re-read a token we just deleted; keep the URL handy for a quick reconnect.
     st.session_state['token_loaded'] = True
@@ -541,15 +573,32 @@ div.st-key-nav_btn_logout button:hover::after {{
 
 
 
-def render_login_page(fetch_courses_fn):
-    """Render the full-page, premium login portal in the main page body."""
-    if st.session_state.get('is_authenticated'):
-        return
+def restore_saved_session() -> None:
+    """Load saved settings + token and sign the user in, once per session.
 
-    # ── Auto-load token (only once per session) ─────────────────────────
-    if not st.session_state.get('token_loaded'):
-        st.session_state['token_loaded'] = True
-        if os.path.exists(CONFIG_FILE):
+    Called from ``app.py`` during session init - BEFORE the sidebar and the page
+    body render - and it must stay there.  This block used to live inside
+    ``render_login_page`` and end in ``st.rerun()``, which made every launch with
+    a saved login cost TWO script runs: the first one rendered nothing at all
+    (it only did keyring + network I/O behind an empty window) and then threw
+    itself away.  Measured 2026-07-27 in the real app: ~4.0s of blank page, of
+    which ~2.1s was this block and the rest the wasted rerun.  Running it during
+    init means the very first run lands on the finished screen.
+
+    Two further consequences of the old placement, both fixed by the move:
+      * every setting in the config file (concurrent downloads, help text, debug
+        mode, default download path, ...) was applied AFTER the sidebar had
+        already rendered on the run that adopted them;
+      * the once-per-session stale-debug-log clear in app.py ran before
+        ``debug_mode`` had been read from disk, so it could never fire.
+
+    Safe to call unconditionally: it is a no-op once ``token_loaded`` is set,
+    and a no-op when there is no config file (a genuinely fresh install).
+    """
+    if st.session_state.get('token_loaded') or st.session_state.get('is_authenticated'):
+        return
+    st.session_state['token_loaded'] = True
+    if os.path.exists(CONFIG_FILE):
             try:
                 with open(CONFIG_FILE, "r", encoding='utf-8') as f:
                     config = _migrate_config(json.load(f))
@@ -584,6 +633,9 @@ def render_login_page(fetch_courses_fn):
 
                     if 'use_12h_format' in config:
                         st.session_state['use_12h_format'] = config.get('use_12h_format', False)
+
+                    if 'show_help_text' in config:
+                        st.session_state['show_help_text'] = bool(config.get('show_help_text', True))
 
                     if 'default_download_path' in config:
                         saved_default = config.get('default_download_path', '') or ''
@@ -648,9 +700,21 @@ def render_login_page(fetch_courses_fn):
                         if valid:
                             st.session_state['is_authenticated'] = True
                             st.session_state['user_name'] = msg.split(": ", 1)[1] if ": " in msg else msg
-                            st.rerun()
+                            # No st.rerun() here: this runs during session init,
+                            # so the SAME run goes on to render the signed-in
+                            # page. The rerun this replaced was a whole wasted
+                            # script run against a blank window.
             except Exception:
-                pass
+                logger.warning("Saved session could not be restored", exc_info=True)
+
+
+def render_login_page(fetch_courses_fn):
+    """Render the full-page, premium login portal in the main page body."""
+    # Normally already done during session init (app.py). Kept as a guard so the
+    # login page is still correct if it is ever reached by another route.
+    restore_saved_session()
+    if st.session_state.get('is_authenticated'):
+        return
 
     from shared.helpers import get_base64_image
 
@@ -1721,11 +1785,15 @@ def _render_authenticated_nav_top():
     # used mid-run. The CURRENT (running) mode's button is excluded from the
     # dimming so it keeps its highlight - "you are here, and it's running".
     if _locked:
-        _keep = f":not(.st-key-nav_btn_{mode})" if mode in ['download', 'sync', 'today'] else ""
         st.html(f"""<style>
-        section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]){_keep} button:disabled {{
-            opacity: 0.4 !important;
-        }}
+        /* No `opacity` here: global.css's single `button[disabled]` recipe
+           (brightness/saturate) paints these, and an opacity on top multiplies
+           with it. The old `:not(.st-key-nav_btn_MODE)` exclusion is expressed
+           the other way round now - see the running-mode rule below, which
+           cancels the shared filter so that one button keeps its highlight.
+           (It previously only set `opacity: 1`, which did NOT undo the shared
+           filter, so the "you are here, and it's running" button was dimmed
+           anyway - the exclusion had been silently broken.) */
         section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled {{
             cursor: not-allowed !important;
         }}
@@ -1740,7 +1808,7 @@ def _render_authenticated_nav_top():
         }}
         /* The running mode keeps its highlight (never dimmed) but shows a plain cursor. */
         section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled {{
-            opacity: 1 !important; cursor: default !important;
+            filter: none !important; opacity: 1 !important; cursor: default !important;
         }}
         section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled:hover {{
             background-color: rgba(255, 255, 255, 0.10) !important;
@@ -1859,6 +1927,9 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     _stg_i_errlog = _stg_ico("M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2h2v2h-2v2h-2v-2H9v-2h2v-2H9V9h2V7h2v2h2v2zM13 9V3.5L18.5 9H13z")
     _stg_i_clock  = _stg_ico("M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z")
     _stg_i_caption = _stg_ico("M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z")
+    # Lifebuoy - reads as "help/support" without reusing the ? glyph, which
+    # in this app means "there is a tooltip here".
+    _stg_i_help = "data:image/svg+xml;base64," + base64.b64encode(b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>').decode()
     _stg_i_history = "data:image/svg+xml;base64," + base64.b64encode(b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>').decode()
 
     # Clear all staged (unsaved) settings state on dismissal. Save and Cancel
@@ -1866,12 +1937,54 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     # so a picked-but-unsaved folder (and any toggled temp_* control) would
     # linger and look applied when the dialog is reopened. Passing a callable to
     # on_dismiss both reruns the app and runs this cleanup first.
+    # Does the dialog currently hold a staged value that differs from what is
+    # actually applied? Read straight out of session_state (Streamlit writes
+    # every widget's value there before the script body runs), so this answers
+    # correctly from BOTH exit paths - Cancel, which has the locals, and the
+    # backdrop/ESC dismiss callback, which has nothing but session state.
+    # A missing key means the widget never rendered -> nothing staged for it.
+    def _stg_has_unsaved_changes():
+        _ss = st.session_state
+        _pairs = (
+            ('temp_max_downloads', 'concurrent_downloads', 5, int),
+            ('temp_cbs_filters', 'enable_cbs_filters', False, bool),
+            ('temp_max_size_enabled', 'max_file_size_enabled', False, bool),
+            ('temp_max_size_mb', 'max_file_size_mb', 500, int),
+            ('temp_notifications_enabled', 'notifications_enabled', True, bool),
+            ('temp_error_log_enabled', 'error_log_enabled', False, bool),
+            ('temp_debug_mode', 'debug_mode', False, bool),
+            ('temp_use_12h_format', 'use_12h_format', False, bool),
+            ('temp_sync_history_retention', 'sync_history_retention', 50, int),
+            ('temp_show_help_text', 'show_help_text', True, bool),
+        )
+        for _tkey, _skey, _default, _cast in _pairs:
+            if _tkey not in _ss:
+                continue
+            try:
+                if _cast(_ss[_tkey]) != _cast(_ss.get(_skey, _default)):
+                    return True
+            except (TypeError, ValueError):
+                # A value that will not cast is not a reason to lose the
+                # dialog - treat it as "no change" and keep going.
+                continue
+        # The folder picker stages into its own key, not a widget key.
+        if '_temp_default_path' in _ss:
+            if (_ss.get('_temp_default_path') or '') != (
+                    _ss.get('default_download_path', '') or ''):
+                return True
+        return False
+
     def _stg_dismiss_cleanup():
+        # Warn BEFORE the staged values are wiped below - once they are gone
+        # there is no way to tell a dismissed edit from a dismissed no-op.
+        if _stg_has_unsaved_changes():
+            st.session_state['_stg_unsaved_toast'] = True
         for _k in ('_temp_default_path', '_stg_reopen_dialog', '_stg_dialog_open',
                    'temp_max_downloads', 'temp_max_size_enabled', 'temp_max_size_mb',
                    'temp_error_log_enabled', 'temp_debug_mode',
                    'temp_notifications_enabled', 'temp_cbs_filters',
-                   'temp_use_12h_format', 'temp_sync_history_retention'):
+                   'temp_use_12h_format', 'temp_sync_history_retention',
+                   'temp_show_help_text'):
             st.session_state.pop(_k, None)
 
     @st.dialog("\u200b", width="large", on_dismiss=_stg_dismiss_cleanup)
@@ -1974,6 +2087,23 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             align-items: stretch !important;
         }
 
+        /* Equal height for the help-text / sync-history pair. */
+        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_helptext"]) { flex: 1 !important; }
+        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_history"]) { flex: 1 !important; }
+        div[class*="st-key-stg_card_helptext"],
+        div[class*="st-key-stg_card_history"] {
+            flex: 1 !important; display: flex !important; flex-direction: column !important;
+            height: 100% !important;
+        }
+        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has([class*="st-key-stg_card_helptext"]) {
+            align-items: stretch !important;
+        }
+        /* Both controls land on the same line despite different copy lengths. */
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_helptext"] > div.st-key-temp_show_help_text,
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_history"] > div.st-key-temp_sync_history_retention {
+            margin-top: auto !important;
+        }
+
         /* ── Toggles ──
            st.toggle renders through [data-testid="stCheckbox"] in 1.51; there is no
            stToggle testid. Label sits left, the switch is pinned to the card's right
@@ -1996,10 +2126,21 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"] > label {
             width: 100% !important; max-width: 100% !important;
         }
+        /* (c) The switch sits IMMEDIATELY after its label with one 8px gap, not
+               pinned to the card's right edge. In `row-reverse` the main-axis
+               start is on the RIGHT, so packing the pair against the left edge
+               is `justify-content: flex-end` (this used to be `space-between`,
+               which flung the switch to the far edge and left a big dead gap
+               between a short label and its own control). */
         div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"] > label {
             display: flex !important; flex-direction: row-reverse !important;
-            justify-content: space-between !important; align-items: center !important;
+            justify-content: flex-end !important; align-items: center !important;
             padding: 2px 0 0 0 !important; cursor: pointer !important; gap: 8px !important;
+        }
+        /* The label block must shrink-wrap its text, or it would still eat the
+           whole row and push the switch back out to the right edge. */
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"] > label > [data-testid="stWidgetLabel"] {
+            flex: 0 1 auto !important; width: auto !important;
         }
         div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"] p {
             font-size: 0.8rem !important; color: #94a3b8 !important;
@@ -2013,10 +2154,52 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             flex: 0 0 auto !important; width: auto !important;
         }
 
-        /* ── Number input ── */
+        /* ── Number input ──
+           Streamlit's dark theme leaves the field's shell borderless, so a
+           number input read as floating text rather than an editable control.
+           Give it the same faint outline the read-only path box already uses. */
         div[data-testid="stDialog"] [data-testid="stNumberInput"] { margin-top: 4px !important; }
         div[data-testid="stDialog"] [data-testid="stNumberInput"] label p {
             font-size: 0.78rem !important; color: #64748b !important;
+        }
+        /* ONE border, on stNumberInputContainer - the element that wraps the
+           field AND the -/+ steppers. Two things went wrong when it sat on the
+           inner div[data-baseweb="input"] instead:
+             - that element spans only the field (291px of a 357px control), so
+               the steppers hung outside the outline; and its 0.909px
+               fractional border anti-aliased the horizontal edges away at this
+               device pixel ratio while the corner arcs survived, which is why
+               it read as "left and right only".
+             - Streamlit's own focus styling then lit the container, the
+               steppers AND the divider between them independently, so clicking
+               the field produced three separate blue edges.
+           So: one solid 1px outline on the outer container, and every inner
+           surface/border explicitly cleared. */
+        div[data-testid="stDialog"] [data-testid="stNumberInputContainer"] {
+            background: rgba(255,255,255,0.03) !important;
+            border: 1px solid rgba(255,255,255,0.16) !important;
+            border-radius: 8px !important;
+            box-shadow: none !important;
+            transition: border-color 0.15s ease !important;
+        }
+        div[data-testid="stDialog"] [data-testid="stNumberInputContainer"]:hover {
+            border-color: rgba(255,255,255,0.28) !important;
+        }
+        div[data-testid="stDialog"] [data-testid="stNumberInputContainer"]:focus-within {
+            border-color: rgba(63,217,255,0.45) !important;
+        }
+        div[data-testid="stDialog"] [data-testid="stNumberInputContainer"] div[data-baseweb="input"],
+        div[data-testid="stDialog"] [data-testid="stNumberInputContainer"] div[data-baseweb="base-input"],
+        div[data-testid="stDialog"] [data-testid="stNumberInputStepUp"],
+        div[data-testid="stDialog"] [data-testid="stNumberInputStepDown"] {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        div[data-testid="stDialog"] [data-testid="stNumberInputStepUp"]:hover,
+        div[data-testid="stDialog"] [data-testid="stNumberInputStepDown"]:hover {
+            background: rgba(255,255,255,0.06) !important;
         }
         /* Dim the whole number input block when disabled (Skip large files toggle off) */
         div[data-testid="stDialog"] div[class*="st-key-stg_card_maxsize"] [data-testid="stNumberInput"]:has(input:disabled) {
@@ -2024,15 +2207,22 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             pointer-events: none !important;
         }
 
-        /* ── Debug toggle: pinned to the bottom of the errlog card, dimmed until on ──
-           The card itself is the flex column (see the equal-height rules above), so
-           margin-top:auto goes on the debug row's own element-container. The dim is
-           state-aware rather than a flat 0.4: off = recessed, hover/on = full. */
+        /* ── Debug toggle ──
+           Same weight as "Create error log" above it, sitting directly under a
+           divider - NOT a shrunken afterthought floated to the card's bottom
+           edge. It used to carry margin-top:auto + scale(0.9) + opacity 0.55 +
+           a 0.72rem label, which left it hanging alone in dead space and
+           reading as a different class of control from its sibling toggle. */
         div[data-testid="stDialog"] div[class*="st-key-stg_card_errlog"] > div.st-key-temp_debug_mode {
-            margin-top: auto !important;
-            padding-top: 8px !important;
+            margin-top: 0 !important;
+            padding-top: 9px !important;
             border-top: 1px solid rgba(255,255,255,0.08) !important;
         }
+        /* Recessed until it matters. Same SIZE and weight as "Create error log"
+           above it - only the opacity differs - so the two read as the same
+           class of control while still ranking debug logging as the secondary,
+           troubleshooting-only one. State-aware rather than a flat dim: full
+           brightness on hover, and stays lit while it is switched on. */
         div[data-testid="stDialog"] div.st-key-temp_debug_mode [data-testid="stCheckbox"] {
             opacity: 0.5 !important;
             transition: opacity 0.15s ease !important;
@@ -2041,19 +2231,27 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         div[data-testid="stDialog"] div.st-key-temp_debug_mode [data-testid="stCheckbox"]:has(input:checked) {
             opacity: 1 !important;
         }
-        div[data-testid="stDialog"] div.st-key-temp_debug_mode [data-testid="stCheckbox"] p {
-            font-size: 0.72rem !important;
-        }
 
-        /* ── Folder buttons ── */
+        /* ── Folder buttons ──
+           Both are pinned to the SAME explicit 34px. Clear carries a `help=`
+           while it is disabled, and Streamlit then wraps its button in a
+           [data-testid="stTooltipHoverTarget"] so it is no longer a direct
+           child of .stButton - which silently drops the shared button sizing
+           and rendered Clear taller than Choose Folder right next to it.
+           `height: auto` cannot fix that (the two boxes just grow differently),
+           so the height is stated once and the tooltip wrapper is made a
+           full-width block that passes it through. */
+        div[data-testid="stDialog"] div.st-key-stg_btn_clear [data-testid="stTooltipHoverTarget"] {
+            display: block !important; width: 100% !important; height: 34px !important;
+        }
         div[data-testid="stDialog"] div.st-key-stg_btn_pick button,
         div[data-testid="stDialog"] div.st-key-stg_btn_clear button {
             background: rgba(255,255,255,0.04) !important;
             border: 1px solid rgba(255,255,255,0.10) !important;
-            min-height: unset !important;
-            height: auto !important;
-            padding-top: 5px !important;
-            padding-bottom: 5px !important;
+            min-height: 34px !important;
+            height: 34px !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
             font-size: 0.8rem !important;
         }
         div[data-testid="stDialog"] div.st-key-stg_btn_pick button:hover,
@@ -2103,6 +2301,29 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             background: rgba(59,130,246,0.18) !important;
             border-color: #60a5fa !important; color: #ffffff !important;
         }
+
+        /* ── Inline help icon (used inside a card's description HTML) ──
+           It exists so a long secondary explanation can be folded away instead
+           of bloating a card's height - the Skip-large-files card was two lines
+           taller than its neighbours purely because of one.
+
+           The GLYPH is Streamlit's own tooltip icon, copied exactly: 16x16,
+           `currentColor` at #fafafa, stroke-width 2, the lucide help-circle
+           path. It has to be hand-rolled because it lives inside raw HTML where
+           Streamlit's React-portal tooltip cannot be reached - but it must not
+           LOOK hand-rolled, and the first version (a bordered circle with a
+           text "?" at #94a3b8) sat right next to the real thing in the
+           neighbouring card and read as a different control.
+           The tooltip itself is a native `title`; a CSS bubble would have to
+           escape the card's stacking context. */
+        .stg-help {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 16px; height: 16px; margin-left: 5px;
+            cursor: help; vertical-align: -3px;
+            opacity: 0.75; transition: opacity 0.15s ease;
+        }
+        .stg-help:hover { opacity: 1; }
+        .stg-help img { display: block; width: 16px; height: 16px; }
         </style>""")
 
         st.markdown("""
@@ -2124,34 +2345,36 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     temp_max = st.slider("Speed", min_value=1, max_value=15, value=st.session_state.get('concurrent_downloads', 5), key="temp_max_downloads", label_visibility="collapsed")
             with _dc2:
                 with st.container(border=True, key="stg_card_maxsize"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_filter}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Skip large files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Skip files above a set size - ensures quick downloads and prevents large files from bloating your drive.<br><span style="color:#64748b;">Skipped files are marked as <i>ignored</i> so future syncs don't re-list them - restore them anytime from the Sync Hub's ignored-files list, even after raising this limit.</span></div></div>""")
+                    # The "skipped files are ignored" explanation is folded into
+                    # the inline ? badge: as visible copy it made this card two
+                    # lines taller than its two neighbours, and since the three
+                    # are height-matched it stretched the whole DOWNLOAD row.
+                    _stg_skip_tip = (
+                        "Skipped files are marked as ignored, so future syncs don't re-list them. "
+                        "You can restore them at any time from the Sync Hub's ignored-files list - "
+                        "including after you raise this limit."
+                    )
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_filter}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Skip large files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Skip files above a set size - ensures quick downloads and prevents large files from bloating your drive.<span class="stg-help" title="{_he(_stg_skip_tip)}">{_STG_HELP_GLYPH}</span></div></div>""")
                     temp_size_enabled = st.toggle("Enable limit", value=st.session_state.get('max_file_size_enabled', False), key="temp_max_size_enabled")
-                    temp_size_mb = st.number_input("Max size (MB)", min_value=1, max_value=100000, step=50, value=int(st.session_state.get('max_file_size_mb', 500)), key="temp_max_size_mb", disabled=not temp_size_enabled)
+                    # step=1, NOT 50. Streamlit disables the minus button while
+                    # `value - step < min_value`, so a step of 50 greyed it out
+                    # for every value at or below 50 - while typing 5 straight
+                    # into the field worked fine. One control, two answers.
+                    # 1 MB is the floor (the old 50 was arbitrary: most slides
+                    # and PDFs are 1-2 MB, so a limit under 50 MB is a perfectly
+                    # ordinary thing to want). It is re-clamped on save.
+                    temp_size_mb = st.number_input("Max size (MB)", min_value=1, max_value=100000, step=1, value=max(1, int(st.session_state.get('max_file_size_mb', 500))), key="temp_max_size_mb", disabled=not temp_size_enabled)
             with _dc3:
                 with st.container(border=True, key="stg_card_errlog"):
                     st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_errlog}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Error log file</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Create a <code style="font-size:0.72rem;background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:3px;">download_errors.txt</code> summarizing any failed downloads or conversion errors in the output folder.</div></div>""")
                     temp_error_log = st.toggle("Create error log", value=st.session_state.get('error_log_enabled', False), key="temp_error_log_enabled")
-                    
-                    st.html("""
-                    <div style="margin-top: 10px; margin-bottom: 2px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;"></div>
-                    <style>
-                    div.st-key-temp_debug_mode {
-                        opacity: 0.55;
-                        transition: opacity 0.2s;
-                        transform: scale(0.9);
-                        transform-origin: left center;
-                    }
-                    div.st-key-temp_debug_mode:hover,
-                    div.st-key-temp_debug_mode:has(input:checked),
-                    div.st-key-temp_debug_mode:has([aria-checked="true"]) {
-                        opacity: 1 !important;
-                    }
-                    div.st-key-temp_debug_mode p {
-                        font-size: 0.85rem !important;
-                    }
-                    </style>
-                    """)
-                    
+
+                    # Second log of the same kind, at the same weight, directly
+                    # under a divider. (The divider is drawn by the scoped
+                    # border-top on st-key-temp_debug_mode in the dialog CSS, so
+                    # it needs no element of its own - an extra st.html here
+                    # would cost a flex gap slot and re-open the gap that made
+                    # this row look marooned at the bottom of the card.)
                     temp_debug_mode = st.toggle(
                         "Save debug log",
                         value=st.session_state.get('debug_mode', False),
@@ -2208,15 +2431,25 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     temp_time_12h = st.toggle("Use 12-hour format", value=st.session_state.get('use_12h_format', False), key="temp_use_12h_format")
 
             st.html("""<div style='padding: 8px 0 0 0;'></div>""")
-            # L-13: Sync history retention - exposed so power users who sync
-            # multiple times daily can extend beyond the default 50 entries.
-            with st.container(border=True, key="stg_card_history"):
-                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_history}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Sync history</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Number of past sync operations to keep in the history panel. Higher values use slightly more disk space.</div></div>""")
-                temp_history_retention = st.number_input(
-                    "Keep last N syncs", min_value=10, max_value=500, step=10,
-                    value=int(st.session_state.get('sync_history_retention', 50)),
-                    key="temp_sync_history_retention",
-                )
+            _p4, _p5 = st.columns(2)
+            with _p4:
+                # Lets an experienced user reclaim the screen space the
+                # onboarding copy occupies, without hiding anything they would
+                # actually need. See shared/helpers.py:help_text_enabled for the
+                # exact boundary between "help" and "information".
+                with st.container(border=True, key="stg_card_helptext"):
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_help}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Show help text</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Keeps the Help buttons and the short explanations under the main action buttons. Turn it off for a cleaner screen once you know your way around - warnings, errors and anything you need in order to make a choice always stay.</div></div>""")
+                    temp_help_text = st.toggle("Show help text", value=st.session_state.get('show_help_text', True), key="temp_show_help_text")
+            with _p5:
+                # L-13: Sync history retention - exposed so power users who sync
+                # multiple times daily can extend beyond the default 50 entries.
+                with st.container(border=True, key="stg_card_history"):
+                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_history}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Sync history</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Number of past sync operations to keep in the history panel. Higher values use slightly more disk space.</div></div>""")
+                    temp_history_retention = st.number_input(
+                        "Keep last N syncs", min_value=10, max_value=500, step=10,
+                        value=int(st.session_state.get('sync_history_retention', 50)),
+                        key="temp_sync_history_retention",
+                    )
 
             # ── PANOPTO TRANSCRIPTION ─────────────────────────────────
             # The transcription engine (model / language / compute device) is a
@@ -2244,8 +2477,9 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     (_tx.get("reason") or "not set up yet").capitalize())
 
             with st.container(border=True, key="stg_card_pan"):
-                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_caption}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Transcription engine</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Configure the local model, language, and compute device used to transcribe Panopto recordings into <b>Transcripts</b> &amp; <b>Subtitles</b>. These settings are shared across every download and sync - nothing is uploaded.</div><div style="display:flex;align-items:center;gap:7px;margin-top:7px;font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;border-radius:50%;background:{_tx_dot};flex-shrink:0;"></span><span>{_tx_txt}</span></div></div>""")
-                if st.button("Configure transcription", key="stg_btn_pan", use_container_width=True):
+                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_caption}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Panopto transcription engine</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Configure the local model, language, and compute device used to transcribe Panopto recordings into <b>Transcripts</b> &amp; <b>Subtitles</b>. These settings are shared across every download and sync - nothing is uploaded.</div><div style="display:flex;align-items:center;gap:7px;margin-top:7px;font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;border-radius:50%;background:{_tx_dot};flex-shrink:0;"></span><span>{_tx_txt}</span></div></div>""")
+                _stg_pan_label = "Manage transcription configuration" if _tx.get("ready") else "Configure transcription"
+                if st.button(_stg_pan_label, key="stg_btn_pan", use_container_width=True):
                     st.session_state['_pan_dialog_open'] = True
                     st.session_state['_pan_return_to_settings'] = True
                     # Settings must close FIRST - Streamlit crashes with "only one
@@ -2265,12 +2499,56 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             from shared.components import render_fda_settings_card
             render_fda_settings_card()
 
+            # ── DIAGNOSTICS ───────────────────────────────────────────
+            # The app's own health record - the ONLY artefact for failures
+            # that leave nothing behind (the app dying without running its
+            # exit path). It deliberately lives HERE and nowhere else: it
+            # was briefly attached to the completion screens' error-log
+            # dialog, which was wrong twice over - that dialog answers
+            # "which files failed in the run I just did", and a crash means
+            # nobody ever reaches a completion screen at all. Settings is
+            # reachable at any time, including straight after a crash,
+            # which is the one moment this matters.
+            st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">DIAGNOSTICS</span></div>""")
+
+            with st.container(border=True, key="stg_card_diag"):
+                from core.health_log import health_log_path
+                _hl_path = health_log_path()
+                _hl_text = ''
+                try:
+                    if _hl_path and os.path.exists(_hl_path):
+                        with open(_hl_path, encoding='utf-8', errors='replace') as _hf:
+                            _hl_text = _hf.read().strip()
+                except OSError:
+                    _hl_text = ''
+
+                _hl_esc = esc(_hl_path or 'unavailable')
+                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_errlog}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">App health record</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">A short log of app startups, shutdowns and memory use - kept automatically. If Canvas Downloader closes unexpectedly or behaves oddly, send this file with your report. It contains <b>no</b> personal data, access tokens, course names or file names, and is never uploaded anywhere.</div><div style="margin-top:7px;font-size:0.72rem;color:rgba(255,255,255,0.45);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{_hl_esc}</div></div>""")
+
+                _dg1, _dg2 = st.columns([1, 1])
+                with _dg1:
+                    st.download_button(
+                        "Download record", data=_hl_text or "(no entries yet)",
+                        file_name="canvas_downloader_health.log", mime="text/plain",
+                        key="stg_btn_diag_dl", use_container_width=True,
+                        disabled=not _hl_text,
+                    )
+                with _dg2:
+                    _reveal_label = ("Reveal in Finder" if sys.platform == "darwin"
+                                     else "Show in Explorer")
+                    if st.button(_reveal_label, key="stg_btn_diag_reveal",
+                                 use_container_width=True, disabled=not _hl_text):
+                        from shared.helpers import reveal_in_folder
+                        reveal_in_folder(_hl_path)
+
         # ── Sticky footer ─────────────────────────────────────────────
         st.html("""<div style="padding:6px 0 0 0;"><hr style="margin:0;border:none;border-top:1px solid rgba(255,255,255,0.08);"/></div><div style="padding:6px 0 0 0;"></div>""")
 
         c_cancel, c_save = st.columns([1, 1])
         with c_cancel:
             if st.button("Cancel", use_container_width=True):
+                if _stg_has_unsaved_changes():
+                    st.session_state['_stg_unsaved_toast'] = True
                 st.session_state.pop('_temp_default_path', None)
                 st.session_state.pop('_stg_dialog_open', None)
                 st.rerun(scope="app")
@@ -2278,6 +2556,13 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             if st.button("Save Settings", type="primary", use_container_width=True):
                 new_default_path = st.session_state.get('_temp_default_path', '') or ''
                 prev_default_path = st.session_state.get('default_download_path', '') or ''
+
+                # Hard floor, server-side. `min_value=1` is enforced by the
+                # widget, but the saved value is what the engine actually filters
+                # on - clamping here means a hand-edited config or a future
+                # widget change can never let a 0 MB (= skip everything) limit
+                # through.
+                temp_size_mb = max(1, int(temp_size_mb or 1))
 
                 _changed = (
                     temp_max != st.session_state.get('concurrent_downloads', 5)
@@ -2290,6 +2575,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     or temp_time_12h != st.session_state.get('use_12h_format', False)
                     or new_default_path != prev_default_path
                     or int(temp_history_retention) != int(st.session_state.get('sync_history_retention', 50))
+                    or temp_help_text != st.session_state.get('show_help_text', True)
                 )
 
                 st.session_state['concurrent_downloads'] = temp_max
@@ -2302,6 +2588,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 st.session_state['use_12h_format'] = temp_time_12h
                 st.session_state['default_download_path'] = new_default_path
                 st.session_state['sync_history_retention'] = int(temp_history_retention)
+                st.session_state['show_help_text'] = bool(temp_help_text)
 
                 from pathlib import Path as _Path
                 _downloads_default = str(_Path.home() / "Downloads")
@@ -2330,6 +2617,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 config_data['use_12h_format'] = bool(temp_time_12h)
                 config_data['default_download_path'] = new_default_path
                 config_data['sync_history_retention'] = int(temp_history_retention)
+                config_data['show_help_text'] = bool(temp_help_text)
 
                 try:
                     _tmp_config = CONFIG_FILE + '.tmp'
@@ -2384,6 +2672,13 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         if st.session_state.pop('_stg_saved_toast', False):
             st.toast("✅ Settings saved")
 
+        # Closing Settings discards staged edits, so the toast says what
+        # happened rather than offering a "Save" that no longer has anything to
+        # save (st.toast holds no widgets, and the values are gone by now).
+        if st.session_state.pop('_stg_unsaved_toast', False):
+            st.toast("⚠️ Some settings were changed, but not applied. Reopen "
+                     "settings, change them again and click 'Save' to keep them.")
+
         # Update-available banner (renders only when a newer release exists).
         # Sits below the Settings section, above the user/logout section.
         try:
@@ -2420,8 +2715,10 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
             # would orphan the background worker and abandon the live progress.
             if _is_executing:
                 st.html("""<style>
+/* No `opacity`: global.css's single `button[disabled]` recipe paints this, and
+   0.35 on top of brightness(0.5) left the glyph all but invisible. */
 section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled {
-    opacity: 0.35 !important; cursor: not-allowed !important;
+    cursor: not-allowed !important;
 }
 section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled:hover {
     background-color: transparent !important;
@@ -2447,6 +2744,9 @@ section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled::afte
                 st.session_state['user_name'] = ''
                 st.session_state['step'] = 1
                 st.session_state['current_mode'] = 'download'
+                # Re-arm the course selector's cold-boot spinner - the next
+                # login's fetch is a genuine first load.
+                st.session_state.pop('_dl_courses_loaded_once', None)
                 fetch_courses_fn.clear()
                 if os.path.exists(CONFIG_FILE):
                     try:

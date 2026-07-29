@@ -13,6 +13,7 @@ Download-specific:
 from __future__ import annotations
 
 import re
+import time
 
 import streamlit as st
 
@@ -22,7 +23,47 @@ from shared.helpers import (
     parse_cbs_metadata,
     render_download_wizard,
     get_base64_image,
+    help_text_enabled,
+    esc,
 )
+
+
+# The "fetching courses" placeholder, used from TWO places that must look
+# identical: the page's cold-boot slot (whole section not built yet) and the
+# list box during a Refresh (toolbar stays, only the list is replaced).
+_COURSES_LOADING_HTML = """
+    <div style="display:flex;align-items:center;justify-content:center;
+                gap:12px;padding:56px 20px;">
+        <div style="width:20px;height:20px;
+                    border:2px solid rgba(255,255,255,0.07);
+                    border-top-color:#38bdf8;border-radius:50%;
+                    animation:_cs_spin .75s linear infinite;flex-shrink:0">
+        </div>
+        <span style="color:rgba(255,255,255,0.5);
+                     font:14px/1 system-ui,sans-serif">
+            Loading your courses…
+        </span>
+    </div>
+    <style>@keyframes _cs_spin{to{transform:rotate(360deg)}}</style>
+"""
+
+# The same spinner inside the list's own outline (a bottom separator, exactly
+# like st-key-course_list_box), used while Refresh re-fetches. min-height keeps
+# the page from collapsing and re-expanding around it.
+_COURSES_LOADING_BOX = (
+    "<div style=\"border-bottom:1px solid rgba(255,255,255,0.1);min-height:220px;"
+    "display:flex;align-items:center;justify-content:center;margin-top:-1rem;\">"
+    + _COURSES_LOADING_HTML +
+    "</div>"
+)
+
+# One line under each primary action saying what it does. Deliberately NOT a
+# tooltip: a tooltip fires every single time you move to click the button, which
+# a returning user reads as the app nagging them. A caption is there when you
+# are choosing and invisible once you have chosen (see `.cd-action-hint` in
+# global.css - it fades out while the sticky bar is floating).
+_CUSTOM_DOWNLOAD_HINT = "Choose exactly what to download, and how"
+_QUICK_DOWNLOAD_HINT = "Pick a preset and download"
 
 
 def _css_escape_content(text: str) -> str:
@@ -280,6 +321,46 @@ def _course_search_field_css(key: str, prefix: str = "") -> str:
     {p}div.st-key-{k} div[data-baseweb="input"] input::placeholder {{
         color: rgba(148, 163, 184, 0.7) !important;
     }}
+
+    /* ── Clear-search "X" (the node injected by inject_search_live_bridge) ──
+       These MUST live here, with the rest of the field's visuals, not in the
+       download page's own CSS block: every dialog search field runs the same
+       bridge, so the button was being injected into dialogs where no rule
+       reached it and it rendered as Streamlit's default button - a narrow
+       solid-white slab with no glyph. Scoped to this field's key so the
+       dialog prefix applies and it outranks the modal portal's styles. */
+    {p}div.st-key-{k} button.cs-clear-search {{
+        position: absolute !important;
+        top: 50% !important;
+        right: 8px !important;
+        transform: translateY(-50%) !important;
+        /* Square by construction - a hit target that is taller than it is wide
+           reads as a scrollbar fragment, which is exactly how it looked. */
+        width: 22px !important; height: 22px !important;
+        min-width: 22px !important; min-height: 22px !important;
+        padding: 0 !important; margin: 0 !important;
+        border: none !important; border-radius: 5px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        cursor: pointer !important;
+        display: none;
+        align-items: center !important; justify-content: center !important;
+        z-index: 5 !important;
+        transition: background-color 0.15s ease !important;
+    }}
+    {p}div.st-key-{k} button.cs-clear-search[data-visible="1"] {{ display: flex !important; }}
+    {p}div.st-key-{k} button.cs-clear-search::after {{
+        content: "" !important;
+        width: 12px !important; height: 12px !important;
+        background-color: rgba(255, 255, 255, 0.55) !important;
+        -webkit-mask-image: url("{_CLEAR_X_MASK}");
+        mask-image: url("{_CLEAR_X_MASK}");
+        -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+        -webkit-mask-position: center;  mask-position: center;
+        -webkit-mask-size: contain;    mask-size: contain;
+    }}
+    {p}div.st-key-{k} button.cs-clear-search:hover {{ background: rgba(255, 255, 255, 0.10) !important; }}
+    {p}div.st-key-{k} button.cs-clear-search:hover::after {{ background-color: #ffffff !important; }}
     """
 
 
@@ -635,19 +716,54 @@ def render_course_list(
         return None
 
 
+def resolve_multi_selection(courses: list, namespace: str) -> list:
+    """The selection as it WILL BE once ``courses`` render, computed up front.
+
+    This is the single definition of the multi-select reconciliation rule:
+    off-screen selections (hidden by the CBS filters or the search box) are
+    preserved, and every visible course contributes according to its checkbox.
+
+    It can run *before* the list renders because Streamlit applies widget state
+    to ``st.session_state`` before the script body runs - so ``dl_chk_<id>``
+    already holds the value the user just clicked. A course that has never been
+    rendered has no key yet and falls back to ``selected_course_ids``, exactly
+    as the ``value=`` argument in ``_render_multi_select_list`` does.
+
+    **Why this is a function and not two copies:** the toolbar's live count has
+    to print the post-click number while sitting ABOVE the list that produces
+    it. It used to solve that with an ``st.empty()`` placeholder filled at the
+    end of the fragment - which unmounted the count for ~60-80ms on every
+    rerun (see the count in ``_course_list_section`` for the full story). The
+    fix is for the toolbar to ask this function instead, and duplicating the
+    rule here rather than sharing it is how the two would drift apart.
+
+    Args:
+        courses: The courses about to be rendered, in any order (only
+            membership is used, so callers may pass a pre-sort list).
+        namespace: The checkbox key prefix (e.g. ``'dl'``).
+
+    Returns:
+        The resolved list of selected course IDs.
+    """
+    selected_ids = st.session_state.get('selected_course_ids', [])
+    visible_ids = {c.id for c in courses}
+    # Preserve off-screen selections (hidden by CBS filters / the search box)
+    resolved = [sid for sid in selected_ids if sid not in visible_ids]
+    for course in courses:
+        chk_key = f"{namespace}_chk_{course.id}"
+        if st.session_state.get(chk_key, course.id in selected_ids):
+            resolved.append(course.id)
+    return resolved
+
+
 def _render_multi_select_list(
     courses: list, namespace: str, first_item_top_offset: str = "-40px"
 ) -> list:
     """Multi-select checkbox list (Download mode)."""
     selected_ids = st.session_state.get('selected_course_ids', [])
-    visible_ids = {c.id for c in courses}
-    new_selected_ids = []
-
-    # Preserve off-screen selections (hidden by CBS filters)
-    for sid in selected_ids:
-
-        if sid not in visible_ids:
-            new_selected_ids.append(sid)
+    # Resolved from the SAME function the toolbar's live count calls, so the
+    # number above the list and the list itself can never disagree.
+    new_selected_ids = resolve_multi_selection(courses, namespace)
 
     # ――― Inject global CSS for this list ―――
     st.html(f"""<style>
@@ -713,15 +829,13 @@ def _render_multi_select_list(
             """)
 
         # NO columns! Just st.checkbox
+        # The return value is deliberately unused - `new_selected_ids` was
+        # already resolved above by resolve_multi_selection(), which reads the
+        # same widget state this call renders from.
         if chk_key not in st.session_state:
-            checked = st.checkbox(
-                base_name, value=(course.id in selected_ids),
-                key=chk_key)
+            st.checkbox(base_name, value=(course.id in selected_ids), key=chk_key)
         else:
-            checked = st.checkbox(base_name, key=chk_key)
-
-        if checked:
-            new_selected_ids.append(course.id)
+            st.checkbox(base_name, key=chk_key)
 
     boundary_css = []
     if len(courses) > 0 and first_item_top_offset and first_item_top_offset != "0":
@@ -979,10 +1093,20 @@ def inject_search_live_bridge(namespace: str = "course_search", debounce_ms: int
 
     function isField(n) {{ return n && n.matches && n.matches(SELECTOR); }}
 
+    // `blur()` is a NO-OP on an element that is not focused - so every commit
+    // here has to know whether the field currently holds focus. See clearValue.
+    function focused(inp) {{ return doc.activeElement === inp; }}
+
     function commit(inp) {{
         if (reg.composing) return;                // mid IME / dead-key (æøé): wait
         if (inp.value === reg.last) return;       // nothing new to push
         reg.last = inp.value;
+        // The debounce can outlive the user's attention: type, then click a
+        // checkbox within DEBOUNCE ms and this fires with focus already gone.
+        // That real blur ALREADY committed the value, so there is nothing to
+        // push - and blur/focus here would yank the caret back into the search
+        // box a fifth of a second after the user left it.
+        if (!focused(inp)) return;
         var s = inp.selectionStart, e = inp.selectionEnd;
         inp.blur();                               // → Streamlit onBlur commit + rerun
         inp.focus({{preventScroll: true}});       // keep the user typing
@@ -1018,11 +1142,31 @@ def inject_search_live_bridge(namespace: str = "course_search", debounce_ms: int
         inp.dispatchEvent(new win.Event('input', {{bubbles: true}}));
         win.clearTimeout(reg.timer);
         reg.last = '';
+        // The X commits by BLURRING, and `blur()` does nothing at all when the
+        // element is not focused - so the field must be focused first or the
+        // cleared value never reaches Python. The field is normally still
+        // focused (mousedown is prevented below, so the click never moves
+        // focus), but it is NOT after anything else took focus first: switch
+        // the favorites/all pill, tick a checkbox, click the page - the field
+        // is re-rendered unfocused and the X then cleared the text on screen
+        // while the course list kept the old filter until the user clicked
+        // somewhere else and that blur finally committed. Focusing first makes
+        // the commit unconditional; the trailing focus() then leaves the caret
+        // in the field exactly as before, ready to type a new query.
+        if (!focused(inp)) inp.focus({{preventScroll: true}});
         inp.blur();
         inp.focus({{preventScroll: true}});
         syncClear(inp);
     }}
 
+    // The X carries NO listeners of its own - see the delegated handlers below.
+    // Attaching them here is what made the button permanently inert: they were
+    // closures from the iframe realm alive at CREATION time, and because the
+    // node survives Streamlit's reruns, `if (!btn)` never fired again, so they
+    // were never replaced. The realm is torn down on the very next rerun and a
+    // listener from a dead realm silently stops firing - the X worked once (or
+    // not at all, if it was healed in by an already-dead observer) and then
+    // ignored every click forever.
     function syncClear(inp) {{
         var shell = inp.closest('div[data-baseweb="input"]');
         if (!shell) return;
@@ -1033,17 +1177,34 @@ def inject_search_live_bridge(namespace: str = "course_search", debounce_ms: int
             btn.className = 'cs-clear-search';
             btn.setAttribute('aria-label', 'Clear search');
             btn.title = 'Clear search';
-            // Keep focus in the field: mousedown default would blur it first,
-            // which fires an extra Streamlit commit before the click lands.
-            btn.addEventListener('mousedown', function(e) {{ e.preventDefault(); }});
-            btn.addEventListener('click', function(e) {{
-                e.preventDefault(); e.stopPropagation();
-                clearValue(inp);
-            }});
             shell.appendChild(btn);
         }}
         btn.setAttribute('data-visible', inp.value ? '1' : '0');
     }}
+
+    // Delegated on the document and REBOUND on every injection (`bind` above),
+    // so the handler always belongs to the live realm no matter how long the X
+    // node itself has been in the DOM.
+    function clearTarget(ev) {{
+        var t = ev.target;
+        if (!t || !t.closest) return null;
+        var btn = t.closest('button.cs-clear-search');
+        if (!btn) return null;
+        // Scope to THIS namespace: several search fields (page + dialog) can be
+        // mounted at once, and a document-level handler sees all of their X's.
+        var shell = btn.closest('div[data-baseweb="input"]');
+        var field = shell && shell.querySelector('input');
+        return (field && isField(field)) ? field : null;
+    }}
+    // mousedown default would blur the field first, firing an extra Streamlit
+    // commit before the click lands.
+    bind('mousedown', function(ev) {{ if (clearTarget(ev)) ev.preventDefault(); }});
+    bind('click', function(ev) {{
+        var field = clearTarget(ev);
+        if (!field) return;
+        ev.preventDefault(); ev.stopPropagation();
+        clearValue(field);
+    }});
 
     // ── Keep the X attached ──
     // The button must be SELF-HEALING, not attached once. It is injected into a
@@ -1084,7 +1245,8 @@ def _gate_actions_on_selection(*button_keys: str) -> None:
 
     Reads ``#cdp_selected_courses_count``, the hidden marker the course-list
     fragment already re-emits on every checkbox click, and mirrors it onto a
-    ``data-cd-has-sel`` attribute on each button plus a live ``title`` tooltip.
+    ``data-cd-has-sel`` attribute on ``document.body`` plus a live ``title``
+    tooltip on each button's wrapper.
 
     Why not Streamlit's ``disabled=``: the course list is an ``@st.fragment``, so
     a checkbox click reruns the fragment only. These buttons are rendered OUTSIDE
@@ -1092,6 +1254,16 @@ def _gate_actions_on_selection(*button_keys: str) -> None:
     the last FULL-page rerun and would stay stale after the user selects a course.
     ``shared.components.live_enable_button`` documents the same hazard for
     text-input-gated buttons; this is the checkbox-gated sibling.
+
+    **The flag is on <body>, not on the buttons** (changed 2026-07-26). Streamlit
+    re-creates the button elements on every full rerun, and a brand-new button
+    carries no attribute - so for the ~50 measured milliseconds until the
+    observer caught up, both primary actions painted at FULL brightness and then
+    dropped back to the disabled paint. That is the "the buttons flash bright for
+    half a second" report, and it fired on every rerun of this page, not just the
+    Help one. ``<body>`` is never replaced, so the very first frame of a new
+    button is already correct. The CSS is written as ``:not([...="1"])`` for the
+    same reason: unknown state has to read as unavailable, never as available.
 
     A MutationObserver on the marker keeps the paint in sync without polling.
     Following the CLAUDE.md rule for ``components.html`` bridges, the observer and
@@ -1103,7 +1275,7 @@ def _gate_actions_on_selection(*button_keys: str) -> None:
     import streamlit.components.v1 as components
 
     keys = [k.lower() for k in button_keys]
-    selectors = ', '.join(f'div[class*="st-key-{k}"] button' for k in keys)
+    wrappers = ', '.join(f'div[class*="st-key-{k}"]' for k in keys)
     # Same recipe as global.css `button[disabled]` and live_enable_button, so the
     # app has exactly ONE way of looking unavailable. These three used to differ:
     # this one and live_enable_button painted a flat rgba(255,255,255,0.075) slab
@@ -1111,8 +1283,9 @@ def _gate_actions_on_selection(*button_keys: str) -> None:
     #
     # A `filter` on the button also dims its ::before icon glyphs, so the separate
     # opacity rule those needed under the old flat-slab approach is now redundant.
+    _unsel = 'body:not([data-cd-has-sel="1"])'
     css = (
-        f'{", ".join(f"""div[class*="st-key-{k}"] button[data-cd-has-sel="0"]""" for k in keys)} {{'
+        f'{", ".join(f"""{_unsel} div[class*="st-key-{k}"] button""" for k in keys)} {{'
         '  filter: brightness(0.5) saturate(0.5) !important;'
         '  box-shadow: none !important;'
         '  cursor: not-allowed !important;'
@@ -1120,7 +1293,7 @@ def _gate_actions_on_selection(*button_keys: str) -> None:
         '}'
         # cursor must also sit on the wrapper - pointer-events:none on the button
         # stops it resolving there, and it carries the explanatory title.
-        f'{", ".join(f"""div[class*="st-key-{k}"]:has(button[data-cd-has-sel="0"])""" for k in keys)} {{'
+        f'{", ".join(f"""{_unsel} div[class*="st-key-{k}"]""" for k in keys)} {{'
         '  cursor: not-allowed !important;'
         '}'
     )
@@ -1129,8 +1302,8 @@ def _gate_actions_on_selection(*button_keys: str) -> None:
         f"""<script>
 (function(){{
     var win = window.parent, doc = win.document;
-    var SEL = {json.dumps(selectors)};
-    var TIP = "Select at least one course to continue.";
+    var WRAP_SEL = {json.dumps(wrappers)};
+    var TIP = "Select at least one course above first.";
     var reg = win._cdSelGate || (win._cdSelGate = {{observer: null, styleId: 'cd-sel-gate-css'}});
 
     var st = doc.getElementById(reg.styleId);
@@ -1145,12 +1318,23 @@ def _gate_actions_on_selection(*button_keys: str) -> None:
         // buttons never flash enabled before the real count arrives.
         var n = marker ? parseInt(marker.getAttribute('data-count') || '0', 10) : 0;
         var has = (n > 0) ? '1' : '0';
-        doc.querySelectorAll(SEL).forEach(function(b) {{
-            if (b.getAttribute('data-cd-has-sel') !== has) {{
-                b.setAttribute('data-cd-has-sel', has);
-            }}
-            if (has === '0') {{ b.setAttribute('title', TIP); }}
-            else {{ b.removeAttribute('title'); }}
+        // One write, on the one element Streamlit never replaces.
+        if (doc.body.getAttribute('data-cd-has-sel') !== has) {{
+            doc.body.setAttribute('data-cd-has-sel', has);
+        }}
+        // Only the BLOCKED reason is a tooltip. What the button does lives in
+        // the caption under it - a tooltip that fires on every approach to a
+        // button you already understand is noise, not help.
+        //
+        // NEVER put this title on the button itself: the disabled paint above
+        // sets `pointer-events: none` on it, so a title there can never be
+        // hovered - which is exactly why the "select a course first" tooltip
+        // appeared to be missing. The WRAPPER still receives the hover.
+        doc.querySelectorAll(WRAP_SEL).forEach(function(w) {{
+            if (has === '0') {{ w.setAttribute('title', TIP); }}
+            else {{ w.removeAttribute('title'); }}
+            var b = w.querySelector('button');
+            if (b) b.removeAttribute('title');
         }});
     }}
 
@@ -1215,6 +1399,37 @@ def _render_search_empty_notice(
     )
 
 
+def _cs_select_all(visible_ids: set) -> None:
+    """Select every course currently on screen (Select All ``on_click``).
+
+    ``visible_ids`` is captured when the button is RENDERED, which is the same
+    view the user is looking at when they click it.
+    """
+    current_ids = set(st.session_state.get('selected_course_ids', []))
+    st.session_state['selected_course_ids'] = list(current_ids.union(visible_ids))
+    for cid in visible_ids:
+        st.session_state[f"dl_chk_{cid}"] = True
+
+
+def _cs_clear_selection(all_course_ids: list) -> None:
+    """Clear the whole selection (Clear Selection ``on_click``).
+
+    Resets checkbox widget state across the ENTIRE course universe, not just the
+    current view. ``selected_course_ids`` is global, so resetting only the
+    visible view would leave a stale ``dl_chk=True`` on a course selected in the
+    other view (e.g. a non-favorite picked in All Courses) - which the list
+    reconciliation would then resurrect as "selected" on the next switch.
+    """
+    st.session_state['selected_course_ids'] = []
+    for cid in all_course_ids:
+        st.session_state[f"dl_chk_{cid}"] = False
+
+
+def _cs_start_refresh() -> None:
+    """Raise the refresh flag (Refresh ``on_click``); step 2 does the fetch."""
+    st.session_state['_dl_courses_refreshing'] = True
+
+
 @st.fragment
 def _course_list_section(
     courses: list, all_courses: list, favorites_only: bool, fetch_courses_fn=None
@@ -1235,69 +1450,138 @@ def _course_list_section(
     """
     filtered_courses = render_cbs_filters(courses, "dl")
 
+    # ── Everything the toolbar PRINTS is resolved before the toolbar renders ──
+    #
+    # This ordering is the whole fix for the count flicker, so do not undo it.
+    # The count used to be an `st.empty()` placeholder here, filled at the very
+    # end of the fragment - because the checkbox list reconciles the selection
+    # as it renders, and reading it inline showed the number from BEFORE the
+    # user's click.
+    #
+    # The placeholder cost far more than it bought. `st.empty()` is not a
+    # reservation, it is an ELEMENT: it enqueues an `Empty` delta immediately,
+    # and Streamlit's runtime flushes the message queue on a ~10ms tick
+    # (`Runtime._loop_coroutine`). The fill only happens after the 33-row list,
+    # two `components.html` bridges and the marker div - far more than one tick
+    # later - so the browser genuinely received "count → Empty", rendered it,
+    # and only then received "Empty → count". Measured in-browser with a
+    # MutationObserver on a single checkbox click:
+    #     t=6302.3  REMOVED  stMarkdown "2 of 33 selected"
+    #     t=6309.7  ADDED    stEmpty
+    #     t=6378.0  REMOVED  stEmpty            (68ms later)
+    #     t=6384.9  ADDED    stMarkdown "3 of 33 selected"
+    # The count is a flex item, so for those ~76ms the row reflowed and the
+    # search field and Refresh button slid 106px left (measured 764 → 658) and
+    # back. On every keystroke in the search box that is one full cycle per
+    # letter, which is the reported "unconsentual nightclub".
+    #
+    # `resolve_multi_selection()` removes the reason for the placeholder: the
+    # post-click selection is knowable up front, because Streamlit applies
+    # widget state before the script body runs. The count is now a plain
+    # `st.markdown` in its final position, so a rerun only patches its text.
+    query = st.session_state.get('course_search', '') or ''
+    displayed_courses = _filter_and_rank_courses(filtered_courses, query)
+    # "Select All" applies to exactly what the user currently sees.
+    visible_ids = {c.id for c in displayed_courses}
+    sel_count = len(resolve_multi_selection(displayed_courses, "dl"))
+
     # --- Action buttons row + inline search box ---
     # The search box lives in the same row as Select All / Clear Selection and
     # stretches to the far right (see the flex reflow CSS in
     # render_course_selector). Its query is held in `course_search` session
     # state, so it survives the favorites/all toggle (a full-page rerun)
     # seamlessly - the filter re-applies to whichever view is shown.
+    #
+    # All three buttons use `on_click=` rather than `if st.button(): ...;
+    # st.rerun()`. A click already schedules a rerun, so the explicit one made
+    # the fragment render TWICE - the first pass painting the pre-click count
+    # and list before being thrown away. (Same rule as the sync-history toggle
+    # in CLAUDE.md.) A callback runs before the script body, so the single
+    # render that remains is already the post-click one.
     with st.container(key="action_btns_row", border=True):
-        select_all_clicked = st.button('Select All', key="btn_course_select_all")
-        clear_sel_clicked = st.button('Clear Selection', key="btn_course_clear_selection")
+        st.button(
+            'Select All', key="btn_course_select_all",
+            on_click=_cs_select_all, args=(visible_ids,),
+        )
+        st.button(
+            'Clear Selection', key="btn_course_clear_selection",
+            on_click=_cs_clear_selection, args=([c.id for c in all_courses],),
+        )
         # Live selection count, grouped with the controls that change it.
-        # A PLACEHOLDER, filled at the very end of this fragment: the checkbox
-        # list below reconciles `selected_course_ids` as it renders, so anything
-        # written here directly would show the count from BEFORE the user's click
-        # (verified: the marker div at the bottom read 1 while the top read 0).
-        _count_slot = st.empty()
-        refresh_clicked = st.button(
+        #
+        # The hidden ghost span reserves the width. Both numbers shrink while
+        # you type ("0 of 33" → "0 of 6"), and a narrower box drags the divider,
+        # the Refresh button and the search field 7px left and back on every
+        # keystroke that changes a digit count - small, but it is a moving
+        # target right where the user is looking. The ghost is sized from
+        # `all_courses`, which is the widest either number can ever get and is
+        # constant until the list is re-fetched, so the box never resizes at all.
+        # (Both spans carry the WHOLE string: splitting it across grid items
+        # would drop the spaces between them - see the note on the CSS.)
+        # The ghost carries the <b> too: bold digits are wider than plain ones,
+        # so a plain-text sizer let the live label outgrow it by ~0.9px and the
+        # box still twitched by a pixel. Same markup, same metrics.
+        _ghost_html = f"<b>{len(all_courses)}</b> of {len(all_courses)} selected"
+        st.markdown(
+            f"<div class='cs-sel-count'>"
+            f"<span class='cs-sel-count-ghost' aria-hidden='true'>{_ghost_html}</span>"
+            f"<span class='cs-sel-count-live'>"
+            f"<b>{sel_count}</b> of {len(displayed_courses)} selected</span></div>",
+            unsafe_allow_html=True,
+        )
+        st.button(
             "​", key="btn_course_refresh",
+            on_click=_cs_start_refresh,
             help="Refresh the course list from Canvas.",
         )
-        query = st.text_input(
+        st.text_input(
             "Search courses",
             key="course_search",
             placeholder="Search courses by name or code…",
             label_visibility="collapsed",
         )
 
-    if refresh_clicked:
-        # Drop the cached course list and re-fetch. scope="app" (not "fragment"):
-        # the fetch happens in render_course_selector, ABOVE this fragment, so a
-        # fragment-scoped rerun would re-render the stale list.
-        try:
-            fetch_courses_fn.clear()
-        except Exception:
-            # A non-cached callable (or a Streamlit version without .clear) must
-            # not break the button - the rerun below still re-renders.
-            pass
-        st.rerun(scope="app")
+    # Refresh is a TWO-STEP dance, and the two steps exist to keep this toolbar
+    # mounted throughout.
+    #
+    # Step 1 is the `_cs_start_refresh` callback above: it only raises a flag,
+    # and the click's own fragment rerun does the rest. The cache is
+    # deliberately left warm, so that rerun is instant and re-renders the
+    # toolbar in place (same elements, same order - React reconciles, nothing
+    # unmounts) while swapping ONLY the list box below for a spinner.
+    #
+    # Step 2 is at the bottom of this function: with the spinner on screen it
+    # clears the cache and reruns app-scoped, and the blocking network fetch
+    # happens while the browser is still showing this frame.
+    #
+    # The old version cleared the cache and reran app-scoped immediately, which
+    # meant the page-level boot spinner replaced this entire section - toolbar
+    # included - and the row's contents visibly collapsed and re-formed on every
+    # refresh.
+    refreshing = bool(st.session_state.get('_dl_courses_refreshing'))
 
-    # Relevance-rank the visible courses against the search query.
-    displayed_courses = _filter_and_rank_courses(filtered_courses, query)
-    # "Select All" applies to exactly what the user currently sees.
-    visible_ids = {c.id for c in displayed_courses}
+    # ONE slot, written exactly once per run. It has to be an st.empty():
+    # rendering the spinner into a plain `st.container` with the same key left
+    # the previous run's checkbox rows mounted underneath it (Streamlit only
+    # trims a container's surplus children when the script run ends, and this
+    # run ends in a rerun), so the spinner appeared ABOVE a greyed-out list
+    # instead of replacing it. `st.empty()` swaps the whole subtree atomically.
+    _list_slot = st.empty()
 
-    if select_all_clicked:
-        current_ids = set(st.session_state.get('selected_course_ids', []))
-        st.session_state['selected_course_ids'] = list(current_ids.union(visible_ids))
-        for cid in visible_ids:
-            st.session_state[f"dl_chk_{cid}"] = True
-        st.rerun(scope="fragment")
-
-    if clear_sel_clicked:
-        st.session_state['selected_course_ids'] = []
-        # Reset checkbox widget state across the ENTIRE course universe, not just
-        # the current view. selected_course_ids is global, so resetting only the
-        # visible view would leave a stale dl_chk=True on a course selected in the
-        # other view (e.g. a non-favorite picked in All Courses) - which the list
-        # reconciliation would then resurrect as "selected" on the next switch.
-        for c in all_courses:
-            st.session_state[f"dl_chk_{c.id}"] = False
-        st.rerun(scope="fragment")
-
-    if displayed_courses:
-        with st.container(key="course_list_box", border=True):
+    if refreshing:
+        # A plain ELEMENT in the slot, not a container. Two container-shaped
+        # attempts both failed, in-browser, for the same underlying reason:
+        # Streamlit reconciles a block by its DELTA PATH, and the `key` is only
+        # a CSS class - so the spinner block was matched with the list block it
+        # replaced and the previous run's 14 checkbox rows stayed mounted inside
+        # it (Streamlit only trims a block's surplus children when the script
+        # run ENDS, and this run ends in a rerun). Even a different key only
+        # swapped the class. Writing an ELEMENT changes the node type, which
+        # React cannot reconcile against a block - so the list is genuinely
+        # unmounted and the swap is atomic.
+        _list_slot.html(_COURSES_LOADING_BOX)
+    elif displayed_courses:
+        with _list_slot.container(key="course_list_box", border=True):
             render_course_list(
                 displayed_courses, "dl", multi_select=True,
                 first_item_top_offset="1px",
@@ -1307,8 +1591,9 @@ def _course_list_section(
         inject_shift_select_bridge("dl")
     else:
         # Distinct key → symmetric vertical padding so the notice sits evenly
-        # between the top (buttons row) and bottom separators.
-        with st.container(key="course_list_empty", border=True):
+        # between the top (buttons row) and bottom separators. Same slot, so
+        # switching between list and empty-state is also an atomic swap.
+        with _list_slot.container(key="course_list_empty", border=True):
             if query.strip():
                 _render_search_empty_notice(
                     query, favorites_only, courses, filtered_courses, all_courses
@@ -1325,16 +1610,30 @@ def _course_list_section(
     # Inject an invisible div so JavaScript knows if any courses are selected,
     # preventing the loading overlay from triggering when validation will fail.
     # Placed inside the fragment so it updates on every checkbox click/clear.
-    sel_count = len(st.session_state.get('selected_course_ids', []))
+    # Uses the SAME `sel_count` the toolbar printed - the JS gate and the label
+    # the user reads must never be able to disagree about the selection.
     st.html(f"<div id='cdp_selected_courses_count' data-count='{sel_count}' style='display:none;'></div>")
 
-    # Fill the toolbar's count slot now that the list has reconciled the
-    # selection (see the placeholder above for why this cannot be written inline).
-    _count_slot.markdown(
-        f"<div class='cs-sel-count'>"
-        f"<b>{sel_count}</b> of {len(displayed_courses)} selected</div>",
-        unsafe_allow_html=True,
-    )
+    # Refresh, step 2 (see step 1 at the Refresh button). Everything above has
+    # already been streamed to the browser, so the toolbar is on screen with a
+    # spinner where the list was. The short sleep guarantees that frame paints
+    # before the script blocks; then the cache is dropped and the app-scoped
+    # rerun does the real network fetch. During that fetch the browser keeps
+    # showing THIS frame - which is exactly the effect we want: toolbar intact,
+    # spinner in the list.
+    if refreshing:
+        st.session_state['_dl_courses_refreshing'] = False
+        # Long enough for the browser to actually PAINT the spinner frame
+        # before the script blocks. At 0.15s the delta and the rerun landed so
+        # close together that the frame was never observed in-browser at all.
+        time.sleep(0.35)
+        try:
+            fetch_courses_fn.clear()
+        except Exception:
+            # A non-cached callable (or a Streamlit build without .clear) must
+            # not break the button - the rerun below still re-renders.
+            pass
+        st.rerun(scope="app")
 
     # (The old 'course_selection_warning_shown' latch is gone: the Custom/Quick
     #  Download buttons are now disabled with an explanatory tooltip while nothing
@@ -1354,7 +1653,7 @@ def render_course_selector(fetch_courses_fn):
             function from app.py.
     """
     inject_course_selector_css()
-    render_download_wizard(st, 1)
+    render_download_wizard(st, 'select')
 
     # Help Card Content
     _cs_help_title = "How Course Selection Works"
@@ -1576,6 +1875,7 @@ def render_course_selector(fetch_courses_fn):
        otherwise let the notice's top margin escape and hug the top line. */
     div.st-key-course_list_empty {{ padding: 14px 0 28px 0 !important; }}
 
+
     /* ══ Inline Course Search box (right side of the buttons row) ══ */
     /* Override the shrink-to-fit rule above so the search wrapper grows to
        fill the remaining row width all the way to the far right edge. The
@@ -1607,9 +1907,26 @@ def render_course_selector(fetch_courses_fn):
        label rendered as "0of 15 selected". Matching line-height to height keeps
        the content in normal inline flow (space intact) while still centring it
        against the 38px buttons. */
+    /* Streamlit's global -16px bottom margin on stMarkdownContainer shrank this
+       label's element-container to 22px while its siblings are 38px. The row is
+       `align-items: center`, so it centred that SHORT box and the 38px text
+       inside it overhung 8px below the buttons' centre line - taking its own
+       ::before divider with it. (Measured: siblings top 298.5 / h 38; this one
+       top 306.5 / h 22 with 38px of content.) Zeroing the margin makes the
+       container a true 38px, and centring then lands it exactly. */
+    [data-testid="stMarkdownContainer"]:has(> .cs-sel-count) {{
+        margin-bottom: 0 !important;
+    }}
+    /* A one-cell GRID with the live label and a hidden ghost stacked in it, so
+       the box is as wide as the widest label it will ever hold and never
+       resizes as the numbers shrink while the user types. Grid (not flex) and
+       one span per COMPLETE string: flex discards the whitespace between flex
+       items, which is what once rendered this label as "0of 15 selected".
+       `line-height: 38px` still does the vertical centring inside each span. */
     .cs-sel-count {{
         position: relative !important;
-        display: block !important;
+        display: grid !important;
+        grid-template-areas: "count" !important;
         height: 38px !important;
         line-height: 38px !important;
         font-size: 0.9rem !important;
@@ -1618,6 +1935,13 @@ def render_course_selector(fetch_courses_fn):
         margin: 0 0 0 {_TB_PRE}px !important;
         padding: 0 0 0 {_TB_PAD}px !important;
     }}
+    .cs-sel-count > span {{
+        grid-area: count !important;
+        white-space: nowrap !important;
+    }}
+    /* Sizes the box; `visibility: hidden` keeps it out of sight AND out of the
+       accessibility tree while still occupying its full width. */
+    .cs-sel-count-ghost {{ visibility: hidden !important; }}
     .cs-sel-count b {{ color: #ffffff !important; font-weight: 700 !important; }}
     .cs-sel-count::before {{
         content: "" !important;
@@ -1690,35 +2014,11 @@ def render_course_selector(fetch_courses_fn):
         pointer-events: none !important;
     }}
 
-    /* ── Clear-search "X" (injected by inject_search_live_bridge) ── */
-    button.cs-clear-search {{
-        position: absolute !important;
-        top: 50% !important;
-        right: 8px !important;
-        transform: translateY(-50%) !important;
-        width: 20px !important; height: 20px !important;
-        padding: 0 !important; margin: 0 !important;
-        border: none !important; border-radius: 4px !important;
-        background: transparent !important;
-        cursor: pointer !important;
-        display: none;
-        align-items: center !important; justify-content: center !important;
-        z-index: 5 !important;
-    }}
-    button.cs-clear-search[data-visible="1"] {{ display: flex !important; }}
-    button.cs-clear-search::after {{
-        content: "" !important;
-        width: 12px !important; height: 12px !important;
-        background-color: rgba(255, 255, 255, 0.55) !important;
-        -webkit-mask-image: url("{_CLEAR_X_MASK}");
-        mask-image: url("{_CLEAR_X_MASK}");
-        -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
-        -webkit-mask-position: center;  mask-position: center;
-        -webkit-mask-size: contain;    mask-size: contain;
-    }}
-    button.cs-clear-search:hover {{ background: rgba(255, 255, 255, 0.10) !important; }}
-    button.cs-clear-search:hover::after {{ background-color: #ffffff !important; }}
-    /* Shared borderless field + magnifier visuals. */
+    /* The clear-"X" is NOT styled here any more - its rules moved into
+       _course_search_field_css() so every search field (this row AND every
+       dialog's) gets them. Leaving them here made the button render as an
+       unstyled white slab in the sync dialogs. */
+    /* Shared borderless field + magnifier + clear-X visuals. */
     {_course_search_field_css('course_search')}
     </style>""")
     st.html('<div style="padding-bottom: 1rem;"></div>')
@@ -1726,27 +2026,27 @@ def render_course_selector(fetch_courses_fn):
     # --- Favorites / All Courses pill toggle ---
     favorites_only = render_favorites_pill("dl")
 
-    # Show a loading placeholder immediately so the UI above is visible
-    # while courses are being fetched. On cache hits (all transitions after
-    # first load) this is replaced so fast the spinner is imperceptible.
-    _courses_area = st.empty()
-    with _courses_area.container():
-        st.html("""
-            <div style="display:flex;align-items:center;justify-content:center;
-                        gap:12px;padding:56px 20px;
-                        border:1px solid rgba(255,255,255,0.1);border-radius:8px;">
-                <div style="width:20px;height:20px;
-                            border:2px solid rgba(255,255,255,0.07);
-                            border-top-color:#38bdf8;border-radius:50%;
-                            animation:_cs_spin .75s linear infinite;flex-shrink:0">
-                </div>
-                <span style="color:rgba(255,255,255,0.5);
-                             font:14px/1 system-ui,sans-serif">
-                    Loading your courses…
-                </span>
-            </div>
-            <style>@keyframes _cs_spin{to{transform:rotate(360deg)}}</style>
-        """)
+    # Cold-boot placeholder, shown ONLY on the very first fetch of a session -
+    # the one time there is genuinely nothing on screen to preserve.
+    #
+    # It is a SIBLING of the course section, never its parent. When it wrapped
+    # the section, every later cache-miss (most visibly Refresh) tore the whole
+    # thing down and rebuilt it, and the toolbar's controls were seen to
+    # collapse and re-form. Now a later rerun leaves the previous frame on
+    # screen while the fetch blocks, and only the parts that actually changed
+    # are replaced.
+    #
+    # The placeholder is created unconditionally so the element index of
+    # everything after it is identical on every run - only its CONTENT is
+    # conditional.
+    _first_load = not st.session_state.get('_dl_courses_loaded_once')
+    _boot_area = st.empty()
+    if _first_load:
+        with _boot_area.container():
+            st.html(
+                '<div style="border:1px solid rgba(255,255,255,0.1);'
+                'border-radius:8px;">' + _COURSES_LOADING_HTML + '</div>'
+            )
 
     # --- Fetch (spinner above is visible during cache miss) ---
     # A token that expired/was revoked mid-session surfaces here as an Unauthorized
@@ -1764,17 +2064,19 @@ def render_course_selector(fetch_courses_fn):
             else:
                 force_reauth("Your Canvas connection expired or the access token was revoked. Please reconnect with a new token.")
         raise
+    st.session_state['_dl_courses_loaded_once'] = True
     courses = [c for c in all_courses if c.is_favorite] if favorites_only else all_courses
 
     if not courses:
-        with _courses_area.container():
+        with _boot_area.container():
             from ui.amber_notice import render_amber_notice
             render_amber_notice('No courses found.')
         st.stop()
 
-    # --- Replace spinner with fragment: CBS filters + action buttons + course list ---
-    with _courses_area.container():
-        _course_list_section(courses, all_courses, favorites_only, fetch_courses_fn)
+    # Drop the cold-boot spinner (a no-op on every run after the first) and
+    # render the section as its own sibling, at a fixed position in the tree.
+    _boot_area.empty()
+    _course_list_section(courses, all_courses, favorites_only, fetch_courses_fn)
 
     # --- Continue ---
     error_container = st.empty()
@@ -1857,7 +2159,7 @@ def render_course_selector(fetch_courses_fn):
         box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
         transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
     }}
-    div.st-key-btn_custom_download button:hover {{
+    div.st-key-btn_custom_download button:hover:not(:disabled) {{
         background-color: #2b8cbe !important;
         box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2),
                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
@@ -1872,7 +2174,9 @@ def render_course_selector(fetch_courses_fn):
         box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
         transition: filter 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
     }}
-    div.st-key-btn_quick_download button:hover {{
+    /* `:not(:disabled)` - a hover `filter` would otherwise replace the shared
+       disabled filter and make the greyed button brighter than its enabled self. */
+    div.st-key-btn_quick_download button:hover:not(:disabled) {{
         filter: brightness(1.15) !important;
         box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2),
                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
@@ -1885,16 +2189,37 @@ def render_course_selector(fetch_courses_fn):
     # 30+ rows, and without it the two primary actions sit far below the fold.
     # Native `position: sticky`, so it self-disables on a page short enough not to
     # scroll - no JS, no scroll listeners.
+    _hints = help_text_enabled()
+    _action_cols = [0.75, 0.16, 0.75, 2.34]
     with st.container(key="sticky_actions_courses"):
-        col_custom, col_or, col_quick, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small", vertical_alignment="center")
+        col_custom, col_or, col_quick, _ = st.columns(_action_cols, gap="small",
+                                                      vertical_alignment="top")
         with col_custom:
             advanced_clicked = st.button('Custom Download', type="primary", use_container_width=True,
                                          key="btn_custom_download")
         with col_or:
-            st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap; word-break:keep-all;'>OR</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='cd-action-or' style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap; word-break:keep-all;'>OR</div>", unsafe_allow_html=True)
         with col_quick:
             quick_clicked = st.button('Quick Download', type="primary", use_container_width=True,
                                       key="btn_quick_download")
+
+    # The captions go AFTER the bar, not inside it. Inside, their height was
+    # reserved in the pinned bar even though they are invisible while it floats,
+    # which lifted both buttons 41 measured pixels and covered a course row for
+    # no benefit. Out here the bar is exactly as tall as it is with help text
+    # off, and the captions scroll into view under their own buttons as the bar
+    # releases. Same column widths, so each caption stays under its button.
+    # (See the ".cd-action-hint" block in global.css for why not opacity or
+    # display:none.)
+    if _hints:
+        with st.container(key="action_hints_courses"):
+            _hc, _ho, _hq, _ = st.columns(_action_cols, gap="small", vertical_alignment="top")
+            with _hc:
+                st.markdown(f"<div class='cd-action-hint'>{esc(_CUSTOM_DOWNLOAD_HINT)}</div>",
+                            unsafe_allow_html=True)
+            with _hq:
+                st.markdown(f"<div class='cd-action-hint'>{esc(_QUICK_DOWNLOAD_HINT)}</div>",
+                            unsafe_allow_html=True)
 
     # Paint both actions as unavailable (and unclickable) until a course is
     # selected, replacing the old after-the-fact "Please select at least one
