@@ -53,6 +53,8 @@ from shared.helpers import (
     friendly_course_name,
     robust_filename_normalize,
     make_long_path,
+    LOCKED_FILE_REASON,
+    LTI_STREAM_REASON,
 )
 from styles import inject_css
 from engine.estimation import transfer_estimator
@@ -984,13 +986,17 @@ def run_sync():
                             ext_lower = filepath.suffix.lower()
                             media_exts = ['.mp4', '.mov', '.avi', '.mkv', '.mp3']
                             if ext_lower in media_exts:
-                                err_msg = "LTI/Media Stream (Cannot directly download)"
+                                # The exact wording is a CONSTANT: the completion
+                                # screen classifies these strings to decide what
+                                # is a failure and what Canvas simply declined,
+                                # so rewording it here would recolour the screen.
+                                err_msg = LTI_STREAM_REASON
                             elif (getattr(file, 'locked_for_user', False)
                                   or getattr(fresh_file, 'locked_for_user', False)):
                                 # Teacher-locked file: Canvas strips the URL for
                                 # students; nothing (not even a browser) can fetch
                                 # it until the teacher unlocks it.
-                                err_msg = "Locked by the teacher on Canvas (not downloadable)"
+                                err_msg = LOCKED_FILE_REASON
                             else:
                                 err_msg = "No download URL"
                             failed_files_for_pair.append(file)
@@ -1341,10 +1347,18 @@ def run_sync():
                                         try:
                                             sync_mgr.protect_conversion_target(_healed)
                                         except Exception as _prot_err:
+                                            # `_debug_file`, not `debug_file` -
+                                            # the latter is bound nowhere in this
+                                            # module, so this handler raised
+                                            # NameError instead of logging. It
+                                            # guards the edit-protection call, so
+                                            # the one path that needed to be loud
+                                            # about failing was the one that
+                                            # could not say anything at all.
                                             log_debug(
                                                 f"could not protect edited "
                                                 f"conversion target {_healed}: "
-                                                f"{_prot_err}", debug_file)
+                                                f"{_prot_err}", _debug_file)
                         elif is_redownload and _redl_info is not None \
                                 and getattr(_redl_info, 'local_path', ''):
                             # Exact recorded path when the type matches; the
@@ -2125,7 +2139,7 @@ def run_sync():
         UIBridge, run_archive_extraction, run_pptx_conversion,
         run_html_conversion, run_code_conversion, run_url_compilation,
         run_word_conversion, run_excel_data_conversion, run_excel_conversion,
-        run_video_conversion, iter_extracted_files, retry_failed_conversions,
+        run_video_conversion, retry_failed_conversions,
     )
 
     # 1. Clear Phase 2 download UI to prevent stacking
@@ -2222,53 +2236,37 @@ def run_sync():
 
     # Archive Extraction
     #
-    # The roots are captured because extraction is the only converter that
-    # CREATES files, and every converter below is scoped by
-    # get_synced_file_paths() - the exact relative paths THIS run downloaded.
-    # Files unpacked from an archive were never downloaded, so without this they
-    # are invisible to the rest of the pipeline and a course that ships its
-    # material in a zip silently gets no conversion at all.
+    # A zip is UNPACKED, and its contents are then left exactly as they are.
+    # Nothing inside an archive is ever converted - by design, decided
+    # 2026-07-29, and the same rule holds in the download flow.
     #
-    # The download flow had the identical defect through its own explicit_files
-    # scope (found by the live audit on 2026-07-27: 11,872 code files and 7
-    # .pptx extracted and then skipped). Both flows now widen their scope the
-    # same way, through the same helper, so the two cannot diverge again.
-    _extracted = run_archive_extraction(
+    # This reverses an earlier change that widened conversion scope to include
+    # extracted trees. That widening was correct about the symptom and wrong
+    # about the cure: an archive is an opaque payload the teacher uploaded, and
+    # unpacking it is a convenience, not an invitation to rewrite what is
+    # inside. Measured on one real lecture zip from course 45899 - a JavaScript
+    # project with node_modules - it meant 21,824 extracted files, 11,818 of
+    # which a converter would rewrite, 9,730 of those landing on paths past
+    # Windows' 260-character limit. Office conversion cannot reach those at all:
+    # COM rejects a long path AND rejects the \?\ prefix (measured), so there
+    # is no depth at which that half could ever have worked.
+    #
+    # The user's own files inside the archive also stop being their own files
+    # the moment a converter deletes a .js to leave a .txt behind.
+    run_archive_extraction(
         get_synced_file_paths({'.zip', '.tar', '.tar.gz'}, 'persistent_convert_zip'), pp_ui
     )
 
     def _from_archives(target_exts, conversion_key=None):
-        """This run's synced files PLUS anything unpacked from an archive.
+        """This run's synced files. The CONTENTS of an archive are never
+        converted - see the note above ``run_archive_extraction``.
 
-        Contract gating is already applied: an archive is only extracted when
-        its pair's contract enabled convert_zip, and the per-converter key is
-        still checked by get_synced_file_paths for the synced half. The
-        extracted half is gated the same way here so a pair that unpacked
-        archives but disabled (say) code conversion is not converted anyway.
+        The name is kept because every converter below calls it and the shape of
+        the call is what guarantees download and sync agree; what changed is the
+        answer, in both flows at once.
         """
-        results = list(get_synced_file_paths(target_exts, conversion_key))
-        if not _extracted:
-            return results
-        seen = {str(p).lower() for p, _sm, _idx in results}
-        for root, sm, pair_idx in _extracted:
-            if conversion_key:
-                sel = next((s for s in sync_selections if s['pair_idx'] == pair_idx), None)
-                contract = (sel or {}).get('res_data', {}).get('contract', {})
-                if not contract.get(conversion_key.replace('persistent_', ''),
-                                    st.session_state.get(conversion_key, False)):
-                    continue
-            for p in iter_extracted_files(root, target_exts):
-                if str(p).lower() not in seen:
-                    seen.add(str(p).lower())
-                    results.append((p, sm, pair_idx))
-        return results
+        return list(get_synced_file_paths(target_exts, conversion_key))
 
-    # Every (runner, items) pair, so the SAME single retry pass the download
-    # flow runs can cover the sync flow too - the two must not diverge on how
-    # a conversion failure is handled any more than on how one is performed.
-    _attempts: list = []
-
-    # PPTX -> PDF
     _items = _from_archives({'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, 'persistent_convert_pptx')
     run_pptx_conversion(_items, pp_ui)
     _attempts.append((run_pptx_conversion, _items))
@@ -2390,6 +2388,7 @@ def run_sync():
     st.session_state['synced_count'] = synced_counter[0]
     st.session_state['synced_bytes'] = synced_counter[1]
     st.session_state['sync_errors'] = error_list
+    st.session_state['pp_archives_skipped'] = list(pp_ui.archives_skipped)
     st.session_state['pp_failure_count'] = pp_ui.pp_failure_count
 
     # Retry feedback: if this was a retry pass, compute how many errors were

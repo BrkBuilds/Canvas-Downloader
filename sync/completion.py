@@ -19,10 +19,12 @@ from core.sync_manager import SyncManager
 from shared.helpers import (
     render_sync_wizard,
     friendly_course_name,
+    split_delivery_errors,
 )
 from shared.components import (
     render_completion_card, render_folder_cards,
     render_pp_warning, render_error_section,
+    render_archives_skipped_notice,
     error_log_dialog, fresh_container,
 )
 from core.state_registry import cleanup_sync_state
@@ -152,11 +154,15 @@ def show_sync_complete():
     # second - covered either way.
     st.empty()
     with fresh_container(border=True, key='completion_dashboard'):
-        # L-3: sync_errors is consistently list[str] - all entries are retriable.
-        # The hasattr/isinstance chain that tried to classify error objects was dead
-        # code; simplify to a direct count.
-        _sync_retriable = len(sync_errors) if sync_errors else 0
-        _sync_unresolvable = 0
+        # sync_errors is list[str], but they are NOT all retriable: the engine
+        # writes a distinct sentence for a teacher-locked file and for an LTI
+        # stream, and neither can ever succeed. Counting them as failures turned
+        # a clean sync amber. Classified by the same function the download screen
+        # uses, off constants the producer shares - see
+        # shared.helpers.split_delivery_errors.
+        _sync_split = split_delivery_errors(sync_errors)
+        _sync_retriable = _sync_split['retriable']
+        _sync_unresolvable = _sync_split['unresolvable']
 
         _retry_attempted = st.session_state.get('retry_attempted', False)
         _retry_total = st.session_state.get('retry_total_attempted', 0)
@@ -171,6 +177,7 @@ def show_sync_complete():
             size_limit_mb=limit_mb,
             retriable_count=_sync_retriable,
             unresolvable_count=_sync_unresolvable,
+            unresolvable_reasons=_sync_split['reasons'],
             courses_count=len(sync_selections),
             retry_attempted=_retry_attempted,
             retry_resolved=_retry_resolved,
@@ -215,6 +222,7 @@ def show_sync_complete():
 
         # Post-processing failure warning
         render_pp_warning(st.session_state.get('pp_failure_count', 0))
+        render_archives_skipped_notice()
 
         # Panopto recordings summary (if the terminal Panopto pass ran)
         from shared.components import render_panopto_summary

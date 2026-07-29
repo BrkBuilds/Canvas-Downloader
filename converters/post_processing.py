@@ -80,6 +80,12 @@ class UIBridge:
     error_log_path: Optional[Path] = None
     pp_success_count: int = 0   # Post-processing files converted successfully
     pp_failure_count: int = 0   # Post-processing files that failed conversion
+    # Archives the file-count guard declined to unpack. Carried here rather
+    # than emitted only to the log: the post-processing terminal scrolls away
+    # and is gone by the time the user reads the completion screen, so a
+    # silent guard produces exactly one question - "why is my zip still a
+    # zip?". Both flows already copy bridge counters back into session state.
+    archives_skipped: list = field(default_factory=list)
     # Time-remaining state, owned here so all 19 _render_dashboard call sites
     # keep their existing signature. Rebuilt whenever the task changes - each
     # conversion type is its own phase with its own per-file cost.
@@ -552,7 +558,16 @@ def run_archive_extraction(files, ui: UIBridge) -> list:
         logger.error(f"archive_extractor unavailable: {_imp_err}")
         _emit(ui, 'error', "Archive extraction unavailable: module not found", detail=str(_imp_err))
         return []
+    # THE one place both flows converge. The download flow arrives via
+    # run_all_conversions and the sync flow calls this function directly, so a
+    # guard read here applies to both by construction - whereas a value passed
+    # in by each caller is a value that can differ between them, and a modifier
+    # that silently means something different in sync than in download is worse
+    # than no modifier at all.
+    from shared.helpers import archive_file_limit
+    _max_files = archive_file_limit()
     extracted_roots = []
+    skipped_big: list = []
 
     total = len(files)
     _emit(ui, 'divider', f"Extracting {total} archive files")
@@ -566,7 +581,20 @@ def run_archive_extraction(files, ui: UIBridge) -> list:
         old_name = archive_file.name
         _show_active_file(ui, old_name)
 
-        success = extract_archive(archive_file)
+        success = extract_archive(archive_file, max_files=_max_files)
+
+        if success is False:
+            # DECLINED, not failed. The archive is untouched and still on disk,
+            # so the user has lost nothing and can extract it themselves - which
+            # is the whole point of a guard rather than a hard limit. It must not
+            # touch pp_failure_count: that drives the "some conversions failed"
+            # warning, and a setting doing its job is not a failure.
+            skipped_big.append(old_name)
+            ui.archives_skipped.append(old_name)
+            _emit(ui, 'skip', old_name, filename=old_name,
+                  detail=f'Skipped: more than {_max_files:,} files inside')
+            _render_dashboard(ui, i, total, "Archives")
+            continue
 
         if success:
             # No manifest update needed - the Sync Engine bypass will
@@ -591,6 +619,16 @@ def run_archive_extraction(files, ui: UIBridge) -> list:
             ui.pp_failure_count += 1
         _render_dashboard(ui, i, total, "Archives")
 
+    # Say it once, plainly, at the end. A per-archive skip line scrolls away in
+    # a long run, and "why is my zip still a zip?" is exactly the question a
+    # silent guard creates.
+    if skipped_big:
+        _n = len(skipped_big)
+        _emit(ui, 'meta',
+              f"{_n} archive{'s were' if _n != 1 else ' was'} left unextracted "
+              f"(more than {_max_files:,} files inside). "
+              f"The .zip {'files are' if _n != 1 else 'file is'} still in your "
+              f"course folder.")
     _emit(ui, 'meta', "Archive extraction complete")
     ui.active_file_placeholder.empty()
     return extracted_roots
@@ -1009,80 +1047,31 @@ _PACKAGE_DIRS = {
     'site-packages', 'dist-packages',
 }
 
-def iter_extracted_files(root: Path, extensions: set) -> list:
-    """Files under an extraction root that a converter should process.
-
-    Applies exactly the same exclusions as ``_glob_files`` - OS junk, Office
-    lock files, ``__MACOSX``, vendored package directories, partial-write
-    artifacts - so that a file unpacked from an archive is treated identically
-    whichever flow unpacked it. Both the download and the sync pipeline route
-    through this, because the two used to filter with separately-written code
-    and that is precisely how they drift apart.
-
-    Walks with ``os.walk`` rather than ``Path.rglob`` and applies the Windows
-    long-path prefix: extracted trees routinely exceed MAX_PATH (measured at
-    18,992 paths over 255 characters in one real course), and ``rglob`` either
-    raises or returns a silently short list there - which would look exactly
-    like an archive that contained fewer files.
-    """
-    out: list = []
-    if not root.is_dir():
-        return out
-    walk_root = str(root)
-    if os.name == "nt" and not walk_root.startswith("\\\\?\\"):
-        walk_root = "\\\\?\\" + os.path.abspath(walk_root)
-    try:
-        for dirpath, dirnames, filenames in os.walk(walk_root):
-            parts = set(Path(dirpath).parts)
-            if "__MACOSX" in parts or _PACKAGE_DIRS.intersection(parts):
-                dirnames[:] = []
-                continue
-            for fn in filenames:
-                if fn.startswith("._") or fn.startswith("~$"):
-                    continue
-                low = fn.lower()
-                if low.endswith(".part") or ".part." in low:
-                    continue
-                if Path(fn).suffix.lower() not in extensions:
-                    continue
-                p = Path(dirpath) / fn
-                # Hand back a normal path; the prefix is a walking device, not
-                # something downstream converters should have to understand.
-                out.append(Path(str(p).replace("\\\\?\\", "", 1)))
-    except OSError as e:
-        logger.warning("Could not enumerate extracted archive '%s': %s", root, e)
-    return out
-
-
-def _glob_files(course_folder: Path, extensions: set, explicit_files: list = None,
-                extracted_roots: list = None) -> list:
+def _glob_files(course_folder: Path, extensions: set, explicit_files: list = None) -> list:
     """Glob course folder for files matching extensions, filtering OS junk and package dirs.
 
-    ``explicit_files`` scopes a DOWNLOAD run to the files it just fetched, so a
-    re-run does not re-convert the whole folder. ``extracted_roots`` widens that
-    scope to everything unpacked from an archive during the same run: those
-    files are teacher-uploaded course material that simply arrived inside a zip,
-    and they get the same treatment as any other file.
+    ``explicit_files`` scopes a run to the files it just fetched, so a re-run
+    does not re-convert the whole folder.
 
-    Membership is a path-PREFIX test rather than an enumerated list because
-    extracted trees are where Windows paths exceed MAX_PATH - walking one would
-    raise or come back silently short, and a converter that skipped half an
-    archive would look exactly like a converter that worked.
+    That scope is also what keeps the CONTENTS of an archive out of conversion:
+    extracted files were never downloaded, so they are never in the list. The
+    exclusion needs no rule of its own - which is why it holds for a folder
+    unpacked by an earlier run too, not just this one.
     """
     if not course_folder.exists():
         return []
 
     explicit_set = {Path(p).resolve() for p in explicit_files} if explicit_files else None
-    root_strs = [os.path.normcase(str(Path(r))) + os.sep
-                 for r in (extracted_roots or [])]
 
     def _in_scope(f: Path) -> bool:
+        # A falsy explicit_files means "no scoping" and converts the whole
+        # folder. Both callers guard against reaching here with an empty list
+        # (app.py skips post-processing outright; sync passes this run's synced
+        # paths), and that guard is what stops a previously-extracted tree being
+        # swept up on a later run.
         if not explicit_set:
             return True
-        if f.resolve() in explicit_set:
-            return True
-        fn = os.path.normcase(str(f))
-        return any(fn.startswith(r) for r in root_strs)
+        return f.resolve() in explicit_set
 
     return [
         f for f in course_folder.rglob('*')
@@ -1103,11 +1092,23 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
     Used by the Download flow in app.py.  Each converter is gated by its
     contract key (e.g. contract['convert_pptx'] == True).
     """
-    # Folders unpacked from an archive during THIS run. Populated by the
-    # extraction step below and handed to every converter after it, so a file
-    # that arrived inside a zip gets the same treatment as one that arrived on
-    # its own. Empty unless convert_zip actually extracted something.
-    extracted_roots: list = []
+    # NOTE ON ARCHIVES: a zip is
+    # unpacked and its contents are then left exactly as they are; nothing
+    # inside an archive is ever converted, by design (2026-07-29), and sync
+    # follows the identical rule.
+    #
+    # This reverses an earlier change that fed these roots to every converter.
+    # That change was right about the symptom (extracted material was being
+    # skipped) and wrong about the cure. Measured on one real lecture zip from
+    # course 45899 - a JavaScript project with node_modules - it meant 21,824
+    # extracted files, 11,818 of which a converter would rewrite, and 9,730 of
+    # those landing past Windows' 260-character path limit. The Office half
+    # could never have worked at any depth: COM rejects a long path and rejects
+    # the long-path prefix as well (both measured).
+    #
+    # An archive is an opaque payload the teacher uploaded. Unpacking it is a
+    # convenience; rewriting its insides - and DELETING the originals, which is
+    # what a source-consuming converter does - is not.
     # Every (runner, items) pair that ran, so ONE retry pass at the end can
     # cover all of them. A source-consuming converter deletes its source on
     # success, so a source still on disk afterwards is exactly the failure
@@ -1129,33 +1130,17 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
         ] if course_folder.exists() else []
         archive_files.extend(extra_targz)
         if archive_files:
-            roots = [r for r, _sm, _ctx in run_archive_extraction(
-                [(f, sm, course_name) for f in archive_files], ui)]
-            # A file that arrives inside a zip is still teacher-uploaded course
-            # material and must get exactly the same treatment as one that
-            # arrived on its own. Extraction is the only converter that CREATES
-            # files, and every converter below is scoped by `explicit_files` -
-            # the paths the DOWNLOADER wrote - so without this the unpacked
-            # content is invisible to all of them. Measured on BINTO1064U with
-            # every converter enabled: 11,872 code files and 7 .pptx were
-            # extracted and then silently skipped, while the same types at
-            # module level converted normally.
-            #
-            # Only widens an EXISTING scope. When explicit_files is None (the
-            # sync path) the converters already glob the whole folder and
-            # extracted content was never excluded - which is why the two modes
-            # behaved differently for identical settings.
-            #
-            # Carried as ROOTS rather than an enumerated file list: extracted
-            # trees are exactly where Windows paths blow past MAX_PATH, so
-            # rglob-ing one would either raise or come back silently short - and
-            # a converter that skipped half an archive looks just like one that
-            # worked. A prefix test needs no walk and cannot half-succeed.
-            extracted_roots = roots
+            # The return value is deliberately dropped. Extraction is the only
+            # converter that CREATES files, and for a while those files were fed
+            # to every converter below - see the note at the top of this
+            # function for why that was reversed. A zip is unpacked; what comes
+            # out of it is left alone.
+            run_archive_extraction(
+                [(f, sm, course_name) for f in archive_files], ui)
 
     # PPTX → PDF
     if contract.get('convert_pptx', False):
-        pptx_files = _glob_files(course_folder, {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, explicit_files, extracted_roots)
+        pptx_files = _glob_files(course_folder, {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, explicit_files)
         if pptx_files:
             _items = [(f, sm, course_name) for f in pptx_files]
             run_pptx_conversion(_items, ui)
@@ -1163,7 +1148,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
 
     # HTML → Markdown
     if contract.get('convert_html', False):
-        html_files = _glob_files(course_folder, {'.html'}, explicit_files, extracted_roots)
+        html_files = _glob_files(course_folder, {'.html'}, explicit_files)
         if html_files:
             _items = [(f, sm, course_name) for f in html_files]
             run_html_conversion(_items, ui)
@@ -1172,7 +1157,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
     # Code → TXT
     if contract.get('convert_code', False):
         from converters.code import CODE_EXTENSIONS
-        code_files = _glob_files(course_folder, CODE_EXTENSIONS, explicit_files, extracted_roots)
+        code_files = _glob_files(course_folder, CODE_EXTENSIONS, explicit_files)
         if code_files:
             _items = [(f, sm, course_name) for f in code_files]
             run_code_conversion(_items, ui)
@@ -1190,7 +1175,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
 
     # Legacy Word → PDF
     if contract.get('convert_word', False):
-        word_files = _glob_files(course_folder, {'.doc', '.rtf', '.odt'}, explicit_files, extracted_roots)
+        word_files = _glob_files(course_folder, {'.doc', '.rtf', '.odt'}, explicit_files)
         if word_files:
             _items = [(f, sm, course_name) for f in word_files]
             run_word_conversion(_items, ui)
@@ -1202,11 +1187,11 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
     if contract.get('convert_excel', False):
         # .xls (Excel 97-2003) is binary format openpyxl cannot read; exclude from data extraction.
         # ExcelToPDF via COM/AppleScript handles .xls fine - it stays in the PDF glob below.
-        excel_data_files = _glob_files(course_folder, {'.xlsx', '.xlsm'}, explicit_files, extracted_roots)
+        excel_data_files = _glob_files(course_folder, {'.xlsx', '.xlsm'}, explicit_files)
         if excel_data_files:
             run_excel_data_conversion([(f, sm, course_name) for f in excel_data_files], ui)
 
-        excel_pdf_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files, extracted_roots)
+        excel_pdf_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files)
         if excel_pdf_files:
             _items = [(f, sm, course_name) for f in excel_pdf_files]
             run_excel_conversion(_items, ui)
@@ -1214,7 +1199,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
 
     # Video → MP3
     if contract.get('convert_video', False):
-        video_files = _glob_files(course_folder, {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, explicit_files, extracted_roots)
+        video_files = _glob_files(course_folder, {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, explicit_files)
         if video_files:
             _items = [(f, sm, course_name) for f in video_files]
             run_video_conversion(_items, ui)

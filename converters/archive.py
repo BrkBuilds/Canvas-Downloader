@@ -20,7 +20,42 @@ def _filter_zip_members(members):
         and not os.path.basename(m.filename).startswith('._')
     ]
 
-def extract_archive(archive_path: str | Path) -> bool | None:
+def _decline(extract_dir) -> bool:
+    """Back out of an extraction we decided not to perform.
+
+    The target folder is created before the archive's member list can be read,
+    so a guard that simply returned would leave an empty folder next to the
+    untouched archive - a stray directory the user did not ask for and the sync
+    analyzer would have to reason about. Removed only when empty, so this can
+    never delete a real extraction.
+    """
+    try:
+        os.rmdir(extract_dir)
+    except OSError:
+        pass
+    return False
+
+
+def extract_archive(archive_path: str | Path,
+                    max_files: int | None = None) -> bool | None:
+    """Extract one archive in place, into a folder named after it.
+
+    Returns:
+        ``True``  - extracted.
+        ``False`` - DECLINED by the ``max_files`` guard. The archive is left
+                    exactly as it was; nothing was written and nothing removed.
+        ``None``  - unsupported type, or extraction failed.
+
+    ``False`` and ``None`` are different answers and the caller must treat them
+    differently: one is the app doing what it was told, the other is a failure.
+    ``False`` was previously unused by this function, which is why it is free to
+    carry the new meaning without disturbing any existing branch.
+
+    ``max_files`` complements the bomb guard rather than duplicating it. That
+    one measures uncompressed SIZE and compression RATIO, so an archive of very
+    many very small files sails through: one real course unpacked 21,630 files,
+    which is both a surprise and the source of the deepest paths in the folder.
+    """
     # Do NOT apply \\?\ to abs_archive - tarfile.open() rejects it on Python < 3.12.
     # The archive file itself won't hit MAX_PATH; only extracted contents can.
     abs_archive = Path(archive_path).resolve().absolute()
@@ -62,6 +97,14 @@ def extract_archive(archive_path: str | Path) -> bool | None:
                             pass  # Keep original if re-encoding fails
                     mutated_members.append(info)
                 members = _filter_zip_members(mutated_members)
+                # Counted BEFORE the first write, so declining costs nothing and
+                # leaves no half-extracted folder behind. Directory entries do
+                # not count - the user's mental model is "how many files will
+                # this put in my course folder".
+                if max_files is not None:
+                    _n_files = sum(1 for i in members if not i.is_dir())
+                    if _n_files > max_files:
+                        return _decline(extract_dir)
                 uncompressed_size = sum(info.file_size for info in members)
                 if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
                     raise Exception(f"Zip bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
@@ -89,6 +132,10 @@ def extract_archive(archive_path: str | Path) -> bool | None:
                 # Cache members once - streaming .tar.gz archives cannot rewind,
                 # so a second getmembers() call would return an empty list.
                 tar_members = tar_ref.getmembers()
+                if max_files is not None:
+                    _n_files = sum(1 for i in tar_members if i.isfile())
+                    if _n_files > max_files:
+                        return _decline(extract_dir)
                 uncompressed_size = sum(info.size for info in tar_members if info.isfile())
                 if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
                     raise Exception(f"Archive bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")

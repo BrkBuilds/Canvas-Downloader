@@ -583,7 +583,7 @@ Reverted to the original single dimming rule and verified in the running app: po
 ### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:815c4edf0cb8 -->
 
-**Status**: fixed
+**Status**: invalid
 **Severity**: medium
 **Category**: conversion
 **Oracles**: —
@@ -600,14 +600,14 @@ Measured with all 8 converters on: 7 .pptx and 11,872 code/data files inside ext
 Not data loss - files are present and usable - but it defeats the AI-optimisation feature for any course shipping material in a zip, which is common for code-heavy courses. Fix: append run_archive_extraction's output paths to the explicit set (or drop the explicit filter for converters that run after extraction).
 
 **Notes**: Fixed 2026-07-27: `run_archive_extraction` now returns its extraction roots and `_glob_files` accepts anything under them, so unpacked files get the same treatment as any other teacher-uploaded file. Guarded by `tests/test_archive_conversion_scope.py`.  
-> Not observed in the latest run.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
 
 ---
 
 ### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:689a00875c36 -->
 
-**Status**: fixed
+**Status**: invalid
 **Severity**: medium
 **Category**: conversion
 **Oracles**: O1,O3
@@ -623,14 +623,14 @@ The download fix alone was not enough. sync/execution.py does NOT call run_all_c
 Fixed by routing both flows through one shared helper (converters.post_processing.iter_extracted_files) and having run_archive_extraction return its extraction roots to both callers. Guarded by tests/test_archive_conversion_scope.py, which now also asserts the two flows keep the SAME converter ordering and that neither reverts to a downloaded-files-only scope.
 
 **Notes**:   
-> Not observed in the latest run.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
 
 ---
 
 ### ~~convert_code did not reach 11872 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:5a22b016415d -->
 
-**Status**: fixed
+**Status**: invalid
 **Severity**: medium
 **Category**: conversion
 **Oracles**: —
@@ -643,14 +643,14 @@ Fixed by routing both flows through one shared helper (converters.post_processin
 convert_zip extracted these, but post-processing filters every converter through explicit_files - the list of paths the DOWNLOADER wrote - and extraction output is never added to it. So enabling both toggles applies only the first to archive contents.
 
 **Notes**: Fixed 2026-07-27: `run_archive_extraction` now returns its extraction roots and `_glob_files` accepts anything under them, so unpacked files get the same treatment as any other teacher-uploaded file. Guarded by `tests/test_archive_conversion_scope.py`.  
-> Not observed in the latest run.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
 
 ---
 
 ### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:24e9563de29e -->
 
-**Status**: fixed
+**Status**: invalid
 **Severity**: medium
 **Category**: conversion
 **Oracles**: —
@@ -663,7 +663,7 @@ convert_zip extracted these, but post-processing filters every converter through
 convert_zip extracted these, but post-processing filters every converter through explicit_files - the list of paths the DOWNLOADER wrote - and extraction output is never added to it. So enabling both toggles applies only the first to archive contents.
 
 **Notes**: Fixed 2026-07-27: `run_archive_extraction` now returns its extraction roots and `_glob_files` accepts anything under them, so unpacked files get the same treatment as any other teacher-uploaded file. Guarded by `tests/test_archive_conversion_scope.py`.  
-> Not observed in the latest run.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
 
 ---
 

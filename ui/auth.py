@@ -626,6 +626,11 @@ def restore_saved_session() -> None:
                     if 'max_file_size_mb' in config:
                         st.session_state['max_file_size_mb'] = int(config.get('max_file_size_mb', 500))
 
+                    if 'archive_max_files_enabled' in config:
+                        st.session_state['archive_max_files_enabled'] = config.get('archive_max_files_enabled', False)
+                    if 'archive_max_files' in config:
+                        st.session_state['archive_max_files'] = int(config.get('archive_max_files', 1000))
+
                     if 'notifications_enabled' in config:
                         st.session_state['notifications_enabled'] = config.get('notifications_enabled', True)
                     if 'sync_history_retention' in config:
@@ -1921,6 +1926,8 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
 
     _stg_i_speed  = _stg_ico("M7 2v11h3v9l7-12h-4l4-8z")
     _stg_i_filter = _stg_ico("M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39c.51-.66.04-1.61-.79-1.61H5.04c-.83 0-1.3.95-.79 1.61z")
+    # Material "archive" (a lidded box) - the zip guard below.
+    _stg_i_archive = _stg_ico("M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM12 17.5L6.5 12H10v-2h4v2h3.5L12 17.5zM5.12 5l.81-1h12l.94 1H5.12z")
     _stg_i_folder = _stg_ico("M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z")
     _stg_i_bell   = _stg_ico("M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z")
     _stg_i_grad   = _stg_ico("M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z")
@@ -1950,6 +1957,8 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             ('temp_cbs_filters', 'enable_cbs_filters', False, bool),
             ('temp_max_size_enabled', 'max_file_size_enabled', False, bool),
             ('temp_max_size_mb', 'max_file_size_mb', 500, int),
+            ('temp_archive_max_enabled', 'archive_max_files_enabled', False, bool),
+            ('temp_archive_max_files', 'archive_max_files', 1000, int),
             ('temp_notifications_enabled', 'notifications_enabled', True, bool),
             ('temp_error_log_enabled', 'error_log_enabled', False, bool),
             ('temp_debug_mode', 'debug_mode', False, bool),
@@ -2382,6 +2391,34 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                         help="For troubleshooting only. Writes a detailed debug_log.txt to each output folder - not needed for normal use."
                     )
 
+            # Second DOWNLOAD row. Full width like the SAVE FOLDER card below,
+            # rather than a fourth column: the three cards above are height-
+            # matched by explicit per-key flex rules, and a fourth would need
+            # all of them re-tuned for a setting that reads better with its
+            # explanation on one line anyway.
+            with st.container(border=True, key="stg_card_archive"):
+                _stg_arch_tip = (
+                    "The existing zip-bomb protection measures size and compression ratio, "
+                    "never how MANY files are inside - so an archive of thousands of small "
+                    "files passes it. One real course unpacked 21,630 files. "
+                    "Over the limit the archive is left as a .zip in your course folder, "
+                    "so nothing is lost and you can extract it yourself."
+                )
+                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_archive}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Skip huge archives</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Don't unpack a .zip that would add an enormous number of files to your course folder. Applies to downloads and syncs alike.<span class="stg-help" title="{_he(_stg_arch_tip)}">{_STG_HELP_GLYPH}</span></div></div>""")
+                _ac1, _ac2 = st.columns([1, 1])
+                with _ac1:
+                    temp_arch_enabled = st.toggle(
+                        "Enable limit",
+                        value=st.session_state.get('archive_max_files_enabled', False),
+                        key="temp_archive_max_enabled")
+                with _ac2:
+                    # step=1 for the same reason as the size cap: Streamlit
+                    # greys the minus button whenever value - step < min_value.
+                    temp_arch_files = st.number_input(
+                        "Max files inside an archive", min_value=1, max_value=1000000, step=1,
+                        value=max(1, int(st.session_state.get('archive_max_files', 1000))),
+                        key="temp_archive_max_files", disabled=not temp_arch_enabled)
+
             # ── SAVE FOLDER ───────────────────────────────────────────
             st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">SAVE FOLDER</span></div>""")
 
@@ -2553,7 +2590,11 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 st.session_state.pop('_stg_dialog_open', None)
                 st.rerun(scope="app")
         with c_save:
-            if st.button("Save Settings", type="primary", use_container_width=True):
+            # Keyed so the live audit can drive it. A dialog whose primary action
+            # cannot be addressed by key is a dialog no automated run can get
+            # past, which is why the settings path had no end-to-end coverage.
+            if st.button("Save Settings", type="primary", use_container_width=True,
+                         key="stg_btn_save"):
                 new_default_path = st.session_state.get('_temp_default_path', '') or ''
                 prev_default_path = st.session_state.get('default_download_path', '') or ''
 
@@ -2569,6 +2610,8 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     or temp_cbs != st.session_state.get('enable_cbs_filters', False)
                     or temp_size_enabled != st.session_state.get('max_file_size_enabled', False)
                     or int(temp_size_mb) != int(st.session_state.get('max_file_size_mb', 500))
+                    or temp_arch_enabled != st.session_state.get('archive_max_files_enabled', False)
+                    or int(temp_arch_files) != int(st.session_state.get('archive_max_files', 1000))
                     or temp_notifications != st.session_state.get('notifications_enabled', True)
                     or temp_error_log != st.session_state.get('error_log_enabled', False)
                     or temp_debug_mode != st.session_state.get('debug_mode', False)
@@ -2582,6 +2625,8 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 st.session_state['enable_cbs_filters'] = temp_cbs
                 st.session_state['max_file_size_enabled'] = temp_size_enabled
                 st.session_state['max_file_size_mb'] = int(temp_size_mb)
+                st.session_state['archive_max_files_enabled'] = temp_arch_enabled
+                st.session_state['archive_max_files'] = int(temp_arch_files)
                 st.session_state['notifications_enabled'] = temp_notifications
                 st.session_state['error_log_enabled'] = temp_error_log
                 st.session_state['debug_mode'] = temp_debug_mode
@@ -2611,6 +2656,8 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 config_data['enable_cbs_filters'] = temp_cbs
                 config_data['max_file_size_enabled'] = bool(temp_size_enabled)
                 config_data['max_file_size_mb'] = int(temp_size_mb)
+                config_data['archive_max_files_enabled'] = bool(temp_arch_enabled)
+                config_data['archive_max_files'] = int(temp_arch_files)
                 config_data['notifications_enabled'] = bool(temp_notifications)
                 config_data['error_log_enabled'] = bool(temp_error_log)
                 config_data['debug_mode'] = bool(temp_debug_mode)

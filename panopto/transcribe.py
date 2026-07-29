@@ -11,6 +11,8 @@ from __future__ import annotations
 import logging
 import os
 
+from shared.helpers import make_long_path
+
 logger = logging.getLogger(__name__)
 
 
@@ -160,8 +162,13 @@ def transcribe(
     # at the final path.
     txt_tmp = txt_path + ".part" if want_txt else None
     srt_tmp = srt_path + ".part" if want_srt else None
-    txt_f = open(txt_tmp, "w", encoding="utf-8") if want_txt else None
-    srt_f = open(srt_tmp, "w", encoding="utf-8") if want_srt else None
+    # Long-path form on the OS CALL only. Unlike the media download, this
+    # function RETURNS its paths (they become `produced`, which the manifest
+    # recorder turns into a relative path), so prefixing the variables would put
+    # a "\?\" absolute into the manifest the moment relative_to() failed - and
+    # every later comparison against a clean path would then miss.
+    txt_f = open(make_long_path(txt_tmp), "w", encoding="utf-8") if want_txt else None
+    srt_f = open(make_long_path(srt_tmp), "w", encoding="utf-8") if want_srt else None
 
     try:
         idx = 0
@@ -192,10 +199,10 @@ def transcribe(
     # Commit temp -> final
     out = {"txt": None, "srt": None, "language": detected or "?"}
     if txt_tmp:
-        os.replace(txt_tmp, txt_path)
-        out["txt"] = txt_path
+        os.replace(make_long_path(txt_tmp), make_long_path(txt_path))
+        out["txt"] = txt_path          # clean: this is what gets recorded
     if srt_tmp:
-        os.replace(srt_tmp, srt_path)
+        os.replace(make_long_path(srt_tmp), make_long_path(srt_path))
         out["srt"] = srt_path
     if progress:
         progress(100, detected)

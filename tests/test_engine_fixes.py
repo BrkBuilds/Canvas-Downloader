@@ -776,9 +776,17 @@ def test_teacher_locked_files_classify_as_permanent():
     import shared.components as sc
     assert 'Locked File' in sc._ERROR_TRANSLATIONS
 
+    # The sync flow says the same thing, through the SHARED constant rather
+    # than its own copy of the sentence. That indirection is the point: the
+    # completion screen classifies these strings to decide what is a failure and
+    # what Canvas merely declined, so a reworded literal here would silently
+    # recolour the screen. Assert the wiring, not the wording.
     from pathlib import Path
+    from shared.helpers import LOCKED_FILE_REASON
     sync_src = Path('sync/execution.py').read_text(encoding='utf-8')
-    assert "Locked by the teacher on Canvas" in sync_src
+    assert "err_msg = LOCKED_FILE_REASON" in sync_src
+    assert "LOCKED_FILE_REASON" in sync_src.split("from shared.helpers import")[1][:400]
+    assert "Locked by the teacher on Canvas" in LOCKED_FILE_REASON
 
 
 def test_panopto_classify_heals_stale_manifest_path(tmp_path):

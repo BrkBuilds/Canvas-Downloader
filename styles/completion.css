@@ -95,13 +95,18 @@
     color: #fca5a5;
 }
 
+/* "Cannot Be Downloaded" is an OUTCOME, not a failure - a teacher-locked file
+   or an LTI stream is Canvas declining to serve something, which no retry and
+   no setting can change. It used to be painted in the same red as a genuine
+   failure, so a run where nothing went wrong still read as broken; the count
+   is neutral grey for the same reason it no longer turns the card amber. */
 .stat-card.stat-skip .stat-icon-wrapper {
-    background: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
+    background: rgba(156, 163, 175, 0.18);
+    color: #9ca3af;
 }
 
 .stat-card.stat-skip .stat-value {
-    color: #f87171;
+    color: #9ca3af;
 }
 
 .stat-card.stat-app-error .stat-icon-wrapper {
@@ -174,6 +179,18 @@
 
 .completion-card .retry-note-success svg {
     color: #4ade80;
+}
+
+/* Explains the "Cannot Be Downloaded" count. Neutral, not amber: it is
+   information, and it appears on the GREEN card whenever nothing else went
+   wrong. Legible on all three card skins, which is why it takes the same
+   TEXT_LIGHT body as the warn note and differs only in the icon colour. */
+.completion-card .retry-note-skip {
+    color: #d1d5db;
+}
+
+.completion-card .retry-note-skip svg {
+    color: #9ca3af;
 }
 
 /* Make grey text lighter in the amber partial card */
@@ -972,6 +989,44 @@ div[class*="st-key-dl_fc_"] div[class*="st-key-fileactlist_"] [data-testid="stVe
     margin: 0 0 8px 0;
     border-top: none;
     overflow: hidden;
+}
+
+/* The panel carries its own statement instead of sitting under a separate
+   header block, so it needs the full box back: all four corners, its top
+   border, and the margin the header used to provide. */
+.skip-panel.skip-panel-solo {
+    border-radius: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    margin: 18px 0 8px 0;
+}
+
+/* No divider under a header that is the only row when closed. */
+.skip-panel-solo > .skip-panel-header {
+    border-bottom: none;
+    padding: 12px 16px;
+}
+
+.skip-panel-solo[open] > .skip-panel-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.skip-panel-header .sp-funnel {
+    width: 16px;
+    height: 16px;
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+/* Keeps the sentence reading exactly as it did in the old header row - the
+   merge was meant to remove a redundant row, not restyle the message. */
+.skip-panel-solo .sp-title {
+    font-size: 0.92em;
+    font-weight: 500;
+    color: #e2e8f0;
+}
+
+.skip-panel-solo .sp-header-row {
+    gap: 8px;
 }
 
 .skip-panel-header {
