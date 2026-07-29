@@ -1,24 +1,41 @@
-"""Files unpacked from an archive must be converted like any other file.
+"""A zip is unpacked. Its CONTENTS are never converted.
 
-Found by the live audit on 2026-07-27 (course BINTO1064U, every converter
-enabled): 11,872 code files and 7 .pptx were extracted from zips and then
-silently skipped by every converter, while the same file types sitting at
-module level converted normally.
+Decided 2026-07-29, and this file previously asserted the opposite - so read
+the reasoning before changing it back.
 
-Root cause: the DOWNLOAD path passes ``explicit_files`` - the list of paths the
-downloader itself wrote - and ``_glob_files`` scoped every converter to that
-set. Archive extraction runs first and CREATES files that were never
-downloaded, so nothing after it could see them. The SYNC path passes no
-explicit list at all, so it globbed the whole folder and converted them fine -
-the same contract produced two different results depending on which flow you
-came from.
+The live audit found (2026-07-27, course BINTO1064U) that files extracted from
+archives were skipped by every converter while the same file types at module
+level converted normally. That was filed and fixed as a defect: conversion scope
+was widened to include extracted trees.
 
-These tests pin both halves: the scope now includes extracted content, and it
-still excludes everything the explicit list was introduced to exclude.
+It was right about the symptom and wrong about the cure. Measured afterwards on
+one real lecture zip from course 45899 - a JavaScript project carrying
+``node_modules``:
+
+* **21,824** files extracted from a single archive;
+* **11,818** of them a converter would rewrite;
+* **9,730** of those landing on paths past Windows' 260-character limit
+  (1,616 even in flat mode), because extracted member names are taken verbatim
+  from the zip and converting one makes the name *longer*
+  (``x.d.ts`` -> ``x.d_ts.txt``).
+
+The Office half could never have worked at any depth: PowerPoint COM rejects a
+long path **and** rejects the long-path prefix - both measured directly. There
+was no version of "convert inside archives" that was correct on Windows.
+
+Underneath the path arithmetic is the simpler argument. An archive is an opaque
+payload the teacher uploaded. Unpacking it is a convenience; rewriting what is
+inside - and DELETING the originals, which is what a source-consuming converter
+does - is not something the user asked for. A student's ``.js`` inside their own
+project should still be a ``.js``.
+
+Both flows must agree, because the failure is silent either way: a folder
+converted by one and not the other looks like churn on every later sync.
 """
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -29,9 +46,9 @@ from converters.post_processing import _glob_files  # noqa: E402
 
 
 def _tree(tmp_path: Path) -> dict:
-    """A course folder holding one downloaded deck, one archive, and its
-    unpacked contents - including a nested copy, which is how the real zips in
-    BINTO1064U are shaped."""
+    """A course folder holding one downloaded deck, one archive's unpacked
+    contents - including a nested copy, which is how the real zips in
+    BINTO1064U are shaped - and a file from an earlier run."""
     downloaded = tmp_path / "Module 1" / "Lecture.pptx"
     downloaded.parent.mkdir(parents=True)
     downloaded.write_bytes(b"deck")
@@ -53,198 +70,117 @@ def _tree(tmp_path: Path) -> dict:
             "stray": stray}
 
 
-def test_extracted_files_are_in_scope(tmp_path):
+# --------------------------------------------------------------------------
+# the rule
+# --------------------------------------------------------------------------
+
+def test_extracted_files_are_NOT_converted(tmp_path):
+    """The whole decision, in one assertion."""
     t = _tree(tmp_path)
-    found = _glob_files(t["folder"], {".pptx"},
-                        explicit_files=[str(t["downloaded"])],
-                        extracted_roots=[t["root"]])
-    assert t["unpacked_deck"] in found, (
-        "a .pptx unpacked from an archive was skipped by the converter")
+    found = _glob_files(t["folder"], {".pptx"}, [str(t["downloaded"])])
     assert t["downloaded"] in found
+    assert t["unpacked_deck"] not in found
 
 
-def test_extracted_code_files_are_in_scope(tmp_path):
+def test_extracted_code_is_NOT_converted(tmp_path):
+    """The 11,818-file case: a project tree inside a zip stays a project tree.
+    Converting it would replace each source with a .txt and delete the original -
+    breaking the very code the student is meant to run."""
     t = _tree(tmp_path)
-    found = _glob_files(t["folder"], {".js"},
-                        explicit_files=[str(t["downloaded"])],
-                        extracted_roots=[t["root"]])
-    assert t["unpacked_code"] in found
+    found = _glob_files(t["folder"], {".js"}, [str(t["downloaded"])])
+    assert t["unpacked_code"] not in found
+
+
+def test_the_downloaded_file_beside_the_archive_still_converts(tmp_path):
+    """The rule is about where a file CAME FROM, not where it sits. A deck the
+    downloader wrote into the same module folder is unaffected."""
+    t = _tree(tmp_path)
+    assert _glob_files(t["folder"], {".pptx"}, [str(t["downloaded"])]) == [t["downloaded"]]
 
 
 def test_scope_still_excludes_files_from_other_runs(tmp_path):
-    """The reason ``explicit_files`` exists: a re-download must not re-convert
-    the whole folder. Widening it for extracted content must not widen it for
-    anything else."""
+    """Unchanged: explicit_files is what stops a re-run re-converting a whole
+    folder, and that is still its job."""
     t = _tree(tmp_path)
-    found = _glob_files(t["folder"], {".pptx"},
-                        explicit_files=[str(t["downloaded"])],
-                        extracted_roots=[t["root"]])
+    found = _glob_files(t["folder"], {".pptx"}, [str(t["downloaded"])])
     assert t["stray"] not in found
 
 
-def test_without_extracted_roots_the_old_behaviour_holds(tmp_path):
-    """Guards the regression itself: with no roots supplied, unpacked content is
-    invisible. If this ever passes, the roots are being ignored."""
+def test_a_tree_unpacked_by_an_EARLIER_run_is_also_excluded(tmp_path):
+    """No marker, no bookkeeping, no expiry. Extracted files were never
+    downloaded, so they are never in either flow's file list - which is why the
+    exclusion holds for an archive unpacked last week just as well as one
+    unpacked a second ago."""
     t = _tree(tmp_path)
-    found = _glob_files(t["folder"], {".pptx"},
-                        explicit_files=[str(t["downloaded"])])
+    found = _glob_files(t["folder"], {".pptx", ".js"}, [str(t["downloaded"])])
     assert t["unpacked_deck"] not in found
-    assert t["downloaded"] in found
+    assert t["unpacked_code"] not in found
 
 
-def test_no_explicit_list_means_whole_folder(tmp_path):
-    """The sync path. It never had the bug and must keep behaving the same."""
-    t = _tree(tmp_path)
-    found = _glob_files(t["folder"], {".pptx"})
-    assert {t["downloaded"], t["unpacked_deck"], t["stray"]} <= set(found)
+# --------------------------------------------------------------------------
+# both flows, and the guard that makes the rule hold
+# --------------------------------------------------------------------------
+
+def test_the_download_flow_never_runs_post_processing_unscoped():
+    """_glob_files converts the WHOLE folder when explicit_files is empty, so an
+    unscoped call would sweep up every previously-extracted tree. app.py skips
+    post-processing outright rather than calling with an empty list, and that
+    guard is load-bearing for this rule."""
+    src = (REPO / "app.py").read_text(encoding="utf-8")
+    i = src.index("if _run_files:")
+    assert "invoke_post_processing(" in src[i:i + 900]
 
 
-def test_package_dirs_still_filtered_inside_archives(tmp_path):
-    """An unpacked node_modules must stay out - that filter is why a code course
-    does not produce 40,000 .txt files."""
-    t = _tree(tmp_path)
-    vendored = t["root"] / "node_modules" / "left-pad" / "index.js"
-    vendored.parent.mkdir(parents=True)
-    vendored.write_bytes(b"module.exports = 1")
-    found = _glob_files(t["folder"], {".js"},
-                        explicit_files=[str(t["downloaded"])],
-                        extracted_roots=[t["root"]])
-    assert vendored not in found
-    assert t["unpacked_code"] in found
+def test_the_sync_flow_converts_only_this_runs_synced_files():
+    """`_from_archives` used to add extracted trees to every converter's input.
+    It now returns this run's synced files and nothing else - the name is kept
+    because all eight converters call it, so the two flows cannot drift."""
+    src = (REPO / "sync" / "execution.py").read_text(encoding="utf-8")
+    i = src.index("def _from_archives(")
+    body = src[i:src.index("_items = _from_archives(", i)]
+    code = re.sub(r"^\s*#.*$", "", body, flags=re.M)
+    assert "return list(get_synced_file_paths(target_exts, conversion_key))" in code
+    assert "iter_extracted_files" not in code, \
+        "sync must not walk extracted trees for conversion candidates"
 
 
-def test_partial_artifacts_still_filtered_inside_archives(tmp_path):
-    t = _tree(tmp_path)
-    partial = t["root"] / "Opgaver" / "half.pptx.part"
-    partial.write_bytes(b"x")
-    found = _glob_files(t["folder"], {".part"},
-                        explicit_files=[str(t["downloaded"])],
-                        extracted_roots=[t["root"]])
-    assert partial not in found
+def test_neither_flow_feeds_extracted_roots_to_a_converter():
+    """The reversal, asserted at the only two places it could come back."""
+    pp = (REPO / "converters" / "post_processing.py").read_text(encoding="utf-8")
+    sync = (REPO / "sync" / "execution.py").read_text(encoding="utf-8")
+    assert "explicit_files, extracted_roots)" not in pp
+    assert "iter_extracted_files" not in sync
 
 
-def test_run_archive_extraction_reports_its_roots():
-    """The fix depends on extraction telling the caller where it wrote.
-
-    A signature change here (back to returning None) would disable the whole
-    thing silently, because ``extracted_roots`` would just stay empty.
-    """
-    import inspect
-    from converters.post_processing import run_archive_extraction
-    src = inspect.getsource(run_archive_extraction)
-    assert "return extracted_roots" in src
-    assert "extracted_roots.append" in src
+def test_archives_are_still_EXTRACTED():
+    """Unpacking is unchanged - only conversion of the contents stopped. A
+    change that quietly disabled extraction too would look identical from the
+    converters' side and be a far bigger regression."""
+    pp = (REPO / "converters" / "post_processing.py").read_text(encoding="utf-8")
+    assert "def run_archive_extraction" in pp
+    sync = (REPO / "sync" / "execution.py").read_text(encoding="utf-8")
+    assert "run_archive_extraction(" in sync
 
 
-def test_iter_extracted_files_applies_the_same_exclusions(tmp_path):
-    """The shared helper both flows use. It must filter exactly like _glob_files,
-    or a file unpacked during a SYNC would be treated differently from the same
-    file unpacked during a DOWNLOAD."""
-    from converters.post_processing import iter_extracted_files
-    root = tmp_path / "Opgaver"
-    (root / "node_modules" / "dep").mkdir(parents=True)
-    (root / "__MACOSX").mkdir()
-    (root / "sub").mkdir()
-    keep = root / "sub" / "solution.js"
-    keep.write_bytes(b"1")
-    for junk in (root / "node_modules" / "dep" / "index.js",
-                 root / "__MACOSX" / "resource.js",
-                 root / "._hidden.js",
-                 root / "half.js.part"):
-        junk.write_bytes(b"1")
+# --------------------------------------------------------------------------
+# the exclusions that predate this rule still apply to ordinary files
+# --------------------------------------------------------------------------
 
-    found = iter_extracted_files(root, {".js"})
-    names = {p.name for p in found}
-    assert "solution.js" in names
-    assert names == {"solution.js"}, f"leaked: {names - {'solution.js'}}"
+def test_package_dirs_are_still_filtered(tmp_path):
+    d = tmp_path / "node_modules" / "pkg"
+    d.mkdir(parents=True)
+    f = d / "index.js"
+    f.write_text("x", encoding="utf-8")
+    assert _glob_files(tmp_path, {".js"}, [str(f)]) == []
 
 
-def test_sync_flow_widens_scope_through_the_same_helper():
-    """Sync must fix the archive gap the same way download does.
-
-    Sync does not call run_all_conversions - it drives each converter itself -
-    so the fix cannot be inherited. Both flows now route unpacked content
-    through iter_extracted_files; if either stops, they diverge again and only
-    one mode converts archive contents.
-    """
-    import inspect
-    from sync import execution
-    src = inspect.getsource(execution)
-    assert "iter_extracted_files" in src, (
-        "sync no longer widens its converter scope to unpacked files")
-    assert "_from_archives" in src
-
-    body = src[src.index("# Archive Extraction"):src.index("# --- Inject post-processing sidecars")]
-    calls = []
-    for ln in body.splitlines():
-        s = ln.strip()
-        if s.startswith("#") or "def " in s or "results = " in s:
-            continue          # comments and the helper's own definition/body
-        if "_from_archives(" in s or "get_synced_file_paths(" in s:
-            calls.append(s)
-    assert calls, "no converter selector calls found; the block moved"
-    # The extraction call itself legitimately uses the un-widened selector: it
-    # runs BEFORE anything is unpacked.
-    for call in calls:
-        if "'.zip'" in call:
-            assert "get_synced_file_paths(" in call
-        else:
-            assert "_from_archives(" in call, (
-                f"sync converter still scoped to downloaded files only: {call}")
+def test_partial_artifacts_are_still_filtered(tmp_path):
+    f = tmp_path / "Lecture.part.pptx"
+    f.write_bytes(b"x")
+    assert _glob_files(tmp_path, {".pptx"}, [str(f)]) == []
 
 
-def test_both_flows_share_one_converter_ordering():
-    """Download and sync must run converters in the same order.
-
-    The ordering is load-bearing in two places: extraction has to precede every
-    converter so unpacked files are visible, and Excel data extraction has to
-    precede Excel->PDF because the PDF step DELETES the .xlsx. Two hand-written
-    orderings is how one flow silently loses a step.
-    """
-    import inspect
-    from converters.post_processing import run_all_conversions
-    from sync import execution
-
-    def order(src, names):
-        seen = []
-        for line in src.splitlines():
-            for n in names:
-                if n + "(" in line and "def " not in line and "import" not in line:
-                    if n not in seen:
-                        seen.append(n)
-        return seen
-
-    names = ["run_archive_extraction", "run_pptx_conversion", "run_html_conversion",
-             "run_code_conversion", "run_word_conversion",
-             "run_excel_data_conversion", "run_excel_conversion",
-             "run_video_conversion"]
-    dl = order(inspect.getsource(run_all_conversions), names)
-    sy_src = inspect.getsource(execution)
-    sy = order(sy_src[sy_src.index("# Archive Extraction"):], names)
-
-    assert dl.index("run_archive_extraction") == 0
-    assert sy.index("run_archive_extraction") == 0
-    for flow, seq in (("download", dl), ("sync", sy)):
-        assert seq.index("run_excel_data_conversion") < seq.index("run_excel_conversion"), (
-            f"{flow}: Excel PDF runs before data extraction; the PDF step deletes "
-            f"the .xlsx, so the _Data.txt sidecar would be lost")
-    assert dl == sy, (
-        f"converter ORDER differs between flows.\n  download: {dl}\n  sync:     {sy}")
-
-
-def test_converters_after_extraction_receive_the_roots():
-    """Every converter that runs AFTER extraction must be passed the roots, and
-    the archive glob itself must NOT be (it runs before anything is unpacked)."""
-    import inspect
-    from converters.post_processing import run_all_conversions
-    src = inspect.getsource(run_all_conversions)
-    calls = [ln.strip() for ln in src.splitlines() if "_glob_files(course_folder" in ln]
-    assert calls, "converter globs moved; update this guard"
-    for call in calls:
-        if "archive_exts" in call:
-            assert "extracted_roots" not in call, (
-                "the archive glob must not see roots from its own run")
-        else:
-            assert "extracted_roots" in call, (
-                f"converter glob missing extracted_roots, so unpacked files "
-                f"will be skipped: {call}")
+def test_office_lock_files_are_still_filtered(tmp_path):
+    f = tmp_path / "~$Lecture.pptx"
+    f.write_bytes(b"x")
+    assert _glob_files(tmp_path, {".pptx"}, [str(f)]) == []

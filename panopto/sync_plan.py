@@ -25,7 +25,12 @@ import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from panopto.runner import video_dir
+import os
+
+from shared.helpers import make_long_path, path_exists
+from panopto.runner import (
+    video_dir, recording_stem_name, recording_base_candidates,
+)
 from panopto.settings import active_outputs
 
 logger = logging.getLogger(__name__)
@@ -151,7 +156,10 @@ def _video_base_path(cm, video, course_root: Path, settings: dict,
     module_safe = cm._sanitize_filename(video.module_name) if getattr(video, "module_name", "") else ""
     out_dir = video_dir(course_root, module_safe, settings, download_mode,
                         lecture_title_sanitized=safe_title)
-    return out_dir / safe_title
+    # The SAME rule the runner writes by - see recording_stem_name. Computing it
+    # separately here is how the writer and the analyzer drift, and the symptom
+    # is silent: every recording reads as missing on every sync.
+    return out_dir / recording_stem_name(safe_title, settings)
 
 
 def classify_videos(cm, videos, course_root, download_mode: str, settings: dict,
@@ -189,22 +197,37 @@ def classify_videos(cm, videos, course_root, download_mode: str, settings: dict,
     for v in videos:
         try:
             base = _video_base_path(cm, v, course_root, settings, download_mode)
+            _safe_title = cm._sanitize_filename(v.title) or (v.video_id or "")[:8]
             mani = manifest.get(v.video_id) or manifest.get(str(v.video_id)) or {}
 
             present, missing, deleted, new = [], [], [], []
             paths: dict = {}
             sizes: dict = {}
             healed: dict = {}
+            # Where this recording's artifacts could be, current naming first
+            # then the pre-2026-07-29 one, so a folder downloaded by an older
+            # version is ADOPTED rather than re-downloaded. `base` stays the
+            # write target for anything genuinely new.
+            _cands = recording_base_candidates(base.parent, _safe_title, settings)
+
+            def _find(kind, _c=_cands, _b=base):
+                for cand in _c:
+                    q = Path(str(cand) + "." + kind)
+                    if path_exists(q):
+                        return q, True
+                return Path(str(_b) + "." + kind), False
+
             for kind in wanted:
                 rel = mani.get(kind)
                 if rel:
                     p = course_root / rel
                 else:
-                    p = Path(str(base) + "." + kind)
-                try:
-                    exists = p.exists()
-                except OSError:
-                    exists = False
+                    p, _ = _find(kind)
+                # path_exists, not Path.exists(): over Windows' 260-char limit
+                # the latter returns False rather than raising, so a recording
+                # that is sitting right there reads as missing and is
+                # re-downloaded on every single sync.
+                exists = path_exists(p)
                 if rel and not exists:
                     # The manifest path is stale (its file is gone), but the
                     # same kind may exist at the CURRENT layout path - e.g. a
@@ -215,19 +238,19 @@ def classify_videos(cm, videos, course_root, download_mode: str, settings: dict,
                     # re-download it into the stale folder - a duplicate copy
                     # of a file the user already has. Adopt the on-disk copy
                     # and flag it for a manifest heal instead.
-                    alt = Path(str(base) + "." + kind)
-                    try:
-                        if alt != p and alt.exists():
-                            p, exists = alt, True
-                            healed[kind] = str(alt)
-                    except OSError:
-                        pass
+                    alt, alt_exists = _find(kind)
+                    if alt_exists and alt != p:
+                        p, exists = alt, True
+                        healed[kind] = str(alt)
                 paths[kind] = str(p)
                 if exists:
                     present.append(kind)
                     # Real on-disk size is authoritative (never an estimate).
                     try:
-                        sizes[kind] = p.stat().st_size
+                        # Matches the path_exists() above: a plain stat() on an
+                        # over-long path raises, and the recording would then be
+                        # counted as 0 bytes in the confirm screen's total.
+                        sizes[kind] = os.path.getsize(make_long_path(p))
                     except OSError:
                         pass
                 else:

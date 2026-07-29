@@ -73,6 +73,51 @@ def make_long_path(p: str | Path) -> str:
     return s
 
 
+def archive_file_limit() -> int | None:
+    """Max files an archive may contain before extraction is declined.
+
+    ``None`` when the user has not asked for a limit, which is the default -
+    extraction behaviour is unchanged until they do.
+
+    Read here, once, rather than passed down from each flow. That is deliberate:
+    download and sync reach archive extraction through completely different call
+    chains, and a value threaded through both is a value that can differ between
+    them. This is a machine-level preference like the file-size cap, NOT part of
+    a folder's sync contract - the contract records what a folder was downloaded
+    WITH, while this is a guard the user can change at any time and expect to
+    apply everywhere at once.
+    """
+    try:
+        import streamlit as st
+        if not st.session_state.get('archive_max_files_enabled', False):
+            return None
+        n = int(st.session_state.get('archive_max_files', 0) or 0)
+        return n if n > 0 else None
+    except Exception:
+        # No Streamlit context (a worker thread, a test, the CLI) - never guess
+        # a limit into existence; the safe default is the app's default, which
+        # is to extract.
+        return None
+
+
+def path_exists(p: str | Path) -> bool:
+    """``exists()``, but correct for a path over Windows' 260-character limit.
+
+    ``Path.exists()`` on an over-long path does not raise - it returns **False**,
+    which is indistinguishable from "the file is not there". Anything that asks
+    "did we already download this?" therefore answers *no* every single time and
+    re-fetches a file that is sitting right there, for ever.
+
+    Only the *query* is rewritten; nothing is stored in this form, because a
+    ``\\\\?\\`` prefix that reaches a manifest breaks every later comparison
+    against a clean path.
+    """
+    try:
+        return os.path.exists(make_long_path(p))
+    except (OSError, ValueError):
+        return False
+
+
 # ── Temp File Shadowing for Office COM APIs ────────────────────────────
 
 _MAX_PATH_THRESHOLD = 240  # 15-char safety margin below Win32 MAX_PATH (255)
@@ -1169,6 +1214,97 @@ def effective_ext(filename: str, contract: dict | None) -> str:
 # these describe the current network and machine, not a durable preference, so
 # persisting them to disk would just let a stale campus-wifi number follow the
 # user home.
+
+# --- What went WRONG vs what Canvas simply will not serve --------------------
+#
+# Two of the outcomes a download or sync can produce are not failures at all:
+# a file the teacher locked, and a video Canvas streams through a plugin rather
+# than storing as a file. No retry, no setting and no amount of waiting changes
+# either - they are the state of the course, not of the run.
+#
+# Both flows must agree about this or the same course reports differently
+# depending on how the user reached it, so the rule lives here once. The
+# messages are CONSTANTS because the sync flow's errors are plain strings and
+# the classifier has to recognise them: with the text inlined at the producer,
+# rewording it would silently reclassify every locked file as a hard failure.
+LOCKED_FILE_REASON = "Locked by the teacher on Canvas (not downloadable)"
+LTI_STREAM_REASON = "LTI/Media Stream (Cannot directly download)"
+
+# The download flow carries objects rather than strings; these are the
+# ``error_type`` values its engine stamps for the same two outcomes.
+LOCKED_FILE_ERROR_TYPE = "Locked File"
+LTI_STREAM_ERROR_TYPE = "LTI/Media Stream"
+
+
+def split_delivery_errors(errors) -> dict:
+    """Split a run's errors into what failed and what was merely declined.
+
+    Accepts either the download flow's ``DownloadError`` objects or the sync
+    flow's ``list[str]`` messages, because the two flows genuinely carry
+    different shapes and the alternative is two copies of this rule that drift.
+
+    Returns ``{'retriable', 'unresolvable', 'app', 'reasons': {...}}``:
+
+    * **retriable** - failed, and a retry could plausibly succeed (network,
+      HTTP, a locked destination). These colour the completion card.
+    * **app** - the engine itself broke. These colour the card too.
+    * **unresolvable** - Canvas declined to serve it. Reported, never coloured;
+      ``reasons`` breaks it down so the screen can say WHICH, because a bare
+      count reads as an unexplained loss.
+    """
+    out = {'retriable': 0, 'unresolvable': 0, 'app': 0,
+           'reasons': {'locked': 0, 'stream': 0, 'other': 0}}
+    for err in (errors or []):
+        if isinstance(err, str):
+            if LOCKED_FILE_REASON in err:
+                out['unresolvable'] += 1
+                out['reasons']['locked'] += 1
+            elif LTI_STREAM_REASON in err:
+                out['unresolvable'] += 1
+                out['reasons']['stream'] += 1
+            else:
+                out['retriable'] += 1
+            continue
+
+        if not hasattr(err, 'error_type'):
+            # An entry this function cannot read - a dict, or some future shape.
+            # `app.py` already guards for `isinstance(err, dict)` in the retry
+            # pass, so it is not hypothetical.
+            #
+            # Counted as a FAILURE, deliberately. The two mistakes are not
+            # symmetric: calling a harmless outcome a failure shows an amber
+            # card the user investigates and dismisses, while calling a failure
+            # harmless hides it behind a green one. When the shape cannot be
+            # read, the safe guess is the loud one.
+            out['retriable'] += 1
+            continue
+
+        if getattr(err, 'is_app_error', False):
+            out['app'] += 1
+            continue
+
+        etype = getattr(err, 'error_type', '') or ''
+        ctx = getattr(err, 'context', None)
+        if etype == LOCKED_FILE_ERROR_TYPE:
+            out['unresolvable'] += 1
+            out['reasons']['locked'] += 1
+        elif etype == LTI_STREAM_ERROR_TYPE:
+            out['unresolvable'] += 1
+            out['reasons']['stream'] += 1
+        elif isinstance(ctx, dict) and ctx.get('filepath') \
+                and not getattr(err, 'retry_exhausted', False):
+            # A real file failure with somewhere to retry TO.
+            out['retriable'] += 1
+        else:
+            # Permanently stuck, but not one of the two named causes - e.g. a
+            # module item Canvas exposes with no URL at all. Counted as
+            # unresolvable (a retry cannot help) but reported generically,
+            # because claiming a cause we have not established would be worse
+            # than admitting we do not know.
+            out['unresolvable'] += 1
+            out['reasons']['other'] += 1
+    return out
+
 
 _ETA_PRIORS_KEY = '_eta_learned_transfer_priors'
 

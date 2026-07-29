@@ -17,6 +17,8 @@ import subprocess
 import sys
 import time
 
+from shared.helpers import make_long_path
+
 logger = logging.getLogger(__name__)
 
 _TAG_RE = re.compile(r"<[^>]+>")
@@ -341,6 +343,18 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
     # extension ("Lecture.part.mp3") because ffmpeg infers the output muxer
     # from the final extension - a trailing ".part" would abort with "unable
     # to find a suitable output format".
+    # Long-path form ONCE, here, and everything below inherits it: the .part
+    # target, the ffmpeg argument, and every os.path call on either. A Panopto
+    # recording is the deepest file this app writes (course / "Panopto
+    # Recordings" / lecture title / lecture title.mp4), so on a default Windows
+    # install - where LongPathsEnabled is 0 - the write fails outright. Verified
+    # that the bundled ffmpeg accepts the prefixed target and produces a
+    # byte-identical file.
+    #
+    # Contained on purpose: this function never returns or records a path, and
+    # the log line below takes a basename, so the prefix cannot reach the
+    # manifest (where it would break every later comparison) or the screen.
+    out_path = make_long_path(out_path)
     _op = os.path.splitext(out_path)
     part_path = f"{_op[0]}.part{_op[1]}"
     cmd = list(cmd[:-1]) + [part_path]

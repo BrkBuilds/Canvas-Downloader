@@ -16,10 +16,12 @@ from pathlib import Path
 from sync_ui import render_sync_step1, render_sync_step4
 from shared.helpers import (
     esc, learned_transfer_priors, remember_transfer_priors, render_download_wizard,
+    split_delivery_errors,
 )
 from shared.components import (
     render_completion_card, render_folder_cards,
     render_error_section, render_pp_warning,
+    render_archives_skipped_notice,
     error_log_dialog, render_panopto_summary,
     fresh_container,
 )
@@ -2342,17 +2344,14 @@ with _main_content.container():
             # (The running/scanning dashboard sits higher up, on one of the four
             # placeholders the else-branch above already emits.)
             with fresh_container(border=True, key='completion_dashboard'):
-                # Split errors: retriable file errors / unresolvable file errors / app-level errors
-                _app_errors = sum(1 for err in download_errors if getattr(err, 'is_app_error', False))
-                _file_errors = [err for err in download_errors if not getattr(err, 'is_app_error', False)]
-                _retriable = sum(
-                    1 for err in _file_errors
-                    if isinstance(getattr(err, 'context', None), dict)
-                    and err.context.get('filepath')
-                    and getattr(err, 'error_type', '') != 'LTI/Media Stream'
-                    and not getattr(err, 'retry_exhausted', False)
-                )
-                _unresolvable = len(_file_errors) - _retriable
+                # Split errors: what failed vs what Canvas simply declined to
+                # serve. ONE rule, shared with the sync completion screen, so the
+                # same course cannot report differently depending on how the user
+                # reached it - see shared.helpers.split_delivery_errors.
+                _split = split_delivery_errors(download_errors)
+                _app_errors = _split['app']
+                _retriable = _split['retriable']
+                _unresolvable = _split['unresolvable']
 
                 render_completion_card(
                     synced_count=success_count,
@@ -2368,10 +2367,12 @@ with _main_content.container():
                     unresolvable_count=_unresolvable,
                     app_error_count=_app_errors,
                     courses_count=len(file_details),
+                    unresolvable_reasons=_split['reasons'],
                 )
 
                 # 2. Post-processing warning
                 render_pp_warning(st.session_state.get('pp_failure_count', 0))
+                render_archives_skipped_notice()
 
                 # 2b. Panopto recordings summary (if the terminal Panopto phase ran)
                 render_panopto_summary(st.session_state.get('panopto_summary'))

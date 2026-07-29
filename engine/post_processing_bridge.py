@@ -167,6 +167,9 @@ def invoke_post_processing(
         logger.error(f"Post-processing pipeline crashed for '{course_name}': {_pp_crash}", exc_info=True)
 
     # Track post-processing results globally
+    st.session_state['pp_archives_skipped'] = (
+        list(st.session_state.get('pp_archives_skipped', []))
+        + list(pp_ui.archives_skipped))
     st.session_state['pp_failure_count'] = (
         st.session_state.get('pp_failure_count', 0) + pp_ui.pp_failure_count
     )

@@ -1698,7 +1698,14 @@ def render_download_settings(fetch_courses_fn):
         def _render_card3_inner():
             # --- Conversion Button Data ---
             conv_button_defs = [
-                ('convert_zip',   'Unpack Archives',    'Auto-unzip .zip and .tar.gz archives.',        'icon_conv_zip.png', None),
+                # The tooltip states a real limit, not a nicety: every other
+                # converter here applies to whatever it can reach, and this one
+                # deliberately stops at the archive's edge. Without saying so,
+                # a user who turns on "Code & Data" and "Unpack Archives"
+                # together has every reason to expect the code inside the zip to
+                # be converted, and no way to find out that it will not be.
+                ('convert_zip',   'Unpack Archives',    'Auto-unzip .zip and .tar.gz archives.',        'icon_conv_zip.png',
+                 'The files inside an archive are left exactly as they are - no other conversion is applied to them, so code projects and their folder structure stay intact.'),
                 ('convert_pptx',  'PowerPoint ⭢ PDF',         'Convert .pptx/.ppt to PDF.',      'icon_conv_pptx.png', 'Requires the Microsoft PowerPoint desktop app'),
                 ('convert_word',  'Legacy Word Docs ⭢ PDF',          'Convert unsupported older formats (.doc, .rtf, .odt) to PDF.',                    'icon_conv_word.png', 'Requires the Microsoft Word desktop app'),
                 ('convert_excel', 'Excel ⭢ PDF & AI Data',              'Export each spreadsheet as PDF + structured .txt with all cell data.',                'icon_conv_excel.png', 'Requires Microsoft Excel. AI data file only for .xlsx/.xlsm (not .xls)'),

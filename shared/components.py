@@ -522,7 +522,8 @@ def render_completion_card(synced_count: int, error_count: int,
                            retriable_count: int = 0,
                            unresolvable_count: int = 0,
                            app_error_count: int = 0,
-                           courses_count: int = 0):
+                           courses_count: int = 0,
+                           unresolvable_reasons: dict = None):
     """Render the unified completion summary card.
 
     Single card that absorbs all status info: success/partial/failure,
@@ -534,16 +535,43 @@ def render_completion_card(synced_count: int, error_count: int,
     size_skipped_files = size_skipped_files or []
     size_skipped_count = len(size_skipped_files)
 
+    # Only things that actually WENT WRONG decide the headline.
+    #
+    # A teacher-locked file, an LTI/media stream and a file the user's own size
+    # cap excluded are all outcomes, not failures: nothing was lost, no retry
+    # could change them, and two of the three are the app doing exactly what it
+    # was told. Counting them made a course with two permanently-locked files
+    # render amber "Partial Success" on every run for ever - which teaches the
+    # user to ignore the one colour that is supposed to mean "look at this".
+    # They are still REPORTED, in their own stat cards below; they just do not
+    # colour the card. (Size skips never reached `error_count` in the first
+    # place - they travel on their own progress channel - so this only had to
+    # change for the other two.)
+    #
+    # Falls back to `error_count` when a caller supplies no split at all, so an
+    # unmigrated call site still reports its errors rather than going silently
+    # green.
+    _has_split = (retriable_count or unresolvable_count or app_error_count)
+    blocking_count = (retriable_count + app_error_count) if _has_split else error_count
+
     # Determine card variant
-    if synced_count == 0 and error_count > 0:
+    if synced_count == 0 and blocking_count > 0:
         card_class = 'failure'
         title = 'Download Failed' if mode == 'download' else 'Sync Failed'
-    elif error_count > 0:
+    elif blocking_count > 0:
         card_class = 'partial'
         title = 'Partial Success' if mode == 'download' else 'Sync Completed with Errors'
     elif synced_count > 0:
         card_class = 'success'
         title = 'Download Success' if mode == 'download' else 'Sync Success'
+    elif unresolvable_count > 0:
+        # Nothing went wrong and nothing arrived: every candidate was something
+        # Canvas will not serve. Without this branch the run fell through to
+        # "All Up to Date - nothing to download", which is the one reading that
+        # is definitely false when N files were just declined.
+        card_class = 'partial'
+        title = ('Nothing Could Be Downloaded' if mode == 'download'
+                 else 'Nothing Could Be Synced')
     else:
         # Same skin and the SAME even 24px inset as the other three variants
         # below - this block is a separate copy for the nothing-to-do card, and
@@ -745,6 +773,36 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
                 f'</div>'
             )
 
+    # Say WHAT could not be downloaded, not just how many. A bare "2 Cannot Be
+    # Downloaded" reads as an unexplained loss; naming the cause turns it into
+    # a fact the user can act on or dismiss. The reasons are counted at the call
+    # site, which is the only place that still holds the error objects.
+    if unresolvable_count > 0:
+        _r = unresolvable_reasons or {}
+        _locked = int(_r.get('locked', 0) or 0)
+        _stream = int(_r.get('stream', 0) or 0)
+        _other = int(_r.get('other', 0) or 0)
+        _bits = []
+        if _locked:
+            _bits.append(
+                f"{_locked} {'file is' if _locked == 1 else 'files are'} locked by "
+                f"your teacher on Canvas")
+        if _stream:
+            _bits.append(
+                f"{_stream} {'video is' if _stream == 1 else 'videos are'} streamed "
+                f"through a Canvas plugin and cannot be saved as a file")
+        if _other or not _bits:
+            _n = _other or unresolvable_count
+            _bits.append(f"Canvas will not serve {_n} {'item' if _n == 1 else 'items'}")
+        _joined = _bits[0] if len(_bits) == 1 else "; ".join(_bits)
+        notes_html += (
+            f'<div class="retry-note retry-note-skip">'
+            f'{slash_icon}'
+            f'{esc(_joined[0].upper() + _joined[1:])}. Nothing is missing from your '
+            f'download that could have been fetched.'
+            f'</div>'
+        )
+
     if card_class == 'failure':
         bg_color = 'rgba(127, 29, 29, 0.30)'
         border_color = 'rgba(239, 68, 68, 0.45)'
@@ -785,16 +843,8 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
 
     if size_skipped_count > 0:
         import os as _os, re as _re
-        _SKIP_CHEVRON = (
-            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
-            " fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
-            "%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E"
-        )
-        _FUNNEL_SVG = (
-            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
-            " fill='%239ca3af' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
-            "%3Cpolygon points='22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3'/%3E%3C/svg%3E"
-        )
+        _SKIP_CHEVRON = _SKIP_CHEVRON_SVG
+        _FUNNEL_SVG = _SKIP_FUNNEL_SVG
         _skip_word = 'file' if size_skipped_count == 1 else 'files'
         _rows_html = ''
         for _sf in size_skipped_files:
@@ -823,20 +873,18 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
                 f'</div>'
             )
         
-        _header_html = (
-            f'<div style="display:flex;align-items:center;gap:8px;background:#1a1a1a;border:1px solid rgba(255, 255, 255, 0.15);border-bottom:none;border-radius:8px 8px 0 0;padding:12px 16px;margin:18px 0 0 0;">'
-            f'<img src="{_FUNNEL_SVG}" style="width:16px;height:16px;opacity:0.8;"/>'
-            f'<span style="font-size:0.92em;color:#e2e8f0;font-weight:500;"><b>{size_skipped_count}</b> {_skip_word} skipped because they exceeded the <b>{size_limit_mb} MB limit</b>.</span>'
-            f'</div>'
-        )
-
+        # ONE row, not two. The statement of fact and the control that reveals
+        # the detail used to be separate elements stacked on top of each other,
+        # so the notice was twice as tall as it needed to be and the second row
+        # ("See 20 skipped files") only restated the first. The summary IS the
+        # sentence now, with the chevron leading it.
         st.markdown(
-            f'{_header_html}'
-            f'<details class="skip-panel">'
+            f'<details class="skip-panel skip-panel-solo">'
             f'<summary class="skip-panel-header">'
             f'<div class="sp-header-row">'
             f'<img class="sp-chevron" src="{_SKIP_CHEVRON}" alt="toggle"/>'
-            f'<span class="sp-title">See {size_skipped_count} skipped {_skip_word}</span>'
+            f'<img class="sp-funnel" src="{_FUNNEL_SVG}" alt=""/>'
+            f'<span class="sp-title"><b>{size_skipped_count}</b> {_skip_word} skipped because they exceeded the <b>{size_limit_mb} MB limit</b>.</span>'
             f'</div>'
             f'</summary>'
             f'<div class="skip-panel-body">'
@@ -1919,6 +1967,76 @@ def render_cancelled_card(what: str, done: int, total: int) -> None:
         </div>
     </div>
     """, unsafe_allow_html=True)  # audit-ignore: SVG constant + esc()'d text only
+
+
+# Icons for the "deliberately left alone" notices (size-skipped files,
+# unpacked archives). Module level because BOTH notices use them and a second
+# copy is a second chance to get the encoding wrong.
+#
+# NOTE the quoting rule: these data URIs contain SINGLE quotes (xmlns='...'),
+# so the src attribute that carries them must be wrapped in DOUBLE quotes. Using
+# single quotes terminates the attribute at the first one inside the URI and the
+# browser renders a broken-image glyph - which is exactly what happened when the
+# archive notice was written with 'src=...'.
+_SKIP_CHEVRON_SVG = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
+    " fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
+    "%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E"
+)
+_SKIP_FUNNEL_SVG = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
+    " fill='%239ca3af' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
+    "%3Cpolygon points='22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3'/%3E%3C/svg%3E"
+)
+_SKIP_ARCHIVE_SVG = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
+    " fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
+    "%3Cpath d='M21 8v13H3V8M1 3h22v5H1zM10 12h4'/%3E%3C/svg%3E"
+)
+
+
+def render_archives_skipped_notice():
+    """Name the archives the file-count guard declined to unpack.
+
+    Deliberately NOT an amber warning: nothing failed and nothing is missing.
+    The archive is still in the course folder exactly as Canvas served it, and
+    the user can unpack it themselves - which is the whole difference between a
+    guard and a hard limit. It is stated here rather than only in the
+    post-processing log because that log is gone by the time this screen is
+    read, and a silent guard produces exactly one question: "why is my zip still
+    a zip?"
+    """
+    names = st.session_state.get('pp_archives_skipped') or []
+    if not names:
+        return
+    limit = int(st.session_state.get('archive_max_files', 0) or 0)
+    n = len(names)
+    # Same one-row shape as the size-skip notice above: the sentence IS the
+    # control, chevron leading. Two notices about "things deliberately left
+    # alone" should not look like two different features.
+    _rows = "".join(
+        f"<div class='skip-file-row'><span class='skip-file-name'>{esc(x)}</span></div>"
+        for x in names[:50]
+    )
+    st.markdown(
+        "<details class='skip-panel skip-panel-solo'>"
+        "<summary class='skip-panel-header'><div class='sp-header-row'>"
+        f'<img class="sp-chevron" src="{_SKIP_CHEVRON_SVG}" alt="toggle"/>'
+        f'<img class="sp-funnel" src="{_SKIP_ARCHIVE_SVG}" alt=""/>'
+        f"<span class='sp-title'><b>{n}</b> archive{'s were' if n != 1 else ' was'} "
+        f"left unpacked because {'they contain' if n != 1 else 'it contains'} more "
+        f"than <b>{limit:,} files</b>.</span>"
+        "</div></summary>"
+        "<div class='skip-panel-body'>"
+        "<div class='sp-subtitle'>The .zip "
+        f"{'files are' if n != 1 else 'file is'} still in your course folder, so "
+        "nothing is missing. Unpack "
+        f"{'them' if n != 1 else 'it'} yourself, or raise the limit in "
+        "<b>Settings &rsaquo; Skip huge archives</b>.</div>"
+        f"<div class='skip-file-list'>{_rows}</div>"
+        "</div></details>",
+        unsafe_allow_html=True,
+    )
 
 
 def render_pp_warning(pp_failure_count: int):

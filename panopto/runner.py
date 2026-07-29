@@ -45,6 +45,7 @@ import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from shared.helpers import make_long_path, path_exists
 from panopto import models as pmodels
 from panopto.auth import lti_launch
 from panopto.discovery import discover_course_videos
@@ -141,6 +142,57 @@ def video_dir(course_root, module_name_sanitized, settings: dict, download_mode:
     return Path(course_root)
 
 
+def recording_stem_name(safe_title: str, settings: dict) -> str:
+    """The base filename (no extension) for a recording's artifacts.
+
+    In the **separate** layout the recording already has a folder named after
+    the lecture, so repeating the title on the file inside it bought nothing and
+    cost a great deal: the title landed in the path TWICE. Measured on course
+    43660, that made the deepest artifact 228 characters *inside the course
+    folder* - 340 absolute with a short download root, against a Windows limit
+    of 260. A short constant stem removes about 100 characters from every
+    recording in that layout.
+
+    In the **match** layout there is no per-recording folder, so the title is
+    the only thing distinguishing one recording from another and it stays.
+
+    Shared with ``panopto.sync_plan._video_base_path`` deliberately. The runner
+    decides where a file is written and the analyzer decides where it expects to
+    find one; if those two disagree nothing crashes - every recording simply
+    reads as missing on every sync, for ever. One function, so they cannot.
+
+    Existing folders are unaffected: both sides consult the manifest first and
+    reuse the exact recorded path, so only recordings downloaded from now on get
+    the shorter name.
+    """
+    if (settings or {}).get("layout") == "separate":
+        return "Recording"
+    return safe_title
+
+
+def recording_base_candidates(out_dir: Path, safe_title: str,
+                              settings: dict) -> list[Path]:
+    """Stems a recording's artifacts may sit at, current naming FIRST.
+
+    Renaming what the app writes is only half a change; the other half is that
+    everything already on disk carries the OLD name. Before 2026-07-29 a
+    separate-layout recording was ``<title>/<title>.mp4``, and the paths that
+    *discover* files - the sync analyzer's no-manifest lookup and its stale-path
+    heal - compute the stem rather than reading it. Moving the computed stem
+    without this made every pre-existing recording read as deleted and queued a
+    full re-download of the course's video, which is the single most expensive
+    wrong answer this app can give.
+
+    Only ever used to FIND a file. What gets written is
+    ``recording_stem_name``, so the legacy name is adopted where it exists and
+    never created anew.
+    """
+    stems = [recording_stem_name(safe_title, settings)]
+    if safe_title and safe_title not in stems:
+        stems.append(safe_title)
+    return [Path(out_dir) / s for s in stems]
+
+
 def _unique_base(directory: Path, safe_title: str, seen: set) -> Path:
     """Return a collision-free <directory>/<safe_title> stem (no extension)."""
     base = directory / safe_title
@@ -158,7 +210,8 @@ def _unique_base(directory: Path, safe_title: str, seen: set) -> Path:
 
 
 def _recording_base(course_root: Path, out_dir: Path, safe_title: str,
-                    video_id: str, manifest: dict | None, seen: set) -> Path:
+                    video_id: str, manifest: dict | None, seen: set,
+                    *, legacy_title: str = "", settings: dict | None = None) -> Path:
     """Resolve the output stem (no extension) for a recording - manifest-first.
 
     If this recording was downloaded in a prior run, the per-folder manifest
@@ -183,6 +236,18 @@ def _recording_base(course_root: Path, out_dir: Path, safe_title: str,
                 return base
             except Exception:
                 pass
+
+    # No manifest entry - but this folder may still hold artifacts written by an
+    # older version under the lecture title. Adopt them rather than writing a
+    # second copy under the new stem: a download-mode run records nothing, so
+    # "no manifest entry" is the NORMAL state for a folder the user downloaded
+    # before ever syncing it.
+    if legacy_title:
+        for cand in recording_base_candidates(out_dir, legacy_title, settings or {}):
+            if any(path_exists(Path(str(cand) + "." + k))
+                   for k in ("mp4", "mp3", "txt", "srt")):
+                seen.add(str(cand).lower())
+                return cand
     return _unique_base(out_dir, safe_title, seen)
 
 
@@ -549,19 +614,25 @@ def _run_panopto_batch(
             out_dir = video_dir(course_root, module_safe, t_settings, download_mode,
                                 lecture_title_sanitized=safe_title)
             try:
-                out_dir.mkdir(parents=True, exist_ok=True)
+                # A recording's folder is the deepest path this app creates.
+                # Without the long-path form this raises on any default
+                # Windows install and the recording is reported as a
+                # "Folder Error", which says nothing about the real cause.
+                Path(make_long_path(out_dir)).mkdir(parents=True, exist_ok=True)
             except Exception as e:
                 progress("error", error=DownloadError(
                     course.name, v.title, "Folder Error", str(e), raw_error=e))
                 summary["failed"] += 1
                 continue
 
-            base = _recording_base(course_root, out_dir, safe_title, v.video_id,
-                                   target_manifest, seen_bases)
+            base = _recording_base(course_root, out_dir,
+                                   recording_stem_name(safe_title, t_settings),
+                                   v.video_id, target_manifest, seen_bases,
+                                   legacy_title=safe_title, settings=t_settings)
             # Defensive: a manifest-derived stem could live in a different subfolder
             # than out_dir (e.g. layout history); make sure its parent exists.
             try:
-                base.parent.mkdir(parents=True, exist_ok=True)
+                Path(make_long_path(base.parent)).mkdir(parents=True, exist_ok=True)
             except Exception:
                 pass
             mp4_path = Path(str(base) + ".mp4")
@@ -580,15 +651,15 @@ def _run_panopto_batch(
             v_want_srt = t_want_srt and (v_kinds is None or 'srt' in v_kinds)
             v_model_ready = engine_ready and (v_want_txt or v_want_srt)
 
-            mp4_missing = v_want_mp4 and not mp4_path.exists()
-            mp3_missing = v_want_mp3 and not mp3_path.exists()
-            txt_missing = v_want_txt and v_model_ready and not txt_path.exists()
-            srt_missing = v_want_srt and v_model_ready and not srt_path.exists()
+            mp4_missing = v_want_mp4 and not path_exists(mp4_path)
+            mp3_missing = v_want_mp3 and not path_exists(mp3_path)
+            txt_missing = v_want_txt and v_model_ready and not path_exists(txt_path)
+            srt_missing = v_want_srt and v_model_ready and not path_exists(srt_path)
             tx_missing = txt_missing or srt_missing
 
             # Nothing to do -> already fully present on disk.
             if not (mp4_missing or mp3_missing or txt_missing or srt_missing):
-                existing = [str(p) for p in (mp4_path, mp3_path, txt_path, srt_path) if p.exists()]
+                existing = [str(p) for p in (mp4_path, mp3_path, txt_path, srt_path) if path_exists(p)]
                 progress("skipped", title=v.title, paths=existing, course=course.name)
                 summary["skipped"] += 1
                 continue
@@ -599,7 +670,7 @@ def _run_panopto_batch(
             # feed transcription when no video is kept.
             tx_source = mp4_path if v_want_mp4 else mp3_path
             need_video = mp4_missing
-            need_audio = mp3_missing or (tx_missing and not v_want_mp4 and not mp3_path.exists())
+            need_audio = mp3_missing or (tx_missing and not v_want_mp4 and not path_exists(mp3_path))
             tasks.append(_Task(
                 video=v, course=course, course_name=course.name,
                 mp4_path=mp4_path, mp3_path=mp3_path, txt_path=txt_path, srt_path=srt_path,
@@ -809,7 +880,7 @@ def _run_panopto_batch(
     # Source is the MP4 when a video was kept, else the MP3 intermediate; either
     # way it must exist on disk (a failed download drops the recording here).
     tx_tasks = [t for t in tasks
-                if t.want_tx and t.tx_source and Path(t.tx_source).exists()]
+                if t.want_tx and t.tx_source and path_exists(t.tx_source)]
     engine_failed = False
     if engine_ready and tx_tasks:
         logger.info("Transcription phase: %d file(s) (model=%s, device=%s).",
@@ -854,9 +925,13 @@ def _run_panopto_batch(
                 progress("transcribed", title=v.title, paths=made)
                 _record_now(t)
                 # Transcription succeeded: drop the intermediate audio unless kept.
-                if not t.want_mp3 and t.mp3_path.exists():
+                if not t.want_mp3 and path_exists(t.mp3_path):
                     try:
-                        t.mp3_path.unlink()
+                        # make_long_path, to match the path_exists above it: the
+                        # check can see the file and a plain unlink cannot, which
+                        # would leave the intermediate audio behind for ever on
+                        # exactly the recordings whose paths are longest.
+                        os.remove(make_long_path(t.mp3_path))
                     except OSError:
                         pass
                 i += 1
@@ -890,7 +965,7 @@ def _run_panopto_batch(
                 progress("warn", message=(
                     "Transcription skipped for the remaining recordings - engine "
                     "crashed. Downloaded audio has been kept."))
-                if t.mp3_path.exists() and str(t.mp3_path) not in t.produced:
+                if path_exists(t.mp3_path) and str(t.mp3_path) not in t.produced:
                     t.produced.append(str(t.mp3_path))
                     progress("produced", title=v.title, path=str(t.mp3_path),
                              course=t.course_name)
@@ -926,7 +1001,7 @@ def _run_panopto_batch(
                         t.course_name, v.title, "Transcription Error", str(e), raw_error=e))
                 # Failure of any kind: keep the audio so the user has SOMETHING,
                 # even if they only asked for a transcript.
-                if t.mp3_path.exists() and str(t.mp3_path) not in t.produced:
+                if path_exists(t.mp3_path) and str(t.mp3_path) not in t.produced:
                     t.produced.append(str(t.mp3_path))
                     progress("produced", title=v.title, path=str(t.mp3_path),
                              course=t.course_name)
@@ -965,7 +1040,7 @@ def _run_panopto_batch(
     # recording too (so nothing is silently deleted as a stale intermediate).
     if engine_failed:
         for t in tx_tasks:
-            if t.mp3_path.exists() and str(t.mp3_path) not in t.produced:
+            if path_exists(t.mp3_path) and str(t.mp3_path) not in t.produced:
                 t.produced.append(str(t.mp3_path))
                 progress("produced", title=t.video.title, path=str(t.mp3_path),
                          course=t.course_name)
@@ -1174,7 +1249,7 @@ def _run_download_task(t, is_cancelled, ev_q) -> "_DLResult":
             res.rec_failed = True
             continue
         try:
-            sz = out_path.stat().st_size
+            sz = os.path.getsize(make_long_path(out_path))
         except OSError:
             sz = 0
         res.total_bytes += sz

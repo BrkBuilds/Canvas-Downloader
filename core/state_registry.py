@@ -99,6 +99,14 @@ DOWNLOAD_DEFAULTS = {
     # File-size filter (Settings dialog)
     'max_file_size_enabled': False,
     'max_file_size_mb': 500,
+    # Archive-extraction guard (Settings dialog). The zip-bomb protection in
+    # converters/archive.py measures SIZE and RATIO, never COUNT, so an archive
+    # of many small files passes it easily: one real course unpacked 21,630
+    # files, and the deep nesting is also where the over-260-character paths
+    # came from. Off by default - extraction behaviour does not change until the
+    # user asks for a limit.
+    'archive_max_files_enabled': False,
+    'archive_max_files': 1000,
     # Persistent default download folder (Settings dialog; empty = use ~/Downloads)
     'default_download_path': '',
     # Completion sound/notification (Settings dialog)
@@ -139,6 +147,11 @@ DOWNLOAD_TRANSIENT_KEYS = {
     'download_errors_list', 'download_file_details', 'seen_error_sigs',
     'start_time', 'log_deque', 'is_post_processing',
     'pp_failure_count', 'pp_success_count',
+    # Archives the file-count guard declined this run. Per-run like every
+    # other post-processing tally: the download bridge APPENDS to it (one
+    # entry per course), so a stale list would show the previous run's
+    # archives on a completion screen where nothing was skipped.
+    'pp_archives_skipped',
     # Isolated retry keys
     'isolated_retry_queue', 'retry_downloaded_items', 'retry_failed_items',
     'retry_isolated_details', 'retry_mb_tracker',
@@ -183,6 +196,7 @@ SYNC_TRANSIENT_KEYS = {
     # and the cached batch outcome must never leak into the next sync run.
     'sync_worker_future', 'sync_worker_pool', 'sync_worker_result',
     'synced_details', 'synced_groups', 'pp_failure_count', 'pp_success_count',
+    'pp_archives_skipped',
     # NOTE: 'today_sync_notice' is deliberately NOT transient - the dismissible
     # Today success card must survive cleanup_sync_state() (which runs the
     # moment the run finishes) until the user closes it or the next run
