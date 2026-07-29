@@ -9,7 +9,9 @@ Eliminates ~800 lines of duplicated code by providing:
   - Consistent DB updates via SyncManager (fixes raw-sqlite3 audit bug)
 """
 
+import glob
 import logging
+import os
 import re
 import sys
 import time
@@ -19,8 +21,10 @@ from typing import Any, Callable, Optional
 
 from shared import theme
 from shared.helpers import esc
+from engine.estimation import stepwise_estimator
 from engine.progress_dashboard import (
-    render_active_file, build_terminal_html,
+    render_active_file, build_terminal_html, build_metrics_row, build_progress_bar_html,
+    metric_count, metric_eta, metric_value,
     log_line, log_divider, log_meta, file_icon_svg,
 )
 
@@ -36,6 +40,24 @@ _COLOR_MAP = {
     'Excel files':        '#22c55e',
     'Excel data files':   '#14b8a6',
     'Video files':        theme.WARNING,
+}
+
+# Starting guess at seconds-per-file, per conversion type. These differ by more
+# than an order of magnitude - launching Word through COM to print one page is
+# not the same job as rewriting an HTML file as Markdown - so one shared prior
+# would be wrong for every task. Each is only a starting point: the estimator
+# replaces it with the measured rate after the first couple of files, which is
+# what makes a 200-file PowerPoint batch predictable on a slow machine and on a
+# fast one alike.
+_TASK_PRIOR_SEC = {
+    'Archives':           1.5,
+    'PowerPoint files':   6.0,
+    'HTML files':         0.3,
+    'Code files':         0.2,
+    'Legacy Word files':  5.0,
+    'Excel data files':   1.5,
+    'Excel files':        5.0,
+    'Video files':        8.0,
 }
 
 
@@ -58,6 +80,11 @@ class UIBridge:
     error_log_path: Optional[Path] = None
     pp_success_count: int = 0   # Post-processing files converted successfully
     pp_failure_count: int = 0   # Post-processing files that failed conversion
+    # Time-remaining state, owned here so all 19 _render_dashboard call sites
+    # keep their existing signature. Rebuilt whenever the task changes - each
+    # conversion type is its own phase with its own per-file cost.
+    _eta_task: str = ''
+    _eta: Any = None
     generated_sidecar_paths: list = field(default_factory=list)  # _Data.txt paths for UI ledger injection
 
 
@@ -107,27 +134,23 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
         </div>
         ''', unsafe_allow_html=True)
 
-        ui.progress_placeholder.markdown(f'''
-        <div style="background-color: {theme.BG_CARD}; border-radius: 8px; width: 100%; height: 24px; position: relative; margin-bottom: 10px;">
-            <div style="background-color: {accent}; width: {pct}%; height: 100%; border-radius: 8px; transition: width 0.3s ease;"></div>
-            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: {theme.WHITE}; font-size: 12px; font-weight: bold; text-shadow: 0px 0px 2px rgba(0,0,0,0.5);">
-                {pct}%
-            </div>
-        </div>
-        ''', unsafe_allow_html=True)
+        ui.progress_placeholder.markdown(
+            build_progress_bar_html(pct, color=accent), unsafe_allow_html=True)
 
-        ui.metrics_placeholder.markdown(f'''
-        <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Converted</span>
-                <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current} <span style="font-size: 0.9rem; color: {accent};">/ {total}</span></span>
-            </div>
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Type</span>
-                <span style="color: {accent}; font-size: 1.2rem; font-weight: bold;">{esc(type_name)}</span>
-            </div>
-        </div>
-        ''', unsafe_allow_html=True)
+        # A fresh estimator per conversion type: a batch of Word documents and a
+        # batch of code files have per-file costs an order of magnitude apart, so
+        # carrying one across the boundary would mis-price the new task for as
+        # long as the old task's samples stayed in the window.
+        if ui._eta is None or ui._eta_task != task_name:
+            ui._eta_task = task_name
+            ui._eta = stepwise_estimator(_TASK_PRIOR_SEC.get(task_name, 2.0))
+        ui._eta.update(units_done=current, units_total=total)
+
+        ui.metrics_placeholder.markdown(build_metrics_row([
+            metric_count('Converted', current, total, accent=accent),
+            metric_value('Type', type_name, accent),
+            metric_eta(ui._eta.eta_text()),
+        ]), unsafe_allow_html=True)
 
         # Re-render log so it stays in sync with progress/metrics
         ui.log_placeholder.markdown(build_terminal_html(ui.log_lines), unsafe_allow_html=True)
@@ -189,7 +212,57 @@ def _show_active_file(ui: UIBridge, filename: str):
 # Database & Error Helpers
 # ─────────────────────────────────────────────────────
 
-def _resolve_conversion_target(sm, src_path, target_ext: str):
+def _target_protected(sm, path: Path) -> bool:
+    """Did THIS sync run classify this conversion output as locally edited?
+
+    The authoritative signal, and the only one that works on a folder created
+    before the product hash was recorded: the analyzer compared the tracked
+    file against its manifest md5 to classify the update in the first place,
+    and ``sync/execution.py`` passes that verdict straight through. The hash
+    check below is the durable backstop for runs where no such verdict exists.
+    """
+    try:
+        return bool(sm is not None and sm.is_conversion_target_protected(path))
+    except Exception:
+        return False
+
+
+def _product_locally_edited(prod_path: Path, recorded_md5: str) -> bool:
+    """Has the student changed the app's own conversion output since it wrote it?
+
+    Compared against the hash stored WITH the product record, not against the
+    manifest row: by the time a re-conversion runs, that row has been
+    re-pointed at the freshly downloaded source, so its md5 describes the
+    source and says nothing about the output.
+
+    No recorded hash means a folder converted by an older version. Those get
+    the previous behaviour - overwrite in place - because inventing a
+    ``_NewVersion`` for every pre-existing product on the next sync would be a
+    worse surprise than the one being fixed. They gain the guard as soon as one
+    conversion has run under this version.
+    """
+    if not recorded_md5 or not prod_path.exists():
+        return False
+    try:
+        from core.sync_manager import SyncManager
+        return (SyncManager.compute_local_md5(prod_path) or "") != recorded_md5
+    except Exception as e:                      # never block a conversion
+        logger.debug(f"could not hash conversion product {prod_path}: {e}")
+        return False
+
+
+def _new_version_name(path: Path) -> Path:
+    """``<stem>_NewVersion<ext>``, free, beside the file it protects."""
+    cand = path.parent / f"{path.stem}_NewVersion{path.suffix}"
+    n = 1
+    while cand.exists():
+        cand = path.parent / f"{path.stem}_NewVersion ({n}){path.suffix}"
+        n += 1
+    return cand
+
+
+def _resolve_conversion_target(sm, src_path, target_ext: str,
+                               default_name: str | None = None):
     """Pick the OUTPUT path for converting *src_path* (H-7 collision guard).
 
     Default target is ``<stem><target_ext>`` beside the source. If that file
@@ -202,7 +275,11 @@ def _resolve_conversion_target(sm, src_path, target_ext: str):
     re-conversion overwrites its own ``X (1).pdf`` instead of minting X (2)).
     """
     src = Path(src_path)
-    default = src.with_suffix(target_ext)
+    # `default_name` exists for converters whose output is not a plain suffix
+    # swap: convert_code writes `<stem>_<ext>.txt`, so with_suffix would have
+    # named the wrong file and the guard below would have protected nothing.
+    default = (src.with_name(default_name) if default_name
+               else src.with_suffix(target_ext))
 
     if sm is not None:
         try:
@@ -218,11 +295,32 @@ def _resolve_conversion_target(sm, src_path, target_ext: str):
                         row_id = fid
                         break
                 if row_id is not None:
-                    prod_rel = sm.get_conversion_products().get(str(row_id), '')
+                    from core.sync_manager import SyncManager as _SM
+                    prod_rel, prod_md5 = _SM.conversion_product(
+                        sm.get_conversion_products().get(str(row_id), ''))
                     if prod_rel:
                         prod_path = sm.local_path / prod_rel
                         if (prod_path.suffix.lower() == target_ext.lower()
                                 and prod_path.parent == src.parent):
+                            # OWN product - but only if the student has not
+                            # since edited it. `_NewVersion` protects the file
+                            # the DOWNLOAD would replace; a converted file is
+                            # replaced by post-processing instead, and that
+                            # path had no such guard. Measured on sync row
+                            # s001: hints.md (0cf8870d -> 44b3b792) and
+                            # Create_ILearn_tables_sql.txt (1e213dd3 ->
+                            # d18bff9a) were both regenerated straight over the
+                            # student's annotations, with no _NewVersion
+                            # sibling anywhere - the one thing the feature
+                            # exists to prevent.
+                            if (_target_protected(sm, prod_path)
+                                    or _product_locally_edited(prod_path, prod_md5)):
+                                alt = _new_version_name(prod_path)
+                                logger.info(
+                                    f"Conversion target '{prod_path.name}' has "
+                                    f"local edits - writing the new copy to "
+                                    f"'{alt.name}' instead.")
+                                return alt
                             return prod_path  # own product → overwrite in place
             except Exception as e:
                 logger.debug(f"_resolve_conversion_target ownership lookup failed: {e}")
@@ -257,6 +355,120 @@ def _update_manifest_path(sm, original_file: Path, converted_path: Path):
         if info.get('local_path', '') == original_rel:
             sm.update_converted_file(int(file_id), new_rel)
             break
+
+
+def _is_locked(path: Path) -> bool:
+    """True when *path* exists but cannot be opened for writing.
+
+    The classic case is a converted file the student still has open in an
+    editor or in Word. Opened in append mode so nothing is ever truncated by
+    the probe itself, and a missing file is NOT locked - it is simply absent.
+    """
+    try:
+        if not path.is_file():
+            return False
+        # Binary append: the probe writes nothing and reads nothing, so no text
+        # decoder should be involved - and a file whose bytes are not valid
+        # UTF-8 must still be probeable.
+        with open(path, "ab"):
+            return False
+    except OSError:
+        return True
+
+
+def _locked_sibling(src: Path) -> Path | None:
+    """A locked file that a converter would plausibly have been writing.
+
+    Every converter names its output from the SOURCE stem, in the source's own
+    folder (``code.py`` -> ``code_py.txt``, ``slides.pptx`` -> ``slides.pdf``).
+    So when a conversion fails, a locked file sharing that stem is almost
+    certainly the destination it could not write. Probing for it means the
+    reason can be reported without every runner having to know its own output
+    naming rule - and it reports a file that demonstrably IS locked, rather
+    than guessing at a cause.
+    """
+    try:
+        for sib in src.parent.glob(glob.escape(src.stem) + "*"):
+            if sib.is_file() and sib != src and _is_locked(sib):
+                return sib
+    except OSError:
+        pass
+    return None
+
+
+def retry_failed_conversions(attempts: list, ui: UIBridge) -> list:
+    """One retry pass over conversions whose source is still on disk.
+
+    Every source-consuming converter DELETES its source on success, so a source
+    still present after a pass is exactly the set that failed - a uniform signal
+    that needs no cooperation from the nine individual runners.
+
+    Most conversion failures are transient: a destination locked for a few
+    seconds by an editor, an antivirus scanner holding a handle, a COM hiccup.
+    Retrying once costs a single extra attempt per failed file and turns a large
+    share of them into successes the user never has to think about. Whatever
+    fails TWICE gets a message naming the cause where it can be established.
+
+    ``attempts`` is ``[(runner, items), ...]`` in the order they first ran; each
+    ``items`` is the runner's own ``[(path, sm, ctx), ...]``. Returns the items
+    that failed both times.
+    """
+    pending = [(runner, [it for it in items if _still_present(it)])
+               for runner, items in attempts]
+    pending = [(r, items) for r, items in pending if items]
+    if not pending:
+        return []
+
+    n = sum(len(items) for _r, items in pending)
+    _emit(ui, 'divider', f"Retrying {n} file{'s' if n != 1 else ''} that could "
+                         f"not be converted")
+    for runner, items in pending:
+        try:
+            runner(items, ui)
+        except Exception as e:                      # never let a retry kill the run
+            logger.warning("Conversion retry failed for %d item(s): %s", len(items), e)
+
+    recovered, still = [], []
+    for _runner, items in pending:
+        for it in items:
+            (still if _still_present(it) else recovered).append(it)
+
+    # Accounting: pass 1 counted every `pending` item as a failure, and the
+    # retry counted the ones that failed again. Remove both, leaving exactly one
+    # failure per file that is genuinely still unconverted.
+    ui.pp_failure_count = max(0, ui.pp_failure_count - (len(recovered) + len(still)))
+
+    for it in still:
+        src = Path(it[0]) if not isinstance(it[0], Path) else it[0]
+        locked = _locked_sibling(src)
+        if locked:
+            detail = f"'{locked.name}' is open in another program"
+            msg = (f"Could not be converted - '{locked.name}' is open in another "
+                   f"program. Close it and sync again.")
+        else:
+            detail = "Conversion failed twice"
+            msg = "Could not be converted (retried once)."
+        _emit(ui, 'error', src.name, filename=src.name, detail=detail)
+        _log_error_to_file(ui.error_log_path, src.name, msg)
+    if recovered:
+        _emit(ui, 'meta', f"{len(recovered)} recovered on retry")
+    return still
+
+
+def _still_present(item) -> bool:
+    """Did this conversion's SOURCE survive the pass (i.e. did it fail)?
+
+    An empty path is not "present": ``Path("").exists()`` is True because it
+    resolves to the current directory, which would make a malformed item look
+    like a permanently failing file and put it in every retry pass for ever.
+    """
+    try:
+        p = item[0] if not isinstance(item, (str, Path)) else item
+        if not p or not str(p).strip():
+            return False
+        return Path(p).is_file()
+    except (OSError, IndexError, TypeError):
+        return False
 
 
 def _log_error_to_file(error_log_path: Path | None, filename: str, error_msg: str):
@@ -324,16 +536,23 @@ def _abort_applescript_phase(ui: UIBridge, fatal_msg: str, remaining: int, phase
 #   ui: UIBridge
 # ─────────────────────────────────────────────────────
 
-def run_archive_extraction(files, ui: UIBridge):
-    """Extract archives (.zip, .tar, .tar.gz)."""
+def run_archive_extraction(files, ui: UIBridge) -> list:
+    """Extract archives (.zip, .tar, .tar.gz).
+
+    Returns the extraction ROOT directory of every archive that unpacked
+    successfully. The caller needs them because extraction is the one converter
+    that *creates* files the rest of the pipeline must still see - see the
+    explicit-files note in ``run_all_conversions``.
+    """
     if not files:
-        return
+        return []
     try:
         from converters.archive import extract_archive
     except ImportError as _imp_err:
         logger.error(f"archive_extractor unavailable: {_imp_err}")
         _emit(ui, 'error', "Archive extraction unavailable: module not found", detail=str(_imp_err))
-        return
+        return []
+    extracted_roots = []
 
     total = len(files)
     _emit(ui, 'divider', f"Extracting {total} archive files")
@@ -354,6 +573,18 @@ def run_archive_extraction(files, ui: UIBridge):
             # silently ignore the missing archive on future sync runs.
             _emit(ui, 'success', old_name, filename=old_name)
             ui.pp_success_count += 1
+            # Mirrors extract_archive's own naming: .tar.gz strips seven
+            # characters, everything else drops a single suffix.
+            if old_name.lower().endswith('.tar.gz'):
+                root = archive_file.with_name(old_name[:-7])
+            else:
+                root = archive_file.with_suffix('')
+            if root.is_dir():
+                # The companion values (sync manager, and course name or pair
+                # index depending on the caller) ride along so the SYNC flow can
+                # rebuild its own (path, sm, pair_idx) tuples without having to
+                # re-derive which pair an archive belonged to.
+                extracted_roots.append((root, sm, ctx))
         else:
             _emit(ui, 'error', old_name, filename=old_name, detail='Extraction failed')
             _log_error_to_file(ui.error_log_path, old_name, "Archive extraction failed")
@@ -362,6 +593,7 @@ def run_archive_extraction(files, ui: UIBridge):
 
     _emit(ui, 'meta', "Archive extraction complete")
     ui.active_file_placeholder.empty()
+    return extracted_roots
 
 
 def run_pptx_conversion(files, ui: UIBridge):
@@ -487,7 +719,15 @@ def run_code_conversion(files, ui: UIBridge):
         old_name = code_file.name
         _show_active_file(ui, old_name)
 
-        txt_path_str = convert_code_to_txt(code_file)
+        # Routed through the shared resolver like every other converter, so a
+        # locally-edited .txt gets the same protection. Its output is
+        # `<stem>_<ext>.txt`, not a suffix swap, hence default_name.
+        _code_default = f"{Path(code_file).stem}" \
+                        f"{Path(code_file).suffix.replace('.', '_')}.txt"
+        txt_path_str = convert_code_to_txt(
+            code_file,
+            dst=_resolve_conversion_target(sm, code_file, '.txt',
+                                           default_name=_code_default))
 
         if txt_path_str:
             txt_path = Path(txt_path_str)
@@ -769,12 +1009,80 @@ _PACKAGE_DIRS = {
     'site-packages', 'dist-packages',
 }
 
-def _glob_files(course_folder: Path, extensions: set, explicit_files: list = None) -> list:
-    """Glob course folder for files matching extensions, filtering OS junk and package dirs."""
+def iter_extracted_files(root: Path, extensions: set) -> list:
+    """Files under an extraction root that a converter should process.
+
+    Applies exactly the same exclusions as ``_glob_files`` - OS junk, Office
+    lock files, ``__MACOSX``, vendored package directories, partial-write
+    artifacts - so that a file unpacked from an archive is treated identically
+    whichever flow unpacked it. Both the download and the sync pipeline route
+    through this, because the two used to filter with separately-written code
+    and that is precisely how they drift apart.
+
+    Walks with ``os.walk`` rather than ``Path.rglob`` and applies the Windows
+    long-path prefix: extracted trees routinely exceed MAX_PATH (measured at
+    18,992 paths over 255 characters in one real course), and ``rglob`` either
+    raises or returns a silently short list there - which would look exactly
+    like an archive that contained fewer files.
+    """
+    out: list = []
+    if not root.is_dir():
+        return out
+    walk_root = str(root)
+    if os.name == "nt" and not walk_root.startswith("\\\\?\\"):
+        walk_root = "\\\\?\\" + os.path.abspath(walk_root)
+    try:
+        for dirpath, dirnames, filenames in os.walk(walk_root):
+            parts = set(Path(dirpath).parts)
+            if "__MACOSX" in parts or _PACKAGE_DIRS.intersection(parts):
+                dirnames[:] = []
+                continue
+            for fn in filenames:
+                if fn.startswith("._") or fn.startswith("~$"):
+                    continue
+                low = fn.lower()
+                if low.endswith(".part") or ".part." in low:
+                    continue
+                if Path(fn).suffix.lower() not in extensions:
+                    continue
+                p = Path(dirpath) / fn
+                # Hand back a normal path; the prefix is a walking device, not
+                # something downstream converters should have to understand.
+                out.append(Path(str(p).replace("\\\\?\\", "", 1)))
+    except OSError as e:
+        logger.warning("Could not enumerate extracted archive '%s': %s", root, e)
+    return out
+
+
+def _glob_files(course_folder: Path, extensions: set, explicit_files: list = None,
+                extracted_roots: list = None) -> list:
+    """Glob course folder for files matching extensions, filtering OS junk and package dirs.
+
+    ``explicit_files`` scopes a DOWNLOAD run to the files it just fetched, so a
+    re-run does not re-convert the whole folder. ``extracted_roots`` widens that
+    scope to everything unpacked from an archive during the same run: those
+    files are teacher-uploaded course material that simply arrived inside a zip,
+    and they get the same treatment as any other file.
+
+    Membership is a path-PREFIX test rather than an enumerated list because
+    extracted trees are where Windows paths exceed MAX_PATH - walking one would
+    raise or come back silently short, and a converter that skipped half an
+    archive would look exactly like a converter that worked.
+    """
     if not course_folder.exists():
         return []
 
     explicit_set = {Path(p).resolve() for p in explicit_files} if explicit_files else None
+    root_strs = [os.path.normcase(str(Path(r))) + os.sep
+                 for r in (extracted_roots or [])]
+
+    def _in_scope(f: Path) -> bool:
+        if not explicit_set:
+            return True
+        if f.resolve() in explicit_set:
+            return True
+        fn = os.path.normcase(str(f))
+        return any(fn.startswith(r) for r in root_strs)
 
     return [
         f for f in course_folder.rglob('*')
@@ -785,7 +1093,7 @@ def _glob_files(course_folder: Path, extensions: set, explicit_files: list = Non
         and not _PACKAGE_DIRS.intersection(f.parts)
         and f.suffix.lower() in extensions
         and not ('.part.' in f.name.lower() or f.name.lower().endswith('.part'))
-        and (not explicit_set or f.resolve() in explicit_set)
+        and _in_scope(f)
     ]
 
 
@@ -795,6 +1103,17 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
     Used by the Download flow in app.py.  Each converter is gated by its
     contract key (e.g. contract['convert_pptx'] == True).
     """
+    # Folders unpacked from an archive during THIS run. Populated by the
+    # extraction step below and handed to every converter after it, so a file
+    # that arrived inside a zip gets the same treatment as one that arrived on
+    # its own. Empty unless convert_zip actually extracted something.
+    extracted_roots: list = []
+    # Every (runner, items) pair that ran, so ONE retry pass at the end can
+    # cover all of them. A source-consuming converter deletes its source on
+    # success, so a source still on disk afterwards is exactly the failure
+    # set - a uniform signal that needs nothing from the individual runners.
+    _attempts: list = []
+
     # Archive Extraction
     if contract.get('convert_zip', False):
         archive_exts = {'.zip', '.tar'}
@@ -810,26 +1129,54 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
         ] if course_folder.exists() else []
         archive_files.extend(extra_targz)
         if archive_files:
-            run_archive_extraction([(f, sm, course_name) for f in archive_files], ui)
+            roots = [r for r, _sm, _ctx in run_archive_extraction(
+                [(f, sm, course_name) for f in archive_files], ui)]
+            # A file that arrives inside a zip is still teacher-uploaded course
+            # material and must get exactly the same treatment as one that
+            # arrived on its own. Extraction is the only converter that CREATES
+            # files, and every converter below is scoped by `explicit_files` -
+            # the paths the DOWNLOADER wrote - so without this the unpacked
+            # content is invisible to all of them. Measured on BINTO1064U with
+            # every converter enabled: 11,872 code files and 7 .pptx were
+            # extracted and then silently skipped, while the same types at
+            # module level converted normally.
+            #
+            # Only widens an EXISTING scope. When explicit_files is None (the
+            # sync path) the converters already glob the whole folder and
+            # extracted content was never excluded - which is why the two modes
+            # behaved differently for identical settings.
+            #
+            # Carried as ROOTS rather than an enumerated file list: extracted
+            # trees are exactly where Windows paths blow past MAX_PATH, so
+            # rglob-ing one would either raise or come back silently short - and
+            # a converter that skipped half an archive looks just like one that
+            # worked. A prefix test needs no walk and cannot half-succeed.
+            extracted_roots = roots
 
     # PPTX → PDF
     if contract.get('convert_pptx', False):
-        pptx_files = _glob_files(course_folder, {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, explicit_files)
+        pptx_files = _glob_files(course_folder, {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, explicit_files, extracted_roots)
         if pptx_files:
-            run_pptx_conversion([(f, sm, course_name) for f in pptx_files], ui)
+            _items = [(f, sm, course_name) for f in pptx_files]
+            run_pptx_conversion(_items, ui)
+            _attempts.append((run_pptx_conversion, _items))
 
     # HTML → Markdown
     if contract.get('convert_html', False):
-        html_files = _glob_files(course_folder, {'.html'}, explicit_files)
+        html_files = _glob_files(course_folder, {'.html'}, explicit_files, extracted_roots)
         if html_files:
-            run_html_conversion([(f, sm, course_name) for f in html_files], ui)
+            _items = [(f, sm, course_name) for f in html_files]
+            run_html_conversion(_items, ui)
+            _attempts.append((run_html_conversion, _items))
 
     # Code → TXT
     if contract.get('convert_code', False):
         from converters.code import CODE_EXTENSIONS
-        code_files = _glob_files(course_folder, CODE_EXTENSIONS, explicit_files)
+        code_files = _glob_files(course_folder, CODE_EXTENSIONS, explicit_files, extracted_roots)
         if code_files:
-            run_code_conversion([(f, sm, course_name) for f in code_files], ui)
+            _items = [(f, sm, course_name) for f in code_files]
+            run_code_conversion(_items, ui)
+            _attempts.append((run_code_conversion, _items))
 
     # URL Compilation
     if contract.get('convert_urls', False):
@@ -843,9 +1190,11 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
 
     # Legacy Word → PDF
     if contract.get('convert_word', False):
-        word_files = _glob_files(course_folder, {'.doc', '.rtf', '.odt'}, explicit_files)
+        word_files = _glob_files(course_folder, {'.doc', '.rtf', '.odt'}, explicit_files, extracted_roots)
         if word_files:
-            run_word_conversion([(f, sm, course_name) for f in word_files], ui)
+            _items = [(f, sm, course_name) for f in word_files]
+            run_word_conversion(_items, ui)
+            _attempts.append((run_word_conversion, _items))
 
     # Excel → AI Data + PDF (single toggle, dual pipeline)
     # CRITICAL ORDERING: Data extraction FIRST (reads .xlsx), PDF SECOND (deletes .xlsx).
@@ -853,16 +1202,29 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
     if contract.get('convert_excel', False):
         # .xls (Excel 97-2003) is binary format openpyxl cannot read; exclude from data extraction.
         # ExcelToPDF via COM/AppleScript handles .xls fine - it stays in the PDF glob below.
-        excel_data_files = _glob_files(course_folder, {'.xlsx', '.xlsm'}, explicit_files)
+        excel_data_files = _glob_files(course_folder, {'.xlsx', '.xlsm'}, explicit_files, extracted_roots)
         if excel_data_files:
             run_excel_data_conversion([(f, sm, course_name) for f in excel_data_files], ui)
 
-        excel_pdf_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files)
+        excel_pdf_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files, extracted_roots)
         if excel_pdf_files:
-            run_excel_conversion([(f, sm, course_name) for f in excel_pdf_files], ui)
+            _items = [(f, sm, course_name) for f in excel_pdf_files]
+            run_excel_conversion(_items, ui)
+            _attempts.append((run_excel_conversion, _items))
 
     # Video → MP3
     if contract.get('convert_video', False):
-        video_files = _glob_files(course_folder, {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, explicit_files)
+        video_files = _glob_files(course_folder, {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, explicit_files, extracted_roots)
         if video_files:
-            run_video_conversion([(f, sm, course_name) for f in video_files], ui)
+            _items = [(f, sm, course_name) for f in video_files]
+            run_video_conversion(_items, ui)
+            _attempts.append((run_video_conversion, _items))
+
+    # One retry pass over everything that failed, then a precise reason for
+    # whatever failed twice. Most conversion failures are transient - a
+    # destination locked for a few seconds by an editor, an antivirus handle,
+    # a COM hiccup - and retrying costs one extra attempt per failed file.
+    # Anything still failing is reported by name, naming the locked file when
+    # one can be found, so "2 files failed during post-processing" becomes a
+    # two-second fix instead of a trip to download_errors.txt.
+    retry_failed_conversions(_attempts, ui)

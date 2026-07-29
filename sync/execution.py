@@ -46,6 +46,8 @@ from core.sync_manager import (
 )
 from shared.helpers import (
     esc,
+    learned_transfer_priors,
+    remember_transfer_priors,
     render_progress_bar,
     render_sync_wizard,
     friendly_course_name,
@@ -53,9 +55,10 @@ from shared.helpers import (
     make_long_path,
 )
 from styles import inject_css
+from engine.estimation import transfer_estimator
 from engine.progress_dashboard import (
-    build_metrics_html, build_terminal_html, render_active_file,
-    log_line, log_meta, file_icon_svg,
+    build_metrics_row, build_terminal_html, render_active_file,
+    transfer_metrics, log_line, log_meta, file_icon_svg,
 )
 from core.canvas_debug import log_debug
 
@@ -443,7 +446,7 @@ def run_sync():
     # "Running daily sync / Quick Sync" title + phase description, so no wizard or
     # duplicate step-header here - just the slim status line + progress bar below.
     if not _today_minimal:
-        render_sync_wizard(st, 3)
+        render_sync_wizard(st, 'sync')
         st.markdown('<h2 class="step-header">Syncing...</h2>', unsafe_allow_html=True)
 
     # First-run macOS permission batch is in flight: tell the user the upcoming
@@ -467,9 +470,9 @@ def run_sync():
         st.session_state['synced_count'] = 0
         st.rerun()
 
-    status_text = st.empty()
-    progress_container = st.empty()
     if _today_minimal:
+        status_text = st.empty()
+        progress_container = st.empty()
         # Keep only the status line + progress bar visible. The metrics/active-file/
         # log placeholders still exist (the async loop writes to them) but live in a
         # hidden container so the Today page stays a single clean progress bar.
@@ -483,9 +486,15 @@ def run_sync():
             unsafe_allow_html=True,
         )
     else:
-        metrics_dashboard = st.empty()
-        active_file_placeholder = st.empty()
-        log_container = st.empty()
+        # One card around the whole readout (see the "Run dashboard card" block
+        # in global.css). Today mode is excluded above: the Today page already
+        # hosts this inside its own titled card.
+        with st.container(key="progress_dashboard"):
+            status_text = st.empty()
+            progress_container = st.empty()
+            metrics_dashboard = st.empty()
+            active_file_placeholder = st.empty()
+            log_container = st.empty()
 
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     cancel_placeholder = st.empty()
@@ -562,16 +571,6 @@ def run_sync():
     # --- Task 2 Fix: Wipe error state at start of every sync run ---
     st.session_state['sync_errors'] = []
 
-    # Format helpers for the injected HTML UI
-    def format_time(seconds):
-        if seconds < 0 or seconds > 86400: return "--:--"
-        m, s = divmod(int(seconds), 60)
-        return f"{m:02d}:{s:02d}"
-
-    def render_metrics_html_compat(current_file_idx, total_files, d_mb, t_mb, speed_mb_s, eta_string):
-        """Backward-compatible alias for build_metrics_html (engine)."""
-        return build_metrics_html(current_file_idx, total_files, d_mb, t_mb, speed_mb_s, eta_string)
-        
     def render_terminal_html_compat(lines):
         """Backward-compatible alias for build_terminal_html (engine)."""
         return build_terminal_html(lines)
@@ -667,10 +666,37 @@ def run_sync():
             last_ui_update = 0
             terminal_log = deque(maxlen=200)
 
+            # One estimator for the whole batch, seeded with whatever the last
+            # transfer in this session measured so the first seconds of a sync
+            # are not spent re-learning the connection from scratch.
+            estimator = transfer_estimator(**learned_transfer_priors())
+            estimator.update(units_total=total_files, bytes_total=total_mb * 1024 * 1024,
+                             now=start_time)
+
             # Initial UI Draw
-            metrics_dashboard.markdown(render_metrics_html_compat(0, total_files, 0.0, total_mb, 0.0, "--:--"), unsafe_allow_html=True)
+            metrics_dashboard.markdown(build_metrics_row(transfer_metrics(
+                estimator, done_files=0, total_files=total_files,
+                done_bytes=0.0, total_bytes=total_mb * 1024 * 1024,
+            )), unsafe_allow_html=True)
             render_active_file(active_file_placeholder, "Preparing sync...")
             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
+
+            def _register_new_version(path, reason):
+                """Record a file delivered as a ``_NewVersion`` sibling.
+
+                Both routes here end the same way for the user - a second file
+                appears next to the one they already had - and until 2026-07-28
+                neither said so anywhere. The locked-target route is the worse
+                of the two because the user made no choice at all: they had the
+                file open, the sync quietly wrote the fresh copy beside it, and
+                the name they recognise is now the STALE one.
+                """
+                try:
+                    _lst = st.session_state.get('sync_newversion_files') or []
+                    _lst.append({'name': path.name, 'reason': reason})
+                    st.session_state['sync_newversion_files'] = _lst
+                except Exception:
+                    pass      # never let bookkeeping break a sync
 
             def _register_synced_path(pair_idx, rel_path, display_name):
                 """Count + list each final on-disk path ONCE (see synced_rel_paths)."""
@@ -687,15 +713,27 @@ def run_sync():
                 coroutine (they all share this one event-loop thread)."""
                 nonlocal last_ui_update
                 c_t = _time.time()
+                # Feed the model on EVERY call, not only on the ones that
+                # repaint: the throttle exists to spare the browser, and
+                # sampling the estimator at 2.5 Hz instead of per chunk would
+                # throw away most of what it has to learn from.
+                estimator.update(units_done=files_done, bytes_done=downloaded_mb * 1024 * 1024,
+                                 units_total=total_files, bytes_total=total_mb * 1024 * 1024,
+                                 now=c_t)
                 if c_t - last_ui_update > 0.4:
-                    elapsed = c_t - start_time
-                    speed = downloaded_mb / elapsed if elapsed > 0 else 0
-                    rem_mb = max(0, total_mb - downloaded_mb)
-                    eta_sec = rem_mb / speed if speed > 0 else 0
-                    metrics_dashboard.markdown(render_metrics_html_compat(
-                        files_done, total_files, downloaded_mb, total_mb, speed, format_time(eta_sec)
-                    ), unsafe_allow_html=True)
-                    render_progress_bar(progress_container, files_done, total_files)
+                    metrics_dashboard.markdown(build_metrics_row(transfer_metrics(
+                        estimator,
+                        done_files=files_done, total_files=total_files,
+                        done_bytes=downloaded_mb * 1024 * 1024,
+                        total_bytes=total_mb * 1024 * 1024,
+                    )), unsafe_allow_html=True)
+                    # Hold the bar off 100% while secondary content is still
+                    # arriving - it raises both counters together, so the ratio
+                    # pins at "done" while real work continues.
+                    _bar_done = files_done
+                    if estimator.is_open_ended and total_files > 0:
+                        _bar_done = min(files_done, total_files - 1)
+                    render_progress_bar(progress_container, _bar_done, total_files)
                     log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
                     last_ui_update = c_t
 
@@ -1029,6 +1067,7 @@ def run_sync():
                                                         _alt = cm._handle_conflict(_alt)
                                                         os.replace(make_long_path(part_path), make_long_path(_alt))
                                                         final_path = _alt
+                                                        _register_new_version(_alt, 'in_use')
                                                         terminal_log.append(log_line('attention', _alt.name, icon=file_icon_svg(_alt.name), detail='original in use'))
                                                         if _debug_file:
                                                             log_debug(f"  Target locked; delivered as {_alt.name}", _debug_file)
@@ -1281,6 +1320,31 @@ def run_sync():
                                     # the tracked PDF in place.
                                     target_dir = _healed.parent
                                     filepath = target_dir / filename
+                                    # ...and if the student EDITED that tracked
+                                    # product, "in place" would destroy their
+                                    # work. `_NewVersion` guards the download's
+                                    # own target, which for a converted file is
+                                    # the SOURCE - a different file that needs
+                                    # no guarding. Measured: hints.md and
+                                    # Create_ILearn_tables_sql.txt were both
+                                    # regenerated straight over the edits, with
+                                    # no _NewVersion anywhere.
+                                    #
+                                    # Told to the converter here, at the one
+                                    # point that knows both facts, rather than
+                                    # re-derived from hashes later: by the time
+                                    # post-processing runs, this row has been
+                                    # re-pointed at the freshly downloaded
+                                    # source and no longer describes the
+                                    # product at all.
+                                    if is_update_modified and sync_mgr is not None:
+                                        try:
+                                            sync_mgr.protect_conversion_target(_healed)
+                                        except Exception as _prot_err:
+                                            log_debug(
+                                                f"could not protect edited "
+                                                f"conversion target {_healed}: "
+                                                f"{_prot_err}", debug_file)
                         elif is_redownload and _redl_info is not None \
                                 and getattr(_redl_info, 'local_path', ''):
                             # Exact recorded path when the type matches; the
@@ -1318,6 +1382,7 @@ def run_sync():
                             # Place _NewVersion alongside the original, not at course root
                             filepath = filepath.parent / f"{base}_NewVersion{ext}"
                             filepath = cm._handle_conflict(filepath)
+                            _register_new_version(filepath, 'edited')
                         elif is_update_clean or is_redownload:
                             # Clean update / redownload → claim the EXACT path. The
                             # atomic os.replace(.part → filepath) overwrites in a
@@ -1712,10 +1777,16 @@ def run_sync():
                     })
 
             # Final 100% UI Paint after the loop
-            elapsed_final = _time.time() - start_time
-            speed_final = (downloaded_mb / elapsed_final) if elapsed_final > 0 else 0
+            estimator.update(units_done=total_files, bytes_done=downloaded_mb * 1024 * 1024,
+                             units_total=total_files, bytes_total=total_mb * 1024 * 1024)
+            # Hand this connection's measured rates to whatever runs next.
+            remember_transfer_priors(estimator)
             render_progress_bar(progress_container, total_files, total_files)
-            metrics_dashboard.markdown(render_metrics_html_compat(synced_counter[0], total_files, downloaded_mb, total_mb, speed_final, "00:00"), unsafe_allow_html=True)
+            metrics_dashboard.markdown(build_metrics_row(transfer_metrics(
+                estimator, done_files=synced_counter[0], total_files=total_files,
+                done_bytes=downloaded_mb * 1024 * 1024,
+                total_bytes=total_mb * 1024 * 1024,
+            )), unsafe_allow_html=True)
             active_file_placeholder.markdown(f"<p style='color: {theme.TEXT_SECONDARY}; font-size: 0.9rem; font-style: italic;'>Finalizing sync…</p>", unsafe_allow_html=True)
             log_container.markdown(render_terminal_html_compat(terminal_log), unsafe_allow_html=True)
 
@@ -2054,7 +2125,7 @@ def run_sync():
         UIBridge, run_archive_extraction, run_pptx_conversion,
         run_html_conversion, run_code_conversion, run_url_compilation,
         run_word_conversion, run_excel_data_conversion, run_excel_conversion,
-        run_video_conversion,
+        run_video_conversion, iter_extracted_files, retry_failed_conversions,
     )
 
     # 1. Clear Phase 2 download UI to prevent stacking
@@ -2150,25 +2221,68 @@ def run_sync():
     # 6. Run each converter with per-course contract evaluation via get_synced_file_paths
 
     # Archive Extraction
-    run_archive_extraction(
+    #
+    # The roots are captured because extraction is the only converter that
+    # CREATES files, and every converter below is scoped by
+    # get_synced_file_paths() - the exact relative paths THIS run downloaded.
+    # Files unpacked from an archive were never downloaded, so without this they
+    # are invisible to the rest of the pipeline and a course that ships its
+    # material in a zip silently gets no conversion at all.
+    #
+    # The download flow had the identical defect through its own explicit_files
+    # scope (found by the live audit on 2026-07-27: 11,872 code files and 7
+    # .pptx extracted and then skipped). Both flows now widen their scope the
+    # same way, through the same helper, so the two cannot diverge again.
+    _extracted = run_archive_extraction(
         get_synced_file_paths({'.zip', '.tar', '.tar.gz'}, 'persistent_convert_zip'), pp_ui
     )
 
+    def _from_archives(target_exts, conversion_key=None):
+        """This run's synced files PLUS anything unpacked from an archive.
+
+        Contract gating is already applied: an archive is only extracted when
+        its pair's contract enabled convert_zip, and the per-converter key is
+        still checked by get_synced_file_paths for the synced half. The
+        extracted half is gated the same way here so a pair that unpacked
+        archives but disabled (say) code conversion is not converted anyway.
+        """
+        results = list(get_synced_file_paths(target_exts, conversion_key))
+        if not _extracted:
+            return results
+        seen = {str(p).lower() for p, _sm, _idx in results}
+        for root, sm, pair_idx in _extracted:
+            if conversion_key:
+                sel = next((s for s in sync_selections if s['pair_idx'] == pair_idx), None)
+                contract = (sel or {}).get('res_data', {}).get('contract', {})
+                if not contract.get(conversion_key.replace('persistent_', ''),
+                                    st.session_state.get(conversion_key, False)):
+                    continue
+            for p in iter_extracted_files(root, target_exts):
+                if str(p).lower() not in seen:
+                    seen.add(str(p).lower())
+                    results.append((p, sm, pair_idx))
+        return results
+
+    # Every (runner, items) pair, so the SAME single retry pass the download
+    # flow runs can cover the sync flow too - the two must not diverge on how
+    # a conversion failure is handled any more than on how one is performed.
+    _attempts: list = []
+
     # PPTX -> PDF
-    run_pptx_conversion(
-        get_synced_file_paths({'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, 'persistent_convert_pptx'), pp_ui
-    )
+    _items = _from_archives({'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, 'persistent_convert_pptx')
+    run_pptx_conversion(_items, pp_ui)
+    _attempts.append((run_pptx_conversion, _items))
 
     # HTML -> Markdown
-    run_html_conversion(
-        get_synced_file_paths({'.html'}, 'persistent_convert_html'), pp_ui
-    )
+    _items = _from_archives({'.html'}, 'persistent_convert_html')
+    run_html_conversion(_items, pp_ui)
+    _attempts.append((run_html_conversion, _items))
 
     # Code -> TXT
     from converters.code import CODE_EXTENSIONS
-    run_code_conversion(
-        get_synced_file_paths(CODE_EXTENSIONS, 'persistent_convert_code'), pp_ui
-    )
+    _items = _from_archives(CODE_EXTENSIONS, 'persistent_convert_code')
+    run_code_conversion(_items, pp_ui)
+    _attempts.append((run_code_conversion, _items))
 
     # M-13: URL Compilation operates on the whole course folder by design -
     # new and existing .url shortcuts both need to land in the compiled
@@ -2186,9 +2300,9 @@ def run_sync():
     run_url_compilation(_url_folders, pp_ui)
 
     # Legacy Word -> PDF
-    run_word_conversion(
-        get_synced_file_paths({'.doc', '.rtf', '.odt'}, 'persistent_convert_word'), pp_ui
-    )
+    _items = _from_archives({'.doc', '.rtf', '.odt'}, 'persistent_convert_word')
+    run_word_conversion(_items, pp_ui)
+    _attempts.append((run_word_conversion, _items))
 
     # Excel → AI Data + PDF (single toggle, dual pipeline)
     # CRITICAL ORDERING: Data extraction FIRST (reads .xlsx), PDF SECOND (deletes .xlsx).
@@ -2196,18 +2310,21 @@ def run_sync():
     # from data extraction (mirrors run_all_conversions in the download flow).
     # ExcelToPDF via COM/AppleScript handles .xls fine in the PDF step below.
     run_excel_data_conversion(
-        get_synced_file_paths({'.xlsx', '.xlsm'}, 'persistent_convert_excel'), pp_ui
+        _from_archives({'.xlsx', '.xlsm'}, 'persistent_convert_excel'), pp_ui
     )
 
     # Excel → PDF
-    run_excel_conversion(
-        get_synced_file_paths({'.xlsx', '.xls', '.xlsm'}, 'persistent_convert_excel'), pp_ui
-    )
+    _items = _from_archives({'.xlsx', '.xls', '.xlsm'}, 'persistent_convert_excel')
+    run_excel_conversion(_items, pp_ui)
+    _attempts.append((run_excel_conversion, _items))
 
     # Video -> MP3
-    run_video_conversion(
-        get_synced_file_paths({'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, 'persistent_convert_video'), pp_ui
-    )
+    _items = _from_archives({'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, 'persistent_convert_video')
+    run_video_conversion(_items, pp_ui)
+    _attempts.append((run_video_conversion, _items))
+
+    # One retry pass, then a precise reason for whatever failed twice.
+    retry_failed_conversions(_attempts, pp_ui)
 
     # --- Inject post-processing sidecars into sync UI ledger ---
     _sidecar_paths = pp_ui.generated_sidecar_paths

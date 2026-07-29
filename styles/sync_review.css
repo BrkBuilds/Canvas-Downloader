@@ -37,6 +37,19 @@ div[class*="st-key-cat_update"] div[data-testid="stExpander"] details summary {
     background-color: rgba(16, 185, 129, 0.1) !important;
 }
 
+/* "Updates Available - You've Edited These" (cat_updmod_).
+   It needs its own rule and CANNOT ride on the cat_update one above: these are
+   substring selectors, and "cat_updmod_45899" does not contain "cat_update"
+   (they diverge at upd-M-od vs upd-A-te). Without this the category rendered
+   with an amber icon on an untinted card while all four of its siblings
+   matched their icons.
+   Amber is not a new colour: rgba(245,158,11) is theme.WARNING and is exactly
+   what this category is already given in the legend card that explains the
+   seven categories (_cc_edited in ui/sync_review.py). */
+div[class*="st-key-cat_updmod"] div[data-testid="stExpander"] details summary {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
 div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details summary {
     background-color: rgba(139, 92, 246, 0.1) !important;
 }
@@ -51,6 +64,11 @@ div[class*="st-key-cat_new"] div[data-testid="stExpander"] details {
 
 div[class*="st-key-cat_update"] div[data-testid="stExpander"] details {
     border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+/* See the substring note on the cat_updmod summary rule above. */
+div[class*="st-key-cat_updmod"] div[data-testid="stExpander"] details {
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
 }
 
 div[class*="st-key-cat_deleted_local"] div[data-testid="stExpander"] details {

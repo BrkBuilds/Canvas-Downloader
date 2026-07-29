@@ -72,6 +72,54 @@ SVG_FOLDER_YELLOW_SMALL = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
 SVG_EDIT_WHITE_SMALL = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff" style="width:1.1em; height:1.1em; vertical-align:-0.15em; display:inline-block; margin-right:4px;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>'
 
 
+def fresh_container(*, border: bool | None = None, key: str | None = None):
+    """A ``st.container`` that cannot inherit the previous run's children.
+
+    Streamlit reconciles by POSITION, and ``AppRoot.addBlock`` deliberately
+    REUSES the children of whatever block already sits at that index (read out
+    of the 1.51 bundle)::
+
+        const existing = this.root.getIn(deltaPath);
+        let children = [];
+        if (existing instanceof BlockNode && existing.deltaBlock.type === block.type)
+            children = existing.children;      // <- inherited
+
+    A run dashboard and a completion card are both plain ``vertical`` blocks,
+    so a completion card landing on the index the run's
+    ``st.container(key="progress_dashboard")`` occupied is handed that node's
+    children: the metrics row and the terminal log render INSIDE the green
+    "Download Success" card. They only disappear when ``clearStaleNodes`` runs,
+    which happens when the script run FINISHES - so they sit there for as long
+    as the completion screen takes to build, with the folder cards stacking up
+    underneath, and then the card shrinks and everything below it jumps up.
+    (Reported 2026-07-26 for Panopto -> complete, retry -> complete, and every
+    sync completion.)
+
+    This emits a bare ``st.empty()`` FIRST, so:
+
+    * the old block's node at that index is replaced by an ElementNode - the
+      dashboard is torn down by the third element of the run, not at the end;
+    * the card itself lands one index later, where the run screens have a plain
+      markdown/button, and ``addBlock`` finds no block to inherit from.
+
+    **The empty must land on a DIFFERENT index than the container** - measured
+    2026-07-26. ``placeholder.container()`` reuses the placeholder's locked
+    cursor, so both deltas carry the SAME delta path, and ``ForwardMsgQueue``
+    composes two deltas at one path into the last one: the ``empty`` is dropped
+    before it ever reaches the browser and the children are inherited exactly
+    as before. (Streamlit's own comment there calls this out - it is the trick
+    ``st.write`` relies on.) The extra slot is free: a bare ``st.empty()``
+    renders a **zero-height** ``stElementContainer``, and the sync completion
+    screen measures byte-identical with and without it (h2 bottom 243, card top
+    243, card height 157 in both).
+
+    Use this for any container a terminal screen renders at an index where a
+    still-running screen also renders one.
+    """
+    st.empty()
+    return st.container(border=border, key=key)
+
+
 def live_enable_button(input_key: str, button_key: str, *,
                        require_change_from: str | None = None,
                        reason: str = "") -> None:
@@ -229,6 +277,154 @@ def inject_material_icons_font() -> None:
     """No-op - Material Symbols font replaced by inline SVGs (issue 2 fix)."""
     pass
 
+
+# The three selectors that identify a sticky action bar's layout wrapper. Kept
+# byte-identical to the "Sticky action bar" block in styles/global.css - if a
+# page opts in there, it opts in here too.
+_STICKY_BAR_SELECTOR = (
+    'div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-sticky_actions_"]),'
+    'div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-action_dl_back"]),'
+    'div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"])'
+)
+
+
+def inject_app_shell_bridge() -> None:
+    """Two page-shell behaviours that CSS and Python alone cannot express.
+
+    **1. Sticky-bar state.** Marks a pinned action bar with ``data-cd-stuck="1"``
+    so global.css can show its lift-off shadow ONLY while it is actually
+    floating. At rest the bar is simply the last row of the page, and a
+    permanent upward shadow there read as detached. An IntersectionObserver
+    against the scroll container with ``threshold: 1`` and a ``-1px`` bottom
+    root margin is exact and costs nothing: while pinned the bar's bottom edge
+    is flush with the scrollport bottom, so shrinking the root by one pixel
+    clips it and the ratio drops below 1; once released it is fully inside
+    again. No scroll listener, no polling, no layout reads.
+    (CSS ``@container scroll-state(stuck: bottom)`` does this natively but is
+    Chromium-only, and the macOS build renders in WKWebView.)
+
+    **2. Scroll preservation across a dialog.** While a modal is open the page
+    behind it CANNOT be scrolled by the user (Streamlit locks ``body``), so any
+    change to the scroll position during that window is spurious by definition -
+    which makes restoring it unconditionally safe. The position is captured when
+    a dialog appears and re-applied for a short window after it disappears,
+    guarded three ways so it can never fight the user: it gives up if the URL's
+    query string changed (the dialog navigated to another page/step), if the
+    user scrolls or types, or after 1.2s.
+
+    Follows the ``components.html`` rule in CLAUDE.md: a fresh iframe is built
+    on every rerun and the previous one destroyed, so every observer and
+    listener is REBOUND here on each injection (a callback whose realm has been
+    torn down silently stops firing), with the previous ones disconnected first
+    so they cannot pile up. Mutable state lives on ``window.parent``.
+    """
+    import json
+    import streamlit.components.v1 as components
+
+    components.html(
+        f"""<script>
+(function(){{
+    var win = window.parent, doc = win.document;
+    var BAR_SEL = {json.dumps(_STICKY_BAR_SELECTOR)};
+    var reg = win._cdShell || (win._cdShell = {{
+        barObs: null, domObs: null, listeners: [], pending: null, timer: null,
+        saved: null, wasOpen: false
+    }});
+
+    function scroller() {{ return doc.querySelector('section[data-testid="stMain"]'); }}
+    function dialogOpen() {{ return !!doc.querySelector('div[data-testid="stDialog"]'); }}
+
+    // Drop listeners bound from a previous (now dead) iframe realm.
+    (reg.listeners || []).forEach(function(l) {{
+        try {{ doc.removeEventListener(l[0], l[1], true); }} catch (_e) {{}}
+    }});
+    reg.listeners = [];
+    function bind(type, fn) {{ doc.addEventListener(type, fn, true); reg.listeners.push([type, fn]); }}
+
+    // ── 1. Sticky bar: pinned or at rest ──────────────────────────────────
+    // The flag goes on <body>, NOT on the bar. Streamlit REPLACES the bar's
+    // wrapper element on every rerun, so an attribute living there is gone
+    // until the observer fires again - measured 2026-07-26 at ~50ms, during
+    // which the pinned bar dropped its separator and put it straight back.
+    // <body> is never replaced, so the flag survives the rerun and the bar
+    // paints correctly on its very first frame. One page hosts at most one
+    // action bar, so a single flag is exact.
+    function watchBars() {{
+        var root = scroller();
+        if (!root) return;
+        try {{ if (reg.barObs) reg.barObs.disconnect(); }} catch (_e) {{}}
+        reg.barObs = new win.IntersectionObserver(function(entries) {{
+            entries.forEach(function(e) {{
+                // Pinned == the bar's bottom edge is flush with the scrollport
+                // bottom, so the -1px root margin clips it out of full view.
+                doc.body.setAttribute('data-cd-stuck', e.intersectionRatio < 1 ? '1' : '0');
+            }});
+        }}, {{root: root, threshold: [1], rootMargin: '0px 0px -1px 0px'}});
+        var bars = doc.querySelectorAll(BAR_SEL);
+        // A page with no bar must not inherit the previous page's flag.
+        if (!bars.length) {{ doc.body.removeAttribute('data-cd-stuck'); return; }}
+        bars.forEach(function(el) {{ reg.barObs.observe(el); }});
+    }}
+
+    // ── 2. Keep the page's scroll position across a dialog ────────────────
+    function cancelRestore() {{
+        if (reg.timer) {{ win.clearInterval(reg.timer); reg.timer = null; }}
+        reg.pending = null;
+    }}
+
+    function beginRestore(saved) {{
+        cancelRestore();
+        if (!saved || !saved.top) return;
+        reg.pending = saved;
+        var until = win.Date.now() + 1200;
+        reg.timer = win.setInterval(function() {{
+            var p = reg.pending, el = scroller();
+            // Give up the moment any assumption stops holding: time is up, the
+            // page navigated (query string changed), or the element is gone.
+            if (!p || !el || win.Date.now() > until || win.location.search !== p.search) {{
+                cancelRestore();
+                return;
+            }}
+            var max = el.scrollHeight - el.clientHeight;
+            if (max < p.top - 4) return;          // page not tall enough (yet)
+            if (Math.abs(el.scrollTop - p.top) > 1) el.scrollTop = p.top;
+        }}, 60);
+    }}
+
+    function onDialogChange() {{
+        var open = dialogOpen();
+        if (open === reg.wasOpen) return;
+        reg.wasOpen = open;
+        var el = scroller();
+        if (!el) return;
+        if (open) {{
+            cancelRestore();
+            reg.saved = {{top: el.scrollTop, search: win.location.search}};
+        }} else {{
+            beginRestore(reg.saved);
+            reg.saved = null;
+        }}
+    }}
+
+    // One DOM observer drives both: dialogs mount/unmount and Streamlit
+    // replaces the bar's wrapper on every rerun, so both need re-checking on
+    // the same signal.
+    try {{ if (reg.domObs) reg.domObs.disconnect(); }} catch (_e) {{}}
+    reg.domObs = new win.MutationObserver(function() {{ onDialogChange(); watchBars(); }});
+    reg.domObs.observe(doc.body, {{childList: true, subtree: true}});
+
+    // Any deliberate user input outranks a queued restore.
+    ['wheel', 'touchstart', 'keydown'].forEach(function(t) {{
+        bind(t, function() {{ if (reg.pending) cancelRestore(); }});
+    }});
+
+    reg.wasOpen = dialogOpen();
+    watchBars();
+}})();
+</script>""",
+        height=0,
+    )
+
 def _mat(icon_name: str, color: str = '#bac2cc', size: int = 18) -> str:
     """Return an inline SVG icon. Replaces the Google Material Symbols font approach."""
     inner = _MAT_SVG_INNER.get(icon_name, _MAT_SVG_INNER['help'])
@@ -349,28 +545,58 @@ def render_completion_card(synced_count: int, error_count: int,
         card_class = 'success'
         title = 'Download Success' if mode == 'download' else 'Sync Success'
     else:
+        # Same skin and the SAME even 24px inset as the other three variants
+        # below - this block is a separate copy for the nothing-to-do card, and
+        # it kept the old lopsided 35px bottom after the others were fixed.
         st.html("""
         <style>
         div[class*="st-key-completion_dashboard"] {
             background-color: rgba(22, 101, 52, 0.25) !important;
             border: 1px solid rgba(74, 222, 128, 0.5) !important;
             border-radius: 10px !important;
-            padding: 20px 20px 35px 20px !important;
+            padding: 24px !important;
             margin-bottom: 12px;
         }
         </style>
         """)
-        _label = 'sync' if mode == 'sync' else 'download'
-        _card_title = 'All Up to Date'
+        # Title states the OUTCOME once; the line under it carries the evidence.
+        # Both used to say the same thing twice ("Sync done! All files up to
+        # date" over "Nothing to sync - all files are up to date!"), which read
+        # as filler and, worse, gave no sign the app had actually compared
+        # anything. The counts come from the analysis pass (see
+        # sync/analysis.py, `sync_uptodate_stats`) and fall back to the old
+        # generic line whenever they are unavailable.
         if mode == 'sync':
             _is_qs = st.session_state.get('sync_quick_mode', False)
-            _card_title = 'Quick Sync done! All files up to date' if _is_qs else 'Sync done! All files up to date'
+            _card_title = 'Quick Sync done - everything up to date' if _is_qs \
+                else 'Sync done - everything up to date'
+            _stats = st.session_state.get('sync_uptodate_stats') or {}
+            _f = int(_stats.get('files') or 0)
+            _c = int(_stats.get('courses') or 0)
+            _r = int(_stats.get('recordings') or 0)
+            # Everything here agrees on the SAME count: one course means one
+            # folder, so "your folders already match Canvas" was wrong copy on
+            # the most common case of all (a single-course sync).
+            _folder_word = "folder" if _c == 1 else "folders"
+            if _f and _c:
+                _bits = [f"{_f:,} file{'s' if _f != 1 else ''}"]
+                if _r:
+                    _bits.append(f"{_r:,} recording{'s' if _r != 1 else ''}")
+                _scope = (f"across {_c} courses" if _c != 1
+                          else "in this course")
+                _sub = (f"Checked {' and '.join(_bits)} {_scope} - your "
+                        f"{_folder_word} already {'match' if _c != 1 else 'matches'} Canvas.")
+            else:
+                _sub = (f"Your {_folder_word} already "
+                        f"{'match' if _c != 1 else 'matches'} Canvas - nothing to download.")
+        else:
+            _card_title = 'All Up to Date'
+            _sub = "Nothing to download - all files are up to date!"
 
         st.markdown(
             "<div class='completion-card success'>"
             f"<div class='card-title'>{_card_title}</div>"
-            f"<p style='color:#86efac;font-size:1rem;margin:8px 0 0;'>"
-            f"Nothing to {_label} - all files are up to date!"
+            f"<p style='color:#86efac;font-size:1rem;margin:8px 0 0;'>{_sub}"
             "</p></div>",
             unsafe_allow_html=True,
         )
@@ -535,7 +761,12 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
         background-color: {bg_color} !important;
         border: 1px solid {border_color} !important;
         border-radius: 10px !important;
-        padding: 20px 20px 35px 20px !important;
+        /* Even inset on all four sides. The bottom used to be 35px against 20px
+           elsewhere, which read as a gap under the last row rather than as the
+           card breathing - most obvious on the partial-success card, where the
+           Error Details expander sat visibly further from its border than the
+           title did from the top. 24px reads as deliberate at this card size. */
+        padding: 24px !important;
         margin-bottom: 12px;
     }}
     div[class*="st-key-completion_dashboard"] [data-testid="stExpanderDetails"] {{
@@ -942,10 +1173,10 @@ def inject_file_action_css():
         background-color: rgba(88,166,255,0.15) !important;
         border-color: rgba(88,166,255,0.55) !important;
     }}
-    div[class*="st-key-fileact_open_"] button:disabled,
-    div[class*="st-key-fileact_reveal_"] button:disabled {{
-        opacity: 0.3 !important;
-    }}
+    /* No disabled rule: global.css's `button[disabled]` recipe owns it. These
+       carried `opacity: 0.3` on top of that filter, and 0.5 x 0.3 left a 22px
+       icon button at 15% of its enabled paint - effectively invisible on the
+       dark card. */
     </style>""", unsafe_allow_html=True)
 
 
@@ -1118,11 +1349,17 @@ def render_course_file_breakdown(files: list, course_root: str, key_scope: str):
         cfiles = by_cat.get(cat_key)
         if not cfiles:
             continue
+        # 'protected' is assigned purely by the "_NewVersion" filename (see
+        # sync/execution.py), and TWO routes produce that name: the user edited
+        # the file, or the file could not be written because it was open in
+        # another program. The old wording - "the files you had edited" - told
+        # the second group they had edited something they had not touched. The
+        # phrasing below is true of both and keeps the protective framing.
         _desc = ('Your unedited local copies were replaced with the newer versions'
                  if cat_key == 'updated' else
                  'Re-downloaded because your local copy was missing'
                  if cat_key == 'restored' else
-                 'Saved alongside the files you had edited'
+                 'Saved next to your copy, which was left untouched'
                  if cat_key == 'protected' else '')
         _mb = "2px" if _desc else "8px"
         _desc_html = (f"<div style='color:#8b949e;font-size:0.75rem;margin-bottom:8px;'>{_desc}</div>"
@@ -1696,6 +1933,35 @@ def render_pp_warning(pp_failure_count: int):
             margin="12px 0 2px 0",
         )
 
+
+def render_error_log_button(error_log_paths: list, key_prefix: str = 'dl') -> None:
+    """The "View Full Error Log" button, on its own.
+
+    Both completion screens print "Check download_errors.txt for details" when a
+    CONVERSION fails, and both used to bury the button that opens it behind an
+    ``if <download/sync errors>:`` gate. A post-processing failure increments
+    ``pp_failure_count``, not the error list, so a run where only a conversion
+    failed told the user to go and read a file and gave them no way to open it.
+    Measured on a real sync: 2 conversion failures, 0 sync errors, no button.
+
+    Shared rather than copied because the two screens are near-duplicates, and a
+    fix applied to one of them is invisible in review on the other.
+    """
+    if not error_log_paths:
+        return
+    col_log, _ = st.columns([0.3, 0.7])
+    with col_log:
+        if st.button("📄 View Full Error Log", key=f"{key_prefix}_view_error_log",
+                     use_container_width=True):
+            error_log_dialog(error_log_paths)
+
+# Separator dot for inline heading scopes. Its own element with equal margins,
+# so the spacing either side of it is one number rather than a mix of a literal
+# space and a flex gap.
+_DOT = ("<span style='display:inline-block;margin:0 7px;opacity:0.5;"
+        f"color:{theme.TEXT_PRIMARY};'>&middot;</span>")
+
+
 def render_panopto_summary(summary: dict | None) -> None:
     """Render a Panopto results card on the Download / Sync completion screens.
 
@@ -1714,19 +1980,27 @@ def render_panopto_summary(summary: dict | None) -> None:
     is_sync = 'uptodate' in summary
     uptodate = int(summary.get('uptodate', 0) or 0)
     selected = int(summary.get('selected', found) or 0)
-    if is_sync:
-        # Only surface the card when this run actually DID something with Panopto
-        # (downloaded / transcribed / processed, or hit an error). A run where
-        # everything was "already up to date" produced no Panopto work, so the
-        # card would just read "0 / 0" - hide it entirely rather than show an
-        # empty section.
-        _did_work = (int(summary.get('downloaded', 0) or 0)
-                     or int(summary.get('transcribed', 0) or 0)
-                     or int(summary.get('failed', 0) or 0)
-                     or selected)
-        if not _did_work:
-            return
-    elif found <= 0:
+
+    # Only surface the card when this run actually DID something with Panopto
+    # (downloaded / transcribed, or hit an error). A run that produced none of
+    # those has nothing to put in it, and the card would read "0" - which lands
+    # as a failure report.
+    #
+    # This guard used to exist for SYNC mode only. In download mode the test was
+    # just `found <= 0`, so a run where every recording was skipped by the
+    # skip-large-files limit rendered "36 found across 1 course / 0 DOWNLOADED"
+    # - directly beside the line that already explains it ("61 files skipped
+    # because they exceeded the 5 MB limit", a count which INCLUDES those 36
+    # recordings). Two panels describing the same event, one of them as a
+    # success metric reading zero. Measured on course 43660 with a 5 MB limit:
+    # 25 over-limit Canvas files + 36 over-limit recordings = the 61 reported.
+    _did_work = (int(summary.get('downloaded', 0) or 0)
+                 or int(summary.get('transcribed', 0) or 0)
+                 or int(summary.get('failed', 0) or 0)
+                 or (selected if is_sync else 0))
+    if not _did_work:
+        return
+    if not is_sync and found <= 0:
         return
 
     # Reuse the completion stat-card styling so this section matches the top
@@ -1801,15 +2075,22 @@ def render_panopto_summary(summary: dict | None) -> None:
             _parts.append(f"{selected} processed")
         if uptodate:
             _parts.append(f"{uptodate} already up to date")
-        _scope = (" · " + " · ".join(_parts)) if _parts else ""
+        _scope = _DOT.join(_parts)
     else:
-        _scope = f" · {found} found"
+        _scope = f"{found} found"
         if courses:
             _scope += f" across {courses} course{'s' if courses != 1 else ''}"
+    # The separator dot carries its own symmetric margins and the row's flex
+    # `gap` is zero, so the space on each side of it is the same number. It used
+    # to be a literal " · " inside a `gap: 6px` row, which meant 6px + a space on
+    # the left and only a space on the right - a lopsided dot at the exact
+    # centre of the heading, where it is the first thing the eye lands on.
     _hdr = (
-        f"<div style='display:flex;align-items:center;gap:6px;margin:0 0 10px 0;'>"
+        f"<div style='display:flex;align-items:baseline;gap:0;margin:0 0 10px 0;'>"
         f"<span style='color:{_theme.TEXT_PRIMARY};font-weight:700;font-size:1.02rem;'>Panopto Recordings</span>"
-        f"<span style='color:{_theme.TEXT_PRIMARY};font-size:0.85rem;'>{_scope}</span></div>"
+        + (f"{_DOT}<span style='color:{_theme.TEXT_PRIMARY};font-size:0.85rem;'>{_scope}</span>"
+           if _scope else "")
+        + "</div>"
     )
     _body = f"<div class='completion-stats-grid'>{''.join(cards)}</div>"
 
@@ -2082,7 +2363,9 @@ def error_log_dialog(log_paths):
                     content = log_path.read_text(encoding='utf-8').strip()
                     if content:
                         found_any = True
-                        st.markdown(f"**{SVG_FOLDER_YELLOW} {log_path.parent.name}**", unsafe_allow_html=True)
+                        # esc() the folder name: it is a course folder, so it
+                        # derives from a Canvas course title.
+                        st.markdown(f"**{SVG_FOLDER_YELLOW} {esc(log_path.parent.name)}**", unsafe_allow_html=True)
                         st.code(content, language="text")
                 except Exception as e:
                     from ui.amber_notice import render_amber_notice
@@ -2091,6 +2374,14 @@ def error_log_dialog(log_paths):
         if not found_any:
             from ui.amber_notice import render_info_notice
             render_info_notice("No error log files found on disk.")
+
+    # NOTE: the app HEALTH record deliberately does NOT live here. This dialog
+    # answers "which files failed in the run I just did" - it is operational,
+    # user-facing, and only reachable from a completion screen. The health
+    # record answers "how has the application itself been behaving across
+    # sessions", which is a different concern for a different audience, and the
+    # failure it exists to catch (the app dying) is precisely the one where
+    # nobody ever reaches a completion screen. It lives in Settings instead.
 
     if st.button("Close", type="primary", use_container_width=True):
         st.rerun(scope="app")
@@ -2297,113 +2588,158 @@ def render_fda_settings_card() -> None:
 def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "", mode: str = "auto"):
     """
     Renders a unified Help Explainer Card component.
-    
+
     Args:
-        key_prefix: Unique string to namespace CSS classes and session state.
+        key_prefix: Unique string to namespace CSS classes and the toggle id.
         title: Title of the explainer card.
         text_html: The HTML body content of the explainer card.
         icon: The emoji/icon prefix for the title.
         mode: "auto" (default), "button" (only trigger), or "card" (only expanded content).
+
+    The card is a PURE-CSS toggle - a hidden checkbox plus ``label for=``
+    triggers - and deliberately NOT an ``st.button`` + ``st.rerun()``. Three
+    separate defects were measured on that single click before this was
+    rewritten (2026-07-26), and all three are reruns, not styling:
+
+    1. **The list flashed / lost its styling.** Streamlit hoists every
+       style-only ``st.html()`` into ONE ordered, ``display: none`` list
+       (``div[data-testid="stEvent"]``) and reconciles it BY INDEX. The card's
+       own ``<style>`` was emitted only while the card was open, so opening or
+       closing it shifted every later stylesheet onto its NEIGHBOUR's host.
+       Recorded frame-by-frame: for one frame the course list's
+       ``st-key-dl_chk_`` stylesheet was replaced by the per-course label
+       stylesheet. Exactly the failure family CLAUDE.md documents for a dialog
+       emitted before the main page - a different trigger, same mechanism.
+       (Which is why BOTH ``st.html`` blocks below are now unconditional: a
+       conditional stylesheet is the bug, not the card.)
+    2. **The primary actions flashed bright and the captions faded.** A full
+       rerun re-creates those elements, dropping the ``data-cd-*`` attributes
+       their paint hangs off until an observer re-applied them. Those
+       attributes now live on ``document.body`` (see ``_gate_actions_on_selection``
+       and ``inject_app_shell_bridge``), which fixes the general case; not
+       rerunning at all fixes this one.
+    3. Everything below the card was re-rendered to show a static explainer.
+
+    Toggling now mutates nothing on the server, so there is no reconciliation
+    to go wrong. Verified in a harness first (Streamlit keeps raw ``<input>``
+    markup, a ``label for=`` still activates a checkbox inside a
+    ``display: none`` ancestor, and the checked state survives an unrelated
+    rerun because React leaves an unchanged ``dangerouslySetInnerHTML``
+    alone), then in the app.
     """
     import base64
-    from shared.helpers import esc
-    
-    state_key = f"show_help_card_{key_prefix}"
-    if state_key not in st.session_state:
-        st.session_state[state_key] = False
+    from shared.helpers import esc, help_text_enabled
 
-    # Logic to determine what to show based on mode and state
-    is_open = st.session_state[state_key]
+    # Single gate for every Help affordance in the app - all eight call sites
+    # route through here, so the Settings toggle needs exactly this one check.
+    if not help_text_enabled():
+        return
+
     show_button = (mode in ["auto", "button"])
-    show_card = (mode in ["auto", "card"]) and is_open
+    show_card = (mode in ["auto", "card"])
 
     close_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
     close_b64 = base64.b64encode(close_svg.encode()).decode()
-    
+
     help_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
     help_b64 = base64.b64encode(help_svg.encode()).decode()
 
-    card_key = f"{key_prefix}_explainer_card"
-    close_key = f"{key_prefix}_close_explainer"
     help_btn_key = f"{key_prefix}_explainer_help_btn"
-    open_key = f"{key_prefix}_open_explainer"
+    # The `for=` target. A label activates its control from anywhere in the
+    # document, which is what lets the trigger live in the page header while
+    # the checkbox sits with the card further down - they never need a shared
+    # parent, only the checkbox and the card do (for the `~` combinator).
+    cb_id = f"cd-help-{key_prefix}"
 
     if show_card:
-        with st.container(key=card_key):
-            if st.button("✕", key=close_key):
-                st.session_state[state_key] = False
-                st.rerun()
-            
-            # Determine icon HTML: SVG content rendered directly, empty string skipped, fallback to emoji span
-            if not icon:
-                _icon_html = HELP_ICONS.get('lightbulb', '')
-            elif icon.strip().startswith('<svg') or icon.strip().startswith('<img'):
-                _icon_html = icon
-            else:
-                _icon_html = f'<span style="font-size: 1.1rem; line-height: 1;">{icon}</span>'
+        # Icon: inline SVG/IMG rendered as-is, an emoji wrapped, nothing falls
+        # back to the shared lightbulb.
+        if not icon:
+            _icon_html = HELP_ICONS.get('lightbulb', '')
+        elif icon.strip().startswith('<svg') or icon.strip().startswith('<img'):
+            _icon_html = icon
+        else:
+            _icon_html = f'<span style="font-size: 1.1rem; line-height: 1;">{icon}</span>'
 
-            st.markdown(f"""
-            <div>
-                <p style="margin: 0 0 12px 0; font-weight: 700; color: #ffffff; font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
-                    {_icon_html}{esc(title)}
-                </p>
-                <div style="margin: 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.92); line-height: 1.5;">
-                    {text_html}
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+        # One markdown call: checkbox + card as SIBLINGS so `:checked ~ .card`
+        # resolves. Built on one line - four spaces of leading indent would make
+        # Streamlit's markdown parser read it as a code block.
+        st.markdown(
+            f'<div class="cd-help-wrap">'
+            f'<input type="checkbox" id="{cb_id}" class="cd-help-cb">'
+            f'<div class="cd-help-card">'
+            f'<label for="{cb_id}" class="cd-help-close" title="Close"></label>'
+            f'<p class="cd-help-card-title">{_icon_html}{esc(title)}</p>'
+            f'<div class="cd-help-card-body">{text_html}</div>'
+            f'</div></div>',
+            unsafe_allow_html=True,
+        )
 
         st.html(f"""<style>
-        @keyframes slideDownFadeIn_{key_prefix} {{
+        @keyframes cdHelpSlideDown {{
             from {{ opacity: 0; transform: translateY(-8px); }}
             to {{ opacity: 1; transform: translateY(0); }}
         }}
-        div.st-key-{card_key} {{
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            border-radius: 8px !important;
-            padding: 16px 16px 32px 16px !important;
-            margin-bottom: 15px !important;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4) !important;
-            position: relative !important;
-            animation: slideDownFadeIn_{key_prefix} 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .cd-help-cb {{ display: none !important; }}
+        /* Closed is the DEFAULT, so if :has() below ever fails to match, the
+           card stays hidden and the page merely keeps one empty flex slot -
+           the safe direction to fail in. */
+        .cd-help-card {{ display: none; }}
+        .cd-help-cb:checked ~ .cd-help-card {{
+            display: block;
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 16px 16px 32px 16px;
+            margin-bottom: 15px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            animation: cdHelpSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }}
-        div.st-key-{card_key} div.element-container {{
-            margin-bottom: 0 !important;
-        }}
-        div.st-key-{card_key} p:last-child {{
-            margin-bottom: 0 !important;
-        }}
-        div.st-key-{close_key} {{
-            position: absolute !important;
-            top: 8px !important;
-            right: 8px !important;
-            z-index: 10 !important;
-        }}
-        div.st-key-{close_key} button {{
-            background: transparent !important;
-            border: none !important;
-            color: #94a3b8 !important;
-            font-size: 1.2rem !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            min-height: 28px !important;
-            height: 28px !important;
-            width: 28px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            border-radius: 6px !important;
-            transition: all 0.15s ease !important;
-        }}
-        div.st-key-{close_key} button:hover {{
-            color: #f8fafc !important;
-            background: transparent !important;
-        }}
-        div.st-key-{close_key} button > div {{
+        /* Take the wrapper's element-container out of the flow while the card
+           is closed, so a closed card costs exactly what it used to cost when
+           it was not rendered at all: nothing. A zero-HEIGHT flex item would
+           still consume one `gap` slot on every page that hosts a card.
+           `stElementContainer` never nests, so the descendant :has() cannot
+           match an ancestor here. */
+        div[data-testid="stElementContainer"]:has(.cd-help-cb:not(:checked)) {{
             display: none !important;
         }}
-        div.st-key-{close_key} button::before {{
+        /* Streamlit's markdown container carries margin-bottom: -16px, which
+           would eat the card's own bottom margin. */
+        div[data-testid="stElementContainer"]:has(.cd-help-cb) [data-testid="stMarkdownContainer"] {{
+            margin-bottom: 0 !important;
+        }}
+        .cd-help-card-title {{
+            margin: 0 0 12px 0;
+            font-weight: 700;
+            color: #ffffff;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        .cd-help-card-body {{
+            margin: 0;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.92);
+            line-height: 1.5;
+        }}
+        .cd-help-card p:last-child {{ margin-bottom: 0 !important; }}
+        .cd-help-close {{
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 10;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+        }}
+        .cd-help-close::before {{
             content: "";
             display: block;
             width: 16px;
@@ -2417,20 +2753,24 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
             mask-repeat: no-repeat;
             -webkit-mask-position: center;
             mask-position: center;
-            transition: background-color 0.15s ease !important;
+            transition: background-color 0.15s ease;
         }}
-        div.st-key-{close_key} button:hover::before {{
-            background-color: #f8fafc !important;
-        }}
+        .cd-help-close:hover::before {{ background-color: #f8fafc; }}
         </style>""")
-    
+
     if show_button:
         with st.container(key=help_btn_key):
-            if st.button("Help", key=open_key, help="Click to open guide."):
-                st.session_state[state_key] = not st.session_state[state_key]
-                st.rerun()
+            # A label, not an st.button: a button would post a widget value and
+            # rerun the whole page (see the docstring). Wrapped in a div so
+            # Streamlit does not put the inline label inside a <p>.
+            st.markdown(
+                f'<div class="cd-help-trigger-row">'
+                f'<label for="{cb_id}" class="cd-help-trigger" title="Click to open guide.">Help</label>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
 
-        # Adjust alignment based on mode: "auto" is usually top-right (flex-end), 
+        # Adjust alignment based on mode: "auto" is usually top-right (flex-end),
         # whereas manual triggers might need flex-start.
         justify_content = "flex-end" if mode == "auto" else "flex-start"
         margin_bottom = "25px" if mode == "auto" else "0px"
@@ -2446,28 +2786,44 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
             justify-content: {justify_content} !important;
             animation: fadeInHelp_{key_prefix} 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }}
-        div.st-key-{open_key} button {{
-            background: transparent !important;
-            border: none !important;
-            padding: 4px 8px !important;
-            min-height: 24px !important;
-            height: 24px !important;
-            color: #a8b4c6 !important;
-            font-weight: 500 !important;
-            font-size: 0.9rem !important;
-            transition: all 0.2s ease !important;
-            box-shadow: none !important;
+        div.st-key-{help_btn_key} [data-testid="stMarkdownContainer"] {{
+            margin-bottom: 0 !important;
         }}
-        div.st-key-{open_key} button:hover {{
-            background: transparent !important;
-            color: #f8fafc !important;
+        /* Flex, not the default block: an inline-flex label inside a block
+           parent sits on a text baseline, and the line box's descender space
+           made the trigger's element-container 27.4px tall against the
+           st.button's 24px. Measured - it changes nothing on this header,
+           where the H2 is taller, but Today's help row is sized to the
+           trigger itself. */
+        .cd-help-trigger-row {{
+            display: flex;
+            align-items: center;
         }}
-        div.st-key-{open_key} button p::before {{
+        /* Metrics copied from the st.button this replaced so every header row
+           it sits in keeps its measured height and baseline. */
+        .cd-help-trigger {{
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            min-height: 24px;
+            height: 24px;
+            color: #a8b4c6;
+            font-weight: 500;
+            font-size: 0.9rem;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: color 0.2s ease;
+        }}
+        .cd-help-trigger:hover {{ color: #f8fafc; }}
+        .cd-help-trigger::before {{
             content: "";
             display: inline-block;
             width: 16px;
             height: 16px;
             margin-right: 6px;
+            flex-shrink: 0;
             background-color: #a8b4c6;
             -webkit-mask-image: url('data:image/svg+xml;base64,{help_b64}');
             mask-image: url('data:image/svg+xml;base64,{help_b64}');
@@ -2477,13 +2833,8 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
             mask-repeat: no-repeat;
             -webkit-mask-position: center;
             mask-position: center;
-            vertical-align: middle;
-            position: relative;
-            /* rely on vertical-align: middle */
-            transition: background-color 0.2s ease !important;
+            transition: background-color 0.2s ease;
         }}
-        div.st-key-{open_key} button:hover p::before {{
-            background-color: #f8fafc !important;
-        }}
+        .cd-help-trigger:hover::before {{ background-color: #f8fafc; }}
         </style>""")
 

@@ -141,14 +141,31 @@ def test_notice_tolerates_garbage_types(fake_session):
     assert notice["errors"] == 0
 
 
-# ── Today's files: quick-sync-only filter (ui.today_dashboard._todays_groups) ─
-# "Today's files" must reflect ONLY the page's own hands-off / one-click syncs
-# (daily auto-sync + "Quick Sync now", both recorded sync_mode == 'quick'). A
-# manual "Analyze, Review & Sync" is the ONLY run type that can restore a
-# locally-deleted file, so filtering to quick-mode is also what keeps restored
-# files off the Today page.
+# ── Today's files scoping (ui.today_dashboard._todays_groups) ────────────────
+# Two independent filters define "today's files", and each one was a real bug:
+#   1. COURSE  - only courses in the curated daily-sync set. Without this the
+#      page listed every quick sync run from the Sync page, so a user with an
+#      EMPTY daily list still saw 43 files under "Courses in your daily sync:
+#      none". It is a display filter: adding the course reveals its files,
+#      removing it hides them again.
+#   2. CATEGORY - only files Canvas actually gave you (new/updated/protected),
+#      never 'restored' (a file the user deleted locally and asked back). The
+#      old code filtered on sync_mode == 'quick' as a PROXY for this, which
+#      also discarded every genuine new file from a review sync.
+#
+# Membership comes from resolve_today_pairs(), the same call the "Courses in
+# your daily sync" card renders - so the folders below MUST really exist, and a
+# pair whose folder is gone is not in the set for either of them.
 
-def _write_history_entry(config_dir, *, sync_mode, course_id, course_name, files):
+def _folder(tmp_path, course_id, *, create=True):
+    p = tmp_path / f"course_{course_id}"
+    if create:
+        p.mkdir(exist_ok=True)
+    return str(p)
+
+
+def _write_history_entry(config_dir, *, sync_mode, course_id, course_name, files,
+                         local_folder=None):
     from datetime import datetime
     from core.sync_manager import SyncHistoryManager
     SyncHistoryManager(str(config_dir)).add_entry({
@@ -156,39 +173,304 @@ def _write_history_entry(config_dir, *, sync_mode, course_id, course_name, files
         "sync_mode": sync_mode,
         "synced_groups": [{
             "course_id": course_id, "course_name": course_name,
-            "local_folder": f"/tmp/c{course_id}", "files": files,
+            "local_folder": local_folder or _folder(config_dir, course_id),
+            "files": files,
         }],
     })
 
 
-def test_todays_files_excludes_manual_review_sync(config_dir, monkeypatch):
+def _daily(config_dir, course_id, *, create=True):
+    today_store.set_today_pairs([
+        {"course_id": course_id, "course_name": f"C{course_id}",
+         "local_folder": _folder(config_dir, course_id, create=create)},
+    ])
+
+
+def test_todays_files_only_covers_daily_sync_courses(config_dir, monkeypatch):
+    """THE BUG: a quick sync from the Sync page must not appear on Today unless
+    its course is in the daily-sync set."""
     import ui.today_dashboard as td
     monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))
 
-    # Manual review-sync today that RESTORED a locally-deleted file.
     _write_history_entry(
-        config_dir, sync_mode="normal", course_id=1, course_name="Manual",
-        files=[{"name": "restored.pdf", "rel": "restored.pdf", "category": "restored"}],
-    )
-    # Quick Sync today that pulled a genuinely new file.
-    _write_history_entry(
-        config_dir, sync_mode="quick", course_id=2, course_name="Quick",
-        files=[{"name": "new.pdf", "rel": "new.pdf", "category": "new"}],
+        config_dir, sync_mode="quick", course_id=7, course_name="Off-list",
+        files=[{"name": "a.pdf", "rel": "a.pdf", "category": "new"}],
     )
 
-    groups = td._todays_groups()
-    assert {g["course_id"] for g in groups} == {2}          # manual run excluded
-    all_files = [f for g in groups for f in g["files"]]
-    assert all(f["category"] != "restored" for f in all_files)
+    # Daily set empty -> nothing on the page, but the day is reported honestly.
+    groups, off_list = td._todays_groups()
+    assert groups == []
+    assert off_list == {"files": 1, "courses": 1}
+
+    # Add the course -> its files from earlier today appear, nothing is "off-list".
+    _daily(config_dir, 7)
+
+    groups, off_list = td._todays_groups()
+    assert [g["course_id"] for g in groups] == [7]
+    assert off_list == {"files": 0, "courses": 0}
+
+    # Remove it again -> they disappear.
+    today_store.set_today_pairs([])
+    groups, off_list = td._todays_groups()
+    assert groups == []
+    assert off_list["files"] == 1
 
 
-def test_todays_files_excludes_legacy_boolean_sync_mode(config_dir, monkeypatch):
-    # Pre-fix entries stored sync_mode as a boolean (True = "in sync mode"), which
-    # can't prove the run was quick - so they're safely excluded, not shown.
+def test_todays_files_includes_review_sync_arrivals(config_dir, monkeypatch):
+    """A file downloaded via "Analyze, Review & Sync" arrived today too - only
+    the RESTORED ones are curation rather than an arrival."""
     import ui.today_dashboard as td
     monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))
+    _daily(config_dir, 1)
+
+    _write_history_entry(
+        config_dir, sync_mode="normal", course_id=1, course_name="C1",
+        files=[
+            {"name": "new.pdf", "rel": "new.pdf", "category": "new"},
+            {"name": "upd.pdf", "rel": "upd.pdf", "category": "updated"},
+            {"name": "prot_NewVersion.pdf", "rel": "prot_NewVersion.pdf",
+             "category": "protected"},
+            {"name": "restored.pdf", "rel": "restored.pdf", "category": "restored"},
+        ],
+    )
+
+    groups, off_list = td._todays_groups()
+    assert [g["course_id"] for g in groups] == [1]
+    names = {f["name"] for f in groups[0]["files"]}
+    assert names == {"new.pdf", "upd.pdf", "prot_NewVersion.pdf"}
+    # A restored file is never counted as an arrival - not on the page, and not
+    # in the "you're missing these" tally either.
+    assert off_list == {"files": 0, "courses": 0}
+
+
+def test_todays_files_merges_both_modes_and_dedupes(config_dir, monkeypatch):
+    import ui.today_dashboard as td
+    monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))
+    _daily(config_dir, 3)
+
+    _write_history_entry(
+        config_dir, sync_mode="quick", course_id=3, course_name="C3",
+        files=[{"name": "a.pdf", "rel": "a.pdf", "category": "new"}],
+    )
+    _write_history_entry(
+        config_dir, sync_mode="normal", course_id=3, course_name="C3",
+        files=[
+            {"name": "a.pdf", "rel": "a.pdf", "category": "new"},   # same file again
+            {"name": "b.pdf", "rel": "b.pdf", "category": "new"},
+        ],
+    )
+
+    groups, _ = td._todays_groups()
+    assert len(groups) == 1
+    assert {f["rel"] for f in groups[0]["files"]} == {"a.pdf", "b.pdf"}
+
+
+def test_todays_files_legacy_boolean_sync_mode_now_included(config_dir, monkeypatch):
+    """Pre-fix entries stored sync_mode as a boolean, which the old quick-only
+    filter could never match. Mode no longer gates anything, so a legacy entry
+    is scoped by course + category like every other run."""
+    import ui.today_dashboard as td
+    monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))
+    _daily(config_dir, 9)
     _write_history_entry(
         config_dir, sync_mode=True, course_id=9, course_name="Legacy",
         files=[{"name": "x.pdf", "rel": "x.pdf", "category": "new"}],
     )
-    assert td._todays_groups() == []
+    groups, _ = td._todays_groups()
+    assert [f["name"] for g in groups for f in g["files"]] == ["x.pdf"]
+
+
+def test_todays_files_folder_match_survives_path_form(config_dir, monkeypatch):
+    """The daily set stores the folder the user saved; history stores
+    ``str(sync_manager.local_path)``. Same folder, different spelling."""
+    import ui.today_dashboard as td
+    monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))
+
+    folder = _folder(config_dir, 5)
+    today_store.set_today_pairs([
+        {"course_id": 5, "course_name": "C5",
+         "local_folder": folder.replace("\\", "/") + "/"},   # trailing slash, fwd slashes
+    ])
+    _write_history_entry(
+        config_dir, sync_mode="quick", course_id=5, course_name="C5",
+        files=[{"name": "a.pdf", "rel": "a.pdf", "category": "new"}],
+        local_folder=folder,
+    )
+    groups, _ = td._todays_groups()
+    assert [g["course_id"] for g in groups] == [5]
+
+
+def test_todays_files_same_course_other_folder_is_not_daily(config_dir, monkeypatch):
+    """Course 6 syncs into two folders; only the daily-set pair belongs here -
+    the card's "Open Folder" button points at that folder, not the other one."""
+    import ui.today_dashboard as td
+    monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))
+    _daily(config_dir, 6)
+
+    _write_history_entry(
+        config_dir, sync_mode="quick", course_id=6, course_name="C6",
+        files=[{"name": "in.pdf", "rel": "in.pdf", "category": "new"}],
+    )
+    _write_history_entry(
+        config_dir, sync_mode="quick", course_id=6, course_name="C6",
+        files=[{"name": "out.pdf", "rel": "out.pdf", "category": "new"}],
+        local_folder="/tmp/backup_c6",
+    )
+
+    groups, off_list = td._todays_groups()
+    assert [f["name"] for g in groups for f in g["files"]] == ["in.pdf"]
+    assert off_list == {"files": 1, "courses": 1}
+
+
+def test_unreachable_daily_pair_is_listed_not_hidden(config_dir, monkeypatch):
+    """A daily pair whose folder was deleted stays ON the list, in the amber
+    state - it is never silently dropped.
+
+    Two bugs met here. The card used to hide such a pair entirely, so three
+    courses the user had deliberately added vanished from the page with no
+    explanation anywhere and the daily sync quietly had nothing to do. And for
+    one round the file list read the raw stored pairs while the card filtered on
+    folder existence, which put a 40-file course card directly under a panel
+    reading "No courses in your daily sync yet".
+    """
+    import ui.today_dashboard as td
+    from core.auto_sync import resolve_today_pairs
+    monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))
+
+    gone = _folder(config_dir, 11, create=False)
+    today_store.set_today_pairs([
+        {"course_id": 11, "course_name": "Deleted folder", "local_folder": gone},
+    ])
+    _write_history_entry(
+        config_dir, sync_mode="quick", course_id=11, course_name="Deleted folder",
+        files=[{"name": "a.pdf", "rel": "a.pdf", "category": "new"}],
+        local_folder=gone,
+    )
+
+    # It is not runnable...
+    assert resolve_today_pairs() == []
+    # ...but it IS on the list, and the card renders it in the amber state.
+    runnable, unreachable = td._split_daily_pairs()
+    assert runnable == []
+    assert [p["course_id"] for p in unreachable] == [11]
+
+    groups, off_list = td._todays_groups()
+    # No files: the folder they lived in is gone, so there is nothing to open.
+    assert groups == []
+    # And NOT counted as "a course that isn't in your daily sync" - it is in the
+    # daily sync, listed in amber right above. Saying otherwise would contradict
+    # the card.
+    assert off_list == {"files": 0, "courses": 0}
+
+
+def _hub_group(config_dir, group_name, pairs):
+    from core.sync_manager import SavedGroupsManager
+    SavedGroupsManager(str(config_dir)).save_group(group_name, pairs)
+
+
+def test_hub_delete_removes_the_course_from_the_daily_list(config_dir):
+    """Deleting a saved pair is the user saying they're done with that course -
+    it must not linger in the daily sync as an entry with no source."""
+    folder = _folder(config_dir, 21)
+    _hub_group(config_dir, "P21", [
+        {"course_id": 21, "course_name": "C21", "local_folder": folder}])
+    today_store.set_today_pairs([
+        {"course_id": 21, "course_name": "C21", "local_folder": folder}])
+
+    # Hub emptied (pair deleted) -> the daily copy goes with it.
+    from core.sync_manager import SavedGroupsManager
+    mgr = SavedGroupsManager(str(config_dir))
+    for g in mgr.load_groups():
+        mgr.delete_group(g["group_id"])
+
+    assert auto_sync.reconcile_daily_list_with_hub() == 1
+    assert today_store.load_today_config()["pairs"] == []
+
+
+def test_hub_relink_repoints_the_daily_list(config_dir):
+    """"Edit Pair" to re-link a moved folder fixes it on the Today page too -
+    the user must never have to repair the same pair in two places."""
+    old = _folder(config_dir, 22, create=False)      # where it used to live
+    new = _folder(config_dir, 23)                    # where the user re-linked it
+    _hub_group(config_dir, "P22", [
+        {"course_id": 22, "course_name": "C22", "local_folder": new}])
+    today_store.set_today_pairs([
+        {"course_id": 22, "course_name": "C22", "local_folder": old}])
+
+    assert auto_sync.reconcile_daily_list_with_hub() == 1
+    assert today_store.load_today_config()["pairs"][0]["local_folder"] == new
+    # ...and it is runnable again, without the user touching the Today page.
+    assert [p["course_id"] for p in auto_sync.resolve_today_pairs()] == [22]
+
+
+def test_reconcile_leaves_matching_entries_alone(config_dir):
+    folder = _folder(config_dir, 24)
+    pair = {"course_id": 24, "course_name": "C24", "local_folder": folder}
+    _hub_group(config_dir, "P24", [pair])
+    today_store.set_today_pairs([pair])
+
+    assert auto_sync.reconcile_daily_list_with_hub() == 0
+    assert today_store.load_today_config()["pairs"] == [pair]
+
+
+def test_reconcile_never_empties_the_list_when_the_hub_is_unreadable(config_dir, monkeypatch):
+    """A hub read failure must not be mistaken for "the user deleted everything"."""
+    folder = _folder(config_dir, 25)
+    today_store.set_today_pairs([
+        {"course_id": 25, "course_name": "C25", "local_folder": folder}])
+
+    class _Boom:
+        def __init__(self, *a, **k): raise OSError("hub unreadable")
+    monkeypatch.setattr("core.sync_manager.SavedGroupsManager", _Boom)
+
+    assert auto_sync.reconcile_daily_list_with_hub() == 0
+    assert len(today_store.load_today_config()["pairs"]) == 1
+
+
+def test_unreachable_pairs_are_reported_as_skipped(config_dir, fake_session):
+    """A skipped course is otherwise invisible - the run just quietly covers
+    fewer courses than the list says."""
+    gone = _folder(config_dir, 26, create=False)
+    live = _folder(config_dir, 27)
+    today_store.set_today_pairs([
+        {"course_id": 26, "course_name": "Gone (LA)", "local_folder": gone},
+        {"course_id": 27, "course_name": "Fine (LA)", "local_folder": live},
+    ])
+
+    # The run itself is NOT blocked by the missing folder - it syncs the rest.
+    assert [p["course_id"] for p in auto_sync.resolve_today_pairs()] == [27]
+    assert [p["course_id"] for p in auto_sync.unreachable_today_pairs()] == [26]
+
+    notice = auto_sync.build_today_sync_notice()
+    assert notice["skipped"] == ["Gone (LA)"]
+
+
+def test_unreachable_pair_does_not_suppress_a_healthy_one(config_dir, monkeypatch):
+    """One broken pair must not affect the rest of the daily set."""
+    import ui.today_dashboard as td
+    monkeypatch.setattr(td, "get_config_dir", lambda: str(config_dir))
+
+    gone = _folder(config_dir, 12, create=False)
+    live = _folder(config_dir, 13)
+    today_store.set_today_pairs([
+        {"course_id": 12, "course_name": "Gone", "local_folder": gone},
+        {"course_id": 13, "course_name": "Fine", "local_folder": live},
+    ])
+    _write_history_entry(
+        config_dir, sync_mode="quick", course_id=12, course_name="Gone",
+        files=[{"name": "x.pdf", "rel": "x.pdf", "category": "new"}],
+        local_folder=gone,
+    )
+    _write_history_entry(
+        config_dir, sync_mode="normal", course_id=13, course_name="Fine",
+        files=[{"name": "y.pdf", "rel": "y.pdf", "category": "new"}],
+        local_folder=live,
+    )
+
+    runnable, unreachable = td._split_daily_pairs()
+    assert [p["course_id"] for p in runnable] == [13]
+    assert [p["course_id"] for p in unreachable] == [12]
+
+    groups, off_list = td._todays_groups()
+    assert [f["name"] for g in groups for f in g["files"]] == ["y.pdf"]
+    assert off_list == {"files": 0, "courses": 0}

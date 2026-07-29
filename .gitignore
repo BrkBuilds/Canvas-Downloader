@@ -58,3 +58,9 @@ today_dashboard.json
 
 # Local dev tooling (never ship): fabricates fake sync DBs for manual testing
 fake_quick_sync_setup.py
+# Local health/diagnostics record (dev runs write it to the repo root;
+# frozen builds write it to the per-user config dir). Never committed.
+diagnostics/
+
+#audit
+_audit_runs/*

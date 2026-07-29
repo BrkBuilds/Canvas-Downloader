@@ -147,12 +147,25 @@ def _select_folder_cb() -> None:
 # Main render
 # ---------------------------------------------------------------------------
 
+def _quick_download_go_back():
+    """Leave Quick Download for the course list.
+
+    Shared by the Back button and the step tracker's "Select Courses" so the two
+    can never reset different amounts of state. Mutates session state only - it
+    runs as an ``on_click`` callback, ahead of the click's own rerun.
+    """
+    # Reset the preset so re-entering Quick Download starts fresh.
+    st.session_state.pop('quick_preset_id', None)
+    st.session_state['quick_download_mode'] = False
+    st.session_state['step'] = 1
+
+
 def render_quick_download(fetch_courses_fn) -> None:
     """Render the Quick Download page (Step 2 lite)."""
     from shared.components import render_config_summary_badges
     from shared.helpers import get_course_display_parts
 
-    render_download_wizard(st, 2)
+    render_download_wizard(st, 'configure', nav={'select': _quick_download_go_back})
 
     # ── Session-state defaults ───────────────────────────────────────────
     # No preset selected on fresh entry - user must actively choose one.
@@ -165,7 +178,15 @@ def render_quick_download(fetch_courses_fn) -> None:
     active_idx    = next((i for i, p in enumerate(_QUICK_PRESETS) if p['id'] == selected_id), None)
     active_preset = _QUICK_PRESETS[active_idx] if active_idx is not None else None
     active_org_key = 'subfolders' if selected_org == 'modules' else 'flat'
-    org_is_locked  = selected_id in ('quick_notebooklm', 'quick_full')
+    # NOTE: presets no longer LOCK the organization choice. Picking one still
+    # pre-selects the layout it was designed around (via _select_preset_cb's
+    # `default_mode`), which is the useful half - but the user can always
+    # override it. Locking two of the five presets meant the control silently
+    # stopped responding depending on which card was selected, and the reasons
+    # for the lock (Canvas fidelity, NotebookLM's flat-import limit) are
+    # preferences, not correctness constraints. `settings['download_mode']` has
+    # always been taken from `quick_org_mode` at launch, so nothing downstream
+    # ever depended on the lock.
 
     # ── Load base64 icons ────────────────────────────────────────────────
     b64_preset_full = get_base64_image("assets/icon_quick_dl_complete.png")
@@ -218,14 +239,6 @@ def render_quick_download(fetch_courses_fn) -> None:
         )
 
     # ── Dynamic CSS fragments ────────────────────────────────────────────
-    locked_org_css = """
-div[class*="st-key-btn_quick_org_"] button {
-    opacity: 0.32 !important;
-    pointer-events: none !important;
-    cursor: not-allowed !important;
-}
-""" if org_is_locked else ""
-
     active_card_css = f"""
 div.st-key-btn_quick_preset_{active_idx} button,
 div.st-key-btn_quick_preset_{active_idx} button:hover {{
@@ -464,7 +477,6 @@ div.st-key-btn_quick_org_flat button {{
     background-size: 42px auto, cover !important;
 }}
 {active_org_css}
-{locked_org_css}
 
 /* Org columns gap override */
 div.st-key-qd_org_wrap [data-testid="stHorizontalBlock"] {{
@@ -795,7 +807,7 @@ div.st-key-page_nav_quick_start button:active {{
             "Want transcripts or subtitles too, or finer control over video vs. audio? Switch to <b>Custom Download</b>, where Card 4 lets you pick formats and set up on-device transcription."
             f"<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px; display: flex; align-items: center; gap: 8px;'>{HELP_ICONS['folder']} Organization Styles</div>"
             "You can choose between <b>With Subfolders</b> (mirrors Canvas Modules exactly) or <b>All in One Folder</b> (flattens directories by placing all files in one single folder). <br>"
-            "<i>Note: The Complete Canvas Download preset locks this choice to With Subfolders to preserve the layout, and the NotebookLM preset locks it to All in One Folder to ensure compatibility with NotebookLM's subfolder limitations.</i>"
+            "<i>Note: each preset pre-selects the layout it was designed around - Complete Canvas Download starts on With Subfolders to preserve the Canvas layout, and the NotebookLM preset starts on All in One Folder because NotebookLM cannot import subfolders. Both are only a starting point: you can change the layout on any preset.</i>"
             "<div style='font-size: 1.25rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; margin-top: 16px; display: flex; align-items: center; gap: 8px;'>Batch Processing</div>"
             "The preset and organization style you choose will be applied to <b>ALL</b> courses you selected in the previous step. "
             "You can review your selected courses in the dropdown at the bottom of the page."
@@ -812,11 +824,12 @@ div.st-key-page_nav_quick_start button:active {{
             "Presets are pre-configured to be simple and quick. If you need to tweak specific options (like keeping original slides instead of converting to PDF, or choosing which Canvas-native content to download), click the <b>Go to Custom Download →</b> button in the top right corner where you have full control over every single toggle."
             "</div></details>"
             "<details style='margin-top: 8px; cursor: pointer;'>"
-            "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Why is the folder option locked on some presets?</summary>"
+            "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Why does the folder option change when I pick a preset?</summary>"
             "<div style='padding: 8px 12px; margin-top: 4px; margin-bottom: 8px; background-color: rgba(63, 217, 255, 0.05); font-size: 0.85rem; color: #d1d5db; cursor: default;'>"
-            "Some presets enforce a specific folder structure to guarantee compatibility or correctness:<br>"
-            "• <b>Complete Canvas Download (1:1)</b> locks organization to <b>With Subfolders</b> to preserve the exact Canvas modules and layout.<br>"
-            "• <b>100% AI & NotebookLM Ready</b> locks organization to <b>All in One Folder</b> because NotebookLM does not support subfolders when importing, ensuring all files can be selected and uploaded seamlessly."
+            "Each preset pre-selects the folder structure it was designed around, so the recommended choice is already made for you:<br>"
+            "• <b>Complete Canvas Download (1:1)</b> starts on <b>With Subfolders</b>, which preserves the exact Canvas modules and layout.<br>"
+            "• <b>100% AI & NotebookLM Ready</b> starts on <b>All in One Folder</b>, because NotebookLM cannot import subfolders - a flat folder lets you select and upload everything in one go.<br>"
+            "Neither is locked: change the folder option after picking a preset and your choice is what gets used."
             "</div></details>"
             "<details style='margin-top: 8px; cursor: pointer;'>"
             "<summary style='font-weight: 500; color: #e2e8f0; margin-bottom: 4px;'>Do the file conversions (like PPTX to PDF) delete my original files?</summary>"
@@ -947,17 +960,19 @@ div.st-key-page_nav_quick_start button:active {{
         st.markdown("<div style='height:24px'></div>", unsafe_allow_html=True)
 
         # ── Section 2: Organization ──────────────────────────────────────
-        _org_lock_note = (
+        # No "(Locked by preset)" note any more - the choice is always the
+        # user's; a preset only pre-selects the layout it was designed around.
+        _org_hint = (
             " <span style='font-size:0.72rem; font-weight:400; color:#64748b; "
             "text-transform:none; letter-spacing:0; margin-left:4px;'>"
-            "(Locked by preset)</span>"
-        ) if org_is_locked else ""
+            "(pre-selected for this preset - change it any time)</span>"
+        ) if active_preset is not None else ""
         st.markdown(
             "<div style='display:flex; align-items:center; gap:10px; margin:0 0 10px 0;'>"
             "<div style='background:rgba(56, 189, 248, 0.5); color:#ffffff; width:26px; height:26px; border-radius:6px; "
             "display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.85rem; flex-shrink:0;'>2</div>"
             f"<p style='font-size:0.8rem; font-weight:600; letter-spacing:0.04em; "
-            f"text-transform:uppercase; color:#e2e8f0; margin:0;'>Choose how files are organized{_org_lock_note}</p>"
+            f"text-transform:uppercase; color:#e2e8f0; margin:0;'>Choose how files are organized{_org_hint}</p>"
             "</div>",
             unsafe_allow_html=True,
         )
@@ -1144,10 +1159,7 @@ div.st-key-page_nav_quick_start button:active {{
                 )
 
         if back_clicked:
-            # Reset preset so re-entering Quick Download from Course Selector starts fresh.
-            st.session_state.pop('quick_preset_id', None)
-            st.session_state['quick_download_mode'] = False
-            st.session_state['step'] = 1
+            _quick_download_go_back()
             st.rerun()
 
         if start_clicked:
@@ -1206,6 +1218,7 @@ div.st-key-page_nav_quick_start button:active {{
                 'isolated_retry_queue', 'retry_downloaded_items', 'retry_failed_items',
                 'retry_isolated_details', 'retry_mb_tracker', 'is_post_processing',
                 'start_time', 'total_items', 'total_mb', 'sync_has_ignored_files',
+                'sync_newversion_files',
             ]:
                 st.session_state.pop(_stale, None)
 

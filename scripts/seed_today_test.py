@@ -334,7 +334,9 @@ def main() -> int:
 
     if not args.dry_run:
         print(f"\nPrimed {len(plans)} folder(s). Now: open the app -> Today page -> Quick Sync now.\n"
-              f"Only Quick Sync writes sync_mode='quick', which is what Today's files filters on.")
+              f"Either sync mode feeds Today's files, but only for courses that are in the\n"
+              f"daily-sync set - so add these courses on the Today page first, or they land\n"
+              f"in the \"downloaded today for courses that aren't in your daily sync\" tally.")
     return exit_code
 
 

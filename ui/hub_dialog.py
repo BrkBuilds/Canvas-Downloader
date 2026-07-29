@@ -150,9 +150,28 @@ def change_hub_layer(target_layer, _pop_keys=None, **kwargs):
             st.session_state.pop(k, None)
 
 
+def _reconcile_daily_list():
+    """Push this hub edit through to the Today page's daily-sync list.
+
+    The daily list holds standalone copies of each pair, so without this a
+    course deleted (or re-linked) here stayed behind in the daily sync as an
+    entry with no source - unsyncable, and unfixable from anywhere. Best-effort:
+    a failure here must never block the hub edit the user actually asked for.
+    See core.auto_sync.reconcile_daily_list_with_hub for the rules.
+    """
+    import logging
+    try:
+        from core.auto_sync import reconcile_daily_list_with_hub
+        reconcile_daily_list_with_hub()
+    except Exception:
+        logging.getLogger(__name__).warning(
+            "Could not reconcile the daily-sync list after a hub edit", exc_info=True)
+
+
 def delete_group_callback(mgr, group_id, group_name, is_single_pair: bool = False):
     """Callback to delete a group before the dialog re-renders."""
     mgr.delete_group(group_id)
+    _reconcile_daily_list()
     entity = "Pair" if is_single_pair else "Group"
     st.session_state['hub_toast'] = f"{entity} '{group_name}' deleted."
 
@@ -164,6 +183,7 @@ def remove_pair_from_group(mgr, group_id, pair_idx):
     if group and 0 <= pair_idx < len(group.get('pairs', [])):
         popped = group['pairs'].pop(pair_idx)
         mgr.update_group(group_id, {'pairs': group['pairs']})
+        _reconcile_daily_list()
         st.session_state['hub_toast'] = f"Removed '{popped.get('course_name', 'course')}' from group."
     # Clear any active edit state that might reference stale indices
     st.session_state.pop('hub_editing_pair_idx', None)
@@ -223,6 +243,9 @@ def save_inline_edit_cb(mgr, gid, p_idx, new_folder, new_cid, new_cname):
             'course_name': new_cname,
         }
         mgr.update_group(gid, {'pairs': updated_pairs})
+        # Re-linking a folder here re-links it on the Today page too, so the
+        # user never has to fix the same pair twice.
+        _reconcile_daily_list()
         st.session_state['hub_toast'] = "✅ Pair updated successfully!"
     # Clear edit state
     hub_cancel_edit()
@@ -893,7 +916,23 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 # === INLINE EDIT MODE ===
                 if editing_idx is not None and editing_idx == p_idx:
                     with st.container(border=True, key=f"hub_compact_edit_form_{p_idx}"):
-                        st.markdown(f"<h3 style='margin-top: -15px; margin-bottom: 5px;'>{SVG_EDIT_WHITE} Editing Pair</h3>", unsafe_allow_html=True)
+                        # Explicit font-size, not a bare h3: Streamlit's h3
+                        # inside this dialog renders smaller than the 1.4em pen
+                        # glyph beside it, so the icon dominated a title that
+                        # read as body text. Stated here so the two are sized
+                        # against each other and stay that way.
+                        # margin-top: 0, NOT the -15px this carried as an <h3>.
+                        # That negative margin existed to cancel Streamlit's
+                        # default heading margin (which the dialog CSS already
+                        # zeroes anyway); at 1.3rem it pulled the row clean
+                        # through the card's top edge and clipped the glyph.
+                        st.markdown(
+                            "<div style='display:flex;align-items:center;gap:4px;"
+                            "margin-top:0;margin-bottom:7px;font-size:1.3rem;"
+                            f"font-weight:700;color:#ffffff;line-height:1.25;'>{SVG_EDIT_WHITE}"
+                            "<span>Editing Pair</span></div>",
+                            unsafe_allow_html=True,
+                        )
 
                         # --- Course row ---
                         temp_course_id = st.session_state.get('hub_edit_temp_course_id')
@@ -1637,9 +1676,11 @@ def inject_hub_global_css():
     }}
 
     /* Crush native top padding on the inline edit/add bordered containers */
+    /* 12px, not 8px: the "Editing Pair" header is a 1.3rem row with a 1.4em
+       glyph, and at 8px it cleared the card's top edge by under a pixel. */
     div[class*="st-key-hub_compact_edit_form_"],
     div[class*="st-key-hub_compact_add_form"] {{
-        padding-top: 0.5rem !important;
+        padding-top: 12px !important;
     }}
     </style>""")
 

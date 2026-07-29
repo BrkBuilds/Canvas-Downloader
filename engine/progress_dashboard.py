@@ -13,8 +13,8 @@ Usage:
 
 from __future__ import annotations
 
+import math
 import os
-import time
 from dataclasses import dataclass
 from html import escape as _html_escape
 
@@ -73,21 +73,12 @@ def search_svg(color: str, size: int = 13) -> str:
 _search_svg = search_svg
 
 
-def analyzing_heading_html(label: str = "Analyzing Course Data...") -> str:
-    """The analysis screens' h4 heading, with the app's SVG search icon.
-
-    Single source of truth on purpose: this exact heading is rendered from FOUR
-    call sites (app.py x2, sync_ui.py, sync/analysis.py) and each one carried a
-    hard-coded magnifying-glass EMOJI - the only emoji left in an otherwise
-    all-SVG icon system, sitting directly under a stepper that used the proper
-    SVG glyph for the very same concept.
-    """
-    return (
-        f'<h4 style="color: {theme.TEXT_PRIMARY}; margin-top: 0; display: flex; '
-        f'align-items: center; gap: 8px;">'
-        f'{search_svg(theme.TEXT_PRIMARY, size=17)}'
-        f'<span>{label}</span></h4>'
-    )
+# NOTE: ``analyzing_heading_html`` used to live here - an h4 + search glyph that
+# was the analysis screens' entire chrome. Those screens now render through
+# ``render_analysis_dashboard`` (same header / bar / metrics row as every other
+# phase), so the bespoke heading has no call sites left. The search glyph itself
+# survives as ``search_svg``: the phase stepper and the active-file indicator
+# both still use it.
 
 
 def _transcribe_svg(color: str) -> str:
@@ -298,13 +289,29 @@ def log_meta(text: str) -> str:
 # Active File Indicator
 # ═══════════════════════════════════════════════
 
+def _row_gap(last: bool) -> str:
+    """The bottom margin a dashboard row carries, given whether it is the last one.
+
+    The card sets `gap: 0` and an even 18 px inset on all four sides, so every
+    row buys its own separation from the row below with a bottom margin. That is
+    correct until the row IS the bottom one, at which point its margin lands on
+    top of the card's padding and the card reads as bottom-heavy: the analysis
+    dashboard has no terminal log, so its active-file card was the last element
+    and sat 12 + 18 = 30 px off the edge against 18 px on the sides. Whichever
+    row happens to be last asks for zero here instead of the card having to know
+    which phase is running.
+    """
+    return '0' if last else '12px'
+
+
 def render_active_file(placeholder, filename: str, phase: str = 'download',
-                       *, label: str | None = None) -> None:
+                       *, label: str | None = None, last: bool = False) -> None:
     """Render the active-file indicator with SVG icon and left-accent card design.
 
     Replaces the old emoji-based 'Currently downloading:' label.
     phase: 'download' | 'postprocess' | 'search' | 'panopto' | 'transcribe'
     label: optional override for the small uppercase phase label.
+    last:  this is the dashboard card's final row - see ``_row_gap`` below.
     Strips Canvas callback prefixes ('Downloading file: ', etc.) automatically.
     """
     clean = str(filename)
@@ -315,19 +322,32 @@ def render_active_file(placeholder, filename: str, phase: str = 'download',
     clean = _html_escape(clean)
 
     color, default_label, icon_fn = _PHASE_STYLE.get(phase, _PHASE_STYLE['download'])
-    label = label or default_label
-    icon = icon_fn(color)
+    # The phase label is app copy, never Canvas data - but it is a public
+    # keyword argument, so escaping it costs nothing and makes that true by
+    # construction rather than by convention.
+    label_html = _html_escape(label or default_label)
+    # Named _html by the repo's convention for app-authored markup: this is an
+    # inline SVG built by one of the _PHASE_STYLE icon factories.
+    icon_html = icon_fn(color)
 
+    # Two depths, one card. The card itself is RAISED on the same overlay +
+    # outward shadow as the metrics row, so the two read as one instrument
+    # rather than as a panel and a loose strip beneath it. The filename inside
+    # it is RECESSED - a darker well behind a soft inset shadow, the same
+    # gesture as the terminal log below, scaled down. The result is that the
+    # thing that changes every file looks set into the surface that holds it.
     placeholder.markdown(f'''
-    <div style="display:flex; align-items:center; gap:10px; padding:8px 14px;
-        background:rgba(255,255,255,0.04);
-        border-radius:6px; margin-bottom:12px; overflow:hidden;">
-      {icon}
+    <div style="display:flex; align-items:center; gap:10px; padding:10px 16px;
+        background:rgba(255,255,255,0.055); border:1px solid rgba(255,255,255,0.08);
+        border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.30);
+        margin-bottom:{_row_gap(last)}; overflow:hidden;"><!-- # audit-ignore: _row_gap returns one of two literals -->
+      {icon_html}
       <div style="overflow:hidden; min-width:0; flex:1;">
         <div style="color:{color}; font-size:0.7rem; font-weight:700;
-            text-transform:uppercase; letter-spacing:0.06em; line-height:1; margin-bottom:4px;">{label}</div>
+            text-transform:uppercase; letter-spacing:0.06em; line-height:1; margin-bottom:5px;">{label_html}</div>
         <div style="color:{theme.TEXT_PRIMARY}; font-size:0.875rem; font-weight:500;
-            background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:4px;
+            background:rgba(0,0,0,0.22); box-shadow:inset 0 1px 3px rgba(0,0,0,0.42);
+            padding:3px 9px; border-radius:5px;
             overflow:hidden; text-overflow:ellipsis; white-space:nowrap; line-height:1.5;">{clean}</div>
       </div>
     </div>
@@ -340,15 +360,18 @@ def render_active_file(placeholder, filename: str, phase: str = 'download',
 
 @dataclass
 class DashboardPlaceholders:
-    """Encapsulates the five Streamlit st.empty() slots that make up the
-    progress dashboard.  Passed explicitly into every render call so the
-    engine never touches global UI state.
+    """Encapsulates the Streamlit st.empty() slots that make up the progress
+    dashboard.  Passed explicitly into every render call so the engine never
+    touches global UI state.
+
+    ``active_file`` and ``log`` are optional: the analysis dashboard shows the
+    same header / bar / metrics chrome but has no per-file terminal to fill.
     """
-    header: object          # st.empty() - course name + phase label
-    progress: object        # st.empty() - progress bar
-    metrics: object         # st.empty() - 4-metric row (downloaded/speed/files/eta)
-    active_file: object     # st.empty() - "Currently downloading: …"
-    log: object             # st.empty() - terminal log widget
+    header: object                  # st.empty() - course name + phase label
+    progress: object                # st.empty() - progress bar
+    metrics: object                 # st.empty() - the metrics row
+    active_file: object = None      # st.empty() - "Currently downloading: …"
+    log: object = None              # st.empty() - terminal log widget
 
 
 # ═══════════════════════════════════════════════
@@ -382,10 +405,36 @@ def render_progress_bar(placeholders: DashboardPlaceholders, percent: int,
     )
 
 
+def _pct(value) -> int:
+    """Coerce anything a call site might hand us into a drawable 0-100 percent.
+
+    This is not defensive padding - an out-of-range percent fails *loudly wrong*
+    rather than slightly wrong, because it goes straight into ``width: N%``:
+
+    * ``150`` overflows the fill past its rounded track;
+    * ``-3`` and ``nan`` are **invalid CSS**, so the browser drops the whole
+      declaration and the div falls back to ``width: auto`` - which for a block
+      element is the full track. A bar that means "less than nothing happened"
+      renders as a bar that means "finished".
+
+    Clamping lives here rather than at the call sites because it has to hold for
+    all of them: the sync analysis hook passed ``int(current / total * 100)``
+    straight through with no ceiling at all.
+    """
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        return 0
+    if not math.isfinite(n):
+        return 0
+    return int(max(0.0, min(100.0, n)))
+
+
 def build_progress_bar_html(percent: int, *, color: str | None = None,
                             indeterminate: bool = False, label: str | None = None) -> str:
     """Return the progress-bar HTML as a string (shared by download + sync flows)."""
     color = color or theme.ACCENT_BLUE
+    percent = _pct(percent)
     if indeterminate:
         return (
             f'<div class="cd-indeterminate-track" style="background-color:{theme.BG_CARD};'
@@ -410,109 +459,260 @@ def build_progress_bar_html(percent: int, *, color: str | None = None,
     )
 
 
-def render_metrics_row(
-    placeholders: DashboardPlaceholders,
-    downloaded_mb: float,
-    total_mb: float,
-    speed_mb_s: float,
-    current_files: int,
-    total_files: int,
-    eta_string: str,
-    *,
-    show_total_mb: bool = True,
-) -> None:
-    """Render the 4-metric row (Downloaded / Speed / Files / ETA).
+# ═══════════════════════════════════════════════
+# The Metrics Row - ONE renderer, one set of cells
+# ═══════════════════════════════════════════════
+#
+# This row used to exist as FOUR byte-identical copies of the same markup
+# (render_metrics_row, build_metrics_html, build_custom_metrics_html and
+# converters/post_processing), and they drifted exactly as you would expect: a
+# `cd-metrics-row` class added to three of them missed the only copy the sync
+# screen actually renders, so the change looked perfect in a harness and was
+# still broken in the app. There is now one renderer, ``build_metrics_row``,
+# and one vocabulary of cells - every screen composes from the same parts.
 
-    When ``show_total_mb`` is False the "Downloaded" column omits the
-    "/ X.X MB" denominator (used by the retry dashboard where total_mb
-    is not always meaningful).
+@dataclass(frozen=True)
+class Metric:
+    """One cell of the metrics row.
+
+    ``value`` is the large figure; ``suffix`` is the dim trailing part - a
+    denominator ("/ 167"), a unit ("MB/s"), or both ("/ 849.4 MB"). Splitting
+    them out is what lets every caller share one renderer: the old
+    "pass pre-built HTML" contract meant each screen re-derived the suffix
+    styling by hand, and each got it slightly differently. Both parts are
+    escaped, so no caller can inject markup here any more.
     """
-    mb_display = (
-        f"{downloaded_mb:.1f} <span style=\"font-size: 0.9rem; color: {theme.ACCENT_BLUE};\">/ {total_mb:.1f} MB</span>"
-        if show_total_mb
-        else f"{downloaded_mb:.1f} <span style=\"font-size: 0.9rem; color: {theme.ACCENT_BLUE};\">MB</span>"
-    )
-
-    placeholders.metrics.markdown(f'''
-    <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
-            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{mb_display}</span>
-        </div>
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
-            <span style="color: #10B981; font-size: 1.2rem; font-weight: bold;">{speed_mb_s:.1f} <span style="font-size: 0.9rem;">MB/s</span></span>
-        </div>
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
-            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_files} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_files}</span></span>
-        </div>
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
-            <span style="color: #F59E0B; font-size: 1.2rem; font-weight: bold;">{eta_string}</span>
-        </div>
-    </div>
-    ''', unsafe_allow_html=True)
+    label: str
+    value: str
+    suffix: str = ''
+    color: str = theme.TEXT_PRIMARY
+    suffix_color: str = theme.ACCENT_BLUE
 
 
-def _format_eta(remaining_mb: float, speed_mb_s: float,
-                total_mb: float, percent: int) -> str:
-    """Human ETA for the metrics row.
+def build_metrics_row(metrics, *, last: bool = False) -> str:
+    """Render a metrics row from :class:`Metric` cells.
 
-    Two things this deliberately avoids:
+    ``cd-metrics-row`` is the hook global.css uses to strip this row's own
+    surface when it renders INSIDE the run dashboard card (a bordered box
+    inside a bordered box reads as two unrelated panels). Standalone callers
+    keep the box.
 
-    * **"00:00" before the run has moved any bytes.** With no speed sample yet
-      the naive ``remaining / speed`` guard yields 0, which renders as "00:00" -
-      i.e. "finishing right now" - at the exact moment we know least. Say
-      "Estimating" instead, and only show a clock once there is a real sample.
-    * **Silently wrapping at one hour.** ``strftime('%M:%S')`` on a 90-minute
-      estimate prints "30:00", understating it by an hour. Anything from an hour
-      up gets an H:MM:SS clock.
+    ``last`` drops the row's bottom margin - see :func:`_row_gap`.
     """
-    if percent >= 100 or remaining_mb <= 0:
-        return "00:00"
-    if speed_mb_s <= 0 or total_mb <= 0:
-        return "Estimating"
-    eta_seconds = max(0.0, remaining_mb / speed_mb_s)
-    if eta_seconds >= 3600:
-        hours, rem = divmod(int(eta_seconds), 3600)
-        minutes, seconds = divmod(rem, 60)
-        return f"{hours}:{minutes:02d}:{seconds:02d}"
-    return time.strftime('%M:%S', time.gmtime(eta_seconds))
-
-
-def build_custom_metrics_html(metrics: list) -> str:
-    """Return a metrics-row HTML string from arbitrary (label, value, color) cells.
-
-    ``metrics`` is a list of (label, value_html, color) tuples. ``value_html`` may
-    contain pre-built inline markup (e.g. a dim unit span); it is NOT escaped, so
-    callers must only pass app-controlled content. Used by the phased Panopto
-    dashboard whose columns differ per phase (search vs download vs transcribe).
-    """
-    cells = ""
-    for label, value, color in metrics:
+    # No cells means no instrument. Rendering the surface anyway leaves an empty
+    # raised box on the screen, which reads as a panel that failed to load.
+    if not metrics:
+        return ''
+    cells = ''
+    for m in metrics:
+        suffix = (
+            f'<span style="font-size:0.9rem;color:{m.suffix_color};">'
+            f'{_html_escape(m.suffix)}</span>'
+        ) if m.suffix else ''
         cells += (
             '<div style="display:flex;flex-direction:column;align-items:center;">'
-            f'<span style="color:{theme.TEXT_SECONDARY};font-size:0.75rem;font-weight:bold;'
-            f'text-transform:uppercase;">{_html_escape(str(label))}</span>'
-            f'<span style="color:{color};font-size:1.2rem;font-weight:bold;">{value}</span>'
+            f'<span style="color:{theme.TEXT_SECONDARY};font-size:0.75rem;'
+            f'font-weight:bold;text-transform:uppercase;">{_html_escape(m.label)}</span>'
+            f'<span style="color:{m.color};font-size:1.2rem;font-weight:bold;">'
+            f'{_html_escape(m.value)} {suffix}</span>'
             '</div>'
         )
+    # A RAISED panel: lifted off whatever surface hosts it, with an outward
+    # shadow - deliberately the mirror of the terminal log below it, which is
+    # recessed behind an inset shadow. The numbers are the thing you look at
+    # while a run is going, and they used to sit on bare card background with no
+    # edge of their own.
+    #
+    # The lift is a white overlay rather than a palette colour so it composes
+    # correctly on every host: inside the run dashboard card, inside Today's
+    # own card, or standalone on the page. One base style, every mode.
     return (
-        f'<div style="display:flex;justify-content:center;gap:4rem;background-color:{theme.BG_DARK};'
-        f'padding:15px 25px;border-radius:8px;border:1px solid {theme.BG_CARD};margin-top:5px;'
-        f'margin-bottom:15px;flex-wrap:wrap;">{cells}</div>'
+        f'<div class="cd-metrics-row" style="display:flex;justify-content:center;'
+        f'gap:4rem;background:rgba(255,255,255,0.055);padding:14px 26px;'
+        f'border-radius:10px;border:1px solid rgba(255,255,255,0.08);'
+        f'box-shadow:0 2px 8px rgba(0,0,0,0.30);margin:2px 0 {_row_gap(last)};'
+        f'flex-wrap:wrap;">{cells}</div>'
     )
 
 
-def render_custom_metrics(placeholders: DashboardPlaceholders, metrics: list) -> None:
-    """Render an arbitrary metrics row (see build_custom_metrics_html)."""
-    placeholders.metrics.markdown(build_custom_metrics_html(metrics), unsafe_allow_html=True)
+def render_metrics(placeholders: DashboardPlaceholders, metrics, *,
+                   last: bool = False) -> None:
+    """Render a metrics row into the dashboard's metrics slot."""
+    placeholders.metrics.markdown(build_metrics_row(metrics, last=last),
+                                  unsafe_allow_html=True)
+
+
+# ── Standard cells ──────────────────────────────────────────────────────────
+# Named so that "Downloaded" means the same thing, and looks the same, on every
+# screen that shows it.
+#
+# Every cell coerces its input through ``_num``. These builders are called from
+# inside repaint loops that run *while a download is in flight*, and several of
+# those call sites are not wrapped in a try/except - so a counter that is
+# momentarily ``None`` between phases, or an ``inf`` from a divide against a
+# zero denominator, would not merely mis-render a cell: it would raise out of
+# the repaint and take the run's progress UI with it. The values arriving here
+# come from a dozen different counters maintained by different subsystems, and
+# the row is the one place that has to tolerate all of them.
+
+def _num(value, default: float = 0.0) -> float:
+    """A finite float, or ``default`` for None / NaN / inf / non-numeric."""
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        return default
+    return n if math.isfinite(n) else default
+
+
+def metric_transferred(done_bytes: float, total_bytes: float | None = None, *,
+                       label: str = 'Downloaded', accent: str = theme.ACCENT_BLUE) -> Metric:
+    """MB moved, with an optional "/ total MB" denominator.
+
+    ``total_bytes=None`` drops the denominator - used where a total is not
+    meaningful (the retry pass, Panopto media whose size is unknown until each
+    stream resolves).
+    """
+    done_mb = max(0.0, _num(done_bytes)) / (1024 * 1024)
+    total_mb = None if total_bytes is None else max(0.0, _num(total_bytes)) / (1024 * 1024)
+    # A denominator of zero is not a denominator. A re-run where every file is
+    # already on disk has nothing to transfer, and "0.0 / 0.0 MB" reads as a
+    # broken counter rather than as "nothing to fetch" - which is exactly how it
+    # was reported. Drop the fraction and just state the megabytes.
+    if total_mb is None or total_mb < 0.05:
+        suffix = "MB"
+    else:
+        suffix = f"/ {total_mb:.1f} MB"
+    return Metric(label, f"{done_mb:.1f}", suffix, theme.TEXT_PRIMARY, accent)
+
+
+def metric_speed(bytes_per_sec: float) -> Metric:
+    return Metric('Speed', f"{max(0.0, _num(bytes_per_sec)) / (1024 * 1024):.1f}",
+                  'MB/s', theme.SUCCESS_STAT, theme.SUCCESS_STAT)
+
+
+def metric_count(label: str, done, total=None, *,
+                 accent: str = theme.ACCENT_BLUE, color: str = theme.TEXT_PRIMARY) -> Metric:
+    """A "done / total" count.
+
+    The denominator is never allowed below the numerator. Synthetic items raise
+    both counters, and the two do not always land in the same tick, so the row
+    could read "236 / 233" - which is not a rounding artefact to a reader, it
+    just looks broken. The estimator applies the same floor internally.
+
+    A denominator of zero is dropped for the same reason ``metric_transferred``
+    drops "/ 0.0 MB": "0 / 0" describes nothing, and on a run with nothing to do
+    it is the whole row saying so in the language of a broken counter.
+    """
+    done = int(max(0.0, _num(done)))
+    total_n = None if total is None else int(max(0.0, _num(total)))
+    suffix = f"/ {max(total_n, done)}" if total_n else ''
+    return Metric(label, f"{done}", suffix, color, accent)
+
+
+def metric_eta(text: str) -> Metric:
+    return Metric('Time Remaining', text, '', theme.WARNING)
+
+
+def metric_elapsed(seconds: float) -> Metric:
+    from engine.estimation import format_elapsed
+    return Metric('Elapsed', format_elapsed(_num(seconds)), '', theme.WARNING)
+
+
+def metric_value(label: str, value: str, color: str = theme.TEXT_PRIMARY) -> Metric:
+    return Metric(label, value, '', color)
+
+
+def transfer_metrics(estimator, *, done_files: int, total_files: int,
+                     done_bytes: float, total_bytes: float | None,
+                     files_label: str = 'Files',
+                     accent: str = theme.ACCENT_BLUE) -> list[Metric]:
+    """The canonical Downloaded / Speed / Files / Time Remaining row.
+
+    Every byte-moving phase in the app renders exactly this, reading the speed
+    and the ETA off the same :class:`~engine.estimation.ProgressEstimator` -
+    so the two numbers can never disagree about how fast the run is going,
+    which is precisely what happened when each screen derived them separately.
+    """
+    return [
+        metric_transferred(done_bytes, total_bytes, accent=accent),
+        metric_speed(estimator.bytes_per_sec),
+        metric_count(files_label, done_files, total_files, accent=accent),
+        metric_eta(estimator.eta_text()),
+    ]
 
 
 def render_terminal_log(placeholders: DashboardPlaceholders, log_deque) -> None:
     """Render the terminal-style log widget from a deque of unified log-line HTML."""
+    if placeholders.log is None:
+        return
     placeholders.log.markdown(build_terminal_html(log_deque), unsafe_allow_html=True)
+
+
+# ═══════════════════════════════════════════════
+# Analysis Dashboard
+# ═══════════════════════════════════════════════
+
+def analysis_percent(courses_done: float, courses_total: float,
+                     sub_done: float = 0.0, sub_total: float = 0.0) -> int:
+    """Overall analysis progress: whole courses plus the current one's fraction.
+
+    The bar and the metrics row have to be measuring the same thing. They were
+    not: the bar took the *sub-step's* ratio straight from the scan hook while
+    the row counted *courses*, so the instant a sub-step finished the card read
+    a 100% bar above "COURSES 0 / 2". Two numbers in one card disagreeing about
+    whether the work is done is worse than either being slightly coarse.
+
+    Folding the sub-step in as a fraction of one course keeps the fine-grained
+    movement that made the bar worth watching, and makes it monotonic across the
+    whole analysis instead of resetting per course.
+    """
+    total = _num(courses_total)
+    if total <= 0:
+        return 0
+    done = max(0.0, _num(courses_done))
+    sub_t = _num(sub_total)
+    frac = min(1.0, max(0.0, _num(sub_done) / sub_t)) if sub_t > 0 else 0.0
+    return _pct((done + frac) / total * 100.0)
+
+
+def render_analysis_dashboard(
+    placeholders: DashboardPlaceholders,
+    *,
+    course_label: str,
+    course_name: str,
+    status_text: str,
+    percent: int = 0,
+    indeterminate: bool = False,
+    metrics=None,
+) -> None:
+    """Render the scan/analysis phase using the SAME chrome as the run dashboard.
+
+    Analysis used to draw its own card - a heading, two paragraphs and an 8 px
+    hairline bar - hand-copied into three places (download scan, sync analysis,
+    and the seed paint). It carried no metrics at all, so the first screen of
+    every run looked like it belonged to a different application than the one
+    that appeared ten seconds later, and told the user nothing about how long
+    the wait would be. It is the same phase label, the same course name, the
+    same progress bar and the same metrics row as everything else now.
+
+    ``indeterminate`` covers the sub-steps that report no meaningful total
+    (most of them report ``total=1``), where a bar frozen near 0% reads as a
+    hang and a sweeping bar reads as work.
+    """
+    # This card has no terminal log, so whichever row comes last here is the
+    # card's final row and must not add its own margin on top of the card's
+    # bottom padding (see ``_row_gap``).
+    _has_active = placeholders.active_file is not None and bool(status_text)
+
+    render_progress_header(placeholders, course_label, course_name)
+    render_progress_bar(placeholders, percent, color=PHASE_BAR_COLOR['search'],
+                        indeterminate=indeterminate,
+                        label="Analyzing…" if indeterminate else None)
+    if metrics:
+        render_metrics(placeholders, metrics, last=not _has_active)
+    if _has_active:
+        render_active_file(placeholders.active_file, status_text,
+                           phase='search', label='Analyzing', last=True)
 
 
 # ═══════════════════════════════════════════════
@@ -527,80 +727,37 @@ def render_full_dashboard(
     course_name: str,
     current_files: int,
     total_files: int,
-    downloaded_mb: float,
-    total_mb: float,
-    start_time: float,
-    show_total_mb: bool = True,
+    downloaded_bytes: float,
+    total_bytes: float | None,
+    estimator,
+    files_label: str = 'Files',
+    bar_color: str | None = None,
 ) -> None:
-    """One-call convenience that renders header + progress bar + metrics + log.
+    """One-call render of the whole byte-moving dashboard.
 
-    Computes percent, speed, and ETA from the provided raw values.
+    ``estimator`` is a :class:`~engine.estimation.ProgressEstimator` the caller
+    keeps for the run and has already fed this tick's progress. Speed and time
+    remaining both come off it, so they are always two views of one model
+    rather than two independent guesses.
     """
-    # Percent
-    if total_files > 0:
-        percent = int((current_files / total_files) * 100)
-        percent = min(100, percent)
-        if current_files >= total_files:
-            percent = 100
-    else:
-        percent = 0
-
-    # Speed & ETA
-    elapsed = time.time() - start_time
-    speed_mb_s = (downloaded_mb / elapsed) if elapsed > 0 else 0.0
-    remaining_mb = max(0, total_mb - downloaded_mb)
-    eta_string = _format_eta(remaining_mb, speed_mb_s, total_mb, percent)
+    _done_n, _total_n = _num(current_files), _num(total_files)
+    percent = int(_done_n / _total_n * 100) if _total_n > 0 else 0
+    # Hold the bar off 100% while work is still arriving. Synthetic items raise
+    # both counters together, so the ratio pins at 100% for the whole trailing
+    # stretch of shortcut/page files - half a minute of work behind a bar that
+    # says it is over.
+    if percent >= 100 and getattr(estimator, 'is_open_ended', False):
+        percent = 99
 
     render_progress_header(placeholders, header_label, course_name)
-    render_progress_bar(placeholders, percent)
-    render_metrics_row(
-        placeholders,
-        downloaded_mb=downloaded_mb,
-        total_mb=total_mb,
-        speed_mb_s=speed_mb_s,
-        current_files=current_files,
-        total_files=total_files,
-        eta_string=eta_string,
-        show_total_mb=show_total_mb,
-    )
+    render_progress_bar(placeholders, percent, color=bar_color)
+    render_metrics(placeholders, transfer_metrics(
+        estimator,
+        done_files=current_files, total_files=total_files,
+        done_bytes=downloaded_bytes, total_bytes=total_bytes,
+        files_label=files_label,
+    ))
     render_terminal_log(placeholders, log_deque)
-
-
-# ═══════════════════════════════════════════════
-# Sync-specific HTML helpers (return strings instead of writing to placeholders)
-# ═══════════════════════════════════════════════
-
-def build_metrics_html(
-    current_files: int,
-    total_files: int,
-    downloaded_mb: float,
-    total_mb: float,
-    speed_mb_s: float,
-    eta_string: str,
-) -> str:
-    """Return the metrics-row HTML as a string (for sync_ui.py which uses
-    placeholder.markdown(html) directly).
-    """
-    return f"""
-    <div style="display: flex; justify-content: center; gap: 4rem; background-color: {theme.BG_DARK}; padding: 15px 25px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 5px; margin-bottom: 15px;">
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Downloaded</span>
-            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{downloaded_mb:.1f} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_mb:.1f} MB</span></span>
-        </div>
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Speed</span>
-            <span style="color: #10B981; font-size: 1.2rem; font-weight: bold;">{speed_mb_s:.1f} <span style="font-size: 0.9rem;">MB/s</span></span>
-        </div>
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Files</span>
-            <span style="color: {theme.TEXT_PRIMARY}; font-size: 1.2rem; font-weight: bold;">{current_files} <span style="font-size: 0.9rem; color: {theme.ACCENT_BLUE};">/ {total_files}</span></span>
-        </div>
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <span style="color: {theme.TEXT_SECONDARY}; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Time Remaining</span>
-            <span style="color: #F59E0B; font-size: 1.2rem; font-weight: bold;">{eta_string}</span>
-        </div>
-    </div>
-    """
 
 
 def build_terminal_html(lines) -> str:

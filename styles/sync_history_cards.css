@@ -283,3 +283,67 @@ div[class*="st-key-shist_run_"]:not([class*="st-key-shist_run_today_"]) div[clas
     border-radius: 6px; padding: 3px 9px; max-width: 100%;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sync History section toggle (the "fake expander" header button)
+   ───────────────────────────────────────────────────────────────────────────
+   Everything here is STATIC. The two state-dependent declarations - the bottom
+   corner radius and the chevron rotation - stay inline in sync_ui.py, because
+   only Python knows whether the panel is open.
+
+   Do not "finish the job" by moving those two inline rules here and driving
+   them off a swapped widget key: that would delete the page's last
+   st.markdown(<style>) element, and per CLAUDE.md every inline <style>
+   injection occupies one flex gap slot that the surrounding layout was tuned
+   with. The button's margin-top: 32px below is measured WITH that slot present.
+   ═══════════════════════════════════════════════════════════════════════════ */
+div.st-key-sync_history_toggle button {
+    background: #262b34 !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+    border-top-left-radius: 8px !important;
+    border-top-right-radius: 8px !important;
+    justify-content: flex-start !important;
+    padding: 16px 20px !important;
+    height: auto !important;
+    margin-top: 32px !important;
+}
+
+div.st-key-sync_history_toggle button:hover {
+    background: #2c3240 !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+div.st-key-sync_history_toggle button p {
+    font-size: 1.15rem !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+/* Clock glyph, matching the one on the section marker above. */
+div.st-key-sync_history_toggle button p::before {
+    content: "";
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    margin-right: 11px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b1bac4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.9;
+}
+
+/* Chevron, pushed to the right edge. The rotation is applied inline. */
+div.st-key-sync_history_toggle button::after {
+    content: "";
+    margin-left: auto;
+    width: 15px;
+    height: 15px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: transform 0.2s ease;
+}

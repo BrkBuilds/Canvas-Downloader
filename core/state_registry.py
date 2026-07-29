@@ -169,6 +169,14 @@ SYNC_TRANSIENT_KEYS = {
     # Today dashboard (in-page daily/Quick Sync) run markers.
     'today_sync_active', 'today_sync_is_auto',
     'size_skipped_files', 'sync_has_ignored_files',
+    # Files delivered as a "_NewVersion" sibling instead of overwriting the copy
+    # already on disk - either because the user had edited it or because it was
+    # open in another program. Collected so the completion screen can say a
+    # second file appeared and why; without it the folder silently gains copies.
+    'sync_newversion_files',
+    # What the analysis actually compared, so the "all up to date" completion
+    # card can say how much work it did instead of only that there was none.
+    'sync_uptodate_stats',
     # sync_failed recovery keys
     'sync_worker_error', 'qs_cancel_route', 'qs_skipped',
     # Re-attachable sync worker (H-2 heartbeat pattern) - future/pool refs

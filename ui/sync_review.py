@@ -376,9 +376,22 @@ def _render_transcription_setup_notice(results):
     )
 
 
+def _sync_review_go_back():
+    """Leave Review Changes for the sync setup page.
+
+    The same single call the page's own Go back button makes, so a click on the
+    tracker discards exactly as much as the button does - the analysis results
+    included, which is the point: they describe a course list the user is about
+    to change. Mutates session state only (``cleanup_sync_state`` also sets
+    ``step = 1``); it runs as an ``on_click``, ahead of the click's own rerun.
+    """
+    cleanup_sync_state()
+
+
 def show_analysis_review(on_confirm_sync):
-    # Step wizard
-    render_sync_wizard(st, 2)
+    # Step wizard. "1. Select Courses" is a live back-link - see the handler
+    # above for why it is the same one the Go back button uses.
+    render_sync_wizard(st, 'review', nav={'select': _sync_review_go_back})
 
     # NOTE: The transcription engine-setup dialog is hosted centrally in app.py;
     # the "Set up transcription" notice button (and Section 4's) opens it by
@@ -1598,9 +1611,8 @@ def show_analysis_review(on_confirm_sync):
         vertical-align: middle;
         transform: translateY(-2px);
     }}
-    div[class*="st-key-restore_all_"] button:disabled p::before {{
-        opacity: 0.3 !important;
-    }}
+    /* No disabled icon rule: global.css's `button[disabled]` filter dims the
+       whole button INCLUDING this ::before, and an extra opacity multiplies. */
 
     /* ===== 'IGNORE UNCHECKED' BULK BUTTONS ===== */
     div[class*="st-key-sweep_"] button p::before {{
@@ -1618,9 +1630,7 @@ def show_analysis_review(on_confirm_sync):
         vertical-align: middle;
         transform: translateY(-2px);
     }}
-    div[class*="st-key-sweep_"] button:disabled p::before {{
-        opacity: 0.3 !important;
-    }}
+    /* No disabled icon rule - see the restore_all note above. */
     div[class*="st-key-sweep_"] button p em {{
         color: #9ca3af !important;
         font-style: normal !important;
@@ -1628,10 +1638,8 @@ def show_analysis_review(on_confirm_sync):
         margin-left: 5px !important;
         vertical-align: baseline !important;
     }}
-    /* Dim the counter when button is disabled to match parent text */
-    div[class*="st-key-sweep_"] button:disabled p em {{
-        color: rgba(255, 255, 255, 0.3) !important;
-    }}
+    /* No disabled counter rule: the shared filter dims the whole button, so
+       forcing the counter to a fixed alpha just made it darker than its label. */
 
     /* ===== PER-LIST 'SELECT / DESELECT ALL HERE' BUTTONS ===== */
     div[class*="st-key-selhere_"] button p,
@@ -1871,7 +1879,27 @@ def show_analysis_review(on_confirm_sync):
                                                 _ext = effective_ext(_disp_raw, _contract) or effective_ext(file.filename, _contract)
                                                 _ext_clean = f" ~{_ext[1:].upper()}~" if _ext else ""
                                                 _size_clean = f" `{size}`" if size else ""
-                                                st.checkbox(f"{_name}{_ext_clean}{_size_clean}", key=key)
+                                                # A file the analyzer declined to
+                                                # match onto a similar local file.
+                                                # Downloading it is the safe call,
+                                                # but to the student it looks like
+                                                # being offered something they
+                                                # already have - so say so, and say
+                                                # what they can do about it.
+                                                _lookalike = getattr(file, 'local_lookalike', '')
+                                                _warn = " ⚠️" if _lookalike else ""
+                                                _help = (
+                                                    f"You may already have this file. "
+                                                    f"“{Path(_lookalike).name}” in your folder is the same "
+                                                    f"size and type, but its name is too different to be sure "
+                                                    f"it is the same file — so it was not matched.\n\n"
+                                                    f"Keep it checked to download a fresh copy (your file is "
+                                                    f"never overwritten), or uncheck it if you know you "
+                                                    f"already have it."
+                                                ) if _lookalike else None
+                                                st.checkbox(
+                                                    f"{_name}{_ext_clean}{_size_clean}{_warn}",
+                                                    key=key, help=_help)
                                             with col2:
                                                 st.button("\u200b", key=f"ign_new_{pair['course_id']}_{file.id}", help="Ignore this file (remove from sync list).", on_click=handle_ignore, args=(idx, file.id, 'new_files', file))
 
@@ -1999,9 +2027,15 @@ def show_analysis_review(on_confirm_sync):
                             for sync_info in result.deleted_on_canvas:
                                 _disp_raw = unquote_plus(sync_info.canvas_filename)
                                 _name, _ext = os.path.splitext(_disp_raw)
-                                _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
+                                # esc() the extension, not just the name. Both
+                                # halves come from the same Canvas filename, and
+                                # .upper() is not a sanitiser - HTML tag names
+                                # are case-insensitive, so a file called
+                                # `notes.<img src=x onerror=...>` renders as a
+                                # live tag here while esc(_name) beside it is safe.
+                                _ext_html = f" <del>{esc(_ext[1:].upper())}</del>" if _ext else ""
                                 _size_html = f" <code>{format_file_size(sync_info.original_size)}</code>" if sync_info.original_size else ""
-                                st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}{_size_html}</div>", unsafe_allow_html=True)
+                                st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_html}{_size_html}</div>", unsafe_allow_html=True)
 
                 # Ignored files Bucket (Canvas files AND/OR Panopto recordings)
                 if (hasattr(result, 'ignored_files') and result.ignored_files) or pan_ignored:
@@ -2019,9 +2053,14 @@ def show_analysis_review(on_confirm_sync):
                                             _disp_raw = unquote_plus(sync_info.canvas_filename)
                                             _name, _ = os.path.splitext(_disp_raw)
                                             _ext = _disk_ext(getattr(sync_info, 'local_path', ''), sync_info.canvas_filename, _contract)
-                                            _ext_clean = f" <del>{_ext[1:].upper()}</del>" if _ext else ""
+                                            # esc() for the same reason as the
+                                            # deleted-on-Canvas row above: this
+                                            # extension traces back to a Canvas
+                                            # filename, and .upper() does not
+                                            # neutralise markup.
+                                            _ext_html = f" <del>{esc(_ext[1:].upper())}</del>" if _ext else ""
                                             _size_html = f" <code>{format_file_size(sync_info.original_size)}</code>" if sync_info.original_size else ""
-                                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_clean}{_size_html}</div>", unsafe_allow_html=True)
+                                            st.markdown(f"<div style='color: rgba(255, 255, 255, 0.6); font-size: 16px; line-height: 1.6; padding: 3px 0 3px 2px; display: flex; align-items: center;'>{esc(_name)}{_ext_html}{_size_html}</div>", unsafe_allow_html=True)
                                         with col2:
                                             st.button("\u200b", key=f"restitem_{pair['course_id']}_{sync_info.canvas_file_id}", help="Restore this file to the sync list above.", on_click=handle_restore, args=(idx, sync_info))
 
@@ -2122,6 +2161,50 @@ def show_analysis_review(on_confirm_sync):
     # Heads-up (with one-click setup) if any synced course is configured for
     # Transcripts/Subtitles but the transcription engine/model isn't ready.
     _render_transcription_setup_notice(st.session_state.get('sync_analysis_results', []))
+
+    # ── "You may already have this" notice ────────────────────────────────
+    # Files the analyzer refused to match onto a similar-looking local file.
+    # Refusing is the safe call - matching on size and type alone once let an
+    # unrelated file take a real file's place, after which the real file was
+    # never downloaded again - but the student sees a file being offered that
+    # they believe they already have, and without an explanation that reads as
+    # the app being wrong. So name the local file, say why it was not matched,
+    # and give them the three things they can actually do.
+    _lookalikes = []
+    for _rd in all_results:
+        _res = (_rd or {}).get('result')
+        for _f in (getattr(_res, 'new_files', None) or []):
+            _la = getattr(_f, 'local_lookalike', '')
+            if _la:
+                _lookalikes.append((
+                    unquote_plus(getattr(_f, 'display_name', '') or _f.filename),
+                    _la))
+    if _lookalikes:
+        from ui.amber_notice import render_amber_notice
+        # Plain text, not markup: render_amber_notice escapes `detail`, and it
+        # must keep doing so - every name below is a Canvas filename, i.e.
+        # untrusted input, and this component is shared by a dozen callers.
+        # Naming ONE example here and putting the rest in each row's tooltip
+        # also reads better than a five-item bullet list inside a warning box.
+        _n = len(_lookalikes)
+        _first_name, _first_local = _lookalikes[0]
+        _eg = (f"For example, “{_first_name}” looks like "
+               f"“{Path(_first_local).name}” in your folder. ")
+        render_amber_notice(
+            f"{_n} new {'file looks' if _n == 1 else 'files look'} like "
+            f"{'a file' if _n == 1 else 'files'} you may already have",
+            detail=(
+                f"{'It is' if _n == 1 else 'They are'} the same size and type as "
+                f"{'a file' if _n == 1 else 'files'} already in your course folder, "
+                "but the names are too different to be certain it is the same file, "
+                f"so it was not matched. {_eg}"
+                "Hover the ⚠️ next to a file to see which of your files it resembles.  "
+                "You can leave it checked to download a fresh copy — your own files "
+                "are never renamed, overwritten or deleted — uncheck it if you know "
+                "you already have it, or use the eye icon to skip it for good."
+            ),
+            key="sync_review_lookalike_notice",
+        )
 
     col_back, _, col_sync = st.columns([1, 5, 1.5])
     with col_sync:
@@ -2384,12 +2467,9 @@ def inject_dynamic_sync_review_css():
         box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
         color: #ffffff !important;
     }
-    div.st-key-btn_sync_selected button:disabled {
-        background-color: #3a3a3a !important;
-        color: #6b6b6b !important;
-        box-shadow: none !important;
-        border: 1px solid #4a4a4a !important;
-    }
+    /* Disabled state: none here - global.css's `button[disabled]` recipe owns
+       it. A flat #3a3a3a repaint made this look unrelated to the Back button
+       beside it, which dims through the shared filter. */
     /* Sweep and Restore buttons (Neutral, no blue tint) */
     div[class*="st-key-sweep_"] button,
     div[class*="st-key-restore_all_"] button,
@@ -2415,12 +2495,7 @@ def inject_dynamic_sync_review_css():
         background-color: rgba(255, 255, 255, 0.2) !important;
         border-color: rgba(255, 255, 255, 0.3) !important;
     }
-    div[class*="st-key-sweep_"] button:disabled,
-    div[class*="st-key-restore_all_"] button:disabled {
-        background-color: rgba(255, 255, 255, 0.02) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        color: rgba(255, 255, 255, 0.3) !important;
-    }
+    /* Disabled state: none here - global.css's `button[disabled]` recipe owns it. */
     """)
 
     if css_blocks:

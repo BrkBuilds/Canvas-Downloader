@@ -34,6 +34,7 @@ from shared.helpers import (
     get_base64_image,
     format_relative_date,
     format_time_display,
+    help_text_enabled,
 )
 
 from core.state_registry import ensure_sync_state, cleanup_sync_state
@@ -57,7 +58,13 @@ logger = logging.getLogger(__name__)
 
 # ── Module-level help card constants (computed once at import, not on every render) ──
 
-_SYNC_HELP_TITLE = "How Sync Mode Works"
+# One line under each sync action. Third person ("Compares…", "Downloads…") so
+# each reads as what the button will do, not as an instruction - these two are
+# the hard choice on this page and their names alone don't separate them.
+_ANALYZE_HINT = "Compares with Canvas, then you pick what to download"
+_QUICK_SYNC_HINT = "Downloads every new file and update in one click"
+
+_SYNC_HELP_TITLE ="How Sync Mode Works"
 _slbl = "font-size: 1rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; margin: 14px 0 8px 0; color: rgba(255,255,255,0.9);"
 _step_card_r = "flex: 1; min-width: 0; border: 1px solid transparent; border-radius: 14px; background: linear-gradient(#132036, #132036) padding-box, linear-gradient(150deg, #3b71b8 0%, #132036 90%) border-box; padding: 13px 14px;"
 _step_num_r = "flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px; background: #1d3354; display: flex; align-items: center; justify-content: center; font-size: 1.32rem; font-weight: 800; color: #ffffff; line-height: 1;"
@@ -376,7 +383,7 @@ _SYNC_HELP_TEXT = (
     f"<li><b>{HELP_ICONS['cat_new']} New Files Added:</b> Brand new files downloaded from Canvas.</li>"
     f"<li><b>{HELP_ICONS['cat_update']} Updates Overwritten:</b> Canvas updates that cleanly replaced your unmodified local files.</li>"
     f"<li><b>{HELP_ICONS['cat_locdel']} Locally-Deleted Files Restored:</b> Files you had deleted from your local folder that you chose to re-download, restoring them from Canvas.</li>"
-    f"<li><b>{HELP_ICONS['cat_miss']} Modified Files Protected:</b> Updated Canvas files that you had edited locally. The sync engine saved the new version as <em>_NewVersion</em> next to your modified copy to protect your edits!</li>"
+    f"<li><b>{HELP_ICONS['cat_miss']} Modified Files Protected:</b> Updated Canvas files your local copy could not be replaced for - either you had edited it, or it was open in another program. The sync engine saved the new version as <em>_NewVersion</em> next to your copy, which is left untouched.</li>"
     f"<li><b>{HELP_ICONS['error']} Skipped / Failed:</b> A list of any files that failed to sync, grouped by the exact error reason (like network timeouts) so you know exactly what manual action is needed.</li>"
     "</ul>"
     "</div>"
@@ -1057,7 +1064,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # Step wizard - must be rendered BEFORE any inject_css() calls.
     # inject_hub_global_css() calls inject_css() via st.markdown which creates a
     # 1rem ghost-box margin; rendering the wizard first pins it flush to the top.
-    render_sync_wizard(st, 1)
+    render_sync_wizard(st, 'select')
 
     # Inject all Hub Dialog + Main Button CSS unconditionally
     _inject_hub_global_css()
@@ -1102,8 +1109,10 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
     }}
 
-    /* Analyze Sync Hover - Glow + Lighter Shift */
-    div.st-key-btn_analyze_sync button:hover {{
+    /* Analyze Sync Hover - Glow + Lighter Shift.
+       `:not(:disabled)` is load-bearing: without it a disabled button still lit
+       up under the cursor, which reads as "clickable" on a control that is not. */
+    div.st-key-btn_analyze_sync button:hover:not(:disabled) {{
         background-color: #2b8cbe !important;
         box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2),
                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
@@ -1119,36 +1128,24 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         transition: filter 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
     }}
 
-    /* Quick Sync Hover - Glow (0.2 Opacity) + Lighter Gradient Shift via Filter */
-    div.st-key-btn_quick_sync button:hover {{
+    /* Quick Sync Hover - Glow + Lighter Gradient Shift via Filter.
+       `:not(:disabled)` is doubly load-bearing here: the hover `filter` would
+       otherwise REPLACE global.css's disabled brightness(0.5) filter, so a
+       disabled button turned brighter than its enabled self on hover. */
+    div.st-key-btn_quick_sync button:hover:not(:disabled) {{
         filter: brightness(1.15) !important;
         box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2),
                     inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
         color: #ffffff !important;
     }}
 
-    /* Analyze Sync Disabled - clean muted grey, no washed-out color */
-    div.st-key-btn_analyze_sync button:disabled {{
-        background-color: #3a3a3a !important;
-        color: #6b6b6b !important;
-        box-shadow: none !important;
-        border: 1px solid #4a4a4a !important;
-    }}
-    div.st-key-btn_analyze_sync button:disabled p::before {{
-        filter: grayscale(100%) opacity(0.4) !important;
-    }}
-
-    /* Quick Sync Disabled - override gradient with flat grey */
-    div.st-key-btn_quick_sync button:disabled {{
-        background: #3a3a3a !important;
-        color: #6b6b6b !important;
-        box-shadow: none !important;
-        border: 1px solid #4a4a4a !important;
-        filter: none !important;
-    }}
-    div.st-key-btn_quick_sync button:disabled p::before {{
-        filter: grayscale(100%) opacity(0.4) !important;
-    }}
+    /* NO disabled rules here on purpose. Both buttons defer to the single
+       `button[disabled]` recipe in global.css (brightness/saturate).
+       They used to repaint themselves flat #3a3a3a, which made two buttons that
+       are nearly the same blue when enabled look like two unrelated controls
+       when disabled - and `filter: none` on Quick Sync actively cancelled the
+       shared recipe. The filter also dims each button's ::before icon for free,
+       so the old grayscale+opacity icon rules are gone too. */
 
     /* ===== ADD COURSE BUTTON - Base64 Icon via ::before ===== */
     div.st-key-btn_add_folder button p::before,
@@ -1270,6 +1267,20 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     if open_hub:
         _saved_groups_hub_dialog(courses, course_names)
 
+    # What to DO on this page, in one line. No max-width: the measure should
+    # run the full content width, out to where the Saved Groups & Pairs button
+    # sits - a `ch` cap wrapped it to roughly half the page and read as a broken
+    # column. (The longer "what is sync mode" explanation lives in the Help
+    # card, which is where a user who needs it will look.)
+    if help_text_enabled():
+        st.html(
+            "<div style='color:#cbd5e1;font-size:0.9rem;line-height:1.55;"
+            "margin-top:-6px;margin-bottom:2px;'>"
+            "Add the courses you want below, then choose whether to review the "
+            "changes first or just fetch everything."
+            "</div>"
+        )
+
     # Help Card Expansion (renders below the header + hub button row if open)
     render_help_card(
         key_prefix="sync_setup",
@@ -1310,13 +1321,22 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     _can_sync = bool(sync_pairs) and not _has_missing_folders
 
-    # Compute student-friendly help tooltips for disabled buttons
+    # The tooltip carries ONLY the reason a button is unavailable. What each
+    # button does is a caption underneath it (_ANALYZE_HINT / _QUICK_SYNC_HINT)
+    # - a tooltip that fires every time you move to click a button you already
+    # understand reads as nagging, and these two are clicked constantly.
     if not sync_pairs:
-        _sync_help = "Add at least one course folder to start syncing."
+        _blocked = "Add at least one course folder above first."
     elif _has_missing_folders:
-        _sync_help = f"Can't sync - a folder is missing or disconnected. Fix or remove it first."
+        _blocked = "Can't sync - a folder is missing or disconnected. Fix or remove it first."
     else:
-        _sync_help = None
+        _blocked = None
+
+    # Captions under the two buttons. Third person on purpose - they describe
+    # what the button will DO, which is the thing a user is actually choosing
+    # between here (the names alone don't separate "review first" from "just
+    # fetch it").
+    _show_hints = help_text_enabled()
 
     # --- Amber notice cards (rendered ABOVE the buttons) ---
     if sync_pairs and _has_missing_folders:
@@ -1349,7 +1369,9 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     # Ratios: 0.75 is ~75% of the previous 1.0 width (relative to page)
     # gap="small" brings the OR closer
-    col_analyze, col_or, col_quick, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small", vertical_alignment="center")
+    # vertical_alignment="top" so both captions start on the same line even
+    # when one wraps and the other does not.
+    col_analyze, col_or, col_quick, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small", vertical_alignment="top")
 
     # Force identical styling for the two primary buttons in this section
     # We target specific children of these columns to ensure parity.
@@ -1402,7 +1424,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                      key="btn_analyze_sync",
                      use_container_width=True,
                      disabled=not _can_sync,
-                     help=_sync_help):
+                     help=_blocked):
             # Nuclear reset of all cancel flags - stale flags from a previous download/sync
             # would break the analysis loop on the very first iteration, producing zero results.
             st.session_state['cancel_requested'] = False
@@ -1417,9 +1439,12 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             if main_placeholder:
                 main_placeholder.empty()
             st.rerun()
+        if _show_hints:
+            st.markdown(f"<div class='cd-action-hint'>{esc(_ANALYZE_HINT)}</div>",
+                        unsafe_allow_html=True)
 
     with col_or:
-        st.markdown(f"<div style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap; word-break:keep-all;'>OR</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='cd-action-or' style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap; word-break:keep-all;'>OR</div>", unsafe_allow_html=True)
 
     with col_quick:
         if st.button('Quick Sync',
@@ -1427,7 +1452,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                      type="primary",
                      use_container_width=True,
                      disabled=not _can_sync,
-                     help=_sync_help):
+                     help=_blocked):
             # Nuclear reset of all cancel flags - stale flags from a previous download/sync
             # would break the analysis loop on the very first iteration, producing zero results
             # and causing Quick Sync to silently fall back to the Review page.
@@ -1443,6 +1468,9 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             if main_placeholder:
                 main_placeholder.empty()
             st.rerun()
+        if _show_hints:
+            st.markdown(f"<div class='cd-action-hint'>{esc(_QUICK_SYNC_HINT)}</div>",
+                        unsafe_allow_html=True)
 
     # --- (6) Sync History (bottom of page) - the single collection point;
     # every resolvable file carries inline Open / Reveal actions + its path. ---
@@ -1552,6 +1580,28 @@ def _toggle_shist_run(open_key: str) -> None:
     rerun, so scroll position survives.
     """
     st.session_state[open_key] = not st.session_state.get(open_key, False)
+
+
+def _toggle_sync_history() -> None:
+    """Open/close the whole Sync History section.
+
+    Same rule, and the same reason, as :func:`_toggle_shist_run` above - which
+    is the point: the per-run cards inside this section were converted to
+    ``on_click`` long ago, but the section that CONTAINS them was missed and
+    kept the double-rendering form. It is the worse of the two offenders, for
+    two reasons:
+
+    * Sync History sits at the very bottom of step 1, so it is the control most
+      likely to be clicked after a long scroll - exactly where losing the
+      anchor is most disruptive.
+    * The panel it reveals is the tallest thing on the page, so the second
+      render changed the document height enormously; per the note on
+      ``_toggle_shist_run``, that height change is precisely what turns the
+      dropped anchor from theoretical into a visible jump to the top.
+    """
+    st.session_state['sync_history_open'] = not st.session_state.get(
+        'sync_history_open', False
+    )
 
 
 def _render_sync_history():
@@ -1900,53 +1950,35 @@ def _render_sync_history():
         # real st.expander and Streamlit forbids nesting expanders. The toggle
         # keeps the section collapsible while letting every run collapse too.
         _hist_open = st.session_state.get('sync_history_open', False)
+        # Only the OPEN/CLOSED difference lives here; the button's whole resting
+        # appearance is static and sits in sync_history_cards.css (injected
+        # above, so these later rules win at equal specificity).
+        #
+        # Emitted UNCONDITIONALLY - both states produce a stylesheet, only its
+        # declarations differ. Putting the condition on the injection instead
+        # would shift every later style host onto its neighbour's index
+        # (CLAUDE.md, "NEVER emit a <style> block CONDITIONALLY").
+        _open_radius = '0' if _hist_open else '8px'
         st.markdown(
             f"""<style>
             div.st-key-sync_history_toggle button {{
-                background: #262b34 !important;
-                border: 1px solid rgba(255,255,255,0.10) !important;
-                border-top-left-radius: 8px !important;
-                border-top-right-radius: 8px !important;
-                /* When open, square the bottom corners + keep the bottom border
-                   as a divider so the panel below reads as this button's body. */
-                border-bottom-left-radius: {'0' if _hist_open else '8px'} !important;
-                border-bottom-right-radius: {'0' if _hist_open else '8px'} !important;
-                justify-content: flex-start !important;
-                padding: 16px 20px !important;
-                height: auto !important;
-                margin-top: 32px !important;
-            }}
-            div.st-key-sync_history_toggle button:hover {{
-                background: #2c3240 !important;
-                border-color: rgba(255,255,255,0.16) !important;
-            }}
-            div.st-key-sync_history_toggle button p {{
-                font-size: 1.15rem !important; font-weight: 600 !important;
-                color: #ffffff !important; display: flex !important; align-items: center !important;
-            }}
-            div.st-key-sync_history_toggle button p::before {{
-                content: ""; display: inline-block; width: 22px; height: 22px; margin-right: 11px;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b1bac4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'/%3E%3C/svg%3E");
-                background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0.9;
+                /* When open, square the bottom corners so the panel below reads
+                   as this button's body rather than a detached box. */
+                border-bottom-left-radius: {_open_radius} !important;
+                border-bottom-right-radius: {_open_radius} !important;
             }}
             div.st-key-sync_history_toggle button::after {{
-                content: ""; margin-left: auto; width: 15px; height: 15px;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'/%3E%3C/svg%3E");
-                background-size: contain; background-repeat: no-repeat; background-position: center;
-                transform: rotate({90 if _hist_open else 0}deg); transition: transform 0.2s ease;
+                transform: rotate({90 if _hist_open else 0}deg);
             }}
             </style>""",
             unsafe_allow_html=True,
         )
-        if st.button("Sync History", key="sync_history_toggle", use_container_width=True):
-            st.session_state['sync_history_open'] = not _hist_open
-            st.rerun()
+        # on_click, never `if st.button(): ...; st.rerun()` - see
+        # _toggle_sync_history for the full reasoning.
+        st.button("Sync History", key="sync_history_toggle",
+                  use_container_width=True, on_click=_toggle_sync_history)
 
         if _hist_open:
-            if not history:
-                st.write('No sync history yet.')
-                return
-
             with st.container(border=True, key="synchist_box"):
                 from collections import defaultdict
                 from datetime import datetime
@@ -2498,16 +2530,43 @@ def render_sync_step4( main_placeholder=None):
             # watchdog only ticked if something ELSE happened to rerun the
             # script - a dead bridge otherwise stranded the user here.
             import time as _time
-            from engine.progress_dashboard import analyzing_heading_html
-            st.markdown(f"""
-            <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-top: 20px; margin-bottom: 20px;">
-                {analyzing_heading_html()}
-                <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Please wait a moment while Canvas is queried.</p>
-                <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
-                    <div style="background-color: {theme.ACCENT_BLUE}; width: 5%; height: 100%;"></div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+            from engine.estimation import stepwise_estimator as _stepwise
+            from engine.progress_dashboard import (
+                DashboardPlaceholders as _DP, metric_count as _mcount,
+                metric_eta as _meta, render_analysis_dashboard as _render_analysis,
+            )
+            # The tracker has to be here too, and not only because the shell
+            # would otherwise flash a screen with no chrome for ~350 ms: pass 2
+            # (``run_analysis``) renders it, so WITHOUT this the dashboard card
+            # sits at index 0 in pass 1 and index 1 in pass 2. Both are plain
+            # `vertical` blocks, and Streamlit's addBlock hands a block the
+            # CHILDREN of whatever block already occupied its index - so the
+            # tracker would inherit the dashboard's header, bar, metrics and
+            # active-file rows and render them inside itself (see the
+            # "inherits the dashboard's CHILDREN" note in CLAUDE.md).
+            render_sync_wizard(st, 'analyze')
+
+            # Paint the SAME dashboard pass 2 will keep updating, so the shell
+            # and the live screen are one continuous readout instead of two
+            # different-looking cards 350 ms apart.
+            with st.container(key="progress_dashboard"):
+                _shell = _DP(header=st.empty(), progress=st.empty(),
+                             metrics=st.empty(), active_file=st.empty())
+            _shell_eta = _stepwise(5.0)
+            _shell_eta.update(units_total=len(sync_pairs))
+            _render_analysis(
+                _shell,
+                course_label="Analyzing Course",
+                course_name=(sync_pairs[0].get('course_name', '') or '')
+                            if len(sync_pairs) == 1 else '',
+                status_text="Querying Canvas…",
+                indeterminate=True,
+                metrics=[
+                    _mcount('Courses', 0, len(sync_pairs)),
+                    _mcount('Changes Found', 0, color=theme.SUCCESS_STAT),
+                    _meta(_shell_eta.eta_text()),
+                ],
+            )
             _time.sleep(0.35)
             st.session_state['analysis_pass'] = 2
             st.rerun()
@@ -2555,6 +2614,11 @@ def render_sync_step4( main_placeholder=None):
         # AFTER the run has finished. The fragment's inline (same-run) call
         # must no-op - advancing inline would end this run in a rerun again
         # and resurrect the exact bug.
+        # Same reasoning as the analysis shell above: 'syncing' renders the
+        # tracker, so leaving it off here would shift every element after it by
+        # one slot on the handover. It is also simply true - the sync is what
+        # this screen is starting.
+        render_sync_wizard(st, 'sync')
         st.markdown("<div style='text-align:center; padding: 40px;'><h3 style='color:#3498db;'>Initializing sync engine...</h3><p>Please wait a moment.</p></div>", unsafe_allow_html=True)
         st.session_state['_presync_tick'] = 0
 
@@ -2628,11 +2692,15 @@ def _run_sync_panopto():
 
     from core.canvas_logic import CanvasManager
     from core.cancellation import cancel_sync, is_sync_cancelled
+    from engine.estimation import panopto_estimators
     from engine.progress_dashboard import (
         DashboardPlaceholders, render_progress_header, render_progress_bar,
-        render_custom_metrics, render_terminal_log, render_active_file,
+        render_metrics, render_terminal_log, render_active_file,
+        metric_count, metric_elapsed, metric_eta, metric_speed,
+        metric_transferred, metric_value,
         PHASE_BAR_COLOR, log_line, log_divider, log_meta, file_icon_svg,
     )
+    from shared.helpers import learned_transfer_priors
     from shared import theme as _theme
     from panopto.settings import compose_settings as _pan_compose
     from panopto.runner import run_panopto_batch, make_recorder, make_ignorer
@@ -2648,7 +2716,7 @@ def _run_sync_panopto():
     # Today dashboard hosts this inside its own titled progress card, so drop the
     # step wizard + big "Panopto Recordings" header (the card narrates the phase).
     if not st.session_state.get('today_sync_active'):
-        _wizard(st, 3)
+        _wizard(st, 'sync')
         st.markdown('<h2 class="step-header">Panopto Recordings</h2>', unsafe_allow_html=True)
 
     # Cancel re-entry guard (a cancel raises RerunException at a render call).
@@ -2656,8 +2724,16 @@ def _run_sync_panopto():
         st.session_state['download_status'] = 'sync_cancelled'
         st.rerun()
 
-    header_ph = st.empty(); prog_ph = st.empty(); metrics_ph = st.empty()
-    active_ph = st.empty(); log_ph = st.empty()
+    # One card around the whole readout - see the "Run dashboard card" block in
+    # global.css. Skipped in Today mode, where the page's own titled card is
+    # already the frame and a second one would nest.
+    if st.session_state.get('today_sync_active'):
+        header_ph = st.empty(); prog_ph = st.empty(); metrics_ph = st.empty()
+        active_ph = st.empty(); log_ph = st.empty()
+    else:
+        with st.container(key="progress_dashboard"):
+            header_ph = st.empty(); prog_ph = st.empty(); metrics_ph = st.empty()
+            active_ph = st.empty(); log_ph = st.empty()
     st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
     cancel_ph = st.empty()
     if cancel_ph.button('Cancel', key='cancel_panopto_sync_btn', type='secondary'):
@@ -2702,44 +2778,59 @@ def _run_sync_panopto():
         except Exception:
             pass
 
-    def _elapsed():
-        return _time.strftime('%M:%S', _time.gmtime(max(0, _time.time() - pan_start)))
+    # Identical phase model to the Download-mode Panopto pass (app.py) - same
+    # priors, same channels, so the two screens cannot disagree about how long
+    # the same work takes.
+    _pan_eta = panopto_estimators(learned_transfer_priors())
 
     def _render():
         ph = _pan['phase']
+        _pan_bytes = st.session_state['panopto_mb_tracker']['bytes']
         if ph == 'download':
             # No _esc(): render_progress_header html-escapes the course name
             # itself (pre-escaping showed "&amp;" in & names).
             render_progress_header(dp, "Downloading Recordings", _pan['course'])
             pct = int(_pan['dl_done'] / _pan['dl_total'] * 100) if _pan['dl_total'] else 0
             render_progress_bar(dp, min(100, pct), color=PHASE_BAR_COLOR['panopto'])
-            _mb = st.session_state['panopto_mb_tracker']['bytes'] / (1024 * 1024)
-            _el = max(0.0, _time.time() - pan_start)
-            _spd = (_mb / _el) if _el > 0 else 0.0
-            render_custom_metrics(dp, [
-                ("Downloaded", f"{_mb:.1f} <span style='font-size:0.9rem;color:#a855f7;'>MB</span>", _theme.TEXT_PRIMARY),
-                ("Speed", f"{_spd:.1f} <span style='font-size:0.9rem;'>MB/s</span>", "#10B981"),
-                ("Recordings", f"{_pan['dl_done']} <span style='font-size:0.9rem;color:#a855f7;'>/ {_pan['dl_total']}</span>", _theme.TEXT_PRIMARY),
-                ("Elapsed", _elapsed(), "#F59E0B"),
+            # No byte total: a recording's size is unknown until its stream is
+            # resolved, so the recording count carries the estimate.
+            _pan_eta['download'].update(units_done=_pan['dl_done'],
+                                        bytes_done=_pan_bytes,
+                                        units_total=_pan['dl_total'])
+            render_metrics(dp, [
+                metric_transferred(_pan_bytes, None, accent=PHASE_BAR_COLOR['panopto']),
+                metric_speed(_pan_eta['download'].bytes_per_sec),
+                metric_count('Recordings', _pan['dl_done'], _pan['dl_total'],
+                             accent=PHASE_BAR_COLOR['panopto']),
+                metric_eta(_pan_eta['download'].eta_text()),
             ])
         elif ph == 'transcribe':
             render_progress_header(dp, "Transcribing Recordings", _pan['course'])
+            # The in-flight file's own percentage is real progress, so it counts
+            # as a fraction of a unit - otherwise the estimate would sit frozen
+            # for the whole of a 40-minute lecture.
             _base = _pan['tx_done'] + (_pan['tx_pct'] / 100.0)
             pct = int(_base / _pan['tx_total'] * 100) if _pan['tx_total'] else 0
             render_progress_bar(dp, min(100, pct), color=PHASE_BAR_COLOR['transcribe'])
-            render_custom_metrics(dp, [
-                ("Transcribed", f"{_pan['tx_done']} <span style='font-size:0.9rem;color:#2dd4bf;'>/ {_pan['tx_total']}</span>", _theme.TEXT_PRIMARY),
-                ("Current File", f"{_pan['tx_pct']}%", "#2dd4bf"),
-                ("Elapsed", _elapsed(), "#F59E0B"),
+            _pan_eta['transcribe'].update(units_done=_base, units_total=_pan['tx_total'])
+            render_metrics(dp, [
+                metric_count('Transcribed', _pan['tx_done'], _pan['tx_total'],
+                             accent=PHASE_BAR_COLOR['transcribe']),
+                metric_value('Current File', f"{_pan['tx_pct']}%",
+                             PHASE_BAR_COLOR['transcribe']),
+                metric_eta(_pan_eta['transcribe'].eta_text()),
             ])
         else:  # search
             render_progress_header(dp, "Searching for Panopto Recordings", _pan['course'])
             render_progress_bar(dp, 0, color=PHASE_BAR_COLOR['search'],
                                 indeterminate=True, label="Searching…")
-            render_custom_metrics(dp, [
-                ("Folders Scanned", f"{_pan['courses_scanned']} <span style='font-size:0.9rem;color:{_theme.ACCENT_BLUE};'>/ {_pan['courses_total']}</span>", _theme.TEXT_PRIMARY),
-                ("Recordings Found", str(_pan['found']), "#10B981"),
-                ("Elapsed", _elapsed(), "#F59E0B"),
+            # Discovery has no denominator to count against - the walk finds out
+            # how many folders exist by walking them - so it reports elapsed time
+            # rather than inventing a countdown.
+            render_metrics(dp, [
+                metric_count('Folders Scanned', _pan['courses_scanned'], _pan['courses_total']),
+                metric_count('Recordings Found', _pan['found'], color=_theme.SUCCESS_STAT),
+                metric_elapsed(_time.time() - pan_start),
             ])
         render_terminal_log(dp, dq)
 
@@ -3067,9 +3158,9 @@ def _run_sync_panopto():
                 # Amend ONLY the entry THIS run wrote (matched by timestamp).
                 # Without _ts this run wrote no file entry, and
                 # amend_last_entry(None) falls back to "most recent" - gluing
-                # the recordings onto some PREVIOUS sync's entry (which also
-                # hides a quick sync's recordings from Today's files whenever
-                # that older entry isn't sync_mode='quick').
+                # the recordings onto some PREVIOUS sync's entry, which
+                # backdates them and (if that entry is from another course or
+                # another day) drops them off Today's files entirely.
                 _amended = bool(_ts) and _hm.amend_last_entry(
                     timestamp=_ts,
                     add_files_synced=len(_h_names),

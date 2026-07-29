@@ -21,9 +21,20 @@
 .completion-card .card-title {
     font-weight: 700;
     font-size: 1.5em;
-    /* -14px (was -20px): keep the pull-up but leave ~6px of air between the
-       card edge and the "Sync Success" / "Partial Success" title. */
-    margin: -14px 0 0 0;
+    /* No pull-up, and a line-height that hugs the glyphs.
+       The title used to carry margin-top: -14px (before that, -20px), which was
+       compensating for the wrong thing. At the inherited 1.6 line-height a 24px
+       title sits in a 38.4px box, so 7.2px of HALF-LEADING sits above the caps -
+       invisible space the card's padding cannot see. Correcting that with a
+       negative margin overshoots by twice the error, because it moves the box
+       instead of shrinking it: the title ended up ~18px below the card edge
+       while the last line of text kept its full ~30px, and the "everything up
+       to date" card (whose last child is text, not a bordered stat grid) showed
+       the gap plainly.
+       Tightening the line box instead fixes the cause, and lands both card
+       shapes within ~2px: text-ending and stat-grid-ending alike. */
+    line-height: 1.2;
+    margin: 0;
 }
 
 .completion-card .card-subtitle {
@@ -438,10 +449,9 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button:hover {
     box-shadow: none !important;
 }
 
-div[class*="st-key-"][class*="_retry_failed_btn"] button:disabled {
-    cursor: not-allowed !important;
-    filter: grayscale(100%) brightness(30%) !important;
-}
+/* Disabled state: none here - global.css's `button[disabled]` recipe owns it.
+   This declared its own `filter`, which REPLACED the shared one (filter is a
+   single property) with a near-black flat grey. */
 
 div[class*="st-key-"][class*="_retry_failed_btn"] button p {
     display: flex !important;
@@ -574,15 +584,46 @@ div[data-testid="stElementContainer"]:has(div[data-testid="stMarkdownContainer"]
    stats panel on the download + sync completion screens. Lives HERE, never as
    an inline <style> inside the card's own markdown: a bundled style tag makes
    the collapse rule above (in its blanket form) hide the entire card. */
+/* Streamlit's `margin-bottom: -16px` on every stMarkdownContainer eats this
+   card's bottom padding, and it does so INCONSISTENTLY - which is why it hid
+   for so long. A partial-success card ends in the Error Details expander, so
+   the last child is not a markdown and the bottom measures a correct 24px; a
+   plain success card ends in the stats markdown, so its bottom collapses to 8px
+   against 24px on the other three sides. Cancel the margin here and the
+   declared padding is what lands, whichever variant renders. Same fix, same
+   reason, as the run dashboard card in global.css. */
+div[class*="st-key-completion_dashboard"] [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
+
 div[class*="st-key-panopto_summary_dashboard"] {
     background-color: rgba(255, 255, 255, 0.075) !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
     border-radius: 8px !important;
-    padding: 8px !important;
-    padding-bottom: 25px !important;
-    /* Breathing room between the stat-cards row above and this card. */
-    margin-top: 8px !important;
+    /* Even inset, like every other card. It used to be 8px on three sides and
+       25px at the bottom: the "Panopto Recordings" heading sat almost against
+       the left edge while its own stat card, which carries an inset of its own,
+       floated in the middle - so the heading read as belonging to something
+       else. 14px gives the heading the same gutter the stat card has. */
+    padding: 14px !important;
+    /* Land 12px of real space above this card, so it and the stat row read as
+       one grid rather than as a row with something tacked under it - 12px is
+       what the stat cards use between themselves. The literal value is
+       negative because Streamlit already puts a 16px block gap between the
+       stats markdown and this container; the number that matters is the 12px
+       measured on screen, not the one written here. */
+    margin-top: -4px !important;
     margin-bottom: 0px !important;
+}
+
+/* Streamlit gives every stMarkdownContainer `margin-bottom: -16px`, which eats
+   this card's bottom padding whole - the stat box ended up flush against the
+   border. That is what the old `padding-bottom: 25px` was silently paying for
+   (25 - 16 = 9px of actual space, against 8px on the other three sides). Cancel
+   the margin instead, so the declared padding is the padding you get. Same fix,
+   same reason, as the run dashboard card in global.css. */
+div[class*="st-key-panopto_summary_dashboard"] [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
 }
 
 div[class*="st-key-panopto_summary_dashboard"] .completion-stats-grid {
@@ -605,23 +646,31 @@ div[class*="st-key-panopto_summary_dashboard"] .completion-stats-grid {
    Both live prefixes must be listed: download mode renders `dl_fc_*` and sync
    completion renders `sync_complete_fc_*`. `sync_fc_` matches NEITHER - it is
    not a contiguous substring of `sync_complete_fc_`. */
+/* A flat, slightly-lifted dark surface - the SAME one the progress dashboard's
+   card and terminal use (theme.BG_DARK on theme.BORDER_DEFAULT), so the
+   completion screen reads as the same material as the run that produced it.
+   Both carry the palette's slight blue cast; a truly neutral grey was tried
+   here and looked wrong against the rest of the app.
+
+   This block used to be a navy `linear-gradient(145deg, #1e293b, #0f172a)` on a
+   `#334155` border, with a lighter gradient on hover. It predates the 1.51
+   selector fixes and had been DEAD for a long time (it named
+   stVerticalBlockBorderWrapper); re-pointing it at the keyed div in the
+   2026-07-25 sweep switched it on for the first time.
+
+   NO :hover STATE, deliberately. These cards are static read-outs, not
+   controls - the only interactive things are the buttons and the expander
+   INSIDE them. A border that brightens under the pointer promises a click
+   target that does not exist. (The buttons keep their own hover.) */
 div[class*="st-key-dl_fc_"],
 div[class*="st-key-sync_complete_fc_"] {
     border-radius: 10px !important;
-    background: linear-gradient(145deg, #1e293b, #0f172a) !important;
-    border: 1px solid #334155 !important;
+    background: #1a1d27 !important;
+    border: 1px solid #2d3248 !important;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-    transition: all 0.2s ease !important;
     margin-bottom: 8px !important;
     overflow: hidden !important;
     padding: 14px 18px !important;
-}
-
-div[class*="st-key-dl_fc_"]:hover,
-div[class*="st-key-sync_complete_fc_"]:hover {
-    border-color: #475569 !important;
-    background: linear-gradient(145deg, #334155, #1e293b) !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Custom Title */
@@ -692,33 +741,72 @@ div[class*="st-key-sync_complete_open_"] [data-testid="stButton"] {
     margin-left: 29px !important;
 }
 
-/* Files Added expander - borderless, indented, consistent width in both states */
-div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"] {
-    margin-left: 29px !important;
-    max-width: calc(100% - 29px) !important;
+/* Files Added expander - borderless, indented, consistent width in both states.
+   ── THE THREE LEFT OFFSETS BELOW ARE ONE ALIGNMENT, MEASURED IN-BROWSER ──
+   All three columns land on the same x. With the card's 18px padding, the
+   1.4rem folder glyph and the header's 9px gap, the course TITLE text starts
+   31.4px into the card's content box, so that is the target:
+     chevron  = expander margin-left (21) + summary padding-left (10) = 31
+     category = margin-left (21) + stExpanderDetails padding-left (2)
+                + fileactlist padding-left (34) - header margin-left (26) = 31
+   Measured in the real app: title 386.4, chevron 386.0, category icon 386.0.
+   (Indenting the content a further 28px to sit under the "Files added" LABEL
+   instead was tried and rejected - one straight edge down the card reads
+   better than a staircase.)
+   Change any one of them and re-derive the others - `fileactlist`'s 34px and
+   the header's -26px are SHARED with the sync-history panel and must not move
+   (shared/components.py:inject_file_action_css).
+
+   BOTH prefixes: download completion renders the same component with
+   `key_prefix='dl'` and `show_files_expander=True`. These rules used to name
+   only the sync prefix, so the download screen's identical card carried a
+   stock Streamlit expander - a different-looking header on the same card. */
+div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"],
+div[class*="st-key-dl_fc_"] [data-testid="stExpander"] {
+    margin-left: 21px !important;
+    max-width: calc(100% - 21px) !important;
     margin-top: 4px !important;
     margin-bottom: -10px !important;
 }
 
-div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"] details {
+div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"] details,
+div[class*="st-key-dl_fc_"] [data-testid="stExpander"] details {
     border: none !important;
     box-shadow: none !important;
     background: transparent !important;
 }
 
-div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"] summary {
-    padding: 4px 10px 4px 2px !important;
+/* `details` being transparent is NOT enough: Streamlit paints the SUMMARY with
+   the theme's secondaryBackgroundColor (measured rgb(18,22,30)), so the header
+   rendered as a full-width dark band across the card - most obvious with the
+   expander open, where the band separated the title from its own contents. The
+   header is a label, not a surface. Hover keeps a whisper of feedback since the
+   whole row is the click target. */
+div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"] summary,
+div[class*="st-key-dl_fc_"] [data-testid="stExpander"] summary {
+    /* Left padding is deliberately close to the right's 10px: at 2px the
+       chevron sat flush on the box edge and read as clipped. */
+    padding: 4px 10px 4px 10px !important;
     border-radius: 5px !important;
+    background: transparent !important;
+}
+
+div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"] summary:hover,
+div[class*="st-key-dl_fc_"] [data-testid="stExpander"] summary:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
 }
 
 div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"] summary p,
-div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"] summary span {
+div[class*="st-key-sync_complete_fc_"] [data-testid="stExpander"] summary span,
+div[class*="st-key-dl_fc_"] [data-testid="stExpander"] summary p,
+div[class*="st-key-dl_fc_"] [data-testid="stExpander"] summary span {
     font-weight: 700 !important;
     color: #ffffff !important;
 }
 
-div[class*="st-key-sync_complete_fc_"] [data-testid="stExpanderDetails"] {
-    padding: 5px 10px 14px 5px !important;
+div[class*="st-key-sync_complete_fc_"] [data-testid="stExpanderDetails"],
+div[class*="st-key-dl_fc_"] [data-testid="stExpanderDetails"] {
+    padding: 5px 10px 14px 2px !important;
 }
 
 /* File rows inside the completion folder cards: same tight rhythm as the

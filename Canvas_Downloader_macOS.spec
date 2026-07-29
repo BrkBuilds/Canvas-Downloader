@@ -62,18 +62,38 @@ if _tn_bin and os.path.isfile(_tn_bin):
 # 1.51's markdown autolink transform builds at runtime - crashing the whole UI
 # with "Invalid regular expression: invalid group specifier name". Strip the
 # lookbehind assertions from the bundled JS BEFORE collecting them.
-_patch_spec = _ilu.spec_from_file_location(
-    "patch_streamlit_webkit",
-    os.path.join(os.path.dirname(os.path.abspath(SPEC)), "scripts", "patch_streamlit_webkit.py"),
-)
-_patch_mod = _ilu.module_from_spec(_patch_spec)
-_patch_spec.loader.exec_module(_patch_mod)
-_patch_mod.patch()
+def _load_build_script(name):
+    _s = _ilu.spec_from_file_location(
+        name, os.path.join(os.path.dirname(os.path.abspath(SPEC)), "scripts", name + ".py")
+    )
+    _m = _ilu.module_from_spec(_s)
+    _s.loader.exec_module(_m)
+    return _m
 
-tmp_ret = collect_all('streamlit')
+_load_build_script("patch_streamlit_webkit").patch()
+
+# Paint the launcher's splash from inside Streamlit's own index.html, so the
+# window never shows an empty page between load_url() and the app's first
+# rendered frame (measured at 6.9s warm, 10-20s on a cold first launch).
+# See scripts/patch_streamlit_boot.py.
+_load_build_script("patch_streamlit_boot").patch(
+    os.path.dirname(os.path.abspath(SPEC)))
+
+# Replace faster-whisper's PyAV decoder with one driving the ffmpeg binary this
+# app already bundles, so PyAV's SECOND full copy of FFmpeg (62 MB of libav
+# libraries) can be excluded. See scripts/patch_faster_whisper_audio.py - it
+# refuses to patch an untested faster-whisper version rather than fail silently.
+_load_build_script("patch_faster_whisper_audio").patch()
+
+# Shared trimming policy - see scripts/build_excludes.py for the traced import
+# chains behind every entry. Kept in ONE file because a fix applied to only one
+# of the two specs is invisible in review and ships a fat build on the other OS.
+_excl = _load_build_script("build_excludes")
+
+tmp_ret = collect_all('streamlit', filter_submodules=_excl.lean_filter)
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
-tmp_ret = collect_all('canvasapi')
+tmp_ret = collect_all('canvasapi', filter_submodules=_excl.lean_filter)
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 packages_to_collect = [
@@ -86,13 +106,19 @@ packages_to_collect = [
     'UserNotifications',
     # Panopto transcription stack (faster-whisper via CTranslate2; NO torch).
     # Wrapped in try/except below, so a host without these still builds.
+    # 'av' is deliberately absent: patch_faster_whisper_audio.py removed the
+    # only import of it, and it is in the exclude list.
     'faster_whisper', 'ctranslate2', 'tokenizers', 'huggingface_hub',
-    'av', 'onnxruntime', 'numpy',
+    'onnxruntime', 'numpy',
 ]
 
 for package in packages_to_collect:
     try:
-        tmp_ret = collect_all(package)
+        # filter_submodules keeps test suites, CLI surfaces and dev tooling from
+        # being FORCE-added as hidden imports. It does not make anything
+        # unavailable - a module something really imports is still collected by
+        # normal graph analysis.
+        tmp_ret = collect_all(package, filter_submodules=_excl.lean_filter)
         datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
     except Exception:
         pass
@@ -114,20 +140,18 @@ a = Analysis(
     ['start.py'],
     pathex=[], binaries=binaries, datas=datas, hiddenimports=hiddenimports,
     hookspath=[], hooksconfig={}, runtime_hooks=[],
-    excludes=['matplotlib', 'IPython', 'jupyter', 'notebook', 'pytest', 'scipy', 'PyQt5', 'PyQt6', 'PySide6',
-              'tkinter.test', 'doctest', 'pdb', 'unittest', 'pydoc', 'curses', 'sqlalchemy',
-              'pyarrow', 'altair', 'pydeck', 'pandas', 'polars', 'botocore', 'boto3',
-              'bokeh', 'plotly', 'seaborn', 'statsmodels', 'tensorboard', 'tensorflow', 'torch', 'keras',
-              'numba', 'cython', 'dask', 'networkx', 'h5py', 'sympy', 'patsy',
-              # OpenCV (~99 MB) pulled transitively via moviepy's optional video
-              # effects; this app only does audio extraction / mp4 remux and never
-              # imports cv2. Pure dead-weight removal, no functionality loss.
-              'cv2', 'opencv', 'opencv-python',
-              'win32com', 'win32com.client', 'pythoncom', 'pywintypes',
-              'webview.platforms.winforms', 'webview.platforms.edgechromium', 'webview.platforms.qt', 'webview.platforms.gtk',
-              'win11toast', 'winsound', 'streamlit.external.langchain'],
+    # Every entry, and the traced import chain that justifies it, lives in
+    # scripts/build_excludes.py. Do NOT add one-off exclusions here - the two
+    # specs drift apart the moment anything platform-agnostic is written twice.
+    excludes=_excl.excludes_for('macos'),
     noarchive=False, optimize=0,
 )
+
+# collect_all() also runs collect_data_files(), which copies test suites back in
+# as DATA even though lean_filter kept them out of the import graph. Nothing
+# imports them, so they are pure dead weight on disk (measured: 7.29 MB, 6.36 MB
+# of it numpy's). Data-only - this can never make an import fail.
+a.datas = _excl.strip_test_datas(a.datas)
 
 pyz = PYZ(a.pure)
 

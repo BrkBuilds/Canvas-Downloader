@@ -14,11 +14,14 @@ from shared import theme
 logger = logging.getLogger(__name__)
 from pathlib import Path
 from sync_ui import render_sync_step1, render_sync_step4
-from shared.helpers import esc, render_download_wizard
+from shared.helpers import (
+    esc, learned_transfer_priors, remember_transfer_priors, render_download_wizard,
+)
 from shared.components import (
     render_completion_card, render_folder_cards,
     render_error_section, render_pp_warning,
     error_log_dialog, render_panopto_summary,
+    fresh_container,
 )
 from styles import inject_css
 from shared.components import inject_material_icons_font
@@ -26,12 +29,13 @@ from core.state_registry import (
     ensure_download_state,
 )
 from core.cancellation import cancel_download, is_download_cancelled, reset_download_cancel
+from engine.estimation import panopto_estimators, stepwise_estimator, transfer_estimator
 from engine.progress_dashboard import (
     DashboardPlaceholders, render_full_dashboard, render_active_file,
-    render_progress_header, render_progress_bar, render_custom_metrics,
-    render_terminal_log, PHASE_BAR_COLOR,
-    log_line, log_divider, log_meta, file_icon_svg, entity_icon_svg,
-    analyzing_heading_html,
+    render_progress_header, render_progress_bar, render_metrics,
+    render_analysis_dashboard, analysis_percent, render_terminal_log, PHASE_BAR_COLOR,
+    metric_count, metric_eta, metric_elapsed, metric_speed, metric_transferred,
+    metric_value, log_line, log_divider, log_meta, file_icon_svg, entity_icon_svg,
 )
 from engine.post_processing_bridge import invoke_post_processing, build_conversion_contract
 from engine.notifications import play_completion_beep, request_macos_notification_permission
@@ -543,7 +547,31 @@ def _write_nav_to_query_params() -> None:
 # --- Session State Initialization (centralized in core/state_registry.py) ---
 _restore_nav_from_query_params()
 ensure_download_state()
+
+# Adopt the saved settings + login BEFORE anything renders. This must sit here,
+# between ensure_download_state() (which installs the defaults it overrides) and
+# _write_nav_to_query_params() (which writes ?mode=auth when signed out). It used
+# to run inside render_login_page and finish with st.rerun(), so a launch with a
+# saved login rendered one entirely blank script run - keyring and two Canvas
+# round-trips behind an empty window - and then threw it away and started over.
+from ui.auth import restore_saved_session
+restore_saved_session()
+
 _write_nav_to_query_params()
+
+# Breadcrumb for the local health record: if this session dies without running
+# our exit path (crash / OOM kill / Task Manager), the next launch reports the
+# phase it was in - see core/health_log.py. Hooked HERE, on the one line every
+# rerun passes through, deliberately: `download_status` is already the app's
+# phase variable, but it is assigned from ~20 sites across app.py, sync/ and
+# core/auto_sync.py, and a breadcrumb bolted onto each of those is guaranteed to
+# drift the first time someone adds a twenty-first. note_phase() early-returns
+# when the phase is unchanged, so the common rerun costs a dict lookup.
+try:
+    from core.health_log import note_phase
+    note_phase(st.session_state.get('download_status') or 'idle')
+except Exception:
+    pass
 
 # C-3: Guard against stale cancel events left by a prior run that bypassed
 # cleanup_download_state(). Safe to reset whenever no background download
@@ -731,17 +759,24 @@ with _main_content.container():
 
 
     elif st.session_state['step'] == 3:
-        wiz_step = 4 if st.session_state.get('download_status') == 'done' else 3
-        render_download_wizard(st, wiz_step)
-        
         current_status = st.session_state.get('download_status', 'scanning')
-        
+
+        # The scan is its own step now. It always WAS its own phase - it renders
+        # the analysis dashboard, and its Cancel button says "Cancel Analysis" -
+        # but the tracker (and the heading) called it "Downloading", so the first
+        # ~30s of every run described work that had not started.
+        render_download_wizard(st, 'complete' if current_status == 'done'
+                                   else 'analyze' if current_status == 'scanning'
+                                   else 'download')
+
         if current_status == 'done':
             st.markdown('<h2 class="step-header">Download Complete!</h2>', unsafe_allow_html=True)
         elif current_status == 'cancelled':
             pass
         elif current_status == 'panopto':
             st.markdown('<h2 class="step-header">Panopto Recordings</h2>', unsafe_allow_html=True)
+        elif current_status == 'scanning':
+            st.markdown('<h2 class="step-header">Analyzing...</h2>', unsafe_allow_html=True)
         else:
             st.markdown('<h2 class="step-header">Downloading...</h2>', unsafe_allow_html=True)
         
@@ -760,8 +795,20 @@ with _main_content.container():
         total = len(st.session_state['courses_to_download'])
         current_idx = st.session_state['current_course_index']
         
-        # UI elements in correct order
-        if st.session_state.get('download_status') == 'running':
+        # UI elements in correct order.
+        #
+        # Scanning and running share ONE dashboard card, built here, because the
+        # two phases must produce an IDENTICAL element tree. When the scan built
+        # its own `st.container(key="progress_dashboard")` further down the page,
+        # the switch to the download phase shifted every element after it by one
+        # slot, and Streamlit - which reconciles by position - handed the card's
+        # DOM node (class and all) to whatever element inherited that slot. The
+        # inheritor was the empty post-processing cancel placeholder, so the
+        # download screen grew a stray 38px empty card below the Cancel button
+        # that no code was rendering into. Same family of bug as the dialog
+        # ordering one in CLAUDE.md: the fix is to stop the indices moving, not
+        # to hunt the ghost node.
+        if st.session_state.get('download_status') in ('running', 'scanning'):
             # First-run macOS permission batch is in flight: tell the user the
             # upcoming system dialogs are expected and one-time. Rendered for the
             # whole first run; the flag is re-armed False at every run start.
@@ -780,17 +827,25 @@ with _main_content.container():
             if 'log_deque' not in st.session_state:
                 st.session_state['log_deque'] = collections.deque(maxlen=200)
                 
-            header_placeholder = st.empty()
-            progress_placeholder = st.empty()
-            metrics_placeholder = st.empty()
-            active_file_placeholder = st.empty()
-            log_placeholder = st.empty()
+            # One card around the whole readout - see the "Run dashboard card"
+            # block in global.css.
+            with st.container(key="progress_dashboard"):
+                header_placeholder = st.empty()
+                progress_placeholder = st.empty()
+                metrics_placeholder = st.empty()
+                active_file_placeholder = st.empty()
+                log_placeholder = st.empty()
 
             st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-            
+
             cancel_placeholder = st.empty()
             cancel_placeholder.button(
-                'Cancel Download',
+                # Same button, same key, same callback - only the wording
+                # changes with the phase. Rendering it from one place is what
+                # keeps the element indices stable across the transition.
+                'Cancel Analysis'
+                if st.session_state.get('download_status') == 'scanning'
+                else 'Cancel Download',
                 type="secondary",
                 key="cancel_download_btn",
                 on_click=cancel_download_callback,
@@ -807,26 +862,26 @@ with _main_content.container():
         
         # Handle download state
         if st.session_state.get('download_status') == 'scanning':
-            # Modern Course Analysis UI (Phase 1)
+            # Course analysis (phase 1) - renders through the SAME dashboard
+            # chrome as the download itself (see render_analysis_dashboard).
             total_courses = len(st.session_state['courses_to_download'])
-            
-            # 1. Define the UI placeholder first
-            analysis_ui_placeholder = st.empty()
-            
-            # 2. Define the Cancel button placeholder second (so it sits below)
-            cancel_placeholder = st.empty()
-            
-            # 3. RENDER THE GLOBAL CANCEL BUTTON ONCE, OUTSIDE THE LOOP.
-            # We're currently in the course-analysis (scanning) phase regardless
-            # of which mode the user picked, so "Cancel Analysis" is more
-            # accurate than "Cancel Download" here.
-            cancel_placeholder.button(
-                'Cancel Analysis',
-                type="secondary",
-                key="cancel_download_btn",
-                on_click=cancel_download_callback,
+
+            # The dashboard card, its placeholders and the (already-rendered)
+            # "Cancel Analysis" button all come from the shared block above -
+            # deliberately, so the tree does not change shape when this phase
+            # hands over to the download.
+            _scan_dp = DashboardPlaceholders(
+                header=header_placeholder, progress=progress_placeholder,
+                metrics=metrics_placeholder, active_file=active_file_placeholder,
             )
-            
+
+            # Courses are the unit of work here; ~5 s each is a fair opening
+            # guess for a Canvas course with modules, and it is replaced by the
+            # measured rate as soon as the first course finishes scanning.
+            _scan_eta = stepwise_estimator(5.0)
+            _scan_files = 0
+            _scan_mb = 0.0
+
             cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
             total_items = 0
             total_mb = 0
@@ -837,37 +892,42 @@ with _main_content.container():
                     break # Escape the loop immediately!
                     
                 current_course_num = idx + 1
-                percent = int((current_course_num / total_courses) * 100)
-                
-                # Progress Hook for granular module scanning
+
+                def _paint_scan(status_text, current_mod=0, total_mods=0,
+                                _num=current_course_num, _course=course):
+                    """One renderer for the whole scan - the seed paint and every
+                    sub-step tick go through it, so they cannot drift apart."""
+                    _scan_eta.update(units_done=idx, units_total=total_courses)
+                    render_analysis_dashboard(
+                        _scan_dp,
+                        course_label=(f"Analyzing Course {_num}/{total_courses}"
+                                      if total_courses > 1 else "Analyzing Course"),
+                        course_name=_course.name,
+                        status_text=status_text,
+                        # Courses are the unit the row counts, so they are the
+                        # unit the bar measures too - the module sub-step only
+                        # supplies the fraction of the course in hand.
+                        percent=analysis_percent(idx, total_courses,
+                                                 current_mod, total_mods),
+                        # Most sub-steps report total=1, where a bar pinned near
+                        # 0% reads as a hang rather than as work in progress.
+                        indeterminate=total_mods <= 1,
+                        metrics=[
+                            metric_count('Courses', idx, total_courses),
+                            metric_count('Items Found', _scan_files),
+                            metric_transferred(_scan_mb * 1024 * 1024, label='Size'),
+                            metric_eta(_scan_eta.eta_text()),
+                        ],
+                    )
+
+                # Progress hook for granular module scanning
                 def analysis_progress_hook(current_mod, total_mods, mod_status_text):
-                    mod_percent = int((current_mod / total_mods) * 100) if total_mods > 0 else 0
-                    analysis_ui_placeholder.markdown(f"""
-                    <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-bottom: 20px;">
-                        {analyzing_heading_html()}
-                        <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {current_course_num} of {total_courses}: <b>{esc(course.name)}</b></p>
-                        <p style="color: {theme.ACCENT_BLUE}; font-size: 0.8rem; margin-bottom: 5px;">{mod_status_text}</p>
-                        <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; overflow: hidden;">
-                            <div style="background-color: {theme.ACCENT_BLUE}; width: {mod_percent}%; height: 100%; transition: width 0.1s ease;"></div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
                     # Cancel button is already rendered above with on_click callback
                     # No need to re-render inside the hook - the callback fires instantly
+                    _paint_scan(mod_status_text, current_mod, total_mods)
 
-                # Render initial modern loading UI
-                analysis_ui_placeholder.markdown(f"""
-                <div style="background-color: {theme.BG_DARK}; padding: 20px; border-radius: 8px; border: 1px solid {theme.BG_CARD}; margin-bottom: 20px;">
-                    {analyzing_heading_html()}
-                    <p style="color: {theme.TEXT_SECONDARY}; font-size: 0.9rem;">Course {current_course_num} of {total_courses}: <b>{esc(course.name)}</b></p>
-                    <div style="background-color: {theme.BG_CARD}; border-radius: 4px; width: 100%; height: 8px; margin-top: 10px; overflow: hidden;">
-                        <div style="background-color: {theme.ACCENT_BLUE}; width: 0%; height: 100%; transition: width 0.3s ease;"></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                
+                _paint_scan(f"Connecting to {course.name}…")
+
                 # Use robust Hybrid file fetching logic directly, identical to actual download loop
                 try:
                     # Build scanning-phase secondary settings for accurate counting
@@ -884,7 +944,8 @@ with _main_content.container():
                         course,
                         progress_callback=analysis_progress_hook,
                         secondary_content_settings=_scan_secondary,
-                        is_scanning_phase=True
+                        is_scanning_phase=True,
+                        download_mode=st.session_state.get('download_mode'),
                     )
                     
                     # Apply file filter if needed ('study' vs 'all')
@@ -909,19 +970,26 @@ with _main_content.container():
                     initial_file_count = sum(1 for f in filtered_files if getattr(f, 'id', 1) > 0)
                     total_items += initial_file_count
 
-                    
+
                     # Guard against API returning literal None for size which breaks sum()
                     total_mb += sum((getattr(f, 'size', 0) or 0) for f in filtered_files) / (1024 * 1024)
-                    
+
                 except Exception as _analysis_err:
                     # Fallback to older count_course_items if Hybrid fetch fails critically
                     logger.warning(f"Analysis: hybrid fetch failed for '{course.name}', using fallback count: {_analysis_err}")
                     total_items += cm.count_course_items(course, mode=st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
                     total_mb += cm.get_course_total_size_mb(course, st.session_state['download_mode'], file_filter=st.session_state['file_filter'])
-            
-            # Clear UI before dashboard
-            analysis_ui_placeholder.empty()
-            
+
+                # Credit the finished course so the next one's ETA is measured,
+                # and let the running totals reach the metrics row.
+                _scan_files, _scan_mb = total_items, total_mb
+                _scan_eta.update(units_done=current_course_num, units_total=total_courses)
+
+            # Clear the analysis readout before the download phase fills the
+            # SAME placeholders on the next run.
+            header_placeholder.empty(); progress_placeholder.empty()
+            metrics_placeholder.empty(); active_file_placeholder.empty()
+
             st.session_state['total_items'] = total_items
             st.session_state['total_mb'] = total_mb
             st.session_state['download_status'] = 'running'
@@ -964,7 +1032,9 @@ with _main_content.container():
                     pass
 
             st.session_state['start_time'] = time.time() # Reset timer immediately before running loop
-            
+            # Fresh time-remaining model for this run (it spans all courses).
+            st.session_state.pop('_download_estimator', None)
+
             st.rerun()
 
         elif st.session_state.get('download_status') == 'running':
@@ -1001,22 +1071,37 @@ with _main_content.container():
                     log=log_placeholder,
                 )
 
+                # One estimator for the WHOLE run, not per course: the counters
+                # it is fed are already run-wide, and a fresh model at every
+                # course boundary would throw away everything learned about this
+                # connection three times over on a three-course run. It lives in
+                # session state because each course is its own Streamlit rerun.
+                _dl_eta = st.session_state.get('_download_estimator')
+                if _dl_eta is None:
+                    _dl_eta = transfer_estimator(**learned_transfer_priors())
+                    st.session_state['_download_estimator'] = _dl_eta
+
                 def render_dashboard():
                     current_mb = sum(st.session_state.get('course_mb_downloaded', {}).values())
                     is_retry = st.session_state.get('download_status') == 'isolated_retry'
                     active_total = st.session_state.get('total_items', total_items)
                     active_current = st.session_state.get('retry_downloaded_items', 0) if is_retry else st.session_state.get('downloaded_items', 0)
                     active_current += st.session_state.get('retry_failed_items', 0) if is_retry else st.session_state.get('failed_items', 0)
+                    _dl_total_mb = st.session_state.get('total_mb', total_mb)
+                    _dl_eta.update(
+                        units_done=active_current, bytes_done=current_mb * 1024 * 1024,
+                        units_total=active_total, bytes_total=_dl_total_mb * 1024 * 1024,
+                    )
                     _dl_header = f"Downloading Course {current_idx + 1}/{total}" if total > 1 else "Downloading"
                     render_full_dashboard(
                         _dp, log_deque,
                         header_label=_dl_header,
-                        course_name=esc(course.name),
+                        course_name=course.name,
                         current_files=active_current,
                         total_files=active_total,
-                        downloaded_mb=current_mb,
-                        total_mb=st.session_state.get('total_mb', total_mb),
-                        start_time=start_time,
+                        downloaded_bytes=current_mb * 1024 * 1024,
+                        total_bytes=_dl_total_mb * 1024 * 1024,
+                        estimator=_dl_eta,
                     )
                 
                 # Render initial state
@@ -1043,6 +1128,23 @@ with _main_content.container():
 
                         if progress_type == 'skipped':
                             st.session_state['downloaded_items'] += 1   # always count the skip
+                            # A file already on disk transfers no bytes, so its
+                            # size must leave the denominator - the engine has
+                            # always sent `file_size` here for exactly that (see
+                            # the "Remove skipped files from Total MB count"
+                            # comment at the emit site) but nothing consumed it.
+                            # The cost was severe on any re-run: every byte of an
+                            # 849 MB course stayed "still to download", so the
+                            # counter sat at 0.0 / 849.4 MB from start to finish
+                            # and the ETA kept pricing in bytes that were never
+                            # going to move. The item itself stays counted - it
+                            # IS done - so only the MB total shrinks.
+                            _skip_sz = kwargs.get('file_size', 0) or 0
+                            if _skip_sz > 0:
+                                st.session_state['total_mb'] = max(
+                                    0.0,
+                                    st.session_state.get('total_mb', total_mb) - (_skip_sz / (1024 * 1024)),
+                                )
                             if msg:
                                 _name = _clean_display_name(str(msg))
                                 log_deque.append(log_line('skip', _name, icon=file_icon_svg(_name)))
@@ -1337,7 +1439,18 @@ with _main_content.container():
                         from core.canvas_debug import log_debug as _pp_fin_log
                         _pp_active_done = [k.replace('convert_', '') for k, v in _pp_settings.items() if v and k.startswith('convert_')]
                         _dl_count_done = len(st.session_state.get('download_file_details', {}).get(course.name, []))
-                        _err_count_done = len(st.session_state.get('download_errors_list', []))
+                        # THIS course's errors, not the batch's. `download_errors_list`
+                        # is created once before the course loop and never reset -
+                        # it is called `global_errors` where the completion screen
+                        # reads it - so `len()` reported every earlier course's
+                        # errors again here. Measured on a three-course run: the
+                        # third course contributed zero errors and its line said
+                        # "Errors: 5". The download count on the same line is
+                        # per-course, so the two halves disagreed about what they
+                        # were counting.
+                        _err_count_done = sum(
+                            1 for _e in st.session_state.get('download_errors_list', [])
+                            if getattr(_e, 'course_name', None) == course.name)
                         _pp_fin_log(
                             f"=== Course Finished: {course.name} | "
                             f"Downloaded: {_dl_count_done} items | Errors: {_err_count_done} ===",
@@ -1360,10 +1473,13 @@ with _main_content.container():
                     st.rerun()
                 
                 st.session_state['current_course_index'] += 1
-                
+
                 # Check if we're done
                 if st.session_state['current_course_index'] >= total:
                     st.session_state['download_status'] = _next_phase_after_courses()
+                    # Pass this connection's measured rates to whatever runs
+                    # next (the Panopto phase, or the next run in this session).
+                    remember_transfer_priors(_dl_eta)
 
                 # Auto-rerun instantly to process next course or done screen
                 st.rerun()
@@ -1389,12 +1505,15 @@ with _main_content.container():
         
         elif st.session_state.get('download_status') == 'isolated_retry':
                 
-            header_placeholder = st.empty()
-            progress_placeholder = st.empty()
-            metrics_placeholder = st.empty()
-            active_file_placeholder = st.empty()
-            log_placeholder = st.empty()
-            
+            # One card around the whole readout - see the "Run dashboard card"
+            # block in global.css.
+            with st.container(key="progress_dashboard"):
+                header_placeholder = st.empty()
+                progress_placeholder = st.empty()
+                metrics_placeholder = st.empty()
+                active_file_placeholder = st.empty()
+                log_placeholder = st.empty()
+
             st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
             cancel_placeholder = st.empty()
             cancel_placeholder.button(
@@ -1445,21 +1564,31 @@ with _main_content.container():
                 log=log_placeholder,
             )
 
+            _retry_eta = st.session_state.get('_retry_estimator')
+            if _retry_eta is None:
+                _retry_eta = transfer_estimator(**learned_transfer_priors())
+                st.session_state['_retry_estimator'] = _retry_eta
+
             def render_dashboard(current_course_name):
                 bytes_down = st.session_state.get('retry_mb_tracker', {}).get('bytes_downloaded', 0)
-                current_mb = bytes_down / (1024 * 1024)
                 active_total = st.session_state.get('total_items', 1)
                 active_current = st.session_state.get('retry_downloaded_items', 0) + st.session_state.get('retry_failed_items', 0)
+                _retry_total_mb = st.session_state.get('total_mb', total_mb)
+                _retry_eta.update(units_done=active_current, bytes_done=bytes_down,
+                                  units_total=active_total,
+                                  bytes_total=_retry_total_mb * 1024 * 1024)
                 render_full_dashboard(
                     _dp, log_deque,
                     header_label="Retrying Failed Items",
-                    course_name=esc(current_course_name),
+                    course_name=current_course_name,
                     current_files=active_current,
                     total_files=active_total,
-                    downloaded_mb=current_mb,
-                    total_mb=st.session_state.get('total_mb', total_mb),
-                    start_time=st.session_state.get('start_time', time.time()),
-                    show_total_mb=False,
+                    downloaded_bytes=bytes_down,
+                    # The retry queue's sizes come from cached error contexts and
+                    # are often absent, so a "/ X MB" denominator here would be a
+                    # number the run cannot honour. The count is the honest one.
+                    total_bytes=None,
+                    estimator=_retry_eta,
                 )
             
             # Use same update_ui logic to append errors/successes
@@ -1794,11 +1923,14 @@ with _main_content.container():
             _pan_contract = _panopto_run_contract()
             pan_settings = compose_settings(_pan_contract)
 
-            header_placeholder = st.empty()
-            progress_placeholder = st.empty()
-            metrics_placeholder = st.empty()
-            active_file_placeholder = st.empty()
-            log_placeholder = st.empty()
+            # One card around the whole readout - see the "Run dashboard card"
+            # block in global.css.
+            with st.container(key="progress_dashboard"):
+                header_placeholder = st.empty()
+                progress_placeholder = st.empty()
+                metrics_placeholder = st.empty()
+                active_file_placeholder = st.empty()
+                log_placeholder = st.empty()
             st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
             cancel_placeholder = st.empty()
             cancel_placeholder.button(
@@ -1841,44 +1973,57 @@ with _main_content.container():
             if len(_pan_course_list) == 1:
                 _pan['course'] = getattr(_pan_course_list[0], 'name', '') or ''
 
-            def _elapsed() -> str:
-                return time.strftime('%M:%S', time.gmtime(max(0, time.time() - pan_start)))
+            _pan_eta = panopto_estimators(learned_transfer_priors())
 
             def _render_pan():
                 ph = _pan['phase']
+                _pan_bytes = st.session_state['panopto_mb_tracker']['bytes']
                 if ph == 'download':
                     # No esc(): render_progress_header html-escapes the course
                     # name itself (pre-escaping showed "&amp;" in & names).
                     render_progress_header(_pan_dp, "Downloading Lectures", _pan['course'])
                     pct = int(_pan['dl_done'] / _pan['dl_total'] * 100) if _pan['dl_total'] else 0
                     render_progress_bar(_pan_dp, min(100, pct), color=PHASE_BAR_COLOR['panopto'])
-                    _mb = st.session_state['panopto_mb_tracker']['bytes'] / (1024 * 1024)
-                    _el = max(0.0, time.time() - pan_start)
-                    _spd = (_mb / _el) if _el > 0 else 0.0
-                    render_custom_metrics(_pan_dp, [
-                        ("Downloaded", f"{_mb:.1f} <span style='font-size:0.9rem;color:#a855f7;'>MB</span>", theme.TEXT_PRIMARY),
-                        ("Speed", f"{_spd:.1f} <span style='font-size:0.9rem;'>MB/s</span>", "#10B981"),
-                        ("Recordings", f"{_pan['dl_done']} <span style='font-size:0.9rem;color:#a855f7;'>/ {_pan['dl_total']}</span>", theme.TEXT_PRIMARY),
-                        ("Elapsed", _elapsed(), "#F59E0B"),
+                    # Panopto media has no known byte size until each stream is
+                    # resolved, so the byte total is left unknown and the
+                    # recording count carries the estimate. Speed is still real.
+                    _pan_eta['download'].update(units_done=_pan['dl_done'],
+                                                bytes_done=_pan_bytes,
+                                                units_total=_pan['dl_total'])
+                    render_metrics(_pan_dp, [
+                        metric_transferred(_pan_bytes, None, accent=PHASE_BAR_COLOR['panopto']),
+                        metric_speed(_pan_eta['download'].bytes_per_sec),
+                        metric_count('Recordings', _pan['dl_done'], _pan['dl_total'],
+                                     accent=PHASE_BAR_COLOR['panopto']),
+                        metric_eta(_pan_eta['download'].eta_text()),
                     ])
                 elif ph == 'transcribe':
                     render_progress_header(_pan_dp, "Transcribing Recordings", _pan['course'])
+                    # The in-flight file's own percentage is real progress, so it
+                    # counts as a fraction of a unit - without it the estimate
+                    # would sit frozen for the whole of a 40-minute lecture.
                     _base = _pan['tx_done'] + (_pan['tx_pct'] / 100.0)
                     pct = int(_base / _pan['tx_total'] * 100) if _pan['tx_total'] else 0
                     render_progress_bar(_pan_dp, min(100, pct), color=PHASE_BAR_COLOR['transcribe'])
-                    render_custom_metrics(_pan_dp, [
-                        ("Transcribed", f"{_pan['tx_done']} <span style='font-size:0.9rem;color:#2dd4bf;'>/ {_pan['tx_total']}</span>", theme.TEXT_PRIMARY),
-                        ("Current File", f"{_pan['tx_pct']}%", "#2dd4bf"),
-                        ("Elapsed", _elapsed(), "#F59E0B"),
+                    _pan_eta['transcribe'].update(units_done=_base, units_total=_pan['tx_total'])
+                    render_metrics(_pan_dp, [
+                        metric_count('Transcribed', _pan['tx_done'], _pan['tx_total'],
+                                     accent=PHASE_BAR_COLOR['transcribe']),
+                        metric_value('Current File', f"{_pan['tx_pct']}%",
+                                     PHASE_BAR_COLOR['transcribe']),
+                        metric_eta(_pan_eta['transcribe'].eta_text()),
                     ])
                 else:  # search
                     render_progress_header(_pan_dp, "Searching for Panopto Recordings", _pan['course'])
                     render_progress_bar(_pan_dp, 0, color=PHASE_BAR_COLOR['search'],
                                         indeterminate=True, label="Searching…")
-                    render_custom_metrics(_pan_dp, [
-                        ("Courses Scanned", f"{_pan['courses_scanned']} <span style='font-size:0.9rem;color:{theme.ACCENT_BLUE};'>/ {_pan['courses_total']}</span>", theme.TEXT_PRIMARY),
-                        ("Recordings Found", str(_pan['found']), "#10B981"),
-                        ("Elapsed", _elapsed(), "#F59E0B"),
+                    # Discovery genuinely cannot be estimated - the walk finds
+                    # out how many folders there are by walking them - so this
+                    # phase reports elapsed time and does not pretend otherwise.
+                    render_metrics(_pan_dp, [
+                        metric_count('Courses Scanned', _pan['courses_scanned'], _pan['courses_total']),
+                        metric_count('Recordings Found', _pan['found'], color=theme.SUCCESS_STAT),
+                        metric_elapsed(time.time() - pan_start),
                     ])
                 render_terminal_log(_pan_dp, log_deque)
 
@@ -2189,7 +2334,14 @@ with _main_content.container():
 
             _retry_failed = retry_attempted and retry_total > 0 and retry_resolved == 0
 
-            with st.container(border=True, key='completion_dashboard'):
+            # fresh_container, not st.container: the Panopto phase and the
+            # isolated-retry pass both put their progress dashboard at THIS
+            # index, and Streamlit hands a new block the old block's children.
+            # Without it the run's metrics row + terminal log render inside the
+            # completion card until the run ends. See shared.components.
+            # (The running/scanning dashboard sits higher up, on one of the four
+            # placeholders the else-branch above already emits.)
+            with fresh_container(border=True, key='completion_dashboard'):
                 # Split errors: retriable file errors / unresolvable file errors / app-level errors
                 _app_errors = sum(1 for err in download_errors if getattr(err, 'is_app_error', False))
                 _file_errors = [err for err in download_errors if not getattr(err, 'is_app_error', False)]
@@ -2244,12 +2396,25 @@ with _main_content.container():
 
                 # 3. Error section (with retry button inside)
                 download_path = Path(st.session_state['download_path'])
-                error_log_paths = []
-                for c in st.session_state.get('courses_to_download', []):
-                    cm_temp = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
-                    log_file = download_path / cm_temp._sanitize_filename(c.name) / "download_errors.txt"
-                    if log_file.exists():
-                        error_log_paths.append(log_file)
+                # ONE manager, and one pass over the courses, for the whole
+                # completion screen. A manager used to be constructed inside
+                # this loop AND inside the folder-paths loop further down - two
+                # per course - each paying for CanvasManager's vanity-URL
+                # round-trip, so the screen blocked on live HTTP while Streamlit
+                # streamed it in element by element. Both loops only ever wanted
+                # _sanitize_filename, which touches no instance state.
+                # (CanvasManager now memoises the resolution too, so this
+                # construction is free after the scan phase's.)
+                cm_temp = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
+                _course_folders = {
+                    c.name: download_path / cm_temp._sanitize_filename(c.name)
+                    for c in st.session_state.get('courses_to_download', [])
+                }
+                error_log_paths = [
+                    _folder / "download_errors.txt"
+                    for _folder in _course_folders.values()
+                    if (_folder / "download_errors.txt").exists()
+                ]
 
                 # Check if retriable errors exist (file errors with filepath context, not LTI streams, not app errors)
                 has_retriable_errors = any(
@@ -2298,6 +2463,9 @@ with _main_content.container():
                     st.session_state['pp_success_count'] = 0
                     st.session_state['log_content'] = ""
                     st.session_state['start_time'] = time.time()
+                    # Fresh time-remaining model for the retry pass (it re-uses
+                    # the run's counters, so a stale one would start at 100%).
+                    st.session_state.pop('_retry_estimator', None)
 
                     st.session_state['total_items'] = len(st.session_state['isolated_retry_queue'])
 
@@ -2315,12 +2483,17 @@ with _main_content.container():
                     retry_failed=_retry_failed,
                 )
 
-            # 4. Per-course folder cards with filetype summary
-            folder_paths = {}
-            for c in st.session_state.get('courses_to_download', []):
-                cm_temp = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
-                course_folder = download_path / cm_temp._sanitize_filename(c.name)
-                folder_paths[c.name] = str(course_folder)
+                # render_error_section early-returns on an empty error list, so a
+                # run whose ONLY failure was a conversion printed "Check
+                # download_errors.txt" with nothing to click. Same gap the sync
+                # screen had; fixed the same way, through the same helper.
+                if not download_errors and st.session_state.get('pp_failure_count', 0):
+                    from shared.components import render_error_log_button
+                    render_error_log_button(error_log_paths, key_prefix='dl_pp')
+
+            # 4. Per-course folder cards with filetype summary (folders already
+            #    resolved above - see the note on the shared manager)
+            folder_paths = {name: str(path) for name, path in _course_folders.items()}
 
             render_folder_cards(file_details, folder_paths, key_prefix='dl')
         
@@ -2387,3 +2560,12 @@ if st.session_state.get('_pan_dialog_open'):
 else:
     from ui.auth import open_pending_global_dialog
     open_pending_global_dialog()
+
+
+# ─── Page-shell bridge ────────────────────────────────────────────────────────
+# Sticky-bar pinned/at-rest state + scroll preservation across a dialog. Emitted
+# LAST, after the dialog hosts above, so its observers see the final DOM of this
+# run; it re-binds itself on every rerun (see the docstring). A 0-height
+# components.html iframe is pulled out of flow by global.css, so it adds no gap.
+from shared.components import inject_app_shell_bridge
+inject_app_shell_bridge()

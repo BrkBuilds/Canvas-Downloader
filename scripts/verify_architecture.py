@@ -11,8 +11,10 @@ Usage:
     python scripts/verify_architecture.py --no-color        # plain output
 
 Suppression:
-    Add  # audit-ignore  on the flagged line or the line immediately before it
-    to suppress a specific violation from the exit code and output.
+    Add  # audit-ignore  on the flagged line, or on any comment line directly
+    above it, to suppress a specific violation from the exit code and output.
+    Comment and blank lines between the marker and the code are skipped, so a
+    multi-line justification does not disarm the marker.
 
 Rules enforced:
     1. st.rerun() inside @st.dialog missing scope="app"
@@ -29,6 +31,7 @@ quoted in a comment to explain the design is documentation, not a violation.
 """
 
 import ast
+from collections import deque
 import re
 import sys
 import os
@@ -118,14 +121,30 @@ def collect_files() -> list[Path]:
 # ---------------------------------------------------------------------------
 
 def build_suppressed_lines(source_lines: list[str]) -> set[int]:
-    """Return 1-indexed line numbers that carry or are preceded by # audit-ignore."""
+    """Return 1-indexed line numbers that carry or are preceded by # audit-ignore.
+
+    The marker suppresses its own line and the next line of actual CODE -
+    skipping any comment or blank lines in between. Suppressing only the
+    literally-next line (the original behaviour) meant that the moment a
+    justification ran to more than one line, the marker stopped working and the
+    violation came back, with the explanation for why it was fine sitting
+    directly above it. A rule worth suppressing is usually a rule worth
+    explaining at length, so the two fought each other.
+    """
     suppressed = set()
     for i, line in enumerate(source_lines):
-        if "# audit-ignore" in line:
-            # Suppress this line AND the next line (so placing # audit-ignore
-            # above a flagged line works too)
-            suppressed.add(i + 1)   # 1-indexed: this line
-            suppressed.add(i + 2)   # 1-indexed: next line
+        if "# audit-ignore" not in line:
+            continue
+        suppressed.add(i + 1)   # 1-indexed: the marker's own line
+        # Walk forward to the next line that is neither blank nor a pure comment.
+        j = i + 1
+        while j < len(source_lines):
+            stripped = source_lines[j].strip()
+            if stripped and not stripped.startswith("#"):
+                break
+            j += 1
+        if j < len(source_lines):
+            suppressed.add(j + 1)
     return suppressed
 
 # ---------------------------------------------------------------------------
@@ -298,6 +317,10 @@ def check_bare_except(tree: ast.AST, filepath: Path, suppressed: set[int]) -> li
 # Whitelist: FormattedValue expressions that are safe and need no escaping
 _SAFE_CALL_NAMES = {
     "esc", "get_base64_image",
+    # Escaping functions. `esc` is this repo's wrapper, but the stdlib is used
+    # directly in a few modules that predate it (and under a private alias in
+    # engine/progress_dashboard.py) - all three produce escaped output.
+    "escape", "html_escape", "_html_escape", "quote", "quote_plus",
     # Type conversions / formatters - output is controlled, not user HTML
     "str", "int", "float", "bool", "len", "round", "abs", "max", "min",
     "repr", "format", "sorted", "enumerate", "range", "sum",
@@ -349,13 +372,67 @@ _SAFE_VAR_SUFFIXES = (
 # Variable name prefixes that indicate base64 image data - always safe
 _SAFE_VAR_PREFIXES = ("b64_", "_b64_", "_b64")
 
+# Inline-SVG constants. These are hand-authored module-level markup literals -
+# the whole point is that they interpolate as markup - and they are named by a
+# strict convention at both ends: SVG_FOLDER_YELLOW / _CHEVRON_SVG.
+#
+# The suffix list above already carries "_svg", but that check is
+# case-SENSITIVE, so it silently missed every one of the uppercase constants
+# this codebase actually uses. Matching is case-insensitive here so both
+# spellings are covered by one rule.
+_SAFE_VAR_CI_PREFIXES = ("svg_", "_svg_")
+_SAFE_VAR_CI_SUFFIXES = ("_svg", "_icon", "_glyph")
+
+
+def _is_markup_constant_name(name: str) -> bool:
+    """True for names that by convention hold app-authored inline markup.
+
+    Deliberately requires the name to also be CONSTANT-CASED: `SVG_EDIT_WHITE`
+    qualifies, a local `svg_from_user` does not. Without that guard the rule
+    would launder any lowercase variable someone happened to suffix `_icon`.
+    """
+    if not name.isupper() and not (name.startswith("_") and name[1:].isupper()):
+        return False
+    low = name.lower()
+    return (any(low.startswith(p) for p in _SAFE_VAR_CI_PREFIXES)
+            or any(low.endswith(s) for s in _SAFE_VAR_CI_SUFFIXES))
+
 # Safe function name suffixes - functions that return CSS/HTML app-controlled strings
 _SAFE_CALL_NAME_SUFFIXES = ("_css", "_svg", "_html", "_style", "_color")
 
+# String methods that can only REMOVE characters or change their case, so they
+# can never introduce markup that the receiver did not already contain. Applied
+# only when the receiver itself is safe, which makes `key_prefix.lower()` as
+# safe as `key_prefix`.
+#
+# Note what is deliberately absent: `replace`, `format`, `join` on a non-literal
+# and `%` - each of those can splice in text from somewhere else. `upper()` in
+# particular is NOT a sanitiser: HTML tag names are case-insensitive, so
+# `"<img src=x onerror=y>".upper()` is still a live tag. It is listed here only
+# because it cannot make an already-safe value unsafe.
+_SAFE_STR_METHODS = frozenset({
+    "lower", "upper", "casefold", "title", "capitalize", "swapcase",
+    "strip", "lstrip", "rstrip", "zfill",
+})
 
-def _is_safe_formatted_value(fv: ast.FormattedValue) -> bool:
-    """Return True if this interpolated expression is safe (doesn't need esc())."""
+
+def _is_safe_formatted_value(fv: ast.FormattedValue,
+                             safe_names: frozenset[str] = frozenset()) -> bool:
+    """Return True if this interpolated expression is safe (doesn't need esc()).
+
+    ``safe_names`` carries the result of the assignment-provenance pass
+    (:func:`collect_provenance_safe_names`): variables whose every binding in
+    the module is itself a safe expression. It is passed in rather than
+    recomputed because provenance is a whole-module property.
+    """
     val = fv.value
+
+    # Provenance: the value was escaped (or built from safe parts) on the way
+    # in, e.g.  _cname = esc(course_name)  ...  f"<span>{_cname}</span>".
+    # Escaping once into a local and interpolating it is the dominant pattern
+    # in this codebase; without this check it reads as 25+ false positives.
+    if isinstance(val, ast.Name) and val.id in safe_names:
+        return True
 
     # Arithmetic / unary / ternary - results are numbers, not user HTML
     if isinstance(val, (ast.BinOp, ast.UnaryOp, ast.IfExp)):
@@ -380,6 +457,15 @@ def _is_safe_formatted_value(fv: ast.FormattedValue) -> bool:
         # "".join(...) - CSS block concatenation
         if isinstance(func, ast.Attribute) and func.attr == "join":
             return True
+        # <safe>.lower() etc. The receiver is re-checked through this same
+        # function, so it may itself be provenance-safe - which is what makes
+        # `key.lower()` safe when `key = f"{namespace}_course_search"`.
+        if isinstance(func, ast.Attribute) and func.attr in _SAFE_STR_METHODS:
+            if _is_safe_formatted_value(
+                    ast.FormattedValue(value=func.value, conversion=-1,
+                                       format_spec=None),
+                    safe_names):
+                return True
 
     # theme.SOMETHING - design token constant
     if isinstance(val, ast.Attribute):
@@ -400,8 +486,304 @@ def _is_safe_formatted_value(fv: ast.FormattedValue) -> bool:
             return True
         if any(name.startswith(pfx) for pfx in _SAFE_VAR_PREFIXES):
             return True
+        if _is_markup_constant_name(name):
+            return True
 
     return False
+
+
+def _target_names(target: ast.AST):
+    """Yield every plain Name bound by an assignment target.
+
+    Attribute and Subscript targets (``obj.x = ...``, ``d['k'] = ...``) bind no
+    bare name, so they are skipped - an interpolation of those forms is handled
+    by the Attribute/Subscript branches of _is_safe_formatted_value.
+    """
+    if isinstance(target, ast.Name):
+        yield target.id
+    elif isinstance(target, (ast.Tuple, ast.List)):
+        for elt in target.elts:
+            yield from _target_names(elt)
+    elif isinstance(target, ast.Starred):
+        yield from _target_names(target.value)
+
+
+_SCOPE_NODES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
+
+
+def _walk_shallow(node: ast.AST):
+    """``ast.walk``, but it does not cross into a nested function or lambda.
+
+    The ROOT is checked as well as the children: a bare ``def`` statement in a
+    scope's body is itself a scope node, and descending into it would attribute
+    the whole nested function to its parent - which double-counted every
+    top-level function's contents when this was first written.
+    """
+    if isinstance(node, _SCOPE_NODES):
+        return
+    todo = deque([node])
+    while todo:
+        n = todo.popleft()
+        yield n
+        for child in ast.iter_child_nodes(n):
+            if not isinstance(child, _SCOPE_NODES):
+                todo.append(child)
+
+
+def _child_scopes(node: ast.AST):
+    """The function/lambda nodes directly inside ``node`` (not deeper ones)."""
+    todo = deque(ast.iter_child_nodes(node))
+    while todo:
+        n = todo.popleft()
+        if isinstance(n, _SCOPE_NODES):
+            yield n
+        else:
+            todo.extend(ast.iter_child_nodes(n))
+
+
+class _ProvenanceCollector(ast.NodeVisitor):
+    """Split the names bound in ONE scope into 'always safe' and 'not always'.
+
+    A name qualifies as provenance-safe only if EVERY binding of it in the
+    scope is a provably safe expression.
+
+    Scoping is per-FUNCTION, matching Python's own rules, and that precision is
+    load-bearing rather than cosmetic. An earlier module-wide version poisoned
+    names across unrelated functions: ``_scope`` is built from literals in
+    ``render_completion_card`` but ``+=``-ed onto 1,400 lines away in a
+    different function, and that lone augmented assignment was enough to
+    condemn the first one. Common local names - ``key``, ``label``, ``name`` -
+    are re-used all over this codebase, so module-wide analysis degrades toward
+    flagging everything, which is the exact failure this rule already had.
+
+    Bindings that carry no inspectable expression - function parameters, loop
+    and comprehension targets, ``with ... as``, ``except ... as``, augmented
+    assignment - are recorded as unsafe. Imports are recorded as NEITHER: they
+    fall through to the name-based rules, so an imported ``SVG_*`` constant is
+    still judged on its name.
+
+    Binding EXPRESSIONS are stored rather than judged on sight, because safety
+    is mutually dependent: ``_c = int(...)`` / ``_scope = f"across {_c}
+    courses"`` / ``_sub = f"... {_scope} ..."`` is a three-link chain, and
+    judging each binding once in source order proves only the first link.
+    :func:`collect_provenance_safe_names` runs the resulting constraints to a
+    fixpoint instead.
+    """
+
+    def __init__(self):
+        # name -> the expressions bound to it. A name is safe only if EVERY
+        # entry here is safe (and it is absent from `unsafe`).
+        self.bindings: dict[str, list[ast.AST]] = {}
+        self.unsafe: set[str] = set()
+
+    def collect(self, scope: ast.AST) -> "_ProvenanceCollector":
+        """Gather bindings for one scope, without descending into nested ones."""
+        if isinstance(scope, _SCOPE_NODES):
+            # The function's own parameters belong to THIS scope. (They are
+            # reached via visit_arguments below only when the arguments node is
+            # walked, which the shallow walk of the body never does.)
+            self.visit_arguments(scope.args)
+        body = scope.body if not isinstance(scope, ast.Lambda) else [scope.body]
+        for stmt in body:
+            for node in _walk_shallow(stmt):
+                # generic_visit would recurse; dispatch on this node only.
+                getattr(self, f"visit_{type(node).__name__}", lambda _n: None)(node)
+        return self
+
+    def _mark_unsafe(self, target: ast.AST) -> None:
+        for name in _target_names(target):
+            self.unsafe.add(name)
+
+    def _bind_value(self, target: ast.AST, value: ast.AST) -> None:
+        """Bind one target to one value, unpacking literal sequences pairwise.
+
+        ``a, b = (SAFE, RAW)`` must not condemn ``a`` for ``b``'s sake, and must
+        not let ``a`` vouch for ``b``. Only literal Tuple/List right-hand sides
+        can be split this way; anything else (a function call returning a tuple,
+        say) is opaque and is applied whole to every target.
+        """
+        if isinstance(target, (ast.Tuple, ast.List)) and \
+                isinstance(value, (ast.Tuple, ast.List)) and \
+                len(target.elts) == len(value.elts) and \
+                not any(isinstance(e, ast.Starred) for e in target.elts):
+            for t_elt, v_elt in zip(target.elts, value.elts):
+                self._bind_value(t_elt, v_elt)
+            return
+        for name in _target_names(target):
+            self.bindings.setdefault(name, []).append(value)
+
+    # -- bindings that carry a value we can judge ---------------------------
+    def visit_Assign(self, node: ast.Assign):
+        for t in node.targets:
+            self._bind_value(t, node.value)
+
+    def visit_AnnAssign(self, node: ast.AnnAssign):
+        if node.value is not None:
+            self._bind_value(node.target, node.value)
+
+    def visit_NamedExpr(self, node: ast.NamedExpr):
+        self._bind_value(node.target, node.value)
+
+    # -- bindings with no inspectable value: conservatively unsafe ----------
+    def visit_AugAssign(self, node: ast.AugAssign):
+        self._mark_unsafe(node.target)
+
+    def visit_For(self, node: ast.For):
+        self._mark_unsafe(node.target)
+
+    visit_AsyncFor = visit_For
+
+    def visit_comprehension(self, node: ast.comprehension):
+        self._mark_unsafe(node.target)
+
+    def visit_With(self, node: ast.With):
+        for item in node.items:
+            if item.optional_vars is not None:
+                self._mark_unsafe(item.optional_vars)
+
+    visit_AsyncWith = visit_With
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler):
+        if node.name:
+            self.unsafe.add(node.name)
+
+    def visit_arguments(self, node: ast.arguments):
+        for a in (*node.posonlyargs, *node.args, *node.kwonlyargs):
+            self.unsafe.add(a.arg)
+        if node.vararg:
+            self.unsafe.add(node.vararg.arg)
+        if node.kwarg:
+            self.unsafe.add(node.kwarg.arg)
+
+
+def _is_safe_expr(node: ast.AST, _depth: int = 0, *,
+                  self_name: str | None = None,
+                  known_safe: frozenset[str] = frozenset()) -> bool:
+    """Return True if evaluating ``node`` can only produce HTML-safe text.
+
+    Used by the provenance pass to decide whether an ASSIGNMENT launders its
+    value. Stricter than the interpolation check in one place that matters: a
+    conditional is safe only if BOTH branches are, whereas an interpolated
+    conditional is assumed numeric. Recursion is depth-capped because an
+    f-string built from f-strings can nest arbitrarily.
+
+    ``self_name`` is the name currently being assigned, and a reference to it
+    counts as safe. That admits the refine-in-place idiom - ``clean =
+    str(filename)`` / ``clean = clean[len(pfx):]`` / ``clean =
+    _html_escape(clean)`` - where every binding either launders the value or
+    narrows what the previous binding produced. Only SELF-reference is granted
+    this; a reference to any OTHER variable must still stand on its own, so
+    unsafety can never be imported from elsewhere. (A general fixpoint over all
+    names would reach further, but this idiom is the one that actually occurs
+    and self-reference cannot launder foreign data.)
+    """
+    if _depth > 6:
+        return False
+
+    def rec(n: ast.AST) -> bool:
+        return _is_safe_expr(n, _depth + 1, self_name=self_name,
+                             known_safe=known_safe)
+
+    # Literals.
+    if isinstance(node, ast.Constant):
+        return True
+    if isinstance(node, (ast.BinOp, ast.UnaryOp, ast.Compare)):
+        # Arithmetic / comparison. String concatenation via + is the one form
+        # that could smuggle raw HTML, so require both sides to be safe.
+        if isinstance(node, ast.BinOp):
+            return rec(node.left) and rec(node.right)
+        return True
+
+    # Conditional: safe only if every branch is.
+    if isinstance(node, ast.IfExp):
+        return rec(node.body) and rec(node.orelse)
+
+    # f-string: safe if every interpolated part is safe (literal text is inert).
+    if isinstance(node, ast.JoinedStr):
+        return all(rec(v.value) for v in node.values
+                   if isinstance(v, ast.FormattedValue))
+
+    # Slice / index of a safe value stays safe - it can only ever be a
+    # substring of something already safe.
+    if isinstance(node, ast.Subscript):
+        return rec(node.value)
+
+    # esc(...), _html_escape(...), str(...), *_html(), "".join(...), ...
+    if isinstance(node, ast.Call):
+        func = node.func
+        name = func.attr if isinstance(func, ast.Attribute) else \
+            (func.id if isinstance(func, ast.Name) else None)
+        if name in _SAFE_CALL_NAMES:
+            return True
+        if name and any(name.endswith(sfx) for sfx in _SAFE_CALL_NAME_SUFFIXES):
+            return True
+        if isinstance(func, ast.Attribute):
+            # "sep".join(...) - literal receiver only, so this cannot match
+            # raw_list.join or a method on unknown data.
+            if func.attr == "join" and isinstance(func.value, ast.Constant):
+                return True
+            # <safe>.lower() / .strip() / ... - case and whitespace transforms
+            # of an already-safe value.
+            if func.attr in _SAFE_STR_METHODS and rec(func.value):
+                return True
+        return False
+
+    # theme.TOKEN
+    if isinstance(node, ast.Attribute):
+        return isinstance(node.value, ast.Name) and node.value.id in _SAFE_ATTR_ROOTS
+
+    if isinstance(node, ast.Name):
+        n = node.id
+        if self_name is not None and n == self_name:
+            return True
+        if n in known_safe:
+            return True
+        return (n in _SAFE_VAR_NAMES
+                or any(n.endswith(s) for s in _SAFE_VAR_SUFFIXES)
+                or any(n.startswith(p) for p in _SAFE_VAR_PREFIXES)
+                or _is_markup_constant_name(n))
+
+    return False
+
+
+def collect_provenance_safe_names(scope: ast.AST,
+                                  inherited: frozenset[str] = frozenset()) -> frozenset[str]:
+    """Provenance-safe names visible inside ``scope``.
+
+    ``inherited`` carries the enclosing scope's safe names, because a closure
+    can read them. Anything the inner scope rebinds unsafely - most commonly a
+    parameter that shadows an outer name - is subtracted back out, so shadowing
+    can never launder.
+
+    Resolution is a PESSIMISTIC fixpoint: the safe set starts as the inherited
+    names only, and a name joins it once every one of its bindings is provably
+    safe given what is already proven. That direction matters. Starting
+    optimistically (assume all safe, remove on contradiction) would let a
+    reference cycle - ``a = f(b)`` / ``b = f(a)`` - validate itself with no
+    laundering anywhere in it. Starting empty, a name can only ever be admitted
+    on the strength of names already admitted, so every safe name is grounded
+    in a literal or an escape call. The loop is monotone, adds at least one
+    name per pass, and so terminates in at most len(bindings) passes.
+    """
+    c = _ProvenanceCollector().collect(scope)
+    safe = set(inherited) - c.unsafe
+    pending = {n: binds for n, binds in c.bindings.items()
+               if n not in c.unsafe and n not in safe}
+
+    while pending:
+        known = frozenset(safe)
+        proved = [
+            name for name, binds in pending.items()
+            if all(_is_safe_expr(b, self_name=name, known_safe=known)
+                   for b in binds)
+        ]
+        if not proved:
+            break
+        for name in proved:
+            safe.add(name)
+            del pending[name]
+
+    return frozenset(safe - c.unsafe)
 
 
 def _is_markdown_with_unsafe_html(call: ast.Call) -> bool:
@@ -414,8 +796,32 @@ def _is_markdown_with_unsafe_html(call: ast.Call) -> bool:
 
 
 def check_unsafe_html_escaping(tree: ast.AST, filepath: Path, suppressed: set[int]) -> list[Violation]:
-    violations = []
-    for node in ast.walk(tree):
+    """Rule 4, walked one lexical scope at a time.
+
+    Each function gets its own provenance set (see _ProvenanceCollector), so a
+    variable is judged by the bindings that can actually reach it rather than
+    by every same-named local in the file.
+    """
+    violations: list[Violation] = []
+
+    def walk_scope(scope: ast.AST, inherited: frozenset[str]) -> None:
+        safe_names = collect_provenance_safe_names(scope, inherited)
+        _check_markdown_calls(scope, safe_names, filepath, suppressed, violations)
+        for child in _child_scopes(scope):
+            walk_scope(child, safe_names)
+
+    walk_scope(tree, frozenset())
+    violations.sort(key=lambda v: v.lineno)
+    return violations
+
+
+def _check_markdown_calls(scope: ast.AST, safe_names: frozenset[str],
+                          filepath: Path, suppressed: set[int],
+                          violations: list[Violation]) -> None:
+    """Flag unescaped interpolations in markdown calls written in THIS scope."""
+    body = scope.body if not isinstance(scope, ast.Lambda) else [scope.body]
+    nodes = [n for stmt in body for n in _walk_shallow(stmt)]
+    for node in nodes:
         if not isinstance(node, ast.Call):
             continue
         # Match *.markdown(...) or st.markdown(...)
@@ -439,7 +845,7 @@ def check_unsafe_html_escaping(tree: ast.AST, filepath: Path, suppressed: set[in
         for fv in ast.walk(first_arg):
             if not isinstance(fv, ast.FormattedValue):
                 continue
-            if _is_safe_formatted_value(fv):
+            if _is_safe_formatted_value(fv, safe_names):
                 continue
 
             lineno = getattr(fv, "lineno", node.lineno)
@@ -465,73 +871,114 @@ def check_unsafe_html_escaping(tree: ast.AST, filepath: Path, suppressed: set[in
                 note=note,
                 suppressed=lineno in suppressed,
             ))
-    return violations
 
 # ---------------------------------------------------------------------------
 # Rule 5: F-string <style> injections with unescaped single CSS braces
 # ---------------------------------------------------------------------------
 
-# Match CSS selectors followed by a lone { (not {{ or {var)
-# Group 1: the selector-like text before the brace
-_CSS_SINGLE_OPEN = re.compile(
-    r'(?<!\{)\{(?!\{)(?![a-zA-Z0-9_\'"!#.\- ])',  # single { not followed by Python expr chars
-    re.MULTILINE,
-)
-
-# A line that looks like a CSS selector (ends with possible whitespace + single {)
-_CSS_SELECTOR_LINE = re.compile(
-    r'(?:^|[\n;,\}])\s*'           # start of line or after ; , }
-    r'[a-zA-Z0-9_\-\.\[\]#:>~+* ,\'"\(\)=\^$|]+'  # selector chars
-    r'\s*'
-    r'(?<!\{)\{(?!\{)',             # single {
-    re.MULTILINE,
-)
-
-# Match st.markdown(f... blocks - find the raw string content
-_ST_MARKDOWN_F = re.compile(
-    r'st\.markdown\s*\(\s*f("""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'|"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\')',
-    re.MULTILINE,
-)
-
-_STYLE_BLOCK = re.compile(r'<style[^>]*>([\s\S]*?)</style>', re.IGNORECASE)
-
-# Remove Python variable injections {var}, {var.attr}, {var.attr.x}, {expr}
-# before checking for unescaped CSS braces - these are intentional f-string uses.
-_PYTHON_VAR_INJECTION = re.compile(r'\{[a-zA-Z_][a-zA-Z0-9_.]*[^{}]*?\}')
+_STYLE_OPEN = re.compile(r'<style[^>]*>', re.IGNORECASE)
+_STYLE_CLOSE = re.compile(r'</style\s*>', re.IGNORECASE)
 
 
-def check_css_fstring_braces(source: str, filepath: Path, suppressed: set[int],
-                              source_lines: list[str]) -> list[Violation]:
-    violations = []
-    for m in _ST_MARKDOWN_F.finditer(source):
-        raw_str = m.group(1)
-        # Strip surrounding quotes
-        if raw_str.startswith('"""') or raw_str.startswith("'''"):
-            content = raw_str[3:-3]
-        else:
-            content = raw_str[1:-1]
+def check_css_fstring_braces(tree: ast.AST, filepath: Path,
+                             suppressed: set[int]) -> list[Violation]:
+    """Flag a CSS block written with single braces inside an f-string.
 
-        for style_m in _STYLE_BLOCK.finditer(content):
-            css_content = style_m.group(1)
-            # Strip Python variable injections so they don't false-positive as CSS braces
-            cleaned_css = _PYTHON_VAR_INJECTION.sub("__PYVAR__", css_content)
-            # Find CSS-selector-like lines followed by single {
-            for sel_m in _CSS_SELECTOR_LINE.finditer(cleaned_css):
-                # Compute line number in original source
-                offset_in_source = m.start() + raw_str.find(css_content) + sel_m.start()
-                lineno = source[:offset_in_source].count("\n") + 1
-                if lineno in suppressed:
-                    continue
-                snippet = sel_m.group(0).strip().replace("\n", " ")[:80]
-                violations.append(Violation(
-                    filepath=filepath,
-                    lineno=lineno,
-                    rule=5,
-                    message=f"CSS selector with single {{ in f-string <style>: {snippet!r}",
-                    note="[CSS_BRACE?]",
-                    suppressed=False,
-                ))
+    Detected through the PARSER rather than by scanning text, because Python
+    has already done the hard part. In an f-string a single ``{`` opens a
+    replacement field, and inside a field a ``:`` starts a FORMAT SPEC - so
+    ``div { color: red }`` is not text and is not a dict either. It parses as
+    the field ``color`` with format spec ``" red"``. That is the whole tell:
+    the spec of a real interpolation is Python's format mini-language
+    (``.2f``, ``>10``, ``,``), and a CSS declaration value never is.
+
+    So: inside a style element, flag any replacement field whose format spec is
+    not a valid format spec. ``{'0' if open else '8px'}`` and ``{90 if open
+    else 0}`` carry no spec at all and are silently correct, which is the point
+    - the previous implementation scanned source text for selector-like runs
+    before a lone brace, having first blanked interpolations with
+    ``\\{[a-zA-Z_][\\w.]*...\\}``. That pattern only recognised fields starting
+    with a letter or underscore, so a field starting with a quote or a digit
+    kept its braces and was reported as CSS. Correctly escaped ``{{`` is
+    unaffected either way: the parser turns it into ordinary literal text.
+    """
+    violations: list[Violation] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = func.attr if isinstance(func, ast.Attribute) else \
+            (func.id if isinstance(func, ast.Name) else None)
+        if name not in ("markdown", "html"):
+            continue
+        for arg in node.args:
+            if isinstance(arg, ast.JoinedStr):
+                _flag_css_format_specs(arg, filepath, suppressed, violations)
     return violations
+
+
+# Python's format mini-language:
+#   [[fill]align][sign][z][#][0][width][grouping][.precision][type]
+_VALID_FORMAT_SPEC = re.compile(
+    r'^(?:.?[<>=^])?[+\- ]?z?#?0?\d*[,_]?(?:\.\d+)?[bcdeEfFgGnosxX%]?$'
+)
+
+
+def _flag_css_format_specs(fstr: ast.JoinedStr, filepath: Path,
+                           suppressed: set[int],
+                           violations: list[Violation]) -> None:
+    """Report style-block fields whose format spec is really a CSS value."""
+    in_style = False
+    for part in fstr.values:
+        if isinstance(part, ast.Constant) and isinstance(part.value, str):
+            text = part.value
+            # A part can open and/or close a style element; track the last
+            # transition so fields after </style> are not attributed to it.
+            last_open = _last_match_end(_STYLE_OPEN, text)
+            last_close = _last_match_end(_STYLE_CLOSE, text)
+            if last_open is not None or last_close is not None:
+                # Explicit None checks, not `or -1`: a style element opening at
+                # offset 0 is the common case and 0 is falsy.
+                lo = -1 if last_open is None else last_open
+                lc = -1 if last_close is None else last_close
+                in_style = lo > lc
+            continue
+
+        if not (in_style and isinstance(part, ast.FormattedValue)):
+            continue
+        spec = part.format_spec
+        if spec is None:
+            continue
+        # A spec built from an interpolation (e.g. {x:{width}}) is dynamic and
+        # deliberate; only a fully literal spec can be judged.
+        if not all(isinstance(p, ast.Constant) for p in spec.values):
+            continue
+        spec_text = "".join(str(p.value) for p in spec.values)
+        if _VALID_FORMAT_SPEC.match(spec_text):
+            continue
+
+        lineno = getattr(part, "lineno", getattr(fstr, "lineno", 0))
+        try:
+            prop = ast.unparse(part.value)
+        except Exception:
+            prop = "?"
+        violations.append(Violation(
+            filepath=filepath,
+            lineno=lineno,
+            rule=5,
+            message=(f"CSS declaration parsed as an f-string field inside a "
+                     f"style block - escape the braces as {{{{ }}}}: "
+                     f"{{{prop}:{spec_text}}}"[:120]),
+            note="[CSS_BRACE]",
+            suppressed=lineno in suppressed,
+        ))
+
+
+def _last_match_end(pattern: re.Pattern, text: str) -> int | None:
+    end = None
+    for m in pattern.finditer(text):
+        end = m.start()
+    return end
 
 # ---------------------------------------------------------------------------
 # Main scan loop
@@ -934,7 +1381,7 @@ def scan_file(filepath: Path) -> list[Violation]:
     violations.extend(check_open_encoding(tree, filepath, suppressed))
     violations.extend(check_bare_except(tree, filepath, suppressed))
     violations.extend(check_unsafe_html_escaping(tree, filepath, suppressed))
-    violations.extend(check_css_fstring_braces(source, filepath, suppressed, source_lines))
+    violations.extend(check_css_fstring_braces(tree, filepath, suppressed))
     violations.extend(check_dead_testids(source, filepath, suppressed))
     violations.extend(check_literal_tags_in_style_py(tree, filepath, suppressed))
     if filepath.name != "theme.py":          # theme.py DEFINES the tokens

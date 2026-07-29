@@ -162,9 +162,17 @@ def test_discovery_skips_already_tracked_paths(sm, course_dir):
 # ── M-4: weakest-tier discovery stores an EMPTY baseline ─────────────────────
 
 def test_size_ext_discovery_stores_empty_baseline(sm, course_dir):
-    # No manifest rows. One local pdf; canvas file has same size+ext but a
-    # DIFFERENT name and no md5 → only the size+ext tier can match.
-    _write_local(course_dir, "myrenamed.pdf", b"b" * 33)
+    # No manifest rows. One local pdf whose name is a RECOGNISABLE rename of the
+    # Canvas file (same stem plus a suffix), same size+ext, and no md5 → tier (a)
+    # misses on the exact name, tier (b) has no hash, so only size+ext can match.
+    #
+    # The fixture used to be an entirely unrelated name ("myrenamed.pdf" vs
+    # "original_name.pdf"), which tier (c) accepted. The live audit showed that
+    # binding on size+extension with no name evidence silently swallows a file -
+    # a planted decoy of identical length took a real file's manifest row - so
+    # tier (c) now requires stem containment (_name_floor_reject). The behaviour
+    # THIS test exists to pin is the empty md5 baseline, which is unchanged.
+    _write_local(course_dir, "original_name (my copy).pdf", b"b" * 33)
     manifest = sm.load_manifest()
     canvas_files = [_cfile(9, "original_name.pdf", size=33)]
     result = sm.analyze_course(canvas_files, manifest, cm=None, download_mode="flat")
@@ -172,6 +180,26 @@ def test_size_ext_discovery_stores_empty_baseline(sm, course_dir):
     assert 9 in up_ids
     entry = manifest["files"]["9"]
     assert entry["original_md5"] == ""  # bias to preserve on next update
+
+
+def test_size_ext_discovery_refuses_an_unrelated_name(sm, course_dir):
+    """The other half of the rule above: size+extension alone is not enough.
+
+    Same shape as the audit's decoy - a file of identical length and extension
+    whose name has nothing in common. Adopting it would mark the Canvas file
+    present, so it is never re-downloaded and the student silently keeps the
+    wrong bytes under its manifest row.
+    """
+    _write_local(course_dir, "decoy 0 unrelated.pdf", b"b" * 33)
+    manifest = sm.load_manifest()
+    canvas_files = [_cfile(9, "Gavelisten - Opgave.pdf", size=33)]
+    result = sm.analyze_course(canvas_files, manifest, cm=None, download_mode="flat")
+
+    assert 9 not in {c.id for c, _ in result.uptodate_files}
+    assert 9 in {f.id for f in result.new_files}, (
+        "the real file must be offered as New so it is re-downloaded")
+    # The student's own file is untouched and stays unclaimed.
+    assert (course_dir / "decoy 0 unrelated.pdf").exists()
 
 
 def test_name_match_discovery_keeps_real_baseline(sm, course_dir):

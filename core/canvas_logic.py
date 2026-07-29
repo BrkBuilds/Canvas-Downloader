@@ -11,7 +11,8 @@ import unicodedata
 from pathlib import Path
 from datetime import datetime, timezone
 from canvasapi import Canvas
-from canvasapi.exceptions import CanvasException, Unauthorized, ResourceDoesNotExist
+from canvasapi.exceptions import (CanvasException, Forbidden,
+                                  ResourceDoesNotExist, Unauthorized)
 import asyncio
 import aiohttp
 import types
@@ -24,7 +25,8 @@ from requests.adapters import HTTPAdapter
 
 from core.sync_manager import (
     SyncManager, make_secondary_id, is_secondary_id, CanvasFileInfo,
-    preferred_disk_name, secondary_content_sig,
+    preferred_disk_name, secondary_content_sig, secondary_id_type,
+    secondary_raw_id,
 )
 from shared.helpers import make_long_path, _err_log_lock
 
@@ -192,6 +194,156 @@ def _extract_canvas_file_links(html_body):
         results.append({'file_id': file_id, 'link_text': link_text})
 
     return results
+
+
+# A student is never allowed to read a quiz's questions, and Canvas says so with
+# 403 Forbidden. `Forbidden` is a SIBLING of `Unauthorized` under
+# `CanvasException`, not a subclass - so `except (Unauthorized, ...)` never
+# caught the one case it was written for, and every student fell through to the
+# generic handler. Measured on quiz 107362: `Forbidden {"status":"unauthorized",
+# ...}`. The payload says "unauthorized"; the class does not.
+_QUIZ_DENIED = (Forbidden, Unauthorized, ResourceDoesNotExist)
+
+_QUIZ_QUESTIONS_DENIED_HTML = (
+    '<p><em>Quiz questions could not be downloaded. Canvas only serves them '
+    'to teachers, so this happens for every student-visible quiz - it does '
+    'not mean the quiz is empty. Open it in Canvas to take or review '
+    'it.</em></p>'
+)
+
+
+def _quiz_questions_html(quiz, debug_file=None) -> str:
+    """The quiz's questions as HTML, or an honest statement of why not.
+
+    ONE implementation, because the alternative was measured: the bulk quiz
+    path fetched questions, the module-item quiz path and every assignment path
+    did not, and a quiz that arrived through one of those was saved with an
+    empty body. `_save_secondary_entity` then rendered the generic placeholder,
+    so the file read "(No content provided)" - which is the wrong statement
+    about a quiz whose questions exist and which Canvas simply will not serve
+    to a student. Course 43660 produced both files for the same quiz: the
+    Quizzes/ copy explained itself, the Assignments/ copy said it was empty.
+    """
+    # THE ITERATION MUST BE INSIDE THE TRY. `get_questions()` returns a
+    # canvasapi PaginatedList, which is LAZY: it touches the network on the
+    # first `next()`, not on the call. Guarding only the call catches nothing
+    # and the Forbidden escapes into the caller - which is what happened the
+    # first time this was refactored, and only the live API showed it, because
+    # a test double raises eagerly.
+    out = []
+    try:
+        for num, q in enumerate(quiz.get_questions(), start=1):
+            q_name = getattr(q, 'question_name', f'Question {num}')
+            q_text = getattr(q, 'question_text', '') or ''
+            q_type = getattr(q, 'question_type', 'unknown')
+            block = (
+                f'<div style="margin:15px 0;padding:10px;'
+                f'border:1px solid #ddd;border-radius:5px;">'
+                f'<h3>Q{num}: {html.escape(q_name)}</h3>'
+                f'<p style="color:#666;font-size:0.85em;">'
+                f'Type: {html.escape(q_type)}</p>'
+                f'{q_text}'
+                f'</div>'
+            )
+            answers = getattr(q, 'answers', None)
+            if answers and isinstance(answers, list):
+                items = ''.join(
+                    f'<li>{a.get("text", "") or a.get("html", "") or ""}</li>'
+                    for a in answers)
+                block += f'<ul>{items}</ul>'
+            out.append(block)
+    except _QUIZ_DENIED:
+        return _QUIZ_QUESTIONS_DENIED_HTML
+    except Exception as e:
+        log_debug(f"Could not fetch questions for quiz "
+                  f"{getattr(quiz, 'id', '?')}: {e}", debug_file)
+        return ('<p><em>Quiz questions could not be loaded. '
+                'Open the quiz in Canvas to see them.</em></p>')
+    return ''.join(out)
+
+
+def quiz_body_html(quiz, debug_file=None) -> str:
+    """A quiz's saved body: its description, then its questions section."""
+    body = getattr(quiz, 'description', '') or ''
+    questions = _quiz_questions_html(quiz, debug_file)
+    if questions:
+        body += '<h2>Questions</h2>' + questions
+    return body
+
+
+def quiz_id_of_assignment(assignment):
+    """The quiz behind an assignment, when the assignment IS a quiz.
+
+    Canvas exposes an online quiz TWICE - as a quiz and as its shadow
+    assignment - and a module can hold either. Reached through the assignment,
+    `description` is empty by nature, because for a quiz the content IS the
+    questions. Measured on assignment 32347: ``submission_types
+    ['online_quiz']``, ``is_quiz_assignment True``, ``quiz_id 107362``,
+    ``description ''``.
+    """
+    if not getattr(assignment, 'is_quiz_assignment', False) and \
+            'online_quiz' not in (getattr(assignment, 'submission_types', []) or []):
+        return None
+    return getattr(assignment, 'quiz_id', None)
+
+
+def resolve_discussion_topic(course, content_id, debug_file=None):
+    """A module item's discussion topic, by whichever endpoint answers.
+
+    Canvas can LIST a topic and then refuse the individual GET for it.
+    Measured on course 43660, topic 166950 ("Spørgsmål til pensum i
+    organisationskultur"): ``get_discussion_topics()`` returns it complete,
+    with its message body - and ``get_discussion_topic(166950)`` raises
+    ``ResourceDoesNotExist: Not Found``. It is not a group discussion, it is
+    not locked, and it is visible in the browser.
+
+    The module path only ever tried the individual GET, so the whole item
+    failed: no file written for a discussion the user can plainly read, and a
+    "Discussion Dispatch Error" on the completion screen that names something
+    the user cannot act on. Falling back to the collection is the same
+    "prefer the richer object, keep the other as fallback" shape the assignment
+    path already uses - in the other direction.
+    """
+    try:
+        return course.get_discussion_topic(content_id)
+    except Exception as e:
+        try:
+            for t in course.get_discussion_topics():
+                if getattr(t, 'id', None) == content_id:
+                    log_debug(f"Discussion {content_id} is not available "
+                              f"individually ({e}); using the copy from the "
+                              f"topic list instead.", debug_file)
+                    return t
+        except Exception as le:
+            log_debug(f"Discussion {content_id}: individual fetch failed "
+                      f"({e}) and the topic list also failed ({le})", debug_file)
+        raise
+
+
+def assignment_body_html(course, assignment, description, debug_file=None) -> str:
+    """An assignment's saved body - including its questions when it IS a quiz.
+
+    An online quiz's assignment description is empty by nature, because for a
+    quiz the content is the questions. Saving that empty string made
+    ``_save_secondary_entity`` render "(No content provided)", which says the
+    teacher left it blank - about a quiz that has questions Canvas simply will
+    not serve to a student. The app already knew better: the same quiz saved
+    through the quizzes path, two folders away, explained itself correctly.
+    """
+    quiz_id = quiz_id_of_assignment(assignment)
+    if not quiz_id:
+        return description
+    try:
+        quiz = course.get_quiz(quiz_id)
+    except Exception as e:
+        log_debug(f"Assignment {getattr(assignment, 'id', '?')} is quiz "
+                  f"{quiz_id} but it could not be fetched: {e}", debug_file)
+        return description or _QUIZ_QUESTIONS_DENIED_HTML
+    body = description or (getattr(quiz, 'description', '') or '')
+    questions = _quiz_questions_html(quiz, debug_file)
+    if questions:
+        body += '<h2>Questions</h2>' + questions
+    return body
 
 
 # Maps entity types to their subfolder names (Mode B) and prefixes (Mode A)
@@ -710,6 +862,63 @@ class DownloadError:
         ts = self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
         return f"[{ts}] [{self.course_name}] [{self.error_type}] {self.item_name}: {self.message}"
 
+# Vanity-URL resolution is a blocking HTTPS round-trip to the institution's
+# Canvas root, and it runs in CanvasManager.__init__ - so every construction
+# paid for it. The completion screens build one manager PER COURSE (twice over,
+# once for the error-log paths and once for the folder paths) purely to reach
+# _sanitize_filename, which turned the download -> complete transition into a
+# second of blocking I/O while Streamlit streamed the screen in element by
+# element. The answer for a given input URL never changes inside a session, so
+# resolve it once and remember it.
+_RESOLVED_CANVAS_URLS: dict[str, str] = {}
+_RESOLVED_CANVAS_URLS_LOCK = threading.Lock()
+
+
+def _is_canonical_canvas_host(api_url: str) -> bool:
+    """True when the URL is already the instructure.com host resolution looks for.
+
+    The resolver's entire job is to follow a vanity domain to its
+    ``*.instructure.com`` target, so a URL that IS one has nothing to resolve -
+    the round-trip can only ever return the address it was given. Skipping it
+    saves a full page fetch of the Canvas landing page (measured 0.70s on a good
+    connection, and it sits on the startup path before anything is on screen;
+    on a slow link it runs to the 5s timeout).
+    """
+    try:
+        host = urllib.parse.urlparse(api_url).hostname or ""
+    except Exception:
+        return False
+    host = host.lower()
+    return host == "instructure.com" or host.endswith(".instructure.com")
+
+
+def real_canvas_file_id(file_obj) -> int | None:
+    """The real Canvas **file** id behind a download task, or None if there is none.
+
+    A single Canvas file reaches the engine through several phases under
+    different ids: the Files tab and the module walk use its true positive id,
+    while an announcement / assignment / quiz / discussion / submission
+    attachment is re-keyed to a synthetic negative id in isolate mode. Asking
+    ``file_obj.id`` therefore cannot tell you that two tasks are the same file -
+    which is exactly how one file came to be fetched twice, 21 seconds apart
+    (course 46396, ids 1784620 and 1807289).
+
+    Only the ``attachment`` synthetic band maps back to a file id. Every other
+    band holds an ENTITY id from a different namespace, so a quiz id of 1784620
+    must never match the file of the same number - hence the explicit gate
+    rather than a bare :func:`secondary_raw_id`.
+    """
+    try:
+        fid = int(getattr(file_obj, 'id', 0) or 0)
+    except (TypeError, ValueError):
+        return None
+    if fid > 0:
+        return fid
+    if fid < 0 and secondary_id_type(fid) == 'attachment':
+        return secondary_raw_id(fid)
+    return None
+
+
 class CanvasManager:
     def __init__(self, api_key, api_url):
         self.api_key = api_key
@@ -720,20 +929,34 @@ class CanvasManager:
         else:
             if not api_url.startswith("http"):
                 api_url = "https://" + api_url
-            
-            # --- Auto-Resolve Vanity URLs ---
-            try:
-                import requests
-                # Attempt to follow redirects to find the true Canvas domain (e.g. .instructure.com)
-                res = requests.get(api_url, timeout=5)
-                for r in res.history:
-                    if 'instructure.com' in r.url:
-                        api_url = r.url
-                        break
-                if 'instructure.com' in res.url:
-                    api_url = res.url
-            except Exception:
-                pass
+
+            # --- Auto-Resolve Vanity URLs (memoised - see above) ---
+            _url_before_resolve = api_url
+            with _RESOLVED_CANVAS_URLS_LOCK:
+                _cached = _RESOLVED_CANVAS_URLS.get(_url_before_resolve)
+            if _cached is not None:
+                api_url = _cached
+            elif _is_canonical_canvas_host(api_url):
+                with _RESOLVED_CANVAS_URLS_LOCK:
+                    _RESOLVED_CANVAS_URLS[_url_before_resolve] = api_url
+            else:
+                try:
+                    import requests
+                    # Attempt to follow redirects to find the true Canvas domain (e.g. .instructure.com)
+                    res = requests.get(api_url, timeout=5)
+                    for r in res.history:
+                        if 'instructure.com' in r.url:
+                            api_url = r.url
+                            break
+                    if 'instructure.com' in res.url:
+                        api_url = res.url
+                except Exception:
+                    # Not cached: a resolution that failed because the network
+                    # was down must be retried, not remembered as "no redirect".
+                    pass
+                else:
+                    with _RESOLVED_CANVAS_URLS_LOCK:
+                        _RESOLVED_CANVAS_URLS[_url_before_resolve] = api_url
 
             from urllib.parse import urlparse
             try:
@@ -850,7 +1073,7 @@ class CanvasManager:
         return course_list
 
     def get_course_files_metadata(self, course, progress_callback=None, secondary_content_settings=None,
-                                  is_scanning_phase=False, timings=None):
+                                  is_scanning_phase=False, timings=None, download_mode=None):
         """
         Fetch metadata for all files in a course using a robust Hybrid strategy.
         
@@ -975,7 +1198,8 @@ class CanvasManager:
             module_files, module_map = self._get_files_from_modules(course, progress_callback=progress_callback,
                                                                     secondary_content_settings=secondary_content_settings,
                                                                     known_file_ids=set(all_files_map.keys()),
-                                                                    page_meta=page_meta)
+                                                                    page_meta=page_meta,
+                                                                    download_mode=download_mode)
             module_only_count = 0
             for f_info in module_files:
                 if f_info.id not in all_files_map:
@@ -1026,7 +1250,7 @@ class CanvasManager:
         return list(all_files_map.values()), secondary_fetch_success, module_map
 
     def _get_files_from_modules(self, course, progress_callback=None, secondary_content_settings=None,
-                                known_file_ids=None, page_meta=None):
+                                known_file_ids=None, page_meta=None, download_mode=None):
         """Fallback: Get files by iterating through modules.
 
         ``known_file_ids`` (set[int] | None): file IDs already fetched by the
@@ -1168,6 +1392,12 @@ class CanvasManager:
                         # content isolate mode. The analyzer must expect the
                         # exact same shape, or every already-downloaded page
                         # looks "new" and freshly-synced ones land at the root.
+                        #
+                        # ...with ONE exception, added 2026-07-29: in FLAT mode
+                        # there is no module folder to keep the page in, so
+                        # "module placement" degenerates to the course root and
+                        # the isolate setting is the only instruction left. See
+                        # `_page_isolated` below.
                         ext = ".html" if item.type == 'Page' else (".webloc" if platform.system() == 'Darwin' else ".url")
 
                         _sig = ''
@@ -1180,9 +1410,24 @@ class CanvasManager:
                         _title = (getattr(_page_stub, 'title', None)
                                   or getattr(item, 'title', 'Untitled'))
                         safe_base = self._sanitize_filename(_title)
+                        # A module Page goes to its category folder only when the
+                        # user asked to isolate AND there is no module folder for
+                        # it to live in - i.e. flat mode. In modules mode the page
+                        # stays with its module, which is the layout that mode is
+                        # for. The folder is carried IN THE NAME because the
+                        # analyzer's flat-mode `target_paths` is empty by design
+                        # (sync_manager.analyze_course only fills it for modules
+                        # mode), and `preferred_disk_name` passes a name_locked
+                        # negative-id name through verbatim - so this is the one
+                        # place that can state the expected path at all.
+                        _page_isolated = (item.type == 'Page' and isolate
+                                          and download_mode == 'flat')
                         if item.type == 'Page':
                             routing = _ENTITY_ROUTING['page']
-                            emitted_filename = f"{routing['prefix']}: {safe_base}{ext}"
+                            if _page_isolated:
+                                emitted_filename = f"{routing['folder']}/{safe_base}{ext}"
+                            else:
+                                emitted_filename = f"{routing['prefix']}: {safe_base}{ext}"
                             if _page_stub is not None:
                                 _sig = compute_entity_content_sig('page', _page_stub)
                         else:
@@ -1192,9 +1437,57 @@ class CanvasManager:
                         if item.type != 'Page':
                             # Link signature: a renamed link or changed target
                             # URL re-syncs the .url/.webloc shortcut.
+                            #
+                            # It MUST be computed from `actual_url` - the very
+                            # string written into the shortcut below (url=... on
+                            # the CanvasFileInfo) - and not from a separately
+                            # derived one. The two orderings differ:
+                            #
+                            #   actual_url : html_url  or external_url or url
+                            #   the old sig: external_url or html_url
+                            #
+                            # For an ExternalUrl item they coincide (Canvas
+                            # leaves html_url empty), which is why this went
+                            # unnoticed. For an ExternalTool item they NEVER do:
+                            # html_url is the Canvas module-item URL that lands
+                            # in the file, while external_url is the shared LTI
+                            # launch endpoint - literally the same string for
+                            # every recording in the course. So the signature
+                            # described a URL the file did not contain, could
+                            # not match the one recorded at download time, and
+                            # every Panopto shortcut was offered as a "clean
+                            # update" on every analysis, for ever. Measured on
+                            # 43660: 36 phantom updates on a folder downloaded
+                            # minutes earlier, with 0 md5 mismatches.
+                            #
+                            # Same family as the Pages identity bug documented
+                            # just below - download and scan must agree on what
+                            # identifies an entity.
+                            #
+                            # ONLY ExternalTool changes. Measured on 43660, both
+                            # directions, by comparing the stored signature
+                            # against one recomputed from the URL actually
+                            # inside each shortcut:
+                            #
+                            #   ExternalUrl  file holds external_url, stored sig
+                            #                is sig(external_url) -> the original
+                            #                ordering is already right, and
+                            #                switching it to html_url turned 5
+                            #                correct rows into phantom updates.
+                            #   ExternalTool file holds html_url, stored sig is
+                            #                sig(html_url) -> external_url is the
+                            #                shared LTI launch endpoint, the same
+                            #                string for all 36 recordings, so it
+                            #                can never identify one.
+                            _link_url = (
+                                (getattr(item, 'html_url', None)
+                                 or getattr(item, 'external_url', None) or '')
+                                if item.type == 'ExternalTool' else
+                                (getattr(item, 'external_url', None)
+                                 or getattr(item, 'html_url', '') or '')
+                            )
                             _sig = link_content_sig(getattr(item, 'title', 'Untitled'),
-                                                    getattr(item, 'external_url', None)
-                                                    or getattr(item, 'html_url', '') or '')
+                                                    _link_url)
                         # ID parity with the download engine: Pages are recorded
                         # in the manifest by PAGE id (-page_id) at download time,
                         # but this scan historically emitted the MODULE ITEM id
@@ -1213,11 +1506,14 @@ class CanvasManager:
                             if _pgid:
                                 syn_id = -_pgid
                                 _legacy_alias = _item_syn_id
-                        if syn_id:
-                            # Always register placement: these items live in
-                            # their module folder in BOTH isolate modes.
+                        if syn_id and not _page_isolated:
+                            # Register placement: these items live in their
+                            # module folder in both isolate modes - EXCEPT an
+                            # isolated page in flat mode, whose folder is already
+                            # carried in the emitted name. Registering one here
+                            # too would produce "<module>/Pages/X.html".
                             module_map.setdefault(syn_id, clean_module_name)
-                        if _legacy_alias:
+                        if _legacy_alias and not _page_isolated:
                             module_map.setdefault(_legacy_alias, clean_module_name)
 
                         mock_info = CanvasFileInfo(
@@ -2227,6 +2523,13 @@ class CanvasManager:
         # DISTINCT entities with identical sanitized names get " (1)" suffixes
         # instead of silently overwriting each other (see _save_secondary_entity).
         self._sec_registry = {}
+
+        # Same-FILE guard: {real Canvas file id -> where this run put it}.
+        # The phases below each compute their own destination for a file, so
+        # the same Canvas id can be requested by the module walk, the Catch-All
+        # and a Canvas Content attachment. _download_file_async consults this
+        # before every fetch and places a local copy instead of re-downloading.
+        self._file_registry = {}
         
         debug_file = (Path(save_dir) / "debug_log.txt") if debug_mode else None
         if debug_mode:
@@ -2304,10 +2607,83 @@ class CanvasManager:
             connector=connector
         ) as session:
             downloaded_files_info = []
-            
+            # Whether the Canvas Content phase has already run for this course.
+            # A list because a closure may only READ an enclosing local.
+            _canvas_content_done = []
+            # Derived HERE, unconditionally. The only other spelling of this in
+            # download_course_async is `_iso`, which lives inside both an
+            # `if debug_mode:` and an `if secondary_content_settings:` - so
+            # reading it at the dispatch below raises UnboundLocalError on any
+            # run with debug off, aborting the whole course into the generic
+            # "Processing Error" handler. Which is exactly what it did.
+            _isolate_secondary = bool(
+                (secondary_content_settings or {}).get('isolate_secondary_content', True))
+
+            async def _canvas_content_phase():
+                """Pages, assignments, announcements … and their attachments.
+
+                A closure because WHERE it runs depends on the mode, and it must
+                always run before whatever sweeps the Files tab - see the
+                ordering note on the Catch-All. Called from one of the two
+                ordinary sites below, plus the 401 fallback.
+
+                **Idempotent, and that is what makes the fallback safe.** When
+                the module walk raises 401 the handler retries the course as a
+                flat scan, and whether this phase already ran depends on WHERE
+                the 401 surfaced: raised by ``get_modules()`` it has not, raised
+                later it has. Neither the fallback nor this function can know
+                which, so guessing picks a failure - skip and a course with a
+                hidden Modules tab silently loses every announcement and
+                assignment; call unconditionally and the other case downloads
+                all of it twice. Running at most once per course answers both.
+                """
+                if _canvas_content_done:
+                    return
+                _canvas_content_done.append(True)
+                if not (secondary_content_settings and any(
+                        secondary_content_settings.get(k)
+                        for k in SECONDARY_CONTENT_DEFAULTS
+                        if k.startswith('download_'))):
+                    return
+                if debug_mode:
+                    _sec_active = [
+                        k.replace('download_', '') for k, v in secondary_content_settings.items()
+                        if v and k.startswith('download_')
+                    ]
+                    log_debug(f"--- Canvas Content Phase: [{', '.join(_sec_active)}] ---", debug_file)
+                try:
+                    await self._download_secondary_content(
+                        course, base_path, sem, session,
+                        progress_callback, mb_tracker, check_cancellation,
+                        secondary_content_settings, Path(save_dir),
+                        debug_file, sync_manager, module_handled_ids,
+                    )
+                except Exception as sec_e:
+                    err = DownloadError(
+                        course.name, "Canvas Content",
+                        "Canvas Content Error", str(sec_e),
+                        raw_error=sec_e,
+                        is_app_error=True,
+                    )
+                    if progress_callback:
+                        progress_callback(err, progress_type='error')
+                    self._log_error(save_dir, err)
+
             try:
+                # In flat / folder-structure mode the primary loop IS the
+                # Files-tab sweep, so Canvas Content has to claim its
+                # attachments ahead of it. (In modules mode it runs later -
+                # after the module walk, which is what fills
+                # module_handled_ids, and before the Catch-All. Those two modes
+                # never populate that set, so nothing is lost by going first.)
+                if mode in ('flat', 'files'):
+                    await _canvas_content_phase()
                 if mode == 'flat':
-                    downloaded_files_info = await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file, sync_manager=sync_manager)
+                    # Only the genuine flat mode opts in. The 401 fallback below
+                    # must NOT: it records download_mode='modules', so the analyzer
+                    # will expect the prefixed "Page: X.html" form and the writer
+                    # has to produce exactly that.
+                    downloaded_files_info = await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file, sync_manager=sync_manager, isolate_pages=_isolate_secondary)
                 elif mode == 'files':
                     downloaded_files_info = await self._download_folders_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file, sync_manager=sync_manager)
                 else:
@@ -2411,6 +2787,14 @@ class CanvasManager:
                                             base_path, course_base_path=base_path, sync_manager=sync_manager,
                                             canvas_entity_id=page_id, canvas_updated_at=getattr(page_obj, 'updated_at', '') or '',
                                             progress_callback=progress_callback, debug_file=debug_file, error_root_path=Path(save_dir) if 'save_dir' in locals() else None,
+                                            # `isolate=False` is DELIBERATE and must stay in step
+                                            # with the two module_map/emitted_filename decisions in
+                                            # _get_files_from_modules: a module Page lives in its
+                                            # module folder in BOTH isolate modes (and at the course
+                                            # root in flat mode, where there is no module folder).
+                                            # Changing this alone writes "Pages/X.html" while the
+                                            # analyzer still expects "Page: X.html", so every page
+                                            # reads as new on every sync, for ever.
                                             course_name=course.name, module_path=target_path, isolate=False, has_attachments=False, metadata_pairs=[],
                                             content_sig=compute_entity_content_sig('page', page_obj)
                                         )
@@ -2528,7 +2912,10 @@ class CanvasManager:
                                                     ]
                                                     module_target = target_path if not isolate else None
                                                     filepath, syn_id, canvas_updated = self._save_secondary_entity(
-                                                        'assignment', a_name, description, base_path,
+                                                        'assignment', a_name,
+                                                        assignment_body_html(
+                                                            course, assignment, description, debug_file),
+                                                        base_path,
                                                         course_base_path=base_path, sync_manager=sync_manager,
                                                         canvas_entity_id=a_id, canvas_updated_at=updated_at,
                                                         progress_callback=progress_callback,
@@ -2659,7 +3046,9 @@ class CanvasManager:
                                                     ]
                                                     module_target = target_path if not isolate else None
                                                     filepath, syn_id, canvas_updated = self._save_secondary_entity(
-                                                        'quiz', q_title, q_desc, base_path,
+                                                        'quiz', q_title,
+                                                        quiz_body_html(quiz, debug_file),
+                                                        base_path,
                                                         course_base_path=base_path, sync_manager=sync_manager,
                                                         canvas_entity_id=q_id, canvas_updated_at=updated_at,
                                                         progress_callback=progress_callback,
@@ -2732,7 +3121,8 @@ class CanvasManager:
                                             if hasattr(item, 'content_id') and item.content_id:
                                                 try:
                                                     isolate = secondary_content_settings.get('isolate_secondary_content', True)
-                                                    topic = course.get_discussion_topic(item.content_id)
+                                                    topic = resolve_discussion_topic(
+                                                        course, item.content_id, debug_file)
                                                     t_id = getattr(topic, 'id', 0)
                                                     title = getattr(topic, 'title', 'Untitled Discussion')
                                                     message = getattr(topic, 'message', '') or ''
@@ -2871,7 +3261,20 @@ class CanvasManager:
                             downloaded_files_info.append(result)
 
 
+                # ---- CANVAS CONTENT (modules mode: after the module walk,
+                #      before the Catch-All - see _canvas_content_phase) ----
+                await _canvas_content_phase()
+
                 # ---- HYBRID MODE CATCH-ALL STARTED ----
+                # Runs LAST, after Canvas Content, and the order is load-bearing.
+                # A Files-tab file can also be an announcement / assignment /
+                # quiz / discussion / submission attachment. Whichever phase goes
+                # first computes its own destination for it, and the one that
+                # follows cannot know - so with the sweep first, the same file
+                # was fetched twice, 21 seconds apart, and landed as two copies
+                # (measured on course 46396, ids 1784620 and 1807289). Going
+                # last, the sweep can see what Canvas Content already claimed,
+                # exactly as it has always been able to see the module walk's.
                 try:
                     log_debug("Starting Catch-All Phase for non-module files...", debug_file)
                     if progress_callback: progress_callback('Scanning remaining files...', progress_type='log')
@@ -2900,6 +3303,9 @@ class CanvasManager:
                         if int(file.id) in _downloaded_ids or int(file.id) in _module_ids:
                             log_debug(f"Catch-All skipping module file: {file.filename} (ID: {file.id})", debug_file)
                             continue # Already downloaded in a module
+
+                        if self._defer_to_canvas_content(file, debug_file):
+                            continue
 
                         # Synchronous conflict resolution to prevent data loss.
                         base_filename = self._sanitize_filename(preferred_disk_name(file) or 'unknown')
@@ -2957,37 +3363,6 @@ class CanvasManager:
                         self._log_error(save_dir, err)
                 # ---- HYBRID MODE CATCH-ALL ENDED ----
 
-                # ---- SECONDARY CONTENT DOWNLOAD ----
-                if secondary_content_settings and any(
-                    secondary_content_settings.get(k)
-                    for k in SECONDARY_CONTENT_DEFAULTS
-                    if k.startswith('download_')
-                ):
-                    if debug_mode:
-                        _sec_active = [
-                            k.replace('download_', '') for k, v in secondary_content_settings.items()
-                            if v and k.startswith('download_')
-                        ]
-                        log_debug(f"--- Canvas Content Phase: [{', '.join(_sec_active)}] ---", debug_file)
-                    try:
-                        await self._download_secondary_content(
-                            course, base_path, sem, session,
-                            progress_callback, mb_tracker, check_cancellation,
-                            secondary_content_settings, Path(save_dir),
-                            debug_file, sync_manager, module_handled_ids,
-                        )
-                    except Exception as sec_e:
-                        err = DownloadError(
-                            course.name, "Canvas Content",
-                            "Canvas Content Error", str(sec_e),
-                            raw_error=sec_e,
-                            is_app_error=True,
-                        )
-                        if progress_callback:
-                            progress_callback(err, progress_type='error')
-                        self._log_error(save_dir, err)
-                # ---- SECONDARY CONTENT DOWNLOAD ENDED ----
-
                 if debug_mode:
                     _total_dl_count = len(downloaded_files_info)
                     _total_mb_dl = mb_tracker.get('bytes_downloaded', 0) / (1024 * 1024)
@@ -3006,7 +3381,16 @@ class CanvasManager:
                      # Log the partial failure
                      err = DownloadError(course.name, "Modules Access", "401 Unauthorized", "Modules locked, falling back to file scan.", raw_error=e)
                      self._log_error(save_dir, err)
-                     
+
+                     # Canvas Content BEFORE the flat sweep, exactly as the
+                     # ordinary flat path does it - the sweep must never reach a
+                     # file an attachment is going to claim. Safe to call here
+                     # because the phase runs at most once per course: if the
+                     # 401 came from get_modules() this is the only chance it
+                     # gets, and if it came later this is a no-op. Without it a
+                     # course with a hidden Modules tab downloaded its files and
+                     # silently none of its announcements or assignments.
+                     await _canvas_content_phase()
                      downloaded_files_info.extend(await self._download_flat_async(course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter, error_root_path=Path(save_dir), debug_file=debug_file, sync_manager=sync_manager))
                  else:
                      err = DownloadError(course.name, "Course Download", "Processing Error", str(e), raw_error=e, is_app_error=True)
@@ -3037,6 +3421,10 @@ class CanvasManager:
         # counter accumulates across reused CanvasManager instances and the
         # UI overstates skipped-discovery counts.
         self.skipped_discovery_errors = 0
+        # Same reason: a retry batch re-fetches items that FAILED, so nothing
+        # here can legitimately be served from the previous course's
+        # already-placed registry. Start empty rather than inherit.
+        self._file_registry = {}
 
         course_name = self._sanitize_filename(course.name)
         base_path = Path(save_dir) / course_name
@@ -3319,6 +3707,10 @@ class CanvasManager:
             
             for file in files_paginator:
                 if check_cancellation and check_cancellation(): break
+                # The Files-tab sweep in folder-structure mode - yields to
+                # Canvas Content exactly as the flat loop and the Catch-All do.
+                if self._defer_to_canvas_content(file, debug_file):
+                    continue
                 try:
                     # Calculate path
                     folder_id = getattr(file, 'folder_id', None)
@@ -3358,8 +3750,16 @@ class CanvasManager:
 
         return downloaded
 
-    async def _download_flat_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None, sync_manager=None):
-        """Downloads all files to the root folder."""
+    async def _download_flat_async(self, course, base_path, sem, session, progress_callback, mb_tracker, check_cancellation, file_filter='all', error_root_path=None, debug_file=None, sync_manager=None, isolate_pages=False):
+        """Downloads all files to the root folder.
+
+        ``isolate_pages`` routes module Pages to their category folder. It is
+        off by default so the 401 fallback and any other caller keep today's
+        layout unless they opt in, and it must agree with what
+        ``_get_files_from_modules`` emits for the same run - the analyzer's
+        expected path comes from there, and the two disagreeing makes every
+        page read as new on every sync.
+        """
         tasks = []
         downloaded = []
         log_debug(f"Starting Flat Download for {course.name}", debug_file)
@@ -3392,6 +3792,13 @@ class CanvasManager:
                     if check_cancellation and check_cancellation(): break
                     if getattr(file, 'id', None):
                         downloaded_ids.add(file.id)
+
+                    # This loop IS the Files-tab sweep in flat mode, so Canvas
+                    # Content runs ahead of it (see download_course_async) and
+                    # it yields the same way the Catch-All does. Before the name
+                    # reservation below, so a deferred file leaves its name free.
+                    if self._defer_to_canvas_content(file, debug_file):
+                        continue
 
                     # Synchronous conflict resolution to prevent data loss.
                     base_filename = self._sanitize_filename(preferred_disk_name(file) or 'unknown')
@@ -3491,7 +3898,7 @@ class CanvasManager:
                                     base_path, course_base_path=base_path, sync_manager=sync_manager,
                                     canvas_entity_id=page_id, canvas_updated_at=getattr(page_obj, 'updated_at', '') or '',
                                     progress_callback=progress_callback, debug_file=debug_file, error_root_path=error_root_path,
-                                    course_name=course.name, module_path=base_path, isolate=False, has_attachments=False, metadata_pairs=[],
+                                    course_name=course.name, module_path=base_path, isolate=isolate_pages, has_attachments=False, metadata_pairs=[],
                                     content_sig=compute_entity_content_sig('page', page_obj)
                                 )
                                 if filepath and filepath.exists():
@@ -3551,6 +3958,195 @@ class CanvasManager:
              self._log_error(error_root_path, err)
         
         return downloaded
+
+    def _remember_placed_file(self, file_obj, filepath) -> None:
+        """Note where this run put a Canvas file, and under WHICH manifest row.
+
+        The row matters as much as the path: the same Canvas file is written
+        under its true id by the Files tab and under a synthetic id by an
+        isolate-mode attachment, and those two cases want opposite treatment
+        (see :meth:`_claim_placed_copy`). Storing only the path would make the
+        two indistinguishable at the point of decision.
+        """
+        raw_id = real_canvas_file_id(file_obj)
+        if raw_id is None:
+            return
+        registry = getattr(self, '_file_registry', None)
+        if registry is None:
+            return  # not inside a course download (flat/legacy entry points)
+        try:
+            row_id = int(getattr(file_obj, 'id', 0) or 0)
+        except (TypeError, ValueError):
+            return
+        registry[raw_id] = (row_id, Path(filepath))
+
+    def _defer_to_canvas_content(self, file_obj, debug_file=None) -> bool:
+        """True when a Files-tab sweep must yield this file to Canvas Content.
+
+        Asked by the THREE loops that enumerate the Files tab - flat,
+        folder-structure, and the modules-mode Catch-All. They ask it early,
+        before reserving a filename, so a deferred file does not leave its name
+        held against a later file that could legitimately use it.
+
+        Every other caller is placing a file in its own right and must not ask.
+        """
+        placed = self._row_already_placed(int(getattr(file_obj, 'id', 0) or 0))
+        if placed is None:
+            return False
+        log_debug(
+            f"Files-tab sweep skipping Canvas Content attachment: "
+            f"{getattr(file_obj, 'filename', '?')} "
+            f"(ID: {getattr(file_obj, 'id', 0)}) -> {placed.name}", debug_file)
+        return True
+
+    def _row_already_placed(self, canvas_file_id):
+        """Where this run put *canvas_file_id*'s file, if it owns that same row.
+
+        The Catch-All's question, and the row half of it is the whole point.
+        ``sync_manifest.canvas_file_id`` is the primary key, so an id that an
+        earlier phase already wrote under has exactly one row and it is taken:
+        a second copy could never be tracked, which is how the Files-tab copy
+        came to be orphaned by the announcement's.
+
+        Returns ``None`` when the file was placed under a DIFFERENT row - the
+        isolate layout, where an attachment is re-keyed to a synthetic id. There
+        the Files-tab entry is a separate tracked entity that genuinely deserves
+        its own copy, so the caller must go ahead (and
+        :meth:`_claim_placed_copy` will still serve it locally rather than
+        fetching it twice).
+        """
+        placed = getattr(self, '_file_registry', {}).get(canvas_file_id)
+        if placed is None:
+            return None
+        row_id, path = placed
+        return path if row_id == canvas_file_id else None
+
+    async def _claim_placed_copy(self, file_obj, dest, *, sync_manager,
+                                 course_base_path, progress_callback,
+                                 debug_file, file_size_bytes):
+        """Place a file this run already fetched, instead of fetching it again.
+
+        Canvas hands the SAME file to several phases, each of which computes
+        its own destination: the module walk, the Files-tab Catch-All, and any
+        Canvas Content attachment (announcement / assignment / quiz /
+        discussion / submission). The Catch-All's skip set is built *before*
+        the Canvas Content phase runs, so it cannot possibly know what that
+        phase is about to claim - which is why one file was fetched twice, 21
+        seconds apart, and landed as two copies under two different names.
+
+        Reordering the phases was rejected: it would move the Canvas Content
+        marker in the progress UI and, worse, change which phase claims a root
+        filename first - renaming files in folders users already have. Instead
+        the SECOND request is served from the copy already on disk.
+
+        Two placements, decided by manifest identity rather than by preference:
+
+        * **Shared row** (Mode A / ``isolate_secondary_content=False``, where the
+          attachment keeps the file's true id) - **move**. The analyzer resolves
+          that one id to the attachment's prefixed name, so the moved file is
+          the only one the manifest can describe; leaving a second copy behind
+          is what orphaned it. One fetch, one file, one row.
+        * **Distinct rows** (Mode B / isolate, where the attachment is re-keyed
+          to a synthetic id) - **copy**. Here the analyzer legitimately expects
+          BOTH a Files-tab entry and an attachment entry, each with its own
+          row. Moving would leave the Files-tab row pointing at nothing, and
+          the next sync would re-download it to the root for ever. Two files as
+          designed, but one fetch.
+
+        Returns the usual ``(CanvasFileInfo, path)`` on success, or ``None`` to
+        fall through to a normal download - which is what every failure does,
+        so this can never make an outcome worse than not having tried.
+        """
+        raw_id = real_canvas_file_id(file_obj)
+        registry = getattr(self, '_file_registry', None)
+        if raw_id is None or not registry:
+            return None
+        placed = registry.get(raw_id)
+        if placed is None:
+            return None
+        placed_row, src = placed
+        try:
+            src = Path(src)
+            if src == Path(dest):
+                return None  # already in place; the exists-check above handles it
+            if not src.exists():
+                registry.pop(raw_id, None)  # moved/deleted since - fetch it properly
+                return None
+            # Only ever claim within THIS course's folder. The registry lives on
+            # the manager, which outlives a single course, and the retry entry
+            # point (download_isolated_batch_async) does not build one - so a
+            # stale entry could otherwise point at another course's file.
+            if course_base_path is not None:
+                src.relative_to(course_base_path)
+        except (OSError, ValueError):
+            return None
+
+        # The decision is "does the copy we have already occupy the row we are
+        # about to write" - NOT "is this id positive". Reading it off the id
+        # would be wrong in exactly the case the phase order creates: the
+        # Files-tab sweep asking for a file an isolate-mode attachment has
+        # already placed would MOVE the attachment's copy out of its folder.
+        shares_row = placed_row == int(getattr(file_obj, 'id', 0) or 0)
+        verb = 'Moving' if shares_row else 'Copying'
+        try:
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            if shares_row:
+                await asyncio.to_thread(
+                    os.replace, make_long_path(src), make_long_path(dest))
+                registry[raw_id] = (placed_row, dest)
+            else:
+                await asyncio.to_thread(
+                    shutil.copy2, make_long_path(src), make_long_path(dest))
+        except OSError as e:
+            # Locked destination, cross-device, permissions - fall back to a
+            # real download, which carries its own conflict handling.
+            log_debug(f"Could not place already-downloaded file {src.name} "
+                      f"-> {dest.name} ({e}); downloading it again.", debug_file)
+            return None
+
+        log_debug(f"{verb} already-downloaded file (ID: {raw_id}): "
+                  f"{src.name} -> {dest}", debug_file)
+
+        if sync_manager and course_base_path:
+            try:
+                rel_path = str(dest.relative_to(course_base_path)).replace('\\', '/')
+                await asyncio.to_thread(
+                    sync_manager.record_downloaded_file,
+                    canvas_file_id=getattr(file_obj, 'id', raw_id),
+                    canvas_filename=getattr(file_obj, 'filename', ''),
+                    local_path=rel_path,
+                    canvas_updated_at=getattr(file_obj, 'modified_at', None) or '',
+                    original_size=getattr(file_obj, 'size', 0) or 0,
+                    content_sig=getattr(file_obj, 'content_sig', '') or '',
+                    clear_ignored=True,
+                )
+            except Exception as db_err:
+                log_debug(f"Warning: DB record failed for placed copy {dest.name}: {db_err}",
+                          debug_file)
+
+        if progress_callback:
+            # 'skipped', not 'download': the item IS delivered and must be
+            # counted (and must reach the run ledger, which is what scopes
+            # post-processing), but no bytes crossed the network - so its size
+            # has to leave the MB denominator or the counter can never reach
+            # its own total.
+            progress_callback(dest.name, progress_type='skipped',
+                              file_size=file_size_bytes,
+                              explicit_filepath=str(dest))
+
+        return (
+            CanvasFileInfo(
+                id=getattr(file_obj, 'id', raw_id),
+                filename=getattr(file_obj, 'filename', ''),
+                display_name=getattr(file_obj, 'display_name', getattr(file_obj, 'filename', '')),
+                size=getattr(file_obj, 'size', 0),
+                modified_at=getattr(file_obj, 'modified_at', None),
+                md5=getattr(file_obj, 'md5', None),
+                url=getattr(file_obj, 'url', ''),
+                content_type=getattr(file_obj, 'content-type', ''),
+                folder_id=getattr(file_obj, 'folder_id', None),
+            ), dest
+        )
 
     async def _download_file_async(self, sem, session, file_obj, folder_path, progress_callback, mb_tracker=None, file_filter='all', error_root_path=None, course_name="Unknown", debug_file=None, sync_manager=None, course_base_path=None, explicit_filepath=None, check_cancellation=None):
         if explicit_filepath:
@@ -3652,6 +4248,7 @@ class CanvasManager:
                                 )
                             except Exception:
                                 pass  # Non-fatal: don't break download for DB issues
+                        self._remember_placed_file(file_obj, filepath)
                         return (
                             CanvasFileInfo(
                                 id=file_obj.id,
@@ -3706,6 +4303,21 @@ class CanvasManager:
                             filename = filepath.name
                 except Exception:
                     pass
+
+            # This run may already hold these exact bytes: the same Canvas file
+            # reaches the engine once per phase that references it, and each
+            # phase computes its own destination. Place the copy we have rather
+            # than fetching it a second time. Deliberately AFTER the
+            # exists-check above (which is the cheaper answer when the
+            # destination is already correct) and BEFORE the URL check, so an
+            # attachment whose URL Canvas has since stripped still lands.
+            _claimed = await self._claim_placed_copy(
+                file_obj, filepath, sync_manager=sync_manager,
+                course_base_path=course_base_path,
+                progress_callback=progress_callback, debug_file=debug_file,
+                file_size_bytes=file_size_bytes)
+            if _claimed is not None:
+                return _claimed
 
             # Create lightweight dictionary for session state JSON serialization safety
             safe_file_dict = {
@@ -3880,7 +4492,11 @@ class CanvasManager:
                                     raise RuntimeError(error_msg)
 
                                 log_debug(f"File Saved: {filepath} ({total_bytes} bytes)", debug_file)
-                                
+
+                                # A later phase asking for this same Canvas file
+                                # gets this copy instead of a second fetch.
+                                self._remember_placed_file(file_obj, filepath)
+
                                 # --- Sync Run #0: Record to DB AFTER successful atomic rename ---
                                 # This is the safety guard: only fully-downloaded files get recorded.
                                 # Cancelled/partial .part files never reach this point.
@@ -4537,7 +5153,7 @@ class CanvasManager:
                 filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'assignment',
                     getattr(assignment, 'name', 'Untitled Assignment'),
-                    a_desc,
+                    assignment_body_html(course, assignment, a_desc, debug_file),
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=raw_id,
@@ -4604,7 +5220,7 @@ class CanvasManager:
                 filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'quiz',
                     getattr(quiz, 'title', 'Untitled Quiz'),
-                    q_desc,
+                    quiz_body_html(quiz, debug_file),
                     base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=raw_id,
@@ -4623,7 +5239,7 @@ class CanvasManager:
                 return filepath, syn_id, attachments or None, canvas_updated
 
             elif entity_type == 'discussion':
-                topic = course.get_discussion_topic(raw_id)
+                topic = resolve_discussion_topic(course, raw_id, debug_file)
                 
                 attachments = []
                 try:
@@ -4692,7 +5308,7 @@ class CanvasManager:
                 return filepath, syn_id, attachments or None, canvas_updated
 
             elif entity_type == 'announcement':
-                topic = course.get_discussion_topic(raw_id)
+                topic = resolve_discussion_topic(course, raw_id, debug_file)
                 
                 attachments = []
                 try:
@@ -4995,7 +5611,12 @@ class CanvasManager:
                 ]
 
                 filepath, syn_id, canvas_updated = self._save_secondary_entity(
-                    'assignment', a_name, description, base_path,
+                    'assignment', a_name,
+                    # _sig_obj, not `assignment`: it is the richer refetched
+                    # object where one was obtained, and the list stub only as
+                    # fallback - the same preference the signature above makes.
+                    assignment_body_html(course, _sig_obj, description, debug_file),
+                    base_path,
                     course_base_path=base_path, sync_manager=sync_manager,
                     canvas_entity_id=a_id, canvas_updated_at=updated_at,
                     progress_callback=progress_callback,
@@ -5749,52 +6370,11 @@ class CanvasManager:
                 q_description = getattr(quiz, 'description', '') or ''
                 updated_at = getattr(quiz, 'updated_at', '') or ''
 
-                # Try to fetch questions (may 403 for students)
-                questions_html = ''
-                try:
-                    questions = quiz.get_questions()
-                    q_num = 0
-                    for q in questions:
-                        q_num += 1
-                        q_name = getattr(q, 'question_name', f'Question {q_num}')
-                        q_text = getattr(q, 'question_text', '') or ''
-                        q_type = getattr(q, 'question_type', 'unknown')
-
-                        questions_html += (
-                            f'<div style="margin:15px 0;padding:10px;'
-                            f'border:1px solid #ddd;border-radius:5px;">'
-                            f'<h3>Q{q_num}: {html.escape(q_name)}</h3>'
-                            f'<p style="color:#666;font-size:0.85em;">'
-                            f'Type: {html.escape(q_type)}</p>'
-                            f'{q_text}'
-                            f'</div>'
-                        )
-
-                        # Render answers if available
-                        answers = getattr(q, 'answers', None)
-                        if answers and isinstance(answers, list):
-                            answers_html = '<ul>'
-                            for ans in answers:
-                                ans_text = ans.get('text', '') or ans.get('html', '') or ''
-                                answers_html += f'<li>{ans_text}</li>'
-                            answers_html += '</ul>'
-                            questions_html += answers_html
-
-                except (Unauthorized, ResourceDoesNotExist):
-                    questions_html = (
-                        '<p><em>Quiz questions are not accessible. '
-                        'The quiz may be locked or unpublished.</em></p>'
-                    )
-                except Exception as qe:
-                    log_debug(f"Could not fetch questions for quiz {q_id}: {qe}", debug_file)
-                    questions_html = (
-                        '<p><em>Could not load quiz questions.</em></p>'
-                    )
-
-                # Combine description + questions
-                full_body = q_description
-                if questions_html:
-                    full_body += '<h2>Questions</h2>' + questions_html
+                # One implementation, shared with every other quiz save site -
+                # see quiz_body_html. This used to be the ONLY place questions
+                # were fetched at all, so a quiz reached any other way was saved
+                # with an empty body and rendered as "(No content provided)".
+                full_body = quiz_body_html(quiz, debug_file)
 
                 filepath, syn_id, canvas_updated = self._save_secondary_entity(
                     'quiz', q_title, full_body, base_path,

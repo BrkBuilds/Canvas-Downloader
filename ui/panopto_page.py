@@ -207,19 +207,10 @@ def _inject_dialog_css() -> None:
     div[data-testid="stDialog"] div[class*="st-key-btn_dev_"]:hover button {{ background-color: rgba(255,255,255,0.06) !important; }}
     div[data-testid="stDialog"] div.st-key-btn_dev_cpu button:hover p::before {{ background-image: url("{SVG_CPU_ACT}") !important; }}
     div[data-testid="stDialog"] div.st-key-btn_dev_gpu button:not([disabled]):hover p::before {{ background-image: url("{SVG_GPU_NEW_ACT}") !important; }}
-    div[data-testid="stDialog"] div.st-key-btn_dev_gpu button[disabled],
-    div[data-testid="stDialog"] div.st-key-btn_dev_gpu button:disabled {{
-        opacity: 0.38 !important; cursor: not-allowed !important;
-        background-color: rgba(255,255,255,0.02) !important; border-color: rgba(255,255,255,0.08) !important;
-    }}
-    div[data-testid="stDialog"] div.st-key-btn_dev_gpu button[disabled] p::before,
-    div[data-testid="stDialog"] div.st-key-btn_dev_gpu button:disabled p::before {{
-        opacity: 0.35 !important;
-    }}
-    div[data-testid="stDialog"] div.st-key-btn_dev_gpu button[disabled]::before,
-    div[data-testid="stDialog"] div.st-key-btn_dev_gpu button:disabled::before {{
-        opacity: 0.35 !important;
-    }}
+    /* Disabled GPU pill: global.css's `button[disabled]` recipe owns the paint
+       (it dims the pill AND both ::before glyphs in one pass). Only the hover
+       suppression stays local - it has no shared equivalent. Three stacked
+       `opacity: 0.35-0.38` rules used to multiply with that filter. */
     div[data-testid="stDialog"] div.st-key-btn_dev_gpu:hover button[disabled] {{ background-color: rgba(255,255,255,0.02) !important; }}
 
     /* Advisory slot: always rendered for stable element indexing (keeps the model
@@ -247,6 +238,13 @@ def _inject_dialog_css() -> None:
         padding-bottom: 5px !important; margin-bottom: 2px !important;
     }}
     div[data-testid="stDialog"] .pan-th {{ color:#64748b; font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }}
+    /* Size is the one numeric column, and while a model downloads its value is
+       a two-part "19 MB / 75 MB" measure that changes width every second.
+       Left-aligning both put the growing figure off-axis from its own header;
+       centring header and cell on the same axis keeps them reading as one
+       column whatever the value's width. */
+    div[data-testid="stDialog"] .pan-th-size,
+    div[data-testid="stDialog"] .pan-size {{ text-align: center !important; }}
 
     /* Model rows */
     div[data-testid="stDialog"] div[class*="st-key-pan_model_row_"] {{
@@ -285,7 +283,8 @@ def _inject_dialog_css() -> None:
         background-color: {PAN_PURPLE_DARK} !important; border: none !important; color: #ffffff !important; font-weight: 600 !important;
     }}
     div[data-testid="stDialog"] div[class*="st-key-pan_model_dl_"] button:hover {{ background-color: #8a4eef !important; }}
-    div[data-testid="stDialog"] div[class*="st-key-pan_model_dl_"] button[disabled] {{ opacity: 0.45 !important; cursor: not-allowed !important; }}
+    /* Disabled Download button: global.css's `button[disabled]` recipe owns it
+       (`opacity: 0.45` used to multiply with that filter). */
     div[data-testid="stDialog"] div[class*="st-key-pan_model_dl_"] button p::before {{
         content: "" !important; display: inline-block !important; width: 13px !important; height: 13px !important; margin-right: 5px !important;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z'/%3E%3C/svg%3E") !important;
@@ -354,6 +353,117 @@ def _inject_dialog_css() -> None:
     div[data-testid="stDialog"] [data-testid="stProgress"] p,
     div[data-testid="stDialog"] [data-testid="stProgress"] small {{
         font-weight: 700 !important;
+    }}
+
+    /* ── Detected Hardware card ──
+       A st.container(border=False) wearing the card skin, so the app-installed
+       CUDA-libraries section (separator + copy + button) can live INSIDE it -
+       those are real Streamlit widgets and cannot be part of a markdown blob.
+       1.51 puts the st-key-* class directly on the container's stVerticalBlock,
+       so the skin goes on the keyed div itself. gap:0 because the rows control
+       their own spacing with margins. */
+    div[class*="st-key-pan_hw_card"] {{
+        margin-top: -6px !important;
+        padding: 12px 14px 13px 14px !important;
+        background: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 10px !important;
+        gap: 0 !important;
+    }}
+    div[class*="st-key-pan_hw_card"] [data-testid="stVerticalBlock"] {{ gap: 0 !important; }}
+    /* MUST zero the markdown container's margin inside this card. global.css
+       gives every stMarkdownContainer `margin-bottom: -16px`, and with the
+       card's flex `gap: 0` that pulled each row 16px UP into the one above it -
+       the CUDA copy sat on top of the CPU row and the button sat on top of the
+       copy. The rows carry their own explicit margins instead. */
+    div[class*="st-key-pan_hw_card"] [data-testid="stMarkdownContainer"] {{
+        margin-bottom: 0 !important;
+    }}
+    /* Compact, self-explanatory action inside the card. Trash glyph so the
+       button's effect is readable before the label is. */
+    div.st-key-pan_cuda_remove {{
+        margin-top: 8px !important; margin-bottom: 2px !important;
+    }}
+    div.st-key-pan_cuda_remove button {{
+        background: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(255,255,255,0.14) !important;
+        color: #cbd5e1 !important;
+        /* Deliberately smaller than a primary action: this is a housekeeping
+           control tucked inside an information card, not a call to action. */
+        font-size: 0.76rem !important; font-weight: 600 !important;
+        height: 27px !important; min-height: 27px !important;
+        padding: 0 11px !important; border-radius: 7px !important;
+        display: inline-flex !important; align-items: center !important;
+        justify-content: center !important; width: auto !important;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+    }}
+    /* The app's destructive hover, verbatim - the same #ff4b4b border/text on a
+       10%-red wash that `remove_pair` and every Cancel button already use, so a
+       "this deletes something" control looks the same wherever it appears.
+       (Was a one-off rgba(248,113,113,…) wash with white text.) */
+    div.st-key-pan_cuda_remove button:hover {{
+        background-color: rgba(255,75,75,0.1) !important;
+        border-color: #ff4b4b !important;
+        color: #ff4b4b !important;
+    }}
+    /* Full flex chain (button -> stMarkdownContainer -> p): flexing only the
+       label leaves the icon+text block sitting high in the button. */
+    div.st-key-pan_cuda_remove button [data-testid="stMarkdownContainer"] {{
+        display: flex !important; align-items: center !important;
+    }}
+    div.st-key-pan_cuda_remove button p {{
+        display: inline-flex !important; align-items: center !important;
+        gap: 6px !important; margin: 0 !important;
+    }}
+    div.st-key-pan_cuda_remove button p::before {{
+        content: "" !important; display: inline-block !important;
+        /* Scaled with the label, not left at its old size - a 14px glyph beside
+           0.76rem text reads as an icon with a caption stuck to it. */
+        width: 12px !important; height: 12px !important; flex-shrink: 0 !important;
+        background-size: contain !important; background-repeat: no-repeat !important;
+        background-position: center !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2'/%3E%3Cpath d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/%3E%3Cpath d='M10 11v6'/%3E%3Cpath d='M14 11v6'/%3E%3C/svg%3E") !important;
+    }}
+    div.st-key-pan_cuda_remove button:hover p::before {{
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff4b4b' stroke-width='2.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2'/%3E%3Cpath d='M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6'/%3E%3Cpath d='M10 11v6'/%3E%3Cpath d='M14 11v6'/%3E%3C/svg%3E") !important;
+    }}
+
+    /* ── The UNDO after a removal has been scheduled ──────────────────────────
+       This must NOT look like the button that was just clicked. It used to be a
+       pixel-identical pill in the identical position, so the moment you clicked
+       "Remove CUDA libraries" a same-shaped button appeared under your cursor
+       and read as a confirm step - one more click and you had silently undone
+       your own decision. Removing them is a deliberate choice, so the screen now
+       CONFIRMS it and this is only an escape hatch: a bare text link, no box, no
+       fill, left where nobody clicks it by reflex. */
+    div.st-key-pan_cuda_keep {{
+        margin-top: 4px !important; margin-bottom: 2px !important;
+    }}
+    div.st-key-pan_cuda_keep button {{
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #7d8899 !important;
+        font-size: 0.73rem !important; font-weight: 500 !important;
+        height: 20px !important; min-height: 20px !important;
+        padding: 0 !important;
+        display: inline-flex !important; align-items: center !important;
+        justify-content: flex-start !important; width: auto !important;
+        text-decoration: underline !important;
+        text-underline-offset: 2px !important;
+        text-decoration-color: rgba(125,136,153,0.45) !important;
+        transition: color 0.15s ease !important;
+    }}
+    div.st-key-pan_cuda_keep button:hover {{
+        background: transparent !important;
+        color: #cbd5e1 !important;
+        text-decoration-color: #cbd5e1 !important;
+    }}
+    div.st-key-pan_cuda_keep button [data-testid="stMarkdownContainer"] {{
+        display: flex !important; align-items: center !important;
+    }}
+    div.st-key-pan_cuda_keep button p {{
+        margin: 0 !important;
     }}
 
     /* CUDA provisioning card container styling */
@@ -583,7 +693,7 @@ def _render_model_manager() -> bool:
         with st.container(key="pan_models_header"):
             hc1, hc2, hc3, hc4 = st.columns([0.46, 0.12, 0.22, 0.20])
             hc1.html("<div class='pan-th' style='padding-left:12px;'>Model</div>")
-            hc2.html("<div class='pan-th'>Size</div>")
+            hc2.html("<div class='pan-th pan-th-size'>Size</div>")
             hc3.html("<div class='pan-th'>Speed &amp; Accuracy</div>")
             hc4.html("<div class='pan-th'></div>")
 
@@ -627,15 +737,35 @@ def _render_model_manager() -> bool:
                 # Real on-disk size once installed (the registry figure is an
                 # estimate of the essential CT2 files only, so the actual folder is
                 # usually larger); the estimate is all we have before download.
-                size_mb = m["size_mb"]
-                if installed:
-                    _actual = pmodels.installed_size_mb(mid)
-                    if _actual:
-                        size_mb = _actual
-                size_str = f"{size_mb/1024:.1f} GB" if size_mb >= 1024 else f"{size_mb:.0f} MB"
-                # size_str is an app-built number string.
-                # audit-ignore
-                c2.html(f"<div style='color:#cbd5e1;font-size:0.82rem;'>{size_str}</div>")
+                def _fmt_mb(v: float) -> str:
+                    return f"{v/1024:.1f} GB" if v >= 1024 else f"{v:.0f} MB"
+
+                if downloading:
+                    # "52 MB / 75 MB" - progress in the accent purple against a
+                    # white target, so the pair reads as one measurement with a
+                    # moving part rather than a size that mysteriously grows.
+                    # (is_installed() flips true the moment config.json lands, so
+                    # the plain branch below was already showing a live-growing
+                    # on-disk figure with nothing to compare it against.)
+                    _done_mb = int(dl_state.get("downloaded_bytes") or 0) / (1024 * 1024)
+                    _total_mb = (int(dl_state.get("total_bytes") or 0) / (1024 * 1024)) or m["size_mb"]
+                    # App-built number strings only.
+                    # audit-ignore
+                    c2.html(
+                        f"<div class='pan-size' style='font-size:0.82rem;white-space:nowrap;'>"
+                        f"<span style='color:{PAN_PURPLE};font-weight:600;'>{_fmt_mb(min(_done_mb, _total_mb))}</span>"
+                        f"<span style='color:#64748b;'> / </span>"
+                        f"<span style='color:#ffffff;'>{_fmt_mb(_total_mb)}</span></div>"
+                    )
+                else:
+                    size_mb = m["size_mb"]
+                    if installed:
+                        _actual = pmodels.installed_size_mb(mid)
+                        if _actual:
+                            size_mb = _actual
+                    # size_str is an app-built number string.
+                    # audit-ignore
+                    c2.html(f"<div class='pan-size' style='color:#cbd5e1;font-size:0.82rem;'>{_fmt_mb(size_mb)}</div>")
 
                 c3.html(_twin_bars(m.get("speed", 3), m.get("accuracy", 3)))
 
@@ -765,36 +895,78 @@ def _render_compute_hardware_status(hw: dict) -> None:
         cpu_txt += f" · {cpu_name}"
     cpu_row = _row("#38bdf8", "CPU", cpu_txt)
 
-    st.markdown(
-        "<div style='margin-top:-6px;padding:10px 14px;background:rgba(255,255,255,0.04);"
-        "border:1px solid rgba(255,255,255,0.1);border-radius:10px;display:flex;"
-        "flex-direction:column;gap:5px;'>"
-        "<div style='font-size:0.95rem;color:#e2e8f0;font-weight:700;margin-bottom:2px;'>Detected Hardware</div>"
-        # gpu_row/cpu_row are app-built HTML; only external data (gpu/cpu name)
-        # is esc()'d inside _row(), so this is safe.
-        # audit-ignore
-        f"{gpu_row}{cpu_row}</div>",
-        unsafe_allow_html=True,
-    )
-
-    # ── App-provisioned CUDA libraries: show what is installed, offer removal ──
-    # Only when WE installed them (is_provisioned() checks our own lib dir, so a
-    # system-wide CUDA install is never offered for deletion). ~1.3 GB is a lot of
-    # disk to have no way of reclaiming from inside the app.
+    # ── The card ──
+    # App-provisioned CUDA libraries live INSIDE this card, under a separator
+    # below the CPU row - they are a fact about this machine's transcription
+    # hardware, and as a loose line + button floating under the card they read
+    # as an unexplained orphan ("CUDA libraries installed by Canvas Downloader."
+    # told the user nothing about what the button would do).
+    # Shown only when WE installed them (is_provisioned() checks our own lib
+    # dir), so a system-wide CUDA install is never offered for deletion.
     try:
-        if cuda_provision.is_provisioned():
+        _provisioned = cuda_provision.is_provisioned()
+        _pending = cuda_provision.removal_pending()
+    except Exception as e:
+        logger.debug(f"CUDA provisioning status check failed: {e}")
+        _provisioned = _pending = False
+
+    with st.container(key="pan_hw_card"):
+        st.markdown(
+            "<div style='display:flex;flex-direction:column;gap:5px;'>"
+            "<div style='font-size:0.95rem;color:#e2e8f0;font-weight:700;margin-bottom:2px;'>Detected Hardware</div>"
+            # gpu_row/cpu_row are app-built HTML; only external data (gpu/cpu name)
+            # is esc()'d inside _row(), so this is safe.
+            # audit-ignore
+            f"{gpu_row}{cpu_row}</div>",
+            unsafe_allow_html=True,
+        )
+
+        if _provisioned:
             _ver = cuda_provision.provisioned_version()
-            _ver_txt = f" ({_esc(_ver)})" if _ver else ""
+            _ver_txt = f" <span style='color:#64748b;'>({_esc(_ver)})</span>" if _ver else ""
+            if _pending:
+                # CONFIRMATION, not a second question. Clicking Remove is a
+                # deliberate act, so the screen's job here is to say the request
+                # landed and what happens next - green tick, "Removal scheduled",
+                # no ambiguity about whether anything is still required. The old
+                # copy was a neutral grey paragraph that read like a prompt, and
+                # the undo button under it read like the confirm.
+                _blurb = (
+                    "<div style='display:flex;align-items:flex-start;gap:7px;'>"
+                    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+                    "stroke='#4ade80' stroke-width='2.6' stroke-linecap='round' "
+                    "stroke-linejoin='round' style='width:14px;height:14px;flex-shrink:0;"
+                    "margin-top:2px;'><polyline points='20 6 9 17 4 12'/></svg>"
+                    "<div><span style='color:#4ade80;font-weight:600;'>Removal scheduled.</span> "
+                    "The CUDA libraries will be <b>deleted the next time you open Canvas "
+                    "Downloader</b>, freeing about 1.3&nbsp;GB. Transcription keeps working "
+                    "on the CPU, and you can reinstall them here whenever you like."
+                    "</div></div>"
+                )
+            else:
+                _blurb = (
+                    "Canvas Downloader installed NVIDIA's CUDA libraries "
+                    f"(cuBLAS&nbsp;+&nbsp;cuDNN){_ver_txt} so transcription can run on your "
+                    "GPU instead of the CPU. Remove them below to reclaim about "
+                    "1.3&nbsp;GB - transcription keeps working, just on the CPU."
+                )
             st.markdown(
-                "<div style='margin-top:8px;font-size:0.8rem;color:#94a3b8;'>"
-                f"CUDA libraries installed by Canvas Downloader{_ver_txt}."
-                "</div>",
+                "<div style='margin:10px 0 8px 0;border-top:1px solid rgba(255,255,255,0.1);'></div>"
+                # audit-ignore  (app-built copy; _ver is esc()'d above)
+                f"<div style='font-size:0.8rem;color:#94a3b8;line-height:1.5;'>{_blurb}</div>",
                 unsafe_allow_html=True,
             )
-            if st.button("Remove CUDA libraries", key="pan_cuda_remove",
-                         use_container_width=False,
-                         help="Frees about 1.3 GB. GPU transcription falls back to "
-                              "the CPU until you install them again."):
+
+            if _pending:
+                if st.button("Changed your mind? Keep them installed",
+                             key="pan_cuda_keep", use_container_width=False,
+                             help="Cancels the scheduled removal - nothing will be deleted."):
+                    cuda_provision.cancel_pending_removal()
+                    st.rerun(scope="fragment")
+            elif st.button("Remove CUDA libraries", key="pan_cuda_remove",
+                           use_container_width=False,
+                           help="Frees about 1.3 GB. GPU transcription falls back to "
+                                "the CPU until you install them again."):
                 if cuda_provision.remove_provision():
                     # The removed libs are still on this process's DLL search path
                     # and the hardware probe is cached, so both must be refreshed
@@ -805,14 +977,25 @@ def _render_compute_hardware_status(hw: dict) -> None:
                         _persist()
                     st.rerun(scope="fragment")
                 else:
-                    from ui.amber_notice import render_amber_notice
-                    render_amber_notice(
-                        "Could not remove the CUDA libraries.",
-                        detail="They may be in use. Close the app and try again.",
-                        margin="8px 0 0 0",
-                    )
-    except Exception as e:
-        logger.debug(f"CUDA provisioning status row failed: {e}")
+                    # Deleting them NOW is impossible, not merely unlucky: this
+                    # process has the DLLs loaded and Windows holds an open
+                    # handle on every loaded module until the process exits. So
+                    # the request is recorded and carried out at the top of the
+                    # next launch, before anything can load them again.
+                    # (The old copy - "they may be in use, close the app and try
+                    # again" - was true but left the user to do the work, and to
+                    # remember to do it before opening this dialog again.)
+                    if cuda_provision.request_removal_on_restart():
+                        st.rerun(scope="fragment")
+                    else:
+                        from ui.amber_notice import render_amber_notice
+                        from panopto.cuda_provision import cuda_libs_dir as _cdir
+                        render_amber_notice(
+                            "Couldn't schedule the removal.",
+                            detail=("Close Canvas Downloader and delete this folder "
+                                    f"by hand: {_esc(str(_cdir()))}"),
+                            margin="4px 0 0 0",
+                        )
 
 
 def _render_gpu_enablement(hw: dict) -> bool:
@@ -825,28 +1008,63 @@ def _render_gpu_enablement(hw: dict) -> bool:
       * 'driver'    -> NVIDIA GPU present but no usable CUDA driver: guide only
         (a driver install needs admin + reboot; we can't do it for them).
       * 'engine'    -> the transcription engine itself is broken/missing.
+
+    Everything is emitted inside ONE always-present container. This section's
+    shape changes with the provisioning state (idle card <-> progress + Cancel),
+    and Streamlit reconciles by delta-path INDEX: without the fixed slot, going
+    idle -> downloading pushed every later element down two slots, so the
+    advisory container landed on the model table's old index and - because
+    AppRoot.addBlock REUSES the children of a same-typed block at that path -
+    rendered a second, stale copy of the whole model table above the real one.
+    That is the reported "clicking Download spawns a second set of models, and
+    they flip between greyed and active" (the flipping is Streamlit's stale-node
+    fade, retriggered by the twice-a-second progress rerun). The empty container
+    is ~0px tall, so the fixed slot costs nothing in the states that render
+    nothing.
     """
+    with st.container(key="pan_gpu_fix_slot"):
+        return _render_gpu_enablement_body(hw)
+
+
+def _render_gpu_enablement_body(hw: dict) -> bool:
     from html import escape as esc
 
     state = cuda_provision.get_state()
     status = state.get("status") if state else None
 
-    # ── Active download ──
-    if status in ("Finding", "downloading", "extracting"):
+    # ── Active run ──
+    # Rendered inside the SAME keyed card as the idle state, so the block shape
+    # under the slot is identical in both (only leaf elements differ) and the
+    # card does not visibly rebuild itself when the download starts.
+    if status in ("Finding", "downloading", "extracting", "installing"):
         total = state.get("total_bytes") or 0
         done = state.get("downloaded_bytes") or 0
         pct = int(done / total * 100) if total else 0
         phase = esc(state.get("phase") or "Working…")
-        size = f" · {done / 1e6:.0f} / {total / 1e6:.0f} MB" if total else ""
-        st.markdown(
-            f"<div style='margin-top:12px;font-size:0.85rem;color:#cbd5e1;'>"
-            # phase is esc()'d above; size is app-built float text.
-            # audit-ignore
-            f"{phase}{size}</div>", unsafe_allow_html=True)
-        st.progress(min(99, pct) / 100.0, text=f"{pct}%")
-        if st.button("Cancel", key="pan_cuda_cancel", use_container_width=False):
-            cuda_provision.request_cancel()
-            st.rerun(scope="fragment")
+        # The byte counter belongs to the download only - during unpack/install
+        # it would sit frozen next to a phase line that says something else is
+        # happening, which reads as a stall (it is exactly what made the old
+        # Cancel look dead).
+        size = (f" · {done / 1e6:.0f} / {total / 1e6:.0f} MB"
+                if total and status == "downloading" else "")
+        with st.container(key="pan_cuda_card"):
+            st.markdown(
+                f"<div style='font-size:0.85rem;color:#cbd5e1;'>"
+                # phase is esc()'d above; size is app-built float text.
+                # audit-ignore
+                f"{phase}{size}</div>", unsafe_allow_html=True)
+            # No percentage once the bytes are in: nothing moves during unpack
+            # or install, so a frozen "38%" is a worse answer than naming the
+            # step. (Unpacking cuDNN takes a while - a stuck number there is
+            # what made this look hung.)
+            _bar_text = {"extracting": "Unpacking…",
+                         "installing": "Installing…"}.get(status, f"{pct}%")
+            st.progress(min(99, pct) / 100.0, text=_bar_text)
+            if st.button("Cancel", key="pan_cuda_cancel", use_container_width=False):
+                # Reports cancelled immediately; the worker winds down on its
+                # own time and can no longer touch the UI state.
+                cuda_provision.request_cancel()
+                st.rerun(scope="fragment")
         return True
 
     # ── Just finished ──
@@ -867,6 +1085,10 @@ def _render_gpu_enablement(hw: dict) -> bool:
         )
         cuda_provision.clear_state()
         # fall through so the Enable button shows again for a retry
+    elif status == "cancelled":
+        # Nothing to say - they asked for it and the card below is the offer to
+        # try again. Drop the state so it can't resurface on the next open.
+        cuda_provision.clear_state()
 
     fix = hw.get("gpu_fix")
 
@@ -1024,7 +1246,11 @@ def render_transcription_dialog() -> None:
     # Detected-hardware status (GPU + CPU), then GPU remediation (one-click CUDA
     # library download or driver guidance) when present-but-not-usable.
     _render_compute_hardware_status(hw)
-    _render_gpu_enablement(hw)
+    # True while this render SHOWED a running provision. Kept separate from the
+    # is_running() poll below: a run that finishes between the two would
+    # otherwise stop the auto-rerun on a frame that still shows the progress
+    # bar, freezing the dialog until the user clicked something.
+    cuda_busy = _render_gpu_enablement(hw)
 
     # Contextual advisory for the chosen device + model.
     # Wrapped in an ALWAYS-present container so switching CPU<->GPU never adds or
@@ -1059,6 +1285,10 @@ def render_transcription_dialog() -> None:
     # (an @st.dialog is a fragment), so the background page is left untouched -
     # without this the old scope="app" tick re-ran the whole app twice a second,
     # making the page behind the modal flicker / re-trigger its loading overlay.
-    if any_downloading or cuda_provision.is_running():
+    if any_downloading or cuda_busy or cuda_provision.is_running():
         time.sleep(0.5)
+        # audit-ignore: Rule 1 wants scope="app" for a rerun that CLOSES a
+        # dialog. This one keeps it open and only advances a progress bar, so
+        # "app" is the wrong scope by exactly the reasoning in the comment
+        # above - it re-ran the whole page twice a second behind the modal.
         st.rerun(scope="fragment")

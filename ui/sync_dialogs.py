@@ -28,6 +28,16 @@ from shared.helpers import (
     friendly_course_name,
 )
 
+# The app's one chevron glyph, as a CSS mask so a ::before can wear it and
+# inherit a single colour. Same path as shared.components._CHEVRON_SVG (the
+# "Courses selected for download" expander) - kept as a mask here because these
+# chevrons need to be recoloured on the checked state.
+_STD_CHEVRON_MASK = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' "
+    "fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' "
+    "stroke-linejoin='round'%3E%3Cpath d='M9 18l6-6-6-6'/%3E%3C/svg%3E"
+)
+
 _PAN_REC_SVG = (
     "<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' "
     "fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' "
@@ -239,7 +249,15 @@ def show_course_ignored_files(course_name, course_id, course_data):
         # (mirrors sync_review.py pattern for reliable styling).
 
         is_expanded = st.session_state.get(f"{prefix}_chevron", False)
-        bottom_padding = "14px" if is_expanded else "4px"
+        # Symmetric on all four sides. The card used to run 4px on top against
+        # 14px on the sides and bottom, so the title sat visibly closer to the
+        # top edge than anything else was to its own edge.
+        card_pad_y = 14 if is_expanded else 12
+        # Collapsed: the strip IS the card, so round all four corners and leave
+        # no gap under it. Expanded: round only the top and leave air before the
+        # filetype pills.
+        header_radius = "10px" if not is_expanded else "10px 10px 0 0"
+        header_gap = 0 if not is_expanded else 8
         filelist_height = 340 if is_expanded else 480
 
         _css = f"""<style>
@@ -251,7 +269,7 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 background: rgba(255,255,255,0.03) !important;
                 border: 1px solid rgba(255,255,255,0.1) !important;
                 border-radius: 10px !important;
-                padding: 4px 14px {bottom_padding} 14px !important;
+                padding: {card_pad_y}px 14px {card_pad_y}px 14px !important;
                 margin-top: -10px !important;
                 margin-bottom: -10px !important;
             }}
@@ -259,14 +277,36 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 gap: 0.1rem !important;
             }}
             /* -- Custom Chevron Toggle -- */
+            /* The full width chain is load-bearing for the hit area below:
+               1.51 gives a checkbox's element-container a CONTENT-based
+               explicit width, so `width: 100%` on the label alone resolved
+               against a 155px box and the clickable strip stayed the width of
+               the words (measured: label 155px inside an 1184px card). */
+            div[class*="st-key-{prefix}_chevron"],
+            div[class*="st-key-{prefix}_chevron"] [data-testid="stCheckbox"] {{
+                width: 100% !important;
+                max-width: 100% !important;
+            }}
             div[class*="st-key-{prefix}_chevron"] {{
                 margin: 0 !important;
             }}
+            /* The WHOLE header strip is the hit target, not just the words.
+               The label is bled out over the card's own padding with matched
+               negative margins, so clicking anywhere on that band toggles it:
+               when collapsed the card contains nothing else, so the entire card
+               is clickable; when expanded only the title band is. Same trick
+               the other expanders in the app use. */
             div[class*="st-key-{prefix}_chevron"] label[data-baseweb="checkbox"] {{
-                padding: 2px 0 !important;
-                margin: 0 !important;
+                margin: -{card_pad_y}px -14px {header_gap}px -14px !important;
+                padding: {card_pad_y}px 14px {card_pad_y}px 14px !important;
+                width: calc(100% + 28px) !important;
+                border-radius: {header_radius} !important;
                 cursor: pointer !important;
                 gap: 0 !important;
+                transition: background-color 0.15s ease !important;
+            }}
+            div[class*="st-key-{prefix}_chevron"] label[data-baseweb="checkbox"]:hover {{
+                background-color: rgba(255,255,255,0.04) !important;
             }}
             div[class*="st-key-{prefix}_chevron"] label[data-baseweb="checkbox"] > span:first-child {{
                 display: none !important;
@@ -274,21 +314,39 @@ def show_course_ignored_files(course_name, course_id, course_data):
             div[class*="st-key-{prefix}_chevron"] label[data-baseweb="checkbox"] > div {{
                 margin-left: 0 !important;
             }}
+            /* Flex row so the masked chevron below sits on the text's optical
+               centre instead of its baseline (an inline-block box would). */
             div[class*="st-key-{prefix}_chevron"] label p {{
                 font-size: 1.05rem !important;
                 font-weight: 700 !important;
                 color: #fff !important;
                 margin: 0 !important;
+                display: flex !important;
+                align-items: center !important;
             }}
+            /* The app's standard chevron glyph (same SVG as the "Courses
+               selected for download" expander), NOT the "▸" text character it
+               used to be - that rendered in whatever the system font had, at a
+               different weight and baseline from every other chevron in the
+               app. Masked so it inherits a single colour and can be sized in px. */
             div[class*="st-key-{prefix}_chevron"] label p::before {{
-                content: "▸" !important;
+                content: "" !important;
                 display: inline-block !important;
-                font-size: 1.25rem !important;
-                margin-right: 12px !important;
-                color: rgba(255,255,255,0.5) !important;
+                width: 14px !important;
+                height: 14px !important;
+                flex-shrink: 0 !important;
+                margin-right: 10px !important;
+                background-color: rgba(255,255,255,0.55) !important;
+                -webkit-mask-image: url("{_STD_CHEVRON_MASK}");
+                mask-image: url("{_STD_CHEVRON_MASK}");
+                -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+                -webkit-mask-position: center;  mask-position: center;
+                -webkit-mask-size: contain;    mask-size: contain;
+                transition: transform 0.18s ease !important;
             }}
             div[class*="st-key-{prefix}_chevron"]:has(input:checked) label p::before {{
                 transform: rotate(90deg) !important;
+                background-color: #ffffff !important;
             }}
             /* Filetypes flex */
             div[class*="st-key-{prefix}_ft_flex"] {{
@@ -362,20 +420,11 @@ def show_course_ignored_files(course_name, course_id, course_data):
                 min-height: 48px !important;
                 border-radius: 8px !important;
             }}
-            /* Explicit disabled state for Restore button */
-            div[data-testid="stDialog"] div[class*="st-key-{prefix}_restore"] button:disabled,
-            div[data-testid="stDialog"] div[class*="st-key-{prefix}_restore"] button[disabled] {{
-                background-color: rgba(255, 255, 255, 0.075) !important;
-                border: 1px solid rgba(255, 255, 255, 0.075) !important;
-                color: rgba(255, 255, 255, 0.2) !important;
-                box-shadow: none !important;
-            }}
-            /* Dim the icon when disabled */
-            div[data-testid="stDialog"] div[class*="st-key-{prefix}_restore"] button:disabled p::before,
-            div[data-testid="stDialog"] div[class*="st-key-{prefix}_restore"] button[disabled] p::before {{
-                opacity: 0.4 !important;
-                filter: grayscale(100%) !important;
-            }}
+            /* Disabled Restore button: no rules here - global.css's
+               `button[disabled]` recipe owns it and dims the ::before icon in
+               the same pass. The flat rgba(255,255,255,0.075) slab this used to
+               paint was exactly the "second unrelated off-style" the single
+               recipe exists to eliminate. */
             /* File list tags */
             div[class*="st-key-{prefix}_filelist"] del {{
                 text-decoration: none !important; background-color: rgba(255,255,255,0.1) !important;
@@ -467,22 +516,44 @@ def show_course_ignored_files(course_name, course_id, course_data):
         st.html(_css)
 
         # ── 1. Custom Header ──────────────────────────────────────────
+        # The course sits ON the title line as a blue tag, not as a "Course:"
+        # label underneath it - the dialog is always about exactly one course,
+        # so that is scope, not content. The paragraph below answers the three
+        # questions the old one-liner left open: what "ignored" actually does,
+        # what happens to a file you restore, and where it turns up afterwards.
         st.html(f"""
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:0;margin-top:-70px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:0;margin-top:-70px;flex-wrap:wrap;">
             <img src="data:image/svg+xml;base64,{b64_icon}"
                  style="width:32px;height:32px;filter:brightness(0) invert(1) opacity(0.9);" />
             <div style="margin:0;padding:0;font-size:1.75rem;font-weight:600;color:white;">
                 Ignored Files
             </div>
+            <span style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.22);
+                         color:#e2e8f0;font-size:1.0rem;font-weight:600;line-height:1.25;
+                         padding:6px 14px;border-radius:8px;white-space:nowrap;margin-left:6px;
+                         max-width:100%;overflow:hidden;text-overflow:ellipsis;">{esc(course_name)}</span>
         </div>
-        <div style="color:rgba(255,255,255,0.9);font-size:1rem;font-weight:600;margin-top:4px;">
-            Course: <span style="font-weight:400;color:rgba(255,255,255,0.9);">{esc(course_name)}</span>
-        </div>
-        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.2);margin-top: 10px;" />
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.2);margin-top: 12px;" />
         """)
 
         # ── 2. Help text ──────────────────────────────────────────────
-        st.html("<div style='font-size:0.85rem;color:rgba(255,255,255,0.5);margin-top:-10px;margin-bottom:10px;'>Select files to restore & remove from ignored list. Restored files will appear in your next sync run for this course.</div>")
+        # Deliberately unstyled emphasis: an earlier version bolded the key
+        # phrases in near-white against a 0.55-alpha body, which inverted the
+        # reading order - the highlights were legible and the sentence they
+        # belonged to sank into the background. One brightness, no bold, and
+        # short enough to actually be read.
+        st.html(
+            # No max-width. A `ch`-based cap looks sensible in the abstract and
+            # in a 1370px dialog it wrapped this to barely half the width, which
+            # reads as a broken column rather than a comfortable measure.
+            "<div style='font-size:0.86rem;color:rgba(255,255,255,0.78);"
+            "line-height:1.6;margin-top:-10px;margin-bottom:12px;'>"
+            "Ignored files are skipped by every sync of this course and are never "
+            "re-downloaded - the copies on your computer are untouched. Restore "
+            "one and it comes back in the next sync review, where you can decide "
+            "whether to download it."
+            "</div>"
+        )
 
         # -- 3. Smart Select Card (Collapsible chevron) -----------------
         with st.container(border=True, key=f"{prefix}_filter_box"):

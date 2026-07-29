@@ -279,6 +279,26 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
     global _last_error
     _last_error = None
     timeout_s = _timeout_for(src)
+
+    def _fail(category: str, detail: str) -> bool:
+        """Record a conversion failure once, in both places, and return False.
+
+        Every failure exit of this function goes through here so the health
+        tally can never drift from ``_last_error`` - the alternative was a
+        ``note_failure`` bolted onto each of the five ``_last_error =`` sites,
+        which is exactly the shape that goes stale when a sixth is added.
+        These failures otherwise reach only the OPT-IN debug log, so on a real
+        user's Mac they leave no trace at all - and macOS Office automation is
+        the least-tested path this app has, with no crash-telemetry channel.
+        """
+        global _last_error
+        _last_error = (category, detail)
+        try:
+            from core.health_log import note_failure
+            note_failure(f"osascript_{category}")
+        except Exception:
+            pass
+        return False
     # Hide the Office app first so opening the document doesn't flash a window /
     # bounce the dock (macOS only; no-op elsewhere). Best-effort, self-trying.
     script = _visibility_prefix(app_name) + script
@@ -300,20 +320,17 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
                 detail = f"Microsoft {app_name} is not installed or could not be launched."
             else:
                 detail = err_msg or f"Microsoft {app_name} returned an unknown error."
-            _last_error = (category, detail)
             logger.error(f"[AppleScript] {app_name} failed ({category}): {err_msg}")
-            return False
+            return _fail(category, detail)
         if dst.exists():
             return True
-        _last_error = ('other', f"Microsoft {app_name} reported success but no output file was created.")
-        return False
+        return _fail('other', f"Microsoft {app_name} reported success but no output file was created.")
 
     except FileNotFoundError:
-        _last_error = ('other', 'osascript not found (not on macOS?)')
         logger.error("[AppleScript] osascript not found (not on macOS?)")
-        return False
+        return _fail('other', 'osascript not found (not on macOS?)')
     except subprocess.TimeoutExpired:
-        _last_error = ('timeout', f"Conversion timed out after {timeout_s}s (Microsoft {app_name} stopped responding or the file is very large).")
+        _fail('timeout', f"Conversion timed out after {timeout_s}s (Microsoft {app_name} stopped responding or the file is very large).")
         logger.error(
             f"[AppleScript] {app_name} conversion timed out after {timeout_s}s - "
             "attempting to close the open document to recover"
@@ -328,9 +345,8 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
             _force_close_canvas_docs_async(mapping[0])
         return False
     except Exception as e:
-        _last_error = ('other', str(e))
         logger.error(f"[AppleScript] {app_name} error: {e}")
-        return False
+        return _fail('other', str(e))
 
 def _marker_in_value(value) -> bool:
     """True if *value* (a SQLite cell: str, bytes/UTF-16, or None) holds our marker.
