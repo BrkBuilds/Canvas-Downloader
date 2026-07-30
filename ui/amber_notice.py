@@ -141,17 +141,23 @@ def render_info_notice(
             f"</style>"
         )
 
+    # SAME WEIGHT AS THE AMBER NOTICE, in blue. It used to be a 0.05 wash
+    # behind a 0.2 border against a card that is itself translucent, so on the
+    # completion screens - where an info notice sits directly under an amber
+    # one - it dissolved into the background and read as unstyled text that had
+    # lost its box. These notices carry the same class of message (nothing
+    # failed, but you should know); only the hue should say which is which.
     html = (
         f"<div style='"
-        f"background: rgba(14, 165, 233, 0.05); "
-        f"border: 1px solid rgba(14, 165, 233, 0.2); "
+        f"background: rgba(14, 165, 233, 0.12); "
+        f"border: 1px solid rgba(14, 165, 233, 0.55); "
         f"border-radius: 6px; "
         f"padding: 10px 14px; "
         f"margin: {margin}; "
         f"font-size: 0.9rem; "
         f"line-height: 1.5;"
         f"'>"
-        f"<div style='color: #94a3b8; font-weight: 500; display: flex; align-items: center;'>"
+        f"<div style='color: #38bdf8; font-weight: 700; display: flex; align-items: center;'>"
         f"<span style='margin-right: 6px; color: #38bdf8;'>{icon}</span>"
         f"<span>{msg_content}</span>"
         f"{tooltip_html}"

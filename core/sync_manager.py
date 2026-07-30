@@ -1542,6 +1542,17 @@ class SyncManager:
 
             missing_norm = _match_key(del_info.canvas_filename)
             _is_true_reupload = raw_id_str not in seen_ids  # old id gone from Canvas
+            # BOTH conditions, never `or`. The body below immediately does
+            # `new_name_map[missing_norm]`, so the membership test is not a
+            # nicety - it is that lookup's only guard. Flipping this to `or`
+            # (seen 2026-07-30) made a locally-deleted file that is ALSO gone
+            # from Canvas with no same-named replacement raise KeyError in the
+            # middle of sync analysis - and that is an ordinary situation, not
+            # an edge case: the phantom-row pruning further down exists
+            # precisely to handle canvas-gone + locally-gone rows, so they
+            # reach here routinely. The `or` also bought nothing, because the
+            # `else` performs the same append this branch ends with; the only
+            # difference was the crash.
             if _is_true_reupload and missing_norm in new_name_map:
                 matching_new_cfile = new_name_map[missing_norm]
                 # Remove ALL keys pointing at this new file (raw + display form)

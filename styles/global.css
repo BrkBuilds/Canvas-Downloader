@@ -693,8 +693,21 @@ div[data-testid="stDialog"] > div:not([role="dialog"]) {
    0-height components.html iframe on the main download page (Shift-click range
    select). Collapse its element container so it adds no gap above the download
    buttons. Kept separate from the dialog-scoped rule above because main-page
-   containers are not inside div[data-testid="stDialog"]. */
-[data-testid="stMain"] [data-testid="stElementContainer"]:has(iframe[height="0"]) {
+   containers are not inside div[data-testid="stDialog"].
+
+   TWO selectors, not a duplicate: `iframe[height="0"]` matches when the
+   <iframe> element itself carries the attribute; `[height="0px"]` on the
+   CONTAINER matches shared.components.inject_app_error_copy_bridge(),
+   whose iframe carries no height attribute at all - the wrapping
+   stElementContainer does instead (`height="0px"`, confirmed by inspecting the
+   live DOM; ordinary content containers measured `height="auto"`, so this is a
+   safe, specific signal, not a guess). Without the second selector, that
+   bridge was an invisible flow sibling that still cost one full flex-gap slot
+   on the completion screens: measured 32px between the error panel and the
+   Retry button - exactly double the 16px every other row uses - whenever the
+   run had an app-level error (the copy bridge only injects then). */
+[data-testid="stMain"] [data-testid="stElementContainer"]:has(iframe[height="0"]),
+[data-testid="stMain"] [data-testid="stElementContainer"][height="0px"]:has(iframe) {
     position: absolute !important;
     width: 0 !important;
     height: 0 !important;

@@ -28,7 +28,7 @@ from pathlib import Path
 import streamlit as st
 
 from styles import inject_css
-from shared.helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path, open_folder, open_file
+from shared.helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path, open_folder, open_file, css_content_safe
 from shared.components import SVG_FOLDER_YELLOW, render_help_card, render_fda_nudge, HELP_ICONS
 
 
@@ -808,20 +808,14 @@ def _render_today_files(groups: list[dict]) -> None:
 
 # ── Import-from-hub dialog ──────────────────────────────────────────────────
 
-def _css_escape_content(text: str) -> str:
-    """Escape a string for safe use inside a CSS quoted string (content: "...")."""
-    return text.replace('\\', '\\\\').replace('"', '\\"')
-
-
-def _css_content_safe(text: str) -> str:
-    """Escape *user* text for a CSS ``content:"…"`` value inside a ``<style>``.
-
-    Extends ``_css_escape_content`` by unicode-escaping ``<`` so a stray
-    ``</style>`` in a user-typed group name can't break out of the injected
-    style element (the HTML parser scans the raw text for the literal
-    ``</style``; ``\\3C`` renders as ``<`` for display but isn't a literal ``<``).
-    """
-    return _css_escape_content(text).replace('<', '\\00003c ')
+# Both names now resolve to the ONE definition in shared.helpers. They used to
+# differ - `_css_escape_content` stopped at the quote while `_css_content_safe`
+# also neutralised `<` - and the two were used a few lines apart on the same
+# `tag_text`, so whether a `</style>` could break out of the injected style
+# element depended on which call site you happened to hit. Kept as module-level
+# aliases because both are referenced by name in tests/test_today_dashboard_helpers.py.
+_css_escape_content = css_content_safe
+_css_content_safe = css_content_safe
 
 
 # White checkmark badge - mirrors the Card 2/3 "active checkbox" pattern in

@@ -25,6 +25,7 @@ from shared.helpers import (
     get_base64_image,
     help_text_enabled,
     esc,
+    css_content_safe,
 )
 
 
@@ -67,13 +68,16 @@ _QUICK_DOWNLOAD_HINT = "Pick a preset and download"
 
 
 def _css_escape_content(text: str) -> str:
-    """Escape a string for safe use inside a CSS quoted string (e.g. content: "...").
+    """Escape a string for a CSS ``content: "…"`` value.
 
-    html.escape() (used by esc()) produces HTML entities like &amp; which render
-    literally in CSS rather than as their intended characters.  CSS strings only
-    require escaping backslashes and the enclosing quote character.
+    Delegates to ``shared.helpers.css_content_safe``, which additionally
+    neutralises ``<``. That matters here because the caller interpolates a
+    Canvas-supplied course code into ``st.html(f'<style>…</style>')``: a code
+    containing ``</style>`` used to close the element early and silently kill
+    every rule after it. The Today page already hardened its copy of this
+    function; the course list did not, and there is now only one definition.
     """
-    return text.replace('\\', '\\\\').replace('"', '\\"')
+    return css_content_safe(text)
 from shared.components import render_help_card, HELP_ICONS
 
 

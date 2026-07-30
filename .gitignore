@@ -64,3 +64,7 @@ diagnostics/
 
 #audit
 _audit_runs/*
+# UI review renders (scripts/capture_completion_gallery.py). Regenerated on
+# demand and ~18 MB of PNGs - deliberately NOT under docs/, which is the
+# published website.
+ui-review/

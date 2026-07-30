@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from shared import theme
-from shared.helpers import esc
+from shared.helpers import esc, make_long_path
 from engine.estimation import stepwise_estimator
 from engine.progress_dashboard import (
     render_active_file, build_terminal_html, build_metrics_row, build_progress_bar_html,
@@ -590,7 +590,16 @@ def run_archive_extraction(files, ui: UIBridge) -> list:
             # touch pp_failure_count: that drives the "some conversions failed"
             # warning, and a setting doing its job is not a failure.
             skipped_big.append(old_name)
-            ui.archives_skipped.append(old_name)
+            # Name AND size, because the completion screen lists these the same
+            # way it lists size-skipped files - filetype icon, extension tag,
+            # size - and the size is only knowable here, while the file is
+            # still in hand. Read defensively: a guard reporting what it left
+            # alone must never be the thing that raises.
+            try:
+                _bytes = os.path.getsize(make_long_path(archive_file))
+            except OSError:
+                _bytes = 0
+            ui.archives_skipped.append({'name': old_name, 'bytes': _bytes})
             _emit(ui, 'skip', old_name, filename=old_name,
                   detail=f'Skipped: more than {_max_files:,} files inside')
             _render_dashboard(ui, i, total, "Archives")
