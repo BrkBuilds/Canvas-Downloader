@@ -206,6 +206,33 @@ def esc(value) -> str:
     """HTML-escape a value for safe interpolation into unsafe_allow_html markup."""
     return html.escape(str(value), quote=True)
 
+
+def css_content_safe(value) -> str:
+    """Escape untrusted text for a CSS ``content: "…"`` inside a ``<style>``.
+
+    Three characters matter and ``esc()`` handles none of them correctly here -
+    it produces HTML entities, which render literally as ``&amp;`` in CSS:
+
+    * ``\\`` starts a CSS escape sequence,
+    * ``"`` closes the content string,
+    * ``<`` is the one that actually bites. The HTML parser scans a ``<style>``
+      element's raw text for the literal ``</style``, so a stray one in a course
+      code or a user-typed group name **terminates the style element early** and
+      every rule after it dies silently - the failure mode CLAUDE.md warns about
+      under "Never write a literal angle-bracket tag name inside an
+      ``st.html(<style>)`` block". ``\\00003c `` renders as ``<`` for display but
+      is not a literal ``<`` to the parser. The trailing space terminates the
+      hex escape and is required.
+
+    This is THE definition. It previously existed as two local copies - a weak
+    one that stopped at the quote and a hardened one that did not - so the same
+    Canvas string was safe on the Today page and unsafe in the course list.
+    """
+    return (str(value)
+            .replace('\\', '\\\\')
+            .replace('"', '\\"')
+            .replace('<', '\\00003c '))
+
 def robust_filename_normalize(name: str) -> str:
     """Normalize filename for robust comparison (unquote, strip, lower, NFC)."""
     if not name:
@@ -1234,6 +1261,38 @@ LTI_STREAM_REASON = "LTI/Media Stream (Cannot directly download)"
 # ``error_type`` values its engine stamps for the same two outcomes.
 LOCKED_FILE_ERROR_TYPE = "Locked File"
 LTI_STREAM_ERROR_TYPE = "LTI/Media Stream"
+
+
+def declined_reason_sentence(reasons: dict, total: int = 0) -> str:
+    """Name WHY Canvas would not serve these items, in one sentence.
+
+    A bare "3 Cannot Be Downloaded" reads as an unexplained loss; naming the
+    cause turns it into a fact the user can dismiss. It lives here, not at
+    either call site, because the same sentence has to appear identically
+    whichever screen the user reached - and because the counts arrive from
+    ``split_delivery_errors``, which is the one classifier both flows share.
+
+    ``total`` is the fallback when the reasons dict is empty or unrecognised:
+    we would rather say "Canvas will not serve 3 items" than invent a cause we
+    did not measure.
+    """
+    reasons = reasons or {}
+    locked = int(reasons.get('locked', 0) or 0)
+    stream = int(reasons.get('stream', 0) or 0)
+    other = int(reasons.get('other', 0) or 0)
+    bits = []
+    if locked:
+        bits.append(f"{locked} {'file is' if locked == 1 else 'files are'} locked "
+                    f"by your teacher on Canvas")
+    if stream:
+        bits.append(f"{stream} {'video is' if stream == 1 else 'videos are'} "
+                    f"streamed through a Canvas plugin and cannot be saved as a file")
+    if other or not bits:
+        n = other or total or (locked + stream)
+        bits.append(f"Canvas will not serve {n} {'item' if n == 1 else 'items'}")
+    joined = bits[0] if len(bits) == 1 else "; ".join(bits)
+    return (joined[0].upper() + joined[1:]
+            + ". Nothing is missing that could have been fetched.")
 
 
 def split_delivery_errors(errors) -> dict:

@@ -102,7 +102,12 @@
    is neutral grey for the same reason it no longer turns the card amber. */
 .stat-card.stat-skip .stat-icon-wrapper {
     background: rgba(156, 163, 175, 0.18);
-    color: #9ca3af;
+    /* The ICON matches every other stat card's icon. Only the VALUE below is
+       grey: that is where the "this is an outcome, not a failure" signal
+       belongs. Dimming the glyph as well made the card look switched off next
+       to "GB Downloaded" sitting right beside it, which reads as a rendering
+       fault rather than as a category. */
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .stat-card.stat-skip .stat-value {
@@ -157,40 +162,25 @@
     line-height: 1.5;
 }
 
-.completion-card .retry-note {
-    display: flex;
-    align-items: flex-start;
-    gap: 7px;
-    margin-top: 10px;
-    font-size: 0.82em;
-}
+/* The `.retry-note*` family is GONE. Two full-width prose rows used to sit
+   between the stat grid and the expander below it - "Recovered 3 of 5 failed
+   items" and "N files are locked by your teacher on Canvas; ..." - splitting
+   the card's one block of metrics with paragraphs, and the second one
+   duplicated the expander directly beneath it almost word for word. Recovery
+   is a stat card now (below); the declined sentence is the expander's own
+   subtitle, built by shared.helpers.declined_reason_sentence. */
 
-.completion-card .retry-note-warn {
-    color: #d1d5db;
-}
-
-.completion-card .retry-note-warn svg {
-    color: #f59e0b;
-}
-
-.completion-card .retry-note-success {
-    color: #86efac;
-}
-
-.completion-card .retry-note-success svg {
+/* Recovered files. GREEN, and deliberately the only green in the grid: it
+   sits immediately right of the red "Failed Downloads" card so the pair reads
+   as one sentence, and the colour is what makes "2 failed / 3 recovered"
+   parse at a glance instead of looking like two failure counts. */
+.stat-card.stat-recovered .stat-icon-wrapper {
+    background: rgba(74, 222, 128, 0.18);
     color: #4ade80;
 }
 
-/* Explains the "Cannot Be Downloaded" count. Neutral, not amber: it is
-   information, and it appears on the GREEN card whenever nothing else went
-   wrong. Legible on all three card skins, which is why it takes the same
-   TEXT_LIGHT body as the warn note and differs only in the icon colour. */
-.completion-card .retry-note-skip {
-    color: #d1d5db;
-}
-
-.completion-card .retry-note-skip svg {
-    color: #9ca3af;
+.stat-card.stat-recovered .stat-value {
+    color: #4ade80;
 }
 
 /* Make grey text lighter in the amber partial card */
@@ -219,8 +209,13 @@
     background: #1a1a1a;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
-    margin: 10px 0 16px 0;
-    /* Add bottom margin to maintain outer padding when retry button is absent */
+    /* NO margin - see .skip-panel-solo for the same rule and the same reason.
+       The completion card is a flex column with `gap: 16px`, so a margin here
+       ADDS to that gap instead of replacing it: 10px top + 16px bottom put the
+       Retry button 32px below the panel while every other pair of rows in the
+       card sat 16px apart, and the panel itself hung further from the stat
+       grid than the stat grid did from the title. */
+    margin: 0;
     overflow: hidden;
 }
 
@@ -279,14 +274,24 @@ details[open]>.error-panel-header .chevron {
 
 /* --- Two-Column Error Layout --- */
 .error-panel-body {
-    padding: 0 16px 4px 42px;
-    /* left-align content with "E" in "Error Details" */
+    /* Left 42px aligns the content with the title text, past the chevron and
+       icon in the header. The right used to be 16px, so every panel body was
+       visibly off-centre in its own box - most obvious on the Application
+       Errors block, which draws its own border and so showed the offset as a
+       shape rather than as ragged text. Matching the two is the whole fix.
+
+       Vertical is symmetric for the same reason: 14px below the header's
+       separator and 14px above the panel's bottom edge, so the content sits
+       evenly inside its own box however many sections it happens to have. */
+    padding: 14px 42px;
 }
 
 .error-columns {
     display: flex;
     gap: 24px;
-    padding-top: 8px;
+    /* The body owns the vertical inset now (see .error-panel-body); a second
+       one here would make the first section sit lower than the last. */
+    padding-top: 0;
     flex-wrap: wrap;
 }
 
@@ -513,7 +518,11 @@ div[class*="st-key-"][class*="_retry_failed_btn"] button p::before {
 .app-error-section-title {
     font-size: 0.88em;
     font-weight: 600;
-    flex: 1;
+    /* NO `flex: 1`. It made the title consume the whole row and pushed the
+       count badge to the far right edge, disconnected from the thing it
+       counts - while "Failed to Download" and "Cannot Be Downloaded" above it
+       (.err-col-header, whose title has no flex either) both sit immediately
+       left of their own badge. Same header shape, same badge placement. */
 }
 
 .app-error-section-subtitle {
@@ -997,7 +1006,12 @@ div[class*="st-key-dl_fc_"] div[class*="st-key-fileactlist_"] [data-testid="stVe
 .skip-panel.skip-panel-solo {
     border-radius: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.15);
-    margin: 18px 0 8px 0;
+    /* NO margin of its own. The card is a flex column with `gap: 16px`, so a
+       margin here is added to that gap rather than replacing it: 18px top +
+       16px gap + 8px bottom put 42px between two consecutive panels, against
+       16px everywhere else in the same card. Two panels that describe the same
+       kind of outcome then read as unrelated. Let the card's gap do it. */
+    margin: 0;
 }
 
 /* No divider under a header that is the only row when closed. */
@@ -1074,7 +1088,8 @@ details[open] > .skip-panel-header .sp-chevron {
 }
 
 .skip-panel-body {
-    padding: 10px 16px 14px 42px;
+    /* Symmetric for the same reason as .error-panel-body - see the note there. */
+    padding: 10px 42px 14px 42px;
 }
 
 .sp-subtitle {
@@ -1141,4 +1156,155 @@ details[open] > .skip-panel-header .sp-chevron {
     border-radius: 4px;
     padding: 1px 6px;
     white-space: nowrap;
+}
+/* ── App-error report controls ─────────────────────────────────────────────
+   INSIDE the amber notice, above the technical rows. They used to be a stock
+   Streamlit button rendered below the whole error panel, which put the one
+   control that acts on an app error outside the box that explains it.
+
+   They are an <a> and a <span>, not st.button widgets, because the notice
+   lives inside a raw-HTML <details> and a Streamlit widget cannot be nested
+   there. That constraint is also the fix: there is no stock button to fight.
+
+   Modelled on the Panopto config button (ui/download_settings.py's
+   pan_open_dialog_btn) - same 32px height, 8px radius, 0.85rem/600 label,
+   tinted-fill + tinted-border treatment - in the notice's amber instead of
+   Panopto's purple, with a white label so it reads as the action in a block
+   that is otherwise all amber text. */
+.app-err-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 4px 0;
+    flex-wrap: wrap;
+}
+
+/* !important on `color` because .app-err-report-btn is an <a> - Streamlit's
+   base stylesheet sets its own link colour (measured: rgb(61,157,243), the
+   same blue as a plain markdown link) and it otherwise wins over a bare class
+   selector. Every other property here already wins on specificity alone; only
+   the two colour properties needed it, matched by measuring computed style in
+   the running app rather than guessing which would be contested. */
+.app-err-report-btn,
+.app-err-copy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    color: #ffffff !important;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+                color 0.15s ease;
+}
+
+.app-err-report-btn {
+    gap: 8px;
+    padding: 0 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none !important;
+}
+
+.app-err-report-btn:hover,
+.app-err-copy-btn:hover {
+    background: rgba(245, 158, 11, 0.26);
+    border-color: #f59e0b;
+    color: #ffffff !important;
+}
+
+.app-err-report-btn svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+/* Square by construction, so it stays square whatever the row does. */
+.app-err-copy-btn {
+    width: 32px;
+    flex: 0 0 32px;
+    padding: 0;
+}
+
+.app-err-copy-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
+/* Confirmation without a rerun: the bridge adds .copied for ~1.6s. A control
+   that does its work silently reads as a control that did nothing. */
+.app-err-copy-btn.copied {
+    background: rgba(74, 222, 128, 0.18);
+    border-color: rgba(74, 222, 128, 0.55);
+    color: #4ade80 !important;
+}
+
+/* A copy that DIDN'T happen has to look different from one that did. The
+   fallback path used to swallow its own failure, so a refused clipboard write
+   produced a button that appeared to do nothing at all - indistinguishable
+   from a broken control. Red, and it holds long enough to be noticed. */
+.app-err-copy-btn.failed {
+    background: rgba(239, 68, 68, 0.18);
+    border-color: rgba(239, 68, 68, 0.55);
+    color: #fca5a5 !important;
+}
+
+.app-err-copy-btn.copied svg,
+.app-err-copy-btn.failed svg {
+    /* Swap the two rectangles for a tick (or a cross), in CSS, so the bridge
+       never has to rewrite markup Streamlit owns. */
+    display: none;
+}
+
+.app-err-copy-btn.failed::after {
+    content: "";
+    width: 15px;
+    height: 15px;
+    background-color: currentColor;
+    -webkit-mask-image: var(--cd-cross);
+    mask-image: var(--cd-cross);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.app-err-copy-btn.copied::after {
+    content: "";
+    width: 15px;
+    height: 15px;
+    background-color: currentColor;
+    -webkit-mask-image: var(--cd-tick);
+    mask-image: var(--cd-tick);
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+:root {
+    --cd-tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    --cd-cross: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E");
+}
+
+/* The payload the copy button reads. In the DOM rather than a data- attribute
+   so the bridge cannot be broken by attribute sanitisation. */
+.app-err-report-src {
+    display: none;
+}
+
+.app-err-actions-note {
+    font-size: 0.76em;
+    color: #d97706;
+    line-height: 1.45;
+    margin: 0 0 2px 0;
+}
+
+.app-err-actions-note b {
+    color: #fbbf24;
+    font-weight: 600;
 }

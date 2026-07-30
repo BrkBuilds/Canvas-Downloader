@@ -2707,9 +2707,19 @@ def _run_sync_panopto():
     from core.sync_manager import SyncManager
     from shared.helpers import esc as _esc, render_sync_wizard as _wizard
 
-    # Batch-level settings carry only the global engine config (model/device/
-    # language); each target supplies its own output/layout contract, so the
-    # batch outputs stay empty (compose_settings(None) -> all outputs off).
+    # Batch-level settings carry the global engine config (model/device/
+    # language); each target supplies its own output/layout contract in
+    # `_targets[i]['settings']`, which is what the runner actually reads.
+    #
+    # NOTE (corrected 2026-07-30): this used to say "compose_settings(None) ->
+    # all outputs off". It does not - it returns PANOPTO_DEFAULTS, which has
+    # mp3/txt/srt ON. That is only harmless because the runner falls back to
+    # these batch outputs solely when a target's own contract is falsy
+    # (`target.get("settings") or settings`), and no target here can be in that
+    # state: the loop below skips any pair with no user-selected recordings, and
+    # the one path producing an empty contract (Panopto analysis raised) also
+    # produces nothing selectable. If either guard changes, harden this instead
+    # of relying on it. See panopto/settings.compose_settings.
     pan = _pan_compose(None)
     sels = st.session_state.get('sync_selections') or []
 

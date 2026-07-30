@@ -1753,7 +1753,7 @@ with _main_content.container():
                     render_amber_notice(
                         "Retry cancelled - post-processing skipped.",
                         detail="Any files that downloaded successfully before cancellation are available in your folder.",
-                        margin="12px 0 2px 0",
+                        margin="0",  # the card's flex gap (16px) is the ONE rhythm; a margin here adds to it
                     )
                     st.session_state['_sync_cancel_warning_shown'] = True
             else:
@@ -2362,40 +2362,28 @@ with _main_content.container():
                     size_limit_mb=limit_mb,
                     retry_attempted=retry_attempted,
                     retry_resolved=retry_resolved,
-                    retry_total=retry_total,
                     retriable_count=_retriable,
                     unresolvable_count=_unresolvable,
                     app_error_count=_app_errors,
                     courses_count=len(file_details),
-                    unresolvable_reasons=_split['reasons'],
+                    # Rendered INSIDE the card, right under the stat grid - it
+                    # is a stat grid too. See the ordering note there.
+                    panopto_summary=st.session_state.get('panopto_summary'),
                 )
 
-                # 2. Post-processing warning
-                render_pp_warning(st.session_state.get('pp_failure_count', 0))
+                # THE ORDER IS BY KIND, and it is the same on both completion
+                # screens: stats -> Panopto stats -> every collapsible -> every
+                # notice. It used to be the order the features were built in, so
+                # an amber warning sat between two expanders and the Panopto
+                # stat grid sat below both of them.
+                #
+                # EXPANDERS. The size-skip panel is emitted by
+                # render_completion_card above; archives follow it, and the
+                # error panel is last because it is the one the user opens.
                 render_archives_skipped_notice()
 
-                # 2b. Panopto recordings summary (if the terminal Panopto phase ran)
-                render_panopto_summary(st.session_state.get('panopto_summary'))
-
-                # Office watchdog broad-kill warning (parity with the sync
-                # completion screen - previously only shown there even though
-                # the same converters run in the download flow).
-                if st.session_state.pop('pp_force_kill_warning', False):
-                    from ui.amber_notice import render_amber_notice
-                    render_amber_notice(
-                        "An Office process was force-closed during conversion.",
-                        icon="⚠️",
-                        detail=(
-                            "A hung Office process was terminated to unblock conversion. "
-                            "If you had other unsaved Word, Excel, or PowerPoint files open, "
-                            "they may have been closed without saving."
-                        ),
-                        margin="12px 0 2px 0",
-                    )
-
-                # Size-skipped files are now rendered inside render_completion_card
-
-                # 3. Error section (with retry button inside)
+                # (error section: the last expander, plus the retry button and
+                #  the app-error report that belong to it)
                 download_path = Path(st.session_state['download_path'])
                 # ONE manager, and one pass over the courses, for the whole
                 # completion screen. A manager used to be constructed inside
@@ -2411,12 +2399,6 @@ with _main_content.container():
                     c.name: download_path / cm_temp._sanitize_filename(c.name)
                     for c in st.session_state.get('courses_to_download', [])
                 }
-                error_log_paths = [
-                    _folder / "download_errors.txt"
-                    for _folder in _course_folders.values()
-                    if (_folder / "download_errors.txt").exists()
-                ]
-
                 # Check if retriable errors exist (file errors with filepath context, not LTI streams, not app errors)
                 has_retriable_errors = any(
                     not getattr(err, 'is_app_error', False)
@@ -2473,8 +2455,7 @@ with _main_content.container():
                     st.rerun()
 
                 render_error_section(
-                    download_errors, error_log_paths,
-                    dialog_fn=error_log_dialog,
+                    download_errors,
                     key_prefix='dl',
                     retry_btn_callback=_do_retry if has_retriable_errors and not retry_attempted else None,
                     has_retriable_errors=has_retriable_errors,
@@ -2484,13 +2465,26 @@ with _main_content.container():
                     retry_failed=_retry_failed,
                 )
 
-                # render_error_section early-returns on an empty error list, so a
-                # run whose ONLY failure was a conversion printed "Check
-                # download_errors.txt" with nothing to click. Same gap the sync
-                # screen had; fixed the same way, through the same helper.
-                if not download_errors and st.session_state.get('pp_failure_count', 0):
-                    from shared.components import render_error_log_button
-                    render_error_log_button(error_log_paths, key_prefix='dl_pp')
+                # NOTICES, last, as one block. Everything above is a metric or
+                # a collapsible; these are the run's asides, and interleaving
+                # them broke both groups.
+                render_pp_warning(st.session_state.get('pp_failure_count', 0))
+
+                # Office watchdog broad-kill warning (parity with the sync
+                # completion screen - previously only shown there even though
+                # the same converters run in the download flow).
+                if st.session_state.pop('pp_force_kill_warning', False):
+                    from ui.amber_notice import render_amber_notice
+                    render_amber_notice(
+                        "An Office process was force-closed during conversion.",
+                        icon="⚠️",
+                        detail=(
+                            "A hung Office process was terminated to unblock conversion. "
+                            "If you had other unsaved Word, Excel, or PowerPoint files open, "
+                            "they may have been closed without saving."
+                        ),
+                        margin="0",  # the card's flex gap (16px) is the ONE rhythm; a margin here adds to it
+                    )
 
             # 4. Per-course folder cards with filetype summary (folders already
             #    resolved above - see the note on the shared manager)

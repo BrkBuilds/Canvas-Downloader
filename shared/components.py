@@ -2,9 +2,13 @@
 Shared UI components for Download and Sync completion screens.
 Extracted to ensure perfect visual parity between both modes.
 """
+import os
 import streamlit as st
 from pathlib import Path
-from shared.helpers import open_folder, open_file, reveal_in_folder, esc, short_path
+from shared.helpers import (
+    open_folder, open_file, reveal_in_folder, esc, short_path,
+    declined_reason_sentence, split_delivery_errors,
+)
 from shared import theme
 from core.sync_manager import format_file_size
 from core.preset_manager import PresetManager
@@ -518,12 +522,11 @@ def render_completion_card(synced_count: int, error_count: int,
                            total_bytes: int, mode: str = 'download',
                            size_skipped_files: list = None, size_limit_mb: int = 0,
                            retry_attempted: bool = False, retry_resolved: int = 0,
-                           retry_total: int = 0,
                            retriable_count: int = 0,
                            unresolvable_count: int = 0,
                            app_error_count: int = 0,
                            courses_count: int = 0,
-                           unresolvable_reasons: dict = None):
+                           panopto_summary: dict = None):
     """Render the unified completion summary card.
 
     Single card that absorbs all status info: success/partial/failure,
@@ -634,7 +637,11 @@ def render_completion_card(synced_count: int, error_count: int,
                 "display:flex;align-items:flex-start;gap:10px;"
                 "background:rgba(245,158,11,0.1);"
                 "border:1px solid rgba(245,158,11,0.3);"
-                "border-radius:8px;padding:12px 14px;margin-top:14px;"
+                "border-radius:8px;padding:12px 14px;"
+                # No margin-top: it is a flex sibling of the card above,
+                # so 14px here landed on top of the container's 16px gap
+                # and opened 30px above the notice against the card's
+                # 24px inset below it.
                 "'>"
                 "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
                 "stroke='#f59e0b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' "
@@ -658,6 +665,12 @@ def render_completion_card(synced_count: int, error_count: int,
                 "</div>",
                 unsafe_allow_html=True,
             )
+        # Reachable: Canvas files can all be up to date while the Panopto pass
+        # still downloaded recordings, and that run has done real work this
+        # card does not mention. render_panopto_summary self-guards on "did
+        # this run actually do anything", so a run with no Panopto at all
+        # still renders nothing.
+        render_panopto_summary(panopto_summary)
         return
 
     # Stats grid
@@ -706,7 +719,8 @@ f'<div class="stat-label">{size_unit} Downloaded</div>'
 
     # Conditional error stat cards - split by retriable vs unresolvable vs app-level
     _warning_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:18px;height:18px;flex-shrink:0;'><path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'></path><line x1='12' y1='9' x2='12' y2='13'></line><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>"
-    if retriable_count > 0 or unresolvable_count > 0 or app_error_count > 0:
+    _split_cards = (retriable_count > 0 or unresolvable_count > 0 or app_error_count > 0)
+    if _split_cards:
         # Show separate cards when split counts are provided
         if retriable_count > 0:
             stats_html += (
@@ -718,6 +732,29 @@ f'<div class="stat-label">Failed {"Download" if retriable_count == 1 else "Downl
 '</div>'
 '</div>'
             )
+
+    # Recovered sits immediately RIGHT of Failed Downloads, so the pair reads as
+    # one sentence: "2 failed, 3 recovered". It used to be a green line of prose
+    # under the grid ("Recovered 3 of 5 failed items"), which restated a number
+    # the grid was already showing and put the run's best news in the one place
+    # on the card that is not a metric.
+    #
+    # Deliberately OUTSIDE the split-cards branch: a retry that fixed everything
+    # leaves all three error counts at zero, and that is exactly the run that
+    # most deserves to say so.
+    if retry_attempted and retry_resolved > 0:
+        _recovered_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:18px;height:18px;flex-shrink:0;'><path d='M3 12a9 9 0 1 0 3-6.7'></path><polyline points='3 3 3 9 9 9'></polyline></svg>"
+        stats_html += (
+'<div class="stat-card stat-recovered">'
+f'<div class="stat-icon-wrapper">{_recovered_icon}</div>'
+'<div class="stat-info">'
+f'<div class="stat-value">{retry_resolved}</div>'
+f'<div class="stat-label">{"File" if retry_resolved == 1 else "Files"} Recovered</div>'
+'</div>'
+'</div>'
+        )
+
+    if _split_cards:
         if unresolvable_count > 0:
             stats_html += (
 '<div class="stat-card stat-skip">'
@@ -752,56 +789,22 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
         
     stats_html += '</div>'
 
-    # Optional notes (retry + discovery, folded inline)
+    # NO PROSE UNDER THE GRID.
+    #
+    # Two full-width rows of text used to live here - "Recovered 3 of 5 failed
+    # items" and "2 files are locked by your teacher on Canvas; ...". Both said
+    # something the card was already showing as a number, and both landed
+    # between the stat grid and the expander below, so the card's one block of
+    # metrics was split by paragraphs. The declined sentence was the worse of
+    # the two: it duplicated, almost word for word, what the expander directly
+    # beneath it says when opened.
+    #
+    # Where each went instead:
+    #   * recovery  -> its own stat card, next to Failed Downloads (above);
+    #   * declined  -> the expander's own subtitle, which is where a user goes
+    #                  to find out WHICH files, via `declined_reason_sentence`
+    #                  so the wording cannot drift between the two screens.
     notes_html = ''
-    _check_icon = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' style='width:14px;height:14px;flex-shrink:0;margin-top:1px;'><polyline points='20 6 9 17 4 12'/></svg>"
-    if retry_attempted and retry_total > 0:
-        if retry_resolved == 0:
-            pass  # Note shown below retry button instead
-        elif retry_resolved < retry_total:
-            notes_html += (
-                f'<div class="retry-note retry-note-success">'
-                f'{_check_icon}'
-                f'Recovered {retry_resolved} of {retry_total} failed {"item" if retry_total == 1 else "items"}.'
-                f'</div>'
-            )
-        else:
-            notes_html += (
-                f'<div class="retry-note retry-note-success">'
-                f'{_check_icon}'
-                f'Successfully recovered all {retry_resolved} previously failed {"item" if retry_resolved == 1 else "items"}!'
-                f'</div>'
-            )
-
-    # Say WHAT could not be downloaded, not just how many. A bare "2 Cannot Be
-    # Downloaded" reads as an unexplained loss; naming the cause turns it into
-    # a fact the user can act on or dismiss. The reasons are counted at the call
-    # site, which is the only place that still holds the error objects.
-    if unresolvable_count > 0:
-        _r = unresolvable_reasons or {}
-        _locked = int(_r.get('locked', 0) or 0)
-        _stream = int(_r.get('stream', 0) or 0)
-        _other = int(_r.get('other', 0) or 0)
-        _bits = []
-        if _locked:
-            _bits.append(
-                f"{_locked} {'file is' if _locked == 1 else 'files are'} locked by "
-                f"your teacher on Canvas")
-        if _stream:
-            _bits.append(
-                f"{_stream} {'video is' if _stream == 1 else 'videos are'} streamed "
-                f"through a Canvas plugin and cannot be saved as a file")
-        if _other or not _bits:
-            _n = _other or unresolvable_count
-            _bits.append(f"Canvas will not serve {_n} {'item' if _n == 1 else 'items'}")
-        _joined = _bits[0] if len(_bits) == 1 else "; ".join(_bits)
-        notes_html += (
-            f'<div class="retry-note retry-note-skip">'
-            f'{slash_icon}'
-            f'{esc(_joined[0].upper() + _joined[1:])}. Nothing is missing from your '
-            f'download that could have been fetched.'
-            f'</div>'
-        )
 
     if card_class == 'failure':
         bg_color = 'rgba(127, 29, 29, 0.30)'
@@ -840,6 +843,17 @@ f'<div class="stat-label">{"Error" if error_count == 1 else "Errors"}</div>'
         {notes_html}
     </div>
     """, unsafe_allow_html=True)
+
+    # THINGS OF THE SAME KIND SIT TOGETHER.
+    #
+    # The Panopto card is a stat grid, so it belongs directly under the run's
+    # other stat grid - not four elements below it, with a warning notice and
+    # two expanders in between, which is where it used to land because the call
+    # sites rendered it in the order the features were built. Rendering it here
+    # is also what makes the rest of the order possible: everything after this
+    # point is a collapsible, and everything the CALLERS add after that is a
+    # notice. See app.py / sync/completion.py for the other half of the rule.
+    render_panopto_summary(panopto_summary)
 
     if size_skipped_count > 0:
         import os as _os, re as _re
@@ -1563,6 +1577,10 @@ _ALERT_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewB
 # Light version of alert for the error expander title, matching the stat-card.stat-error icon color
 _ALERT_LIGHT_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fca5a5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='12' y1='8' x2='12' y2='12'/%3E%3Cline x1='12' y1='16' x2='12.01' y2='16'/%3E%3C/svg%3E"
 
+# The same slash-circle the "Cannot Be Downloaded" stat card uses, in the same
+# grey, so the card and the panel it explains are recognisably one thing.
+_SLASH_GREY_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cline x1='4.93' y1='4.93' x2='19.07' y2='19.07'/%3E%3C/svg%3E"
+
 
 def _course_id_from_sync_pairs(course_name: str):
     """Resolve a Canvas course id from the sync pairs, by course name.
@@ -1607,16 +1625,13 @@ def _course_id_from_sync_pairs(course_name: str):
     return None
 
 
-def render_error_section(error_list: list, error_log_paths: list = None,
-                         dialog_fn=None, key_prefix: str = 'dl',
+def render_error_section(error_list: list, key_prefix: str = 'dl',
                          retry_btn_callback=None, has_retriable_errors: bool = False,
                          retry_failed: bool = False):
     """Render error details as a custom CSS panel with human-friendly messages.
 
     Args:
         error_list: List of error messages or DownloadError objects.
-        error_log_paths: Optional list of Path objects to download_errors.txt files.
-        dialog_fn: Optional callable; if provided, called with error_log_paths.
         key_prefix: Unique prefix for Streamlit widget keys.
         retry_btn_callback: If provided, renders the retry button inside the panel.
         has_retriable_errors: Whether retriable errors exist (controls retry btn visibility).
@@ -1626,6 +1641,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
         return
 
     import os
+    import re
     from collections import defaultdict
     count = len(error_list)
 
@@ -1677,11 +1693,23 @@ def render_error_section(error_list: list, error_log_paths: list = None,
                 f'</div></div>'
             )
         else:
+            # A sync error is a STRING - "Error syncing notes.pdf: Connection
+            # reset by peer" - and it used to be printed whole, so the row read
+            # like a log line that had been given a file icon. The technical
+            # tail is not the filename, and the column's own subtitle already
+            # says what happened to every file in it; naming the cause per row
+            # tells the user nothing they can act on and buries the one thing
+            # they need, which is WHICH file. Same row shape as the object
+            # branch above, so the two flows are indistinguishable here.
+            _m = re.match(r'^\s*Error syncing (.+?):\s', str(err))
+            fname = _m.group(1) if _m else str(err)
+            ext = os.path.splitext(fname)[1].lower().lstrip('.')
+            label = os.path.splitext(fname)[0] if ext else fname
             return (
                 f'<div class="error-row">'
-                f'<img class="err-icon" src="{_FILETYPE_SVG_DEFAULT}" alt="file"/>'
+                f'<img class="err-icon" src="{_FILETYPE_SVGS.get(ext, _FILETYPE_SVG_DEFAULT)}" alt="{esc(ext)}"/>'
                 f'<div class="err-body">'
-                f'<div class="err-filename">{esc(str(err))}</div>'
+                f'<span class="err-filename">{esc(label)}</span>'
                 f'</div></div>'
             )
 
@@ -1735,12 +1763,17 @@ def render_error_section(error_list: list, error_log_paths: list = None,
         lti_count = sum(1 for e in unresolvable if getattr(e, 'error_type', '') == 'LTI/Media Stream')
         if lti_count == len(unresolvable):
             col_title = 'Unavailable Files (Stream-Only)'
-            col_subtitle = 'These are video streams. Canvas does not allow direct downloads for these.'
             badge_class = 'err-group-badge-neutral'
         else:
             col_title = 'Cannot Be Downloaded'
-            col_subtitle = 'These files have a permanent issue and cannot be retried.'
             badge_class = 'err-group-badge-muted'
+        # The specific sentence, not "these files have a permanent issue" -
+        # this is where the full-width prose row that used to sit under the
+        # stat grid went, and it is the reason removing it loses nothing. Built
+        # by the same helper the classifier feeds, so the two screens cannot
+        # word it differently.
+        col_subtitle = declined_reason_sentence(
+            split_delivery_errors(unresolvable)['reasons'], len(unresolvable))
 
         sub_html = ''
         for reason, errs in by_reason.items():
@@ -1783,14 +1816,31 @@ def render_error_section(error_list: list, error_log_paths: list = None,
                 f'</div>'
                 f'</div>'
             )
+        # NOT "check your settings and API connection".
+        #
+        # That sentence was wrong in three ways at once. It blamed the user for
+        # a fault in our code. It named "API connection", which most students
+        # have never heard of and cannot check. And it was not actionable: no
+        # setting on this machine fixes an UnboundLocalError in the engine.
+        #
+        # What is true, and what a person actually needs to know, is: this is a
+        # bug, the rest of your download is fine, and here is how to tell the
+        # developer.
+        _n_app = len(app_errors)
         body_html += (
             f'<div class="app-error-section">'
             f'<div class="app-error-section-header">'
             f'{_WARN_SVG}'
-            f'<span class="app-error-section-title">Application Errors</span>'
-            f'<span class="err-group-badge err-group-badge-warn">{len(app_errors)}</span>'
+            f'<span class="app-error-section-title">Something went wrong inside the app</span>'
+            f'<span class="err-group-badge err-group-badge-warn">{_n_app}</span>'
             f'</div>'
-            f'<div class="app-error-section-subtitle">The download engine encountered internal errors. Check your settings and API connection, then try again.</div>'
+            f'<div class="app-error-section-subtitle">'
+            f'This is a bug in Canvas Downloader, not something you did, and it is '
+            f'not caused by your settings. Everything else on this screen '
+            f'downloaded normally. Sending the report is the only thing that '
+            f'helps &mdash; it is what gets {"it" if _n_app == 1 else "these"} fixed.'
+            f'</div>'
+            f'{build_app_error_actions(app_errors)}'
             f'{app_rows_html}'
             f'</div>'
         )
@@ -1803,15 +1853,36 @@ def render_error_section(error_list: list, error_log_paths: list = None,
     if st.session_state.get('error_log_enabled', False):
         footer_html = '<div class="error-panel-footer">Full error details are saved in <code>download_errors.txt</code> in each course folder.</div>'
 
+    # THE PANEL IS NAMED AFTER WHAT IT CONTAINS.
+    #
+    # It was always "Error Details" behind a red alert glyph. On a run whose
+    # only entries are teacher-locked files the card above says "Download
+    # Success" and shows a neutral grey "3 Cannot Be Downloaded" - and then
+    # this panel called the very same three files errors, in red. The user
+    # meets the stat card first, so the panel has to answer the question that
+    # card raises, with its own words and its own colour.
+    #
+    # "Blocking" is the same distinction the headline card makes: a retriable
+    # failure or an app error is a problem, a declined item is an outcome.
+    _blocking = bool(actionable or app_errors)
+    if _blocking:
+        _panel_title = 'Error Details'
+        _panel_icon = _ALERT_LIGHT_SVG
+        _panel_icon_bg = 'rgba(239, 68, 68, 0.2)'
+    else:
+        _panel_title = 'Cannot Be Downloaded'
+        _panel_icon = _SLASH_GREY_SVG
+        _panel_icon_bg = 'rgba(156, 163, 175, 0.18)'
+
     st.markdown(
         f'<details class="error-panel">'
         f'<summary class="error-panel-header">'
         f'<div class="ep-header-row">'
         f'<img class="chevron" src="{_CHEVRON_SVG}" alt="toggle"/>'
-        f'<div style="display:flex; align-items:center; justify-content:center; width:26px; height:26px; background:rgba(239, 68, 68, 0.2); border-radius:6px; flex-shrink:0;">'
-        f'<img src="{_ALERT_LIGHT_SVG}" alt="error" style="width:16px; height:16px;"/>'
+        f'<div style="display:flex; align-items:center; justify-content:center; width:26px; height:26px; background:{_panel_icon_bg}; border-radius:6px; flex-shrink:0;">'
+        f'<img src="{_panel_icon}" alt="" style="width:16px; height:16px;"/>'
         f'</div>'
-        f'<span class="ep-title" style="color: #d1d5db; font-weight: 400;">Error Details</span>'
+        f'<span class="ep-title" style="color: #d1d5db; font-weight: 400;">{esc(_panel_title)}</span>'
         f'</div>'
         f'</summary>'
         f'<div class="error-panel-body">'
@@ -1821,14 +1892,18 @@ def render_error_section(error_list: list, error_log_paths: list = None,
         unsafe_allow_html=True,
     )
 
-    # Error log viewer button
-    if error_log_paths and dialog_fn:
-        valid_paths = [p for p in error_log_paths if p.exists()]
-        if valid_paths:
-            col_log, _ = st.columns([0.3, 0.7])
-            with col_log:
-                if st.button("View Full Error Log", key=f"{key_prefix}_view_error_log", use_container_width=True):
-                    dialog_fn(valid_paths)
+    # NO "View Full Error Log" BUTTON. It was a stock Streamlit button offering
+    # a raw log file, and it appeared on runs that had succeeded - a green
+    # "Download Success" screen whose only entries were locked files still
+    # invited the user to go and read an error log. It is not actionable
+    # either: every error the log holds is already on this screen, named, and
+    # what a user does about one of them happens on Canvas, not in a text file.
+    # `error_log_dialog` is kept for a future diagnostics surface.
+
+    if app_errors:
+        # The controls themselves are inside the notice, in the markdown above.
+        # This only teaches the copy button how to copy.
+        inject_app_error_copy_bridge()
 
     # Retry button - placed in half-width left column under the error panel
     # so it visually associates with the "Failed to Download" column only.
@@ -1849,7 +1924,6 @@ def render_error_section(error_list: list, error_log_paths: list = None,
             "We couldn't download these files after retrying. "
             "You can find them directly on Canvas and download from there."
         ) if retry_failed else None
-        st.html("<div style='padding: 4px 0 0 0;'></div>")
         col_retry, _ = st.columns(2)
         with col_retry:
             if st.button(btn_text, type="secondary", key=f"{key_prefix}_retry_failed_btn",
@@ -1867,7 +1941,7 @@ def render_error_section(error_list: list, error_log_paths: list = None,
         render_amber_notice(
             "Retry didn't work - these files may be temporarily unavailable.",
             detail="Check your internet connection and try again later, or download them directly from Canvas.",
-            margin="12px 0 2px 0",
+            margin="0",  # the card's flex gap (16px) is the ONE rhythm; a margin here adds to it
         )
 
 
@@ -1937,9 +2011,15 @@ def render_cancelled_card(what: str, done: int, total: int) -> None:
         done:  items finished before the cancel.
         total: items planned (0 when the run was still enumerating courses).
     """
+    # ONE HUE. The gradient used to run from ERROR_BG to BG_PAGE, and BG_PAGE
+    # (#0e1117) is a blue-black - so the right-hand half of a card whose entire
+    # message is "cancelled" faded into a cool blue-violet, which is the one
+    # colour on the completion screens that means "informational". Fading red
+    # into transparent keeps the card sitting on whatever it is placed over
+    # while staying red across its whole width.
     st.markdown(f"""
     <div style="
-        background: linear-gradient(135deg, {theme.ERROR_BG} 0%, {theme.BG_PAGE} 100%);
+        background: linear-gradient(135deg, {theme.ERROR_BG} 0%, rgba(127, 29, 29, 0.04) 100%);
         border: 1px solid {theme.ERROR};
         border-radius: 12px;
         padding: 28px 32px;
@@ -1988,10 +2068,16 @@ _SKIP_FUNNEL_SVG = (
     " fill='%239ca3af' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
     "%3Cpolygon points='22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3'/%3E%3C/svg%3E"
 )
+# FILLED, not stroked. Its neighbour in the same panel stack is the solid
+# funnel above, so a 2px outline glyph read as a lighter, thinner element of a
+# different family - the two notices are meant to look like one thing. The
+# "holes" (lid seam and handle) are punched with fill-rule: evenodd so the
+# shape still reads as a box at 16px rather than as a filled rectangle.
 _SKIP_ARCHIVE_SVG = (
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
-    " fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E"
-    "%3Cpath d='M21 8v13H3V8M1 3h22v5H1zM10 12h4'/%3E%3C/svg%3E"
+    " fill='%239ca3af' fill-rule='evenodd'%3E"
+    "%3Cpath d='M1 3h22v5H1V3zm2 6h18v12H3V9zm6 2h6v2H9v-2z'/%3E"
+    "%3C/svg%3E"
 )
 
 
@@ -2006,6 +2092,7 @@ def render_archives_skipped_notice():
     read, and a silent guard produces exactly one question: "why is my zip still
     a zip?"
     """
+    import os as _os
     names = st.session_state.get('pp_archives_skipped') or []
     if not names:
         return
@@ -2014,10 +2101,37 @@ def render_archives_skipped_notice():
     # Same one-row shape as the size-skip notice above: the sentence IS the
     # control, chevron leading. Two notices about "things deliberately left
     # alone" should not look like two different features.
-    _rows = "".join(
-        f"<div class='skip-file-row'><span class='skip-file-name'>{esc(x)}</span></div>"
-        for x in names[:50]
-    )
+    #
+    # And the same ROW shape too: filetype icon, name, extension tag, size.
+    # These were bare text on an indent while the size-skip list directly above
+    # used the app's established file row, so one panel spoke the application's
+    # visual language and its neighbour did not.
+    #
+    # Entries are {'name', 'bytes'}; a bare string is still accepted because a
+    # session that started before this version can hold the old shape in
+    # `pp_archives_skipped`, and a completion screen must never be the thing
+    # that raises.
+    _rows_html = ''
+    for _entry in names[:50]:
+        if isinstance(_entry, dict):
+            _name = str(_entry.get('name') or '')
+            _bytes = int(_entry.get('bytes') or 0)
+        else:
+            _name, _bytes = str(_entry), 0
+        _ext = _os.path.splitext(_name)[1].lower().lstrip('.')
+        _stem = _os.path.splitext(_name)[0] if _ext else _name
+        _icon = _FILETYPE_SVGS.get(_ext, _FILETYPE_SVG_DEFAULT)
+        _ext_badge = (f'<span class="skip-ext-badge">{esc(_ext.upper())}</span>'
+                      if _ext else '')
+        _size_badge = (f'<span class="skip-file-size">{esc(format_file_size(_bytes))}</span>'
+                       if _bytes else '')
+        _rows_html += (
+            f'<div class="skip-file-row">'
+            f'<img class="skip-file-icon" src="{_icon}" alt="{esc(_ext)}"/>'
+            f'<span class="skip-file-name">{esc(_stem)}</span>'
+            f'{_ext_badge}{_size_badge}'
+            f'</div>'
+        )
     st.markdown(
         "<details class='skip-panel skip-panel-solo'>"
         "<summary class='skip-panel-header'><div class='sp-header-row'>"
@@ -2033,45 +2147,647 @@ def render_archives_skipped_notice():
         "nothing is missing. Unpack "
         f"{'them' if n != 1 else 'it'} yourself, or raise the limit in "
         "<b>Settings &rsaquo; Skip huge archives</b>.</div>"
-        f"<div class='skip-file-list'>{_rows}</div>"
+        f"<div class='skip-file-list'>{_rows_html}</div>"
         "</div></details>",
         unsafe_allow_html=True,
     )
 
 
-def render_pp_warning(pp_failure_count: int):
-    """Render post-processing failure warning if applicable."""
-    if pp_failure_count > 0:
-        from ui.amber_notice import render_amber_notice
-        word = "file" if pp_failure_count == 1 else "files"
-        detail_hint = "Check download_errors.txt for details." if st.session_state.get('error_log_enabled', False) else "Enable error logging in settings to capture details."
-        render_amber_notice(
-            f"{pp_failure_count} {word} failed during post-processing (conversion/extraction).",
-            detail=detail_hint,
-            margin="12px 0 2px 0",
-        )
+DEVELOPER_EMAIL = "brkbuilds1@gmail.com"
+
+# Gmail's compose endpoint, NOT mailto:.
+#
+# `mailto:` hands the URL to the OS, and the OS is the problem. On Windows a
+# machine with no desktop mail client shows "You'll need a new app to open this
+# mailto link", or nothing at all - and students who live in Gmail have no such
+# client. On macOS it ALWAYS resolves to Mail.app, which is installed and is
+# the default handler even when it has never been set up, so an unconfigured
+# Mac opens the account-setup wizard: a worse dead end than nothing, because it
+# reads as the app demanding their email password.
+#
+# An https URL opens in the default browser, which every machine has, and
+# behaves identically on both platforms. Anyone not signed into Gmail uses the
+# copy button beside it instead - which is why that button is not optional.
+#
+# `tf=cm`, NOT the older `view=cm&fs=1`. Both open a compose window, but
+# `view=cm` opens the standalone compose PAGE - a text editor floating on an
+# otherwise blank white canvas, with no Gmail around it - which is alarming
+# when you have just been told to report a bug and reads as a broken page.
+# `tf=cm` opens the full Gmail interface with the compose window inside it, and
+# `fs` is documented as no longer doing anything at all.
+_GMAIL_COMPOSE = "https://mail.google.com/mail/u/0/?tf=cm"
+
+# Keep the whole URL inside what the OS will carry. pywebview hands the href to
+# `webbrowser.open`, which on Windows reaches ShellExecuteW - historically
+# ~2048 characters - and URL-encoding inflates log text (every newline becomes
+# `%0A`). 1900 is comfortably inside that with room for the base URL and
+# subject. The email therefore carries a CURATED extract; the clipboard, which
+# has no such limit, carries everything.
+_EMAIL_URL_LIMIT = 1900
+
+# The tail of a debug log is verbose but bounded. 40 KB is a few hundred lines
+# of real request/response history - enough to see what the run was doing when
+# it broke, without pasting a 5 MB file into an email.
+_DEBUG_TAIL_BYTES = 40 * 1024
+
+# A ceiling on the WHOLE bundle. It is embedded in the page as a hidden span and
+# re-escaped on every render of the completion screen, and the debug-tail budget
+# is per FILE with one file per course - so a 12-course download could otherwise
+# put ~750 KB of text into the DOM, on every rerun, to serve a button that most
+# users never press. 192 KB is far more log than any bug report needs and keeps
+# the page weight bounded regardless of how many courses ran.
+_BUNDLE_MAX_CHARS = 192 * 1024
+
+# The marker has to EXPLAIN ITSELF. "--- PASTE THE FULL REPORT BELOW ---" was
+# meaningless to the person reading it: nothing on screen had told them a
+# clipboard copy happened, so the instruction referred to something they did
+# not know they had. It has to say what is on the clipboard, that it is already
+# there, and that sending without pasting is still fine - otherwise a user who
+# cannot paste assumes the whole report is void and abandons it.
+_PASTE_MARKER = (
+    "----------------------------------------------------------------\n"
+    "The FULL log is already on your clipboard - click below this line\n"
+    "and press Ctrl+V (Cmd+V on Mac) to add it, then send.\n"
+    "(No paste? Send it as-is - the summary above is still useful.)\n"
+    "----------------------------------------------------------------"
+)
+
+_REPORT_MAIL_SVG = (
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+    "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
+    "stroke-linejoin='round' aria-hidden='true'>"
+    "<rect x='2' y='4' width='20' height='16' rx='2'/>"
+    "<path d='m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7'/></svg>"
+)
+_REPORT_COPY_SVG = (
+    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+    "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
+    "stroke-linejoin='round' aria-hidden='true'>"
+    "<rect x='9' y='9' width='13' height='13' rx='2'/>"
+    "<path d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1'/></svg>"
+)
 
 
-def render_error_log_button(error_log_paths: list, key_prefix: str = 'dl') -> None:
-    """The "View Full Error Log" button, on its own.
+def build_app_error_actions(app_errors: list) -> str:
+    """The report controls, as HTML, so they can live INSIDE the notice.
 
-    Both completion screens print "Check download_errors.txt for details" when a
-    CONVERSION fails, and both used to bury the button that opens it behind an
-    ``if <download/sync errors>:`` gate. A post-processing failure increments
-    ``pp_failure_count``, not the error list, so a run where only a conversion
-    failed told the user to go and read a file and gave them no way to open it.
-    Measured on a real sync: 2 conversion failures, 0 sync errors, no button.
+    This is markup rather than ``st.button`` for a structural reason, not a
+    stylistic one: the app-error notice is rendered inside a raw-HTML
+    ``<details>``, and a Streamlit widget cannot be nested in raw HTML. Putting
+    the control anywhere a widget CAN go means putting it outside the box that
+    explains it - which is where it was, and it read as an unrelated button
+    floating under the panel.
 
-    Shared rather than copied because the two screens are near-duplicates, and a
-    fix applied to one of them is invisible in review on the other.
+    Being an anchor also settles the styling question permanently. There is no
+    stock Streamlit button to override.
+
+    ``target="_blank"`` is MANDATORY, not decoration. pywebview routes
+    new-window requests to the system browser
+    (``OPEN_EXTERNAL_LINKS_IN_BROWSER`` defaults True; edgechromium.py:252 and
+    cocoa.py:257), and marks them handled so the app window stays put. A plain
+    same-window link would navigate the app itself to Gmail and end the
+    session.
     """
-    if not error_log_paths:
+    import urllib.parse
+
+    # Two different payloads, because the two channels have different limits.
+    # The clipboard bundle is the whole record; the email carries a curated
+    # extract that fits in a URL, plus a marker inviting the paste that turns
+    # it into the whole record. Fitting is not assumed - the body is rebuilt
+    # with fewer health lines until the finished URL is under the limit, so a
+    # long environment line or a burst of unclean exits can never silently
+    # produce a truncated or rejected link.
+    bundle = build_app_error_bundle(app_errors)
+
+    def _url_for(body: str) -> str:
+        return (f"{_GMAIL_COMPOSE}"
+                f"&to={urllib.parse.quote_plus(DEVELOPER_EMAIL)}"
+                f"&su={urllib.parse.quote_plus('Canvas Downloader - application error')}"
+                f"&body={urllib.parse.quote_plus(body)}")
+
+    # Health lines go first, then errors: an unclean-exit line is cheap and
+    # highly diagnostic, while the tenth copy of the same stack trace is
+    # neither. Measured before adding the error cap: 12 maxed-out messages
+    # produced 4,020 characters against the 1,900 limit, and trimming health
+    # alone could not reach it.
+    url = body = ""
+    for _health, _errs in ((12, None), (8, None), (5, None), (3, None),
+                           (3, 6), (2, 3), (0, 2), (0, 1)):
+        body = (build_app_error_report(app_errors, max_health_lines=_health,
+                                       max_errors=_errs)
+                + f"\n\n{_PASTE_MARKER}\n")
+        url = _url_for(body)
+        if len(url) <= _EMAIL_URL_LIMIT:
+            break
+    else:
+        # Even one error can be too long on its own. Cut the BODY rather than
+        # ship a URL the OS may truncate at an arbitrary byte or refuse
+        # outright - the whole record is on the clipboard either way.
+        head = build_app_error_report(app_errors, max_health_lines=0,
+                                      max_errors=1)
+        while head and len(_url_for(head + f"\n\n{_PASTE_MARKER}\n")) > _EMAIL_URL_LIMIT:
+            head = head[:-200]
+        body = (head or "Canvas Downloader - application error") + \
+            f"\n... (truncated)\n\n{_PASTE_MARKER}\n"
+        url = _url_for(body)
+    return (
+        '<div class="app-err-actions">'
+        f'<a class="app-err-report-btn" href="{esc(url)}" target="_blank" '
+        f'rel="noopener noreferrer">{_REPORT_MAIL_SVG}'
+        '<span>Report this to the developer</span></a>'
+        # A span, not a <button>: Streamlit sanitises raw HTML and a span with
+        # role/tabindex is certain to survive, where a <button> is not. The
+        # bridge below binds the behaviour.
+        '<span class="app-err-copy-btn" role="button" tabindex="0" '
+        'title="Copy the full report - the errors, this session\'s health log, '
+        'and the app\'s recent activity">'
+        f'{_REPORT_COPY_SVG}</span>'
+        # The payload lives in the DOM rather than in a data- attribute so the
+        # bridge never depends on an attribute surviving sanitisation, and so a
+        # multi-line report needs no escaping games. It is the FULL bundle:
+        # both the copy button and the report link read it, the latter so one
+        # paste in the compose window upgrades the curated extract to the whole
+        # record.
+        f'<span class="app-err-report-src">{esc(bundle)}</span>'
+        '</div>'
+        '<div class="app-err-actions-note">Opens Gmail with the details filled '
+        'in, and copies the full log so you can paste it in. Not using Gmail? '
+        'Use the copy button and email it to '
+        f'<b>{_unlinkable_email(DEVELOPER_EMAIL)}</b>.</div>'
+    )
+
+
+def _unlinkable_email(address: str) -> str:
+    """Render an email address as plain text Streamlit's markdown CANNOT
+    autolink into a ``mailto:`` anchor.
+
+    Measured: ``st.markdown(unsafe_allow_html=True)`` still runs the string
+    through remark-gfm's autolink pass even though it is HTML, and it
+    autolinks a bare address INSIDE an explicit ``<b>`` tag - so this line
+    rendered as a live, blue, underlined ``mailto:`` link with no anchor tag
+    anywhere in the source, defeating the entire point of the fallback (a
+    plain address for the person the Gmail button doesn't work for).
+
+    An HTML entity for the `@` does NOT work - measured - because the parser
+    decodes entities to their literal character in the text AST before the
+    autolink scanner runs, so `&#64;` and `@` are indistinguishable to it by
+    the time it looks.
+
+    What DOES work is breaking node adjacency rather than character identity:
+    an empty ``<wbr>`` (word-break opportunity - void, zero visual/layout
+    effect, and survives Streamlit's sanitizer where a `<span>` also would)
+    splits the source into two separate text runs at the point remark builds
+    its AST, before the autolink pass ever sees one contiguous
+    `word@word.word` shape to match. Verified in the running app: no anchor in
+    the rendered DOM, and the visible text is unchanged pixel-for-pixel.
+    """
+    esc_addr = esc(address)
+    at = esc_addr.index('@')
+    return esc_addr[:at] + '<wbr>' + esc_addr[at:]
+
+
+def inject_app_error_copy_bridge() -> None:
+    """Client-side clipboard for the copy button. No Streamlit round-trip.
+
+    Re-binds on EVERY injection rather than guarding with a one-time flag:
+    ``components.html`` builds a fresh iframe per rerun and destroys the
+    previous one, so a listener attached from a dead realm silently stops
+    firing (see the JS-bridge rules in CLAUDE.md). The handler ref is stashed
+    on ``window.parent`` so it survives to be removed next time.
+
+    Deliberately the SAFE class of bridge: it reads the DOM and writes the
+    clipboard, and never tries to drive a Streamlit widget - the mechanism this
+    repo has already removed once for being unreliable.
+
+    It binds BOTH controls. The report link also copies, so the paste marker in
+    the email body has something to paste: the URL can only carry a curated
+    extract, and one Ctrl+V upgrades that to the full log. Crucially it does
+    NOT preventDefault for the link - the navigation is the whole point, and
+    the clipboard write is fire-and-forget alongside it.
+    """
+    import streamlit.components.v1 as _components
+    _components.html(
+        """<script>
+(function () {
+  var win = window.parent, doc = win.document;
+  var reg = win._cdErrCopy || (win._cdErrCopy = {});
+  try { doc.removeEventListener('click', reg.handler, true); } catch (e) {}
+
+  reg.handler = function (ev) {
+    if (!ev.target || !ev.target.closest) return;
+    var btn = ev.target.closest('.app-err-copy-btn');
+    var link = btn ? null : ev.target.closest('.app-err-report-btn');
+    var el = btn || link;
+    if (!el) return;
+    // The copy button has no other job, so swallow its click. The link's
+    // click MUST be left alone: cancelling it would stop pywebview handing
+    // the URL to the system browser, i.e. the report would never open.
+    if (btn) { ev.preventDefault(); ev.stopPropagation(); }
+
+    var host = el.closest('.app-err-actions') || el.parentElement;
+    var src = host && host.querySelector('.app-err-report-src');
+    var text = src ? src.textContent : '';
+    if (!text) return;
+
+    var flag = function (cls) {
+      if (!btn) return;                 // no confirmation state on the link
+      btn.classList.remove('copied', 'failed');
+      btn.classList.add(cls);
+      win.clearTimeout(reg.timer);
+      reg.timer = win.setTimeout(function () {
+        btn.classList.remove('copied', 'failed');
+      }, 2200);
+    };
+    var done = function () { flag('copied'); };
+
+    // The async Clipboard API rejects with NotAllowedError when the document
+    // is not focused - which is the normal state after the report link has
+    // just opened Gmail in the system browser and the user has clicked back.
+    // Asking for focus first costs nothing and removes that whole class of
+    // failure.
+    try { win.focus(); } catch (e) {}
+
+    // The PARENT's clipboard object: the click's user activation belongs to
+    // the parent document, not to this iframe's realm.
+    try {
+      win.navigator.clipboard.writeText(text).then(done, fallback);
+    } catch (e) { fallback(); }
+
+    function fallback() {
+      // execCommand has different requirements from the async API (a live
+      // selection and a user gesture, but no permission or focus check), so it
+      // succeeds in cases the API refuses. Deprecated, universally supported,
+      // and the only second chance available.
+      try {
+        var ta = doc.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        doc.body.appendChild(ta);
+        ta.select();
+        var ok = doc.execCommand('copy');
+        doc.body.removeChild(ta);
+        // A SILENT failure is the worst outcome: the user clicks, nothing
+        // visibly happens, and they cannot tell a broken button from one that
+        // worked. Both paths now end in a visible state.
+        flag(ok ? 'copied' : 'failed');
+      } catch (e2) { flag('failed'); }
+    }
+  };
+  doc.addEventListener('click', reg.handler, true);
+})();
+</script>""",
+        height=0,
+    )
+
+# mailto: URLs are handed to the OS as a command line, and both Windows and
+# macOS truncate long ones (and some clients silently drop the whole body).
+# 1,600 characters is comfortably inside every limit measured; anything longer
+# is cut with a pointer to the full log, which the report names anyway.
+_MAILTO_BODY_LIMIT = 1600
+
+
+def _safe_mtime(path: str) -> float:
+    """Modification time, or 0 for anything unreadable.
+
+    Only used to ORDER debug logs, so a missing file must sort last rather than
+    take the report down with it.
+    """
+    try:
+        return os.path.getmtime(path)
+    except Exception:                                   # noqa: BLE001
+        return 0.0
+
+
+def _read_text_tail(path: str, max_bytes: int) -> str:
+    """Last ``max_bytes`` of a text file, trimmed to a line boundary.
+
+    Seeks rather than reads the whole file: ``debug_log.txt`` rotates at 5 MB
+    and this runs while a completion screen is painting.
+    """
+    try:
+        size = os.path.getsize(path)
+        with open(path, "rb") as fh:
+            if size > max_bytes:
+                fh.seek(size - max_bytes)
+            raw = fh.read()
+        text = raw.decode("utf-8", errors="replace")
+        if size > max_bytes:
+            # The seek almost certainly landed mid-line.
+            text = text.split("\n", 1)[-1]
+        return text.strip("\n")
+    except Exception:                                   # noqa: BLE001
+        return ""
+
+
+# The lines in health.log that are worth their bytes in a length-capped email.
+# `core/health_log.py` calls the unclean-exit line "the single highest-value
+# signal", and the failure tallies are what turn a phase into a diagnosis.
+_HEALTH_SIGNALS = (
+    "DID NOT EXIT CLEANLY",
+    "failures=",
+    "reaped",
+)
+
+# The opposite: lines that say only "the app opened and closed normally". One
+# of each anchors the session; more of them is filler.
+_ROUTINE_HEALTH = (
+    "SESSION START",
+    "SESSION END (clean)",
+)
+
+
+def _curated_health_lines(raw: str, max_lines: int = 12) -> list[str]:
+    """The most diagnosable ``max_lines`` of a health log, in file order.
+
+    A plain tail is the obvious thing and it is wrong: a user who has opened
+    the app forty times has a log that is almost entirely SESSION START/END
+    pairs, and a tail of those pushes the unclean-exit line - the whole reason
+    `core/health_log.py` exists, and what it calls "the single highest-value
+    signal" - clean out of the window.
+
+    So lines are taken by TIER, newest first within each:
+
+      1. every unclean-exit / failures= / reaped line,
+      2. the last SESSION START (anchors when this run began),
+      3. the last SESSION END (the previous run's peak memory - a baseline to
+         compare the crash against),
+      4. anything else, only if budget is left.
+
+    Verified against generated samples before shipping: on a 120-line log of
+    routine start/stop pairs with one unclean exit at the very end, a tail
+    would have shown twelve clean sessions and missed the crash entirely.
+
+    Survivors are re-sorted chronologically, because an out-of-order log is
+    much harder to reason about than a short one, and the count of what was
+    dropped is reported by the caller.
+    """
+    lines = [ln for ln in (raw or "").splitlines() if ln.strip()]
+    if not lines:
+        return []
+    idx = range(len(lines) - 1, -1, -1)
+    picked: set[int] = set()
+
+    def take(pred, limit=None):
+        for i in idx:
+            if len(picked) >= max_lines:
+                return
+            if i in picked or not pred(lines[i]):
+                continue
+            picked.add(i)
+            if limit is not None:
+                limit -= 1
+                if limit <= 0:
+                    return
+
+    take(lambda ln: any(s in ln for s in _HEALTH_SIGNALS))
+    take(lambda ln: "SESSION START" in ln, limit=1)
+    take(lambda ln: "SESSION END" in ln, limit=1)
+    # Anything that is NOT a routine start/stop - unknown or future line types,
+    # a non-clean SESSION END reason - rather than a plain recency fill.
+    #
+    # A generic "fill the remaining budget with the newest lines" was tried and
+    # measured worse: on the 120-line routine-history sample it spent seven of
+    # nine slots on identical "SESSION END (clean) uptime=1200s" lines and left
+    # the one crash line sitting at the bottom of them. Noise does not become
+    # informative by being recent, and the complete log is on the clipboard
+    # anyway - the email's job is signal.
+    take(lambda ln: not any(r in ln for r in _ROUTINE_HEALTH), limit=4)
+    return [lines[i] for i in sorted(picked)]
+
+
+def _error_lines(app_errors: list, max_errors: int | None = None) -> list[str]:
+    """The errors themselves. ``max_errors`` caps how many are spelled out.
+
+    The cap exists because the errors are the one part of the email whose size
+    the user controls: measured, twelve maxed-out 220-character messages
+    produced a 4,020-character URL against a 1,900 limit, and no amount of
+    trimming HEALTH lines can rescue that. Distinct error TYPES are what
+    identify a bug, so the surplus is reported as a count rather than dropped
+    silently - and the full list is always in the clipboard bundle.
+    """
+    total = len(app_errors)
+    shown = app_errors if max_errors is None else app_errors[:max_errors]
+    out = [f"{total} application error{'' if total == 1 else 's'}:"]
+    for i, err in enumerate(shown, 1):
+        _type = getattr(err, 'error_type', '') or 'Application Error'
+        _course = getattr(err, 'course_name', '') or ''
+        _msg = getattr(err, 'message', '') or str(err)
+        # "#1", NOT "1." - Gmail's compose box is a rich-text editor and
+        # auto-formats a line beginning "1. " into an ordered LIST, which
+        # discards the literal marker and re-indents the block. Observed in a
+        # real report: the pasted bundle came through with the numbers gone
+        # entirely, so with several errors there was no way to tell which
+        # message belonged to which. "#" is not a list marker in any editor.
+        out.append(f"  #{i} [{_type}]{f' {_course}' if _course else ''}")
+        out.append(f"     {_msg}")
+    if total > len(shown):
+        out.append(f"  ... and {total - len(shown)} more "
+                   f"(full list on clipboard)")
+    return out
+
+
+def _environment_lines() -> list[str]:
+    """App + OS dimensions, from the same source the health log uses.
+
+    `core.health_log.environment()` already assembles exactly what a crash
+    report needs to slice by - OS BUILD (not just "Windows 11"), arch, RAM,
+    CPU count, frozen/packaged, and the Rosetta flag that explains an entire
+    class of macOS failure. Re-deriving a thinner version here from
+    `platform` - which is what this did - threw away the build number and the
+    packaging mode, the two dimensions the Store report groups by.
+    """
+    import datetime as _dt
+    try:
+        from core.health_log import environment
+        env = environment() or {}
+    except Exception:                                   # noqa: BLE001
+        env = {}
+    out = []
+    if env:
+        out.append(f"Canvas Downloader {env.get('app', '?')}"
+                   f"{'  frozen' if env.get('frozen') else ''}"
+                   f"{'  packaged' if env.get('packaged') else ''}"
+                   f"{'  ROSETTA' if env.get('rosetta') else ''}")
+        # `build` is only worth its own field when it ADDS something. On Windows
+        # os="Windows 11" and build="10.0.26100" - the build is the dimension
+        # crash reports group by. On macOS `environment()` derives both from
+        # mac_ver(), so os="macOS 14.6" and build="14.6" and printing both gives
+        # "macOS 14.6  build 14.6".
+        _os, _build = str(env.get('os', '?')), str(env.get('build', '?'))
+        _os_line = _os if _build in _os else f"{_os}  build {_build}"
+        out.append(f"{_os_line}  {env.get('arch', '?')}  "
+                   f"{env.get('ram_gb', '?')} GB RAM  {env.get('cpus', '?')} CPU")
+        out.append(f"Python {env.get('python', '?')}")
+    else:
+        import platform
+        out.append(f"{platform.system()} {platform.release()} "
+                   f"({platform.machine()})")
+        out.append(f"Python {platform.python_version()}")
+    out.append(f"Reported {_dt.datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    return out
+
+
+def build_app_error_report(app_errors: list, *, max_health_lines: int = 12,
+                           max_errors: int | None = None) -> str:
+    """The CURATED report, sized for an email body.
+
+    Readable rather than machine-parseable: the user is about to look at this
+    in a compose window, and a wall of JSON reads as something being taken
+    from them. Everything in it is app-generated - versions, platform, error
+    type and message, and health-log lines that carry no course names, file
+    names or paths outside the app's own config dir.
+
+    It no longer ends with the PATH of the health log. A path is worthless the
+    moment the mail leaves the machine; the lines themselves are the point.
+    """
+    lines = _environment_lines()
+    lines.append("")
+    lines.extend(_error_lines(app_errors, max_errors))
+    try:
+        from core.health_log import health_log_path
+        raw = _read_text_tail(health_log_path(), 64 * 1024)
+        total = len([ln for ln in raw.splitlines() if ln.strip()])
+        health = _curated_health_lines(raw, max_health_lines)
+        if health:
+            lines.append("")
+            lines.append("Session health:")
+            lines.extend("  " + ln for ln in health)
+            # Say what was left out. Without this the extract looks like the
+            # WHOLE log, and a reader has no way to tell a quiet history from
+            # a heavily-trimmed one - which changes how much the absence of a
+            # crash line actually means.
+            if total > len(health):
+                lines.append(f"  ... {total - len(health)} earlier line"
+                             f"{'' if total - len(health) == 1 else 's'} omitted "
+                             f"(full log below / on clipboard)")
+    except Exception:                                   # noqa: BLE001
+        pass
+    return "\n".join(lines)
+
+
+def build_app_error_bundle(app_errors: list) -> str:
+    """The FULL report, for the clipboard - which has no length limit.
+
+    Same head as the email so the two are recognisably one document, then
+    everything the email had to leave out: the complete health log, and the
+    tail of every debug log this session actually wrote to.
+
+    The debug log is included only when the user turned debug mode on. Its
+    contents are already redacted at write time (``canvas_debug._sanitize``
+    strips Bearer tokens and signed-URL verifiers), but it does carry course
+    and file names - which is exactly why it is opt-in and why it is never in
+    the email, only in something the user copies deliberately.
+    """
+    # A banner, because this text is usually PASTED under the email body -
+    # which carries its own copy of the environment header. Without a marker
+    # the reader meets the same four lines twice with nothing to say why, and
+    # cannot tell where the summary ends and the full record begins. The header
+    # is still repeated on purpose: the copy button is also used on its own,
+    # where the bundle is the entire message.
+    lines = ["===== CANVAS DOWNLOADER - FULL DIAGNOSTIC REPORT ====="]
+    lines.extend(_environment_lines())
+    lines.append("")
+    lines.extend(_error_lines(app_errors))
+
+    try:
+        from core.health_log import health_log_path
+        raw = _read_text_tail(health_log_path(), 256 * 1024)
+        if raw:
+            lines.append("")
+            lines.append("=== health.log ===")
+            lines.append(raw)
+    except Exception:                                   # noqa: BLE001
+        pass
+
+    try:
+        from core.canvas_debug import session_debug_files
+        # Newest first: with several courses the budget runs out, and the log of
+        # the course that failed LAST is the one worth having.
+        paths = sorted(session_debug_files(),
+                       key=lambda p: _safe_mtime(p), reverse=True)
+        used = sum(len(ln) for ln in lines)
+        for path in paths:
+            if used >= _BUNDLE_MAX_CHARS:
+                lines.append("")
+                lines.append(f"... {len(paths) - paths.index(path)} further debug "
+                             f"log(s) omitted to keep this report a sane size")
+                break
+            tail = _read_text_tail(path, _DEBUG_TAIL_BYTES)
+            if not tail:
+                continue
+            lines.append("")
+            lines.append(f"=== {os.path.basename(os.path.dirname(path))}"
+                         f"/{os.path.basename(path)} (tail) ===")
+            lines.append(tail)
+            used += len(tail)
+    except Exception:                                   # noqa: BLE001
+        pass
+
+    # The narration for the DEFAULT case: debug logging is off, so none of the
+    # above exists. Without this an app error from a normal user arrived with a
+    # message and no story around it. In-memory only, never written to disk -
+    # see core.canvas_debug.breadcrumbs.
+    try:
+        from core.canvas_debug import breadcrumbs, session_debug_files
+        crumbs = breadcrumbs()
+        # Redundant when a real debug log is already attached above; that file
+        # is the same narration, longer and on disk.
+        if crumbs and not session_debug_files():
+            lines.append("")
+            lines.append("=== recent activity (this session, from memory) ===")
+            lines.append(crumbs)
+    except Exception:                                   # noqa: BLE001
+        pass
+
+    # One hard ceiling at the end, so no combination of inputs can exceed it.
+    # The per-file budget above is a fair share, not a guarantee: the health log
+    # alone can be 256 KB. Truncating the TAIL keeps the head - environment and
+    # the errors - which is the part a report is useless without.
+    out = "\n".join(lines)
+    if len(out) > _BUNDLE_MAX_CHARS:
+        out = (out[:_BUNDLE_MAX_CHARS]
+               + f"\n\n... (report truncated at {_BUNDLE_MAX_CHARS // 1024} KB)")
+    return out
+
+
+def render_pp_warning(pp_failure_count: int):
+    """Say what a failed conversion actually cost the user, and what to do.
+
+    The old copy was "N files failed during post-processing
+    (conversion/extraction)" over "Enable error logging in settings to capture
+    details" - three problems at once. "Post-processing" is our word, not a
+    user's. It left the worst possible question open, which is whether the FILE
+    is gone. And its only suggestion was to switch on a log and do the whole
+    thing again, which tells them nothing they can act on today.
+
+    So: name the loss precisely (the converted copy, never the original), then
+    give the two causes that account for almost all of these - Office not
+    available, or the file open somewhere - and one concrete next step.
+    """
+    if pp_failure_count <= 0:
         return
-    col_log, _ = st.columns([0.3, 0.7])
-    with col_log:
-        if st.button("📄 View Full Error Log", key=f"{key_prefix}_view_error_log",
-                     use_container_width=True):
-            error_log_dialog(error_log_paths)
+    from ui.amber_notice import render_amber_notice
+    word = "file" if pp_failure_count == 1 else "files"
+    it = "it" if pp_failure_count == 1 else "them"
+    detail = (
+        f"The original {word} downloaded fine and {'is' if pp_failure_count == 1 else 'are'} "
+        f"in your course folder - only the converted {'copy' if pp_failure_count == 1 else 'copies'} "
+        f"could not be made. This is usually Microsoft Office not being installed "
+        f"or not signed in, or the file being open in another program. Close any "
+        f"open Office windows and run this course again to retry just {it}."
+    )
+    # Only mention the log when it exists. Error logging is OFF by default, so
+    # pointing at download_errors.txt was, for most users, naming a file that
+    # is not there.
+    if st.session_state.get('error_log_enabled', False):
+        detail += " Details are in download_errors.txt in each course folder."
+    render_amber_notice(
+        f"{pp_failure_count} {word} could not be converted.",
+        detail=detail,
+        margin="0",  # the card's flex gap (16px) is the ONE rhythm; a margin here adds to it
+    )
+
 
 # Separator dot for inline heading scopes. Its own element with equal margins,
 # so the spacing either side of it is one number rather than a mix of a literal

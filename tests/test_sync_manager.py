@@ -200,3 +200,79 @@ def test_amend_last_entry_merges_panopto_results(tmp_path):
 def test_amend_on_empty_history_returns_false(tmp_path):
     mgr = SyncHistoryManager(str(tmp_path))
     assert mgr.amend_last_entry(add_files_synced=1) is False
+
+
+# ---------------------------------------------------------------------------
+# analyze_course: the locally-deleted / re-upload branch
+# ---------------------------------------------------------------------------
+#
+# This branch guards its own dict lookup, and the guard was briefly flipped
+# from `and` to `or` (2026-07-30). The whole 1,542-test suite passed with that
+# in place, because nothing covered the most ordinary shape of all: a file the
+# user deleted locally that is ALSO gone from Canvas, with no same-named
+# replacement. It raised KeyError in the middle of sync analysis.
+
+def _cf(file_id: int, name: str):
+    from core.sync_manager import CanvasFileInfo
+    return CanvasFileInfo(id=file_id, filename=name, display_name=name, size=9,
+                          modified_at="2026-07-01T00:00:00Z", url="http://x/f")
+
+
+def _tracked_then_deleted_locally(sm, course_dir):
+    """One manifest row whose local file does not exist."""
+    sm.record_downloaded_file(555001, "Old Lecture Notes.pdf",
+                              str(course_dir / "Old Lecture Notes.pdf"),
+                              "2026-01-01T00:00:00Z", 1234)
+    return sm.load_manifest()
+
+
+def test_locally_deleted_and_gone_from_canvas_does_not_raise(sm, course_dir):
+    """THE regression. Canvas no longer serves the file and offers nothing with
+    the same name, so the re-upload lookup has no entry to find.
+
+    Reachable constantly: the phantom-row pruning later in analyze_course exists
+    specifically to handle canvas-gone + locally-gone rows, so they arrive here
+    as a matter of course.
+    """
+    manifest = _tracked_then_deleted_locally(sm, course_dir)
+    res = sm.analyze_course([_cf(555999, "Unrelated.pdf")], manifest)
+    names = [d.canvas_filename for d in res.locally_deleted_files]
+    assert "Old Lecture Notes.pdf" in names, "the deletion must still be reported"
+    row = res.locally_deleted_files[names.index("Old Lecture Notes.pdf")]
+    assert getattr(row, "_reupload_new_file", None) is None, \
+        "there is no replacement, so nothing may be linked as one"
+
+
+def test_a_genuine_reupload_is_still_linked(sm, course_dir):
+    """The direction that must NOT regress while fixing the above: same name,
+    NEW Canvas id, old id gone. The new file is claimed by the deleted row and
+    withheld from new_files so it is not offered twice."""
+    manifest = _tracked_then_deleted_locally(sm, course_dir)
+    res = sm.analyze_course([_cf(555002, "Old Lecture Notes.pdf")], manifest)
+    assert len(res.locally_deleted_files) == 1
+    linked = getattr(res.locally_deleted_files[0], "_reupload_new_file", None)
+    assert linked is not None and linked.id == 555002
+    assert not res.new_files, "the re-upload must not also appear as a new file"
+
+
+def test_a_file_still_on_canvas_is_a_plain_local_deletion(sm, course_dir):
+    """Same id still served by Canvas: a normal restore candidate, and
+    explicitly NOT a re-upload - `_is_true_reupload` is false here."""
+    manifest = _tracked_then_deleted_locally(sm, course_dir)
+    res = sm.analyze_course([_cf(555001, "Old Lecture Notes.pdf")], manifest)
+    assert len(res.locally_deleted_files) == 1
+    assert getattr(res.locally_deleted_files[0], "_reupload_new_file", None) is None
+
+
+def test_the_reupload_guard_is_a_conjunction():
+    """Structural, because the failure is a one-character edit that no existing
+    test caught. The body immediately indexes `new_name_map[missing_norm]`, so
+    the membership test is that lookup's only guard - and `or` also buys
+    nothing, since the `else` performs the same append the branch ends with."""
+    import re
+    from pathlib import Path
+    src = Path(__file__).resolve().parents[1] / "core" / "sync_manager.py"
+    text = src.read_text(encoding="utf-8")
+    text = re.sub(r"^\s*#.*$", "", text, flags=re.M)      # ignore commentary
+    assert "_is_true_reupload and missing_norm in new_name_map" in text
+    assert "_is_true_reupload or missing_norm in new_name_map" not in text

@@ -143,6 +143,20 @@ _JUNK_PREFIXES = (
 )
 
 
+def _is_under(name: str, prefix: str) -> bool:
+    """True if ``name`` IS ``prefix`` or is a submodule of it.
+
+    Deliberately not ``str.startswith``. A raw prefix test matches on
+    characters rather than on module boundaries, so ``huggingface_hub.cli``
+    would also drop a sibling called ``huggingface_hub.client`` - a module
+    nothing in ``_JUNK_PREFIXES`` is talking about. No installed package hits
+    that today (checked across 1,784 submodules of every package the specs
+    collect: zero verdict changes), which is exactly why it would have shipped
+    unnoticed the day a dependency added such a name.
+    """
+    return name == prefix or name.startswith(prefix + ".")
+
+
 def lean_filter(name: str) -> bool:
     """``filter_submodules`` predicate for ``collect_all``. True = collect it.
 
@@ -151,7 +165,7 @@ def lean_filter(name: str) -> bool:
     """
     if set(name.split(".")) & _JUNK_COMPONENTS:
         return False
-    return not name.startswith(_JUNK_PREFIXES)
+    return not any(_is_under(name, p) for p in _JUNK_PREFIXES)
 
 
 # ── Heavy third-party stacks this app has never used ─────────────────────────

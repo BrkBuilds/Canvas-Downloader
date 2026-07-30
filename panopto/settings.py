@@ -239,8 +239,25 @@ def compose_settings(contract: dict | None) -> dict:
     """Rehydrate a complete settings dict from a per-run *contract*.
 
     Engine config (model/language/device) is pulled from the persisted JSON;
-    the output/layout come from the contract; ``enabled`` is derived from whether
-    any output is selected. A None/empty contract yields a disabled config.
+    the output/layout come from the contract; ``enabled`` is derived from
+    whether any output ends up selected.
+
+    **A None/empty contract does NOT yield a disabled config** - it yields the
+    defaults, and ``PANOPTO_DEFAULTS`` has mp3/txt/srt ON, so ``enabled`` comes
+    back True. (This docstring claimed the opposite until 2026-07-30; the
+    behaviour has always been this.) Keys absent from a partial contract are
+    likewise filled from the defaults, not from False.
+
+    That matters because ``panopto/runner.py`` resolves a target's outputs as
+    ``target.get("settings") or settings``, so a target with a falsy contract
+    inherits whatever this returned for the batch. Nothing reaches that state
+    today - ``sync_ui`` skips any pair with no user-selected recordings, and the
+    only path that yields an empty contract (a Panopto analysis that raised)
+    also yields nothing to select - but it is one guard away, and the failure
+    would be transcription nobody asked for. Every contract this module builds
+    (``make_contract``, ``extract_contract``, ``infer_contract_from_manifest``)
+    carries all five keys, so hardening the gaps to False would change only the
+    None/empty/partial cases. Covered both ways in tests/test_panopto_settings.py.
     """
     s = dict(PANOPTO_DEFAULTS)
     s.update(engine_settings())
