@@ -255,9 +255,22 @@ div.st-key-stg_btn_clear button {
     width: 100% !important;
 }
 
-/* Ensure button text wraps correctly at word boundaries and not mid-word */
+/* Ensure button text wraps correctly at word boundaries and not mid-word.
+   The `>` in `.stButton>button` is what makes the tooltip variants below
+   necessary: passing help= to st.button wraps the button in
+   stTooltipIcon > stTooltipHoverTarget, so it is NO LONGER a direct child of
+   .stButton and every declaration here silently stops applying. The one that
+   shows is `line-height` - the label falls back to the inherited 25.6px from
+   1.2 (19.2px), which makes the SAME button 6.4px taller the moment it gains a
+   tooltip. Measured 2026-08-01 on the Settings dialog's transcription button,
+   which is `disabled=` + `help=` while Panopto is switched off: 33.19px enabled
+   -> 39.59px disabled, reported as "the button grows when I toggle Panopto off".
+   This is app-wide - any button that carries help= only in one state changes
+   height between its states - so it is fixed here rather than per button. */
 .stButton>button p,
-.stButton>button div[data-testid="stMarkdownContainer"]>p {
+.stButton>button div[data-testid="stMarkdownContainer"]>p,
+.stButton [data-testid="stTooltipHoverTarget"]>button p,
+.stButton [data-testid="stTooltipHoverTarget"]>button div[data-testid="stMarkdownContainer"]>p {
     word-break: normal !important;
     overflow-wrap: break-word !important;
     white-space: normal !important;
@@ -2320,4 +2333,284 @@ div[class*="st-key-cd_wiz_"][class*="_download_st_"] button [data-testid="stMark
 div[class*="st-key-cd_wiz_"][class*="_complete_st_"] button [data-testid="stMarkdownContainer"]::before {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/%3E%3Cpolyline points='22 4 12 14.01 9 11.01'/%3E%3C/svg%3E");
             mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/%3E%3Cpolyline points='22 4 12 14.01 9 11.01'/%3E%3C/svg%3E");
+}
+
+/* ==========================================================================
+   THE HELP CARD  (shared/components.py: render_help_card)
+   ==========================================================================
+   This lives HERE, and not in an st.html() block beside the component, for a
+   reason that has nothing to do with tidiness.
+
+   A style-ONLY st.html() is not rendered where you call it. Streamlit routes
+   it to the EVENT root container (streamlit/elements/html.py:
+   _html_only_style_tags -> self._event_dg._enqueue) - one global, INDEX-
+   ADDRESSED list. st.toast writes to that same list (streamlit/__init__.py:
+   toast = _event.toast). And a dialog body is a FRAGMENT, so
+   streamlit/runtime/fragment.py snapshots ctx.cursors at the dialog's CALL
+   SITE and restores it on every fragment rerun - rewinding that list's write
+   index.
+
+   Net effect, measured in the real app on 2026-07-30: the sync page invokes
+   the Saved Groups hub at sync_ui.py:1294 and emitted this stylesheet at
+   sync_ui.py:1297, i.e. the first event-container write after the call site.
+   Deleting a saved pair queues a toast (ui/hub_dialog.py:306); the fragment
+   reran, the toast landed on the rewound index and DESTROYED this stylesheet.
+   The event list went 8 entries down to 7 and cdHelpSlideDown vanished
+   document-wide.
+
+   Losing THIS stylesheet is uniquely visible because it is the only one in the
+   app whose absence makes hidden content APPEAR: without the three display
+   rules below the card renders as a plain block and the raw checkbox becomes
+   visible. The reported symptom was "the Help card expanded on its own while
+   the dialog was open" - the checkbox was never checked; its CSS was deleted.
+
+   global.css is injected once per page through styles.inject_css(), which uses
+   st.markdown, i.e. the MAIN container, which no fragment can rewind. Moving
+   these rules here also costs ZERO new DOM elements (the file is already
+   injected) and removed 2 event-container writes per call site, 16 app-wide.
+   ========================================================================== */
+
+@keyframes cdHelpSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cdHelpTriggerIn {
+    from { opacity: 0; transform: translateX(8px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+.cd-help-cb { display: none !important; }
+
+/* Closed is the DEFAULT, so if the :has() below ever fails to match, the card
+   stays hidden and the page merely keeps one empty flex slot - the safe
+   direction to fail in. */
+.cd-help-card { display: none; }
+
+.cd-help-cb:checked ~ .cd-help-card {
+    display: block;
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 16px 16px 32px 16px;
+    margin-bottom: 15px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    animation: cdHelpSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Take the wrapper's element-container out of the flow while the card is
+   closed, so a closed card costs exactly what it used to cost when it was not
+   rendered at all: nothing. A zero-HEIGHT flex item would still consume one
+   `gap` slot on every page that hosts a card. stElementContainer never nests,
+   so the descendant :has() cannot match an ancestor here. */
+div[data-testid="stElementContainer"]:has(.cd-help-cb:not(:checked)) {
+    display: none !important;
+}
+
+/* Streamlit's markdown container carries margin-bottom: -16px, which would eat
+   the card's own bottom margin. */
+div[data-testid="stElementContainer"]:has(.cd-help-cb) [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
+
+.cd-help-card-title {
+    margin: 0 0 12px 0;
+    font-weight: 700;
+    color: #ffffff;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cd-help-card-body {
+    margin: 0;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.92);
+    line-height: 1.5;
+}
+
+.cd-help-card p:last-child { margin-bottom: 0 !important; }
+
+.cd-help-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.cd-help-close::before {
+    content: "";
+    display: block;
+    width: 16px;
+    height: 16px;
+    background-color: #94a3b8;
+    -webkit-mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGxpbmUgeDE9IjE4IiB5MT0iNiIgeDI9IjYiIHkyPSIxOCI+PC9saW5lPjxsaW5lIHgxPSI2IiB5MT0iNiIgeDI9IjE4IiB5Mj0iMTgiPjwvbGluZT48L3N2Zz4=');
+            mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGxpbmUgeDE9IjE4IiB5MT0iNiIgeDI9IjYiIHkyPSIxOCI+PC9saW5lPjxsaW5lIHgxPSI2IiB5MT0iNiIgeDI9IjE4IiB5Mj0iMTgiPjwvbGluZT48L3N2Zz4=');
+    -webkit-mask-size: contain;
+            mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+            mask-position: center;
+    transition: background-color 0.15s ease;
+}
+
+.cd-help-close:hover::before { background-color: #f8fafc; }
+
+/* --- The trigger --------------------------------------------------------
+   Keyed on the SUFFIX every help button shares, because render_help_card
+   builds its key as f"{key_prefix}_explainer_help_btn" and the prefix differs
+   per call site. Streamlit lowercases key strings when it builds the DOM
+   class, and every prefix in use is already lowercase. */
+div[class*="st-key-"][class*="_explainer_help_btn"] {
+    margin-bottom: 0px !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    animation: cdHelpTriggerIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* mode="auto" - the trigger sits top-right of its row. Selected off a modifier
+   class on the row rather than a Python-side f-string, so this whole
+   stylesheet can stay static. No call site in the app uses "auto" today, so a
+   :has() failure degrades to the flex-start default above. */
+div[class*="st-key-"][class*="_explainer_help_btn"]:has(.cd-help-trigger-row--end) {
+    margin-bottom: 25px !important;
+    justify-content: flex-end !important;
+}
+
+div[class*="st-key-"][class*="_explainer_help_btn"] [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
+
+/* Flex, not the default block: an inline-flex label inside a block parent sits
+   on a text baseline, and the line box's descender space made the trigger's
+   element-container 27.4px tall against the st.button's 24px. Measured - it
+   changes nothing on the sync header, where the H2 is taller, but Today's help
+   row is sized to the trigger itself. */
+.cd-help-trigger-row {
+    display: flex;
+    align-items: center;
+}
+
+/* Metrics copied from the st.button this replaced so every header row it sits
+   in keeps its measured height and baseline. */
+.cd-help-trigger {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    min-height: 24px;
+    height: 24px;
+    color: #a8b4c6;
+    font-weight: 500;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: color 0.2s ease;
+}
+
+.cd-help-trigger:hover { color: #f8fafc; }
+
+.cd-help-trigger::before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-right: 6px;
+    flex-shrink: 0;
+    background-color: #a8b4c6;
+    -webkit-mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCI+PC9jaXJjbGU+PHBhdGggZD0iTTkuMDkgOWEzIDMgMCAwIDEgNS44MyAxYzAgMi0zIDMtMyAzIj48L3BhdGg+PGxpbmUgeDE9IjEyIiB5MT0iMTciIHgyPSIxMi4wMSIgeTI9IjE3Ij48L2xpbmU+PC9zdmc+');
+            mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImJsYWNrIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCI+PC9jaXJjbGU+PHBhdGggZD0iTTkuMDkgOWEzIDMgMCAwIDEgNS44MyAxYzAgMi0zIDMtMyAzIj48L3BhdGg+PGxpbmUgeDE9IjEyIiB5MT0iMTciIHgyPSIxMi4wMSIgeTI9IjE3Ij48L2xpbmU+PC9zdmc+');
+    -webkit-mask-size: contain;
+            mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+            mask-position: center;
+    transition: background-color 0.2s ease;
+}
+
+.cd-help-trigger:hover::before { background-color: #f8fafc; }
+
+/* ── Panopto acceptable-use reminder (download settings, Section 4) ──────────
+   Operational copy, never gated behind Settings -> Show help text: it states
+   what the app does and does not check, which is a fact about the software
+   rather than tuition about the UI.
+
+   Lives here rather than as an inline style injection because the note sits
+   INSIDE a bordered st.container, where a style block occupies a real flex slot
+   and silently inflates the card's spacing (CLAUDE.md, ghost-box-inside-
+   container). The above-the-line space is padding on a border-bottom-style
+   rule, not a margin, so it cannot collapse to zero as a first child. */
+.cd-pan-usage-note {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: #8b949e;
+}
+
+.cd-pan-usage-note a {
+    color: #38bdf8;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.cd-pan-usage-note a:hover { text-decoration: underline; }
+
+/* The note is the card's LAST child, and Streamlit puts margin-bottom: -16px on
+   every stMarkdownContainer - which lands on top of the card's own 15px
+   padding-bottom and cancels it outright. Measured 2026-07-30: text bottom to
+   card bottom was -0.2px, i.e. the text sat flush on the card's edge while the
+   same card kept 16px above the separator. This is the "-16px markdown margin
+   eats card padding" trap, and it only bites when the last child happens to be
+   markdown - which is why nothing else in this card shows it. Cancelling the
+   negative margin lets the declared padding land. */
+div[class*="st-key-card_panopto"] [data-testid="stMarkdownContainer"]:has(> .cd-pan-usage-note) {
+    margin-bottom: 0 !important;
+}
+
+/* The "Add Course" row's slot wrapper (sync_ui._sync_pairs_section).
+   It exists only so this slot presents the same FIVE children as the add/edit
+   form that replaces it - see shared/components.py: pad_slot_children. Four of
+   those children are zero-height st.empty()s, but Streamlit's default ~1rem
+   flex gap is NOT free: without gap 0 the four pads would add four gaps of
+   dead space under the row. Padding is zeroed too so the wrapper is a pure
+   grouping node and the row keeps the exact geometry it had before it existed
+   (measured: Add Course button x=352 y=391 w=348 h=48, identical). */
+div[class*="st-key-sync_add_row_slot"] {
+    gap: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* ── Step tracker: restore the top inset on the COMPLETION screens ───────────
+   Measured 2026-07-31. The tracker's inset from the page top is NOT padding -
+   stMainBlockContainer is padding-top: 0 on every screen ("tracker sits flush
+   at the top edge"). What actually creates it is accidental: each in-flow
+   `st.html(<style>)` host before the tracker eats one 16px flex gap, so step 1
+   gets 32px from its two style injections. The completion screens inject none
+   (their four leading zero-height children are components.html iframes, which
+   the rules above pull OUT of flow), so the tracker sat at 0 and the row was
+   jammed against the window edge - visibly inconsistent with every other screen.
+
+   Fixed here rather than by collapsing style hosts app-wide: CLAUDE.md records
+   that every screen is hand-tuned WITH those gap slots present, so collapsing
+   them is a deliberate re-tune of the whole app, not a one-line CSS change.
+   Selected off the tracker's own widget key, whose active step is 'complete'
+   only on the two completion screens (download and sync alike). Verified in the
+   running app: 0px -> 32px, matching step 1 exactly. */
+div[class*="st-key-cd_wizard_"]:has([class*="_complete_st_active"]) {
+    margin-top: 32px !important;
 }

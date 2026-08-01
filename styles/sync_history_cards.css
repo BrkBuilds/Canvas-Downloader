@@ -222,47 +222,87 @@ div[class*="st-key-fileactlist_synchist_s_"] {
  * A multi-course run shows a clean "N courses" title with every
  * course as a wrapping pill on the middle row, so the header height
  * is no longer fixed. Same "fake expander" shape as Today's cards:
- *   - shist_btn_     : invisible full-width button. It is BOTH the
- *                      click target AND the element that gives the
- *                      card its height, and it carries the header's
+ *   - shist_btn_     : the invisible full-width button. It is the
+ *                      click target and carries the header's
  *                      background + the card's only hover state.
- *   - .shist-runhead : the rich header, painted on top as an
- *                      absolute, pointer-events:none overlay, so
- *                      clicks anywhere (pills included) reach the
- *                      button and the WHOLE card is clickable.
- * Why the button, not the header, sets the height: Streamlit 1.51
- * will not grow a container from an auto-height flow child (a card
- * stayed 92px around a 106px header, clipping its last line). Only
- * a flow child with an EXPLICIT pixel height sizes the card - and
- * the header's height depends on how many rows the pills wrap onto,
- * which CSS cannot know. So sync_ui._inject_shist_height_bridge()
- * measures each header and copies its height onto the button.
+ *   - .shist-runhead : the rich header, painted on top of it with
+ *                      pointer-events:none, so clicks anywhere
+ *                      (pills included) reach the button and the
+ *                      WHOLE card is clickable.
+ *
+ * The two share ONE grid cell, and the HEADER - in flow, at its own
+ * natural height - is what sizes the row. There is no measurement
+ * and no JavaScript, so there is no state in which the card and its
+ * header can disagree about how tall the card is.
+ *
+ * This replaced an absolute overlay whose height was measured in JS
+ * and copied onto the button (sync_ui._inject_shist_height_bridge,
+ * deleted 2026-07-31). That bridge failed silently and permanently
+ * whenever React replaced a button node without remounting the
+ * components.html iframe - measured: switching the By-Course filter
+ * from a single-course course to a multi-course one left a card
+ * 62px tall around its 106px header, so the course pills were cut
+ * in half and the "Synced N files" line vanished entirely. See the
+ * note in sync_ui.py for why the overlay was built in the first
+ * place (short version: it was working around Streamlit's -16px
+ * markdown margin, cancelled below).
+ *
  * Today's cards are single-course, keep their fixed 52/60px bar and
  * their own .shist-card overlay, so every rule here either excludes
  * shist_run_today_ or keys off .shist-runhead, which Today never
  * renders. */
 div[class*="st-key-shist_run_"]:not([class*="st-key-shist_run_today_"]) {
     gap: 0 !important;
+    display: grid !important;
+    /* minmax(0, 1fr) rather than 100%: it is exactly the container width AND it
+       lets the body's long filenames shrink instead of blowing the track out. */
+    grid-template-columns: minmax(0, 1fr) !important;
 }
-/* The rich header: an absolute, pointer-events:none overlay painted on top of
-   the invisible button, so clicks anywhere on it reach that button and the
-   whole card is clickable. Its height is its content (it grows with the pills);
-   _inject_shist_height_bridge() copies that height onto the button below, which
-   is what actually gives the card its height. NOTE: no fixed height here (the
-   Today-only .shist-card rule above pins 60px - this one must not). */
-div[class*="st-key-shist_run_"] [data-testid="stElementContainer"]:has(.shist-runhead) {
-    position: absolute !important;
-    top: 0 !important; left: 0 !important; right: 0 !important;
+/* Header and button both pinned to row 1 = they stack. The body has no explicit
+   placement, so grid auto-flow puts it in row 2, under both of them. */
+div[class*="st-key-shist_run_"]:not([class*="st-key-shist_run_today_"]) > [data-testid="stElementContainer"]:has(.shist-runhead),
+div[class*="st-key-shist_run_"]:not([class*="st-key-shist_run_today_"]) > [data-testid="stElementContainer"][class*="st-key-shist_btn_"] {
+    grid-row: 1 !important;
+    grid-column: 1 !important;
+    /* Streamlit sets align-items: start on stVerticalBlock, so without this the
+       button keeps its own 60px height inside a 106px row and the header bar's
+       background covers only the top half of the card. */
+    align-self: stretch !important;
+}
+div[class*="st-key-shist_run_"]:not([class*="st-key-shist_run_today_"]) > [data-testid="stElementContainer"]:has(.shist-runhead) {
+    /* relative, NOT static: the button's element-container is positioned
+       (Streamlit's own CSS), and a positioned box paints above a static sibling
+       whatever the DOM order - so a static header would be buried under the
+       button's opaque background. z-index only applies to a positioned box. */
+    position: relative !important;
     z-index: 3 !important;
     pointer-events: none !important;
     margin: 0 !important;
 }
-/* The click target / height driver. It keeps the header's background + the only
-   hover state on the card (the overlay above it is fully transparent), and the
-   bridge overrides its height inline with !important. min-height 60px keeps the
-   familiar single-course bar height before the bridge runs. */
+div[class*="st-key-shist_run_"]:not([class*="st-key-shist_run_today_"]) > [data-testid="stElementContainer"][class*="st-key-shist_btn_"] {
+    height: auto !important;
+}
+/* THE 16 PIXELS THE WHOLE JS BRIDGE EXISTED FOR. Streamlit puts
+   margin-bottom: -16px on every stMarkdownContainer, so the header's
+   element-container measures 16px SHORTER than the header inside it - and it is
+   the container, not the content, that sizes the grid row. Measured 2026-07-31:
+   header 105.675px, its container 89.675px, card 91.675px. That is exactly the
+   "card stayed 92px around a 106px header" that the absolute-overlay design was
+   built to explain, and it was never a container-collapse quirk at all. Same
+   trap as the completion cards' fat bottom padding. */
+div[class*="st-key-shist_run_"] [data-testid="stMarkdownContainer"]:has(> .shist-runhead) {
+    margin-bottom: 0 !important;
+}
+/* The click target. height:100% must be restated on EVERY wrapper between the
+   stretched element-container and the <button>, or the button collapses to its
+   min-height and only the top of the card is clickable/lit on hover.
+   min-height 60px is the floor for a header that somehow renders empty; a real
+   header can never go under it (.shist-runhead sets the same min-height). */
+div[class*="st-key-shist_run_"]:not([class*="st-key-shist_run_today_"]) div[class*="st-key-shist_btn_"] [data-testid="stButton"] {
+    height: 100% !important;
+}
 div[class*="st-key-shist_run_"]:not([class*="st-key-shist_run_today_"]) div[class*="st-key-shist_btn_"] button {
-    height: 60px !important; min-height: 60px !important; width: 100% !important;
+    height: 100% !important; min-height: 60px !important; width: 100% !important;
 }
 /* The header sits ON the button, so it must not paint its own background - the
    button's background (and its hover) shows through and lights the whole card. */

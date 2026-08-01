@@ -36,6 +36,9 @@ from core.state_registry import (
     PANOPTO_OUTPUT_KEYS,
 )
 from shared.components import render_help_card, HELP_ICONS, SVG_SAVE_COLORFUL
+from shared.legal import (
+    DISCLAIMER_URL, clear_panopto_skip, require_panopto_notice,
+)
 
 
 def _resolve_path(path):
@@ -439,17 +442,17 @@ def render_download_settings(fetch_courses_fn):
         "<div style='padding: 10px 14px 14px 14px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);'>"
         "<p style='font-size: 0.85rem; color: rgba(255,255,255,0.65); margin: 0 0 10px 0;'>These run after downloading finishes. Each only touches the file types it handles - all others are left unchanged. <br><b>Note: All conversions replace the original file with the optimized file</b> - e.g., a PowerPoint file, optimized with 'PPTX -> PDF', will be replaced by the PDF, inheriting the exact name and content.<br>Click any item to read more.</p>"
         f"<details style='{_row}'><summary style='{_b3}'>Unpack Archives</summary>"
-        f"<div style='{_ans3}'>Extracts ZIP files after downloading, so the contents are immediately accessible. Most AI tools cannot read ZIP files directly.<br><b>Note:</b> ALL files within the archive will ALSO be AI optimized according to your configuration! ZIP unpacking runs as the first converter, so any other AI optimizations toggled on will apply to the files that may be inside your archive as well. <br> - Example: You have ZIP extraction and PowerPoint to PDF toggled on, and your teacher's ZIP archive contains a PPTX file. Canvas Downloader first extracts the .zip into a regular folder, and then the PPTX file gets converted into a PDF. </div></details>"
+        f"<div style='{_ans3}'>Extracts ZIP files after downloading, so the contents are immediately accessible. Most AI tools cannot read ZIP files directly.<br><b>Note:</b> nothing <i>inside</i> an archive is converted. The zip is unpacked and its contents are left exactly as your teacher packed them - so a code project comes out as a working project. <br> - Example: You have ZIP extraction and PowerPoint to PDF toggled on, and your teacher's ZIP archive contains a PPTX file. The .zip is extracted into a regular folder, and the PPTX inside it stays a PPTX. <br>This is deliberate: most conversions <b>delete the original</b>, and one real lecture archive unpacked 21,824 files - rewriting them would have renamed 11,818 and broken 9,730 by pushing them past Windows' path-length limit. Sync follows the identical rule.</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>PowerPoint to PDF</summary>"
         f"<div style='{_ans3}'>Converts PowerPoint files (all types) to PDF. Most AI tools handle PDF better than PowerPoint and have a smaller file size. <br>Requires the Microsoft PowerPoint desktop app (Windows or Mac).</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Legacy Word Docs to PDF</summary>"
         f"<div style='{_ans3}'>Converts old Word document formats (.doc, .rtf, .odt) to PDF. Modern .docx files are not affected. <br>Requires the Microsoft Word desktop app (Windows or Mac).</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Excel to PDF &amp; AI Data</summary>"
-        f"<div style='{_ans3}'>Converts Excel spreadsheets into two files: a PDF (preserves layout, charts, and formatting) and a structured plain text 'data file' optimized for AI. They inherit the name of the original spreadsheet, and the data file is suffixed with ' - Data'. <br>The data file includes a cell coordinate grid (A1, B2...) that matches the PDF, formula annotations showing the math behind calculated cells, and supports merged cell values and formulas. It is tested, and your AI loves the PDF & Data file combination. ;)<br> <b>Note:</b> The original spreadsheet is replaced by the PDF. If you want to download it, run a new download without this AI Optimization toggled.<br><b>Note:</b> The AI data file is generated only for modern Excel formats (.xlsx, .xlsm). Legacy .xls files are converted to PDF only. <br>Requires Microsoft Excel.</div></details>"
+        f"<div style='{_ans3}'>Converts Excel spreadsheets into two files: a PDF (preserves layout, charts, and formatting) and a structured plain text 'data file' optimized for AI. They inherit the name of the original spreadsheet, and the data file is suffixed with '_Data' - e.g. <b>Budget.xlsx</b> becomes <b>Budget.pdf</b> + <b>Budget_Data.txt</b>. <br>The data file includes a cell coordinate grid (A1, B2...) that matches the PDF, formula annotations showing the math behind calculated cells, and supports merged cell values and formulas. It is tested, and your AI loves the PDF & Data file combination. ;)<br> <b>Note:</b> The original spreadsheet is replaced by the PDF. If you want to download it, run a new download without this AI Optimization toggled.<br><b>Note:</b> The AI data file is generated only for modern Excel formats (.xlsx, .xlsm). Legacy .xls files are converted to PDF only. <br>Requires Microsoft Excel.</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Canvas Pages to Plain Text</summary>"
         f"<div style='{_ans3}'>Converts Canvas web pages downloaded via Card 2 (Canvas Content) into clean plain text files, stripping all web formatting. Makes them easy to paste into or upload to AI tools.</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Code &amp; Data to .txt</summary>"
-        f"<div style='{_ans3}'>Adds a .txt extension to programming files so you can upload them to AI tools that only accept plain text. The file content is completely unchanged - only the filename gets .txt added, e.g., <b>index.js.txt</b>.<br>This is an effective workaround for the common limitation of many AI tools not accepting certain code files.</div></details>"
+        f"<div style='{_ans3}'>Turns programming and data files into .txt so you can upload them to AI tools that only accept plain text. The dot in the extension becomes an underscore - <b>index.js</b> becomes <b>index_js.txt</b> - which keeps the original type visible in the name and guarantees it can't collide with a .txt that was already sitting there. A short header naming the original file is added at the top; the code itself is unchanged.<br>Covers 50+ formats (.py, .js, .sql, .json, .csv, .yaml and more). <b>Note:</b> the original file is replaced.</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Gather Web Links</summary>"
         f"<div style='{_ans3}'>Collects all website shortcut files across your course folder and combines them into a single text file per course. Useful for keeping track of every external link your teacher added. <br>Cleans up your course folder, so no .url or .webloc files appear, preventing NotebookLM from throwing an error, as NotebookLM will happily accept a list of links.</div></details>"
         f"<details style='{_row}'><summary style='{_b3}'>Video to Audio</summary>"
@@ -570,6 +573,12 @@ def render_download_settings(fetch_courses_fn):
         "</details>"
     )
 
+    # Both header dialogs are invoked at the very END of this function - see the
+    # comment at that call site. Flags, not direct calls, because a dialog body
+    # is a fragment whose rerun rewinds the EVENT container to its CALL SITE.
+    _open_save_config = False
+    _open_presets_hub = False
+
     with _hdr_left:
         # Title + Help Tag in a Snug Flex Row
         st.html("""
@@ -642,10 +651,10 @@ def render_download_settings(fetch_courses_fn):
         _pb1, _pb2 = st.columns([3, 5], gap="small")
         with _pb1:
             if st.button("Save Preset", key="btn_save_config", use_container_width=True):
-                _save_config_dialog()
+                _open_save_config = True
         with _pb2:
             if st.button("Presets", key="btn_presets_hub", use_container_width=True):
-                _presets_hub_dialog()
+                _open_presets_hub = True
 
     # Help Card Expansion (renders below the header row if open)
     render_help_card(
@@ -1710,7 +1719,12 @@ def render_download_settings(fetch_courses_fn):
                 ('convert_word',  'Legacy Word Docs ⭢ PDF',          'Convert unsupported older formats (.doc, .rtf, .odt) to PDF.',                    'icon_conv_word.png', 'Requires the Microsoft Word desktop app'),
                 ('convert_excel', 'Excel ⭢ PDF & AI Data',              'Export each spreadsheet as PDF + structured .txt with all cell data.',                'icon_conv_excel.png', 'Requires Microsoft Excel. AI data file only for .xlsx/.xlsm (not .xls)'),
                 ('convert_html',  'Canvas Pages ⭢ Plain Text',          'Convert Canvas web pages into AI-friendly text.',          'icon_conv_html.png', None),
-                ('convert_code',  'Code & Data ⭢ .txt',       'Append .txt extension to programming files (e.g. code.js.txt).',          'icon_conv_code.png', None),
+                # The example has to match what converters/code.py actually
+                # writes: the dot before the extension becomes an underscore
+                # (`code.js` -> `code_js.txt`), it is not a suffix append. The
+                # old copy promised `code.js.txt`, which is a filename that
+                # never exists - a user searching for it finds nothing.
+                ('convert_code',  'Code & Data ⭢ .txt',       'Rewrite code and data files as readable .txt (e.g. code_js.txt).',          'icon_conv_code.png', None),
                 ('convert_urls',  'Gather Web Links in .txt',        'Compile all internet shortcuts into one structured .txt file.',        'icon_conv_urls.png', None),
                 ('convert_video', 'Video ⭢ Audio',            'Extract .mp3 audio from video files.',          'icon_conv_video.png', None),
             ]
@@ -1945,6 +1959,16 @@ def render_download_settings(fetch_courses_fn):
                 _pan_active = sum(1 for k in selectable if st.session_state.get(k, False))
                 has_active = _pan_active > 0
                 _is_exp = st.session_state.get('card_panopto_expanded', False)
+
+                # NO acceptable-use prompt here, deliberately (removed
+                # 2026-07-31). Ticking an output is configuration, not intent to
+                # download - the same misjudgement the notice would make if it
+                # fired when a course is added to the daily-sync list. It also
+                # produced a second prompt for anyone who ticked a box and then
+                # pressed Start. The run-start guards are the only triggers, and
+                # they cover every path a recording can actually be fetched
+                # through; the permanent note at the bottom of this card carries
+                # the information while the user configures.
 
                 # Header ON/OFF tag (purple), mirroring Card 2's behaviour.
                 if _pan_active == 0:
@@ -2445,6 +2469,24 @@ def render_download_settings(fetch_courses_fn):
                                   on_click=_set_pan_layout, args=("separate",), use_container_width=True,
                                   disabled=_pan_layout_disabled, help=_pan_layout_help)
 
+                # ── Permanent acceptable-use reminder ──
+                # NOT gated behind help_text_enabled(): this is operational copy
+                # (it states what the app does and does not check), not tuition
+                # about the UI, so "Show help text" must never hide it. Styling
+                # lives in global.css because a style injection INSIDE a bordered
+                # container occupies a real flex slot and would inflate the
+                # card's spacing (see CLAUDE.md, ghost-box-inside-container).
+                st.markdown(
+                    '<div class="cd-pan-usage-note">'
+                    'Recordings are saved for your personal study. You are '
+                    'responsible for following your institution&#39;s rules, and '
+                    'for not sharing or republishing them. '
+                    f'<a href="{esc(DISCLAIMER_URL)}" target="_blank" '
+                    'rel="noopener noreferrer">Details</a>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+
         _render_card_panopto()
 
         # Separator above Output Folder section
@@ -2791,19 +2833,44 @@ div.st-key-review_browse_folder button:hover {
                     reset_download_cancel()
                     reset_sync_cancel()
 
-                    if st.session_state['current_mode'] == 'sync':
-                        # Sync mode - go to Step 4 (Analysis)
-                        st.session_state['download_status'] = 'analyzing'
-                        st.session_state['step'] = 4
+                    # Acceptable-use notice, ACTIVE trigger. Read from the
+                    # persistent_* keys just written above, which ARE the run
+                    # contract - so this asks the same question the engine will.
+                    #
+                    # No early return: the rest of Step 2 must still render, or
+                    # its element indices shift under the modal and Streamlit
+                    # reconciles the page behind it with its neighbours'
+                    # stylesheets. Skipping the status change is enough to hold
+                    # the run - nothing downstream starts without it.
+                    _pan_wanted = any(
+                        st.session_state.get(f'persistent_{_pk}', False)
+                        for _pk in PANOPTO_OUTPUT_KEYS
+                    )
+                    # Resume payload: a declined notice must still start the run
+                    # the user asked for, minus recordings. Both branches are
+                    # spelled out because the transition differs by mode.
+                    _resume = (
+                        {'download_status': 'analyzing', 'step': 4}
+                        if st.session_state['current_mode'] == 'sync'
+                        else {'download_status': 'scanning', 'step': 3}
+                    )
+                    if _pan_wanted and not require_panopto_notice(resume=_resume):
+                        pass
                     else:
-                        # Download mode - go to Step 3 (Progress)
-                        st.session_state['download_status'] = 'scanning'
-                        st.session_state['step'] = 3
+                        clear_panopto_skip()
+                        if st.session_state['current_mode'] == 'sync':
+                            # Sync mode - go to Step 4 (Analysis)
+                            st.session_state['download_status'] = 'analyzing'
+                            st.session_state['step'] = 4
+                        else:
+                            # Download mode - go to Step 3 (Progress)
+                            st.session_state['download_status'] = 'scanning'
+                            st.session_state['step'] = 3
 
-                    # Brief pause to ensure state is saved before rerun
-                    time.sleep(0.1)
-                    step2_container.empty() # Clear EVERYTHING in Step 2
-                    st.rerun()
+                        # Brief pause to ensure state is saved before rerun
+                        time.sleep(0.1)
+                        step2_container.empty() # Clear EVERYTHING in Step 2
+                        st.rerun()
                 except Exception as e:
                     from ui.amber_notice import render_error_notice
                     render_error_notice(f"Error initializing: {e}")
@@ -2812,4 +2879,30 @@ div.st-key-review_browse_folder button:hover {
             if st.button('Go back', use_container_width=True, key='action_dl_back'):
                 _dl_settings_go_back()
                 st.rerun()
+
+    # --- The two header dialogs - invoked LAST, and that is load-bearing.
+    # A dialog body is a FRAGMENT, and streamlit/runtime/fragment.py snapshots
+    # ctx.cursors at the CALL SITE and restores it on every fragment rerun,
+    # rewinding the EVENT root container's write index. That container is one
+    # global, index-addressed list holding BOTH st.toast and every style-only
+    # st.html(). So a fragment rerun that emits one more event element than the
+    # run that opened the dialog silently OVERWRITES whatever the main script
+    # wrote to that container after the call site.
+    #
+    # Invoked from their buttons in the header (~line 650), the writes at risk
+    # were the help card's stylesheet three lines below plus the Card 2 / Card 4
+    # stylesheets and the FDA nudge - and ui/presets.py toasts on apply and on
+    # delete. This is the same defect that made the sync page's help card unfold
+    # itself behind the open hub (see sync_ui.py's matching comment).
+    #
+    # Rendering last costs nothing - a dialog is a portal, so its call-site
+    # position does not affect where it appears. The only direct exits below the
+    # old site (st.stop at 2737, st.rerun at 2811/2819) are inside
+    # `if st.button(...)` handlers for Start Download / Go back, which cannot
+    # fire on the same frame as a Save Preset / Presets click.
+    if _open_save_config:
+        _save_config_dialog()
+    elif _open_presets_hub:
+        # elif, not a second if: Streamlit allows only ONE dialog open per run.
+        _presets_hub_dialog()
 

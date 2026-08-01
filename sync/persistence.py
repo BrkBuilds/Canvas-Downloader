@@ -23,6 +23,27 @@ _BAD_ROOTS_WIN = {
 _BAD_ROOTS_NIX = {'/etc', '/usr', '/bin', '/sbin', '/var', '/sys', '/proc'}
 
 
+def _strip_label(pair: dict) -> dict:
+    """Drop a course's user-chosen NAME before it enters the sync-pairs file.
+
+    A label belongs to the ``(course_id, local_folder)`` link and is resolved at
+    render from Saved Groups & Pairs (``core.pair_labels``) - deliberately never
+    copied, because a copy is a thing that can disagree with its source.
+
+    The hub hands its OWN pair dicts straight to the sync list ("Add to Sync
+    List" for a group, and rescue mode), and a group member's dict carries
+    ``label``. Without this the name would be written into
+    ``canvas_sync_pairs.json`` as a second, silently-stale copy - inert today
+    because nothing reads it, and a trap for the first person who does. Stripped
+    HERE rather than at the three call sites so a future one cannot forget.
+
+    ``today_store._norm_pair`` performs the same duty for the daily list.
+    """
+    if not isinstance(pair, dict) or 'label' not in pair:
+        return pair
+    return {k: v for k, v in pair.items() if k != 'label'}
+
+
 def _validate_pair_folder(folder: str) -> bool:
     """Return False if folder is an obviously dangerous system root."""
     try:
@@ -55,6 +76,7 @@ def load_persistent_pairs() -> None:
 
 def add_pair(new_pair: dict) -> None:
     """Add a single sync pair (deduplicates by course_id + local_folder)."""
+    new_pair = _strip_label(new_pair)
     target_folder = new_pair.get('local_folder', '')
     if not _validate_pair_folder(target_folder):
         st.toast(f"Folder rejected - system folders cannot be used as sync folders: {target_folder}", icon="⚠️")
@@ -74,6 +96,7 @@ def add_pair(new_pair: dict) -> None:
 def add_pairs_batch(new_pairs_list: list[dict]) -> None:
     """Add multiple sync pairs in a single atomic operation."""
     rejected = []
+    new_pairs_list = [_strip_label(p) for p in new_pairs_list]
     def modifier(fresh_pairs):
         for new_pair in new_pairs_list:
             target_cid = new_pair.get('course_id')
@@ -95,6 +118,7 @@ def add_pairs_batch(new_pairs_list: list[dict]) -> None:
 
 def update_pair_by_signature(old_signature: dict, new_pair_data: dict) -> None:
     """Replace a specific pair identified by course_id + local_folder."""
+    new_pair_data = _strip_label(new_pair_data)
     def modifier(fresh_pairs):
         for idx, p in enumerate(fresh_pairs):
             if (p.get('course_id') == old_signature.get('course_id') and
@@ -106,7 +130,30 @@ def update_pair_by_signature(old_signature: dict, new_pair_data: dict) -> None:
 
 
 def update_last_synced_batch(updates_list: list) -> None:
-    """Batch-update last_synced timestamps: [(course_id, folder, ts), ...]."""
+    """Batch-update last_synced timestamps: [(course_id, folder, ts), ...].
+
+    The ONLY mutator here that is called by the sync ENGINE rather than by the
+    Sync page's own CRUD - and that is exactly why it must NOT assign the
+    persisted list over ``st.session_state['sync_pairs']`` the way its four
+    siblings do. For them the session list and the file are the same set by
+    construction, so the assignment is a no-op. The engine also runs for the
+    Today dashboard, whose ``sync_pairs`` is a CURATED SUBSET published by
+    ``core.auto_sync.start_today_sync`` from ``today_dashboard.json`` and never
+    written to ``canvas_sync_pairs.json`` at all.
+
+    So the assignment used to replace the running Today sync's pair list with
+    whatever the Sync page happened to have saved. For a user who only ever used
+    Saved Groups & Pairs that file is ``[]``, and the run's own pair list was
+    wiped the instant it finished - stranding ``render_sync_step4`` on its
+    "No course folders found" notice with no way to reach the completion
+    handler, so the Today notice was never built and ``cleanup_sync_state()``
+    never ran (measured 2026-07-31 in the frozen build: a 203-file Quick Sync
+    downloaded everything successfully and then hung on that screen).
+
+    Stamping the session's own list in place keeps both flows correct: the Sync
+    page sees the same pairs it already had, now timestamped, and Today keeps
+    its subset.
+    """
     def modifier(fresh_pairs):
         for cid, folder, ts in updates_list:
             for p in fresh_pairs:
@@ -114,7 +161,14 @@ def update_last_synced_batch(updates_list: list) -> None:
                     p['last_synced'] = ts
                     break
         return fresh_pairs
-    st.session_state['sync_pairs'] = atomic_update_sync_pairs(modifier)
+
+    atomic_update_sync_pairs(modifier)
+
+    # Same transformation, applied to the session's working list - deliberately
+    # the SAME callable, so the persisted and in-memory stamps can never drift.
+    session_pairs = st.session_state.get('sync_pairs')
+    if isinstance(session_pairs, list):
+        modifier(session_pairs)
 
 
 # ═══════════════════════════════════════════════

@@ -144,7 +144,7 @@ def build_today_sync_notice() -> dict:
     and adding one would double-count.
     """
     from datetime import datetime
-    from shared.helpers import friendly_course_name
+    from core.pair_labels import pair_display_name
 
     courses = []
     files_in_groups = 0
@@ -152,8 +152,11 @@ def build_today_sync_notice() -> dict:
         files = grp.get("files") or []
         if not files:
             continue
+        # synced_groups entries carry course_id + local_folder, so this notice
+        # (and the native notification built from it) names each course the way
+        # the Today card the user is looking at names it.
         courses.append({
-            "name": friendly_course_name(grp.get("course_name", "") or "Course"),
+            "name": pair_display_name(grp),
             "count": len(files),
         })
         files_in_groups += len(files)
@@ -170,10 +173,7 @@ def build_today_sync_notice() -> dict:
     # the user is guaranteed to be looking, and a skip is otherwise invisible -
     # the run just quietly covers fewer courses than the list says it does.
     try:
-        skipped = [
-            friendly_course_name(p.get("course_name", "") or "Course")
-            for p in unreachable_today_pairs()
-        ]
+        skipped = [pair_display_name(p) for p in unreachable_today_pairs()]
     except Exception:
         skipped = []
 
@@ -206,6 +206,23 @@ def start_today_sync(pairs: list[dict] | None = None, is_auto: bool = False) -> 
         return
 
     mark_auto_synced(logical_today())
+
+    # NEVER BLOCK AN UNATTENDED RUN. The daily sync fires by itself the first
+    # time the app is opened each day, so raising the acceptable-use notice here
+    # would throw a modal at a run the user did not start and may not be
+    # watching. Instead the run proceeds files-only and the Today page reports
+    # what it skipped, with a card that opens the notice at a moment the user
+    # chooses. "Quick Sync now" takes the same path deliberately: it is still
+    # not the moment to interrupt someone with a legal notice, and the card is
+    # already on the screen they clicked from.
+    from shared.legal import (
+        SKIP_RUN_KEY, clear_panopto_skip, panopto_feature_available,
+        panopto_notice_acknowledged,
+    )
+    if panopto_feature_available() and panopto_notice_acknowledged():
+        clear_panopto_skip()
+    else:
+        st.session_state[SKIP_RUN_KEY] = True
 
     # A fresh run makes the previous run's success notice stale - drop it now so
     # the dashboard never shows an outdated "N new files" card next to (or after)

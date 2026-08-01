@@ -22,8 +22,11 @@ import streamlit as st
 from collections import defaultdict
 
 from shared import theme
-from shared.components import SVG_FOLDER_YELLOW, SVG_CLOCK, SVG_SAVE_COLORFUL
+from shared.components import (
+    SVG_FOLDER_YELLOW, SVG_CLOCK, SVG_SAVE_COLORFUL, SVG_COURSE_PILL,
+)
 from core.sync_manager import SyncManager, SavedGroupsManager
+from core.pair_labels import canvas_name_label_index, label_for, pair_display
 from shared.helpers import (
     esc,
     open_folder,
@@ -35,10 +38,12 @@ from shared.helpers import (
     format_relative_date,
     format_time_display,
     help_text_enabled,
+    md_escape,
 )
 
 from core.state_registry import ensure_sync_state, cleanup_sync_state
 from core.cancellation import cancel_sync
+from shared.legal import clear_panopto_skip, require_panopto_notice
 from sync.persistence import (
     load_persistent_pairs as _load_persistent_pairs_impl,
     remove_pairs_by_signature as _remove_pairs_by_signature_impl,
@@ -52,7 +57,7 @@ from sync.completion import (
     show_sync_errors as _show_sync_errors_impl,
 )
 from shared.components import error_log_dialog as _view_error_log_dialog_impl
-from shared.components import render_help_card, HELP_ICONS
+from shared.components import render_help_card, HELP_ICONS, pad_slot_children
 
 logger = logging.getLogger(__name__)
 
@@ -582,12 +587,95 @@ def _inject_hub_global_css():
 
 
 
+def history_course_display_names(entry: dict, name_labels: dict | None = None) -> list[str]:
+    """The course names to SHOW for one sync-history entry, in order.
+
+    Sync History is a lens on runs that already happened, so it resolves names
+    the same way every live surface does - a course the user has named reads
+    with that name here too. This is RETROACTIVE by design and matches the
+    decision already recorded for the Today page's membership filter: rename a
+    course and its past runs are relabelled; delete the saved pair and they go
+    back to the Canvas name. Storing a snapshot instead would leave history
+    stuck on names the user has since abandoned.
+
+    Three sources, best first, because a history entry is not guaranteed to
+    carry the pair identity a label is keyed on:
+
+    1. ``synced_groups`` - written on every run that moved files, and the only
+       source that carries ``(course_id, local_folder)`` outright.
+    2. ``course_sigs`` - the same tuple, recorded explicitly from this version
+       on, so a run that moved nothing is still resolvable.
+    3. ``course_names`` - name strings, all an older entry has. Matched through
+       ``name_labels`` (see ``core.pair_labels.canvas_name_label_index``);
+       without this fallback, entries written before this feature would be the
+       one place in the app still showing the Canvas name, which reads as a bug
+       rather than as a limitation.
+
+    ONE function, called by the filter dropdown, the filter itself AND the card
+    header. Those three used to each apply ``friendly_course_name`` inline; with
+    labels in play, writing the rule three times is how a card would end up
+    showing a name its own dropdown could not select.
+    """
+    if not isinstance(entry, dict):
+        return []
+    if name_labels is None:
+        name_labels = {}
+
+    out = []
+
+    def _add(name):
+        # Deliberately NOT deduped. The count drives the header ("N courses" vs
+        # a single name), and two entries CAN legitimately share a display name -
+        # the same course synced into two folders is two pairs, and nothing stops
+        # a user naming two pairs the same. Dropping the second would report a
+        # 2-course run as a 1-course run. Empties are skipped; that is all.
+        if isinstance(name, str) and name:
+            out.append(name)
+
+    for g in (entry.get('synced_groups') or []):
+        if isinstance(g, dict) and g.get('files'):
+            _add(label_for(g.get('course_id'), g.get('local_folder'))
+                 or friendly_course_name(g.get('course_name') or '') or None)
+    if out:
+        return out
+
+    for sig in (entry.get('course_sigs') or []):
+        try:
+            cid, folder, cname = sig
+        except (TypeError, ValueError):
+            continue
+        _add(label_for(cid, folder) or friendly_course_name(cname or '') or None)
+    if out:
+        return out
+
+    # A corrupt or hand-edited history can hold a bare string here instead of a
+    # list; iterating that would yield one "course" per CHARACTER. The old call
+    # sites each coerced this inline - the rule lives here now, with them.
+    _raw_names = entry.get('course_names') or []
+    if not isinstance(_raw_names, (list, tuple)):
+        _raw_names = [_raw_names]
+    for c in _raw_names:
+        if not c:
+            continue
+        c = str(c)
+        friendly = friendly_course_name(c) or c
+        _add(name_labels.get(c.strip().casefold())
+             or name_labels.get(friendly.strip().casefold())
+             or friendly)
+    return out
+
+
 def _sync_pairs_section(courses, course_names, course_options):
     sync_pairs = st.session_state.get('sync_pairs', [])
     pairs_to_remove = []
     _deferred_save_pair = None   # Will hold pair data if inline Save is clicked
     _deferred_save_group = False # Will be True if "Save as Group" is clicked
     _deferred_ignored = None     # Will hold (course_name, course_id, course_data) if "Ignored Files" is clicked
+    # Set by ui.sync_dialogs.render_pending_folder_ui further down this run, and
+    # read back into the return value below. Cleared HERE, before anything can
+    # set it, so a flag left behind by a run that was cut short (an st.rerun
+    # from a click handler) can never pop the dialog open on a later run.
+    st.session_state.pop('_sync_open_course_dialog', None)
 
     # Pre-compute set of already-saved (course_id, local_folder) tuples for inline Save button
     from shared.helpers import get_config_dir as _get_config_dir
@@ -823,6 +911,11 @@ def _sync_pairs_section(courses, course_names, course_options):
                     # Removed explicit spacer to match list gap via CSS margin-bottom on container
                     continue
 
+                # NOTE: this row is FIVE columns, and render_pending_folder_ui
+                # pads itself to five children because of that - see the comment
+                # on its trailing st.empty(). Adding a sixth column here without
+                # padding the form to match brings back a stale button inside the
+                # edit form.
                 # Use vertical_alignment="center" (Streamlit 1.32+) or rely on CSS above
                 # Adjusted ratios: Card takes space, but buttons need room for text now
                 col_card, col_open, col_edit, col_ignored, col_remove = st.columns([5, 1.5, 1.1, 1.5, 1.2], gap="small", vertical_alignment="center")
@@ -847,8 +940,13 @@ def _sync_pairs_section(courses, course_names, course_options):
                     else:
                         ts_str = 'Never synced'
                     
-                    # Simplified card content
-                    display_name = friendly_course_name(pair['course_name'])
+                    # Simplified card content.
+                    # `pair_label` is the user's own name for this course, taken
+                    # from Saved Groups & Pairs and resolved by (course_id,
+                    # local_folder) - see core.pair_labels. It is '' unless they
+                    # actually chose one, and then this card renders exactly as
+                    # it always has.
+                    pair_label, display_name = pair_display(pair)
                     folder_display = short_path(pair['local_folder'])
 
                     # Pre-compute save state for inline button
@@ -875,15 +973,60 @@ def _sync_pairs_section(courses, course_names, course_options):
                         _card_key = f"sync_pair_card_txsetup_{idx}"
                     else:
                         _card_key = f"sync_pair_card_{idx}"
+                    # The card's THREE children (title / save button / details)
+                    # are invariant across the labelled and unlabelled variants,
+                    # and must stay that way. Both variants render at the same
+                    # index under the same key, and Streamlit hands a block the
+                    # children of whatever occupied its index - a variant that
+                    # emitted fewer would inherit the other's leftovers until the
+                    # script run ended. Only the HTML inside each child changes.
                     with st.container(border=True, key=_card_key):
-                        # Title rendered first, naturally
-                        st.markdown(f"**Course: {display_name}**")
+                        # Title: the user's name for this course when they gave
+                        # one, otherwise the Canvas name exactly as before.
+                        # md_escape, not esc: this st.markdown has
+                        # unsafe_allow_html OFF, so Streamlit already neutralises
+                        # HTML - what it does NOT neutralise is Markdown, and a
+                        # user-typed "Math_2 _stats_" would italicise while
+                        # "**x**" would fight the bold wrapper. (The pill row
+                        # below is the opposite case: raw HTML, so esc there.)
+                        st.markdown(
+                            f"**{md_escape(pair_label)}**" if pair_label
+                            else f"**Course: {display_name}**"
+                        )
                         # Save button rendered after - CSS absolute-positions it to top-right
                         if st.button("\u200b", key=f"save_pair_{idx}", disabled=_is_save_disabled,
                                      help=_save_help):
                             _deferred_save_pair = pair
-                        st.markdown(f"""<div style="font-size:0.85em;color:rgba(255, 255, 255, 0.9);margin-top:-10px;display:flex;align-items:center;">{SVG_FOLDER_YELLOW}{folder_display}</div>  <!-- # audit-ignore: folder_display is a local path -->
-                            <div style="font-size:0.75em;color:rgba(255, 255, 255, 0.8);margin-top:2px;">{SVG_CLOCK}{ts_str}</div>""", unsafe_allow_html=True)
+                        if pair_label:
+                            # Named: course and folder become two chips side by
+                            # side (the same language as Today's daily-sync
+                            # chips), because the title no longer says which
+                            # Canvas course this is and this card is the one
+                            # place that mapping has to be legible.
+                            # No title= tooltip: measured in the running app,
+                            # Streamlit's markdown sanitiser STRIPS `title` from
+                            # a span, so it is a dead attribute (the sync-history
+                            # `.shist-pill` markup carries one too, and it has
+                            # never shown a tooltip either). The course chip is
+                            # therefore held at full width by CSS instead - see
+                            # sync_hub.css - because on this card "(XB)" vs "(LA)"
+                            # IS the identity and truncating it away is the one
+                            # thing this row must never do.
+                            _details_html = (
+                                '<div class="sp-pill-row">'
+                                f'<span class="sp-pill sp-pill-course">{SVG_COURSE_PILL}'  # audit-ignore: static SVG constant
+                                f'<span>{esc(display_name)}</span></span>'
+                                f'<span class="sp-pill sp-pill-folder">{SVG_FOLDER_YELLOW}'  # audit-ignore: static SVG constant
+                                f'<span>{esc(folder_display)}</span></span>'
+                                '</div>'
+                                f'<div style="font-size:0.75em;color:rgba(255, 255, 255, 0.8);margin-top:6px;">{SVG_CLOCK}{ts_str}</div>'
+                            )
+                        else:
+                            _details_html = (
+                                f'<div style="font-size:0.85em;color:rgba(255, 255, 255, 0.9);margin-top:-10px;display:flex;align-items:center;">{SVG_FOLDER_YELLOW}{esc(folder_display)}</div>'
+                                f'<div style="font-size:0.75em;color:rgba(255, 255, 255, 0.8);margin-top:2px;">{SVG_CLOCK}{ts_str}</div>'
+                            )
+                        st.markdown(_details_html, unsafe_allow_html=True)
 
                 # (4) Action buttons with text labels restored
                 with col_open:
@@ -914,8 +1057,11 @@ def _sync_pairs_section(courses, course_names, course_options):
                                  disabled=(ignored_count == 0), use_container_width=True, help=ignored_help):
                         course_data = ignored_by_course.get(pair['course_id'])
                         if course_data:
+                            # Title the dialog the way the card that opened it is
+                            # titled - the user clicked "Ignored Files" on a row
+                            # called X and must land on a dialog about X.
                             _deferred_ignored = (
-                                friendly_course_name(pair['course_name']),
+                                pair_label or display_name,
                                 pair['course_id'], course_data)
 
                 with col_remove:
@@ -928,8 +1074,8 @@ def _sync_pairs_section(courses, course_names, course_options):
                 
                 # Build toast message before modifying the sync_pairs array
                 if len(pairs_to_remove) == 1:
-                    display_name = friendly_course_name(sync_pairs[pairs_to_remove[0]].get('course_name', 'Course'))
-                    st.session_state['pending_toast'] = f"Removed '{display_name}' from Sync List"
+                    _rl, _rc = pair_display(sync_pairs[pairs_to_remove[0]])
+                    st.session_state['pending_toast'] = f"Removed '{_rl or _rc}' from Sync List"
                 else:
                     st.session_state['pending_toast'] = f"Removed {len(pairs_to_remove)} courses from Sync List"
                     
@@ -953,17 +1099,29 @@ def _sync_pairs_section(courses, course_names, course_options):
                     else:
                         _save_group_help = "This exact group of courses is already saved."
 
-                col_add, col_save, _ = st.columns([2.25, 1.5, 6.25], gap="small", vertical_alignment="bottom")
-                with col_add:
-                    if st.button('Add Course', key="btn_add_folder", use_container_width=True):
-                        st.session_state['pending_sync_folder'] = ""
-                        st.session_state['sync_selected_course_id'] = None
-                        st.session_state.pop('editing_pair_idx', None)
-                        st.rerun(scope="app")
+                # Wrapped + padded so this slot presents the same FIVE children
+                # as the add/edit form that replaces it. Without that, cancelling
+                # out of the form left the form's "Cancel" and "Confirm and Add"
+                # buttons sitting under the restored Add Course row for 22ms
+                # (slot 112px instead of 48px) - Streamlit only prunes the
+                # previous run's children when the script run finishes, and the
+                # row's own children overwrite just the first of them.
+                # The wrapper's gap is zeroed in global.css; four zero-height
+                # children would otherwise cost four gaps.
+                with st.container(key="sync_add_row_slot"):
+                    col_add, col_save, _ = st.columns([2.25, 1.5, 6.25], gap="small", vertical_alignment="bottom")
+                    with col_add:
+                        if st.button('Add Course', key="btn_add_folder", use_container_width=True):
+                            st.session_state['pending_sync_folder'] = ""
+                            st.session_state['sync_selected_course_id'] = None
+                            st.session_state.pop('editing_pair_idx', None)
+                            st.rerun(scope="app")
 
-                with col_save:
-                    if st.button("Save as Group", key="btn_save_group_main", disabled=_save_disabled, use_container_width=True, help=_save_group_help):
-                        _deferred_save_group = True
+                    with col_save:
+                        if st.button("Save as Group", key="btn_save_group_main", disabled=_save_disabled, use_container_width=True, help=_save_group_help):
+                            _deferred_save_group = True
+
+                    pad_slot_children(1)   # the columns row is child 1 of 5
 
         else:
             # EMPTY STATE Logic (if not sync_pairs)
@@ -973,13 +1131,19 @@ def _sync_pairs_section(courses, course_names, course_options):
                 # Button styling lives in styles/sync_hub.css (static). An inline
                 # <style> injection inside col_add adds a ghost box above the button,
                 # pushing it down out of alignment with the container's left padding.
-                col_add, _ = st.columns([2.25, 7.75])
-                with col_add:
-                    if st.button('Add Course', key="btn_add_folder_empty", use_container_width=True):
-                        st.session_state['pending_sync_folder'] = ""
-                        st.session_state['sync_selected_course_id'] = None
-                        st.session_state.pop('editing_pair_idx', None)
-                        st.rerun(scope="app")
+                # Same wrap + pad as the non-empty branch above, and it matters
+                # MORE here: on an empty list this row IS the whole slot, so the
+                # form's leftovers had nothing else to hide behind.
+                with st.container(key="sync_add_row_slot"):
+                    col_add, _ = st.columns([2.25, 7.75])
+                    with col_add:
+                        if st.button('Add Course', key="btn_add_folder_empty", use_container_width=True):
+                            st.session_state['pending_sync_folder'] = ""
+                            st.session_state['sync_selected_course_id'] = None
+                            st.session_state.pop('editing_pair_idx', None)
+                            st.rerun(scope="app")
+
+                    pad_slot_children(1)   # the columns row is child 1 of 5
     
             
             # Helper to optionally load icon
@@ -1002,42 +1166,82 @@ def _sync_pairs_section(courses, course_names, course_options):
                 unsafe_allow_html=True
             )
 
-    # --- Deferred dialog invocations (MUST be outside all column/container contexts) ---
-    if _deferred_save_pair is not None:
-        _save_pair_dialog(_deferred_save_pair)
-    if _deferred_save_group:
-        _save_group_dialog(sync_pairs)
-    if _deferred_ignored is not None:
-        _show_course_ignored_files(*_deferred_ignored)
+    # --- Deferred dialog invocations ---
+    # RETURNED, not invoked here. They must be outside all column/container
+    # contexts (that is why they were deferred at all), but "the end of this
+    # helper" is still the MIDDLE of the page: render_sync_step1 calls us at
+    # line ~1340 and then emits the Analyze / Quick Sync stylesheet at ~1423.
+    # A dialog body is a fragment whose rerun rewinds the EVENT container to its
+    # call site, so opening one here silently destroyed that stylesheet - the
+    # two action buttons lost their `height: 3.2em` and `font-size: 1rem` and
+    # the page below them jumped. Reported 2026-07-30 as "the button text gets
+    # smaller and the page shifts when I click Save as Pair".
+    return {
+        'save_pair': _deferred_save_pair,
+        'save_group': _deferred_save_group,
+        'ignored': _deferred_ignored,
+        'course_select': st.session_state.pop('_sync_open_course_dialog', False),
+    }
 
 
 
-def _sync_pairs_want_transcription(sync_pairs) -> bool:
-    """True if any pair's resolved Panopto contract requests Transcript/Subtitles.
+def _resolve_pair_panopto_contract(p) -> dict:
+    """Return the Panopto contract a sync of pair *p* would actually run under.
 
     Per-folder source of truth is the stored ``panopto_contract`` (seeded on the
     first sync); for a not-yet-synced pair it falls back to the current Section 4
     selection (``persistent_pan_*``) that the first sync will seed - mirroring
-    ``sync.analysis`` so the heads-up matches what the run will actually do.
+    ``sync.analysis`` so anything derived from this matches what the run will do.
+
+    ONE resolver, because two callers now ask two different questions of the same
+    contract (does it want transcription, does it want Panopto at all) and a
+    resolution rule written twice is a resolution rule that drifts.
     """
     import json as _json_tx
+    folder = p.get('local_folder')
+    if folder and Path(folder).exists():
+        try:
+            sm = SyncManager(folder, p.get('course_id'), p.get('course_name', ''))
+            raw = sm._load_metadata('panopto_contract')
+            if raw:
+                return _json_tx.loads(raw)
+        except Exception:
+            pass
+    return {
+        'output_mp4': st.session_state.get('persistent_pan_out_mp4', False),
+        'output_mp3': st.session_state.get('persistent_pan_out_mp3', False),
+        'output_txt': st.session_state.get('persistent_pan_out_txt', False),
+        'output_srt': st.session_state.get('persistent_pan_out_srt', False),
+    }
+
+
+def _sync_pairs_want_transcription(sync_pairs) -> bool:
+    """True if any pair's resolved Panopto contract requests Transcript/Subtitles."""
     for p in sync_pairs or []:
-        folder = p.get('local_folder')
-        contract = None
-        if folder and Path(folder).exists():
-            try:
-                sm = SyncManager(folder, p.get('course_id'), p.get('course_name', ''))
-                raw = sm._load_metadata('panopto_contract')
-                if raw:
-                    contract = _json_tx.loads(raw)
-            except Exception:
-                contract = None
-        if contract is None:
-            contract = {
-                'output_txt': st.session_state.get('persistent_pan_out_txt', False),
-                'output_srt': st.session_state.get('persistent_pan_out_srt', False),
-            }
+        contract = _resolve_pair_panopto_contract(p)
         if contract.get('output_txt') or contract.get('output_srt'):
+            return True
+    return False
+
+
+def _sync_pairs_want_panopto(sync_pairs) -> bool:
+    """True if any pair's resolved contract would fetch a Panopto recording.
+
+    Gates the acceptable-use notice on the Quick Sync button. Quick Sync is the
+    one sync path with no Review screen, so it has no later point at which the
+    notice could be raised safely: by the time ``sync.analysis`` knows a
+    recording will be downloaded it is mid-run, with nowhere to land if the user
+    declines. Asking here, before the analysis starts, is the only safe moment.
+
+    This is also the upgrade path that matters. A folder whose contract already
+    enables Panopto was configured under a previous version, so its owner may
+    never have seen the notice at all; without this check their next Quick Sync
+    would fetch recordings having never been asked.
+    """
+    for p in sync_pairs or []:
+        contract = _resolve_pair_panopto_contract(p)
+        if any(contract.get(k) for k in
+               ('output_mp4', 'output_mp3', 'output_txt', 'output_srt')):
             return True
     return False
 
@@ -1241,7 +1445,13 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         </style>
     """)
 
-    col_heading, col_hub = st.columns([0.7, 0.3], vertical_alignment="center")
+    # BOTTOM alignment, not center: the intro line below the title lives inside
+    # col_heading, so the hub button's bottom edge lands flush with the bottom of
+    # the header block - i.e. flush with the top of the sync list container below.
+    # Centering left the button floating a line-height too high once the intro
+    # line was introduced. Works with help text off too (the column is shorter,
+    # the button still sits on its bottom edge).
+    col_heading, col_hub = st.columns([0.7, 0.3], vertical_alignment="bottom")
     with col_heading:
         with st.container(key="sync_title_help_row"):
             _c1, _c2 = st.columns([1, 10])
@@ -1257,6 +1467,26 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                     text_html=_SYNC_HELP_TEXT,
                     mode="button"
                 )
+
+        # What to DO on this page, in one line. No max-width: the measure should
+        # run the full content width, out to where the Saved Groups & Pairs button
+        # sits - a `ch` cap wrapped it to roughly half the page and read as a broken
+        # column. (The longer "what is sync mode" explanation lives in the Help
+        # card, which is where a user who needs it will look.)
+        # It renders INSIDE col_heading so the bottom-aligned hub button beside it
+        # measures against the full header block. Its vertical spacing is set in
+        # sync_hub.css, on the stLayoutWrapper AROUND st-key-sync_intro_line - see
+        # the comment there; neither the keyed block nor the st.html() div itself
+        # can move it.
+        if help_text_enabled():
+            with st.container(key="sync_intro_line"):
+                st.html(
+                    "<div style='color:#cbd5e1;font-size:0.9rem;line-height:1.55;'>"
+                    "Add the courses you want below, then choose whether to review the "
+                    "changes first or just fetch everything."
+                    "</div>"
+                )
+
     open_hub = False
     with col_hub:
         if st.button("Saved Groups & Pairs", key="btn_hub_main",
@@ -1264,22 +1494,9 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             _reset_hub_state()
             open_hub = True
 
-    if open_hub:
-        _saved_groups_hub_dialog(courses, course_names)
-
-    # What to DO on this page, in one line. No max-width: the measure should
-    # run the full content width, out to where the Saved Groups & Pairs button
-    # sits - a `ch` cap wrapped it to roughly half the page and read as a broken
-    # column. (The longer "what is sync mode" explanation lives in the Help
-    # card, which is where a user who needs it will look.)
-    if help_text_enabled():
-        st.html(
-            "<div style='color:#cbd5e1;font-size:0.9rem;line-height:1.55;"
-            "margin-top:-6px;margin-bottom:2px;'>"
-            "Add the courses you want below, then choose whether to review the "
-            "changes first or just fetch everything."
-            "</div>"
-        )
+    # NOTE: the hub dialog is NOT invoked here - it is invoked at the very END
+    # of this function. See the comment at that call site; invoking it here
+    # silently destroyed the stylesheet emitted three lines below.
 
     # Help Card Expansion (renders below the header + hub button row if open)
     render_help_card(
@@ -1292,7 +1509,9 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # --- (4) Pair action-button CSS: Remove fixed height, let flex align handle it ---
 
 
-    _sync_pairs_section(courses, course_names, course_options)
+    # Returns which dialog (if any) the list's buttons asked for. Opened at the
+    # very END of this function, never here - see the note at that call site.
+    _pending_list_dialog = _sync_pairs_section(courses, course_names, course_options) or {}
 
     # Read sync_pairs here so the Analyze/Quick Sync buttons below can check it.
     # The fragment may have mutated session state (add/remove via scope="app" reruns).
@@ -1436,8 +1655,11 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
             st.session_state['analysis_pass'] = 1
             st.session_state.pop('sync_quick_mode', None)
             st.session_state.pop('qs_cancel_route', None)
-            if main_placeholder:
-                main_placeholder.empty()
+            # (No main_placeholder.empty() here any more - app.py renders the
+            # page in a plain container now. See the comment there: the
+            # st.empty() wrapper blanked the WHOLE PAGE for ~20ms on ~1.3% of
+            # reruns, and all it bought was a blank screen for the ~200ms
+            # before this st.rerun() replaced it anyway.)
             st.rerun()
         if _show_hints:
             st.markdown(f"<div class='cd-action-hint'>{esc(_ANALYZE_HINT)}</div>",
@@ -1453,21 +1675,38 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
                      use_container_width=True,
                      disabled=not _can_sync,
                      help=_blocked):
-            # Nuclear reset of all cancel flags - stale flags from a previous download/sync
-            # would break the analysis loop on the very first iteration, producing zero results
-            # and causing Quick Sync to silently fall back to the Review page.
-            st.session_state['cancel_requested'] = False
-            st.session_state['sync_cancelled'] = False
-            st.session_state['sync_cancel_requested'] = False
-            st.session_state['download_cancelled'] = False
-            st.session_state['step'] = 4
-            st.session_state['download_status'] = 'analyzing'
-            st.session_state['sync_quick_mode'] = True
-            st.session_state['qs_cancel_route'] = True
-            st.session_state['analysis_pass'] = 1
-            if main_placeholder:
-                main_placeholder.empty()
-            st.rerun()
+            # Acceptable-use notice, ACTIVE trigger. Asked BEFORE the analysis
+            # starts because Quick Sync has no Review screen: it runs straight
+            # through to the sync, so there is no later point at which declining
+            # has anywhere to land (see _sync_pairs_want_panopto).
+            #
+            # No early return - the rest of the page must still render or its
+            # element indices shift under the modal. Withholding the status
+            # change holds the run on its own.
+            _qs_resume = {
+                'cancel_requested': False, 'sync_cancelled': False,
+                'sync_cancel_requested': False, 'download_cancelled': False,
+                'step': 4, 'download_status': 'analyzing',
+                'sync_quick_mode': True, 'qs_cancel_route': True,
+                'analysis_pass': 1,
+            }
+            if not _sync_pairs_want_panopto(sync_pairs) or require_panopto_notice(
+                    resume=_qs_resume):
+                clear_panopto_skip()
+                # Nuclear reset of all cancel flags - stale flags from a previous download/sync
+                # would break the analysis loop on the very first iteration, producing zero results
+                # and causing Quick Sync to silently fall back to the Review page.
+                st.session_state['cancel_requested'] = False
+                st.session_state['sync_cancelled'] = False
+                st.session_state['sync_cancel_requested'] = False
+                st.session_state['download_cancelled'] = False
+                st.session_state['step'] = 4
+                st.session_state['download_status'] = 'analyzing'
+                st.session_state['sync_quick_mode'] = True
+                st.session_state['qs_cancel_route'] = True
+                st.session_state['analysis_pass'] = 1
+                # (See the matching note on the Analyze button above.)
+                st.rerun()
         if _show_hints:
             st.markdown(f"<div class='cd-action-hint'>{esc(_QUICK_SYNC_HINT)}</div>",
                         unsafe_allow_html=True)
@@ -1480,6 +1719,55 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
     # viewport bottom - this is what made history rows feel "jumpy" on expand.
     st.markdown("<div style='height: 64px;'></div>", unsafe_allow_html=True)
 
+    # --- The Saved Groups & Pairs hub - invoked LAST, and that is load-bearing.
+    # A dialog body is a FRAGMENT, and streamlit/runtime/fragment.py snapshots
+    # ctx.cursors at the CALL SITE and restores it on every fragment rerun. That
+    # rewinds the EVENT root container's write index - the global, index-
+    # addressed list that both st.toast and every style-only st.html() land in.
+    # So any event-container write the main script makes AFTER this call site is
+    # overwritten the moment something inside the dialog reruns the fragment and
+    # emits one more event element than it did when the dialog opened.
+    #
+    # That is not hypothetical: it was invoked next to its button (~line 1290),
+    # three lines above render_help_card(mode="card"). Deleting a saved pair
+    # queues a toast (ui/hub_dialog.py:306), the fragment reran, and the toast
+    # landed on the help card's stylesheet index and deleted it - so the help
+    # card unfolded itself behind the open dialog, checkbox still unchecked.
+    # Measured in the real app 2026-07-30: event list 8 entries -> 7,
+    # `cdHelpSlideDown` gone document-wide, card 951px tall.
+    #
+    # Rendering last costs nothing (a dialog is a portal, so its call-site
+    # position does not affect where it appears) and it also makes the dialog
+    # the LAST child of the main container, so opening it can no longer shift
+    # any main-container index either. The only two st.rerun() calls below the
+    # old site are inside `if st.button(...)` blocks for Analyze / Quick Sync,
+    # which cannot fire on the same frame as the hub button - so nothing that
+    # used to run before the dialog can now be skipped.
+    #
+    # The sync list's own three dialogs land here for the SAME reason. They were
+    # already deferred to the end of `_sync_pairs_section`, which reads like the
+    # end of something - but that helper is called at ~line 1340 and the Analyze
+    # / Quick Sync stylesheet is emitted at ~1423, so a save dialog's fragment
+    # rerun overwrote it and both buttons lost their `height: 3.2em` and
+    # `font-size: 1rem`. That is the reported "the action-button text gets
+    # smaller and the page below shifts up" when opening Save as Pair / Group.
+    #
+    # ONE elif chain, not four ifs: Streamlit raises if a second dialog is
+    # opened in the same run ("only one dialog allowed open at a time"). Only
+    # one of these buttons can be clicked per frame, so the chain never actually
+    # discards a request - it just makes that guarantee local and explicit.
+    if open_hub:
+        _saved_groups_hub_dialog(courses, course_names)
+    elif _pending_list_dialog.get('save_pair') is not None:
+        _save_pair_dialog(_pending_list_dialog['save_pair'])
+    elif _pending_list_dialog.get('save_group'):
+        _save_group_dialog(sync_pairs)
+    elif _pending_list_dialog.get('ignored') is not None:
+        _show_course_ignored_files(*_pending_list_dialog['ignored'])
+    elif _pending_list_dialog.get('course_select'):
+        from ui.sync_dialogs import select_course_dialog_inner
+        select_course_dialog_inner(courses, st.session_state.get('sync_d_selected_id'))
+
 
 # Order + labels + icons for the per-run file-category sections in Sync History.
 _SYNC_HISTORY_CATEGORIES = [
@@ -1490,83 +1778,41 @@ _SYNC_HISTORY_CATEGORIES = [
 ]
 
 
-def _inject_shist_height_bridge():
-    """Size each Sync-History run's click button to its header's measured height.
-
-    Streamlit 1.51 refuses to grow a nested container from an auto-height flow
-    child - a run card stayed 92px tall around a 106px header, clipping its last
-    line. Only a flow child with an EXPLICIT pixel height sizes the card. So the
-    rich header is an absolute, pointer-events:none overlay and the invisible
-    click button is the flow element; this bridge copies the header's measured
-    height onto that button. The card then always fits the header exactly, and
-    the button (being the full header) stays clickable across the whole card -
-    no matter how many rows the course pills wrap onto.
-
-    A ResizeObserver re-syncs when a header reflows (window resize / zoom changes
-    the pill wrapping). Per CLAUDE.md, a FRESH observer + listener set is bound on
-    EVERY injection: components.html rebuilds its iframe on each rerun and
-    destroys the previous JS realm, so a one-time guard would leave dead closures
-    and the sizing would silently stop working after the first rerun.
-    """
-    import streamlit.components.v1 as components
-
-    components.html(
-        """
-        <script>
-        (function(){
-            var P = window.parent, doc = P.document;
-            var reg = P._cdShistHeights = P._cdShistHeights || {};
-
-            // Tear down the previous realm's observers/listener. The stored refs
-            // stay valid for removal even though their closures are dead.
-            try { (reg.observers || []).forEach(function(o){ o.disconnect(); }); } catch(e){}
-            try { if (reg.onResize) P.removeEventListener('resize', reg.onResize); } catch(e){}
-            reg.observers = [];
-
-            function sizeOne(run){
-                if (!run || !run.isConnected) return;
-                var head  = run.querySelector('.shist-runhead');
-                var btnEC = run.querySelector('[class*="st-key-shist_btn_"]');
-                if (!head || !btnEC) return;
-                var h = Math.ceil(head.getBoundingClientRect().height);
-                if (!h) return;
-                var px = h + 'px';
-                // setProperty(..., 'important') is required: the stylesheet's
-                // height/min-height on this button carry !important, which would
-                // otherwise beat a plain inline style.
-                btnEC.style.setProperty('height', px, 'important');
-                var btn = btnEC.querySelector('button');
-                if (btn){
-                    btn.style.setProperty('height', px, 'important');
-                    btn.style.setProperty('min-height', px, 'important');
-                }
-            }
-
-            function sizeAll(){
-                doc.querySelectorAll('[class*="st-key-shist_run_"]').forEach(sizeOne);
-            }
-
-            sizeAll();
-
-            // Re-measure whenever a header reflows (pill wrapping changes). Setting
-            // the button height never changes the header's WIDTH, so this cannot
-            // feed back into an observer loop.
-            doc.querySelectorAll('[class*="st-key-shist_run_"] .shist-runhead').forEach(function(head){
-                var run = head.closest('[class*="st-key-shist_run_"]');
-                try {
-                    var ro = new P.ResizeObserver(function(){ sizeOne(run); });
-                    ro.observe(head);
-                    reg.observers.push(ro);
-                } catch(e){}
-            });
-
-            reg.onResize = function(){ sizeAll(); };
-            P.addEventListener('resize', reg.onResize);
-        })();
-        </script>
-        """,
-        height=0,
-    )
+# A Sync-History run card sizes itself in pure CSS - there is no height bridge
+# any more, and there must not be one again.
+#
+# There used to be `_inject_shist_height_bridge()`: a components.html iframe that
+# measured every `.shist-runhead` and copied its height onto the invisible click
+# button, because the header was an absolutely-positioned overlay and therefore
+# contributed nothing to the card's height. It was deleted on 2026-07-31 for two
+# independent reasons.
+#
+# 1. IT DID NOT WORK, and it failed silently and permanently. Its docstring
+#    claimed "components.html rebuilds its iframe on each rerun"; measured in the
+#    real app, Streamlit REUSES the iframe whenever the srcdoc is unchanged - and
+#    this srcdoc was a constant. So the script was effectively one-shot per
+#    mount, while React went on replacing button nodes underneath it. Any card
+#    whose button node was recreated after that one shot lost its inline height
+#    and fell back to the stylesheet's 60px floor. Reproduced by switching the
+#    By-Course filter from a single-course course to a multi-course one: one card
+#    rendered 62px tall around its 106px header, cutting the course pills in half
+#    and dropping the "Synced N files" line completely. (A ResizeObserver rescued
+#    the cards whose header node Streamlit mutated in place rather than replaced,
+#    which is why only SOME cards break - the symptom looks random.)
+#
+# 2. IT WAS SOLVING THE WRONG PROBLEM. The observation behind it - "the card
+#    stayed 92px around a 106px header" - was read as Streamlit 1.51 refusing to
+#    grow a container from an auto-height flow child. It is not: the container
+#    grows fine. Streamlit puts `margin-bottom: -16px` on every
+#    stMarkdownContainer, so the header's element-container measures exactly 16px
+#    shorter than the header inside it, and it is the container that sizes the
+#    parent. Measured 2026-07-31: header 105.675px, container 89.675px, card
+#    91.675px = the reported 92, to a third of a pixel.
+#
+# So the card is now a one-cell CSS grid: the header (in flow, natural height)
+# and the button share row 1, the header sizes the row, the button stretches to
+# fill it, and the body auto-flows into row 2. See the block in
+# styles/sync_history_cards.css. Guarded by tests/test_sync_history_card_height.py.
 
 
 def _toggle_shist_run(open_key: str) -> None:
@@ -1989,6 +2235,11 @@ def _render_sync_history():
                 st.session_state.setdefault('sync_history_filter', 'all')
                 st.session_state.setdefault('sync_history_course', None)
 
+                # Built ONCE for the whole panel: history_course_display_names
+                # is called for every entry three times over (dropdown, filter,
+                # card), and this index re-reads the hub file.
+                _hist_name_labels = canvas_name_label_index()
+
                 st.html('<div id="sync-history-toolbar" aria-hidden="true" style="width:0;height:0;overflow:hidden;"></div>')
                 col1, col2 = st.columns([7, 1])
                 with col1:
@@ -2010,12 +2261,8 @@ def _render_sync_history():
                             # otherwise blow up sorted() with a None-vs-str compare.
                             all_courses = set()
                             for entry in history:
-                                if not isinstance(entry, dict):
-                                    continue
-                                for c in (entry.get('course_names') or []):
-                                    fc = friendly_course_name(c) if c else None
-                                    if isinstance(fc, str) and fc:
-                                        all_courses.add(fc)
+                                all_courses.update(
+                                    history_course_display_names(entry, _hist_name_labels))
                             courses_list = sorted(all_courses, key=lambda s: s.lower())
                             if courses_list:
                                 # Pre-select if previously selected
@@ -2064,9 +2311,10 @@ def _render_sync_history():
                     if st.session_state.sync_history_filter == 'course':
                         c_filter = st.session_state.get('sync_history_course')
                         if c_filter:
-                            # friendly names in entry
-                            entry_friendly_courses = [friendly_course_name(c) for c in (entry.get('course_names') or []) if c]
-                            if c_filter not in entry_friendly_courses:
+                            # Same resolver the dropdown was built from, so every
+                            # option it offers can actually match something.
+                            if c_filter not in history_course_display_names(
+                                    entry, _hist_name_labels):
                                 continue
                     filtered_history.append(entry)
                 
@@ -2155,9 +2403,9 @@ def _render_sync_history():
                             # history page. (entry is guaranteed a dict by the filter.)
                             count = _as_int(entry.get('files_synced', 0))
                             courses_count = _as_int(entry.get('courses', 0))
-                            course_names = entry.get('course_names') or []
-                            if not isinstance(course_names, (list, tuple)):
-                                course_names = [course_names]
+                            # (course_names is read - and defensively coerced -
+                            # inside history_course_display_names, which is the
+                            # only thing that turns this entry into names now.)
                             errors = _as_int(entry.get('errors', 0))
                             error_details = entry.get('error_details') or []
                             synced_groups = [g for g in (entry.get('synced_groups') or [])
@@ -2188,8 +2436,7 @@ def _render_sync_history():
                             # invisible button (the click target) with the rich
                             # two-line HTML painted on top (pointer-events:none),
                             # and the body renders below only when open.
-                            _names = [friendly_course_name(str(n)) for n in course_names if n]
-                            _names = [nm for nm in _names if isinstance(nm, str) and nm]
+                            _names = history_course_display_names(entry, _hist_name_labels)
                             _n_courses = len(_names)
                             # Collapsed title: a single-course run shows its full
                             # course name; a multi-course run shows a clean
@@ -2250,19 +2497,16 @@ def _render_sync_history():
 
                             with st.container(border=True, key=f"shist_run_{run_seq}"):
                                 # "Fake expander": the invisible full-width button is
-                                # BOTH the click target and the element that gives the
-                                # card its height; the rich header (title / course
-                                # pills / meta) is painted on top as a
-                                # pointer-events:none absolute overlay.
+                                # the click target; the rich header (title / course
+                                # pills / meta) is painted on top of it with
+                                # pointer-events:none, so a click anywhere on the card
+                                # reaches the button.
                                 #
-                                # Streamlit 1.51 will NOT grow a nested container from
-                                # an auto-height flow child (verified in-browser: the
-                                # card stayed 92px around a 106px header). Only a flow
-                                # child with an EXPLICIT pixel height sizes the card.
-                                # The header's height depends on how many rows the
-                                # course pills wrap onto, which CSS cannot know - so
-                                # _inject_shist_height_bridge() measures each header
-                                # and copies its height onto this button.
+                                # ORDER MATTERS: the button must be emitted FIRST. Both
+                                # land in the same CSS grid cell, and the header is
+                                # painted over the button by DOM order + z-index. Swap
+                                # these two lines and the button's opaque header
+                                # background covers the text.
                                 # Toggle via on_click, NEVER `if st.button(): ...
                                 # st.rerun()`. The click already schedules a rerun,
                                 # so an explicit st.rerun() forces a SECOND one - the
@@ -2296,7 +2540,9 @@ def _render_sync_history():
                                                     # holds the category lists (with dividers between
                                                     # categories). Reads as distinct, enclosed sections
                                                     # instead of one flat wall of filenames.
-                                                    _cname = esc(friendly_course_name(g.get('course_name', '') or 'Course'))
+                                                    _cname = esc(
+                                                        label_for(g.get('course_id'), g.get('local_folder'))
+                                                        or friendly_course_name(g.get('course_name', '') or 'Course'))
                                                     _fcount = len(files)
                                                     _fcount_label = f"{_fcount} file" if _fcount == 1 else f"{_fcount} files"
                                                     with st.container(key=f"shist_course_{run_seq}_{gi}"):
@@ -2382,9 +2628,10 @@ def _render_sync_history():
                                 )
                             run_seq += 1
 
-                # Every run card is rendered - now match each card's height to its
-                # header (see _inject_shist_height_bridge for why this needs JS).
-                _inject_shist_height_bridge()
+                # No height bridge here any more: each card sizes itself to its
+                # own header in pure CSS. See the note above _toggle_shist_run
+                # for what used to be here and why measuring it in JS was both
+                # unnecessary and unreliable.
 
 
 
@@ -2413,6 +2660,20 @@ def _render_pending_folder_ui(courses, course_names, course_options):
 # STEP 4 - Analysis + Syncing + Completion
 # ===================================================================
 
+# download_status values whose handling in render_sync_step4 reads NOTHING from
+# the pair list. Analysis is the only consumer ('analyzing' is therefore absent,
+# as is '' - an unknown status with no pairs really is the post-refresh case the
+# notice describes); every later phase works off sync_analysis_results /
+# sync_selections. The terminal three are the load-bearing entries: they are what
+# writes the Today completion notice and runs cleanup_sync_state(), so blocking
+# them strands a FINISHED run on an error screen. 'sync_failed' is included
+# because render_sync_step4 normalises it into 'sync_complete' a few lines down.
+_STATUSES_NOT_NEEDING_PAIRS = frozenset({
+    'analyzed', 'pre_sync', 'syncing', 'sync_panopto',
+    'sync_complete', 'sync_cancelled', 'sync_failed',
+})
+
+
 def render_sync_step4( main_placeholder=None):
     """Render the entire sync Step 4: analysis → review → sync → done."""
     from styles import inject_css
@@ -2422,7 +2683,25 @@ def render_sync_step4( main_placeholder=None):
     inject_dynamic_sync_review_css()
 
     sync_pairs = st.session_state.get('sync_pairs', [])
-    if not sync_pairs:
+    status = st.session_state.get('download_status', '')
+
+    # The pair list is read by exactly ONE branch below - the 'analyzing' shell
+    # and run_analysis. Everything from 'analyzed' onwards works off
+    # sync_analysis_results / sync_selections and never touches it, so losing it
+    # after the analysis is not a reason to refuse to render.
+    #
+    # Gating the guard on that is what makes the screen RECOVERABLE. Placed
+    # unconditionally (with its st.stop()) it sat above the terminal-state
+    # routing further down, so a run whose pair list disappeared while it was in
+    # flight could never reach the handler that writes the Today notice and
+    # calls cleanup_sync_state() - every rerun landed back on the same notice,
+    # for ever. That is not hypothetical: sync.persistence.update_last_synced_batch
+    # used to do exactly that to a Today Quick Sync at the moment it finished
+    # (fixed there; see its docstring). The user's files had all downloaded and
+    # the run was 'sync_complete', but the screen said "No course folders found"
+    # and stayed there - with a "Go back" button as the only exit and a stale
+    # sync state left behind.
+    if not sync_pairs and status not in _STATUSES_NOT_NEEDING_PAIRS:
         from ui.amber_notice import render_amber_notice
         render_amber_notice(
             "No course folders found - this can happen after a page refresh.",
@@ -2432,8 +2711,6 @@ def render_sync_step4( main_placeholder=None):
             st.session_state['step'] = 1
             st.rerun()
         st.stop()
-
-    status = st.session_state.get('download_status', '')
 
     # Normalize sync_failed → sync_complete: inject the crash message into
     # sync_errors so the completion screen's existing error UI surfaces it.
@@ -3181,11 +3458,19 @@ def _run_sync_panopto():
                 if not _amended:
                     # No file-sync entry to amend (recordings-only sync) - create one.
                     _cnames = list({m.get('course_name', '') for m in _pan_pair_meta.values() if m.get('course_name')})
+                    # Pair identity per course, same contract as the file-sync
+                    # writer in sync/execution.py - it is what lets Sync History
+                    # show the user's own name for a recordings-only run too.
+                    _csigs = [
+                        [m.get('course_id'), m.get('local_folder', ''), m.get('course_name', '')]
+                        for m in _pan_pair_meta.values()
+                    ]
                     _pan_entry = {
                         'timestamp': _ts or _dt.now().strftime("%Y-%m-%d %H:%M"),
                         'files_synced': len(_h_names),
                         'courses': len(_pan_pair_meta),
                         'course_names': _cnames,
+                        'course_sigs': _csigs,
                         'errors': len(st.session_state.get('sync_errors', []) or []),
                         'error_details': list(st.session_state.get('sync_errors', []) or []),
                         'synced_files': _h_names,

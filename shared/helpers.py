@@ -916,14 +916,61 @@ def get_course_display_parts(course) -> tuple[str, str]:
 
 def short_path(full_path: str) -> str:
     """Return just the folder name from a full path.
-    
+
     Args:
         full_path: Full filesystem path
-        
+
     Returns:
         Just the last component (folder name)
     """
     return Path(full_path).name or full_path
+
+
+_MD_SPECIALS = re.compile(r"([\\`*_{}\[\]()#+\-.!~|<>$])")
+
+
+def md_escape(text: str) -> str:
+    """Neutralise Markdown in a string that will become a WIDGET LABEL.
+
+    Streamlit renders ``st.button``/``st.checkbox``/``st.expander`` labels as
+    Markdown, so any user-supplied text in one is markup. The failure is
+    cosmetic but total and silent - the step tracker hit the same thing from the
+    other side (CLAUDE.md): a label of ``1. Select Courses`` is an ORDERED LIST
+    ITEM and Streamlit eats the ``1.`` entirely.
+
+    Real names people give a course trip this constantly: "1. Semester",
+    "Math_2", "Stats (week 1-3)", "**Important**". Escaping is the only way to
+    show back exactly what they typed.
+
+    This is NOT a substitute for :func:`esc` - it is the opposite problem.
+    ``esc`` protects HTML; this protects Markdown. A string interpolated into
+    ``unsafe_allow_html`` markup still needs ``esc``.
+    """
+    if not text:
+        return text
+    return _MD_SPECIALS.sub(r"\\\1", str(text))
+
+
+def norm_folder_key(path) -> str:
+    """Case- and separator-normalised folder key for pair-identity matching.
+
+    A sync pair is identified by ``(course_id, local_folder)``, but the folder
+    string reaching each consumer came from a different place: the daily set
+    stores the string the user picked, sync history stores
+    ``str(sync_manager.local_path)``, and the hub stores whatever the folder
+    picker returned. Those describe the same folder while differing in
+    separators, trailing slashes or (on Windows) case, so neither side can be
+    compared raw.
+
+    This is the ONE normaliser - ``ui.today_dashboard._norm_folder`` and
+    ``core.pair_labels`` both route through it. Writing the rule twice is how
+    two consumers of the same identity drift apart (the daily-list bug in
+    CLAUDE.md is the worked example).
+    """
+    try:
+        return os.path.normcase(os.path.normpath(str(path or "")))
+    except Exception:
+        return str(path or "")
 
 
 # --- Progress Bar Helper ---

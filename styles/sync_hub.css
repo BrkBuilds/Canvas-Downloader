@@ -23,6 +23,31 @@ div[data-testid="stHorizontalBlock"]:has(.st-key-btn_hub_main) {
     padding-bottom: 0px !important;
 }
 
+/* 2b. The one-line intro under the page title. It sits inside col_heading so the
+   bottom-aligned hub button measures against the whole header block.
+   The margin MUST go on the stLayoutWrapper, not on the keyed block inside it:
+   the wrapper is the column's flex item, so a margin on the keyed block only
+   repaints it higher while the wrapper stays put and the column keeps its full
+   height (measured: block top 170.8 against wrapper top 180.8, and -10 vs -21
+   produced the identical 19.4px gap). A margin inside the st.html() div is
+   absorbed by its shadow root, so that is not an option either.
+   -25px turns the column's 16px gap into a 4px line-box gap under the title. */
+div[data-testid="stLayoutWrapper"]:has(> div.st-key-sync_intro_line) {
+    margin-top: -25px !important;
+    margin-bottom: 0px !important;
+}
+
+/* 2c. Drop the hub button so its bottom edge is flush with the top of the sync
+   list container below. This has to be a positional offset, NOT margin-top: the
+   column is bottom-aligned by a computed margin-top that exactly fills the row,
+   so any margin added here grows the row, pushes the list down by the same
+   amount and nets out to zero movement. `top` shifts the paint without reflow.
+   Measured after: button bottom 200.1, list top 200.1. */
+div.st-key-btn_hub_main {
+    position: relative !important;
+    top: 7px !important;
+}
+
 /* 3. Pull the main sync list container UP */
 div.st-key-sync_list_outline {
     margin-top: -10px !important;
@@ -697,6 +722,109 @@ div[class*="st-key-sync_pair_card_"][data-testid="stVerticalBlock"] {
     gap: 10px !important;
     justify-content: flex-start !important;
     align-items: stretch !important;
+}
+
+/* =========================================
+   MAIN SYNC LIST: COURSE + FOLDER PILL ROW
+   -----------------------------------------
+   Shown only on a card whose course the user has NAMED in Saved Groups & Pairs:
+   the title is then their name, so the Canvas course and the folder move into
+   two chips on one line below it. Deliberately the same chip language as
+   Today's daily-sync chips (`.tcs-pill` in today.css) - a course chip is one
+   idea and should look like one idea on both screens. The glyph inside comes
+   from shared.components.svg_course_book, which both screens build from.
+
+   ONE line, always - `nowrap` is load-bearing, not a default. With `wrap`, a
+   browser prefers breaking to shrinking, so the folder chip dropped to its own
+   line the moment the window narrowed (measured: side by side at a 1920 viewport,
+   stacked at 1500 - i.e. it would have looked "right" only on a wide monitor).
+   The FOLDER chip absorbs all of the shrinking and the course chip absorbs none.
+   Letting both shrink proportionally looked reasonable and was wrong: at a 1500
+   viewport it rendered "Makroøkonomi…" for a user who has a Makroøkonomi (XB)
+   AND a Makroøkonomi (LA) on this very list - it truncated away the only part
+   that says WHICH. A `title` tooltip is not an option to fall back on either:
+   Streamlit's markdown sanitiser strips `title` from a span (measured; the
+   sync-history `.shist-pill` markup has carried a dead one for as long as it has
+   existed). So the identity chip is never allowed to truncate, capped at 70% so
+   a pathological course name still leaves the folder chip a place to be.
+   ========================================= */
+div[class*="st-key-sync_pair_card_"] .sp-pill-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: -6px;
+    min-width: 0;
+    /* Backstop, not decoration. Below a ~250px card the folder chip's min-width
+       floor stops it shrinking any further and the row spills OUT of the card -
+       measured 15px over at a forced 250px card, 27px at 160px. Streamlit stacks
+       these columns long before the card gets that narrow (at a 560px viewport
+       the card is 488px), so it is not reachable today; it becomes reachable the
+       moment someone re-weights st.columns([5, 1.5, 1.1, 1.5, 1.2]). Clipping
+       inside the card is a bad-looking chip; spilling past it is a broken card. */
+    overflow: hidden;
+}
+
+div[class*="st-key-sync_pair_card_"] .sp-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    min-width: 4.5rem;
+    flex: 0 1 auto;
+    /* Tight horizontally on purpose. The chip's own border sits on the card's
+       text column, so its PADDING is pure indent: at 10px the course glyph
+       started ~10px right of the title above it and the clock below it, and the
+       row read as inset from a list it is supposed to be part of. 6px keeps the
+       chip legible while landing the glyph on the same left edge. */
+    padding: 5px 6px;
+    /* Squarer than Today's .tcs-pill (9px) and than the row's action buttons on
+       purpose: these chips sit inches from Open Folder / Edit / Remove, and at a
+       matching radius they read as buttons the user can click. They are labels. */
+    border-radius: 5px;
+    background: linear-gradient(180deg, #252830 0%, #2e323c 100%);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: #e8eaf0;
+}
+
+div[class*="st-key-sync_pair_card_"] .sp-pill > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+/* The identity chip: never shrinks. */
+div[class*="st-key-sync_pair_card_"] .sp-pill-course {
+    flex: 0 0 auto;
+    max-width: 70%;
+}
+
+/* The folder chip: gives up whatever the row is short of. */
+div[class*="st-key-sync_pair_card_"] .sp-pill-folder {
+    flex: 0 1 auto;
+}
+
+/* The shared course glyph inherits `color`; the folder glyph carries its own
+   yellow fill and only needs its inline-block margin cancelled so the flex
+   `gap` above is the only spacing in play. */
+div[class*="st-key-sync_pair_card_"] .sp-pill > svg {
+    color: #b1bac4;
+    width: 15px !important;
+    height: 15px !important;
+    margin-right: 0 !important;
+    vertical-align: middle !important;
+    flex-shrink: 0;
+}
+
+/* Missing-folder cards dim their text (global.css rule 13); the chips have to
+   follow or they light up brighter than the card they sit in. */
+div[class*="st-key-sync_pair_card_missing_"] .sp-pill {
+    opacity: 0.65;
 }
 
 /* =========================================

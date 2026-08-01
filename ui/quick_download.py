@@ -11,6 +11,7 @@ import streamlit as st
 from shared.helpers import esc, get_base64_image, native_folder_picker, render_download_wizard
 from shared.components import render_help_card, HELP_ICONS
 from core.state_registry import SECONDARY_CONTENT_KEYS, NOTEBOOK_SUB_KEYS, PANOPTO_OUTPUT_KEYS
+from shared.legal import clear_panopto_skip, require_panopto_notice
 
 
 # ---------------------------------------------------------------------------
@@ -1245,8 +1246,29 @@ div.st-key-page_nav_quick_start button:active {{
                 st.session_state[f'persistent_{k}'] = settings.get(k, False)
             st.session_state['persistent_pan_layout'] = settings.get('pan_layout', 'match')
 
-            st.session_state['download_status'] = 'scanning'
-            st.session_state['step']            = 3
+            # Acceptable-use notice, ACTIVE trigger. This path is the reason the
+            # guard cannot live on the settings card alone: three of the five
+            # Quick Download presets include Panopto, and none of them ever opens
+            # that card - so a preset user would otherwise reach a lecture
+            # download having never been shown the notice.
+            #
+            # Deliberately no early return: the rest of the page must still
+            # render, or its element indices shift under the modal and Streamlit
+            # restyles the page behind it. Withholding the status change is what
+            # holds the run.
+            _pan_wanted = any(
+                st.session_state.get(f'persistent_{k}', False)
+                for k in PANOPTO_OUTPUT_KEYS
+            )
+            # A declined notice must still START this download, just without
+            # recordings - the resume payload is what carries the click across
+            # the modal. Without it the user clicks Confirm, answers the dialog,
+            # and lands back on an unchanged page having achieved nothing.
+            _resume = {'download_status': 'scanning', 'step': 3}
+            if not _pan_wanted or require_panopto_notice(resume=_resume):
+                clear_panopto_skip()
+                st.session_state['download_status'] = 'scanning'
+                st.session_state['step']            = 3
 
-            time.sleep(0.1)
-            st.rerun()
+                time.sleep(0.1)
+                st.rerun()

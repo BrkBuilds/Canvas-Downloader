@@ -88,15 +88,38 @@ inject_material_icons_font()
 # Activation: click listener fires ONLY for buttons inside known navigation
 # containers (NAV_SEL allowlist) - in-page interactions (chevrons, filters,
 # dialogs) are excluded.
-# Hide (3-phase geometry-polling):
-#   Phase 1: 150 ms debounce - batches rapid-fire mutations.
-#   Phase 2: Poll for stStatusWidget removal - waits until the Python script
-#            has finished executing.
-#   Phase 3: Poll page geometry (scrollHeight + element count) every 200 ms.
-#            Only hides after 4 consecutive identical readings (800 ms of
-#            layout stability). Directly detects old-element cleanup regardless
-#            of whether mutations fire.
-#   An 8 s safety valve force-hides if a rerun hangs.
+#
+# Show is DEFERRED (SHOW_DELAY): a click arms the watcher but does not paint.
+# A navigation that finishes first never shows a mask at all.
+#
+# Uncover, in one watcher with three exits - all gated on the app's own screen
+# id having moved (#cdp_nav_state, written by ui/auth.py):
+#   * run finished    - script state left "running" AND the DOM has been quiet
+#                       for QUIET ms. Quiet, not a fixed hold, so the wait
+#                       scales with the machine instead of being tuned to one.
+#   * run STARTED     - data-busy says a download/sync/analysis is under way and
+#                       its dashboard is up and quiet. A run holds the script
+#                       thread for minutes, so waiting for it to finish means
+#                       covering its own progress UI.
+#   * no screen change- the click produced a run that did not navigate; bounded
+#                       by NOCHANGE_MAX so it costs a beat, not the valve.
+# An 8 s valve remains as a last resort and should now never fire.
+#
+# The three defects this replaced, all measured in the real app on 2026-07-31
+# and all invisible precisely because the mask hid the evidence:
+#   1. pageFingerprint() read the SIDEBAR's vertical block (the first one in the
+#      document), which is identical on every page here - so the fingerprint was
+#      really just stMain.scrollHeight, and sync step 1 / Today / the sync review
+#      screen are all 1049. "Has the page changed" never became true and the
+#      overlay could only exit via the valve: 8.03 s over a 179 ms navigation.
+#   2. A long run never reaches "script finished", so Analyze, Quick Sync, Start
+#      Sync, Confirm and Download and login were ALL covered for a flat 8 s. A
+#      whole analysis - dashboard, live counts, ETA - rendered underneath and was
+#      discarded unseen.
+#   3. The 1200 ms stability window cost ~1.4 s on every ordinary navigation, on
+#      top of a page that was already final. Measured waste: median 1484 ms.
+# Script state remains the primary readiness signal and MUST NOT go back to
+# stStatusWidget - see isStReady().
 import base64
 import os
 try:
@@ -113,7 +136,73 @@ components.html("""<script>
     // this pattern the MutationObserver (tied to the old iframe context) is
     // garbage-collected and the overlay stops working after the first rerun.
     var win=window.parent, doc=win.document;
-    var p=win._cdp||(win._cdp={vis:false,hT:null,safeT:null,el:null,obs:null,clickAdded:false,awaitChange:false,preFP:null});
+    var p=win._cdp||(win._cdp={vis:false,armed:false,el:null,obs:null,handler:null,
+        showT:null,watchT:null,hideT:null,safeT:null,t0:0,lastMut:0,readyAt:0,
+        sawRun:false,preScreen:null,preFP:null,abortScroll:false});
+
+    // --- Tunables, in ONE place ---------------------------------------------
+    // SHOW_DELAY: how long to wait before PAINTING the mask. It is 0, and the
+    // history of that number is worth keeping because it inverted.
+    //
+    // It was 200 ms, on the reasoning that the first DOM change of a navigation
+    // did not land until 124-235 ms, so an earlier mask covered a page that had
+    // not moved yet. That was true - of an app whose pages took 1.2-1.9 s to
+    // render. Once `core/course_cache.py` took the Canvas fetch off the render
+    // path, whole navigations began finishing in 170-700 ms and the churn
+    // started almost immediately, so a 200 ms delay no longer arrived early -
+    // it arrived after most of the swap had already happened.
+    //
+    // Measured with `exposed_churn_ms` (page still changing while the mask is
+    // below 85 % opacity - the honest version of the complaint, counting the
+    // un-painted window and not just the fade): **median 311 ms, max 458 ms, on
+    // EVERY transition** including the ones the mask did cover. Reported as
+    // "through each transition it looks like the application is severely
+    // glitching - elements are being scrambled everywhere".
+    //
+    // So the mask now paints from the click. At t=0 the old page is still
+    // whole and nothing has moved, which is exactly the right moment to cover:
+    // it reads as a cut to a loading state, not as a blackout thrown over
+    // motion. The reason this is affordable NOW and was not before is that the
+    // thing being hidden is short - the whole point of the two fixes above.
+    var SHOW_DELAY=0;       // click -> start painting the mask
+    // The fade-IN is the one thing that can make the mask WORSE than no mask:
+    // while it ramps, the page churns visibly THROUGH it. Reported as "the ui
+    // shift is visible for a split second behind it at ~50% opacity", and
+    // measured with scripts/measure_nav.py's `leak_ms` (time the mask is
+    // translucent while the page is still changing): a 150 ms linear fade-in
+    // leaked a median 138-155 ms on the download-settings screens and 258 ms at
+    // worst, on 18 of 30 transitions.
+    //
+    // So it is short AND front-loaded: the ease-out curve is past 85 % opacity
+    // in roughly the first third, which is where the leak is paid, while still
+    // being a ramp rather than a step. It exists so the mask arrives as a cut
+    // to a loading state rather than a black step; it is NOT there to soften a
+    // near-miss, which is why it must stay short.
+    //
+    // The fade-OUT can stay leisurely: by then the page is final, so there is
+    // nothing left to leak and a gradual reveal reads better than a cut.
+    var RECHECK=80;         // paint() declined; look again this much later
+    var FADE_IN=45, FADE_OUT=110;
+    var EASE_IN='cubic-bezier(.2,.8,.3,1)';
+    // QUIET is measured from the last DOM mutation, NOT a fixed hold, and that
+    // is what makes it scale with the machine. Measured: after the script run
+    // ends the DOM still moves for ~58 ms on this machine and ~334 ms at 4x CPU
+    // throttling. A constant tuned for one of those is wrong for the other; a
+    // quiet window is right for both, because the churn itself is what keeps
+    // resetting it.
+    var QUIET=90;           // ready + this much DOM silence -> uncover
+    var MIN_HOLD=60;        // never uncover in the same tick readiness arrived
+    var READY_MAX=1200;     // ...but never wait longer than this after ready
+    var BUSY_QUIET=180;     // long-run path: the dashboard is up and gone quiet
+    var NOCHANGE_MAX=450;   // the click produced a run but no screen change
+    var NORUN_MAX=1500;     // the click produced no run at all
+    // Two valves, because "slow" and "hung" are different failures and only one
+    // of them is worth uncovering onto. A script state of `running` is positive
+    // evidence that the server is alive and working, so VALVE waits for it;
+    // HARD_VALVE is the absolute cap that fires regardless, because a mask
+    // nothing can lift is the one failure a user cannot work around.
+    var VALVE=8000;         // force-uncover once the script is no longer running
+    var HARD_VALVE=30000;   // ...and unconditionally at this point
 
     // --- Create overlay element once ---
     if(!p.el){
@@ -122,9 +211,13 @@ components.html("""<script>
         doc.head.appendChild(s);
         p.el=doc.createElement('div');
         p.el.id='_cdOv';
+        // opacity is transitioned, display is not - so the mask fades in over
+        // the swap instead of slamming over it, and a transition that finishes
+        // mid-fade reverses into a soft pulse rather than a hard black flash.
         p.el.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;'
             +'background:#0d1117;z-index:99999;display:none;flex-direction:column;'
-            +'align-items:center;justify-content:center;gap:16px';
+            +'align-items:center;justify-content:center;gap:16px;opacity:0;'
+            +'transition:opacity '+FADE_IN+'ms '+EASE_IN;
         p.el.innerHTML=
             '<div style="width:30px;height:30px;border:2.5px solid rgba(255,255,255,.07);'
             +'border-top-color:#38bdf8;border-radius:50%;animation:_cdR .75s linear infinite"></div>'
@@ -133,161 +226,331 @@ components.html("""<script>
         doc.body.appendChild(p.el);
     }
 
-    function show(){
-        if(p.vis)return;
+    function paint(){
+        p.showT=null;
+        if(p.vis||!p.armed)return;
+        // The deferred show is decided on EVIDENCE, not just on the clock. If
+        // the new screen is already up and its run has already finished, all
+        // that remains is the confirmation window - covering the page now would
+        // paint a mask over a page that has arrived, and then take it away
+        // again, which is the flash the delay exists to avoid.
+        //
+        // This is also what makes the behaviour scale with the machine, which a
+        // constant cannot: on a faster box more navigations are already
+        // finished at this point, so fewer of them are ever masked. Measured
+        // here, the two fastest screens land at ~130-215 ms and now show
+        // nothing at all, while a 700 ms one is still covered for its whole
+        // wait. Re-armed rather than cancelled: if this turns out to be a lull
+        // between two runs, the next check still paints.
+        if(screenId()!==p.preScreen&&isStReady()&&isPainted()){
+            // RECHECK, not SHOW_DELAY: with SHOW_DELAY at 0 a re-arm on the
+            // same value is a 0 ms self-rescheduling loop.
+            p.showT=win.setTimeout(paint,RECHECK);
+            return;
+        }
         // Re-attach if Streamlit hot-reload replaced document.body while we were detached
         if(!p.el.isConnected)doc.body.appendChild(p.el);
-        p.el.style.display='flex'; p.vis=true; p.abortScroll=false;
-        // Safety valve: force-hide after 8 s so a hung rerun can't trap the overlay.
-        // Also kill any pending poll timer - otherwise the stabilization loop keeps
-        // running as a zombie AFTER the overlay is hidden and later fires its
-        // scroll-to-top, yanking the user back up while they read a settled page.
-        if(p.safeT)clearTimeout(p.safeT);
-        p.safeT=setTimeout(function(){p.el.style.display='none';p.vis=false;p.safeT=null;if(p.hT){clearTimeout(p.hT);p.hT=null;}},8000);
+        p.el.style.transition='opacity '+FADE_IN+'ms '+EASE_IN;
+        p.el.style.display='flex';
+        p.el.style.pointerEvents='auto';
+        p.vis=true;
+        // Reading offsetWidth forces the layout that makes the transition
+        // actually run; without it the browser coalesces display+opacity into
+        // one style recalculation and the mask appears at full strength.
+        void p.el.offsetWidth;
+        p.el.style.opacity='1';
     }
 
-    // Streamlit injects [data-testid="stStatusWidget"] while the Python script
-    // is executing and removes it once the rerun completes.  If the element is
-    // absent the script has finished (or the attribute was removed in a future
-    // Streamlit version - graceful degradation: treat as "ready").
+    function uncover(){
+        // Stop covering IMMEDIATELY - pointer-events goes first and p.vis with
+        // it, so the page is live for the whole fade rather than for the 110 ms
+        // after it. The click handler reads p.vis to decide whether a click
+        // that got through means the mask was not really blocking, so the two
+        // must be lowered together.
+        if(p.showT){win.clearTimeout(p.showT);p.showT=null;}
+        if(p.safeT){win.clearTimeout(p.safeT);p.safeT=null;}
+        if(p.watchT){win.clearTimeout(p.watchT);p.watchT=null;}
+        p.armed=false;
+        if(!p.vis){p.el.style.display='none';p.el.style.opacity='0';return;}
+        p.vis=false;
+        p.el.style.pointerEvents='none';
+        p.el.style.transition='opacity '+FADE_OUT+'ms linear';
+        p.el.style.opacity='0';
+        if(p.hideT)win.clearTimeout(p.hideT);
+        // display:none only after the fade, but guarded: a NEW navigation may
+        // have re-armed and repainted in the meantime, and hiding it then would
+        // strand that navigation with no mask at all.
+        p.hideT=win.setTimeout(function(){
+            p.hideT=null;
+            if(!p.vis&&!p.armed)p.el.style.display='none';
+        },FADE_OUT+20);
+    }
+
+    // Has the Python script finished?  Streamlit publishes its own script-run
+    // state on the app root as data-test-script-state: "initial" | "running" |
+    // "rerunRequested" | "notRunning" | "compilationError".
+    //
+    // This MUST NOT go back to polling [data-testid="stStatusWidget"] (what it
+    // did until 2026-07-31).  That element is never in the DOM in this app:
+    // styles/global.css hides it and .streamlit/config.toml + start.py both set
+    // client.toolbarMode="minimal", so the old check returned "ready" on its
+    // very first poll, every single time - Phase 2 was dead code.  That left
+    // Phase 3's "1200 ms of DOM stillness" as the only gate, and a mid-render
+    // Python stall of that length is indistinguishable from a finished page.
+    // Measured: the overlay lifted at 61 elements / 21 stylesheets while the
+    // script state still read "running", exposing a half-rendered, partly
+    // unstyled Custom Download page with the previous page's elements still on
+    // it.  Symptom: "the page was 50% raw unstyled Streamlit containers, STILL,
+    // then 2-3 s later the styling was applied" - the stall is why it was
+    // frozen, and the freeze is exactly what the old heuristic read as "done".
     function isStReady(){
+        var app=doc.querySelector('[data-testid="stApp"]');
+        var s=app&&app.getAttribute('data-test-script-state');
+        if(s)return s!=='running'&&s!=='rerunRequested';
+        // Fallback if a future Streamlit drops the attribute (it is a data-test-*
+        // hook, so treat it as unstable): any element still flagged stale means
+        // the page swap is mid-flight.  Legacy widget check last.
+        if(doc.querySelector('[data-stale="true"]'))return false;
         return !doc.querySelector('[data-testid="stStatusWidget"]');
     }
 
-    // Returns a fingerprint of the page layout.  Uses querySelectorAll('*') on
-    // the main vertical block to catch deep-subtree reconciliation (e.g. old
-    // course-list elements still present) that childElementCount misses.
-    // O(n) but negligible at 200 ms intervals (~1 ms for 500 elements).
-    function pageFingerprint(target){
-        var vb=doc.querySelector('[data-testid="stVerticalBlock"]');
-        return target.scrollHeight+'|'+(vb?vb.querySelectorAll('*').length:target.childElementCount);
+    // The screen the app says it is rendering, and whether it says a long run
+    // is in flight.  Both are written by ui/auth.py onto #cdp_nav_state - read
+    // that block for what each field is for.  These are the two facts the
+    // overlay cannot work out for itself, and every attempt to infer them from
+    // the DOM has been wrong:
+    //
+    //   * "has the page changed" was a geometry fingerprint, and it COLLIDED.
+    //     Sync step 1, the Today page and the sync review screen are all
+    //     scrollHeight 1049, so the fingerprint never moved and the overlay sat
+    //     until its 8-second valve. Measured 2026-07-31: sync<->today was 8.03 s
+    //     against a page that had finished in 179 ms, and a whole Analyze run -
+    //     dashboard, live counts, ETA and all - rendered underneath the mask and
+    //     was then thrown away, uncovering only once the review screen was up.
+    //   * "is the script finished" cannot answer "may I uncover" during a
+    //     download or an analysis, because those hold the script thread for
+    //     minutes. data-busy is what separates "still painting the screen" from
+    //     "the screen is up and now it is working".
+    function screenId(){
+        var el=doc.getElementById('cdp_nav_state');
+        return el?(el.getAttribute('data-screen')||''):'';
+    }
+    function isBusyRun(){
+        var el=doc.getElementById('cdp_nav_state');
+        return !!el&&el.getAttribute('data-busy')==='1';
     }
 
-    function schedHide(){
-        // Don't cancel the safety valve - it is the ultimate fallback.
-        // Only clear it once we actually commit the hide (in Phase 3).
-        if(p.hT)clearTimeout(p.hT);
+    // "The script has finished" does NOT mean "the DOM is finished".
+    //
+    // Streamlit renders each element inside <Suspense fallback={<Skeleton/>}>
+    // and code-splits the implementations, so until a chunk resolves the page
+    // holds `stSkeleton` placeholders where the real widgets go. Measured
+    // 2026-07-31 at 4x CPU throttling on sync -> download: at the frame the
+    // script state went notRunning the page carried **16 skeletons**, and 535 ms
+    // later they became 15 checkboxes and a text input - +112 elements, and the
+    // page shrank 1365 -> 1279 px. The DOM is genuinely STILL for most of that
+    // gap, so a quiet window alone reads it as finished and uncovers onto a page
+    // that is about to visibly pop.
+    //
+    // This is Streamlit's own "I do not have this component yet" marker, so it
+    // is an exact signal rather than a heuristic - and the app never renders one
+    // itself (ui/course_selector.py only styles around them, having hit the same
+    // phenomenon from the other side). READY_MAX still caps the wait, so a chunk
+    // that never arrives degrades to an ordinary uncover instead of a hang.
+    function isPainted(){
+        var m=doc.querySelector('[data-testid="stMain"]');
+        return !m||!m.querySelector('[data-testid="stSkeleton"]');
+    }
 
-        // Phase 1 - 150 ms debounce.  Batches the rapid-fire mutations that
-        // occur during React's initial DOM insertion.
-        p.hT=setTimeout(function(){
+    // A fingerprint of what the MAIN page looks like.  It is a secondary
+    // signal now (screenId() is the primary one), used only to refuse to
+    // uncover while the main area still shows the OLD page.
+    //
+    // The block is looked up INSIDE stMain, and that is the entire bug fix.
+    // `doc.querySelector('[data-testid="stVerticalBlock"]')` returns the
+    // SIDEBAR's block - the sidebar is the first vertical block in the
+    // document - and this app's sidebar is identical on every page. Measured
+    // 2026-07-31: 59 elements on download, sync AND today. So the "element
+    // count" half of the fingerprint was a constant, the whole fingerprint
+    // collapsed to stMain.scrollHeight, and any two screens of equal height
+    // were indistinguishable. That is why sync<->today took 8 seconds.
+    function pageFingerprint(){
+        var m=doc.querySelector('[data-testid="stMain"]');
+        if(!m)return '';
+        var vb=m.querySelector('[data-testid="stVerticalBlock"]');
+        return m.scrollHeight+'|'+(vb?vb.querySelectorAll('*').length:0)
+            +'|'+m.querySelectorAll('[data-testid="stElementContainer"]').length;
+    }
 
-            // Phase 2 - Wait for Streamlit's Python script to finish.
-            // Poll every 150 ms until stStatusWidget is removed from the DOM.
-            // The 8 s safety valve guarantees we can never poll forever.
-            function waitForReady(){
-                // Overlay already hidden (safety valve or a prior hide): stop the
-                // loop so it can never fire scroll/side-effects after teardown.
-                // Also bail if the overlay got detached from the DOM (a Streamlit
-                // hot-reload can replace document.body): p.vis would still say
-                // "visible" while nothing actually covers the page, so the user is
-                // free to click - and this loop would later yank them to the top.
-                if(!p.vis||!p.el.isConnected){p.vis=false;p.hT=null;return;}
-                if(!isStReady()){
-                    p.hT=setTimeout(waitForReady,150);
-                    return;
+    function scrollTop(){
+        // abortScroll: a click reached a button while the mask claimed to be
+        // covering, so it was NOT actually blocking input. The user is already
+        // interacting with a settled page (e.g. expanding a sync-history card);
+        // uncover silently rather than yanking them to the top.
+        if(p.abortScroll){p.abortScroll=false;return;}
+        p.abortScroll=false;
+        win.scrollTo(0,0);
+        var sc=doc.querySelectorAll('[data-testid="stMain"],'
+            +'[data-testid="stAppViewContainer"],[data-testid="stVerticalBlock"]');
+        for(var i=0;i<sc.length;i++) sc[i].scrollTop=0;
+    }
+
+    function done(){
+        // Scrolling belongs to the NAVIGATION, not to the mask: with a deferred
+        // show the mask often never paints, and a new screen must still arrive
+        // at the top. So this runs on the decision, not on the uncover.
+        //
+        // ...but ONLY when a navigation actually happened. Three of the exits
+        // below are "nothing came of that click" (no screen change, no run at
+        // all, valve), and scrolling there would yank the user to the top of a
+        // page they never left. Re-reading the screen id here rather than
+        // taking a flag from each caller keeps that impossible to get wrong at
+        // a call site, and is correct for the valve too - which may fire on
+        // either kind of click.
+        if(screenId()!==p.preScreen)scrollTop();
+        uncover();
+    }
+
+    // The watcher.  One loop, three ways out, each with a different meaning.
+    //
+    // Everything is gated on `changed` - the app's own screen id differing from
+    // the one captured at click time. That single condition replaces the old
+    // `awaitChange` fingerprint dance AND makes the two-rerun pattern a
+    // non-event: a sidebar nav button mutates session state and calls
+    // st.rerun(), so run 1 renders the sidebar with the OLD screen id and only
+    // run 2 publishes the new one. Measured, the gap between those two runs
+    // does reach the DOM as a brief `notRunning` (20-38 ms here, longer under
+    // load) - and a rule that trusts readiness alone uncovers inside it. In the
+    // replay of 54 recorded navigations that mistake happened in 19 of them.
+    function watch(){
+        p.watchT=null;
+        if(!p.armed)return;
+        // The mask may have been detached by a Streamlit hot-reload replacing
+        // document.body. p.vis would still claim it is covering while nothing
+        // is, so the user is free to click - and this loop would later scroll
+        // them to the top of a page they are already reading.
+        if(p.vis&&!p.el.isConnected){p.vis=false;p.armed=false;return;}
+
+        var now=Date.now();
+        var ready=isStReady();
+        if(!ready)p.sawRun=true;
+        var changed=screenId()!==p.preScreen;
+
+        if(changed){
+            if(ready){
+                if(!p.readyAt)p.readyAt=now;
+                // Nothing is covering the page, so there is no reveal to get
+                // wrong: stand down at once. The quiet window below exists to
+                // stop a HALF-BUILT page being uncovered - it has no job when
+                // the page was never covered, and holding on regardless is
+                // what kept the mask fading in over navigations that had
+                // already finished (measured: peak opacity 0.36-0.62 on
+                // screens that were done in 152-188 ms).
+                //
+                // This is also the whole deferred-show idea completing itself.
+                // The paint is 200 ms away, so on a machine where a screen
+                // arrives inside 200 ms the mask is never painted at all, and
+                // on a slower one it still covers the swap. Nothing is tuned to
+                // a particular machine; the race between the two timers IS the
+                // adaptation, and the fade means a photo finish costs a few
+                // percent of opacity rather than a black flash.
+                if(!p.vis){done();return;}
+                // Uncover once the run has ended, the lazy components have
+                // actually arrived, AND the DOM has gone quiet. Quiet, not a
+                // fixed hold: measured, the DOM keeps moving for ~58 ms after
+                // the run ends on this machine and ~334 ms at 4x CPU
+                // throttling, so any constant is wrong for one of them while a
+                // quiet window is right for both.
+                var quiet=now-p.lastMut;
+                if(now-p.readyAt>=READY_MAX){done();return;}
+                if(now-p.readyAt>=MIN_HOLD&&quiet>=QUIET&&isPainted()){
+                    done();return;
                 }
-                // Phase 3 - Script is done, but React DOM reconciliation may still
-                // be running.  awaitChange=true is always set for all nav buttons:
-                // we compare against p.preFP (fingerprint captured at click time)
-                // and do not start counting stability until the DOM has changed
-                // from the pre-click state.  This handles:
-                //   (a) Two-rerun pattern: sidebar nav buttons call st.rerun() at
-                //       the end of Rerun 1, creating a gap where stStatusWidget is
-                //       absent.  Without awaitChange, Phase 3 would count the old
-                //       (unchanged) page as stable and hide prematurely.
-                //   (b) Slow startup: Streamlit may not have injected stStatusWidget
-                //       yet when Phase 2 first polls.
-                // - If DOM already differs from preFP → React reconciled during
-                //   Phase 1/2; just count stability normally (no extra wait).
-                // - If DOM still matches preFP → old page still displayed;
-                //   wait for the first geometry change, then count stability.
-                var target=doc.querySelector('[data-testid="stMain"]')||doc.body;
-                var hasChanged=!p.awaitChange||(pageFingerprint(target)!==(p.preFP||''));
-                var lastFP='';
-                var stableCount=0;
-                function pollStable(){
-                    // Overlay already hidden (safety valve or a prior hide), or
-                    // detached from the DOM: abort so a stale loop can never yank
-                    // scroll after the overlay is gone / while it isn't covering.
-                    if(!p.vis||!p.el.isConnected){p.vis=false;p.hT=null;return;}
-                    // If a new rerun started (e.g. st.query_params.update() on the
-                    // previous rerun triggered a second server round-trip), go back
-                    // to Phase 2 so we wait for it to finish before counting stability.
-                    if(!isStReady()){p.hT=setTimeout(waitForReady,150);return;}
-                    var fp=pageFingerprint(target);
-                    if(!hasChanged){
-                        if(fp!==p.preFP){
-                            // DOM moved past pre-click state - begin stability.
-                            hasChanged=true;lastFP=fp;stableCount=0;
-                        }
-                        // else: old page still displayed - keep polling.
-                    }else{
-                        if(fp===lastFP){
-                            stableCount++;
-                            if(stableCount>=6){
-                                // Layout stable for ~1200 ms.  Attempt hide.
-                                p.awaitChange=false;p.preFP=null;
-                                // Capture the stable fingerprint for the rAF guard.
-                                var commitFP=lastFP;
-                                requestAnimationFrame(function(){
-                                    // The overlay may have been torn down during the
-                                    // ~16 ms rAF gap (the 8 s safety valve can fire, or a
-                                    // hot-reload can detach it).  pollStable's guard ran
-                                    // BEFORE this callback was queued, so re-check here -
-                                    // otherwise the scroll below still executes on a page
-                                    // the user is already reading and interacting with.
-                                    if(!p.vis||!p.el.isConnected){p.vis=false;p.hT=null;return;}
-                                    // Guard against the ~16 ms rAF gap: a late mutation
-                                    // (deep React cleanup, URL-param update, second rerun)
-                                    // may have fired between the stableCount decision and
-                                    // now.  If the DOM changed or a new rerun started,
-                                    // restart Phase 3 instead of hiding prematurely.
-                                    var curFP=pageFingerprint(target);
-                                    if(!isStReady()||curFP!==commitFP){
-                                        stableCount=0;lastFP=curFP;
-                                        p.hT=setTimeout(pollStable,200);
-                                        return;
-                                    }
-                                    // Confirmed stable AND still the active navigation
-                                    // overlay.  Scroll to top as the LAST act before
-                                    // hiding, so it fires exactly once per navigation -
-                                    // never early, never repeatedly, and never while the
-                                    // user reads a settled page.  Streamlit uses internal
-                                    // scroll containers, not the window - hit all
-                                    // candidates.
-                                    //
-                                    // abortScroll: a click reached a button while the
-                                    // overlay was supposedly covering the page, so it was
-                                    // NOT actually blocking input.  The user is already
-                                    // interacting (e.g. expanding a sync-history card);
-                                    // hide silently rather than yanking them to the top.
-                                    if(!p.abortScroll){
-                                        win.scrollTo(0,0);
-                                        var sc=doc.querySelectorAll(
-                                            '[data-testid="stMain"],'
-                                            +'[data-testid="stAppViewContainer"],'
-                                            +'[data-testid="stVerticalBlock"]'
-                                        );
-                                        for(var i=0;i<sc.length;i++) sc[i].scrollTop=0;
-                                    }
-                                    p.abortScroll=false;
-                                    if(p.safeT){clearTimeout(p.safeT);p.safeT=null;}
-                                    p.el.style.display='none';p.vis=false;p.hT=null;
-                                });
-                                return;
-                            }
-                        }else{
-                            // Layout still changing - reset stability counter.
-                            stableCount=0;lastFP=fp;
-                        }
-                    }
-                    p.hT=setTimeout(pollStable,200);
+            }else{
+                p.readyAt=0;
+                // The long-run path. A download, a sync or an analysis holds
+                // the script thread for minutes, so "wait for the run to
+                // finish" would mean covering the operation's own progress
+                // dashboard for its whole duration - which is exactly what used
+                // to happen, bounded only by the 8 s valve. Here the app has
+                // told us a run is under way (data-busy), the screen id has
+                // moved to the run's screen, and the main area no longer looks
+                // like the page we left; once the DOM goes quiet the dashboard
+                // is up and the user should be watching it, not a spinner.
+                if(isBusyRun()&&pageFingerprint()!==p.preFP&&now-p.lastMut>=BUSY_QUIET){
+                    done();return;
                 }
-                pollStable();
             }
-            waitForReady();
-        },150);
+        }else if(ready&&p.sawRun){
+            // A run happened but the screen id never moved: the click did not
+            // navigate after all (a guard declined it, or it re-rendered the
+            // same screen). Bounded so this costs a beat, not the valve.
+            if(!p.readyAt)p.readyAt=now;
+            if(now-p.readyAt>=NOCHANGE_MAX){done();return;}
+        }else{
+            p.readyAt=0;
+            // No run has even STARTED and the screen has not moved. A real
+            // navigation's run reaches the DOM in well under NORUN_MAX
+            // (measured 34-78 ms here, ~300 ms at 4x CPU throttling), so this
+            // can only mean the click produced nothing at all. Bounded here
+            // rather than left to the valve, because "a mask that sits for 8
+            // seconds over a page that is already finished" is the entire
+            // defect this rewrite exists to remove - it must not survive in a
+            // corner.
+            if(!p.sawRun&&now-p.t0>=NORUN_MAX){done();return;}
+        }
+
+        // The valve. A render that is STILL RUNNING is slow, not hung, and
+        // uncovering it shows a frozen half-built page for however long the
+        // render still takes. Measured 2026-07-31: a sync-page render stalled
+        // 14.7 s behind an expired fetch_courses cache (10-minute TTL, two
+        // Canvas round-trips); the old unconditional 8 s valve uncovered onto
+        // that half-page and left it there for the remaining 8.5 s. Waiting is
+        // the honest answer - "Loading..." is true, a half-built page is not.
+        if(now-p.t0>=VALVE&&(ready||now-p.t0>=HARD_VALVE)){done();return;}
+        p.watchT=win.setTimeout(watch,25);
+    }
+
+    // Backstop for the case where the watcher's timer chain dies with its
+    // realm and no new injection arrives to re-adopt it - which is precisely
+    // what a long stalled render looks like, since a stalled script emits no
+    // deltas and therefore re-injects nothing.
+    function valveFire(){
+        p.safeT=null;
+        if(!p.armed)return;
+        var el=Date.now()-p.t0;
+        if(!isStReady()&&el<HARD_VALVE){
+            p.safeT=win.setTimeout(valveFire,Math.min(VALVE,HARD_VALVE-el));
+            return;
+        }
+        done();
+    }
+
+    function arm(){
+        p.armed=true;
+        p.t0=Date.now();
+        p.lastMut=p.t0;
+        p.readyAt=0;
+        p.sawRun=false;
+        p.abortScroll=false;
+        p.preScreen=screenId();
+        p.preFP=pageFingerprint();
+        if(p.showT)win.clearTimeout(p.showT);
+        if(p.watchT)win.clearTimeout(p.watchT);
+        // With no deferral, paint SYNCHRONOUSLY from the click handler rather
+        // than through a timer. A setTimeout(0) is still a macrotask hop, and
+        // measured it cost ~34 ms before the mask reached full strength - which
+        // was 100 % of the remaining visible churn. Painting inline puts the
+        // mask in the DOM before the browser's next frame, so the swap is
+        // covered from the first paint after the click.
+        if(SHOW_DELAY<=0){paint();}
+        else{p.showT=win.setTimeout(paint,SHOW_DELAY);}
+        p.watchT=win.setTimeout(watch,25);
+        // Last-resort valve. It should now never fire; it stays because the
+        // failure it guards against - a mask nothing can lift - is the one
+        // failure the user cannot work around.
+        if(p.safeT)win.clearTimeout(p.safeT);
+        p.safeT=win.setTimeout(valveFire,VALVE);
     }
 
     // --- Register click listener once ---
@@ -307,11 +570,33 @@ components.html("""<script>
         'div[class*="st-key-btn_custom_download"]',// Course Selector: Custom Download
         'div[class*="st-key-btn_quick_download"]', // Course Selector: Quick Download
         'div[class*="st-key-action_dl_back"]',    // Back in download settings
-        'div[class*="st-key-qd_goto_advanced"]'   // Customize configuration in Quick Download
+        // Custom Download's "Confirm and Download". Quick Download's twin
+        // (page_nav_quick_start) was covered and this one was not, so the same
+        // action was masked or bare depending on which screen you started it
+        // from. Same class of gap as _retry_failed_btn below.
+        'div[class*="st-key-action_dl_confirm"]', // Start the download (Custom)
+        'div[class*="st-key-qd_goto_advanced"]',  // Customize configuration in Quick Download
+        // Retry replaces a completion screen with a live run dashboard - as big
+        // a screen change as any Continue button, and it was the one such
+        // action with no cover at all. It is safe to list only now: with the
+        // old hide path a run-starting button meant a flat 8-second blindfold
+        // over the run's own progress UI, so adding it would have made the
+        // worst case worse. Key is `<prefix>_retry_failed_btn`, hence no
+        // `st-key-` anchor.
+        'div[class*="_retry_failed_btn"]'         // Retry failed downloads
     ].join(',');
-    if(!p.clickAdded){
-        p.clickAdded=true;
-        doc.addEventListener('click',function(e){
+    // Re-bind a FRESH listener on every injection, never a one-time guard.
+    // components.html destroys and recreates its iframe on every rerun, and a
+    // handler whose closure belongs to a destroyed realm stops firing silently
+    // - see the Panopto mask below, which already does exactly this, and the
+    // JS-bridge rules in CLAUDE.md. The previous `if(!p.clickAdded)` form also
+    // meant any edit to this handler kept running the ORIGINAL closure until a
+    // full page reload, so a broken change could look fine while testing.
+    // The stored reference stays valid for removeEventListener even when its
+    // realm is gone, which is what makes the swap safe.
+    try{ if(p.handler) doc.removeEventListener('click',p.handler,true); }catch(_){}
+    {
+        p.handler=function(e){
             if(!e.target.closest('button'))return;
             var btn = e.target.closest(NAV_SEL);
             // A click reached a button while the overlay claims to be visible, so it
@@ -340,35 +625,54 @@ components.html("""<script>
                 var backendCount=countEl?parseInt(countEl.getAttribute('data-count'),10):0;
                 if(checkedCourses.length===0&&backendCount===0)return;
             }
-            // Always capture the pre-click fingerprint for all nav buttons.
-            // Phase 3 will not count stability until the DOM has actually changed
-            // from the pre-click state. This fixes the two-rerun race condition:
-            // sidebar nav buttons (Download/Sync) call st.rerun() at the end of
-            // Rerun 1, creating a brief gap where stStatusWidget is absent between
-            // Rerun 1 and Rerun 2. Without awaitChange, Phase 3 would see the old
-            // page as "stable" for 1200ms and hide the overlay before the new page
-            // renders. It also handles slow Streamlit startup where stStatusWidget
-            // hasn't been injected yet when Phase 2 first polls.
-            p.awaitChange=true;
-            p.preFP=pageFingerprint(doc.querySelector('[data-testid="stMain"]')||doc.body);
-            show();
-        },true);
+            // Arm. The mask is NOT painted here - see SHOW_DELAY in arm().
+            arm();
+        };
+        doc.addEventListener('click',p.handler,true);
     }
 
     // --- Recreate MutationObserver on every iframe load ---
     // The previous observer (from the last iframe context) was disconnected when
     // that iframe was destroyed.  Always create a fresh one here.
-    // The observer triggers schedHide() on DOM changes to kick off the 3-phase
-    // sequence.  Phase 3 itself uses geometry polling (not mutations) to decide
-    // when to hide - so even if mutations stop while stale elements linger,
-    // the polling loop catches the eventual cleanup.
+    //
+    // Its only job now is to timestamp the last DOM change; the watcher owns
+    // every decision. It used to RESTART the whole hide sequence on each
+    // mutation, which meant a screen that repaints continuously - a run
+    // dashboard repaints ~2.5x/second - could starve the hide indefinitely and
+    // leave the 8 s valve as the only way out.
     if(p.obs){try{p.obs.disconnect();}catch(_){}}
     p.obs=new MutationObserver(function(){
-        if(!p.vis)return;
-        schedHide(); // restarts the 3-phase sequence on every DOM change
+        if(p.armed)p.lastMut=Date.now();
     });
     p.obs.observe(doc.querySelector('[data-testid="stMain"]')||doc.body,
         {childList:true,subtree:true,attributes:false,characterData:false});
+
+    // --- Re-adopt an in-flight navigation into THIS realm ---
+    // Every timer above is a closure belonging to the iframe that created it,
+    // and a navigation re-injects this script (that is the whole point of the
+    // re-bind rule for the click listener). A watcher left owned by the
+    // outgoing realm is the same silent-death hazard, only worse: nothing would
+    // ever lift the mask except the valve. Re-arming from the current realm on
+    // every injection costs three timer swaps and removes the question.
+    // Deadlines are recomputed from p.t0, so re-adoption never extends them.
+    if(p.armed){
+        var el=Date.now()-p.t0;
+        if(p.watchT)win.clearTimeout(p.watchT);
+        p.watchT=win.setTimeout(watch,25);
+        if(p.showT){
+            win.clearTimeout(p.showT);
+            p.showT=win.setTimeout(paint,Math.max(0,SHOW_DELAY-el));
+        }
+        if(p.safeT){
+            win.clearTimeout(p.safeT);
+            p.safeT=win.setTimeout(valveFire,Math.max(0,VALVE-el));
+        }
+    }else if(!p.vis&&p.el){
+        // Not navigating and not covering: make sure a fade-out whose timer
+        // died with its realm still ends up display:none rather than an
+        // invisible full-screen element sitting on the page.
+        p.el.style.display='none';
+    }
 
     // --- Server-shutdown watchdog (branded "app closed" screen) ---
     // When the user quits the controller/app the Streamlit server dies but the
@@ -662,25 +966,10 @@ def _next_phase_after_courses() -> str:
 
 
 
-@st.cache_resource(ttl=600, show_spinner=False)  # 10-minute TTL; spinner handled by course selector placeholder
-def fetch_courses(token, url):
-    """Return all enrolled courses, each annotated with .is_favorite (bool).
-
-    Callers that previously filtered by fav_only should now do:
-        [c for c in courses if c.is_favorite]  # favorites
-        courses                                  # all
-    """
-    mgr = CanvasManager(token, url)
-    all_courses = list(mgr.get_courses(favorites_only=False))
-    all_courses.sort(key=lambda c: (c.name or "").lower())
-    try:
-        fav_ids = {c.id for c in mgr.get_courses(favorites_only=True)}
-    except Exception as e:
-        logger.warning(f"fetch_courses: favorites fetch failed, treating all as non-favorite: {e}")
-        fav_ids = set()
-    for c in all_courses:
-        c.is_favorite = c.id in fav_ids
-    return all_courses
+# The course list is cached and refreshed OFF the render path - see
+# core/course_cache.py for why (it was the largest remaining page-render
+# blocker: ~950 ms of Canvas round-trips, paid on every sidebar navigation).
+from core.course_cache import fetch_courses
 
 # --- Sidebar: Navigation & Settings (delegated to ui.auth) ---
 if st.session_state['is_authenticated']:
@@ -717,10 +1006,35 @@ if not st.session_state.get('_auto_sync_checked'):
 #  behind them renders mis-styled for a few frames.)
 
 # --- Wizard Steps ---
-# Wrap in st.empty().container() to prevent stale elements from previous steps
-# persisting during long-running operations (e.g., sync downloads via asyncio.run).
-_main_content = st.empty()
-with _main_content.container():
+# A PLAIN container - deliberately NOT st.empty().container(), and this is the
+# fix for a measured defect, not a simplification.
+#
+# `st.empty()` is an ELEMENT: it enqueues an `Empty` delta immediately.
+# `slot = st.empty(); slot.container(...)` puts both deltas on the SAME delta
+# path, and ForwardMsgQueue.enqueue composes two deltas at one path into the
+# last one - so the `Empty` normally never reaches the browser. But composition
+# only holds while BOTH are still in the queue, and Runtime._loop_coroutine
+# flushes every ~10ms. When a flush lands between those two lines, the `Empty`
+# ships on its own and the browser renders an empty box IN PLACE OF THE WHOLE
+# PAGE until the container delta arrives.
+#
+# Reported as "after a certain amount of clicks the whole page turns dark for
+# ~10ms and then comes back straight, with no UI shifting". Reproduced 2026-07-31
+# by driving 300 rapid reruns: the page blanked FOUR times (~1.3% of reruns).
+# Captured mid-dip - stMain down to 5-6 element containers, every one of them
+# height 0, innerText "", and exactly one stEmpty present; stMain's own height
+# stayed 999px, which is why the content returns without shifting anything.
+#
+# The wrapper existed so a long-running screen could wipe the page mid-run via
+# `main_placeholder.empty()`. It bought almost nothing: `render_sync_step4()` is
+# called with NO arguments, so sync/analysis.py's "wipe before blocking on
+# analysis" has been a no-op for its whole life, and the only two live callers
+# blanked the page ~200ms before an st.rerun() replaced it anyway - leaving the
+# previous screen up until the new one arrives is the smoother of the two.
+#
+# Both forms emit exactly ONE `vertical` block at this index, so nothing about
+# the page's reconciliation shape changes; only the stray `Empty` is gone.
+with st.container():
 
     # (No preset-dialog import here: ui/download_settings.py opens them at its
     #  own call sites, so importing them into this scope bound two names that
@@ -741,7 +1055,7 @@ with _main_content.container():
 
         # ========== SYNC MODE - STEP 1 ==========
         elif st.session_state['current_mode'] == 'sync':
-            render_sync_step1(fetch_courses, _main_content)
+            render_sync_step1(fetch_courses)
 
         
             # ========== DOWNLOAD MODE - STEP 1 ==========
@@ -2546,10 +2860,32 @@ with _main_content.container():
 #     which needs the modal re-emitted at top script level on every rerun.
 #
 # Only ONE may open per run - Streamlit crashes with "only one dialog allowed
-# open at a time". The two flags are mutually exclusive by construction: opening
+# open at a time". The flags are mutually exclusive by construction: opening
 # transcription from Settings pops _stg_dialog_open, and panopto_page's close
 # handler sets _stg_reopen_dialog to bring Settings back afterwards.
-if st.session_state.get('_pan_dialog_open'):
+#
+# The acceptable-use notice comes FIRST. It gates the Panopto feature itself, so
+# it can be raised from a settings-card callback, a Quick Download preset or a
+# sync confirm - any of which could otherwise be contending for the same slot.
+# Its guard returns False and the caller does nothing further, so the run this
+# notice interrupts has not started and there is nothing for another modal to be
+# about. Deciding precedence here (rather than at the four call sites) is what
+# keeps that guarantee in one place.
+from shared.legal import NOTICE_OPEN_KEY as _PAN_NOTICE_OPEN
+from shared.legal import resume_is_pending as _pan_resume_pending
+if st.session_state.get(_PAN_NOTICE_OPEN):
+    from ui.panopto_notice import render_panopto_notice
+    render_panopto_notice()
+elif _pan_resume_pending():
+    # The notice has just been answered. Its action is deliberately NOT run in
+    # that same script run: the transition it performs enters the blocking
+    # download at app.py:1359, a thousand lines above this host, so the run
+    # would never get here and the modal would stay painted over the download.
+    # This lets the current run FINISH (which is what removes the modal) and
+    # fires the action on the next tick. See render_pending_resume.
+    from ui.panopto_notice import render_pending_resume
+    render_pending_resume()
+elif st.session_state.get('_pan_dialog_open'):
     from ui.panopto_page import render_transcription_dialog
     render_transcription_dialog()
 else:

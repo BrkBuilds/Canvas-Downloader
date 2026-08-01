@@ -305,8 +305,22 @@ def cleanup_download_state() -> None:
     except Exception:
         pass
 
-    # Clear the course list cache so a re-login or re-run fetches fresh data.
-    st.cache_resource.clear()
+    # NOT cleared here: the course list cache.
+    #
+    # This used to call `st.cache_resource.clear()` - a GLOBAL clear, and
+    # `fetch_courses` is the app's only cache_resource, so it nuked the course
+    # list. That reads as "start the next run fresh", but this function is also
+    # called by the SIDEBAR NAV BUTTONS on every mode switch, so every single
+    # navigation threw the course list away and the next page that needed one
+    # paid ~950 ms of sequential Canvas round-trips. Measured 2026-07-31: it is
+    # why `-> Today` was the only fast navigation in the app (it is the one
+    # screen that needs no course list) while the rest cost 1.2-1.9 s.
+    #
+    # Nothing about finishing a download changes which courses you are enrolled
+    # in, and the two cases that genuinely need fresh data clear it explicitly:
+    # logout (`ui/auth.py`) and the course list's Refresh button
+    # (`ui/course_selector.py`). Everything else is handled by the background
+    # refresh in `app.fetch_courses`.
     st.session_state.pop('sync_manager', None)
     st.session_state.pop('cm', None)
 
@@ -356,8 +370,22 @@ def cleanup_sync_state() -> None:
     except Exception:
         pass
 
-    # Clear the course list cache so a re-login or re-run fetches fresh data.
-    st.cache_resource.clear()
+    # NOT cleared here: the course list cache.
+    #
+    # This used to call `st.cache_resource.clear()` - a GLOBAL clear, and
+    # `fetch_courses` is the app's only cache_resource, so it nuked the course
+    # list. That reads as "start the next run fresh", but this function is also
+    # called by the SIDEBAR NAV BUTTONS on every mode switch, so every single
+    # navigation threw the course list away and the next page that needed one
+    # paid ~950 ms of sequential Canvas round-trips. Measured 2026-07-31: it is
+    # why `-> Today` was the only fast navigation in the app (it is the one
+    # screen that needs no course list) while the rest cost 1.2-1.9 s.
+    #
+    # Nothing about finishing a download changes which courses you are enrolled
+    # in, and the two cases that genuinely need fresh data clear it explicitly:
+    # logout (`ui/auth.py`) and the course list's Refresh button
+    # (`ui/course_selector.py`). Everything else is handled by the background
+    # refresh in `app.fetch_courses`.
     st.session_state.pop('sync_manager', None)
     st.session_state.pop('cm', None)
 

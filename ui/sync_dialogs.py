@@ -21,7 +21,7 @@ from pathlib import Path
 import streamlit as st
 
 from shared import theme
-from shared.components import SVG_FOLDER_YELLOW
+from shared.components import SVG_FOLDER_YELLOW, pad_slot_children
 from core.sync_manager import SyncManager
 from shared.helpers import (
     esc,
@@ -900,20 +900,32 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
     folder_name = Path(pending_folder).name if pending_folder else "Select Course Folder →"
     editing_idx = st.session_state.get('editing_pair_idx')
 
-    # (1) Everything inside one bordered container
+    # (1) Everything inside one bordered container.
+    #
+    # This form must be STRUCTURALLY ISOMORPHIC to the sync-list row it replaces:
+    # ONE top-level slot, and FIVE children. Streamlit reconciles by index and
+    # only prunes the previous run's nodes when the script run FINISHES, so both
+    # numbers matter and they fail in different ways:
+    #   * more or fewer SLOTS than a row shifts every item below it, and the tail
+    #     of the old render stays on screen until the run ends (measured: a
+    #     duplicated "Add Course" row for ~25ms when cancelling out of the form);
+    #   * fewer CHILDREN than the row's five columns leaves the inherited extras
+    #     in place, because addBlock hands a new block the children of whatever
+    #     block sat at its index and only the ones our own elements overwrite go
+    #     away (measured: the row's red "Remove" button sitting inside the open
+    #     edit form, form 247px instead of 193px).
+    # Together those two were the reported "the old grey card shifts below the
+    # edit form and then disappears" and, from the Add Course button, "an empty
+    # box with only the Add Course button in it". See the trailing st.empty().
     with st.container(border=True, key="edit_form_container"):
-        st.html("""<style>
-            /* Reduce vertical margins between elements inside the inline edit form */
-            .st-key-edit_form_container > div[data-testid="stVerticalBlock"] {
-                gap: 0.25rem !important;
-            }
-            /* (Removed: a padding:12px 16px on the retired
-               stVerticalBlockBorderWrapper around this form. In 1.51 the
-               border=True padding sits on the keyed block itself; the form has
-               been rendering with Streamlit's stock padding and is signed off
-               that way, so re-applying 12px 16px now would be a change, not a
-               repair.) */
-        </style>""")
+        # A style-only st.html() setting `gap: 0.25rem` used to sit here. It was
+        # a DUPLICATE - global.css already declares `gap: 4px !important` on the
+        # identical selector (see "SYNC FOLDER ROW COMPACT LAYOUT"), which is the
+        # same 4px - so removing it changes no computed style. Worth removing
+        # anyway: a style-only st.html goes to Streamlit's EVENT container, one
+        # more slot in the index-addressed list that a dialog's fragment rerun
+        # rewinds (CLAUDE.md, "A style-only st.html() after a dialog CALL SITE
+        # gets DELETED"). The static file is where this rule belongs.
         # (3) CSS for cancel button red styling (Moved to render_sync_step1 for global scope/no flash)
 
         # --- Course Selection (Pop-up Dialog) ---
@@ -956,7 +968,15 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         with col_c_btn:
             if st.button(btn_label, key="btn_open_course_dialog"):
                 st.session_state["sync_d_selected_id"] = selected_course_id
-                select_course_dialog_inner(courses, selected_course_id)
+                # FLAG, not a call. Opening the dialog here would open it from
+                # the middle of the sync page - and a dialog body is a fragment
+                # whose rerun rewinds the EVENT container to its call site,
+                # destroying every style-only st.html() the page emits after
+                # this point (the Analyze / Quick Sync button stylesheet among
+                # them). sync_ui.render_sync_step1 opens it at the very end;
+                # _sync_pairs_section clears this flag at the start of each run
+                # so a stale one can never open the dialog by itself.
+                st.session_state["_sync_open_course_dialog"] = True
         
         with col_c_notice:
             if st.session_state.get('sync_auto_detected_course') and selected_course_id:
@@ -1267,6 +1287,13 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                         """, 
                         unsafe_allow_html=True
                     )
+
+        # This form renders at an index a sync-list row occupied, so it must
+        # present the same number of children as every other occupant of that
+        # slot - see shared.components.pad_slot_children for the measurements
+        # in both directions. The form's own four are: course row, folder row,
+        # the hidden notice slot, and the button row.
+        pad_slot_children(4)
 
 
 # ===================================================================

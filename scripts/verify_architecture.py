@@ -25,6 +25,7 @@ Rules enforced:
     6. CSS selectors naming a testid Streamlit 1.51 no longer renders
     7. Literal HTML tags inside an st.html(<style>) block / closing style tag in .css
     8. Hex colours within 1.0 CIEDE2000 of a shared/theme.py token (palette drift)
+    9. A style-only st.html() the main script emits AFTER a dialog call site
 
 Rules 6 and 8 blank comments before scanning: a retired selector or a ramp's hex
 quoted in a comment to explain the design is documentation, not a violation.
@@ -992,6 +993,7 @@ RULE_LABELS = {
     5: "F-string <style> block with unescaped single CSS brace",
     6: "CSS selector naming a testid Streamlit no longer renders",
     7: "Literal angle-bracket tag name inside a CSS comment",
+    9: "Style-only st.html() emitted AFTER a dialog call site (fragment rewinds the event container)",
 }
 
 
@@ -1212,6 +1214,232 @@ def collect_css_files() -> list[Path]:
 
 
 # ---------------------------------------------------------------------------
+# Rule 9: a style-only st.html() the main script emits AFTER a dialog call site
+# ---------------------------------------------------------------------------
+#
+# Three Streamlit facts combine into a silent, invisible-in-review defect:
+#
+#   1. st.html("<style>...</style>") - content that is ONLY style tags - is not
+#      rendered where you call it. streamlit/elements/html.py routes it to the
+#      EVENT root container (_html_only_style_tags -> self._event_dg._enqueue).
+#      That is ONE global, INDEX-ADDRESSED list for the whole app.
+#   2. st.toast writes to the SAME list (streamlit/__init__.py: toast = _event.toast),
+#      and a toast is by nature conditional - it appears only on the run after
+#      some action queued it.
+#   3. A @st.dialog body is a FRAGMENT. streamlit/runtime/fragment.py snapshots
+#      ctx.cursors at the dialog's CALL SITE and restores it on every fragment
+#      rerun, which REWINDS that list's write index back to the call site.
+#
+# So the moment anything inside a dialog reruns the fragment while emitting one
+# more event element than the run that opened it, the extra element lands on the
+# index the MAIN script used for its next style-only st.html() and DELETES that
+# stylesheet. It stays deleted until the next full-page run.
+#
+# Measured in the real app 2026-07-30: the sync page invoked the Saved Groups
+# hub three lines above render_help_card(mode="card"). Deleting a saved pair
+# queues a toast (ui/hub_dialog.py:306); the fragment reran, the toast overwrote
+# the help card's stylesheet, the event list went 8 entries -> 7, and the card -
+# whose CSS is the only CSS in the app whose ABSENCE makes hidden content APPEAR
+# - unfolded itself 951px tall behind the open dialog with its checkbox still
+# unchecked.
+#
+# The fix is always one of: emit the stylesheet from a static .css file via
+# styles.inject_css() (st.markdown -> the MAIN container, which no fragment can
+# rewind), or invoke the dialog AFTER every event-container write on the page.
+#
+# Only STYLESHEETS count as victims here. A toast written after a dialog call
+# site is not a defect worth flagging: it is transient, it has already been
+# displayed, and it is only ever written on a click frame that is a full rerun.
+# Toasts matter as the CAUSE, not as the casualty.
+
+_STYLE_ONLY_RE = re.compile(r"<style[^>]*>.*?</style>", re.S | re.I)
+_HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.S)
+
+
+def _is_style_only_html_call(call: ast.Call) -> bool:
+    """True for st.html(...) whose body is nothing but style tags/comments.
+
+    Mirrors streamlit.elements.html._html_only_style_tags. The literal parts of
+    an f-string are enough: an interpolated value cannot turn a style-only body
+    into a non-style-only one, because it lands INSIDE the style element.
+    """
+    if not (isinstance(call.func, ast.Attribute) and call.func.attr == "html"):
+        return False
+    if not call.args:
+        return False
+    text = "".join(
+        n.value for n in ast.walk(call.args[0])
+        if isinstance(n, ast.Constant) and isinstance(n.value, str)
+    )
+    if "<style" not in text.lower():
+        return False
+    return _STYLE_ONLY_RE.sub("", _HTML_COMMENT_RE.sub("", text)).strip() == ""
+
+
+def _own_nodes(fn: ast.AST):
+    """Walk fn's body without descending into nested function/lambda bodies."""
+    stack = list(getattr(fn, "body", []))
+    while stack:
+        node = stack.pop()
+        yield node
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+                continue
+            stack.append(child)
+
+
+def _called_name(call: ast.Call) -> Optional[str]:
+    f = call.func
+    if isinstance(f, ast.Attribute):
+        return f.attr
+    if isinstance(f, ast.Name):
+        return f.id
+    return None
+
+
+_PROJECT_INDEX: Optional[tuple[set[str], set[str]]] = None
+
+
+def _project_index() -> tuple[set[str], set[str]]:
+    """(names that OPEN a dialog, names that reach a style-only st.html).
+
+    Whole-project, because both facts cross files: render_help_card lives in
+    shared/components.py while the dialog that clobbered it is called from
+    sync_ui.py. Computed once and cached; the fixpoint is tiny.
+
+    **Both sets are transitive, and the dialog side being transitive is not an
+    embellishment - it is the half that was missing.** The first version of this
+    rule only knew a function opened a dialog when the ``@st.dialog`` function was
+    called BY NAME in that same function, so it passed ``sync_ui.py`` clean while
+    a real instance of the very defect it exists to catch sat in it: the Save as
+    Pair / Save as Group dialogs are opened inside ``_sync_pairs_section``, and
+    the Analyze / Quick Sync button stylesheet is emitted by ``render_sync_step1``
+    AFTER its call to that helper. Reported by the user as "the action buttons'
+    text gets smaller and the page shifts" - the lost stylesheet is the one
+    setting their ``height: 3.2em`` and ``font-size: 1rem``.
+
+    A helper that opens a dialog only CONDITIONALLY still counts. The risk is
+    real whenever the branch is taken, and the fix (open it last) costs nothing
+    when it is not.
+    """
+    global _PROJECT_INDEX
+    if _PROJECT_INDEX is not None:
+        return _PROJECT_INDEX
+
+    funcs: dict[str, list[ast.AST]] = {}
+    dialogs: set[str] = set()
+    for path in collect_files():
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            funcs.setdefault(node.name, []).append(node)
+            if any(_is_st_dialog_decorator(d) for d in node.decorator_list):
+                dialogs.add(node.name)
+
+    writers = {
+        name for name, defs in funcs.items()
+        if any(isinstance(n, ast.Call) and _is_style_only_html_call(n)
+               for fn in defs for n in ast.walk(fn))
+    }
+
+    def _close(seed: set[str], *, skip_dialogs: bool) -> set[str]:
+        """Least fixpoint over call edges: a caller inherits the callee's property."""
+        out = set(seed)
+        changed = True
+        while changed:
+            changed = False
+            for name, defs in funcs.items():
+                if name in out:
+                    continue
+                for fn in defs:
+                    if any(isinstance(n, ast.Call)
+                           and _called_name(n) in out
+                           and not (skip_dialogs and _called_name(n) in dialogs)
+                           for n in ast.walk(fn)):
+                        out.add(name)
+                        changed = True
+                        break
+        return out
+
+    # Writers: a helper that calls a writer is a writer. A dialog is NOT counted
+    # here - its own stylesheets are emitted from inside the fragment, which is
+    # the cause, not the casualty.
+    writers = _close(writers, skip_dialogs=True)
+
+    # Openers: a helper that calls a dialog OPENS one, transitively. Seeded from
+    # the callers of a @st.dialog function rather than from the dialogs
+    # themselves, so a dialog is not treated as opening itself.
+    openers: set[str] = set()
+    for name, defs in funcs.items():
+        if name in dialogs:
+            continue
+        if any(isinstance(n, ast.Call) and _called_name(n) in dialogs
+               for fn in defs for n in ast.walk(fn)):
+            openers.add(name)
+    openers = _close(openers, skip_dialogs=False) - dialogs
+
+    _PROJECT_INDEX = (dialogs | openers, writers)
+    return _PROJECT_INDEX
+
+
+def check_event_writes_after_dialog(
+        tree: ast.AST, filepath: Path, suppressed: set[int],
+        index: Optional[tuple[set[str], set[str]]] = None) -> list[Violation]:
+    """Flag stylesheets the main script writes after opening a dialog.
+
+    ``index`` overrides the whole-project (openers, writers) pair. It exists so
+    the tests can exercise the rule against a synthetic source that names
+    functions this repo has never heard of. ``openers`` holds every name whose
+    CALL may open a dialog - the ``@st.dialog`` functions themselves and, just
+    as importantly, any helper that reaches one (see ``_project_index``).
+    """
+    openers, writers = index if index is not None else _project_index()
+    violations: list[Violation] = []
+
+    for fn in ast.walk(tree):
+        if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        # Inside a dialog BODY the writes are the cause, not the casualty. This
+        # asks the decorator, not the opener set: since openers are transitive,
+        # a name-set test here would skip every page function that reaches a
+        # dialog - i.e. exactly the functions this rule exists to check.
+        if any(_is_st_dialog_decorator(d) for d in fn.decorator_list):
+            continue
+
+        dialog_calls, style_writes = [], []
+        for node in _own_nodes(fn):
+            if not isinstance(node, ast.Call):
+                continue
+            name = _called_name(node)
+            if name in openers:
+                dialog_calls.append((node.lineno, name))
+            elif _is_style_only_html_call(node):
+                style_writes.append((node.lineno, "st.html(<style>)"))
+            elif name in writers:
+                style_writes.append((node.lineno, f"{name}()"))
+
+        if not dialog_calls:
+            continue
+        first_line, first_name = min(dialog_calls)
+        for lineno, what in sorted(w for w in style_writes if w[0] > first_line):
+            violations.append(Violation(
+                filepath=filepath,
+                lineno=lineno,
+                rule=9,
+                message=(f"{what} runs AFTER {first_name}() may open a dialog at "
+                         f"line {first_line}; a fragment rerun of that dialog can "
+                         f"overwrite this stylesheet"),
+                note="[move the CSS to styles/*.css, or invoke the dialog last]",
+                suppressed=lineno in suppressed,
+            ))
+    return violations
+
+
+# ---------------------------------------------------------------------------
 # Rule 8: a hex colour that is a near-duplicate of a design token
 # ---------------------------------------------------------------------------
 
@@ -1384,6 +1612,7 @@ def scan_file(filepath: Path) -> list[Violation]:
     violations.extend(check_css_fstring_braces(tree, filepath, suppressed))
     violations.extend(check_dead_testids(source, filepath, suppressed))
     violations.extend(check_literal_tags_in_style_py(tree, filepath, suppressed))
+    violations.extend(check_event_writes_after_dialog(tree, filepath, suppressed))
     if filepath.name != "theme.py":          # theme.py DEFINES the tokens
         violations.extend(check_near_duplicate_colours(source, filepath, suppressed))
 

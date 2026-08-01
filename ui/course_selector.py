@@ -58,6 +58,13 @@ _COURSES_LOADING_BOX = (
     "</div>"
 )
 
+# Space between the course list's top/bottom separators and the first/last row.
+# ONE constant because the whole point is that the two ends match: writing the
+# number twice is how they drift. Set to the list's inter-row gap so the
+# separators sit in the same rhythm as the rows between them.
+_LIST_END_PAD = 6
+
+
 # One line under each primary action saying what it does. Deliberately NOT a
 # tooltip: a tooltip fires every single time you move to click the button, which
 # a returning user reads as the app nagging them. A caption is there when you
@@ -782,6 +789,39 @@ def _render_multi_select_list(
         width: 100% !important;
         display: block !important;
     }}
+    /* While a row still holds Streamlit's loading skeleton, drop the optical
+       padding above. Those 4px/2px are tuned for TEXT - they sit behind the
+       label and nobody can see they are uneven. A skeleton is a FILLED block
+       that fills the content box, so the same 2px asymmetry renders as a
+       visibly uneven list: measured 10px above the first block, 8px below the
+       last and 12px between blocks, against 6/6/6 once the real rows land.
+       That mismatch was the complaint - the loading list read as a different
+       component than the loaded one, and its last block appeared to sit ON the
+       bottom separator.
+       Zeroing it makes the two states geometrically IDENTICAL, so the list does
+       not re-space itself as it resolves. The rule can only match while a
+       skeleton is present, so the loaded list is untouched.
+       Direct-child form: the skeleton is a direct child of the keyed element
+       container, and `:has(...)` without `>` would also match every ANCESTOR
+       that merely contains one (see the gap-leak note in CLAUDE.md). */
+    div[class*="st-key-{namespace}_chk_"]:has(> [data-testid="stSkeleton"]) {{
+        padding-top: 3px !important;
+        padding-bottom: 3px !important;
+    }}
+    /* The last row must not keep the -10px that pulls the NEXT row up - there
+       is no next row, so it hangs the list 10px past its own container and the
+       bottom separator cuts through it.
+       This is :last-child and NOT a per-course-id rule on purpose. The id form
+       (which this replaced) can only name the last course of the FINISHED list,
+       and it is emitted after every checkbox - so while the run is still
+       streaming, the rows that have arrived have no cancel at all and the last
+       one visibly overlaps the separator. Measured mid-load: -4px, i.e. the
+       block sat BELOW the line. :last-child is true of whichever row is last at
+       any instant, so the list is correct in every frame, not just the final
+       one. It also lands in this stylesheet, which is emitted BEFORE the rows. */
+    div[class*="st-key-{namespace}_chk_"]:last-child {{
+        margin-bottom: 0 !important;
+    }}
     div[class*="st-key-{namespace}_chk_"]:hover {{
         background-color: rgba(255, 255, 255, 0.03) !important;
     }}
@@ -847,15 +887,20 @@ def _render_multi_select_list(
         boundary_css.append(f"""
         div.st-key-{f_key} {{ margin-top: {first_item_top_offset} !important; }}
         """)
-    if len(courses) > 0:
-        l_key = f"{namespace}_chk_{courses[-1].id}"
-        boundary_css.append(f"""
-        div.st-key-{l_key} {{ margin-bottom: 0px !important; }}
-        """)
+    # NOTE: the last row's margin-bottom is handled STRUCTURALLY by the
+    # `:last-child` rule in this list's stylesheet above, not by a rule keyed to
+    # the last course's id. An id-keyed rule is only correct once the whole list
+    # has streamed in; until then the rows on screen have no cancel and the last
+    # one overlaps the bottom separator. See the comment on that rule.
 
     combined_css = dynamic_css + boundary_css
-    if combined_css:
-        st.html(f'<style>{"".join(combined_css)}</style>')
+    # Emitted UNCONDITIONALLY. A style-only st.html goes to the event container,
+    # which is index-addressed, so a stylesheet that appears on some runs and not
+    # others shifts every later one onto its neighbour's host (CLAUDE.md: "NEVER
+    # emit a <style> block CONDITIONALLY"). The old `if combined_css:` was safe
+    # only by accident - the id-keyed last-row rule above made the list non-empty
+    # on every run, and removing that rule is what would have armed it.
+    st.html(f'<style>{"".join(combined_css)}</style>')
     st.session_state['selected_course_ids'] = new_selected_ids
     return new_selected_ids
 
@@ -878,6 +923,39 @@ def _render_single_select_list(
         padding-right: 10px !important;
         width: 100% !important;
         display: block !important;
+    }}
+    /* While a row still holds Streamlit's loading skeleton, drop the optical
+       padding above. Those 4px/2px are tuned for TEXT - they sit behind the
+       label and nobody can see they are uneven. A skeleton is a FILLED block
+       that fills the content box, so the same 2px asymmetry renders as a
+       visibly uneven list: measured 10px above the first block, 8px below the
+       last and 12px between blocks, against 6/6/6 once the real rows land.
+       That mismatch was the complaint - the loading list read as a different
+       component than the loaded one, and its last block appeared to sit ON the
+       bottom separator.
+       Zeroing it makes the two states geometrically IDENTICAL, so the list does
+       not re-space itself as it resolves. The rule can only match while a
+       skeleton is present, so the loaded list is untouched.
+       Direct-child form: the skeleton is a direct child of the keyed element
+       container, and `:has(...)` without `>` would also match every ANCESTOR
+       that merely contains one (see the gap-leak note in CLAUDE.md). */
+    div[class*="st-key-{namespace}_chk_"]:has(> [data-testid="stSkeleton"]) {{
+        padding-top: 3px !important;
+        padding-bottom: 3px !important;
+    }}
+    /* The last row must not keep the -10px that pulls the NEXT row up - there
+       is no next row, so it hangs the list 10px past its own container and the
+       bottom separator cuts through it.
+       This is :last-child and NOT a per-course-id rule on purpose. The id form
+       (which this replaced) can only name the last course of the FINISHED list,
+       and it is emitted after every checkbox - so while the run is still
+       streaming, the rows that have arrived have no cancel at all and the last
+       one visibly overlaps the separator. Measured mid-load: -4px, i.e. the
+       block sat BELOW the line. :last-child is true of whichever row is last at
+       any instant, so the list is correct in every frame, not just the final
+       one. It also lands in this stylesheet, which is emitted BEFORE the rows. */
+    div[class*="st-key-{namespace}_chk_"]:last-child {{
+        margin-bottom: 0 !important;
     }}
     div[class*="st-key-{namespace}_chk_"]:hover {{
         background-color: rgba(255, 255, 255, 0.03) !important;
@@ -1588,7 +1666,11 @@ def _course_list_section(
         with _list_slot.container(key="course_list_box", border=True):
             render_course_list(
                 displayed_courses, "dl", multi_select=True,
-                first_item_top_offset="1px",
+                # "0", not a nudge: the gap to the top separator is owned by
+                # course_list_box's padding so it always equals the gap to the
+                # bottom one. Any offset here is added on top of that padding
+                # and breaks the symmetry.
+                first_item_top_offset="0",
                 sort=not query.strip(),  # already relevance-ranked when searching
             )
         # Shift-click range selection across the checkbox rows above.
@@ -1872,7 +1954,21 @@ def render_course_selector(fetch_courses_fn):
         margin-top: -1rem !important;
         box-sizing: border-box !important;
     }}
-    div.st-key-course_list_box {{ padding: 0 !important; }}
+    /* Breathing room at BOTH ends of the list, and it has to live here rather
+       than on the rows. The first row's margin-top and the last row's
+       margin-bottom are set per-course inside _render_multi_select_list (the
+       keys are course ids), so they are the wrong place to express "how far the
+       list sits from its separators" - the two ends were 1.0px and 0.8px, i.e.
+       both rows flush against a hairline while the rows themselves sat 6px
+       apart. Padding on the box is symmetric by construction and cannot drift
+       when the first/last course changes.
+       {_LIST_END_PAD}px == the inter-row gap, so separator -> row -> row ->
+       separator is one even rhythm. Keep the call site's
+       first_item_top_offset at "0" or the top gap silently gains that offset
+       back and the two ends stop matching. */
+    div.st-key-course_list_box {{
+        padding: {_LIST_END_PAD}px 0 !important;
+    }}
     /* Empty-state notice container: symmetric top/bottom padding so the notice
        sits evenly between the buttons-row separator and the bottom separator.
        The padding (vs a child margin) also defeats margin-collapse, which would

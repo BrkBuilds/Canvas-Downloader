@@ -642,6 +642,15 @@ def restore_saved_session() -> None:
                     if 'show_help_text' in config:
                         st.session_state['show_help_text'] = bool(config.get('show_help_text', True))
 
+                    # Mirrored into session state so the Settings dialog's
+                    # unsaved-changes check has something to compare against.
+                    # panopto.settings.is_globally_enabled() reads the file
+                    # directly and stays the source of truth for the engine -
+                    # this is a UI convenience, not a second store.
+                    if 'panopto_globally_enabled' in config:
+                        st.session_state['panopto_globally_enabled'] = bool(
+                            config.get('panopto_globally_enabled', True))
+
                     if 'default_download_path' in config:
                         saved_default = config.get('default_download_path', '') or ''
                         st.session_state['default_download_path'] = saved_default
@@ -1707,14 +1716,17 @@ def render_login_page(fetch_courses_fn):
                         "<svg class='privacy-list-icon' viewBox='-2 -2 28 28' width='14' height='14'><path fill='currentColor' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z'/></svg>"
                         "<div class='privacy-list-content'>"
                         "<div class='privacy-list-title'>Direct Connection</div>"
-                        "<div class='privacy-list-desc'>The app communicates exclusively and directly with the Canvas URL you provide. No proxies or intermediaries. Requests are sent to Canvas to read and fetch files from your Canvas courses, nothing else.</div>"
+                        "<div class='privacy-list-desc'>Your courses and files come straight from the Canvas URL you provide - no proxies, no intermediaries. "
+                        "The app makes three other connections, and none of them carry your data: your university's <b>Panopto</b> server, only if you download lecture recordings; "
+                        "<b>Hugging Face</b> and <b>PyPI</b>, only if you set up on-device transcription or GPU acceleration (a one-time download, like any other file); "
+                        "and a version check against <b>GitHub</b> when the app starts, which sends nothing but the request itself.</div>"
                         "</div>"
                         "</div>"
                         "<div class='privacy-list-item'>"
                         "<svg class='privacy-list-icon' viewBox='-2 -2 28 28' width='14' height='14'><path fill='currentColor' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20zm6.31-4.69L7.69 4.69C9.04 3.63 10.74 3 12 3c4.41 0 8 3.59 8 8 0 1.85-.63 3.55-1.69 4.9z'/></svg>"
                         "<div class='privacy-list-content'>"
                         "<div class='privacy-list-title'>Zero Telemetry</div>"
-                        "<div class='privacy-list-desc'>No tracking, no analytics, and absolutely no third-party data collection.</div>"
+                        "<div class='privacy-list-desc'>No tracking, no analytics, no accounts, and no third-party data collection. There is no backend to send anything to - the developer never receives anything from your machine.</div>"
                         "</div>"
                         "</div>"
                         "<div class='privacy-list-item'>"
@@ -1770,8 +1782,38 @@ def _render_authenticated_nav_top():
     _NAV_LOCKED_HELP = ("Switching pages is locked while a download or sync is "
                         "running. Use the run's own Cancel button to stop it.")
 
-    # Expose current mode+step for the JS overlay logic (read via doc.getElementById).
-    st.html(f"<span id='cdp_nav_state' data-mode='{mode}' data-step='{step}' style='display:none;position:absolute;pointer-events:none'></span>")
+    # Expose the current screen for the JS overlay logic (read via getElementById).
+    #
+    # `data-screen` is the SCREEN IDENTITY, and it is what tells the navigation
+    # overlay that the page it is covering has actually been replaced. It has to
+    # be an app-authored value: the overlay used to infer this from a geometry
+    # fingerprint, and the fingerprint collided. Measured 2026-07-31 - sync step
+    # 1, the Today page and the sync review screen all render at exactly
+    # scrollHeight 1049, so "the page changed" never became true and the overlay
+    # could only exit through its 8-second safety valve. Every sync<->today
+    # navigation, and every Analyze run, was covered for a flat 8 seconds.
+    #
+    # Every field is load-bearing; each is the ONLY one that moves for at least
+    # one navigation:
+    #   mode   sidebar nav, login, logout
+    #   step   Custom Download (1->2), Back (2->1), Confirm and Download (2->3)
+    #   quick  "Customize configuration" - Quick Download and Custom Download are
+    #          BOTH mode=download step=2, so without this they are one screen
+    #   status the run phases (scanning / running / panopto / done / cancelled),
+    #          which is what makes starting a download a screen change at all
+    #
+    # `data-busy` is the app's own "a long operation is in flight", taken from
+    # the same call that locks the nav buttons - so the overlay cannot disagree
+    # with the rest of the app about whether a run is under way. It is what lets
+    # the overlay uncover a progress dashboard while its script is still
+    # running: a download holds the script thread for minutes, so "wait for the
+    # script to finish" can never be the rule there.
+    _quick = 'q' if st.session_state.get('quick_download_mode') else ''
+    _status = st.session_state.get('download_status') or ''
+    _screen = _he(f"{mode}|{step}|{_quick}|{_status}", quote=True)
+    st.html(f"<span id='cdp_nav_state' data-mode='{mode}' data-step='{step}' "
+            f"data-screen='{_screen}' data-busy='{'1' if _locked else '0'}' "
+            f"style='display:none;position:absolute;pointer-events:none'></span>")
 
     # Active-state CSS is dynamic (depends on session state) - inject separately
     if mode in ['download', 'sync', 'panopto', 'today']:
@@ -1920,8 +1962,13 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
 
 
     # ── Global Settings dialog ─────────────────────────────────────
-    def _stg_ico(path_d):
-        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="{path_d}" fill="#a0aec0"/></svg>'
+    def _stg_ico(path_d, evenodd=False):
+        # evenodd makes EVERY inner subpath a hole regardless of its winding
+        # direction, which is what lets a glyph be composed out of separate
+        # hand-written subpaths (outline + fold + symbol) without having to get
+        # each one's direction right by inspection.
+        _fr = ' fill-rule="evenodd"' if evenodd else ''
+        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="{path_d}" fill="#a0aec0"{_fr}/></svg>'
         return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
     _stg_i_speed  = _stg_ico("M7 2v11h3v9l7-12h-4l4-8z")
@@ -1932,12 +1979,63 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
     _stg_i_bell   = _stg_ico("M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z")
     _stg_i_grad   = _stg_ico("M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z")
     _stg_i_errlog = _stg_ico("M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 9h-2v2h2v2h-2v2h-2v-2H9v-2h2v-2H9V9h2V7h2v2h2v2zM13 9V3.5L18.5 9H13z")
+    # The health record. Same document body and folded corner as the error log
+    # above - they ARE both files the app writes, and reading as a family is
+    # right - with a heartbeat where that one has a cross, which is the whole
+    # difference the user has to see. It previously reused _stg_i_errlog
+    # verbatim, so the two cards in the same row carried an identical glyph.
+    # A literal "?" was the obvious alternative and is declined on purpose:
+    # the ? glyph means "there is a tooltip here" everywhere else in this
+    # dialog (see _STG_HELP_GLYPH), so it would collide with itself.
+    _stg_i_health = _stg_ico(
+        "M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"
+        "M13 9V3.5L18.5 9H13z"
+        "M11.6 10.8l-1.85 4.3-.72-1.5H6.9v1.5h1.18l1.42 2.95h1.02l1.72-4 1.28 2.85"
+        "h1.03l.92-1.8h1.63v-1.5h-2.55l-.5.98-1.42-3.18z",
+        evenodd=True)
     _stg_i_clock  = _stg_ico("M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z")
     _stg_i_caption = _stg_ico("M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm10 6H4v-2h10v2zm6 0h-4v-2h4v2zm0-4H10v-2h10v2z")
+    # Film strip - the Panopto master switch. Distinct from _stg_i_caption
+    # (subtitles), which sits one card below it and means transcription.
+    _stg_i_movie = _stg_ico("M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z")
     # Lifebuoy - reads as "help/support" without reusing the ? glyph, which
     # in this app means "there is a tooltip here".
     _stg_i_help = "data:image/svg+xml;base64," + base64.b64encode(b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>').decode()
     _stg_i_history = "data:image/svg+xml;base64," + base64.b64encode(b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>').decode()
+
+    # ── The ONE card-header recipe ────────────────────────────────────
+    # Every card in this dialog opens with icon + title + description, and
+    # each of the 13 used to hand-write its own ~600-character f-string
+    # repeating the same margin-top:-5px / margin-bottom:3px / padding:0 0 4px
+    # tuple. Any drift between them was invisible in review and read to the
+    # user as the dialog getting less harmonious the further they scrolled.
+    # Stating the spacing exactly once makes the cards structurally identical
+    # rather than coincidentally identical - which is the whole point.
+    #
+    # `tip` folds a long secondary explanation into the inline ? glyph instead
+    # of paying for it in card height (see the .stg-help note in the CSS);
+    # `extra` carries a card-specific trailer such as a status dot row.
+    def _stg_card_head(icon, title, desc, tip=None, extra=""):
+        _tip = (f'<span class="stg-help" title="{_he(tip)}">{_STG_HELP_GLYPH}</span>'
+                if tip else "")
+        return (
+            '<div style="padding:0 0 4px 0;">'
+            '<div style="display:flex;align-items:center;gap:7px;'
+            'margin-bottom:3px;margin-top:-5px;">'
+            f'<img src="{icon}" width="18" height="18" style="flex-shrink:0;">'
+            '<span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">'
+            f'{title}</span></div>'
+            '<div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">'
+            f'{desc}{_tip}</div>{extra}</div>'
+        )
+
+    # Section rule. `first` drops the leading air so the topmost header sits
+    # flush against the scroll body's edge.
+    def _stg_section(label, first=False):
+        return (f'<div style="padding:{"2px" if first else "10px"} 0 1px 0;">'
+                '<span style="font-size:0.7rem;font-weight:800;'
+                'text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">'
+                f'{label}</span></div>')
 
     # Clear all staged (unsaved) settings state on dismissal. Save and Cancel
     # already pop '_temp_default_path', but a backdrop/ESC dismiss runs neither -
@@ -1965,6 +2063,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             ('temp_use_12h_format', 'use_12h_format', False, bool),
             ('temp_sync_history_retention', 'sync_history_retention', 50, int),
             ('temp_show_help_text', 'show_help_text', True, bool),
+            ('temp_panopto_globally_enabled', 'panopto_globally_enabled', True, bool),
         )
         for _tkey, _skey, _default, _cast in _pairs:
             if _tkey not in _ss:
@@ -2068,49 +2167,102 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             gap: 0.25rem !important;
         }
 
-        /* ── Equal height download cards (HACKS doc flex chain) ── */
-        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_speed"]) { flex: 1 !important; }
-        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_maxsize"]) { flex: 1 !important; }
-        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_errlog"]) { flex: 1 !important; }
-        div[class*="st-key-stg_card_speed"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
-        div[class*="st-key-stg_card_maxsize"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
-        div[class*="st-key-stg_card_errlog"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
-        div[class*="st-key-stg_card_speed"],
-        div[class*="st-key-stg_card_maxsize"],
-        div[class*="st-key-stg_card_errlog"] { height: 100% !important; }
-        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has([class*="st-key-stg_card_speed"]) {
-            align-items: stretch !important;
-        }
+        /* ── Equal-height cards: ONE rule for every row ──
+           This was three near-identical per-key blocks (speed/maxsize/errlog,
+           sound/cbs/time, helptext/history) that had to be extended by hand for
+           every new card - which is exactly why the later cards never got it.
+           Keyed on the shared st-key-stg_card_ prefix instead, so a new card is
+           height-matched for free.
 
-        /* ── Equal height preference cards ── */
-        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_sound"]) { flex: 1 !important; }
-        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_cbs"]) { flex: 1 !important; }
-        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_time"]) { flex: 1 !important; }
-        div[class*="st-key-stg_card_sound"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
-        div[class*="st-key-stg_card_cbs"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
-        div[class*="st-key-stg_card_time"] { flex: 1 !important; display: flex !important; flex-direction: column !important; }
-        div[class*="st-key-stg_card_sound"],
-        div[class*="st-key-stg_card_cbs"],
-        div[class*="st-key-stg_card_time"] { height: 100% !important; }
-        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has([class*="st-key-stg_card_sound"]) {
-            align-items: stretch !important;
+           Scoped INSIDE stHorizontalBlock on purpose. `flex: 1` on a card whose
+           parent is a column-direction flex box means "grow vertically", which
+           is the equal-height trick when the card sits in a columns row - but
+           would make a standalone full-width card (the macOS Full Disk Access
+           one) stretch to fill the fixed-height scroll body whenever the
+           content happens to be shorter than it. */
+        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"] [data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_"]) {
+            flex: 1 !important;
         }
-
-        /* Equal height for the help-text / sync-history pair. */
-        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_helptext"]) { flex: 1 !important; }
-        div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_history"]) { flex: 1 !important; }
-        div[class*="st-key-stg_card_helptext"],
-        div[class*="st-key-stg_card_history"] {
-            flex: 1 !important; display: flex !important; flex-direction: column !important;
+        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"] div[class*="st-key-stg_card_"] {
+            flex: 1 !important;
+            display: flex !important;
+            flex-direction: column !important;
             height: 100% !important;
         }
-        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has([class*="st-key-stg_card_helptext"]) {
+        /* A row's direct children are stColumn - NOT stLayoutWrapper - so the
+           `:has(> stLayoutWrapper)` form of this matches nothing. */
+        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"]:has(> [data-testid="stColumn"] div[class*="st-key-stg_card_"]) {
             align-items: stretch !important;
         }
-        /* Both controls land on the same line despite different copy lengths. */
-        div[data-testid="stDialog"] div[class*="st-key-stg_card_helptext"] > div.st-key-temp_show_help_text,
-        div[data-testid="stDialog"] div[class*="st-key-stg_card_history"] > div.st-key-temp_sync_history_retention {
+
+        /* Every card's controls sit on the same line across a row, however long
+           each description ran. The auto margin goes on the FIRST control (the
+           card's second child - child one is always the header block), never on
+           the last: on a two-control card like the error log's, a last-child
+           auto margin splits the pair and strands the divider mid-card. */
+        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"] div[class*="st-key-stg_card_"] > div:nth-child(2) {
             margin-top: auto !important;
+        }
+        /* ...except the Panopto master switch, which is a third of the width of
+           a card carrying a description, a status line AND a button, so the
+           bottom of that row is a long way from its own copy. Bottom-aligning
+           earns nothing across a gap that large - the toggle just floats alone
+           in the middle of the card, disowned by the sentence it belongs to.
+
+           The selector has to out-specify the auto rule above, not merely come
+           after it: both are !important, so specificity decides, and the first
+           version of this exemption lost 3-to-4 and did nothing at all. Naming
+           the card's own testid (it IS a vertical block) puts it ahead. */
+        div[data-testid="stDialog"] [data-testid="stHorizontalBlock"] div[data-testid="stVerticalBlock"][class*="st-key-stg_card_pan_enabled"] > div:nth-child(2) {
+            margin-top: 0 !important;
+        }
+
+        /* ── Row rhythm: both axes agree ──
+           Streamlit puts 16px between the cards INSIDE a row, while the dialog's
+           vertical block gap is 0.3rem - so a grid of cards read as tight bands
+           with airy columns. Each band adds the remainder itself, which keeps
+           the tight gap under a section header (that one is deliberate) while
+           making card-to-card spacing identical in both directions.
+
+           The band is the stLayoutWrapper that CONTAINS the horizontal block,
+           not the horizontal block itself - that wrapper is the scroll body's
+           flex item, and it is the only element whose margin lands between two
+           rows. (Measured chain: scroll body > stLayoutWrapper >
+           stHorizontalBlock > stColumn > stVerticalBlock > stLayoutWrapper >
+           card. A row's children are stColumn, so any `:has(> stLayoutWrapper)`
+           form matches nothing.)
+           `stg_card_path` is named separately because a full-width card is its
+           own band, and a blanket rule on every card's wrapper would also hit
+           the per-column wrappers that carry the equal-height flex chain. */
+        div[data-testid="stDialog"] [data-testid="stLayoutWrapper"]:has(> [data-testid="stHorizontalBlock"] div[class*="st-key-stg_card_"]),
+        div[data-testid="stDialog"] [data-testid="stLayoutWrapper"]:has(> div[class*="st-key-stg_card_path"]) {
+            margin-bottom: calc(16px - 0.3rem) !important;
+        }
+
+        /* ── The transcription card while Panopto is switched off ──
+           The app's ONE disabled recipe (global.css button[disabled]), applied
+           to the card so the description, the status line and the button all
+           go unavailable together - the button alone would read as a broken
+           control on a live card.
+
+           `filter` COMPOSES down the tree: the disabled button inside would
+           otherwise be rendered through brightness(0.5) twice and land at a
+           quarter of its paint, which is the "never stack a second dim on the
+           shared recipe" rule. So the card carries the dim exactly once and the
+           button opts out - the same explicit `filter: none` exemption the
+           card-header rerun locks use. */
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_pan_off"] {
+            filter: brightness(0.5) saturate(0.5) !important;
+        }
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_pan_off"] button[disabled] {
+            filter: none !important;
+        }
+        /* A disabled button carrying help= is wrapped in stTooltipHoverTarget,
+           so it is no longer a direct child of stButton and silently loses the
+           full-width sizing - it would render narrower than the enabled state
+           it replaces. */
+        div[data-testid="stDialog"] div.st-key-stg_btn_pan [data-testid="stTooltipHoverTarget"] {
+            display: block !important; width: 100% !important;
         }
 
         /* ── Toggles ──
@@ -2146,10 +2298,24 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             justify-content: flex-end !important; align-items: center !important;
             padding: 2px 0 0 0 !important; cursor: pointer !important; gap: 8px !important;
         }
-        /* The label block must shrink-wrap its text, or it would still eat the
-           whole row and push the switch back out to the right edge. */
-        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"] > label > [data-testid="stWidgetLabel"] {
+        /* (d) The label block must shrink-wrap its text, or it would still eat
+               the whole row and push the switch back out to the right edge -
+               AND it must give back BaseWeb's 8px left padding.
+
+               The real flex item here is an UNNAMED wrapper div; stWidgetLabel
+               is its child, not the label's, so the old form of this rule
+               ('> label > [data-testid=stWidgetLabel]') matched nothing at all.
+               BaseWeb puts padding-left on that wrapper because Streamlit
+               renders the control with the label placed to the right of the
+               switch. Reversing the row moves the wrapper to the card's LEFT
+               edge, where the padding stops separating label from switch and
+               instead indents the text past the description above it - by
+               exactly 8.0px on all nine toggles (measured 2026-07-31), which
+               is what made every toggle row look mysteriously inset. The
+               separation is already supplied by the label's own gap: 8px. */
+        div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"] > label > div:has(> [data-testid="stWidgetLabel"]) {
             flex: 0 1 auto !important; width: auto !important;
+            padding-left: 0 !important;
         }
         div[data-testid="stDialog"] div[class*="st-key-stg_card_"] div[data-testid="stCheckbox"] p {
             font-size: 0.8rem !important; color: #94a3b8 !important;
@@ -2295,6 +2461,53 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             border-color: #b89dfe !important; color: #ffffff !important;
         }
 
+        /* ── App health record "Reveal" button (neutral slate accent) ──
+           Same shape as the Panopto configure button above so the two read as
+           one class of control, but in the neutral family: purple is Panopto's
+           colour in this app and this card has nothing to do with Panopto.
+           (It shipped as a bare default st.button next to an st.download_button
+           - the only two unstyled controls left in the dialog.) */
+        div[data-testid="stDialog"] div.st-key-stg_btn_diag_reveal button {
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.14) !important;
+            color: #cbd5e1 !important;
+            min-height: unset !important; height: auto !important;
+            padding-top: 6px !important; padding-bottom: 6px !important;
+            font-size: 0.82rem !important; font-weight: 600 !important;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+        }
+        div[data-testid="stDialog"] div.st-key-stg_btn_diag_reveal button:hover {
+            background: rgba(255,255,255,0.10) !important;
+            border-color: rgba(255,255,255,0.30) !important; color: #ffffff !important;
+        }
+        /* Folder-open glyph, drawn the same way as the Choose Folder button's.
+           Grey at rest, white on hover, matching the label's own transition. */
+        div[data-testid="stDialog"] div.st-key-stg_btn_diag_reveal button p::before {
+            content: ''; display: inline-block; width: 14px; height: 14px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 14l1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2'%3E%3C%2Fpath%3E%3C%2Fsvg%3E");
+            background-size: contain; background-repeat: no-repeat; flex-shrink: 0;
+        }
+        div[data-testid="stDialog"] div.st-key-stg_btn_diag_reveal button:hover p::before {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 14l1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2'%3E%3C%2Fpath%3E%3C%2Fsvg%3E");
+        }
+        /* The full centring chain from the HACKS doc: flexing only the label p
+           is not enough, because stMarkdownContainer is the button's actual
+           flex child and stays uncentred. margin:0 on the p is required - its
+           default bottom margin is part of the flex item's margin-box, so
+           align-items:center would centre the margin-box and push the visible
+           content up. Do NOT add line-height:1 here (it shrinks the line box
+           below the glyph height and the text reads as mis-centred). */
+        div[data-testid="stDialog"] div.st-key-stg_btn_diag_reveal button {
+            align-items: center !important; justify-content: center !important;
+        }
+        div[data-testid="stDialog"] div.st-key-stg_btn_diag_reveal button [data-testid="stMarkdownContainer"] {
+            display: flex !important; align-items: center !important;
+        }
+        div[data-testid="stDialog"] div.st-key-stg_btn_diag_reveal button p {
+            display: inline-flex !important; align-items: center !important;
+            gap: 8px !important; margin: 0 !important;
+        }
+
         /* ── Full Disk Access "Open Settings" button (blue accent) ──
            Same shape as the Panopto configure button above, in the FDA
            card's blue family so the card reads as one story. */
@@ -2344,26 +2557,58 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
 
         with st.container(height=620, border=False):
 
-            # ── DOWNLOAD ──────────────────────────────────────────────
-            st.html("""<div style="padding:2px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">DOWNLOAD</span></div>""")
+            # ── DOWNLOADS & STORAGE ───────────────────────────────────
+            # One section for everything that shapes a run plus everything the
+            # app keeps on disk as a result. It absorbed the old standalone
+            # SAVE FOLDER section (a single card never earned a heading of its
+            # own) and Sync history, which is a retention setting rather than a
+            # look-and-feel preference. The two log toggles went the other way,
+            # down to TROUBLESHOOTING - they produce diagnostic artefacts and
+            # do not change which files a run fetches.
+            st.html(_stg_section("DOWNLOADS & STORAGE", first=True))
 
-            _dc1, _dc2, _dc3 = st.columns(3)
+            # Row 1 - the four numeric settings, one anatomy across all of them
+            # so the row reads as one set. Skip large files and Skip huge
+            # archives are deliberately IDENTICAL in shape (toggle ABOVE its
+            # number input, never beside it): they answer the same kind of
+            # question, and looked like two unrelated controls only because the
+            # archive one had been given a full-width row and split its pair
+            # into side-by-side columns to fill it.
+            _stg_skip_tip = (
+                "Skipped files are marked as ignored, so future syncs don't re-list them. "
+                "You can restore them at any time from the Sync Hub's ignored-files list - "
+                "including after you raise this limit."
+            )
+            _stg_arch_tip = (
+                "Applies to downloads and syncs alike. The existing zip-bomb protection "
+                "measures size and compression ratio, never how MANY files are inside - so "
+                "an archive of thousands of small files passes it. One real course unpacked "
+                "21,630 files. Over the limit the archive is left as a .zip in your course "
+                "folder, so nothing is lost and you can extract it yourself."
+            )
+
+            _dc1, _dc2, _dc3, _dc4 = st.columns(4)
             with _dc1:
                 with st.container(border=True, key="stg_card_speed"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_speed}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Simultaneous downloads</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;margin-bottom:4px;">Choose how many files download at once. Higher values may increase download speed.</div><div style="font-size:0.75rem;color:#f59e0b;line-height:1.3;">Lower this if you encounter download issues.<br>Default = 5.</div></div>""")
+                    st.html(_stg_card_head(
+                        _stg_i_speed, "Simultaneous downloads",
+                        "How many files download at once. Higher values may "
+                        "increase download speed.",
+                        extra='<div style="font-size:0.75rem;color:#f59e0b;'
+                              'line-height:1.35;margin-top:5px;">Lower this if you '
+                              'encounter download issues. Default = 5.</div>'))
                     temp_max = st.slider("Speed", min_value=1, max_value=15, value=st.session_state.get('concurrent_downloads', 5), key="temp_max_downloads", label_visibility="collapsed")
             with _dc2:
                 with st.container(border=True, key="stg_card_maxsize"):
                     # The "skipped files are ignored" explanation is folded into
                     # the inline ? badge: as visible copy it made this card two
                     # lines taller than its two neighbours, and since the three
-                    # are height-matched it stretched the whole DOWNLOAD row.
-                    _stg_skip_tip = (
-                        "Skipped files are marked as ignored, so future syncs don't re-list them. "
-                        "You can restore them at any time from the Sync Hub's ignored-files list - "
-                        "including after you raise this limit."
-                    )
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_filter}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Skip large files</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Skip files above a set size - ensures quick downloads and prevents large files from bloating your drive.<span class="stg-help" title="{_he(_stg_skip_tip)}">{_STG_HELP_GLYPH}</span></div></div>""")
+                    # are height-matched it stretched the whole row.
+                    st.html(_stg_card_head(
+                        _stg_i_filter, "Skip large files",
+                        "Skip files above a set size, so a few huge files can't "
+                        "bloat your drive.",
+                        tip=_stg_skip_tip))
                     temp_size_enabled = st.toggle("Enable limit", value=st.session_state.get('max_file_size_enabled', False), key="temp_max_size_enabled")
                     # step=1, NOT 50. Streamlit disables the minus button while
                     # `value - step < min_value`, so a step of 50 greyed it out
@@ -2374,44 +2619,16 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                     # ordinary thing to want). It is re-clamped on save.
                     temp_size_mb = st.number_input("Max size (MB)", min_value=1, max_value=100000, step=1, value=max(1, int(st.session_state.get('max_file_size_mb', 500))), key="temp_max_size_mb", disabled=not temp_size_enabled)
             with _dc3:
-                with st.container(border=True, key="stg_card_errlog"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_errlog}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Error log file</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Create a <code style="font-size:0.72rem;background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:3px;">download_errors.txt</code> summarizing any failed downloads or conversion errors in the output folder.</div></div>""")
-                    temp_error_log = st.toggle("Create error log", value=st.session_state.get('error_log_enabled', False), key="temp_error_log_enabled")
-
-                    # Second log of the same kind, at the same weight, directly
-                    # under a divider. (The divider is drawn by the scoped
-                    # border-top on st-key-temp_debug_mode in the dialog CSS, so
-                    # it needs no element of its own - an extra st.html here
-                    # would cost a flex gap slot and re-open the gap that made
-                    # this row look marooned at the bottom of the card.)
-                    temp_debug_mode = st.toggle(
-                        "Save debug log",
-                        value=st.session_state.get('debug_mode', False),
-                        key="temp_debug_mode",
-                        help="For troubleshooting only. Writes a detailed debug_log.txt to each output folder - not needed for normal use."
-                    )
-
-            # Second DOWNLOAD row. Full width like the SAVE FOLDER card below,
-            # rather than a fourth column: the three cards above are height-
-            # matched by explicit per-key flex rules, and a fourth would need
-            # all of them re-tuned for a setting that reads better with its
-            # explanation on one line anyway.
-            with st.container(border=True, key="stg_card_archive"):
-                _stg_arch_tip = (
-                    "The existing zip-bomb protection measures size and compression ratio, "
-                    "never how MANY files are inside - so an archive of thousands of small "
-                    "files passes it. One real course unpacked 21,630 files. "
-                    "Over the limit the archive is left as a .zip in your course folder, "
-                    "so nothing is lost and you can extract it yourself."
-                )
-                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_archive}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Skip huge archives</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Don't unpack a .zip that would add an enormous number of files to your course folder. Applies to downloads and syncs alike.<span class="stg-help" title="{_he(_stg_arch_tip)}">{_STG_HELP_GLYPH}</span></div></div>""")
-                _ac1, _ac2 = st.columns([1, 1])
-                with _ac1:
+                with st.container(border=True, key="stg_card_archive"):
+                    st.html(_stg_card_head(
+                        _stg_i_archive, "Skip huge archives",
+                        "Don't unpack a .zip that would add an enormous number "
+                        "of files to your course folder.",
+                        tip=_stg_arch_tip))
                     temp_arch_enabled = st.toggle(
                         "Enable limit",
                         value=st.session_state.get('archive_max_files_enabled', False),
                         key="temp_archive_max_enabled")
-                with _ac2:
                     # step=1 for the same reason as the size cap: Streamlit
                     # greys the minus button whenever value - step < min_value.
                     temp_arch_files = st.number_input(
@@ -2419,18 +2636,44 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                         value=max(1, int(st.session_state.get('archive_max_files', 1000))),
                         key="temp_archive_max_files", disabled=not temp_arch_enabled)
 
-            # ── SAVE FOLDER ───────────────────────────────────────────
-            st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">SAVE FOLDER</span></div>""")
+            with _dc4:
+                # L-13: Sync history retention - exposed so power users who sync
+                # multiple times daily can extend beyond the default 50 entries.
+                # Fourth in the row rather than beside the path card: it is a
+                # bare number input, the same amount of chrome as the two limit
+                # cards beside it, and pairing it with the path card left that
+                # card at two thirds for no reason.
+                with st.container(border=True, key="stg_card_history"):
+                    st.html(_stg_card_head(
+                        _stg_i_history, "Sync history",
+                        "How many past sync operations to keep in the history "
+                        "panel. Higher values use slightly more disk space."))
+                    temp_history_retention = st.number_input(
+                        "Keep last N syncs", min_value=10, max_value=500, step=10,
+                        value=int(st.session_state.get('sync_history_retention', 50)),
+                        key="temp_sync_history_retention",
+                    )
 
+            # Row 2 - where files land. Full width, and the one card in this
+            # dialog that earns it: the path box is the only value display here
+            # that has to render an arbitrarily long absolute path, and it reads
+            # as the section's conclusion under the row of limits above it.
             with st.container(border=True, key="stg_card_path"):
-                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_folder}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Default save location</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Pick the default output folder for all downloads, so you don't have to change it manually every time. Application default = Downloads folder.</div></div>""")
+                st.html(_stg_card_head(
+                    _stg_i_folder, "Default save location",
+                    "The output folder every download starts from, so you "
+                    "don't have to set it each time. Default = your Downloads folder."))
 
                 if '_temp_default_path' not in st.session_state:
                     st.session_state['_temp_default_path'] = st.session_state.get('default_download_path', '') or ''
 
                 _display_path = st.session_state['_temp_default_path'] or "Set to default: Downloads folder"
                 _esc_path = (_display_path.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("'", "&#39;").replace('"', "&quot;"))
-                st.html(f"""<div style="padding:0 0 6px 0;"><div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:6px 12px;font-size:0.79rem;color:rgba(255,255,255,0.45);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">{_esc_path}</div></div>""")
+                # The box truncates with an ellipsis, so a very long path still
+                # cannot break the layout - but a truncated path the user cannot
+                # read is a poor trade, so the full string is carried in a
+                # native title.
+                st.html(f"""<div style="padding:0 0 6px 0;"><div title="{_esc_path}" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:6px 12px;font-size:0.79rem;color:rgba(255,255,255,0.45);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5;">{_esc_path}</div></div>""")
 
                 _pc1, _pc2 = st.columns([3, 1])
                 with _pc1:
@@ -2451,42 +2694,51 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                         st.rerun(scope="app")
 
             # ── PREFERENCES ───────────────────────────────────────────
-            st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">PREFERENCES</span></div>""")
+            # Four single-toggle cards, four across. They are the same control
+            # with the same anatomy, so they belong on one line - as two rows of
+            # three-plus-one they cost twice the height and read as two
+            # unrelated groups. At quarter width the copy has to be one tight
+            # sentence; anything longer goes in the ? glyph rather than being
+            # cut, which is the same trade the two limit cards above make.
+            st.html(_stg_section("PREFERENCES"))
 
-            _p1, _p2, _p3 = st.columns(3)
+            _p1, _p2, _p3, _p4 = st.columns(4)
             with _p1:
                 with st.container(border=True, key="stg_card_sound"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_bell}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Notifications</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Get a sound and a native notification when a download or sync finishes, so you can focus on what matters.</div></div>""")
+                    st.html(_stg_card_head(
+                        _stg_i_bell, "Notifications",
+                        "A sound and a native notification when a download or "
+                        "sync finishes."))
                     temp_notifications = st.toggle("Enable notifications", value=st.session_state.get('notifications_enabled', True), key="temp_notifications_enabled")
             with _p2:
                 with st.container(border=True, key="stg_card_cbs"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_grad}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">CBS filters</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Adds course type, semester, and year filters to all course lists. Only relevant for CBS students.</div></div>""")
+                    st.html(_stg_card_head(
+                        _stg_i_grad, "CBS filters",
+                        "Adds course type, semester and year filters to every "
+                        "course list. For CBS students."))
                     temp_cbs = st.toggle("Enable CBS filters", value=st.session_state.get('enable_cbs_filters', False), key="temp_cbs_filters")
             with _p3:
                 with st.container(border=True, key="stg_card_time"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_clock}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Time format</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Display all times in 12-hour AM/PM format instead of the default 24-hour clock.</div></div>""")
+                    st.html(_stg_card_head(
+                        _stg_i_clock, "Time format",
+                        "Show all times as 12-hour AM/PM instead of the default "
+                        "24-hour clock."))
                     temp_time_12h = st.toggle("Use 12-hour format", value=st.session_state.get('use_12h_format', False), key="temp_use_12h_format")
-
-            st.html("""<div style='padding: 8px 0 0 0;'></div>""")
-            _p4, _p5 = st.columns(2)
             with _p4:
                 # Lets an experienced user reclaim the screen space the
                 # onboarding copy occupies, without hiding anything they would
                 # actually need. See shared/helpers.py:help_text_enabled for the
                 # exact boundary between "help" and "information".
                 with st.container(border=True, key="stg_card_helptext"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_help}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Show help text</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Keeps the Help buttons and the short explanations under the main action buttons. Turn it off for a cleaner screen once you know your way around - warnings, errors and anything you need in order to make a choice always stay.</div></div>""")
+                    st.html(_stg_card_head(
+                        _stg_i_help, "Show help text",
+                        "Keeps the Help buttons and the short explanations under "
+                        "the main action buttons.",
+                        tip="Turn it off for a cleaner screen once you know your way "
+                            "around. Warnings, errors, empty states and anything you "
+                            "need in order to make a choice always stay - only the "
+                            "onboarding copy is hidden."))
                     temp_help_text = st.toggle("Show help text", value=st.session_state.get('show_help_text', True), key="temp_show_help_text")
-            with _p5:
-                # L-13: Sync history retention - exposed so power users who sync
-                # multiple times daily can extend beyond the default 50 entries.
-                with st.container(border=True, key="stg_card_history"):
-                    st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_history}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Sync history</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Number of past sync operations to keep in the history panel. Higher values use slightly more disk space.</div></div>""")
-                    temp_history_retention = st.number_input(
-                        "Keep last N syncs", min_value=10, max_value=500, step=10,
-                        value=int(st.session_state.get('sync_history_retention', 50)),
-                        key="temp_sync_history_retention",
-                    )
 
             # ── PANOPTO TRANSCRIPTION ─────────────────────────────────
             # The transcription engine (model / language / compute device) is a
@@ -2496,9 +2748,45 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             # a download or sync. Streamlit forbids nested dialogs, so the button
             # closes Settings, opens the transcription dialog (hosted in app.py),
             # and returns here when done (_pan_return_to_settings).
-            st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">PANOPTO TRANSCRIPTION</span></div>""")
+            st.html(_stg_section("PANOPTO LECTURE RECORDINGS"))
 
             from shared.helpers import esc
+
+            # ── Global Panopto on/off ─────────────────────────────────
+            # The master switch, and the permanent answer to "stop asking me".
+            # Off means: no institution lookup, no discovery, no acceptable-use
+            # dialog, and no recordings in any download or sync. It exists for
+            # two independent reasons that happen to share one control:
+            #   * the user simply does not want lecture recordings, and
+            #   * their university may not use Panopto at all - in which case
+            #     every run currently pays for an LTI handshake per external
+            #     tool in every course (measured: 48 across one real account,
+            #     ~1-2s each) that can only ever return nothing.
+            # Auto-detection (panopto/institution.py) fixes the second case
+            # without anyone touching this switch; the switch is what makes it
+            # a choice rather than a diagnosis.
+            _pan_on = st.session_state.get('panopto_globally_enabled')
+            if _pan_on is None:
+                from panopto.settings import is_globally_enabled
+                _pan_on = is_globally_enabled()
+
+            # Status line ONLY when the scan is already cached. Never trigger a
+            # lookup from here: this renders inside a dialog, and a ~230ms
+            # network call on the render path would stall it for no benefit.
+            _scan = st.session_state.get('_panopto_institution_scan')
+            _pan_status = ""
+            if _scan is not None and getattr(_scan, 'resolved', False):
+                if getattr(_scan, 'has_panopto', False):
+                    _pan_status = ('<div style="display:flex;align-items:center;gap:7px;margin-top:7px;'
+                                   'font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;'
+                                   'border-radius:50%;background:#22c55e;flex-shrink:0;"></span>'
+                                   '<span>Your institution provides Panopto.</span></div>')
+                else:
+                    _pan_status = ('<div style="display:flex;align-items:center;gap:7px;margin-top:7px;'
+                                   'font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;'
+                                   'border-radius:50%;background:#8b949e;flex-shrink:0;"></span>'
+                                   '<span>No Panopto integration found at your institution.</span></div>')
+
             try:
                 from panopto.models import transcription_status as _tx_status
                 _tx = _tx_status()
@@ -2506,25 +2794,77 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 _tx = {"ready": False, "model_id": "small",
                        "reason": "the local transcription engine isn't available yet"}
 
-            if _tx.get("ready"):
+            # The master switch is a single toggle and the engine card carries a
+            # full-width button, so they are sized accordingly rather than each
+            # being handed the whole dialog width for one control.
+            _pn1, _pn2 = st.columns([1, 2])
+            with _pn1:
+                with st.container(border=True, key="stg_card_pan_enabled"):
+                    st.html(_stg_card_head(
+                        _stg_i_movie, "Panopto lecture recordings",
+                        "Look for Panopto recordings in your courses and offer "
+                        "them as downloads.",
+                        tip="Turn this off if your university doesn't use Panopto, or "
+                            "if you never want lecture recordings - the search is "
+                            "skipped entirely, so downloads and syncs finish faster.",
+                        extra=_pan_status))
+                    temp_pan_enabled = st.toggle(
+                        "Include Panopto recordings", value=bool(_pan_on),
+                        key="temp_panopto_globally_enabled")
+            # The engine is a SUBORDINATE of the master switch: with Panopto off
+            # there are no recordings to transcribe, so the whole card goes
+            # unavailable rather than sitting there fully lit offering to
+            # configure something that can never run. Read off `temp_pan_enabled`
+            # (the toggle above, already rendered this run) so it tracks the
+            # switch immediately, not one save later.
+            #
+            # The state carries in THREE places at once, because any one of them
+            # alone is a dead end: the status line says why, the tooltip says it
+            # again on the control the user will actually reach for, and the
+            # dimming makes it visible without reading anything.
+            if not temp_pan_enabled:
+                _tx_dot = "#8b949e"
+                _tx_txt = ("Panopto is switched off &middot; turn it on to view "
+                           "and configure the engine")
+            elif _tx.get("ready"):
                 _tx_dot, _tx_txt = "#22c55e", (
                     f"Ready &middot; active model: <b>{esc(str(_tx.get('model_id', '')))}</b>")
             else:
                 _tx_dot, _tx_txt = "#f59e0b", esc(
                     (_tx.get("reason") or "not set up yet").capitalize())
 
-            with st.container(border=True, key="stg_card_pan"):
-                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_caption}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Panopto transcription engine</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Configure the local model, language, and compute device used to transcribe Panopto recordings into <b>Transcripts</b> &amp; <b>Subtitles</b>. These settings are shared across every download and sync - nothing is uploaded.</div><div style="display:flex;align-items:center;gap:7px;margin-top:7px;font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;border-radius:50%;background:{_tx_dot};flex-shrink:0;"></span><span>{_tx_txt}</span></div></div>""")
-                _stg_pan_label = "Manage transcription configuration" if _tx.get("ready") else "Configure transcription"
-                if st.button(_stg_pan_label, key="stg_btn_pan", use_container_width=True):
-                    st.session_state['_pan_dialog_open'] = True
-                    st.session_state['_pan_return_to_settings'] = True
-                    # Settings must close FIRST - Streamlit crashes with "only one
-                    # dialog allowed open at a time" if both flags survive the
-                    # rerun. panopto_page's close handler sets _stg_reopen_dialog
-                    # to bring Settings back.
-                    st.session_state.pop('_stg_dialog_open', None)
-                    st.rerun(scope="app")
+            with _pn2:
+                # A distinct key while unavailable is what lets CSS find the card
+                # - a container takes no attributes, and the dimming has to land
+                # on the CARD (once) rather than on each control inside it.
+                with st.container(border=True,
+                                  key="stg_card_pan" if temp_pan_enabled else "stg_card_pan_off"):
+                    st.html(_stg_card_head(
+                        _stg_i_caption, "Panopto transcription engine",
+                        "Configure the local model, language and compute device used "
+                        "to transcribe Panopto recordings into <b>Transcripts</b> "
+                        "&amp; <b>Subtitles</b>. These settings are shared across "
+                        "every download and sync - nothing is uploaded.",
+                        extra=f'<div style="display:flex;align-items:center;gap:7px;'
+                              f'margin-top:7px;font-size:0.78rem;color:#cbd5e1;">'
+                              f'<span style="width:8px;height:8px;border-radius:50%;'
+                              f'background:{_tx_dot};flex-shrink:0;"></span>'
+                              f'<span>{_tx_txt}</span></div>'))
+                    _stg_pan_label = "Manage transcription configuration" if _tx.get("ready") else "Configure transcription"
+                    if st.button(_stg_pan_label, key="stg_btn_pan", use_container_width=True,
+                                 disabled=not temp_pan_enabled,
+                                 help=None if temp_pan_enabled else
+                                      "Panopto lecture recordings are switched off. Turn "
+                                      "them on in the card to the left to configure the "
+                                      "transcription engine."):
+                        st.session_state['_pan_dialog_open'] = True
+                        st.session_state['_pan_return_to_settings'] = True
+                        # Settings must close FIRST - Streamlit crashes with "only one
+                        # dialog allowed open at a time" if both flags survive the
+                        # rerun. panopto_page's close handler sets _stg_reopen_dialog
+                        # to bring Settings back.
+                        st.session_state.pop('_stg_dialog_open', None)
+                        st.rerun(scope="app")
 
             # ── MACOS PERMISSIONS (Full Disk Access status card) ──────
             # PERMANENT card (its own section, own header) - never the
@@ -2536,45 +2876,81 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             from shared.components import render_fda_settings_card
             render_fda_settings_card()
 
-            # ── DIAGNOSTICS ───────────────────────────────────────────
-            # The app's own health record - the ONLY artefact for failures
-            # that leave nothing behind (the app dying without running its
-            # exit path). It deliberately lives HERE and nowhere else: it
-            # was briefly attached to the completion screens' error-log
-            # dialog, which was wrong twice over - that dialog answers
-            # "which files failed in the run I just did", and a crash means
-            # nobody ever reaches a completion screen at all. Settings is
-            # reachable at any time, including straight after a crash,
-            # which is the one moment this matters.
-            st.html("""<div style="padding:8px 0 1px 0;"><span style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#e2e8f0;">DIAGNOSTICS</span></div>""")
+            # ── TROUBLESHOOTING ───────────────────────────────────────
+            # The three artefacts you send with a bug report, together. The two
+            # log toggles used to sit in the DOWNLOAD row purely because a run
+            # is what writes them, which put a troubleshooting control in the
+            # middle of the settings that decide which files you get; the health
+            # record then got a section of its own for one card.
+            #
+            # The health record is the ONLY artefact for failures that leave
+            # nothing behind (the app dying without running its exit path). It
+            # deliberately lives HERE and nowhere else: it was briefly attached
+            # to the completion screens' error-log dialog, which was wrong twice
+            # over - that dialog answers "which files failed in the run I just
+            # did", and a crash means nobody ever reaches a completion screen at
+            # all. Settings is reachable at any time, including straight after a
+            # crash, which is the one moment this matters.
+            st.html(_stg_section("TROUBLESHOOTING"))
 
-            with st.container(border=True, key="stg_card_diag"):
-                from core.health_log import health_log_path
-                _hl_path = health_log_path()
-                _hl_text = ''
-                try:
-                    if _hl_path and os.path.exists(_hl_path):
-                        with open(_hl_path, encoding='utf-8', errors='replace') as _hf:
-                            _hl_text = _hf.read().strip()
-                except OSError:
-                    _hl_text = ''
+            _tb1, _tb2 = st.columns([1, 2])
+            with _tb1:
+                with st.container(border=True, key="stg_card_errlog"):
+                    st.html(_stg_card_head(
+                        _stg_i_errlog, "Error log file",
+                        'Write a <code style="font-size:0.72rem;background:'
+                        'rgba(255,255,255,0.08);padding:1px 4px;border-radius:3px;">'
+                        'download_errors.txt</code> into the output folder, listing '
+                        'any failed downloads or conversion errors.'))
+                    temp_error_log = st.toggle("Create error log", value=st.session_state.get('error_log_enabled', False), key="temp_error_log_enabled")
 
-                _hl_esc = esc(_hl_path or 'unavailable')
-                st.html(f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;"><img src="{_stg_i_errlog}" width="18" height="18" style="flex-shrink:0;"><span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">App health record</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">A short log of app startups, shutdowns and memory use - kept automatically. If Canvas Downloader closes unexpectedly or behaves oddly, send this file with your report. It contains <b>no</b> personal data, access tokens, course names or file names, and is never uploaded anywhere.</div><div style="margin-top:7px;font-size:0.72rem;color:rgba(255,255,255,0.45);font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{_hl_esc}</div></div>""")
-
-                _dg1, _dg2 = st.columns([1, 1])
-                with _dg1:
-                    st.download_button(
-                        "Download record", data=_hl_text or "(no entries yet)",
-                        file_name="canvas_downloader_health.log", mime="text/plain",
-                        key="stg_btn_diag_dl", use_container_width=True,
-                        disabled=not _hl_text,
+                    # Second log of the same kind, at the same weight, directly
+                    # under a divider. (The divider is drawn by the scoped
+                    # border-top on st-key-temp_debug_mode in the dialog CSS, so
+                    # it needs no element of its own - an extra st.html here
+                    # would cost a flex gap slot and re-open the gap that made
+                    # this row look marooned at the bottom of the card.)
+                    temp_debug_mode = st.toggle(
+                        "Save debug log",
+                        value=st.session_state.get('debug_mode', False),
+                        key="temp_debug_mode",
+                        help="For troubleshooting only. Writes a detailed debug_log.txt to each output folder - not needed for normal use."
                     )
-                with _dg2:
+            with _tb2:
+                with st.container(border=True, key="stg_card_diag"):
+                    from core.health_log import health_log_path
+                    _hl_path = health_log_path()
+                    _hl_exists = False
+                    try:
+                        _hl_exists = bool(_hl_path) and os.path.exists(_hl_path)
+                    except OSError:
+                        _hl_exists = False
+
+                    _hl_esc = esc(_hl_path or 'unavailable')
+                    st.html(_stg_card_head(
+                        _stg_i_health, "App health record",
+                        "A short log of app startups, shutdowns and memory use, kept "
+                        "automatically. If Canvas Downloader closes unexpectedly or "
+                        "behaves oddly, send this file with your report. It contains "
+                        "<b>no</b> personal data, access tokens, course names or file "
+                        "names, and is never uploaded anywhere.",
+                        extra=f'<div title="{_hl_esc}" style="margin-top:7px;'
+                              f'font-size:0.72rem;color:rgba(255,255,255,0.45);'
+                              f'font-family:monospace;white-space:nowrap;overflow:hidden;'
+                              f'text-overflow:ellipsis;">{_hl_esc}</div>'))
+
+                    # ONE action, and it is the one that helps. The card prints
+                    # the file's own path directly above this button - a
+                    # "Download record" next to it offered to copy a file the
+                    # user already has, from their own disk, to their own disk.
+                    # Revealing it in the file manager is the whole job: from
+                    # there they can open it, or drag it into a bug report.
                     _reveal_label = ("Reveal in Finder" if sys.platform == "darwin"
                                      else "Show in Explorer")
                     if st.button(_reveal_label, key="stg_btn_diag_reveal",
-                                 use_container_width=True, disabled=not _hl_text):
+                                 use_container_width=True, disabled=not _hl_exists,
+                                 help=None if _hl_exists else
+                                      "No health record has been written yet."):
                         from shared.helpers import reveal_in_folder
                         reveal_in_folder(_hl_path)
 
@@ -2634,6 +3010,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 st.session_state['default_download_path'] = new_default_path
                 st.session_state['sync_history_retention'] = int(temp_history_retention)
                 st.session_state['show_help_text'] = bool(temp_help_text)
+                st.session_state['panopto_globally_enabled'] = bool(temp_pan_enabled)
 
                 from pathlib import Path as _Path
                 _downloads_default = str(_Path.home() / "Downloads")
@@ -2665,6 +3042,15 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 config_data['default_download_path'] = new_default_path
                 config_data['sync_history_retention'] = int(temp_history_retention)
                 config_data['show_help_text'] = bool(temp_help_text)
+                # Written into the SAME atomic write as every other setting
+                # rather than through panopto.settings.set_globally_enabled():
+                # two writers racing on one file is how the other's keys get
+                # lost. This handler is a read-modify-write of the whole config,
+                # so panopto_notice_ack_version and the "panopto" engine block
+                # survive untouched - which is exactly why it must not be
+                # rewritten as a fresh dict.
+                from panopto.settings import GLOBAL_ENABLED_KEY as _PAN_ENABLED_KEY
+                config_data[_PAN_ENABLED_KEY] = bool(temp_pan_enabled)
 
                 try:
                     _tmp_config = CONFIG_FILE + '.tmp'
@@ -2723,8 +3109,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
         # happened rather than offering a "Save" that no longer has anything to
         # save (st.toast holds no widgets, and the values are gone by now).
         if st.session_state.pop('_stg_unsaved_toast', False):
-            st.toast("⚠️ Some settings were changed, but not applied. Reopen "
-                     "settings, change them again and click 'Save' to keep them.")
+            st.toast("⚠️ Some settings were changed, but not applied. Reopen, edit, and click 'save' to keep them.")
 
         # Update-available banner (renders only when a newer release exists).
         # Sits below the Settings section, above the user/logout section.
