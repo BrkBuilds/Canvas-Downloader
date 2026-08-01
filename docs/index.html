@@ -2259,30 +2259,44 @@
       border-top: 1px solid rgba(139, 92, 246, 0.15);
     }
 
-    /* Hero Product Video and Spacing */
+    /* Hero image and spacing.
+       This chain used to cost the picture 104px: 32px padding on all four
+       sides here, then calc(100% - 40px) + 20px margins on the wrap below,
+       then a 600px cap. All of it was there to keep .hero-icon-glow from
+       clipping - but that glow is position:absolute with inset:-32px, so it
+       escapes on its own as long as overflow stays visible. Measured: the
+       image went 440px -> 544px with no change to the glow. */
     .hero-visual {
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      padding: 32px;
-      /* Give room for active glow so it doesn't clip */
       overflow: visible;
+      /* Let the picture run past its grid track into the empty page margin on
+         wide screens. A grid item's margin-box fills its track, so a negative
+         margin widens the item itself - the heading track is untouched.
+         .hero has overflow:hidden, so this can never cause a scrollbar, and
+         the clamp floors at 0 before the margin runs out (below ~1108px).
+         Safe here precisely BECAUSE the image is a transparent cut-out: with
+         no edge of its own, there is nothing to look misaligned. */
+      margin-right: calc(-1 * clamp(0px, (100vw - 1108px) / 2, 100px));
     }
 
     .hero-gif-wrap {
-      width: calc(100% - 40px);
-      /* Leave 20px on each side for the active glow */
-      margin: 20px auto;
-      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
       position: relative;
       overflow: visible;
     }
 
     @media (min-width: 769px) {
       .hero-inner {
+        /* Do NOT push this past 1.3 to make the image bigger - 1.5 was tried
+           and it narrowed the heading track to 389px, which wrapped the hook
+           onto an extra line (h1 372px -> 496px). The image gets its width
+           from the bleed below instead, which costs the text nothing. */
         grid-template-columns: 1fr 1.3fr !important;
-        column-gap: 50px !important;
+        column-gap: 40px !important;
         row-gap: 20px !important;
         align-items: center !important;
       }
@@ -2291,6 +2305,164 @@
       .hero-actions {
         max-width: 450px !important;
       }
+    }
+
+    /* ── Hero image slot ────────────────────────────────────────────────────
+       NO frame. No border, no background, no rounded corners, no box-shadow -
+       every one of those draws a rectangle, and a rectangle around a PNG with
+       a transparent background looks broken. The image sits bare on the page.
+       The only thing behind it is .hero-icon-glow, which is a radial gradient
+       with no edges of its own, so it reads as light rather than as a box.
+       If you ever swap in an image that HAS its own hard edges (a screenshot,
+       a mock-up), that is when to add rounding back - and only then. */
+    .hero-media {
+      position: relative;
+      line-height: 0;
+    }
+
+    .hero-media-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      /* Grounds the picture without outlining it: a soft shadow cast straight
+         down, far too diffuse to trace an edge. Follows the alpha channel, so
+         a cut-out subject gets a shadow of its own silhouette, not of a box. */
+      filter: drop-shadow(0 24px 45px rgba(0, 0, 0, 0.45));
+    }
+
+    /* Shown only while assets/hero.png is missing - the img's onerror adds
+       .is-empty. Keeps the live site from rendering a broken-image icon, and
+       reserves a 16:10 box so nothing below jumps. It is deliberately dashed:
+       it should look like scaffolding, and it disappears the instant the real
+       file exists. */
+    .hero-media-fallback {
+      display: none;
+    }
+
+    .hero-media.is-empty {
+      aspect-ratio: 16 / 10;
+      border: 1px dashed var(--border2);
+      border-radius: var(--rad-l);
+    }
+
+    .hero-media.is-empty .hero-media-fallback {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      height: 100%;
+      line-height: 1.4;
+      color: var(--txt3);
+      font-size: 12.5px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .hero-media-fallback svg {
+      width: 30px;
+      height: 30px;
+      opacity: 0.55;
+    }
+
+    /* ── Today pillar mock ──────────────────────────────────────────────── */
+    .today-mock {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .today-mock-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--cyan-b);
+      border-radius: 12px;
+      padding: 13px 15px;
+      margin-bottom: 18px;
+    }
+
+    .today-mock-toggle-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .today-mock-toggle-sub {
+      font-size: 11px;
+      color: var(--txt3);
+      margin-top: 2px;
+    }
+
+    .today-mock-switch {
+      width: 38px;
+      height: 21px;
+      border-radius: 11px;
+      background: var(--cyan);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .today-mock-switch span {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #0b1220;
+    }
+
+    .today-mock-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      margin-bottom: 9px;
+    }
+
+    .today-mock-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 10px;
+      padding: 11px 13px;
+      margin-bottom: 8px;
+    }
+
+    .today-mock-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .today-mock-row svg {
+      width: 16px;
+      height: 16px;
+      color: var(--cyan);
+      flex-shrink: 0;
+    }
+
+    .today-mock-course {
+      flex: 1;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--txt);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .today-mock-count {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--cyan);
+      background: var(--cyan-bg);
+      border: 1px solid var(--cyan-b);
+      border-radius: 20px;
+      padding: 2px 9px;
+      flex-shrink: 0;
     }
 
     /* Student-friendly options explanation container */
@@ -2693,6 +2865,33 @@
       line-height: 1.65;
       margin-bottom: 20px;
     }
+
+    /* Honest-caveat note inside a pillar expander. Deliberately quiet: it is
+       information the reader needs before enabling a feature, not a warning. */
+    .expand-note {
+      margin-top: 20px;
+      padding: 13px 16px;
+      border-radius: var(--rad-m);
+      border: 1px solid rgba(184, 157, 254, 0.3);
+      background: rgba(184, 157, 254, 0.07);
+      font-size: 12.5px;
+      color: var(--txt2);
+      line-height: 1.65;
+    }
+
+    .expand-note b {
+      color: var(--txt);
+    }
+
+    .expand-note a {
+      color: #b89dfe;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .expand-note a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 
@@ -2799,15 +2998,44 @@
             </a>
           </div>
         </div>
+        <!-- ══ HERO IMAGE SLOT ══════════════════════════════════════════════
+             Drop your PNG in as  docs/assets/hero.png  and it appears here.
+             Nothing else needs changing - no CSS, no markup.
+
+             Target ~1600 x 1000 px (16:10). The slot renders about 560px wide
+             on a desktop, so that gives you a crisp 2x image on retina screens.
+             A different ratio is fine: the image keeps its own proportions and
+             is never cropped or stretched. Just avoid anything taller than 4:3,
+             or the hero gets very tall.
+
+             Export with a TRANSPARENT background if the picture has no natural
+             edges - the frame below supplies the border, rounding and shadow,
+             so a hard white rectangle would fight it. If your image already has
+             its own solid background (a mock-up, a screenshot), that looks fine
+             too and the frame just wraps it.
+
+             Until the file exists, the placeholder below shows instead - so the
+             live site never displays a broken-image icon.
+             ═══════════════════════════════════════════════════════════════ -->
         <div class="hero-visual reveal">
           <div class="hero-gif-wrap">
             <div class="hero-icon-glow"
               style="inset: -32px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;">
             </div>
-            <video autoplay loop muted playsinline
-              style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); box-shadow: 0 24px 80px rgba(59, 113, 184, 0.35); display: block; object-fit: cover; aspect-ratio: 16/9; background: var(--surf2);">
-              <source src="assets/product_demo.mp4" type="video/mp4" />
-            </video>
+            <div class="hero-media">
+              <img src="assets/hero.png" alt="Canvas Downloader turning a Canvas course into an organised folder of files"
+                class="hero-media-img" width="1600" height="1000" fetchpriority="high"
+                onerror="this.closest('.hero-media').classList.add('is-empty'); this.remove();" />
+              <div class="hero-media-fallback" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <path d="M21 15l-5-5L5 21" />
+                </svg>
+                <span>assets/hero.png</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -3147,11 +3375,45 @@
             <label for="p6-open" class="pillar-expander-label desktop-only">How daily sync works
               <span class="pex-arrow"></span></label>
           </div>
+          <!-- Static mock rather than a clip, like the Lecture Recordings pillar
+               below. The Today page is mostly one toggle and a list, so a
+               recording of it would be a still image with a cursor in it. -->
           <div class="pillar-vis aligned-to-title"
-            style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
-            <!-- TODO: drop in the Today page demo clip as assets/Today_Demo.mp4 -->
-            <video class="expandable-video" src="assets/Today_Demo.mp4" autoplay loop muted playsinline
-              style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2); background: var(--surf2); aspect-ratio: 16/9;"></video>
+            style="display:flex; align-items:center; justify-content:center; padding:32px 26px; background:radial-gradient(120% 120% at 50% 0%, rgba(56,189,248,0.10), transparent 70%); border:1px solid var(--border); border-radius:var(--rad-l); box-shadow:0 16px 40px rgba(0,0,0,0.2);">
+            <div class="today-mock">
+              <div class="today-mock-toggle">
+                <div>
+                  <div class="today-mock-toggle-title">Daily auto-sync</div>
+                  <div class="today-mock-toggle-sub">Runs on your first launch each day</div>
+                </div>
+                <div class="today-mock-switch"><span></span></div>
+              </div>
+              <div class="today-mock-label">Today's files</div>
+              <div class="today-mock-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+                <span class="today-mock-course">Financial Accounting</span>
+                <span class="today-mock-count">4 new</span>
+              </div>
+              <div class="today-mock-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+                <span class="today-mock-course">Statistics II</span>
+                <span class="today-mock-count">2 new</span>
+              </div>
+              <div class="today-mock-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+                <span class="today-mock-course">Organisation Theory</span>
+                <span class="today-mock-count">1 lecture</span>
+              </div>
+            </div>
           </div>
         </div>
         <label for="p6-open" class="pillar-expander-label mobile-only"
@@ -3489,6 +3751,15 @@
               </div>
             </div>
           </div>
+          <div class="expand-note">
+            <b>Before your first lecture download, the app asks you to read a short notice.</b> Panopto's player has a
+            download button your institution can switch on or off - and Canvas Downloader doesn't read that setting. It
+            saves the same stream the player already sends to your browser. That's worth knowing, so you get the
+            choice: <b>accept</b> and recordings download, or <b>continue without recordings</b> and everything else in
+            the run goes ahead exactly as normal. You can also switch lecture recordings off for good in
+            <b>Settings</b>. Whatever you save is for your own study - never re-share a recording. The full story is on
+            the <a href="disclaimer.html">Disclaimer &amp; Acceptable Use</a> page.
+          </div>
         </div>
       </div>
 
@@ -3548,11 +3819,18 @@
             </svg>
             What does it actually connect to?
           </summary>
-          <p class="qa-body">Only your university's Canvas server - the same URL you log into in your browser. There's
-            no backend, no analytics server, no developer receiving anything from your machine. Your Canvas Access Token
-            is stored
-            in your OS's password vault (Windows Credential Manager or macOS Keychain), not in a file on disk, and is
-            only sent to your university's Canvas when downloading.</p>
+          <p class="qa-body">Your courses and files come from your university's Canvas server - the same URL you log
+            into in your browser. There's no backend, no analytics server, no developer receiving anything from your
+            machine. Your Canvas Access Token is stored in your OS's password vault (Windows Credential Manager or
+            macOS Keychain), not in a file on disk, and is only ever sent to your university's Canvas.</p>
+          <p class="qa-body">Three other connections exist, and none of them carry your data:
+            <b>your university's Panopto server</b>, only if you download lecture recordings;
+            <b>Hugging Face and PyPI</b>, only if you set up on-device transcription or GPU acceleration - a one-time
+            file download; and a <b>version check against GitHub</b> when the app starts, so it can tell you an update
+            is out. That last one sends nothing but the request itself: no token, no course data, no identifier. The
+            full list is in the <a href="privacy.html" style="color:var(--cyan);text-decoration:none;">privacy
+              policy</a>.
+          </p>
           <p class="qa-note">The app's local interface runs on 127.0.0.1 - your own computer only. It cannot be reached
             from the internet or your local network. None of this requires trusting our word: the source code is
             publicly readable on GitHub.</p>
@@ -3673,7 +3951,7 @@
             </svg>
             <div>
               <div class="plat-name">macOS</div>
-              <div class="plat-req">Apple Silicon (M1 or later)</div>
+              <div class="plat-req">Apple Silicon (M1 or later) &middot; macOS 11+</div>
             </div>
           </div>
           <div class="plat-body">
@@ -3686,7 +3964,7 @@
               </svg>
               Download for macOS (.dmg)
             </a>
-            <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported.</p>
+            <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported. Needs macOS 11 (Big Sur) or newer.</p>
           </div>
         </div>
 
@@ -4241,8 +4519,10 @@
           rel="noopener">Report a Bug</a>
         <a href="#faq">FAQ</a>
         <a href="guide.html">How It Works</a>
+        <a href="engine.html">Under the Hood</a>
         <a href="mac-setup.html" data-setup-link>Setup Guide</a>
         <a href="privacy.html">Privacy Policy</a>
+        <a href="disclaimer.html">Disclaimer</a>
         <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
             style="color:#f97316;">&hearts;</span> Support the project</a>
       </div>

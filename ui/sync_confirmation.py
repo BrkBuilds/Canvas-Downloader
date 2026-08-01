@@ -18,8 +18,8 @@ import streamlit as st
 
 from shared import theme
 from core.sync_manager import SyncManager
+from core.pair_labels import pair_display_name
 from shared.helpers import (
-    friendly_course_name,
     format_file_size,
     esc,
     effective_ext,
@@ -50,7 +50,7 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
             
         # Get the friendly course name for the folder
         pair = s['res_data']['pair']
-        course_display = friendly_course_name(pair.get('course_name', 'Unknown'))
+        course_display = pair_display_name(pair, fallback='Unknown')
         folder_set.add(course_display)
         
         # Helper to format filename friendly

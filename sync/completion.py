@@ -373,6 +373,11 @@ def show_sync_complete():
             pair = sel.get('res_data', {}).get('pair', {})
             if not pair.get('local_folder'):
                 continue
+            # NOT a display value - render_folder_cards titles each card with
+            # short_path(folder), so this string is only a dict key and the
+            # "(pair_idx)" suffix is what actually makes it unique. Kept on the
+            # Canvas name deliberately: resolving a user label here would imply
+            # it reaches the screen, and it does not.
             display_name = friendly_course_name(pair.get('course_name', ''))
 
             f_key = f"{display_name} ({pair_idx})"

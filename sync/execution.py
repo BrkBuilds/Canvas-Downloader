@@ -50,7 +50,7 @@ from shared.helpers import (
     remember_transfer_priors,
     render_progress_bar,
     render_sync_wizard,
-    friendly_course_name,
+    friendly_course_name,  # noqa: F401 - debug-log call sites keep the Canvas name
     robust_filename_normalize,
     make_long_path,
     LOCKED_FILE_REASON,
@@ -63,6 +63,7 @@ from engine.progress_dashboard import (
     transfer_metrics, log_line, log_meta, file_icon_svg,
 )
 from core.canvas_debug import log_debug
+from core.pair_labels import pair_display_name
 
 logger = logging.getLogger(__name__)
 
@@ -751,7 +752,19 @@ def run_sync():
                 canvas_files_map = {f.id: f for f in res_data['canvas_files']}
                 pair = res_data['pair']
 
-                course_name = friendly_course_name(pair['course_name']) or 'Unnamed Course'
+                # TWO names, and which one goes where is deliberate.
+                #   course_name  - what the USER calls this course (their name
+                #                  from Saved Groups & Pairs, else the Canvas
+                #                  name). Screens and messages the user reads.
+                #   _log_name    - always the CANVAS name. The debug log is a
+                #                  diagnostic artefact read against Canvas, and
+                #                  tests/audit/harness/oracles/log.py parses the
+                #                  "=== Sync Execution: <course> | Mode:" line to
+                #                  attribute every event to a course - putting a
+                #                  nickname there would silently unhook the audit
+                #                  harness from the run it is auditing.
+                course_name = pair_display_name(pair, fallback='Unnamed Course')
+                _log_name = friendly_course_name(pair['course_name']) or 'Unnamed Course'
 
                 # Same-name secondary entity guard: per-pair registry so two
                 # DISTINCT entities with identical sanitized names get " (1)"
@@ -774,7 +787,7 @@ def run_sync():
                     if pair_idx == 0:
                         _dbg_header(_debug_file, context=f"Sync execution | {total_pairs} pair(s)")
                     _sync_mode_label = "Quick Sync" if st.session_state.get('sync_quick_mode') else "Analyze, Review & Sync"
-                    log_debug(f"=== Sync Execution: {course_name} | Mode: {_sync_mode_label} ===", _debug_file)
+                    log_debug(f"=== Sync Execution: {_log_name} | Mode: {_sync_mode_label} ===", _debug_file)
                     log_debug(f"Pair {pair_idx + 1}/{total_pairs} | Folder: {local_path}", _debug_file)
                     log_debug(
                         f"Concurrency: {concurrent_limit} | "
@@ -1971,10 +1984,26 @@ def run_sync():
                 import unicodedata as _ud_hist
                 categorized_files = {'new': [], 'updated': [], 'restored': [], 'protected': []}
                 synced_course_names = []
+                # The pair IDENTITY of every course in the run, alongside the
+                # Canvas name. Sync History renders a course the way the rest of
+                # the app does - through the user's own name when they gave one -
+                # and that name is keyed on (course_id, local_folder), which a
+                # list of name STRINGS cannot supply. Recorded for every selected
+                # pair, not just the ones that received files, so a run that
+                # changed nothing is still resolvable.
+                # course_name stays the CANVAS name here: this is the record of
+                # what was synced, and shared.components._course_id_from_sync_pairs
+                # still matches error rows against it.
+                course_sigs = []
 
                 for sel in sync_selections:
                     pair_idx = sel['pair_idx']
                     pair_files = synced_details.get(pair_idx, [])
+                    _hp = sel.get('res_data', {}).get('pair', {}) or {}
+                    course_sigs.append([
+                        _hp.get('course_id'), _hp.get('local_folder', ''),
+                        _hp.get('course_name', ''),
+                    ])
                     if pair_files:
                         synced_course_names.append(sel['res_data']['pair']['course_name'])
 
@@ -2027,6 +2056,7 @@ def run_sync():
                     'files_synced': synced_counter[0],
                     'courses': len(sync_selections),
                     'course_names': list(set(synced_course_names)),
+                    'course_sigs': course_sigs,
                     'errors': len(error_list),
                     'error_details': error_list,
                     'synced_files': _synced_files_flat,
@@ -2233,6 +2263,19 @@ def run_sync():
             logger.warning(f"Failed to prime Office automation for sync: {_sync_prime_err}")
 
     # 6. Run each converter with per-course contract evaluation via get_synced_file_paths
+
+    # Every (runner, items) pair that ran, so ONE retry pass at the end can cover
+    # all of them - the same contract as run_all_conversions in the download
+    # flow, which is where this pattern came from.
+    #
+    # MUST be declared here. The retry pass was copied into this function
+    # WITHOUT this line (commit 4b98b2e), so the first `_attempts.append` below
+    # raised NameError on every sync that reached post-processing - i.e. every
+    # sync that transferred a single file, on every contract shape. It is
+    # unconditional here, unlike the download flow which guards each append
+    # behind `if <files>:`, so nothing narrowed the blast radius. The whole
+    # test suite passes with it missing; only a real sync reaches this line.
+    _attempts: list = []
 
     # Archive Extraction
     #

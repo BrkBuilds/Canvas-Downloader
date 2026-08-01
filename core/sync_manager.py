@@ -2733,14 +2733,48 @@ class SavedGroupsManager:
             except OSError:
                 pass
     
-    def save_group(self, name: str, pairs: list[dict], is_single_pair: bool = False) -> dict:
+    @staticmethod
+    def _project_pair(p: dict) -> dict:
+        """Normalise a pair dict to the shape stored in a group record.
+
+        Both writers project through here so a stored pair can never carry a
+        stray key - and, just as importantly, so a key that IS meant to persist
+        cannot be dropped by only one of them.
+
+        ``label`` (the user's own name for this course inside a multi-course
+        group) is such a key. It was very nearly lost here: this projection used
+        to hard-code three keys, so ANY group edit - renaming the group, adding
+        a course, re-linking one folder - would have silently erased every
+        member label in that group. Nothing would have raised; the names would
+        just have started reverting. See ``core.pair_labels`` for the model.
+        """
+        out = {
+            'local_folder': p.get('local_folder', ''),
+            'course_id': p.get('course_id'),
+            'course_name': p.get('course_name', ''),
+        }
+        label = (p.get('label') or '').strip()
+        if label:
+            out['label'] = label
+        return out
+
+    def save_group(self, name: str, pairs: list[dict], is_single_pair: bool = False,
+                   auto_named: bool = False) -> dict:
         """Save a new group (or single pair).
-        
+
         Args:
             name: Human-readable group name (e.g. 'Fall 2025')
             pairs: List of pair dicts with keys: local_folder, course_id, course_name
+                   (plus an optional per-course ``label``)
             is_single_pair: If True, flags this as a saved single pair (not a multi-course group)
-        
+            auto_named: True when *name* is the course name the Save as Pair
+                dialog pre-filled and the user accepted without typing. The
+                record keeps the text (it still has to be called something in
+                the hub) but is marked as UNNAMED by the user, so
+                ``core.pair_labels`` ignores it and every sync surface goes on
+                showing the live Canvas name - which is what makes a
+                Canvas-side rename still reach the user.
+
         Returns:
             The newly created group dict
         """
@@ -2749,17 +2783,12 @@ class SavedGroupsManager:
             new_group = {
                 'group_id': f"grp_{uuid.uuid4().hex}",
                 'group_name': name.strip(),
-                'pairs': [
-                    {
-                        'local_folder': p.get('local_folder', ''),
-                        'course_id': p.get('course_id'),
-                        'course_name': p.get('course_name', ''),
-                    }
-                    for p in pairs
-                ],
+                'pairs': [self._project_pair(p) for p in pairs],
             }
             if is_single_pair:
                 new_group['is_single_pair'] = True
+            if auto_named:
+                new_group['auto_named'] = True
             groups.append(new_group)
             self._save_all(groups)
             return new_group
@@ -2784,8 +2813,9 @@ class SavedGroupsManager:
         
         Args:
             group_id: The ID of the group to update
-            new_data: Dict with optional keys 'group_name', 'pairs', 'is_single_pair'
-        
+            new_data: Dict with optional keys 'group_name', 'pairs',
+                      'is_single_pair', 'auto_named'
+
         Returns:
             True if found and updated, False otherwise
         """
@@ -2795,17 +2825,22 @@ class SavedGroupsManager:
                 if g.get('group_id') == group_id:
                     if 'group_name' in new_data:
                         g['group_name'] = new_data['group_name'].strip()
+                        # Renaming is the user CHOOSING a name, so it always
+                        # clears the auto-named flag - otherwise a pair saved
+                        # with the pre-filled suggestion could be renamed by
+                        # hand and still be ignored by core.pair_labels, which
+                        # would look exactly like the rename silently failed.
+                        # An explicit 'auto_named' in new_data still wins.
+                        g.pop('auto_named', None)
                     if 'pairs' in new_data:
-                        g['pairs'] = [
-                            {
-                                'local_folder': p.get('local_folder', ''),
-                                'course_id': p.get('course_id'),
-                                'course_name': p.get('course_name', ''),
-                            }
-                            for p in new_data['pairs']
-                        ]
+                        g['pairs'] = [self._project_pair(p) for p in new_data['pairs']]
                     if 'is_single_pair' in new_data:
                         g['is_single_pair'] = new_data['is_single_pair']
+                    if 'auto_named' in new_data:
+                        if new_data['auto_named']:
+                            g['auto_named'] = True
+                        else:
+                            g.pop('auto_named', None)
                     self._save_all(groups)
                     return True
             return False

@@ -9,49 +9,13 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260728_145153_matrix` on 2026-07-29.
+Last updated by run `20260730_173725_gpu_transcription` on 2026-07-30.
 
-**2 open** · 40 total · 23 fixed · 15 invalid
-
----
-
-### Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it
-<!-- fp:7e2221df01e0 -->
-
-**Status**: fixed
-**Severity**: medium
-**Category**: config
-**Oracles**: O2,O3
-**First seen**: 2026-07-29 (20260728_145153_matrix)
-**Last seen**: 2026-07-29 (20260728_145153_matrix)
-**Occurrences**: 3
-**Scenario**: m051_c43660 · 43660
-
-**Detail**:
-
-Both Page call sites pass isolate=False literally, so with isolation ON in flat mode every Page lands at the course root - the one folder the setting exists to keep clean - while assignments, quizzes and discussions from the same run go to their category folders. _ENTITY_ROUTING already defines 'Pages' as the destination, so the routing supports it; only the two call sites never ask for it. Reported, not fixed: lanes were still running.
-
-**Notes**: Fixed 2026-07-29, flat mode only (decided with the user; modules mode deliberately unchanged - a module Page belongs with its module, and that path carries legacy_sync_id back-compat machinery precisely because page keying moved once before). In FLAT mode there is no module folder, so 'module placement' degenerates to the course root and the isolate setting is the only instruction left. TWO halves had to move together: the writer (_download_flat_async -> isolate_pages) and the analyzer's expectation (_get_files_from_modules emits 'Pages/<name>.html', because analyze_course only fills target_paths in modules mode and preferred_disk_name passes a name_locked negative-id name through verbatim). If they disagree nothing crashes - every page just reads as new on every sync for ever. VERIFIED IN THE REAL APP: flat+isolate download of course 43660 -> 28 module scans, 35 pages, all 35 in Pages/, no Processing Error; then TWO sync runs, both 'Sync done - everything up to date, Checked 152 files'. Guarded by tests/test_page_isolation_flat_mode.py.
+**0 open** · 41 total · 22 fixed · 19 invalid
 
 ---
 
-### Canvas Content isolation requested but 35 entity file(s) sit at the folder root
-<!-- fp:c52480b4f905 -->
-
-**Status**: fixed
-**Severity**: medium
-**Category**: placement
-**Oracles**: O1,O3
-**First seen**: 2026-07-29 (20260728_145153_matrix)
-**Last seen**: 2026-07-29 (20260728_145153_matrix)
-**Occurrences**: 3
-**Scenario**: m051_c43660 · m051_c43660
-
-**Notes**: Fixed 2026-07-29, flat mode only (decided with the user; modules mode deliberately unchanged - a module Page belongs with its module, and that path carries legacy_sync_id back-compat machinery precisely because page keying moved once before). In FLAT mode there is no module folder, so 'module placement' degenerates to the course root and the isolate setting is the only instruction left. TWO halves had to move together: the writer (_download_flat_async -> isolate_pages) and the analyzer's expectation (_get_files_from_modules emits 'Pages/<name>.html', because analyze_course only fills target_paths in modules mode and preferred_disk_name passes a name_locked negative-id name through verbatim). If they disagree nothing crashes - every page just reads as new on every sync for ever. VERIFIED IN THE REAL APP: flat+isolate download of course 43660 -> 28 module scans, 35 pages, all 35 in Pages/, no Processing Error; then TWO sync runs, both 'Sync done - everything up to date, Checked 152 files'. Guarded by tests/test_page_isolation_flat_mode.py.
-
----
-
-### ~~'readonly:gk2 vejl_løsn_js.txt' was locally edited but no _NewVersion sibling was created~~~~~~~~~~~~~~~~~~~~
+### ~~'readonly:gk2 vejl_løsn_js.txt' was locally edited but no _NewVersion sibling was created~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6a83c06e72be -->
 
 **Status**: invalid
@@ -72,7 +36,7 @@ The product's stated contract is that local edits are never overwritten and the 
 
 ---
 
-### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~
+### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~~~~~~~~~
 <!-- fp:bc9703c2e9f2 -->
 
 **Status**: fixed
@@ -139,7 +103,28 @@ THE OTHER DIRECTION, verified separately and at least as important: this resolve
 
 ---
 
-### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~
+### ~~Sync post-processing crashes with NameError: _attempts is not defined~~
+<!-- fp:5d735855a0d8 -->
+
+**Status**: fixed
+**Severity**: critical
+**Category**: robustness
+**Oracles**: O1,O2
+**First seen**: 2026-07-30 (20260730_142424_ship_sync_20260730)
+**Last seen**: 2026-07-30 (20260730_142424_ship_sync_20260730)
+**Occurrences**: 1
+**Scenario**: s001
+
+**Detail**:
+
+sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initialised anywhere in the file (used 7 times: appends at 2272/2277/2283/2303/2317/2322, read at 2325 retry_failed_conversions). Introduced by commit 4b98b2e (2026-07-29), which copied the conversion retry-pass pattern from converters/post_processing.py:run_all_conversions - where _attempts: list = [] IS declared at line 1125 - without copying the declaration. TRIGGER: unconditional. Unlike the download flow, which guards every append behind 'if pptx_files:', line 2272 runs on every sync that reaches post-processing, regardless of contract or file types. Confirmed on THREE different snapshots simultaneously (c43657_study, c43657_isolated, c45899_base); only the no-op 'nothing changed' row survived because it returns before post-processing. IMPACT: run_pptx_conversion at 2271 completes first - and it is source-consuming, so .pptx originals are deleted - then the NameError aborts the script run. Everything after 2272 never executes: HTML-to-MD, code-to-TXT, URL compilation, Word-to-PDF, Excel data+PDF, video-to-MP3, the retry pass, and the sidecar ledger injection at 2327. The user sees a Streamlit exception screen instead of a completion screen. 1951 unit tests pass against this; it is only reachable by running a real sync.
+
+**Notes**: Fixed 2026-07-30, same day, same session that found it. `_attempts: list = []` now declared in `run_sync` before the converter section (sync/execution.py), mirroring `run_all_conversions`. Introduced by 4b98b2e when the retry-pass was copied over WITHOUT its declaration; unconditional there (the download flow guards each append behind `if <files>:`), so it fired on every sync that transferred a file, on every contract shape - confirmed simultaneously on c43657_study, c43657_isolated and c45899_base. Only the no-op "nothing changed" row survived, because it returns before post-processing. VERIFIED by re-running the full 43-row sync matrix against the fix: 43/43 rows, **0 defects**, zero `NameError` in any lane log, and the `edited_update` critical fixture passing on 11 of 12 rows across all four contract shapes and both sync modes (the 12th was a 20s UI click timeout that the identical configuration passed elsewhere - transient, not a defect). GUARDED by `tests/test_undefined_names.py`, an AST checker asserting no function in 8 engine modules reads a name nothing binds. A test naming `_attempts` would not have caught the FIRST bug of this class (the `isolate` UnboundLocalError in CLAUDE.md) and would not catch the next; the guard validates in both directions and includes a case that strips the real declaration from the real file and asserts it still fires, so it cannot quietly die in a refactor.  
+> Not observed in the latest run.
+
+---
+
+### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:2e38f73c0857 -->
 
 **Status**: invalid
@@ -160,7 +145,7 @@ Renamed, row dropped, and another file shares its size and extension. The unique
 
 ---
 
-### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:1d964fc34314 -->
 
 **Status**: fixed
@@ -189,7 +174,7 @@ Options: require a name-similarity floor for tier (c) as heal Tier 3 already doe
 
 ---
 
-### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~
+### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6fe18c5a9b2f -->
 
 **Status**: fixed
@@ -229,7 +214,7 @@ Guarded by tests/test_link_content_sig_parity.py, which runs BOTH directions and
 
 ---
 
-### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:91d640ef7d5a -->
 
 **Status**: invalid
@@ -250,7 +235,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:78c7871b2180 -->
 
 **Status**: invalid
@@ -271,7 +256,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~Download finished with 1 unexplained error(s)~~
+### ~~Download finished with 1 unexplained error(s)~~~~~~~~~~
 <!-- fp:fa2cae30e286 -->
 
 **Status**: fixed
@@ -287,11 +272,12 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 Errors this course logged that are not teacher-locked files. Each names the item the engine could not deliver.
 
-**Notes**: The undeliverable discussion on course 43660, fixed 2026-07-28 by resolve_discussion_topic() (defined core/canvas_logic.py:290, called at 3 sites). Registered separately as "A discussion Canvas lists but will not serve individually is never downloaded". This title is the reworded check from checker defect 24, which now NAMES the failing item instead of printing a bare count. product-stale evidence from a pre-fix run.
+**Notes**: The undeliverable discussion on course 43660, fixed 2026-07-28 by resolve_discussion_topic() (defined core/canvas_logic.py:290, called at 3 sites). Registered separately as "A discussion Canvas lists but will not serve individually is never downloaded". This title is the reworded check from checker defect 24, which now NAMES the failing item instead of printing a bare count. product-stale evidence from a pre-fix run.  
+> Not observed in the latest run.
 
 ---
 
-### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~
+### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~~~~~~~~~
 <!-- fp:fa247ec01d02 -->
 
 **Status**: fixed
@@ -313,11 +299,12 @@ The data was already in hand on the path the app takes anyway.
 
 FIXED: resolve_discussion_topic() tries the individual endpoint first and falls back to the collection, which is the same 'prefer the richer object, keep the other as fallback' shape the assignment path already uses. A genuinely absent topic still raises, and the individual endpoint's error is the one that propagates. All three call sites route through it; a test fails if a fourth calls the endpoint directly.
 
-**Notes**: Fixed 2026-07-28 and verified against the live API. `resolve_discussion_topic()` tries the individual endpoint first and falls back to the collection - the same 'prefer the richer object, keep the other as fallback' shape the assignment path already uses, in the other direction. A genuinely absent topic still raises, and the individual endpoint's error is the one that propagates. All three call sites route through it; tests/test_discussion_resolve.py fails if a fourth calls the endpoint directly.
+**Notes**: Fixed 2026-07-28 and verified against the live API. `resolve_discussion_topic()` tries the individual endpoint first and falls back to the collection - the same 'prefer the richer object, keep the other as fallback' shape the assignment path already uses, in the other direction. A genuinely absent topic still raises, and the individual endpoint's error is the one that propagates. All three call sites route through it; tests/test_discussion_resolve.py fails if a fourth calls the endpoint directly.  
+> Not observed in the latest run.
 
 ---
 
-### ~~2 Canvas file(s) were downloaded more than once in one run~~
+### ~~2 Canvas file(s) were downloaded more than once in one run~~~~~~~~~~
 <!-- fp:d05cc83d973a -->
 
 **Status**: fixed
@@ -333,11 +320,12 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 
 Each of these ids went to the network twice. Two phases both claimed the file, so two copies are on disk and only one can hold the manifest row - the other is an untracked orphan. Canvas Content must run before every Files-tab sweep; see _defer_to_canvas_content.
 
-**Notes**: DUPLICATE of "A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice", fixed 2026-07-28 by running Canvas Content before all THREE Files-tab sweeps. This is the mechanical check added the same day, so it fires on pre-fix rows by construction. Verified fixed on 5 targeted post-fix runs (modules+inline, modules+isolate, flat+inline, each twice; a repeat run made ZERO HTTP requests). product-stale evidence from a pre-fix run.
+**Notes**: DUPLICATE of "A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice", fixed 2026-07-28 by running Canvas Content before all THREE Files-tab sweeps. This is the mechanical check added the same day, so it fires on pre-fix rows by construction. Verified fixed on 5 targeted post-fix runs (modules+inline, modules+isolate, flat+inline, each twice; a repeat run made ZERO HTTP requests). product-stale evidence from a pre-fix run.  
+> Not observed in the latest run.
 
 ---
 
-### ~~2 content file(s) on disk with no manifest row~~
+### ~~2 content file(s) on disk with no manifest row~~~~~~~~~~
 <!-- fp:371b678dbdf1 -->
 
 **Status**: invalid
@@ -357,11 +345,12 @@ Each of these will be offered as a NEW file on every future sync unless the anal
 
 The audit's own exemption for this existed and never fired: it read `expect["converters"]` while `check download` is handed a FLAT config. The same shape mismatch was also reporting the 25 consumed `.url` rows as a broken manifest. Both now read the `sync_contract` the app stored in the folder, which is what the engine itself obeys.
 
-Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.
+Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.  
+> Not observed in the latest run.
 
 ---
 
-### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~
+### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:09c8ffb50041 -->
 
 **Status**: invalid
@@ -384,7 +373,7 @@ Now derived from the folder's stored `sync_contract`. Re-checked on the same pri
 
 ---
 
-### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~
+### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~~~~~~~~~
 <!-- fp:f5c9f9d3c10f -->
 
 **Status**: fixed
@@ -427,11 +416,12 @@ WHICH COPY WINS - settled by the app's own placement logic, not by preference. `
 TWO WAYS TO IMPLEMENT, both needing a verifying run:
   (a) give the Catch-All the ids the Canvas Content phase will claim. Complete, but the API-attachment half of that set needs a per-assignment refetch that the secondary phase already performs - so it either costs the calls twice or needs the secondary enumeration split into plan-then-execute.
   (b) let the secondary phase MOVE an already-downloaded copy into the entity folder instead of re-fetching it. One download, correct placement, one manifest row, no pre-pass - but it changes the engine's write path.
-(b) is the smaller change and fixes all three symptoms; (a) is the more conservative one. Deferred rather than guessed at: this area already carries one duplicate-files fix, and the matrix owns the machine until the GPU lane finishes.
+(b) is the smaller change and fixes all three symptoms; (a) is the more conservative one. Deferred rather than guessed at: this area already carries one duplicate-files fix, and the matrix owns the machine until the GPU lane finishes.  
+> Not observed in the latest run.
 
 ---
 
-### ~~2 partial-write artifact(s) left on disk~~~~~~~~~~~~~~~~~~
+### ~~2 partial-write artifact(s) left on disk~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:62da7c0a9988 -->
 
 **Status**: invalid
@@ -452,7 +442,7 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:18cc3b9d802a -->
 
 **Status**: invalid
@@ -473,7 +463,7 @@ Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8224b9e3a4a1 -->
 
 **Status**: invalid
@@ -494,7 +484,7 @@ Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:
 
 ---
 
-### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:0995f8315ce5 -->
 
 **Status**: invalid
@@ -515,7 +505,7 @@ g1 darts vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:ac0b7c1a10e5 -->
 
 **Status**: invalid
@@ -536,7 +526,7 @@ gk2 vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~
+### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8badba1fc12c -->
 
 **Status**: invalid
@@ -580,7 +570,28 @@ Reverted to the original single dimming rule and verified in the running app: po
 
 ---
 
-### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~~~~~~~
+<!-- fp:7e2221df01e0 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: config
+**Oracles**: O2,O3
+**First seen**: 2026-07-29 (20260728_145153_matrix)
+**Last seen**: 2026-07-29 (20260728_145153_matrix)
+**Occurrences**: 3
+**Scenario**: m051_c43660 · 43660
+
+**Detail**:
+
+Both Page call sites pass isolate=False literally, so with isolation ON in flat mode every Page lands at the course root - the one folder the setting exists to keep clean - while assignments, quizzes and discussions from the same run go to their category folders. _ENTITY_ROUTING already defines 'Pages' as the destination, so the routing supports it; only the two call sites never ask for it. Reported, not fixed: lanes were still running.
+
+**Notes**: Fixed 2026-07-29, flat mode only (decided with the user; modules mode deliberately unchanged - a module Page belongs with its module, and that path carries legacy_sync_id back-compat machinery precisely because page keying moved once before). In FLAT mode there is no module folder, so 'module placement' degenerates to the course root and the isolate setting is the only instruction left. TWO halves had to move together: the writer (_download_flat_async -> isolate_pages) and the analyzer's expectation (_get_files_from_modules emits 'Pages/<name>.html', because analyze_course only fills target_paths in modules mode and preferred_disk_name passes a name_locked negative-id name through verbatim). If they disagree nothing crashes - every page just reads as new on every sync for ever. VERIFIED IN THE REAL APP: flat+isolate download of course 43660 -> 28 module scans, 35 pages, all 35 in Pages/, no Processing Error; then TWO sync runs, both 'Sync done - everything up to date, Checked 152 files'. Guarded by tests/test_page_isolation_flat_mode.py.  
+> Not observed in the latest run.
+
+---
+
+### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:815c4edf0cb8 -->
 
 **Status**: invalid
@@ -600,11 +611,12 @@ Measured with all 8 converters on: 7 .pptx and 11,872 code/data files inside ext
 Not data loss - files are present and usable - but it defeats the AI-optimisation feature for any course shipping material in a zip, which is common for code-heavy courses. Fix: append run_archive_extraction's output paths to the explicit set (or drop the explicit filter for converters that run after extraction).
 
 **Notes**: Fixed 2026-07-27: `run_archive_extraction` now returns its extraction roots and `_glob_files` accepts anything under them, so unpacked files get the same treatment as any other teacher-uploaded file. Guarded by `tests/test_archive_conversion_scope.py`.  
-> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.  
+> Not observed in the latest run.
 
 ---
 
-### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:689a00875c36 -->
 
 **Status**: invalid
@@ -622,52 +634,56 @@ The download fix alone was not enough. sync/execution.py does NOT call run_all_c
 
 Fixed by routing both flows through one shared helper (converters.post_processing.iter_extracted_files) and having run_archive_extraction return its extraction roots to both callers. Guarded by tests/test_archive_conversion_scope.py, which now also asserts the two flows keep the SAME converter ordering and that neither reverts to a downloaded-files-only scope.
 
-**Notes**:   
-> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
+**Notes**: > Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.  
+> Not observed in the latest run.
 
 ---
 
-### ~~convert_code did not reach 11872 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~convert_code did not reach 54 file(s) unpacked from archives~~~~~~~~
 <!-- fp:5a22b016415d -->
 
 **Status**: invalid
 **Severity**: medium
 **Category**: conversion
-**Oracles**: —
+**Oracles**: O1,O3
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Last seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Occurrences**: 1
+**Last seen**: 2026-07-30 (20260730_135829_ship_readiness_20260730)
+**Occurrences**: 4
+**Scenario**: m040 · m040
 
 **Detail**:
 
 convert_zip extracted these, but post-processing filters every converter through explicit_files - the list of paths the DOWNLOADER wrote - and extraction output is never added to it. So enabling both toggles applies only the first to archive contents.
 
 **Notes**: Fixed 2026-07-27: `run_archive_extraction` now returns its extraction roots and `_glob_files` accepts anything under them, so unpacked files get the same treatment as any other teacher-uploaded file. Guarded by `tests/test_archive_conversion_scope.py`.  
-> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.  
+> Not observed in the latest run.
 
 ---
 
-### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~~~~~
 <!-- fp:24e9563de29e -->
 
 **Status**: invalid
 **Severity**: medium
 **Category**: conversion
-**Oracles**: —
+**Oracles**: O1,O3
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Last seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Occurrences**: 1
+**Last seen**: 2026-07-30 (20260730_135829_ship_readiness_20260730)
+**Occurrences**: 2
+**Scenario**: m032_c45899 · m032_c45899
 
 **Detail**:
 
 convert_zip extracted these, but post-processing filters every converter through explicit_files - the list of paths the DOWNLOADER wrote - and extraction output is never added to it. So enabling both toggles applies only the first to archive contents.
 
 **Notes**: Fixed 2026-07-27: `run_archive_extraction` now returns its extraction roots and `_glob_files` accepts anything under them, so unpacked files get the same treatment as any other teacher-uploaded file. Guarded by `tests/test_archive_conversion_scope.py`.  
-> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.  
+> Not observed in the latest run.
 
 ---
 
-### ~~2 file(s) differ from their recorded md5~~~~~~~~~~~~~~~~~~
+### ~~2 file(s) differ from their recorded md5~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8a7f0ead05f4 -->
 
 **Status**: invalid
@@ -688,7 +704,7 @@ original_md5 is what classifies the next update as clean (overwrite) or modified
 
 ---
 
-### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~
+### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:72054c302758 -->
 
 **Status**: invalid
@@ -709,7 +725,24 @@ original_size decides whether the next Canvas change is treated as a real update
 
 ---
 
-### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~~~~~~~
+<!-- fp:c52480b4f905 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: placement
+**Oracles**: O1,O3
+**First seen**: 2026-07-29 (20260728_145153_matrix)
+**Last seen**: 2026-07-29 (20260728_145153_matrix)
+**Occurrences**: 3
+**Scenario**: m051_c43660 · m051_c43660
+
+**Notes**: Fixed 2026-07-29, flat mode only (decided with the user; modules mode deliberately unchanged - a module Page belongs with its module, and that path carries legacy_sync_id back-compat machinery precisely because page keying moved once before). In FLAT mode there is no module folder, so 'module placement' degenerates to the course root and the isolate setting is the only instruction left. TWO halves had to move together: the writer (_download_flat_async -> isolate_pages) and the analyzer's expectation (_get_files_from_modules emits 'Pages/<name>.html', because analyze_course only fills target_paths in modules mode and preferred_disk_name passes a name_locked negative-id name through verbatim). If they disagree nothing crashes - every page just reads as new on every sync for ever. VERIFIED IN THE REAL APP: flat+isolate download of course 43660 -> 28 module scans, 35 pages, all 35 in Pages/, no Processing Error; then TWO sync runs, both 'Sync done - everything up to date, Checked 152 files'. Guarded by tests/test_page_isolation_flat_mode.py.  
+> Not observed in the latest run.
+
+---
+
+### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:4b3b4fd09677 -->
 
 **Status**: fixed
@@ -736,7 +769,7 @@ Fixed in sync/analysis.py: every category now writes one line per file through a
 
 ---
 
-### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~
+### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~~~~~~~~~
 <!-- fp:d433d4f13087 -->
 
 **Status**: fixed
@@ -769,7 +802,7 @@ Verified by cancelling three real runs: before, both .part files remained; after
 
 ---
 
-### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~
+### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~~~~~~~~~
 <!-- fp:98608167bec2 -->
 
 **Status**: fixed
@@ -785,11 +818,12 @@ Verified by cancelling three real runs: before, both .part files remained; after
 
 Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found
 
-**Notes**: Same cause as the undeliverable-discussion entry, fixed 2026-07-28 by resolve_discussion_topic(). This is the generic 'unexpected log line' net catching the WARNING half of that event. product-stale evidence from a pre-fix run.
+**Notes**: Same cause as the undeliverable-discussion entry, fixed 2026-07-28 by resolve_discussion_topic(). This is the generic 'unexpected log line' net catching the WARNING half of that event. product-stale evidence from a pre-fix run.  
+> Not observed in the latest run.
 
 ---
 
-### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~
+### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~~~~~~~~~
 <!-- fp:257805fd303c -->
 
 **Status**: fixed
@@ -805,11 +839,12 @@ Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': N
 
 ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Spørgsmål til pensum i organisationskultur :: Not Found
 
-**Notes**: Same cause as the undeliverable-discussion entry, fixed 2026-07-28. This is the generic net catching the ERROR half of the SAME log event - a known redundancy with the dedicated check, documented in RUNBOOK 'Known redundancy: one Canvas condition, three findings'. product-stale evidence from a pre-fix run.
+**Notes**: Same cause as the undeliverable-discussion entry, fixed 2026-07-28. This is the generic net catching the ERROR half of the SAME log event - a known redundancy with the dedicated check, documented in RUNBOOK 'Known redundancy: one Canvas condition, three findings'. product-stale evidence from a pre-fix run.  
+> Not observed in the latest run.
 
 ---
 
-### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~
+### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~~~~~~~~~
 <!-- fp:92e8dcc3c9f9 -->
 
 **Status**: fixed
@@ -833,11 +868,12 @@ That is the wrong statement. The quiz has content; Canvas will not serve it to a
 
 Measured on course 43660: 10 quizzes saved via the quiz path all explain themselves properly; the one quiz that also sits in a module as an Assignment item is the only one that produced a second, misleading file.
 
-**Notes**: Fixed 2026-07-28 and verified against the live API. TWO defects, one root: questions were fetched in exactly ONE of the five places a quiz can be saved, and that one caught the wrong exception - `Forbidden` is a SIBLING of `Unauthorized` under `CanvasException`, not a subclass, so the informative handler was dead code for every student. Now one `quiz_body_html` helper at all three quiz sites and `assignment_body_html` at all three assignment sites, with copy that states the truth. NOTE: the first version of the fix was wrong and only the live API caught it - `get_questions()` returns a lazy PaginatedList, so guarding the CALL catches nothing; the iteration must be inside the try. 21 unit tests passed against an eagerly-raising double. Guarded by tests/test_quiz_body.py, whose fixtures now raise on iteration.
+**Notes**: Fixed 2026-07-28 and verified against the live API. TWO defects, one root: questions were fetched in exactly ONE of the five places a quiz can be saved, and that one caught the wrong exception - `Forbidden` is a SIBLING of `Unauthorized` under `CanvasException`, not a subclass, so the informative handler was dead code for every student. Now one `quiz_body_html` helper at all three quiz sites and `assignment_body_html` at all three assignment sites, with copy that states the truth. NOTE: the first version of the fix was wrong and only the live API caught it - `get_questions()` returns a lazy PaginatedList, so guarding the CALL catches nothing; the iteration must be inside the try. 21 unit tests passed against an eagerly-raising double. Guarded by tests/test_quiz_body.py, whose fixtures now raise on iteration.  
+> Not observed in the latest run.
 
 ---
 
-### ~~Course Finished reports 2 error(s) but this course's log records 0~~
+### ~~Course Finished reports 2 error(s) but this course's log records 0~~~~~~~~~~
 <!-- fp:eee718626a2e -->
 
 **Status**: fixed
@@ -853,11 +889,12 @@ Measured on course 43660: 10 quizzes saved via the quiz path all explain themsel
 
 The engine's error counter is not reset per course, so a later course in a batch reports its predecessors' failures as its own.
 
-**Notes**: DUPLICATE of "The per-course 'Course Finished' line reports the whole batch's error count", which this same matrix produced and which was fixed on 2026-07-28 (app.py:1450 filters download_errors_list by course_name; tests/test_per_course_error_count.py). This entry is the MECHANICAL detection of it, added by checker defect 24 on 2026-07-29 - so it necessarily fires on the whole matrix, whose lanes started 18:34 on 2026-07-28 with --server.fileWatcherType=none and therefore ran pre-fix code for all 73 rows. product-stale evidence from a pre-fix run; a fresh run is the only thing that can clear it.
+**Notes**: DUPLICATE of "The per-course 'Course Finished' line reports the whole batch's error count", which this same matrix produced and which was fixed on 2026-07-28 (app.py:1450 filters download_errors_list by course_name; tests/test_per_course_error_count.py). This entry is the MECHANICAL detection of it, added by checker defect 24 on 2026-07-29 - so it necessarily fires on the whole matrix, whose lanes started 18:34 on 2026-07-28 with --server.fileWatcherType=none and therefore ran pre-fix code for all 73 rows. product-stale evidence from a pre-fix run; a fresh run is the only thing that can clear it.  
+> Not observed in the latest run.
 
 ---
 
-### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~
+### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~~~~~~~~~
 <!-- fp:6b8c9476a66a -->
 
 **Status**: fixed
@@ -899,7 +936,7 @@ What was actually wrong was only the other half - the Panopto card rendering '36
 
 ---
 
-### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~
+### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~~~~~~~~~
 <!-- fp:eb27c313381a -->
 
 **Status**: fixed
@@ -923,11 +960,12 @@ It is a debug-log line rather than a UI one, but it is the line anybody judging 
 
 FIXED: count only entries whose DownloadError.course_name matches the course. Guarded by tests/test_per_course_error_count.py, which also asserts the download half of the line stays per-course - fixing one and not the other just moves the disagreement.
 
-**Notes**: Fixed 2026-07-28. Counts only entries whose DownloadError.course_name matches the course. tests/test_per_course_error_count.py also asserts the DOWNLOAD half of the same line stays per-course - fixing one and not the other just moves the disagreement.
+**Notes**: Fixed 2026-07-28. Counts only entries whose DownloadError.course_name matches the course. tests/test_per_course_error_count.py also asserts the DOWNLOAD half of the same line stays per-course - fixing one and not the other just moves the disagreement.  
+> Not observed in the latest run.
 
 ---
 
-### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~
+### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:7eaa8671abd1 -->
 
 **Status**: fixed
@@ -960,7 +998,7 @@ Guarded by tests/test_newversion_notice.py, including a check that every _NewVer
 
 ---
 
-### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~
+### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~~~~~~~~~
 <!-- fp:fa5b7101bfd4 -->
 
 **Status**: fixed
@@ -989,7 +1027,7 @@ Found while building the readonly_target fixture: it had been locking a CONVERSI
 
 ---
 
-### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f695845da958 -->
 
 **Status**: invalid
@@ -1011,7 +1049,7 @@ Consequence: a shared debug log cannot answer WHICH file the app put in those ca
 
 ---
 
-### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:70a043d21429 -->
 
 **Status**: fixed
@@ -1036,7 +1074,7 @@ Fixed with its own rule using rgba(245,158,11) = theme.WARNING, which is the col
 
 ---
 
-### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~
+### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~~~~~~~~~
 <!-- fp:aa56baa0771b -->
 
 **Status**: fixed

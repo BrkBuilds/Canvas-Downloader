@@ -425,6 +425,67 @@ def test_last_synced_matches_on_folder_too_not_just_course(config_dir, pairs_fil
     assert disk == {"/a": None, "/b": "T"}
 
 
+# ── the session list is stamped, never REPLACED ──────────────────────────────
+#
+# update_last_synced_batch is the one mutator called by the sync ENGINE rather
+# than by the Sync page's CRUD, so it is the only one that can run while
+# st.session_state['sync_pairs'] is something other than the contents of
+# canvas_sync_pairs.json. The Today dashboard is exactly that case: its pair
+# list is a curated subset published from today_dashboard.json and never written
+# to the pairs file at all.
+
+def test_last_synced_does_not_replace_the_session_list_with_the_file(
+        config_dir, pairs_file, session):
+    """The 2026-07-31 frozen-build hang, at its source.
+
+    A Today Quick Sync runs with a curated ``sync_pairs`` that is NOT in
+    canvas_sync_pairs.json. Assigning the persisted list over it wiped the
+    running sync's own pair list the moment it finished - and for a user who
+    only ever used Saved Groups & Pairs the file is ``[]``, so ``sync_pairs``
+    became empty and render_sync_step4 stranded a completed 203-file sync on
+    "No course folders found".
+    """
+    pairs_file.write_text("[]", encoding="utf-8")
+    today_pairs = [_pair(48018, "C:/dl/Makro"), _pair(43660, "C:/dl/Org")]
+    session.session_state['sync_pairs'] = today_pairs
+
+    persistence.update_last_synced_batch([(48018, "C:/dl/Makro", "T1")])
+
+    assert session.session_state['sync_pairs'], \
+        "the running sync's pair list was wiped by its own completion"
+    assert [p["course_id"] for p in session.session_state['sync_pairs']] \
+        == [48018, 43660]
+
+
+def test_last_synced_stamps_the_session_list_in_place(config_dir, pairs_file, session):
+    """Not replacing it is only half the contract - the timestamps the Sync page
+    renders come from the SESSION list, so they must land there too."""
+    pairs_file.write_text(json.dumps([_pair(1, "/a"), _pair(2, "/b")]),
+                          encoding="utf-8")
+    session.session_state['sync_pairs'] = [_pair(1, "/a"), _pair(2, "/b")]
+
+    persistence.update_last_synced_batch([(1, "/a", "T1")])
+
+    in_session = {p["course_id"]: p.get("last_synced")
+                  for p in session.session_state['sync_pairs']}
+    on_disk = {p["course_id"]: p.get("last_synced") for p in _on_disk(pairs_file)}
+    assert in_session == {1: "T1", 2: None}
+    assert in_session == on_disk, "the two stamps drifted apart"
+
+
+def test_last_synced_survives_an_absent_or_odd_session_list(config_dir, pairs_file, session):
+    """It runs at the very end of a sync, where raising would lose the run's
+    history write. No sync_pairs key at all is a real state (the engine can
+    outlive a cleanup), and so is a non-list left by something else."""
+    pairs_file.write_text(json.dumps([_pair(1, "/a")]), encoding="utf-8")
+
+    persistence.update_last_synced_batch([(1, "/a", "T1")])          # key absent
+    session.session_state['sync_pairs'] = None
+    persistence.update_last_synced_batch([(1, "/a", "T2")])          # not a list
+
+    assert _on_disk(pairs_file)[0]["last_synced"] == "T2"
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # Delete
 # ═══════════════════════════════════════════════════════════════════════════

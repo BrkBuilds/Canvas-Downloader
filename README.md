@@ -27,7 +27,7 @@ Canvas Downloader is a **standalone desktop application** that connects directly
 
 **Keep your course folders up to date automatically.** The sync engine tracks exactly what changed since your last run - new files, updated slides, teacher edits - and only touches what needs updating. Put it on full autopilot with the **Today page**: the app syncs your chosen courses by itself the first time you open it each day and shows you exactly which files arrived.
 
-**Download your Panopto lecture recordings.** The app finds the Panopto recordings linked in your courses and saves them as video (MP4) or audio (MP3) - and can generate **transcripts (.txt) and subtitles (.srt)** with on-device speech recognition. Nothing is ever uploaded anywhere.
+**Download your Panopto lecture recordings.** The app finds the Panopto recordings linked in your courses and saves them as video (MP4) or audio (MP3) - and can generate **transcripts (.txt) and subtitles (.srt)** with on-device speech recognition, so a lecture is searchable by text and readable if you are deaf or hard of hearing, working in a second language, or studying somewhere you cannot play audio. Nothing is ever uploaded anywhere. Please read the [disclaimer](DISCLAIMER.md) before enabling lecture downloads.
 
 **Turn your downloads into AI-ready study material automatically.** One toggle converts every PowerPoint, spreadsheet, video, and code file into a format any AI tool (NotebookLM, ChatGPT, Claude) can read and reason over.
 
@@ -386,6 +386,30 @@ The macOS spec includes the `com.apple.security.automation.apple-events` entitle
 Issues and PRs are welcome. If you find a bug or want to request a feature, open an issue on GitHub.
 
 When contributing code, follow the CSS/UI rules in `CLAUDE.md` - they exist because we learned the hard way.
+
+---
+
+## Disclaimer & Acceptable Use
+
+Canvas Downloader saves a local copy of course material you already have access
+to. It signs in as **you**, with **your** own Canvas access token, and can only
+reach what your own account is already permitted to open. It contains no
+decryption and breaks no copy protection; when Canvas or Panopto refuses a
+request, the app reports the refusal and moves on.
+
+**Lecture recordings:** Panopto has a download button your institution can switch
+on or off per recording. **This app does not read that setting**, so saving a
+recording may still be against your institution's rules. Recordings belong to
+your lecturer and your institution. Keep them for your own study, and never
+share or republish them.
+
+You are responsible for how you use this software, including compliance with
+your institution's IT regulations, any applicable terms of service, and your
+local copyright law.
+
+Full text: **[DISCLAIMER.md](DISCLAIMER.md)**. If you represent an institution or
+rights holder and have a concern, please open an issue or email
+**brkbuilds1@gmail.com** first - it will be addressed promptly.
 
 ---
 

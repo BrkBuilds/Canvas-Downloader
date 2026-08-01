@@ -73,6 +73,37 @@ SVG_SAVE_COLORFUL_SMALL = (
 
 # Small versions for compact configuration summary badges & tags
 SVG_FOLDER_YELLOW_SMALL = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#facc15" style="width:1.35em; height:1.35em; vertical-align:-0.25em; display:inline-block; margin-right:4px;"><path d="M20 5h-7.586l-2-2H4c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V7c0-1.103-.897-2-2-2z"/></svg>'
+
+# Solid book/reader glyph - a filled silhouette with its text lines *subtracted*
+# (fill-rule evenodd punches the inner rects into holes). The "this is a Canvas
+# course" mark, used by Today's daily-sync chips and by the sync-list card's
+# course pill. Defined ONCE here because those two are meant to read as the same
+# chip; a second copy of the path is how they would stop being.
+COURSE_BOOK_PATH = (
+    "M6 3H18A2 2 0 0 1 20 5V19A2 2 0 0 1 18 21H6"
+    "A2 2 0 0 1 4 19V5A2 2 0 0 1 6 3Z"
+    "M7.5 8H16.5V9.4H7.5ZM7.5 11.3H16.5V12.7H7.5ZM7.5 14.6H13.5V16H7.5Z"
+)
+
+
+def svg_course_book(css_class: str = "", size_px: int = 16) -> str:
+    """The course glyph, tinted by the parent's ``color``.
+
+    The inline size is REQUIRED, not cosmetic: this markup can outlive the
+    stylesheet that sizes it during a page transition (Streamlit briefly leaves
+    the old DOM in place), and an unsized inline SVG balloons to its default
+    replaced-element box - a full-width icon on the next screen.
+    """
+    cls = f" class='{css_class}'" if css_class else ""
+    return (
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' "
+        f"fill='currentColor'{cls} "
+        f"style='width:{size_px}px;height:{size_px}px;flex-shrink:0;'>"
+        f"<path fill-rule='evenodd' d='{COURSE_BOOK_PATH}'/></svg>"
+    )
+
+
+SVG_COURSE_PILL = svg_course_book()
 SVG_EDIT_WHITE_SMALL = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ffffff" style="width:1.1em; height:1.1em; vertical-align:-0.15em; display:inline-block; margin-right:4px;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>'
 
 
@@ -119,9 +150,49 @@ def fresh_container(*, border: bool | None = None, key: str | None = None):
 
     Use this for any container a terminal screen renders at an index where a
     still-running screen also renders one.
+
+    **Do NOT reach for this inside a LIST** - use :func:`pad_slot_children`
+    instead. In a list every index already holds another row of the same shape,
+    so the leading empty does not find a clean index, it just moves the block
+    onto the NEXT row and inherits that one. See its docstring.
     """
     st.empty()
     return st.container(border=border, key=key)
+
+
+# Every element that can occupy one slot of the sync list presents this many
+# children. The number comes from the widest of them - the pair row's
+# st.columns([5, 1.5, 1.1, 1.5, 1.2]) in sync_ui._sync_pairs_section.
+SYNC_LIST_SLOT_CHILDREN = 5
+
+
+def pad_slot_children(used: int, total: int = SYNC_LIST_SLOT_CHILDREN) -> None:
+    """Emit blank children until this container has *total* of them.
+
+    Streamlit reconciles by index, and ``AppRoot.addBlock`` hands a new block
+    the CHILDREN of whatever block already sat at its index. Only the children
+    your own elements overwrite go away; the rest survive until
+    ``clearStaleNodes``, which runs when the script run FINISHES. So when two
+    different widgets can render at one index, the one with FEWER children
+    leaves the other's tail on screen - inside itself.
+
+    Measured on the sync page 2026-07-30, both directions of the same slot:
+
+    * pair row (5 children) -> edit form (4): the row's red **Remove** button
+      rendered inside the open edit form, which stood at 247px instead of 193px;
+    * add/edit form (5) -> "Add Course" row (3): the form's **Cancel** and
+      **Confirm and Add** buttons stayed under the restored Add Course row for
+      22ms, the slot at 112px instead of 48px.
+
+    A bare ``st.empty()`` is a zero-height ``stElementContainer``, so the
+    padding is free - but the container's own flex ``gap`` is NOT, and four
+    zero-height children still cost four gaps. Any container padded this way
+    must set ``gap: 0`` (see ``styles/global.css``).
+
+    This is the right tool inside a list; :func:`fresh_container` is not.
+    """
+    for _ in range(max(0, total - used)):
+        st.empty()
 
 
 def live_enable_button(input_key: str, button_key: str, *,
@@ -3460,8 +3531,20 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
     ``display: none`` ancestor, and the checked state survives an unrelated
     rerun because React leaves an unchanged ``dangerouslySetInnerHTML``
     alone), then in the app.
+
+    **This component emits NO stylesheet of its own - every rule lives in
+    ``styles/global.css`` - and it must stay that way.** A style-ONLY
+    ``st.html()`` does not render where you call it: Streamlit routes it to the
+    EVENT root container, one global INDEX-ADDRESSED list that ``st.toast``
+    also writes to, and that a dialog's fragment rerun REWINDS to the index its
+    call site held. Measured in the real app on 2026-07-30: this component's
+    stylesheet was the first event-container write after ``sync_ui.py:1294``'s
+    Saved Groups hub, so deleting a saved pair (which queues a toast) landed
+    that toast on the stylesheet's index and deleted it - and because these are
+    the only rules in the app whose ABSENCE makes hidden content appear, the
+    card unfolded itself behind the open dialog with its checkbox still
+    unchecked. See the header comment in ``global.css`` for the full chain.
     """
-    import base64
     from shared.helpers import esc, help_text_enabled
 
     # Single gate for every Help affordance in the app - all eight call sites
@@ -3472,12 +3555,8 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
     show_button = (mode in ["auto", "button"])
     show_card = (mode in ["auto", "card"])
 
-    close_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
-    close_b64 = base64.b64encode(close_svg.encode()).decode()
-
-    help_svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>'
-    help_b64 = base64.b64encode(help_svg.encode()).decode()
-
+    # The close and help glyphs are constants, so they are baked into the
+    # data: URIs in global.css rather than re-encoded per call.
     help_btn_key = f"{key_prefix}_explainer_help_btn"
     # The `for=` target. A label activates its control from anywhere in the
     # document, which is what lets the trigger live in the page header while
@@ -3509,166 +3588,23 @@ def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = ""
             unsafe_allow_html=True,
         )
 
-        st.html(f"""<style>
-        @keyframes cdHelpSlideDown {{
-            from {{ opacity: 0; transform: translateY(-8px); }}
-            to {{ opacity: 1; transform: translateY(0); }}
-        }}
-        .cd-help-cb {{ display: none !important; }}
-        /* Closed is the DEFAULT, so if :has() below ever fails to match, the
-           card stays hidden and the page merely keeps one empty flex slot -
-           the safe direction to fail in. */
-        .cd-help-card {{ display: none; }}
-        .cd-help-cb:checked ~ .cd-help-card {{
-            display: block;
-            position: relative;
-            background-color: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 8px;
-            padding: 16px 16px 32px 16px;
-            margin-bottom: 15px;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-            animation: cdHelpSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }}
-        /* Take the wrapper's element-container out of the flow while the card
-           is closed, so a closed card costs exactly what it used to cost when
-           it was not rendered at all: nothing. A zero-HEIGHT flex item would
-           still consume one `gap` slot on every page that hosts a card.
-           `stElementContainer` never nests, so the descendant :has() cannot
-           match an ancestor here. */
-        div[data-testid="stElementContainer"]:has(.cd-help-cb:not(:checked)) {{
-            display: none !important;
-        }}
-        /* Streamlit's markdown container carries margin-bottom: -16px, which
-           would eat the card's own bottom margin. */
-        div[data-testid="stElementContainer"]:has(.cd-help-cb) [data-testid="stMarkdownContainer"] {{
-            margin-bottom: 0 !important;
-        }}
-        .cd-help-card-title {{
-            margin: 0 0 12px 0;
-            font-weight: 700;
-            color: #ffffff;
-            font-size: 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }}
-        .cd-help-card-body {{
-            margin: 0;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.92);
-            line-height: 1.5;
-        }}
-        .cd-help-card p:last-child {{ margin-bottom: 0 !important; }}
-        .cd-help-close {{
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            z-index: 10;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            cursor: pointer;
-        }}
-        .cd-help-close::before {{
-            content: "";
-            display: block;
-            width: 16px;
-            height: 16px;
-            background-color: #94a3b8;
-            -webkit-mask-image: url('data:image/svg+xml;base64,{close_b64}');
-            mask-image: url('data:image/svg+xml;base64,{close_b64}');
-            -webkit-mask-size: contain;
-            mask-size: contain;
-            -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-            -webkit-mask-position: center;
-            mask-position: center;
-            transition: background-color 0.15s ease;
-        }}
-        .cd-help-close:hover::before {{ background-color: #f8fafc; }}
-        </style>""")
-
     if show_button:
+        # Alignment by MODIFIER CLASS, not by an f-string in a stylesheet:
+        # "auto" puts the trigger top-right of its row (flex-end + 25px),
+        # every other mode leaves it at the row's start. Carrying the variant
+        # on markup the component already owns is what lets the whole
+        # stylesheet stay static in global.css - see the docstring.
+        _row_cls = ("cd-help-trigger-row cd-help-trigger-row--end"
+                    if mode == "auto" else "cd-help-trigger-row")
+
         with st.container(key=help_btn_key):
             # A label, not an st.button: a button would post a widget value and
             # rerun the whole page (see the docstring). Wrapped in a div so
-            # Streamlit does not put the inline label inside a <p>.
+            # Streamlit does not put the inline label inside a paragraph.
             st.markdown(
-                f'<div class="cd-help-trigger-row">'
+                f'<div class="{_row_cls}">'
                 f'<label for="{cb_id}" class="cd-help-trigger" title="Click to open guide.">Help</label>'
                 f'</div>',
                 unsafe_allow_html=True,
             )
-
-        # Adjust alignment based on mode: "auto" is usually top-right (flex-end),
-        # whereas manual triggers might need flex-start.
-        justify_content = "flex-end" if mode == "auto" else "flex-start"
-        margin_bottom = "25px" if mode == "auto" else "0px"
-
-        st.html(f"""<style>
-        @keyframes fadeInHelp_{key_prefix} {{
-            from {{ opacity: 0; transform: translateX(8px); }}
-            to {{ opacity: 1; transform: translateX(0); }}
-        }}
-        div.st-key-{help_btn_key} {{
-            margin-bottom: {margin_bottom} !important;
-            display: flex !important;
-            justify-content: {justify_content} !important;
-            animation: fadeInHelp_{key_prefix} 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }}
-        div.st-key-{help_btn_key} [data-testid="stMarkdownContainer"] {{
-            margin-bottom: 0 !important;
-        }}
-        /* Flex, not the default block: an inline-flex label inside a block
-           parent sits on a text baseline, and the line box's descender space
-           made the trigger's element-container 27.4px tall against the
-           st.button's 24px. Measured - it changes nothing on this header,
-           where the H2 is taller, but Today's help row is sized to the
-           trigger itself. */
-        .cd-help-trigger-row {{
-            display: flex;
-            align-items: center;
-        }}
-        /* Metrics copied from the st.button this replaced so every header row
-           it sits in keeps its measured height and baseline. */
-        .cd-help-trigger {{
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 8px;
-            min-height: 24px;
-            height: 24px;
-            color: #a8b4c6;
-            font-weight: 500;
-            font-size: 0.9rem;
-            border-radius: 6px;
-            cursor: pointer;
-            user-select: none;
-            -webkit-user-select: none;
-            transition: color 0.2s ease;
-        }}
-        .cd-help-trigger:hover {{ color: #f8fafc; }}
-        .cd-help-trigger::before {{
-            content: "";
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            margin-right: 6px;
-            flex-shrink: 0;
-            background-color: #a8b4c6;
-            -webkit-mask-image: url('data:image/svg+xml;base64,{help_b64}');
-            mask-image: url('data:image/svg+xml;base64,{help_b64}');
-            -webkit-mask-size: contain;
-            mask-size: contain;
-            -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-            -webkit-mask-position: center;
-            mask-position: center;
-            transition: background-color 0.2s ease;
-        }}
-        .cd-help-trigger:hover::before {{ background-color: #f8fafc; }}
-        </style>""")
 

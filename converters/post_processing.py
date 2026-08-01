@@ -546,9 +546,21 @@ def run_archive_extraction(files, ui: UIBridge) -> list:
     """Extract archives (.zip, .tar, .tar.gz).
 
     Returns the extraction ROOT directory of every archive that unpacked
-    successfully. The caller needs them because extraction is the one converter
-    that *creates* files the rest of the pipeline must still see - see the
-    explicit-files note in ``run_all_conversions``.
+    successfully - but NOTHING CONSUMES IT, and that is deliberate. A zip is
+    unpacked and its contents are then left exactly as they are; no converter
+    ever runs over what came out of one, in either the download or the sync
+    flow. ``run_all_conversions`` drops this return value on purpose and its
+    "NOTE ON ARCHIVES" records the measurements behind the 2026-07-29 reversal
+    (one lecture zip: 21,824 files out, 9,730 past Windows' 260-char limit,
+    and PowerPoint COM rejecting long paths and the long-path prefix alike).
+
+    Do not wire these roots back into ``_glob_files`` without re-reading that
+    note: a source-consuming converter DELETES its input, so doing so turns a
+    student's own .js inside their own project into something else.
+
+    The value is still returned because it is the honest result of the work,
+    and a caller that ever needs it (a progress line, a report) should not have
+    to re-derive it - see ``tests/test_archive_conversion_scope.py``.
     """
     if not files:
         return []

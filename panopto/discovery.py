@@ -438,6 +438,14 @@ def discover_course_videos(
     rest = _CanvasREST(canvas_base, token)
     videos: dict[str, PanoptoVideo] = {}
 
+    # Which LTI tools this institution has, so pass 2 can skip the ones that
+    # provably are not Panopto. Memoised per Canvas host, so this is one ~230ms
+    # lookup for the whole run rather than one per course. Any failure yields an
+    # unresolved scan, which classifies nothing and therefore skips nothing.
+    from panopto.institution import cached_scan
+    _tool_scan = cached_scan(rest, course_id)
+    _skipped_tools = 0
+
     def _emit(kind, **kw):
         if on_event is None:
             return
@@ -498,12 +506,37 @@ def discover_course_videos(
             # quiz_lti marks Canvas New Quizzes - an LTI tool, never Panopto;
             # launching it would waste a full handshake per quiz.
             if item.get("type") == "ExternalTool" and not item.get("quiz_lti"):
+                # Same idea, generalised: an item whose tool we can POSITIVELY
+                # identify as some other vendor's cannot yield a recording, and
+                # pass 2 costs ~1-2s of LTI handshake for each one. Measured on
+                # a real account: course 45899 had 12 ExternalTool items, every
+                # one of them the ExLibris library tool - 12 full handshakes
+                # that could only ever return nothing. The Panopto course next
+                # to it had 36, all Panopto, all genuinely needed.
+                #
+                # SKIP ONLY WHAT WE CAN PROVE IS NOT PANOPTO. An unknown tool id
+                # (or none) still gets its handshake, so a course-level Panopto
+                # install we never listed can never be lost. Tool ids are
+                # resolved per institution at runtime and are never hardcoded -
+                # Panopto is 863 on one Canvas and something else on the next.
+                if not direct_vids and _tool_scan.is_known_non_panopto_tool(
+                        item.get("content_id")):
+                    _skipped_tools += 1
+                    continue
                 pending.append((mod, item, mod_name, item_title, item_id,
                                 launch_url, direct_vids))
             else:
                 for vid in direct_vids:
                     add(vid, item_title, module=mod_name, launch=launch_url,
                         source="module", item_id=item_id)
+
+    if _skipped_tools:
+        logger.info(
+            "Panopto discovery: skipped %d non-Panopto ExternalTool item(s) in "
+            "course %s (~%.0f-%.0fs of LTI handshakes avoided); %d to resolve.",
+            _skipped_tools, course_id, _skipped_tools, _skipped_tools * 2,
+            len(pending),
+        )
 
     # Pass 2 (parallel): the slow part. Each pending ExternalTool item needs an
     # LTI handshake (and possibly an item-detail fetch) - ~1-2s of pure network

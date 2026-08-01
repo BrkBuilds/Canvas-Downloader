@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Disclaimer &amp; Acceptable Use - Canvas Downloader</title>
+  <meta name="description"
+    content="Canvas Downloader saves course material you already have access to. It breaks no copy protection. Read what it does, what it does not do, and what you are responsible for." />
+  <meta name="robots" content="index, follow" />
+  <link rel="icon" type="image/x-icon" href="icon.ico" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0b0c14;
+      --surf: #10111e;
+      --surf2: #15172a;
+      --border: rgba(255, 255, 255, 0.1);
+      --border2: rgba(255, 255, 255, 0.16);
+      --txt: #e2e8f0;
+      --txt2: #cbd5e1;
+      --txt3: #94a3b8;
+      --cyan: #38bdf8;
+      --cyan-bg: rgba(56, 189, 248, 0.08);
+      --cyan-b: rgba(56, 189, 248, 0.3);
+      --green: #68d4a3;
+      --grn-bg: rgba(104, 212, 163, 0.08);
+      --grn-b: rgba(104, 212, 163, 0.3);
+      --red: #ef4444;
+      --blue: #3b71b8;
+      --rad: 10px;
+      --rad-l: 16px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 24px;
+      width: 100%;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* ---- NAV ---- */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 12, 20, 0.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 58px;
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--txt);
+    }
+
+    .nav-logo img {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: block;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--txt2);
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-link:hover {
+      color: var(--txt);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-link.active {
+      color: var(--cyan);
+    }
+
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 18px;
+      border-radius: var(--rad);
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: filter 0.15s;
+      text-decoration: none;
+    }
+
+    .btn-nav:hover {
+      filter: brightness(1.15);
+    }
+
+    .btn-nav-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: var(--rad);
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border2);
+      color: var(--txt);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-nav-ghost:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .nav-link, .nav-logo, .btn-nav, .btn-nav-ghost { white-space: nowrap; }
+
+    @media(max-width:860px) {
+      .btn-nav-ghost span, .btn-nav span { display: none; }
+      .btn-nav-ghost, .btn-nav { padding: 8px 10px; }
+    }
+
+    .setup-short { display: none; }
+
+    @media(max-width:600px) {
+      .setup-full { display: none; }
+      .setup-short { display: inline; }
+    }
+
+    @media(max-width:540px) {
+      .nav-right .nav-link { display: none; }
+    }
+
+    /* ---- CONTENT ---- */
+    main {
+      flex: 1;
+      padding: 64px 0 80px;
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      background: var(--cyan-bg);
+      border: 1px solid var(--cyan-b);
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 44px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
+    }
+
+    .updated {
+      font-size: 13px;
+      color: var(--txt3);
+      margin-bottom: 36px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 40px 0 14px;
+      color: var(--txt);
+    }
+
+    p {
+      font-size: 15px;
+      color: var(--txt2);
+      margin-bottom: 14px;
+    }
+
+    ul {
+      margin: 0 0 14px;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    ul li {
+      position: relative;
+      padding-left: 26px;
+      font-size: 15px;
+      color: var(--txt2);
+      margin-bottom: 10px;
+    }
+
+    ul li::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 10px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+    }
+
+    code {
+      font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+      font-size: 13px;
+      background: var(--surf2);
+      border: 1px solid var(--border2);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--txt);
+    }
+
+    a.link {
+      color: var(--cyan);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    strong {
+      color: var(--txt);
+    }
+
+    /* TL;DR box */
+    .tldr {
+      background: var(--grn-bg);
+      border: 1px solid var(--grn-b);
+      border-radius: var(--rad-l);
+      padding: 24px 26px;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .tldr svg {
+      color: var(--green);
+      flex-shrink: 0;
+      margin-top: 2px;
+      filter: drop-shadow(0 0 12px rgba(104, 212, 163, 0.3));
+    }
+
+    .tldr strong {
+      color: var(--green);
+      display: block;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .tldr span {
+      font-size: 14.5px;
+      color: var(--txt2);
+      line-height: 1.6;
+    }
+
+    /* do / don't lists */
+    .check li::before,
+    .cross li::before {
+      content: none;
+    }
+
+    .check li,
+    .cross li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding-left: 0;
+    }
+
+    .check li svg {
+      color: var(--green);
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .cross li svg {
+      color: var(--red);
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    /* ---- FOOTER ---- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+      text-align: center;
+    }
+
+    .foot-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .foot-logo img {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+    }
+
+    footer p {
+      font-size: 13px;
+      color: var(--txt3);
+      margin-bottom: 16px;
+    }
+
+    .foot-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .foot-links a {
+      font-size: 12px;
+      color: var(--txt3);
+      transition: color 0.15s;
+    }
+
+    .foot-links a:hover {
+      color: var(--txt2);
+    }
+
+    .foot-v {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--txt3);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="icon.png" alt="Canvas Downloader" />
+        Canvas Downloader
+      </a>
+      <div class="nav-right">
+        <a href="mac-setup.html" class="nav-link" data-setup-link><span class="setup-full">How to set up</span><span
+            class="setup-short">Setup</span></a>
+        <a href="guide.html" class="nav-link">How It Works</a>
+        <a href="index.html#get" class="btn-nav">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          <span>Download</span>
+        </a>
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
+          class="btn-nav-ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+          </svg>
+          <span>100% Open Source</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <div class="container">
+      <div class="label">Legal</div>
+      <h1>Disclaimer &amp; Acceptable Use</h1>
+      <p class="updated">Last updated: 30 July 2026</p>
+
+      <div class="tldr">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <div>
+          <strong>The short version</strong>
+          <span>Canvas Downloader saves a local copy of course material you already have access to. It signs in as you,
+            with your own credentials, and breaks no copy protection of any kind. You are responsible for how you use
+            it, including whether your use follows your institution's rules and your local copyright law. If you enable
+            Panopto lecture downloads, please read that section below.</span>
+        </div>
+      </div>
+
+      <h2>How the app accesses your content</h2>
+      <p>Canvas Downloader acts as <strong>you</strong>, using <strong>your</strong> credentials:</p>
+      <ul>
+        <li>It connects to your university's Canvas with an API access token that you create and paste in yourself.</li>
+        <li>For Panopto recordings it performs the same LTI 1.3 sign-in handshake your browser performs when you click a
+          Panopto link inside Canvas, then requests the recording from the same endpoint the Panopto player uses.</li>
+        <li>Everything runs on your own machine. There is no server, no account, and nothing is uploaded anywhere.</li>
+      </ul>
+      <p>It can therefore only reach material that <strong>your own account is already permitted to open</strong>. If
+        Canvas or Panopto refuses a request, the app reports the refusal and moves on. It does not attempt to work
+        around it.</p>
+
+      <h2>What the app does not do</h2>
+      <ul>
+        <li>It does <strong>not</strong> break, strip, or work around digital rights management, encryption, or copy
+          protection. It contains no decryption of any kind.</li>
+        <li>It does <strong>not</strong> guess, share, bypass, or escalate credentials or permissions.</li>
+        <li>It does <strong>not</strong> reach anything you could not open yourself in a browser.</li>
+        <li>It does <strong>not</strong> upload, publish, or share your downloads.</li>
+      </ul>
+
+      <h2>Panopto lecture recordings</h2>
+      <p><strong>Please read this section before enabling lecture downloads.</strong></p>
+      <p>Panopto's video player has a download button that your institution or your instructor can switch on or off, per
+        folder or per recording. Many institutions leave it off site-wide without a deliberate decision ever being made
+        about any particular lecture.</p>
+      <p><strong>Canvas Downloader does not read that setting.</strong> It saves the same video stream the player
+        already sends to your browser, whether or not the download button is shown to you.</p>
+      <p>That means:</p>
+      <ul>
+        <li>Saving a recording may be contrary to your institution's IT rules or to Panopto's terms of service, even
+          though your account is permitted to watch it.</li>
+        <li>A lecturer may have deliberately chosen not to make a recording downloadable. Please respect that where the
+          choice has clearly been made.</li>
+        <li>Recordings are the intellectual property of the lecturer and/or the institution. They often contain
+          third-party material that is licensed only for use inside a closed teaching context.</li>
+      </ul>
+      <p><strong>Never republish, upload, share, or redistribute a lecture recording.</strong> Not to classmates, not to
+        file-sharing services, not to a public AI service, not anywhere. Redistribution is the act most likely to cause
+        real harm to your lecturer and real consequences for you, and it is entirely your own act.</p>
+      <p>If you are unsure whether you may save a particular recording, ask the lecturer or your institution's IT
+        support. Downloads are for <strong>your own personal study</strong>.</p>
+
+      <h2>Why this feature exists</h2>
+      <ul>
+        <li><strong>Accessibility.</strong> Transcripts and subtitles are generated on-device, for students who are deaf
+          or hard of hearing, students with auditory processing differences, and students studying in a language that is
+          not their first.</li>
+        <li><strong>Studying offline.</strong> Commutes, travel, and unreliable or metered connections.</li>
+        <li><strong>Revision.</strong> Reviewing your own courses at your own pace, in your own tools.</li>
+        <li><strong>Continuity.</strong> Course material regularly disappears when a term ends or a course is
+          unpublished.</li>
+      </ul>
+
+      <h2>Your responsibilities</h2>
+      <p>By using this software you accept that you are solely responsible for:</p>
+      <ul>
+        <li>complying with your institution's IT regulations and academic rules;</li>
+        <li>complying with any applicable terms of service;</li>
+        <li>complying with the copyright law of your country;</li>
+        <li>how you store and use what you download, and above all whether you share it.</li>
+      </ul>
+
+      <h2>No warranty, no liability</h2>
+      <p>This software is provided "as is", without warranty of any kind. To the fullest extent permitted by law, the
+        author accepts no liability for any claim, damage, loss, disciplinary action, or other consequence arising from
+        your use of this software. Canvas Downloader is a free, open-source app built by a student. It is <strong>not
+          affiliated with, endorsed by, or connected to Instructure, Inc., Canvas LMS, or Panopto.</strong></p>
+      <p><strong>Nothing on this page is legal advice.</strong></p>
+
+      <h2>For institutions, rights holders, and Panopto</h2>
+      <p>If you represent an institution, a rights holder, or Panopto and you have a concern about this project, please
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank"
+          rel="noopener">open an issue</a> or email <a href="mailto:brkbuilds1@gmail.com">brkbuilds1@gmail.com</a>
+        before taking any other step. Concerns raised in good faith will be addressed in good faith, and promptly.</p>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="foot-logo">
+        <img src="icon.png" alt="Canvas Downloader" />
+        Canvas Downloader
+      </div>
+      <p>Built by a student, for students. Free and open source.</p>
+      <div class="foot-links">
+        <a href="index.html">Homepage</a>
+        <a href="guide.html">How It Works</a>
+        <a href="engine.html">Under the Hood</a>
+        <a href="releases.html">Downloads &amp; Releases</a>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="disclaimer.html">Disclaimer</a>
+        <a href="mac-setup.html" data-setup-link>Setup Guide</a>
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank"
+          rel="noopener">Report a Bug</a>
+        <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
+            style="color:#f97316;">&hearts;</span> Support the project</a>
+      </div>
+      <div class="foot-v">Not affiliated with Instructure or Canvas LMS</div>
+    </div>
+  </footer>
+
+  <script>
+    // OS-aware setup links: Windows users get the Windows guide.
+    (function () {
+      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+        document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
+      }
+    })();
+  </script>
+</body>
+
+</html>

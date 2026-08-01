@@ -183,6 +183,12 @@ _APP_LOGGER_PREFIXES = (
     'md_converter', 'code_converter', 'archive_extractor', 'url_compiler',
     'preset_manager', 'ui_helpers', 'ui_shared', 'theme',
     'engine', 'sync', 'ui', 'core', 'panopto',
+    # 'shared' was missing until 2026-07-31, so every INFO line from
+    # shared/legal.py, shared/helpers.py and shared/components.py was dropped
+    # from debug_log.txt (the bridge only keeps WARNING+ for non-app loggers).
+    # That silently hid the Panopto consent decisions - exactly the records you
+    # need when a user reports "it didn't download my lectures".
+    'shared',
 )
 
 

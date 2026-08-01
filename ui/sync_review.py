@@ -21,7 +21,6 @@ from shared import theme
 from shared.components import SVG_FOLDER_YELLOW
 from shared.helpers import (
     render_sync_wizard,
-    friendly_course_name,
     format_file_size,
     short_path,
     check_disk_space,
@@ -29,6 +28,7 @@ from shared.helpers import (
     esc,
     effective_ext,
 )
+from core.pair_labels import pair_display_name
 
 
 def _disk_ext(local_path: str, canvas_name: str, contract: dict) -> str:
@@ -62,6 +62,15 @@ def _checkbox_default(key: str) -> bool:
     return True
 from core.state_registry import cleanup_sync_state
 from shared.components import HELP_ICONS
+from shared.legal import (
+    clear_panopto_skip, panopto_skipped_this_run, require_panopto_notice,
+)
+
+#: Set by the acceptable-use notice's resume payload when the user answers it
+#: from this screen, so the confirm dialog the click was heading for still
+#: opens. A flag rather than the call itself: the confirm screen is an
+#: @st.dialog, and opening it from inside the notice modal would nest two.
+_RESUME_SYNC_CONFIRM = "_panopto_resume_sync_confirm"
 
 
 
@@ -1724,7 +1733,7 @@ def show_analysis_review(on_confirm_sync):
                 # ON-DISK (post-conversion) type, in lockstep with Smart Select.
                 _contract = res_data.get('contract') or {}
 
-                display_name = friendly_course_name(pair['course_name'])
+                display_name = pair_display_name(pair)
                 folder_display = short_path(pair['local_folder'])
             
                 # Panopto recordings for THIS course, split into the review buckets.
@@ -1834,7 +1843,7 @@ def show_analysis_review(on_confirm_sync):
                     <div style="min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px;">
                         <div style="display: flex; align-items: baseline; overflow: hidden; white-space: nowrap;">
                             <span style="color: {theme.WHITE}; font-size: 1rem; font-weight: 700; min-width: 26px; flex-shrink: 0;">{idx + 1}.</span>
-                            <span style="color: {theme.WHITE}; font-size: 1.15rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{display_name}</span>
+                            <span style="color: {theme.WHITE}; font-size: 1.15rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; min-width: 0;">{esc(display_name)}</span>
                         </div>
                         <div class="sync-review-folder-row" style="display: flex; align-items: center; overflow: hidden; padding-left: 25px;">
                             {SVG_FOLDER_YELLOW}
@@ -2225,7 +2234,13 @@ def show_analysis_review(on_confirm_sync):
             else:
                 _sync_help = None
 
-            if st.button(sync_label, type="primary", use_container_width=True, disabled=total_selected == 0, help=_sync_help):
+            # `or <resume flag>` re-enters this block on the render after the
+            # user answers the acceptable-use notice, so the click that opened
+            # the modal still reaches the confirm dialog. The whole block has to
+            # re-run, not just the tail: `sync_selections` is collected inside it
+            # and does not survive the rerun.
+            if st.button(sync_label, type="primary", use_container_width=True, disabled=total_selected == 0, help=_sync_help) \
+                    or st.session_state.get(_RESUME_SYNC_CONFIRM):
                     # Collect selections
                     sync_selections = []
                     for idx, res_data in enumerate(all_results):
@@ -2357,7 +2372,46 @@ def show_analysis_review(on_confirm_sync):
                                 dest_folder = short_path(s['res_data']['pair']['local_folder'])
                                 break
 
-                    on_confirm_sync(sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
+                    # Acceptable-use notice, ACTIVE trigger, raised BEFORE the
+                    # confirmation dialog opens. It CANNOT be raised from inside
+                    # that dialog: _show_sync_confirmation is itself an
+                    # @st.dialog, and Streamlit crashes outright on a nested one
+                    # ("only one dialog allowed open at a time"). Gating here is
+                    # also simply earlier - the user has just picked the
+                    # recordings, which is the moment the intent exists.
+                    #
+                    # The predicate matches sync/execution.py's own trigger for
+                    # the Panopto pass (the summed per-selection count), so the
+                    # question is asked exactly when a recording would be
+                    # fetched, and never on a files-only sync.
+                    #
+                    # No early return: withholding the on_confirm_sync call is
+                    # enough to hold the run, and the rest of the review screen
+                    # must still render or its element indices shift under the
+                    # modal (see CLAUDE.md, dialog ordering).
+                    #
+                    # The resume payload is a FLAG, not the action itself: the
+                    # action here is "open the confirm dialog", and invoking that
+                    # from inside the notice modal is the nested-dialog crash.
+                    # Setting a flag lets the next render open it normally.
+                    _pan_selected = sum(
+                        len(s.get('panopto', []) or []) for s in sync_selections
+                    )
+                    if _pan_selected == 0 or require_panopto_notice(
+                            resume={_RESUME_SYNC_CONFIRM: True}):
+                        st.session_state.pop(_RESUME_SYNC_CONFIRM, None)
+                        # ORDER MATTERS: read the decline before clearing it.
+                        # Unlike the download paths, this block RE-RUNS after
+                        # the notice is answered and rebuilds sync_selections
+                        # from the UI - which still carries every recording the
+                        # user had ticked. Clearing first would drop the only
+                        # evidence that they said no, and the sync would fetch
+                        # the recordings they just declined.
+                        if panopto_skipped_this_run():
+                            for _s in sync_selections:
+                                _s['panopto'] = []
+                        clear_panopto_skip()
+                        on_confirm_sync(sync_selections, total_count, format_file_size(total_bytes), folders_count, avail_mb, total_mb, dest_folder, total_bytes)
 
         with col_back:
             with st.container(key="btn_sync_back"):

@@ -434,7 +434,7 @@
     <div class="container">
       <div class="label">Privacy</div>
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated: 11 July 2026</p>
+      <p class="updated">Last updated: 31 July 2026</p>
 
       <div class="tldr">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -544,8 +544,15 @@
         <li><strong>Hugging Face (optional, one-time model download).</strong> Only if you set up local transcription:
           the app downloads the speech-recognition model you pick from Hugging Face's public model hub, the same way a
           browser downloads a file. No personal data, no account, and none of your content is sent - after the
-          download, transcription runs fully offline. (Similarly, opting into GPU acceleration downloads NVIDIA's
-          official CUDA libraries one time.)</li>
+          download, transcription runs fully offline.</li>
+        <li><strong>PyPI (optional, one-time library download).</strong> Only if you opt into GPU acceleration for
+          transcription on a Windows PC with an NVIDIA card: the app downloads NVIDIA's official CUDA library packages
+          from the Python Package Index. Again, a plain file download - no account, nothing sent.</li>
+        <li><strong>GitHub (version check).</strong> When the app starts, it asks GitHub's public releases API whether a
+          newer version has been published, so it can show you an update notice. The request carries nothing but the
+          request itself - no token, no course data, no identifier of any kind - and GitHub sees only what any website
+          sees when you visit it. If it fails or you are offline, the app simply shows no notice. The
+          <a class="link" href="releases.html">Downloads &amp; Releases</a> page makes the same call in your browser.</li>
         <li><strong>Microsoft Store (Windows).</strong> If you install the app from the Microsoft Store, Microsoft
           handles distribution and updates. Any data Microsoft collects as the store operator is governed by the
           <a class="link" href="https://privacy.microsoft.com/privacystatement" target="_blank" rel="noopener">Microsoft
@@ -598,8 +605,10 @@
       <div class="foot-links">
         <a href="index.html">Homepage</a>
         <a href="guide.html">How It Works</a>
+        <a href="engine.html">Under the Hood</a>
         <a href="releases.html">Downloads &amp; Releases</a>
         <a href="privacy.html">Privacy Policy</a>
+        <a href="disclaimer.html">Disclaimer</a>
         <a href="mac-setup.html" data-setup-link>Setup Guide</a>
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues" target="_blank"

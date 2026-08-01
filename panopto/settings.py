@@ -121,6 +121,59 @@ def save_settings(settings: dict) -> bool:
         return False
 
 
+# ── Global on/off preference ────────────────────────────────────────────────
+# A TOP-LEVEL key, deliberately NOT a member of PANOPTO_DEFAULTS: that dict is
+# the schema for a per-run CONTRACT (save_settings sanitises to exactly its keys,
+# compose_settings starts from a copy of it), so anything added there is copied
+# into every run config and persisted into every synced folder's manifest. This
+# is a standing preference about the user, not a property of a download - the
+# same reasoning that keeps the acceptable-use acknowledgement top-level in
+# shared/legal.py.
+GLOBAL_ENABLED_KEY = "panopto_globally_enabled"
+
+
+def is_globally_enabled() -> bool:
+    """False only when the user has explicitly switched Panopto off.
+
+    Defaults to True: off-by-default would silently strip a headline feature
+    from every existing install and quietly neuter the three Quick Download
+    presets that include recordings.
+    """
+    return bool(_read_full_config().get(GLOBAL_ENABLED_KEY, True))
+
+
+def set_globally_enabled(enabled: bool) -> bool:
+    """Persist the global Panopto preference. Returns True on success.
+
+    Atomic read-modify-write so the ``"panopto"`` block and every other
+    top-level key written by the Settings dialog survive untouched.
+    """
+    full = _read_full_config()
+    full[GLOBAL_ENABLED_KEY] = bool(enabled)
+
+    path = _config_path()
+    tmp = str(path) + ".tmp"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(full, f, indent=2, ensure_ascii=False)
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except OSError:
+                pass
+        os.replace(tmp, path)
+        return True
+    except Exception as e:
+        logger.warning(f"Could not save the global Panopto preference: {e}")
+        try:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+        except OSError:
+            pass
+        return False
+
+
 def active_outputs(settings: dict) -> list[str]:
     """Return the list of enabled output kinds, e.g. ['mp3', 'txt', 'srt']."""
     out = []

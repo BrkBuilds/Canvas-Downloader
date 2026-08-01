@@ -213,8 +213,8 @@ class PresetManager:
             'description': (
                 'Only the files your teacher uploaded, organized by '
                 'Canvas module. Skips all Canvas-generated content '
-                '(assignments, announcements, discussions). '
-                'Panopto video recordings included.'
+                '(assignments, announcements, discussions) and '
+                'Panopto recordings.'
             ),
             'is_builtin': True,
             'settings': {
@@ -237,7 +237,13 @@ class PresetManager:
                 'convert_code': False,
                 'convert_urls': False,
                 'convert_video': False,
-                'pan_out_mp4': True,
+                # Panopto: none. Must mirror ui/quick_download.py's
+                # `quick_files_only` exactly - "Files Only" means just the
+                # teacher's uploaded files, so this preset must never pull
+                # multi-GB lecture videos (matching its "no distractions"
+                # promise and "Slides & PDFs Only" above). Guarded by
+                # tests/test_preset_parity.py.
+                'pan_out_mp4': False,
                 'pan_out_mp3': False,
                 'pan_out_txt': False,
                 'pan_out_srt': False,

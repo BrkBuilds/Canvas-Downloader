@@ -28,8 +28,12 @@ from pathlib import Path
 import streamlit as st
 
 from styles import inject_css
-from shared.helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path, open_folder, open_file, css_content_safe
-from shared.components import SVG_FOLDER_YELLOW, render_help_card, render_fda_nudge, HELP_ICONS
+from shared.helpers import esc, friendly_course_name, get_base64_image, get_config_dir, short_path, open_folder, open_file, css_content_safe, md_escape
+from shared.components import (
+    SVG_FOLDER_YELLOW, render_help_card, render_fda_nudge, HELP_ICONS,
+    svg_course_book,
+)
+from core.pair_labels import pair_display, pair_display_name
 
 
 # Lucide calendar glyph (matches the sidebar "Today" nav icon).
@@ -80,18 +84,13 @@ _SVG_CAUGHT_UP = (
 # Solid book/reader glyph - a filled silhouette with its text lines *subtracted*
 # (fill-rule evenodd punches the inner rects into holes), tinted light-grey via
 # CSS. The icon for each course chip in the collapsed daily-sync summary.
-_SVG_COURSE = (
-    "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' "
-    "fill='currentColor' class='tcs-pill-ico' "
-    # Inline size is REQUIRED, not just cosmetic: when navigating Today -> Download,
-    # Streamlit briefly leaves this chip markup in the DOM while today.css (which
-    # sizes .tcs-pill-ico) is no longer injected, so an unsized SVG balloons to its
-    # huge default replaced-element size on the download loading screen.
-    "style='width:16px;height:16px;flex-shrink:0;'>"
-    "<path fill-rule='evenodd' d='M6 3H18A2 2 0 0 1 20 5V19A2 2 0 0 1 18 21H6"
-    "A2 2 0 0 1 4 19V5A2 2 0 0 1 6 3Z"
-    "M7.5 8H16.5V9.4H7.5ZM7.5 11.3H16.5V12.7H7.5ZM7.5 14.6H13.5V16H7.5Z'/></svg>"
-)
+# Built from the ONE definition in shared.components so this chip and the sync
+# list's course pill can never drift into two different marks for one idea.
+# Inline size comes with it and is REQUIRED, not just cosmetic: when navigating
+# Today -> Download, Streamlit briefly leaves this chip markup in the DOM while
+# today.css (which sizes .tcs-pill-ico) is no longer injected, so an unsized SVG
+# balloons to its huge default replaced-element size on the download screen.
+_SVG_COURSE = svg_course_book("tcs-pill-ico")
 # Solid file glyph with a transparent corner fold gap - small, colored
 # currentColor (inherits parent font color), used inside the completed sync
 # course chips. Both the file body and the folded corner are separate path elements
@@ -754,7 +753,9 @@ def _render_today_files(groups: list[dict]) -> None:
         files = grp.get("files") or []
         if not files:
             continue
-        course_name = friendly_course_name(grp.get("course_name", "") or "Course")
+        # History groups carry course_id + local_folder, so "Today's files" names
+        # each course exactly as the daily-sync chips above it do.
+        course_name = pair_display_name(grp)
         local_folder = grp.get("local_folder", "") or ""
         count = len(files)
         count_label = f"{count} file" if count == 1 else f"{count} files"
@@ -1143,6 +1144,8 @@ def _import_courses_dialog():
         locked, tag_text = False, "Pair" if is_sp else "Group"
         if is_sp:
             icon_b64 = b64_pairs
+            # The card's own title is already the saved pair's name, so the pill
+            # states the Canvas COURSE - that is the fact the user is choosing on.
             pill_names = [friendly_course_name(
                 (pairs[0] if pairs else {}).get("course_name", group["group_name"]))]
             # Absorbed: a selected GROUP already covers this pair's course.
@@ -1151,8 +1154,11 @@ def _import_courses_dialog():
                 tag_text = f'Included in "{grp_cover[sigs[0]]}"'
         else:
             icon_b64 = b64_groups
+            # A group's title names the SET, so its pills are the only place the
+            # member courses appear - name them the way the daily list will once
+            # they are imported.
             pill_names = [
-                friendly_course_name(p.get("course_name", ""))
+                pair_display_name(p)
                 for p in pairs if p.get("course_name")
             ]
             # Covered: all this group's courses come from selected pairs while
@@ -1285,16 +1291,23 @@ def _inject_import_pills_bridge(cards_data: list[dict]) -> None:
 </script>""", height=0)
 
 
-def _open_import_dialog():
-    """Clear stale selection state, then open the import dialog.
+def _request_import_dialog():
+    """Clear stale selection state, then ASK for the import dialog.
 
     Clearing ``today_imp_sel_*`` ensures every open recomputes membership fresh
     from the current daily-sync set (e.g. after a card was removed via the
     main page's "Remove" button while the dialog was closed).
+
+    It sets a flag rather than opening the dialog, because both buttons that
+    call it sit in the MIDDLE of the page. A dialog body is a fragment, and
+    Streamlit rewinds the EVENT container to the fragment's call site on every
+    fragment rerun - so opening from here destroys the style-only ``st.html()``
+    blocks the page emits further down (``_render_today_running_sync``'s among
+    them). ``render_today_dashboard`` opens it at the very end instead.
     """
     for k in [k for k in st.session_state if k.startswith("today_imp_sel_")]:
         st.session_state.pop(k, None)
-    _import_courses_dialog()
+    st.session_state["_today_open_import_dialog"] = True
 
 
 # ── Callbacks ───────────────────────────────────────────────────────────────
@@ -1333,6 +1346,89 @@ def _remove_daily_pair_cb(course_id, local_folder, name):
 def _dismiss_sync_notice() -> None:
     """on_click for the notice's close button - idempotent pop, no dangling flag."""
     st.session_state.pop("today_sync_notice", None)
+
+
+# ── Panopto opt-in card ──────────────────────────────────────────────────────
+
+PANOPTO_OPTIN_DISMISSED_KEY = "today_panopto_optin_dismissed"
+
+
+def _panopto_optin_needed() -> bool:
+    """True when the daily sync is silently leaving lecture recordings out.
+
+    Three conditions, and all three are required or the card is noise:
+
+    * the user has not switched Panopto off globally (that IS the durable "no"),
+    * their institution actually has a Panopto tool - one memoised ~230ms
+      lookup, so a university without Panopto never sees this card at all, and
+    * the acceptable-use notice has never been answered.
+
+    It deliberately does NOT check whether any daily course HAS recordings:
+    that needs a full discovery pass, which is precisely the cost the unattended
+    run is avoiding. The copy therefore states a fact about the sync rather than
+    promising recordings exist.
+    """
+    from shared.legal import panopto_feature_available, panopto_notice_acknowledged
+
+    if st.session_state.get(PANOPTO_OPTIN_DISMISSED_KEY):
+        return False
+    if panopto_notice_acknowledged():
+        return False
+    return panopto_feature_available()
+
+
+def _dismiss_panopto_optin() -> None:
+    """on_click for the card's close button.
+
+    PERMANENT, unlike the off-list footnote's tally-based dismiss. That one
+    reports CHANGING state, so a new occurrence must resurface it; this reports
+    a static condition (you have not opted in), and re-showing it every day is
+    nagging the one user who already said no. The card says where to find the
+    setting later, so discoverability lives in Settings rather than repetition.
+    """
+    st.session_state[PANOPTO_OPTIN_DISMISSED_KEY] = True
+
+
+def _open_panopto_optin() -> None:
+    """on_click: raise the acceptable-use notice from the Today page.
+
+    Safe here in a way it is not during the run: this is a deliberate click on
+    an interactive screen, not an ambush during an unattended sync. The 'optin'
+    context relabels the decline button to "Not now" - the user is opting IN to
+    something already switched off, so a "skip" verb would be nonsense.
+    """
+    from shared.legal import NOTICE_OPEN_KEY
+    from ui.panopto_notice import NOTICE_CONTEXT_KEY
+
+    st.session_state[NOTICE_CONTEXT_KEY] = "optin"
+    st.session_state[NOTICE_OPEN_KEY] = True
+
+
+def _render_panopto_optin_card() -> None:
+    """Say what the daily sync is leaving out, and offer to include it."""
+    if not _panopto_optin_needed():
+        return
+
+    with st.container(key="today_panopto_optin_card"):
+        c_body, c_close = st.columns([0.95, 0.05], vertical_alignment="center")
+        with c_body:
+            st.markdown(
+                "<div class='today-notice-inner'>"
+                "<div class='today-notice-head'>"
+                "<span class='today-notice-title'>Panopto lecture recordings "
+                "aren&#39;t included in your daily sync</span></div>"
+                "<div class='today-notice-desc'>Your daily sync downloads files "
+                "only. To include lecture recordings, review and accept the "
+                "usage notice once - or turn Panopto off for good in "
+                "<b>Settings</b>.</div>"
+                "</div>",
+                unsafe_allow_html=True,
+            )
+            st.button("Include lecture recordings",
+                      key="today_pan_optin_btn", on_click=_open_panopto_optin)
+        with c_close:
+            st.button("​", key="today_pan_optin_close",
+                      on_click=_dismiss_panopto_optin)
 
 
 def _dismiss_offlist_notice(signature: tuple) -> None:
@@ -1470,16 +1566,20 @@ def _render_course_chips(pairs: list[dict], unreachable: list[dict]) -> None:
     what the user sees every day - a broken pair that only surfaced behind
     "Manage" would stay invisible indefinitely.
     """
+    # md_escape: these chips are st.buttons, whose labels are MARKDOWN, and the
+    # name can now be one the user typed. "1. Semester" would render as an
+    # ordered-list item with the "1." eaten, "Math_2 _stats_" would italicise -
+    # silently, and only for the people who named their courses.
     with st.container(key="today_courses_summary"):
         for i, p in enumerate(pairs):
-            name = friendly_course_name(p.get("course_name") or "Course")
+            name = md_escape(pair_display_name(p))
             folder = p.get("local_folder", "") or ""
             if st.button(name, key=f"today_chip_{i}", disabled=not folder,
                          help=None if folder else
                               "No local folder is linked to this course yet."):
                 open_folder(folder)
         for i, p in enumerate(unreachable):
-            name = friendly_course_name(p.get("course_name") or "Course")
+            name = md_escape(pair_display_name(p))
             st.button(
                 name, key=f"today_chip_missing_{i}", disabled=True,
                 help="Folder could not be located - the daily sync skips this "
@@ -1556,6 +1656,11 @@ def render_today_dashboard(fetch_courses_fn=None):
     """
     from core.today_store import load_today_config, set_auto_sync_enabled
     from core.auto_sync import resolve_today_pairs, start_today_sync
+
+    # Cleared before anything can set it, so a flag left behind by a run that was
+    # cut short can never pop the import dialog open on its own. Set by
+    # _request_import_dialog() further down, consumed at the END of this function.
+    st.session_state.pop('_today_open_import_dialog', None)
 
     # A daily/Quick Sync launched from this page routes back here at step==4 with
     # today_sync_active set, so the run can surface IN-PAGE. Any other entry means
@@ -1750,7 +1855,7 @@ def render_today_dashboard(fetch_courses_fn=None):
                 if st.button("Add courses", use_container_width=True,
                              key="today_add_courses_btn", disabled=sync_running,
                              help=_SYNC_RUNNING_HELP if sync_running else None):
-                    _open_import_dialog()
+                    _request_import_dialog()
             elif not manage_open:
                 # COLLAPSED (the day-to-day view) - clickable course chips (open folder).
                 _render_course_chips(visible_pairs, unreachable_pairs)
@@ -1759,7 +1864,7 @@ def render_today_dashboard(fetch_courses_fn=None):
                 with st.container(key="today_list_outline"):
                     for i, pair in enumerate(visible_pairs):
                         folder = pair.get("local_folder", "")
-                        name = friendly_course_name(pair.get("course_name") or "Course")
+                        name = pair_display_name(pair)
                         col_card, col_rm = st.columns([0.84, 0.16],
                                                       vertical_alignment="center")
                         with col_card:
@@ -1794,7 +1899,7 @@ def render_today_dashboard(fetch_courses_fn=None):
                     # only the user can perform it.
                     for i, pair in enumerate(unreachable_pairs):
                         folder = pair.get("local_folder", "") or ""
-                        name = friendly_course_name(pair.get("course_name") or "Course")
+                        name = pair_display_name(pair)
                         col_card, col_rm = st.columns([0.84, 0.16],
                                                       vertical_alignment="center")
                         with col_card:
@@ -1826,7 +1931,7 @@ def render_today_dashboard(fetch_courses_fn=None):
                     if st.button("Add or manage courses", use_container_width=True,
                                  key="today_add_courses_btn", disabled=sync_running,
                                  help=_SYNC_RUNNING_HELP if sync_running else None):
-                        _open_import_dialog()
+                        _request_import_dialog()
 
         # ── Running sync (in-page) — STABLE SLOT ────────────────────────────────
         # A daily/Quick Sync is in flight: surface it as a slim progress card right
@@ -1860,6 +1965,13 @@ def render_today_dashboard(fetch_courses_fn=None):
         _sync_notice = st.session_state.get("today_sync_notice")
         if _sync_notice:
             _render_sync_notice(_sync_notice)
+
+        # Says what the daily sync is silently leaving out. Same principle as
+        # the off-list footnote: a page that quietly drops content just looks
+        # like it lost it, so the omission has to be stated. Renders nothing at
+        # a university without Panopto, nothing once the notice is answered, and
+        # nothing after it is dismissed.
+        _render_panopto_optin_card()
 
         # ── Today's files — the HERO card (page highlight) ──────────────────────
         # The main event and primary action of the page: a prominent, accented card
@@ -2014,3 +2126,14 @@ def render_today_dashboard(fetch_courses_fn=None):
                              key="today_sync_now_btn", disabled=not runnable or sync_running,
                              help=help_text):
                     start_today_sync(runnable)  # sets state + st.rerun()
+
+    # --- The import dialog - opened LAST, and that is load-bearing.
+    # Both "Add courses" buttons sit mid-page, and a dialog body is a fragment
+    # whose rerun rewinds the EVENT root container (the global, index-addressed
+    # list holding st.toast and every style-only st.html()) back to its call
+    # site. Opening from those buttons therefore destroyed the stylesheets this
+    # page emits below them. A dialog is a portal, so opening it here changes
+    # nothing about where or how it appears. See CLAUDE.md, "A style-only
+    # st.html() after a dialog CALL SITE gets DELETED".
+    if st.session_state.pop('_today_open_import_dialog', False):
+        _import_courses_dialog()

@@ -28,7 +28,8 @@ from core.canvas_logic import CanvasManager, safe_thread_wrapper
 from core.cancellation import cancel_sync, is_sync_cancelled, reset_sync_cancel
 from core.state_registry import NOTEBOOK_SUB_KEYS
 from core.sync_manager import SyncManager
-from shared.helpers import render_sync_wizard, friendly_course_name, esc
+from shared.helpers import render_sync_wizard, esc
+from core.pair_labels import pair_display_name
 from engine.notifications import play_completion_beep
 # MODULE level on purpose. These used to be imported ONLY inside the Today-mode
 # branch of sync_progress_hook, so the regular full-page branch below - which
@@ -668,7 +669,10 @@ def run_analysis(sync_pairs, main_placeholder=None):
             )
             continue
 
-        display_name = friendly_course_name(pair['course_name']) or 'Unnamed Course'
+        # The user's own name for this course when they gave one (Saved Groups &
+        # Pairs), else the Canvas name. Display only - every identity the engine
+        # below uses still comes from pair['course_id'] / pair['course_name'].
+        display_name = pair_display_name(pair, fallback='Unnamed Course')
 
         # Default-argument capture binds pair_num and display_name to the
         # current iteration's values, preventing late-binding over loop variables.
@@ -978,7 +982,15 @@ def run_analysis(sync_pairs, main_placeholder=None):
             # buckets above. Selection is by video_id (the runner's allowlist key).
             _pan_changes = (res_data.get('panopto') or {}).get('changes', [])
             _pan_selected_ids = []
-            for _c in _pan_changes:
+            # An unattended run (the Today daily sync) whose user has never
+            # answered the acceptable-use notice selects NO recordings. It
+            # cannot ask - a modal thrown at app launch would block a run the
+            # user did not start and may not be watching - so it quietly syncs
+            # files only and the Today page reports what it left out. The same
+            # flag carries a run-scoped decline from the interactive paths.
+            from shared.legal import panopto_skipped_this_run
+            _pan_declined = panopto_skipped_this_run()
+            for _c in ([] if _pan_declined else _pan_changes):
                 if _c.bucket == 'new':
                     st.session_state[f'sync_pan_{cid}_{_c.video_id}'] = True
                     _pan_selected_ids.append(_c.video_id)

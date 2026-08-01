@@ -20,6 +20,7 @@ import streamlit as st
 
 from shared import theme
 from core.sync_manager import SyncManager, SavedGroupsManager
+from core.pair_labels import PAIR_LABEL_MAX_CHARS, pair_display
 from shared.helpers import (
     esc,
     friendly_course_name,
@@ -54,14 +55,26 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
 </style>
 """, unsafe_allow_html=True)
     if is_pair:
+        # The pre-filled suggestion is the course's own name, so saving is ONE
+        # click and the dialog never blocks on a decision the user may not want
+        # to make. Accepting it is recorded as auto_named (see save_group), which
+        # means "the user did not choose a name": core.pair_labels then ignores
+        # it and every screen goes on showing the live Canvas name, so a
+        # Canvas-side rename still reaches the user instead of being frozen the
+        # moment they clicked Save.
+        _suggested_name = (
+            friendly_course_name((pair_data or {}).get('course_name') or '') or ''
+        ).strip()
         desc_text = (
             'Save your selected course/folder pair to the "Saved Groups & Pairs" tab, '
-            'so you can quickly add it to the sync list later.'
+            'so you can quickly add it to the sync list later. The name you give it '
+            'is what the app shows for this course everywhere in Sync mode.'
         )
-        input_label = "Give your pair a name: :red[*]"
-        input_placeholder = "e.g., Programming (for NotebookLM)"
+        input_label = "Give your pair a name:"
+        input_placeholder = _suggested_name or "e.g., Programming (for NotebookLM)"
         entity = "Pair"
     else:
+        _suggested_name = ""
         desc_text = (
             'Save your current list of course/folder pairs as a group, so you can '
             'quickly bulk-add them to the sync list from "Saved Groups & Pairs".'
@@ -86,7 +99,13 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
         input_label,
         placeholder=input_placeholder,
         key="save_group_name_input",
+        # A name is a title, not prose. Uncapped, one pasted paragraph would
+        # become the card heading on six screens and the sync-list pill row.
+        max_chars=PAIR_LABEL_MAX_CHARS,
     )
+    if is_pair and _suggested_name:
+        st.caption(f"Leave this empty to use the course's own name "
+                   f"(\u201c{_suggested_name}\u201d).")
 
     # Dialog button CSS now lives in inject_hub_global_css() for bulletproof rendering.
 
@@ -97,23 +116,34 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
             st.rerun(scope="app")
     with col_create:
         # Button stays genuinely enabled server-side (so a single click works);
-        # live_enable_button() greys it + blocks pointer events while invalid,
-        # and this guard is the server-side source of truth for the save.
+        # for GROUPS live_enable_button() greys it + blocks pointer events while
+        # invalid, and this guard is the server-side source of truth for the save.
         if st.button("Save", type="primary", use_container_width=True,
                      key="save_group_create"):
-            if item_name and item_name.strip():
+            _typed = (item_name or "").strip()
+            # Empty + a suggestion = "use the course's own name", flagged as
+            # auto_named so it never overrides the live Canvas name.
+            _auto = is_pair and not _typed and bool(_suggested_name)
+            _final = _typed or (_suggested_name if _auto else "")
+            if _final:
                 from shared.helpers import get_config_dir
                 mgr = SavedGroupsManager(get_config_dir())
                 if is_pair and pair_data:
-                    mgr.save_group(item_name.strip(), [pair_data], is_single_pair=True)
+                    mgr.save_group(_final, [pair_data], is_single_pair=True,
+                                   auto_named=_auto)
                 else:
-                    mgr.save_group(item_name.strip(), sync_pairs)
-                st.session_state['pending_toast'] = f"\u2705 {entity} '{item_name.strip()}' saved successfully!"
+                    mgr.save_group(_final, sync_pairs)
+                st.session_state['pending_toast'] = f"\u2705 {entity} '{_final}' saved successfully!"
                 st.rerun(scope="app")
 
-    # Enable the Save button the instant a name is typed (no blur required).
-    live_enable_button("save_group_name_input", "save_group_create",
-                       reason=f"Give this {entity.lower()} a name first.")
+    # A GROUP still requires a name - a set of courses has no name of its own to
+    # fall back on, so there is nothing honest to pre-fill. A PAIR always has one
+    # (the course's), so its Save must stay live from the first frame: greying it
+    # while the box is empty would contradict the caption directly above it.
+    if not (is_pair and _suggested_name):
+        # Enable the Save button the instant a name is typed (no blur required).
+        live_enable_button("save_group_name_input", "save_group_create",
+                           reason=f"Give this {entity.lower()} a name first.")
 
 
 
@@ -182,9 +212,13 @@ def remove_pair_from_group(mgr, group_id, pair_idx):
     group = next((g for g in groups if g.get('group_id') == group_id), None)
     if group and 0 <= pair_idx < len(group.get('pairs', [])):
         popped = group['pairs'].pop(pair_idx)
+        # Name it the way the card the user just clicked named it - reading
+        # course_name raw here would report a different name than the one they
+        # were looking at.
+        _pl, _pc = pair_display(popped, fallback='course')
         mgr.update_group(group_id, {'pairs': group['pairs']})
         _reconcile_daily_list()
-        st.session_state['hub_toast'] = f"Removed '{popped.get('course_name', 'course')}' from group."
+        st.session_state['hub_toast'] = f"Removed '{_pl or _pc}' from group."
     # Clear any active edit state that might reference stale indices
     st.session_state.pop('hub_editing_pair_idx', None)
     st.session_state.pop('hub_is_adding_new_pair', None)
@@ -196,6 +230,10 @@ def hub_start_edit_pair(p_idx, pair):
     st.session_state['hub_edit_temp_folder'] = pair.get('local_folder', '')
     st.session_state['hub_edit_temp_course_id'] = pair.get('course_id')
     st.session_state['hub_edit_temp_course_name'] = pair.get('course_name', '')
+    # Seed the widget's own key, not a shadow copy: st.text_input(value=...) is
+    # only the INITIAL value, so a second edit of a different pair would keep
+    # showing the first pair's name. hub_cancel_edit clears it on both exits.
+    st.session_state['hub_edit_pair_label_input'] = pair.get('label', '') or ''
     st.session_state.pop('hub_is_adding_new_pair', None)
 
 
@@ -205,6 +243,7 @@ def hub_cancel_edit():
     st.session_state.pop('hub_edit_temp_folder', None)
     st.session_state.pop('hub_edit_temp_course_id', None)
     st.session_state.pop('hub_edit_temp_course_name', None)
+    st.session_state.pop('hub_edit_pair_label_input', None)
     st.session_state.pop('hub_is_adding_new_pair', None)
     st.session_state.pop('hub_auto_detected_course', None)
 
@@ -231,16 +270,36 @@ def hub_pick_folder_cb():
             pass  # Silently ignore - manifest might be locked or corrupt.
 
 
-def save_inline_edit_cb(mgr, gid, p_idx, new_folder, new_cid, new_cname):
-    """Callback to save an inline-edited pair without closing the dialog."""
+def save_inline_edit_cb(mgr, gid, p_idx, new_folder, new_cid, new_cname,
+                        label_editable: bool = False):
+    """Callback to save an inline-edited pair without closing the dialog.
+
+    ``label_editable`` says the form rendered the per-course Name field (group
+    members only - a standalone saved pair is renamed by the title editor at the
+    top of this layer). The typed name is read from ``st.session_state`` HERE
+    rather than passed in as an arg: args bind when the button RENDERS, which is
+    before the user's last keystroke is committed, so a name typed and then
+    saved without blurring would have been silently discarded. Callbacks run
+    after Streamlit applies widget state, so this reads the real value.
+    """
     groups = mgr.load_groups()
     group = next((g for g in groups if g.get('group_id') == gid), None)
     if group:
         updated_pairs = list(group['pairs'])
+        # Carry the user's own name for this course across the edit. Re-linking
+        # a folder (or even swapping the course) is fixing the pair, not
+        # renaming it - and a standalone saved pair's name already survives the
+        # same edit untouched, because only the PAIRS list is rebuilt. Dropping
+        # it here would make the two kinds of saved course behave differently
+        # for no reason the user could see.
+        _prev_label = (updated_pairs[p_idx] or {}).get('label') if 0 <= p_idx < len(updated_pairs) else None
+        _label = (st.session_state.get('hub_edit_pair_label_input') or '').strip() \
+            if label_editable else _prev_label
         updated_pairs[p_idx] = {
             'local_folder': new_folder,
             'course_id': new_cid,
             'course_name': new_cname,
+            'label': _label,
         }
         mgr.update_group(gid, {'pairs': updated_pairs})
         # Re-linking a folder here re-links it on the Today page too, so the
@@ -601,22 +660,42 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     # === PAIR CARD (Single Pair) ===
                     with st.container(border=True, key=f"hub_pair_item_{g_idx}"):
                         pair = group.get('pairs', [{}])[0] if group.get('pairs') else {}
-                        display_name = friendly_course_name(pair.get('course_name', group['group_name']))
+                        _label, _canvas = pair_display(pair, fallback=group['group_name'])
+                        # What the app CALLS this course - used by the title and
+                        # by the "Added 'X' to sync list" toast, which must name
+                        # it the same way the list about to show it will.
+                        display_name = _label or _canvas
                         folder_missing = not Path(pair.get('local_folder', '')).exists() if pair.get('local_folder') else True
 
-                        # Title: Base64 Pairs icon with same font size/weight as group expander summaries
+                        # Title = the user's name when they chose one, otherwise
+                        # the LIVE Canvas name. A pair saved by accepting the
+                        # pre-filled suggestion is auto_named, so pair_display
+                        # returns no label and this shows the current course name
+                        # instead of the frozen copy stored in the record - which
+                        # is the whole point of the flag. The "Course:" subtitle
+                        # is then suppressed, because printing the same string
+                        # twice reads as a rendering bug.
                         top_right_html = "Pair"
-                        title_html = f"<img src='data:image/png;base64,{b64_pairs}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{esc(group['group_name'])}"
+                        title_html = f"<img src='data:image/png;base64,{b64_pairs}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{esc(display_name)}"
+                        _subtitle_html = (
+                            f"<div class='pair-course-subtitle'>Course: {esc(_canvas)}</div>"
+                            if _label else ""
+                        )
 
-                        st.markdown(f"""
-                            <div style='margin-top: 0px; margin-bottom: 10px;'>
-                                <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;'>
-                                    <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'>{title_html}</div>
-                                    <div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>{top_right_html}</div>
-                                </div>
-                                <div class='pair-course-subtitle'>Course: {esc(display_name)}</div>
-                            </div>
-                        """, unsafe_allow_html=True)
+                        # ONE LINE - see the note on the Layer 2 pair card. With
+                        # the subtitle suppressed (an auto-named pair), a
+                        # triple-quoted block leaves a whitespace-only line here
+                        # and Markdown starts reading the indented markup that
+                        # follows as a code block.
+                        st.markdown(
+                            "<div style='margin-top: 0px; margin-bottom: 10px;'>"
+                            "<div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;'>"
+                            f"<div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.2;'>{title_html}</div>"
+                            f"<div style='font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); font-weight: 500; letter-spacing: 0.5px; margin-top: 0px;'>{top_right_html}</div>"
+                            "</div>"
+                            f"{_subtitle_html}"
+                            "</div>",
+                            unsafe_allow_html=True)
 
                         # Smart disable check: is this pair already on the sync list?
                         _current_sync = st.session_state.get('sync_pairs', [])
@@ -704,7 +783,12 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         with st.expander(f"{pair_count} {course_word}"):
                             bullet_points = []
                             for p in group.get('pairs', []):
-                                fname = friendly_course_name(p.get('course_name', 'Unknown'))
+                                _pl, _pc = pair_display(p, fallback='Unknown')
+                                # Name first, Canvas name in parentheses after it:
+                                # this list is how the user recognises what is in a
+                                # group before adding it, so it must read the same
+                                # way the sync list will once they do.
+                                fname = f"{_pl} ({_pc})" if _pl else _pc
                                 bullet_points.append(f"- {fname}")
                             
                             if bullet_points:
@@ -886,7 +970,13 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                 col_name, col_cancel, col_save = st.columns([0.6, 0.2, 0.2], vertical_alignment="bottom")
                 with col_name:
                     new_name = st.text_input(f"{entity_label} Name", value=group['group_name'],
-                                             key="hub_rename_name_input", label_visibility="collapsed")
+                                             key="hub_rename_name_input", label_visibility="collapsed",
+                                             # Same cap as every other name
+                                             # input: for a PAIR this field IS
+                                             # the label that titles the sync
+                                             # card, the review screen and the
+                                             # history header.
+                                             max_chars=PAIR_LABEL_MAX_CHARS)
                 with col_cancel:
                     st.button("Cancel", use_container_width=True, key="hub_cancel_edit_name", on_click=_cancel_edit_name_cb)
                 with col_save:
@@ -981,6 +1071,28 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 st.button("Change Folder", key=f"btn_hub_compact_change_folder_{p_idx}",
                                           on_click=hub_pick_folder_cb)
 
+                        # --- Name row (group members only) ---
+                        # A GROUP's name names the SET, so it can never name one
+                        # of its courses - without this, importing a group to the
+                        # sync list gave you N rows that could not be named at
+                        # all, and "you can only name a course if you saved it
+                        # the pair way" would have been a rule the UI never
+                        # states. A standalone saved pair is deliberately NOT
+                        # offered this field: it is renamed by the title editor
+                        # at the top of this layer, and two controls writing one
+                        # value is how they drift.
+                        if not is_sp:
+                            st.text_input(
+                                "Your name for this course",
+                                key="hub_edit_pair_label_input",
+                                max_chars=PAIR_LABEL_MAX_CHARS,
+                                placeholder=(friendly_course_name(temp_course_name or '')
+                                             or "Leave empty to use the course name"),
+                                help="Shown instead of the Canvas course name everywhere "
+                                     "in Sync mode. Leave it empty to keep using the "
+                                     "course's own name.",
+                            )
+
                         # --- Warnings ---
                         is_hub_dup_edit = False
                         if temp_course_name and temp_folder:
@@ -1055,30 +1167,61 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                 final_folder != pair.get('local_folder', '')
                                 or final_cid != pair.get('course_id')
                             )
-                            _save_disabled = not has_changes or is_hub_dup_edit
+                            # With a Name field present, "nothing changed" stops
+                            # being a state worth defending: `disabled=` is
+                            # evaluated at RENDER time, so a name typed and then
+                            # saved without blurring would leave the button still
+                            # disabled and swallow the click entirely (the exact
+                            # failure shared.components.live_enable_button exists
+                            # for, which cannot help here because validity is a
+                            # compound of three fields). A no-op save rewrites
+                            # identical JSON, so keeping it live costs nothing.
+                            _gate_on_changes = is_sp
+                            _save_disabled = is_hub_dup_edit or (_gate_on_changes and not has_changes)
                             _save_help = (
                                 "This pair already exists in this group - cancel to go back."
                                 if is_hub_dup_edit else
-                                None if has_changes else "Change the course or folder to save."
+                                None if (has_changes or not _gate_on_changes)
+                                else "Change the course or folder to save."
                             )
                             st.button("Save Changes", type="primary", use_container_width=True,
                                       key=f"hub_save_edit_{p_idx}", disabled=_save_disabled,
                                       help=_save_help,
                                       on_click=save_inline_edit_cb,
-                                      args=(mgr, gid, p_idx, final_folder, final_cid, final_cname))
+                                      args=(mgr, gid, p_idx, final_folder, final_cid, final_cname,
+                                            not is_sp))
 
                 # === NORMAL VIEW MODE ===
                 else:
                     with st.container(border=True, key=f"hub_pair_card_{p_idx}"):
-                        display_name = friendly_course_name(pair.get('course_name', 'Unknown'))
+                        _label, _canvas = pair_display(pair, fallback='Unknown')
+                        display_name = _label or _canvas
                         folder_exists = Path(pair.get('local_folder', '')).exists()
 
-                        st.markdown(f"""
-                            <div style='margin-bottom: 12px; margin-top: 6px;'>
-                                <div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.4; margin-bottom: 4px;'>{esc(display_name)}</div>
-                                <div style='color: #a3a8b8; font-size: 14px;'>{SVG_FOLDER_YELLOW} {pair.get('local_folder', '')}</div><!-- # audit-ignore: local_folder is a filesystem path -->
-                            </div>
-                        """, unsafe_allow_html=True)
+                        # The Canvas name only earns its own line once the user's
+                        # name has taken the title - otherwise it would print
+                        # twice. Identity must stay visible on this card either
+                        # way: it is where folders get re-linked.
+                        _canvas_line = (
+                            f"<div style='color: #8ab; font-size: 13px; margin-bottom: 4px;'>"
+                            f"Course: {esc(_canvas)}</div>" if _label else ""
+                        )
+                        # ONE LINE, no triple-quoted block. An optional part
+                        # interpolated on its own line inside an indented
+                        # triple-quoted string is a trap: when it is empty the
+                        # markup contains a BLANK LINE, which terminates the HTML
+                        # block, and Markdown then reads the 8-space-indented
+                        # lines after it as a CODE BLOCK - so the card printed its
+                        # own folder <div> as literal source. It fails only in the
+                        # branch where the optional part is absent, which is the
+                        # branch that looks like the safe one.
+                        st.markdown(
+                            "<div style='margin-bottom: 12px; margin-top: 6px;'>"
+                            f"<div style='font-size: 1.25rem; font-weight: 600; color: {theme.WHITE}; line-height: 1.4; margin-bottom: 4px;'>{esc(display_name)}</div>"
+                            f"{_canvas_line}"
+                            f"<div style='color: #a3a8b8; font-size: 14px;'>{SVG_FOLDER_YELLOW} {esc(pair.get('local_folder', ''))}</div>"
+                            "</div>",
+                            unsafe_allow_html=True)
 
                         if not folder_exists:
                             from ui.amber_notice import render_amber_notice
