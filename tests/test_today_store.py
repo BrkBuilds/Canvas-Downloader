@@ -64,23 +64,21 @@ def test_corrupt_file_degrades_to_defaults(config_dir, garbage):
     assert cfg["pairs"] == []
 
 
-def test_malformed_pairs_are_dropped_on_load(config_dir):
+def test_legacy_file_pairs_ignored_settings_still_load(config_dir):
+    """After the library unification the daily SELECTION lives on the library's
+    ``in_daily_sync`` flag, so a stale ``pairs`` array in the settings file is
+    ignored - but the settings themselves still load."""
     import json
     (config_dir / "today_dashboard.json").write_text(
         json.dumps({
             "auto_sync_enabled": True,
-            "pairs": [
-                {"course_id": 1, "course_name": "Good", "local_folder": "C:/x"},
-                {"course_id": 2, "course_name": "No folder"},          # unusable
-                "not-a-dict",                                          # junk
-                {"course_id": 3, "local_folder": ""},                  # empty folder
-            ],
+            "pairs": [{"course_id": 1, "course_name": "Stale", "local_folder": "C:/x"}],
             "last_auto_sync_date": "2026-07-01",
         }),
         encoding="utf-8",
     )
     cfg = today_store.load_today_config()
-    assert [p["course_id"] for p in cfg["pairs"]] == [1]
+    assert cfg["pairs"] == []                       # the library is the source, not the file
     assert cfg["auto_sync_enabled"] is True
     assert cfg["last_auto_sync_date"] == "2026-07-01"
 

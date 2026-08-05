@@ -1174,9 +1174,17 @@ def _run_download_task(t, is_cancelled, ev_q) -> "_DLResult":
         pass
 
     if t.session is None or t.panopto_base is None:
+        # No authenticated Panopto session for this recording. Two causes reach
+        # here and the user can't act on the distinction, so the message covers
+        # both without jargon: either the course's Panopto sign-in couldn't be
+        # established, or this link (often a page-embedded one carrying no launch
+        # URL) points at a recording that has since been moved/deleted. "LTI
+        # handshake failed" was accurate internally but meaningless to a user -
+        # and misleading here, where no handshake is even attempted.
         res.errors.append(DownloadError(
-            t.course_name, v.title, "Auth Error",
-            "Could not authenticate to Panopto (LTI handshake failed)."))
+            t.course_name, v.title, "Recording Unavailable",
+            "Couldn't access this Panopto recording - it may have been moved, "
+            "deleted, or isn't available to your account."))
         res.rec_failed = True
         return res
 
@@ -1195,9 +1203,18 @@ def _run_download_task(t, is_cancelled, ev_q) -> "_DLResult":
     if not delivery:
         logger.warning("Panopto delivery resolve failed for '%s' (id=%s): %s",
                        v.title, v.video_id, derr or "no delivery")
+        from shared.helpers import (
+            PANOPTO_UNAVAILABLE_REASON, PANOPTO_UNAVAILABLE_ERROR_TYPE)
+        _reason = derr or "No stream found for this recording."
+        # A recording Panopto reports as gone is a PERMANENT decline, not a
+        # retriable failure - stamp the shared error_type so the completion
+        # screen classifies it like a locked file / LTI stream (reported, but
+        # not counted as a failure that colours the card). Any other delivery
+        # miss (transient network, no stream) stays a plain retriable error.
+        _etype = (PANOPTO_UNAVAILABLE_ERROR_TYPE
+                  if _reason == PANOPTO_UNAVAILABLE_REASON else "Download Error")
         res.errors.append(DownloadError(
-            t.course_name, v.title, "Download Error",
-            derr or "No stream found for this recording.",
+            t.course_name, v.title, _etype, _reason,
             context={"video_id": v.video_id}))
         res.rec_failed = True
         return res

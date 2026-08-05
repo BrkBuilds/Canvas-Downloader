@@ -195,6 +195,48 @@ def pad_slot_children(used: int, total: int = SYNC_LIST_SLOT_CHILDREN) -> None:
         st.empty()
 
 
+def resolve_courses_or_stop(fetch_courses_fn, *, retry_key: str = "courses_action_retry"):
+    """Fetch the course list for an ACTION (Start Download / Start Sync) and
+    handle failure gracefully - never let a raw exception reach the page.
+
+    - **Auth failure** (expired/revoked token): route to the clean reconnect
+      flow via ``force_reauth`` (which reruns into the cut-to-the-bone reauth
+      screen), pre-serving the saved Canvas URL.
+    - **Non-auth failure** (offline, captive portal, timeout, TLS intercept,
+      Canvas down): show a calm amber notice + a Try-again button and
+      ``st.stop()`` - the page stays put, the sidebar (logout/nav) is intact.
+
+    Returns the course list on success. Mirrors the course-selector cold-fetch
+    handling so every fetch site behaves the same. These action fetches almost
+    always serve from the warm cache set at course selection, so this only
+    fires in the rare cold-fail case - but when it does, it must not be a red
+    traceback in the middle of starting a run.
+    """
+    try:
+        return fetch_courses_fn(st.session_state['api_token'], st.session_state['api_url'])
+    except Exception as _err:
+        from core.canvas_logic import is_auth_error
+        if is_auth_error(_err):
+            from ui.auth import force_reauth
+            if "expired" in str(_err).lower():
+                force_reauth("Your Canvas Access Token has expired. Please reconnect with a new token.")
+            else:
+                force_reauth("Your Canvas connection expired or the access token was revoked. Please reconnect with a new token.")
+        from ui.amber_notice import render_amber_notice
+        render_amber_notice(
+            "We couldn't reach Canvas",
+            detail=("Check your internet connection and try again. On campus or office wifi you "
+                    "may need to sign in to the network first, or switch off a VPN. Your login is still saved."),
+        )
+        if st.button("Try again", key=retry_key, type="primary"):
+            try:
+                fetch_courses_fn.clear()
+            except Exception:
+                pass
+            st.rerun()
+        st.stop()
+
+
 def live_enable_button(input_key: str, button_key: str, *,
                        require_change_from: str | None = None,
                        reason: str = "") -> None:
@@ -359,7 +401,8 @@ def inject_material_icons_font() -> None:
 _STICKY_BAR_SELECTOR = (
     'div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-sticky_actions_"]),'
     'div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-action_dl_back"]),'
-    'div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"])'
+    'div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"]),'
+    'div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_analyze_sync"])'
 )
 
 
@@ -1696,6 +1739,47 @@ def _course_id_from_sync_pairs(course_name: str):
     return None
 
 
+def run_had_auth_failure(error_list) -> bool:
+    """True only when a run's errors indicate the TOKEN itself died (expired or
+    revoked) mid-run - NOT a per-endpoint 401.
+
+    This distinction is the whole point. The download engine deliberately
+    tolerates per-endpoint 401s - a hidden Pages tab, a restricted quiz - as
+    normal, expected restrictions (most are skipped outright). Treating one of
+    those as "your session expired" would tell a user to regenerate a token
+    that is perfectly valid, which is worse friction than the errors themselves.
+
+    So the signal must be SYSTEMIC, not per-item:
+      - a DownloadError flagged ``is_app_error`` (a whole course/engine
+        operation crashed) whose payload is an auth error - the token could not
+        even list the course, so it is the token, not one restricted feature; or
+      - several (>= 3) item-level auth errors - a dead token 401s everything
+        after it, so one stray 401 can never trip this; or
+      - a sync-error string that is an auth error - sync targets the teacher's
+        own course files, which are not per-endpoint restricted, so an auth
+        failure there is the token.
+    All matching goes through the central :func:`is_auth_error`.
+    """
+    from core.canvas_logic import is_auth_error
+    item_auth = 0
+    for e in error_list or []:
+        if isinstance(e, str):
+            if is_auth_error(e):
+                return True
+            continue
+        _is_auth = (
+            str(getattr(e, 'error_type', '') or '').strip() in ('401', 'Unauthorized')
+            or is_auth_error(str(getattr(e, 'raw_error', '') or ''))
+            or is_auth_error(str(getattr(e, 'message', '') or ''))
+        )
+        if not _is_auth:
+            continue
+        if getattr(e, 'is_app_error', False):
+            return True
+        item_auth += 1
+    return item_auth >= 3
+
+
 def render_error_section(error_list: list, key_prefix: str = 'dl',
                          retry_btn_callback=None, has_retriable_errors: bool = False,
                          retry_failed: bool = False):
@@ -1710,6 +1794,35 @@ def render_error_section(error_list: list, key_prefix: str = 'dl',
     """
     if not error_list:
         return
+
+    # A token that expired/was revoked DURING the run 401s everything after it.
+    # Both the download and sync completion screens route their errors here, so
+    # this one banner + button gives the user the clean reconnect flow from
+    # either screen instead of leaving them staring at a wall of 401s. Rendered
+    # above the error panel as real Streamlit elements. The presence of this CTA
+    # is fixed for a finished run (the error list no longer changes), so it does
+    # not flip-flop across reruns of the terminal screen.
+    if run_had_auth_failure(error_list):
+        st.markdown(
+            "<div style='display:flex; align-items:flex-start; gap:11px; "
+            "background:rgba(249,115,22,0.12); border:1px solid rgba(249,115,22,0.40); "
+            "border-radius:8px; padding:13px 15px; margin-bottom:14px;'>"
+            "<svg viewBox='0 0 24 24' width='19' height='19' style='flex-shrink:0; margin-top:1px;' "
+            "fill='none' stroke='#f97316' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+            "<path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/>"
+            "<line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
+            "<div><div style='color:#fdba74; font-weight:700; font-size:0.95rem; margin-bottom:3px;'>"
+            "Your Canvas session expired during this run</div>"
+            "<div style='color:#fcd9b6; font-size:0.88rem; line-height:1.5;'>"
+            "Some items couldn't be downloaded because your access token expired or was revoked. "
+            "Reconnect with a new token, then run it again to pick up what's missing. "
+            "Your Canvas address is still saved.</div></div></div>",
+            unsafe_allow_html=True,
+        )
+        if st.button("Reconnect to Canvas", key=f"{key_prefix}_reconnect_expired", type="primary"):
+            from ui.auth import force_reauth
+            force_reauth("Your Canvas Access Token expired during your last run. "
+                         "Please reconnect with a new token, then run it again.")
 
     import os
     import re

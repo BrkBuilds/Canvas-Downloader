@@ -51,14 +51,33 @@ _PAN_REC_SVG = (
 
 # Lazy imports to avoid circular dependency with sync_ui.py
 def _select_sync_folder_lazy():
-    """Open native folder picker, store result, and auto-detect bound course."""
-    from shared.helpers import native_folder_picker
+    """Open the native folder picker and record the result.
+
+    Supports selecting SEVERAL folders at once (bulk add). A single selection
+    behaves exactly as before - the folder is stored and its bound course is
+    auto-detected. When more than one folder comes back, the raw list is stashed
+    for ``render_pending_folder_ui`` to process, because matching each folder to
+    a Canvas course needs ``course_names`` (only available there).
+
+    Editing an existing pair is single-folder by definition, so any extra
+    selections are ignored in that mode.
+    """
+    from shared.helpers import native_folder_multi_picker
     import streamlit as st
-    folder_path = native_folder_picker(initial_dir=st.session_state.get('pending_sync_folder') or None)
-    if folder_path:
+    editing = st.session_state.get('editing_pair_idx') is not None
+    folders = native_folder_multi_picker(
+        initial_dir=st.session_state.get('pending_sync_folder') or None
+    )
+    if not folders:
+        return
+    if editing or len(folders) == 1:
+        folder_path = folders[0]
         st.session_state['pending_sync_folder'] = folder_path
         # --- Auto-detect course from manifest ---
         _auto_detect_course_from_manifest(folder_path)
+        return
+    # Multiple folders → hand off to the bulk processor on the next render.
+    st.session_state['_bulk_folders_raw'] = folders
 
 def _auto_detect_course_from_manifest(folder_path: str):
     """Read .canvas_sync.db in *folder_path* and auto-select the bound course.
@@ -89,9 +108,136 @@ def _update_pair_by_signature_lazy(old_sig, new_pair):
     from sync.persistence import update_pair_by_signature
     update_pair_by_signature(old_sig, new_pair)
 
+
+def _retarget_saved_pair_lazy(old_course_id, old_folder, new_pair):
+    """Move a standalone saved pair's NAME to a re-linked course/folder so an
+    inline Edit relocates a named pair just like the hub's Edit Pair. Non-fatal:
+    a hub read/write failure must never block the sync-list edit itself."""
+    try:
+        from core.sync_manager import SavedGroupsManager
+        from shared.helpers import get_config_dir
+        SavedGroupsManager(get_config_dir()).retarget_standalone_pair(
+            old_course_id, old_folder, new_pair)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).warning(
+            "Could not retarget saved pair on inline re-link", exc_info=True)
+
 def _add_pair_lazy(pair):
     from sync.persistence import add_pair
     add_pair(pair)
+
+
+# ── Bulk "Add Course" (multi-folder selection) ─────────────────────────────
+# Session keys used while a bulk add is in progress:
+#   _bulk_folders_raw   - the raw list just picked, awaiting processing
+#   _bulk_total         - how many folders need MANUAL course assignment
+#   _bulk_index         - 1-based position of the folder currently in the form
+#   _bulk_folder_queue  - folders still queued AFTER the current one
+# All are listed in state_registry.SYNC_TRANSIENT_KEYS so navigating away clears
+# them.
+
+def _clear_bulk_state():
+    for k in ('_bulk_folders_raw', '_bulk_total', '_bulk_index',
+              '_bulk_folder_queue'):
+        st.session_state.pop(k, None)
+
+
+def _load_bulk_folder(folder: str):
+    """Load one queued folder into the pending-pair form.
+
+    No course is pre-selected - only a folder whose manifest names a course is
+    trusted enough to auto-add (that happens in :func:`_process_bulk_folders`).
+    Everything else lands here for the user to choose a course with the Select
+    Course button, exactly like a single add.
+    """
+    st.session_state['pending_sync_folder'] = folder
+    st.session_state['sync_selected_course_id'] = None
+    st.session_state.pop('sync_auto_detected_course', None)
+
+
+def _advance_bulk() -> bool:
+    """Move to the next queued folder, or finish the bulk run. Returns True if a
+    folder was loaded (more to do), False if the queue is now empty (form closed)."""
+    queue = st.session_state.get('_bulk_folder_queue', [])
+    if queue:
+        nxt = queue.pop(0)
+        st.session_state['_bulk_folder_queue'] = queue
+        st.session_state['_bulk_index'] = st.session_state.get('_bulk_index', 1) + 1
+        _load_bulk_folder(nxt)
+        return True
+    # Done - tear the form down.
+    _clear_bulk_state()
+    st.session_state['pending_sync_folder'] = None
+    st.session_state.pop('sync_selected_course_id', None)
+    st.session_state.pop('sync_auto_detected_course', None)
+    return False
+
+
+def _process_bulk_folders(raw: list[str], course_names: dict):
+    """Partition freshly picked folders and set up the bulk add.
+
+    Manifest-matched folders (their ``.canvas_sync.db`` is bound to a course
+    that still exists in Canvas) are added straight away - the binding is
+    authoritative. Everything else is queued for one-at-a-time confirmation with
+    a fuzzy course guess pre-filled. Folders already on the sync list are
+    skipped. A summary is queued as a toast.
+    """
+    from sync.persistence import add_pairs_batch
+    sync_pairs = st.session_state.get('sync_pairs', [])
+    existing_folders = {p.get('local_folder') for p in sync_pairs}
+
+    auto_pairs: list[dict] = []
+    queue: list[str] = []
+    skipped = 0
+    seen: set = set()
+    for folder in raw:
+        if not folder or folder in seen:
+            continue
+        seen.add(folder)
+        if folder in existing_folders:
+            skipped += 1
+            continue
+        cid = None
+        try:
+            cid = SyncManager.peek_bound_course_id(folder)
+        except Exception:
+            cid = None
+        if cid and cid in course_names:
+            auto_pairs.append({
+                'local_folder': folder,
+                'course_id': cid,
+                'course_name': course_names[cid],
+                'last_synced': None,
+            })
+            existing_folders.add(folder)
+        else:
+            queue.append(folder)
+
+    if auto_pairs:
+        add_pairs_batch(auto_pairs)
+
+    parts = []
+    if auto_pairs:
+        n = len(auto_pairs)
+        parts.append(f"{n} folder{'s' if n != 1 else ''} auto-matched and added")
+    if skipped:
+        parts.append(f"{skipped} already on your list")
+    if parts:
+        st.session_state['pending_toast'] = " · ".join(parts)
+
+    if queue:
+        st.session_state['_bulk_total'] = len(queue)
+        st.session_state['_bulk_index'] = 1
+        first = queue.pop(0)
+        st.session_state['_bulk_folder_queue'] = queue
+        _load_bulk_folder(first)
+    else:
+        # Everything was handled automatically - close the form.
+        _clear_bulk_state()
+        st.session_state['pending_sync_folder'] = None
+        st.session_state.pop('sync_selected_course_id', None)
+
 
 def render_filetype_selector(all_files, prefix, file_key_fn):
     """Bulk Selection Matrix - filetype unit checkboxes that act as remote controls.
@@ -896,9 +1042,27 @@ def select_course_dialog_inner(courses, current_selected_id, ):
 
 def render_pending_folder_ui(courses, course_names, course_options, ):
     """Inline UI shown while adding/editing a sync-pair - unified card."""
+    # A pending BULK selection is processed here (not in the picker callback)
+    # because matching folders to courses needs course_names. It reruns itself,
+    # so the code below never sees a half-processed list.
+    if '_bulk_folders_raw' in st.session_state:
+        raw = st.session_state.pop('_bulk_folders_raw')
+        _process_bulk_folders(raw, course_names)
+        st.rerun(scope="app")
+
     pending_folder = st.session_state.get('pending_sync_folder', "")
     folder_name = Path(pending_folder).name if pending_folder else "Select Course Folder →"
     editing_idx = st.session_state.get('editing_pair_idx')
+
+    # Bulk add is only meaningful when creating pairs (never editing) and with a
+    # folder actually loaded - the pending_folder guard stops a stale queue key
+    # from dressing an empty add form as a bulk step.
+    _bulk_active = (
+        bool(st.session_state.get('_bulk_total'))
+        and editing_idx is None
+        and bool(pending_folder)
+    )
+    _bulk_queue_remaining = bool(st.session_state.get('_bulk_folder_queue'))
 
     # (1) Everything inside one bordered container.
     #
@@ -928,8 +1092,25 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         # gets DELETED"). The static file is where this rule belongs.
         # (3) CSS for cancel button red styling (Moved to render_sync_step1 for global scope/no flash)
 
+        # --- Bulk-add progress banner ---
+        # Rendered as the form's FIRST child while stepping through a multi-folder
+        # selection. Kept inside the form container (not a new top-level slot) so
+        # the "ONE top-level slot" isomorphism with the sync-list row still holds.
+        if _bulk_active:
+            _b_idx = st.session_state.get('_bulk_index', 1)
+            _b_total = st.session_state.get('_bulk_total', 1)
+            _hint = "Pick this folder's Canvas course, then continue."
+            st.html(
+                '<div style="background: rgba(56,139,253,0.10); '
+                'border: 1px solid rgba(56,139,253,0.45); border-radius: 6px; '
+                'padding: 8px 12px; margin: 0 0 6px 0; font-size: 0.9rem; line-height: 1.45;">'
+                f'<span style="color:#79c0ff; font-weight:700;">Bulk add · folder {_b_idx} of {_b_total}</span>'
+                f'<span style="color:#c9d1d9;"> — {esc(_hint)}</span>'
+                '</div>'
+            )
+
         # --- Course Selection (Pop-up Dialog) ---
-        
+
         # Determine current display
         current_disp = 'Select Canvas Course →'
         
@@ -1132,19 +1313,38 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         # Error container Relocated HERE (Below dropdown/warnings, Above buttons)
         error_container = st.empty()
 
-        # (3) Confirm + Cancel - compact, side-by-side, cancel has red tint
-        # Made columns narrower (10% each) to reduce button width significantly (per user request)
-        col_cancel, col_add, _ = st.columns([1, 1.5, 7.5])
-        
+        # (3) Confirm + Cancel - compact, side-by-side, cancel has red tint.
+        # In bulk mode a "Skip" button appears between them (still ONE child - a
+        # single horizontal block - so the form's child count is unchanged).
+        if _bulk_active:
+            col_cancel, col_skip, col_add, _ = st.columns([1.2, 1, 1.6, 6.2])
+        else:
+            col_cancel, col_add, _ = st.columns([1, 1.5, 7.5])
+            col_skip = None
+
         with col_cancel:
-            if st.button('Cancel', key="cancel_pair",
-                         use_container_width=True):
+            _cancel_label = 'Cancel all' if _bulk_active else 'Cancel'
+            _cancel_help = ("Stop the bulk add and discard the remaining folders."
+                            if _bulk_active else None)
+            if st.button(_cancel_label, key="cancel_pair",
+                         use_container_width=True, help=_cancel_help):
+                _clear_bulk_state()
                 st.session_state['pending_sync_folder'] = None
                 st.session_state.pop('editing_pair_idx', None)
                 st.session_state.pop('_prev_course_search', None)
                 st.session_state.pop('sync_selected_course_id', None)  # Prevent stale pre-selection on re-open
                 st.session_state.pop('sync_auto_detected_course', None)
                 st.rerun()
+
+        if col_skip is not None:
+            with col_skip:
+                _skip_label = 'Skip' if _bulk_queue_remaining else 'Skip & finish'
+                if st.button(_skip_label, key="bulk_skip_pair",
+                             use_container_width=True,
+                             help="Don't add this folder; go to the next one."):
+                    _advance_bulk()
+                    st.session_state.pop('_prev_course_search', None)
+                    st.rerun(scope="app")
 
         with col_add:
             is_folder_selected = bool(pending_folder)
@@ -1159,7 +1359,12 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                     or _orig.get('local_folder') != pending_folder
                 )
 
-            btn_label = "Save Changes" if is_edit_mode else "Confirm and Add"
+            if is_edit_mode:
+                btn_label = "Save Changes"
+            elif _bulk_active:
+                btn_label = "Add & next" if _bulk_queue_remaining else "Add & finish"
+            else:
+                btn_label = "Confirm and Add"
 
             if is_duplicate_pair:
                 btn_disabled = True
@@ -1232,14 +1437,28 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                         if old_pair.get('course_id') == selected_course_id:
                             new_pair['last_synced'] = old_pair.get('last_synced')
                         _update_pair_by_signature_lazy(old_sig, new_pair)
+                        # If the course/folder link actually changed, carry any
+                        # standalone saved pair's NAME to the new link so an
+                        # inline re-link relocates a named pair like the hub does.
+                        if (old_pair.get('course_id'), old_pair.get('local_folder')) != \
+                                (new_pair.get('course_id'), new_pair.get('local_folder')):
+                            _retarget_saved_pair_lazy(
+                                old_pair.get('course_id'),
+                                old_pair.get('local_folder'),
+                                new_pair)
                     else:
                         # Append new
                         _add_pair_lazy(new_pair)
 
-                    st.session_state['pending_sync_folder'] = None
-                    st.session_state.pop('editing_pair_idx', None)
                     st.session_state.pop('_prev_course_search', None)
                     st.session_state.pop('sync_auto_detected_course', None)
+                    if _bulk_active:
+                        # Advance to the next queued folder (or close if done).
+                        # _advance_bulk owns pending_sync_folder / selection state.
+                        _advance_bulk()
+                    else:
+                        st.session_state['pending_sync_folder'] = None
+                        st.session_state.pop('editing_pair_idx', None)
                     st.rerun(scope="app")
                 elif selected_course_id and selected_course_id not in course_names:
                     # Course exists in saved pair but was archived/removed from Canvas
@@ -1292,8 +1511,9 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         # present the same number of children as every other occupant of that
         # slot - see shared.components.pad_slot_children for the measurements
         # in both directions. The form's own four are: course row, folder row,
-        # the hidden notice slot, and the button row.
-        pad_slot_children(4)
+        # the hidden notice slot, and the button row - plus the bulk banner as a
+        # fifth when a multi-folder add is in progress.
+        pad_slot_children(5 if _bulk_active else 4)
 
 
 # ===================================================================

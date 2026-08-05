@@ -3,6 +3,13 @@
    Source: app.py L36-60 (extracted Phase 0)
    ═══════════════════════════════════════════════ */
 
+/* Hidden widget-chunk prewarm (ui/auth.py:_prewarm_widget_chunks) - mounts one
+   slider / number_input / selectbox / multiselect off-screen so their lazy JS
+   chunks load during page render instead of flashing a grey skeleton the first
+   time the Settings or Panopto dialog opens. display:none keeps the React node
+   mounted (so the import still fires) while removing it from paint and flow. */
+div[class*="st-key-cd_widget_prewarm"] { display: none !important; }
+
 /* ═══════════════════════════════════════════════
    Indeterminate progress bar (work of unknown duration)
    ───────────────────────────────────────────────
@@ -1916,7 +1923,13 @@ div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-sticky_actions_"]),
    descendant form `:has(A)`, which would match every ancestor wrapper too and
    try to stick the entire page. (:has() cannot be nested inside :has().) */
 div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-action_dl_back"]),
-div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"]) {
+div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"]),
+/* Sync step 1's Analyze / Quick Sync row. Made sticky 2026-08-03. Sync History
+   sits below it, so in sync_ui.render_sync_step1 the whole pairs-list + action
+   region is wrapped in a plain st.container() - that wrapper is the bar's
+   containing block, so the bar releases at the wrapper's bottom (above history)
+   instead of floating over it. */
+div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_analyze_sync"]) {
     position: sticky;
     bottom: 0;
     z-index: 20;
@@ -1982,8 +1995,15 @@ div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] di
    references data-cd-stuck. */
 body[data-cd-stuck="1"] div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-sticky_actions_"]),
 body[data-cd-stuck="1"] div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-action_dl_back"]),
-body[data-cd-stuck="1"] div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"]) {
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+body[data-cd-stuck="1"] div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"]),
+body[data-cd-stuck="1"] div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_analyze_sync"]) {
+    /* Pinned only: a hairline plus an UPWARD drop-shadow that lifts the floating
+       bar off the content scrolling under it. Because it lives on the pinned
+       state and the base rule transitions box-shadow (0.18s), it fades to zero
+       exactly as the bar lands (data-cd-stuck flips 1->0 at the release point) -
+       the "shadow that fades out where the buttons come to rest". */
+    box-shadow: 0 -8px 20px -6px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
 /* Identical air above the buttons on EVERY page that uses the bar.
@@ -1993,7 +2013,8 @@ body[data-cd-stuck="1"] div[data-testid="stLayoutWrapper"]:has(> div[data-testid
    margins on the row it wraps are neutralised here rather than page by page. */
 div[data-testid="stLayoutWrapper"]:has(> div[class*="st-key-sticky_actions_"]) > div[class*="st-key-sticky_actions_"],
 div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-action_dl_back"]) > div[data-testid="stHorizontalBlock"],
-div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"]) > div[data-testid="stHorizontalBlock"] {
+div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_sync_selected"]) > div[data-testid="stHorizontalBlock"],
+div[data-testid="stLayoutWrapper"]:has(> div[data-testid="stHorizontalBlock"] div[class*="st-key-btn_analyze_sync"]) > div[data-testid="stHorizontalBlock"] {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
 }

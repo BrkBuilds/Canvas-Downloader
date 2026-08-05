@@ -279,6 +279,53 @@ def test_the_empty_string_is_currently_ACCEPTED(tmp_path, monkeypatch):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Library references (saved pairs on the working list follow hub edits)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def test_active_entry_follows_a_hub_relink_by_stable_id(config_dir):
+    """A saved pair on the working list is stored as a reference (saved_id), so a
+    hub re-link (folder move) shows up on load without touching the sync list."""
+    import core.library as library
+    pid = library.save_pair(1, "C:/old", "Course A", name="Macro")
+    (config_dir / helpers.SYNC_PAIRS_FILENAME).write_text(
+        json.dumps([{"course_id": 1, "local_folder": "C:/old",
+                     "course_name": "Course A", "saved_id": pid}]),
+        encoding="utf-8")
+
+    library.relink_pair(pid, 1, "C:/new", "Course A")
+    got = helpers.load_sync_pairs()
+    assert got[0]["local_folder"] == "C:/new"      # followed the move
+    assert got[0]["saved_id"] == pid
+
+
+def test_active_entry_binds_a_bare_link_opportunistically(config_dir):
+    """A pre-existing entry with no saved_id but a link that IS a saved pair gets
+    bound to it on load (so old lists pick up references)."""
+    import core.library as library
+    pid = library.save_pair(2, "C:/b", "Course B", name="Beta")
+    (config_dir / helpers.SYNC_PAIRS_FILENAME).write_text(
+        json.dumps([{"course_id": 2, "local_folder": "C:/b", "course_name": "Course B"}]),
+        encoding="utf-8")
+    assert helpers.load_sync_pairs()[0]["saved_id"] == pid
+
+
+def test_active_entry_degrades_to_raw_when_saved_pair_deleted(config_dir):
+    """Deleting the saved pair must not drop it from the working list - it stays
+    as a raw entry (keeps its cached fields, loses the dangling reference)."""
+    import core.library as library
+    pid = library.save_pair(3, "C:/c", "Course C", name="Gamma")
+    (config_dir / helpers.SYNC_PAIRS_FILENAME).write_text(
+        json.dumps([{"course_id": 3, "local_folder": "C:/c",
+                     "course_name": "Course C", "saved_id": pid}]),
+        encoding="utf-8")
+    library.delete_pair(pid)
+    got = helpers.load_sync_pairs()
+    assert len(got) == 1
+    assert got[0]["local_folder"] == "C:/c"        # kept
+    assert "saved_id" not in got[0]                # dangling ref dropped
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Create
 # ═══════════════════════════════════════════════════════════════════════════
 

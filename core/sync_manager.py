@@ -2675,194 +2675,189 @@ class SyncHistoryManager:
 # --- Saved Sync Groups Manager ---
 
 class SavedGroupsManager:
-    """Manages saved sync groups (reusable sets of course/folder pairs).
-    
-    Persists groups to a JSON file so users can swap between semesters
-    without reconfiguring folders.
+    """Back-compat facade over :mod:`core.library`.
+
+    The hub used to store saved pairs as "a group with one member"
+    (``is_single_pair`` + ``group_name`` + ``auto_named``) and multi-course
+    groups in ``saved_sync_groups.json``. That model is now unified in
+    ``core.library``: one first-class saved PAIR per ``(course_id, folder)`` link
+    with a STABLE id, plus GROUPS that reference pairs by id. This facade keeps
+    the old API so the hub UI and its many call sites keep working, translating
+    every read/write to the library.
+
+    The ``group_id`` of a reconstructed record IS the library entity's id: a
+    ``pair_...`` id is a standalone saved pair, a ``grp_...`` id is a group -
+    which is how the write methods below tell them apart.
+
+    ``core.library`` is imported lazily in each method: ``shared.helpers`` imports
+    from this module, and the library imports ``shared.helpers``, so a top-level
+    import here would be a cycle.
     """
-    
+
     def __init__(self, config_dir: str):
-        """
-        Args:
-            config_dir: Directory where config files are stored
-        """
-        self.groups_path = Path(config_dir) / SAVED_GROUPS_FILENAME
-    
-    def load_groups(self) -> list[dict]:
-        """Load all saved groups from disk.
-        
-        Returns:
-            List of group dicts with keys: group_id, group_name, pairs
-        """
-        with _groups_lock:
-            if not self.groups_path.exists():
-                return []
-            try:
-                with open(self.groups_path, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                if not isinstance(data, dict):
-                    logger.warning(f"Sync groups file has invalid root type: {type(data)}")
-                    return []
-                groups = data.get('groups', [])
-                if not isinstance(groups, list):
-                    return []
-                return groups
-            except (json.JSONDecodeError, IOError) as e:
-                logger.error(f"Error loading sync groups: {e}")
-                return []
-    
-    def _save_all(self, groups: list[dict]):
-        """Atomically persist the full groups list to disk.
+        import core.library as library
+        # Retained for the few callers that read ``.groups_path``; the store is
+        # the library file now and this class no longer touches it directly.
+        self.groups_path = Path(config_dir) / library._FILENAME
 
-        Pattern: write to ``.tmp``, fsync, then ``os.replace``.
-        Matches the atomic write convention used by ``PresetManager``,
-        ``SyncHistoryManager``, and ``save_sync_pairs``.
-        """
-        tmp_path = self.groups_path.with_suffix('.tmp')
-        try:
-            with open(tmp_path, 'w', encoding='utf-8') as f:
-                json.dump({'groups': groups}, f, indent=2, ensure_ascii=False)
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(str(tmp_path), str(self.groups_path))
-        except IOError as e:
-            logger.warning(f"Error saving sync groups: {e}")
-            try:
-                if tmp_path.exists():
-                    tmp_path.unlink()
-            except OSError:
-                pass
-    
+    # -- reconstruction (library record -> legacy hub record) -----------------
+
     @staticmethod
-    def _project_pair(p: dict) -> dict:
-        """Normalise a pair dict to the shape stored in a group record.
-
-        Both writers project through here so a stored pair can never carry a
-        stray key - and, just as importantly, so a key that IS meant to persist
-        cannot be dropped by only one of them.
-
-        ``label`` (the user's own name for this course inside a multi-course
-        group) is such a key. It was very nearly lost here: this projection used
-        to hard-code three keys, so ANY group edit - renaming the group, adding
-        a course, re-linking one folder - would have silently erased every
-        member label in that group. Nothing would have raised; the names would
-        just have started reverting. See ``core.pair_labels`` for the model.
-        """
-        out = {
-            'local_folder': p.get('local_folder', ''),
-            'course_id': p.get('course_id'),
-            'course_name': p.get('course_name', ''),
+    def _pair_record(p: dict) -> dict:
+        name = (p.get("name") or "").strip()
+        return {
+            "group_id": p.get("id"),
+            "group_name": name or (p.get("course_name") or ""),
+            "is_single_pair": True,
+            "auto_named": not name,
+            "pairs": [{
+                "local_folder": p.get("local_folder", ""),
+                "course_id": p.get("course_id"),
+                "course_name": p.get("course_name", ""),
+            }],
         }
-        label = (p.get('label') or '').strip()
-        if label:
-            out['label'] = label
-        return out
 
-    def save_group(self, name: str, pairs: list[dict], is_single_pair: bool = False,
-                   auto_named: bool = False) -> dict:
-        """Save a new group (or single pair).
-
-        Args:
-            name: Human-readable group name (e.g. 'Fall 2025')
-            pairs: List of pair dicts with keys: local_folder, course_id, course_name
-                   (plus an optional per-course ``label``)
-            is_single_pair: If True, flags this as a saved single pair (not a multi-course group)
-            auto_named: True when *name* is the course name the Save as Pair
-                dialog pre-filled and the user accepted without typing. The
-                record keeps the text (it still has to be called something in
-                the hub) but is marked as UNNAMED by the user, so
-                ``core.pair_labels`` ignores it and every sync surface goes on
-                showing the live Canvas name - which is what makes a
-                Canvas-side rename still reach the user.
-
-        Returns:
-            The newly created group dict
-        """
-        with _groups_lock:
-            groups = self.load_groups()
-            new_group = {
-                'group_id': f"grp_{uuid.uuid4().hex}",
-                'group_name': name.strip(),
-                'pairs': [self._project_pair(p) for p in pairs],
+    @staticmethod
+    def _group_record(g: dict, by_id: dict) -> dict:
+        members = []
+        for mid in g.get("member_ids", []):
+            m = by_id.get(mid)
+            if not m:
+                continue
+            entry = {
+                "local_folder": m.get("local_folder", ""),
+                "course_id": m.get("course_id"),
+                "course_name": m.get("course_name", ""),
             }
-            if is_single_pair:
-                new_group['is_single_pair'] = True
-            if auto_named:
-                new_group['auto_named'] = True
-            groups.append(new_group)
-            self._save_all(groups)
-            return new_group
-    
+            nm = (m.get("name") or "").strip()
+            if nm:
+                entry["label"] = nm
+            members.append(entry)
+        return {
+            "group_id": g.get("id"),
+            "group_name": g.get("name", ""),
+            "pairs": members,
+        }
+
+    def load_groups(self) -> list[dict]:
+        """Reconstruct the legacy hub list: a record per STANDALONE pair plus a
+        record per group, oldest-first (the hub reverses for newest-at-top)."""
+        import core.library as library
+        data = library.load_library()
+        by_id = {p["id"]: p for p in data["pairs"]}
+        records = []
+        for p in data["pairs"]:
+            if p.get("standalone", True):
+                records.append((p.get("created_at", ""), self._pair_record(p)))
+        for g in data["groups"]:
+            records.append((g.get("created_at", ""), self._group_record(g, by_id)))
+        records.sort(key=lambda t: t[0])
+        return [r for _, r in records]
+
+    # -- writes (legacy call -> library op) -----------------------------------
+
+    def save_group(self, name, pairs, is_single_pair: bool = False,
+                   auto_named: bool = False):
+        import core.library as library
+        if is_single_pair:
+            p = (pairs or [{}])[0]
+            pid = library.save_pair(
+                p.get("course_id"), p.get("local_folder"), p.get("course_name", ""),
+                name=("" if auto_named else (name or "")), standalone=True)
+            return self._pair_record(library.get_pair(pid) or {})
+        ids = []
+        for p in (pairs or []):
+            pid = library.save_pair(
+                p.get("course_id"), p.get("local_folder"), p.get("course_name", ""),
+                name=(p.get("label") or ""), standalone=False)
+            if pid not in ids:
+                ids.append(pid)
+        gid = library.save_group(name or "", ids)
+        data = library.load_library()
+        by_id = {p["id"]: p for p in data["pairs"]}
+        g = next((x for x in data["groups"] if x["id"] == gid),
+                 {"id": gid, "name": name, "member_ids": ids})
+        return self._group_record(g, by_id)
+
     def delete_group(self, group_id: str) -> bool:
-        """Delete a group by its ID.
-        
-        Returns:
-            True if found and deleted, False otherwise
-        """
-        with _groups_lock:
-            groups = self.load_groups()
-            original_len = len(groups)
-            groups = [g for g in groups if g.get('group_id') != group_id]
-            if len(groups) == original_len:
-                return False
-            self._save_all(groups)
-            return True
-    
+        import core.library as library
+        if str(group_id).startswith("pair_"):
+            return library.delete_pair(group_id)
+        return library.delete_group(group_id)
+
     def update_group(self, group_id: str, new_data: dict) -> bool:
-        """Update an existing group's name and/or pairs.
-        
-        Args:
-            group_id: The ID of the group to update
-            new_data: Dict with optional keys 'group_name', 'pairs',
-                      'is_single_pair', 'auto_named'
+        import core.library as library
+        gid = str(group_id)
+        if gid.startswith("pair_"):
+            ok = False
+            if "group_name" in new_data:
+                nm = "" if new_data.get("auto_named") else (new_data["group_name"] or "")
+                ok = library.rename_pair(gid, nm) or ok
+            if new_data.get("pairs"):
+                p = new_data["pairs"][0]
+                ok = library.relink_pair(
+                    gid, p.get("course_id"), p.get("local_folder"),
+                    p.get("course_name", "")) or ok
+            return ok
+        ok = False
+        if "group_name" in new_data:
+            ok = library.rename_group(gid, new_data["group_name"] or "") or ok
+        if "pairs" in new_data:
+            ids = []
+            for p in new_data["pairs"]:
+                pid = library.save_pair(
+                    p.get("course_id"), p.get("local_folder"), p.get("course_name", ""),
+                    name=(p.get("label") or ""), standalone=False)
+                # a cleared per-course label must clear the pair's name too
+                if not (p.get("label") or "").strip():
+                    library.rename_pair(pid, "")
+                if pid not in ids:
+                    ids.append(pid)
+            ok = library.set_group_members(gid, ids) or ok
+        return ok
 
-        Returns:
-            True if found and updated, False otherwise
-        """
-        with _groups_lock:
-            groups = self.load_groups()
-            for g in groups:
-                if g.get('group_id') == group_id:
-                    if 'group_name' in new_data:
-                        g['group_name'] = new_data['group_name'].strip()
-                        # Renaming is the user CHOOSING a name, so it always
-                        # clears the auto-named flag - otherwise a pair saved
-                        # with the pre-filled suggestion could be renamed by
-                        # hand and still be ignored by core.pair_labels, which
-                        # would look exactly like the rename silently failed.
-                        # An explicit 'auto_named' in new_data still wins.
-                        g.pop('auto_named', None)
-                    if 'pairs' in new_data:
-                        g['pairs'] = [self._project_pair(p) for p in new_data['pairs']]
-                    if 'is_single_pair' in new_data:
-                        g['is_single_pair'] = new_data['is_single_pair']
-                    if 'auto_named' in new_data:
-                        if new_data['auto_named']:
-                            g['auto_named'] = True
-                        else:
-                            g.pop('auto_named', None)
-                    self._save_all(groups)
-                    return True
-            return False
-    
+    def retarget_standalone_pair(self, old_course_id, old_folder,
+                                 new_pair: dict) -> int:
+        """Move a standalone saved pair's link to a re-linked course/folder,
+        keeping its name. Now a one-liner over the library (the name lives on the
+        pair's stable id, so this is just an in-place re-link)."""
+        import core.library as library
+        p = library.pair_for(old_course_id, old_folder)
+        if p is None or not p.get("standalone", True):
+            return 0
+        if library.link_key(new_pair.get("course_id"), new_pair.get("local_folder")) == \
+                library.link_key(old_course_id, old_folder):
+            return 0
+        return 1 if library.relink_pair(
+            p["id"], new_pair.get("course_id"), new_pair.get("local_folder"),
+            new_pair.get("course_name", "")) else 0
+
     def matches_existing_group(self, pairs: list[dict]) -> bool:
-        """Check if the given pairs exactly match any saved group.
-
-        Comparison is based on sorted (course_id, local_folder) tuples,
-        ignoring course_name and ordering.
-        """
-        current_sig = self._pairs_signature(pairs)
-        with _groups_lock:
-            for group in self.load_groups():
-                if self._pairs_signature(group.get('pairs', [])) == current_sig:
-                    return True
+        """True if these pairs exactly match a saved GROUP's member set (by
+        ``(course_id, local_folder)``, ignoring name and order)."""
+        import core.library as library
+        sig = self._pairs_signature(pairs)
+        data = library.load_library()
+        by_id = {p["id"]: p for p in data["pairs"]}
+        for g in data["groups"]:
+            members = [by_id[m] for m in g.get("member_ids", []) if m in by_id]
+            gsig = self._pairs_signature(members)
+            if gsig == sig:
+                return True
         return False
-    
+
     @staticmethod
     def _pairs_signature(pairs: list[dict]) -> frozenset:
-        """Create a hashable signature from a pairs list for comparison."""
+        """Hashable signature from a pairs list for comparison.
+
+        Both sides go through ``library.link_key`` (coerced course id +
+        normalised folder), so a group saved with a string course id or a folder
+        stored with a different slash/case still matches the working list's
+        int-coerced, library-resolved form - otherwise a genuine duplicate
+        slipped past this check because ``"42" != 42``."""
+        import core.library as library
         return frozenset(
-            (p.get('course_id'), p.get('local_folder', ''))
+            library.link_key(p.get("course_id"), p.get("local_folder", ""))
             for p in pairs
         )
 

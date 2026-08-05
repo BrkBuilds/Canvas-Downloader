@@ -317,6 +317,37 @@ def normalize_canvas_url(raw: str) -> str:
     return m.group(1) if m else s
 
 
+def _looks_like_token(s: str) -> bool:
+    """Heuristic: does this value look like a Canvas access token, not a URL?
+
+    Deliberately conservative - only UNAMBIGUOUS signals, so a correctly typed
+    URL is never mistaken for a token. Canvas tokens commonly look like
+    ``<id>~<letters+digits>`` (a tilde no hostname ever contains), or a long
+    dot-free/slash-free code. Any real Canvas URL has a dot, and the bare
+    shorthand form (e.g. ``cbscanvas``) is far shorter than 40 chars.
+    """
+    s = (s or '').strip()
+    if not s:
+        return False
+    if '~' in s:
+        return True
+    return (len(s) >= 40 and '.' not in s and '/' not in s and ' ' not in s
+            and not s.lower().startswith(('http://', 'https://')))
+
+
+def _looks_like_url(s: str) -> bool:
+    """Heuristic: does this value look like a Canvas URL, not a token?
+
+    Conservative twin of :func:`_looks_like_token` - only fires on signals a
+    token cannot produce (an ``http(s)://`` scheme, or the literal
+    ``instructure.com``), so a real token is never flagged as a URL.
+    """
+    s = (s or '').strip().lower()
+    if not s:
+        return False
+    return s.startswith(('http://', 'https://')) or 'instructure.com' in s
+
+
 def _canvas_url_reachable(base_url: str, timeout: float = 5.0) -> bool:
     """Best-effort reachability check for a Canvas base URL.
 
@@ -571,6 +602,52 @@ div.st-key-nav_btn_logout button:hover::after {{
 
     _render_authenticated_nav_bottom(fetch_courses_fn)
 
+    # Warm the lazy JS chunks for the dialog-only widgets so they don't flash a
+    # grey skeleton the first time the user opens Settings / Panopto. Rendered
+    # last, hidden, on every authenticated page - see the function docstring.
+    _prewarm_widget_chunks()
+
+
+
+def _prewarm_widget_chunks() -> None:
+    """Preload the lazy-loaded JS chunks for widgets that ONLY appear in dialogs.
+
+    Streamlit code-splits every widget's React implementation into its own JS
+    chunk, fetched on FIRST mount and shown behind a ``<Suspense>`` skeleton
+    (the solid grey box) until it arrives. Widgets used all over the app -
+    button, checkbox/toggle, text input - are always warm, so they never
+    skeleton. But ``slider`` / ``number_input`` (Settings) and ``selectbox`` /
+    ``multiselect`` (Panopto, sync-history filter, CBS filters) live only in
+    dialogs and rarely-visited screens, so their chunk is COLD until that screen
+    first opens - and on a slow machine that is a visible second of grey boxes
+    over the fields (reported 2026-08-03: the three Settings number inputs and
+    the Panopto Language dropdown).
+
+    Mounting one hidden instance of each here - the sidebar renders on every
+    authenticated page - triggers the ``import()`` during the normal page load,
+    so by the time the user opens the dialog the chunk is already cached and the
+    real widgets mount instantly. ``display:none`` (global.css) does NOT unmount
+    a React node, so the lazy import still fires; the container just never
+    paints and is out of layout flow. The widgets' return values and keys are
+    throwaway and collide with nothing real.
+
+    Rendered ONCE per session: the browser keeps an imported JS module in memory
+    for the page's lifetime, so a single mount is enough to warm the chunk - the
+    node can then unmount on the next rerun with no cost. It is the last element
+    in the sidebar, so dropping it shifts nothing after it.
+    """
+    if st.session_state.get('_widget_chunks_prewarmed'):
+        return
+    st.session_state['_widget_chunks_prewarmed'] = True
+    try:
+        with st.container(border=True, key="cd_widget_prewarm"):
+            st.slider("pw", 0, 1, 0, key="_pw_slider", label_visibility="collapsed")
+            st.number_input("pw", value=0, key="_pw_number", label_visibility="collapsed")
+            st.selectbox("pw", ("-",), key="_pw_select", label_visibility="collapsed")
+            st.multiselect("pw", ("-",), key="_pw_multiselect", label_visibility="collapsed")
+    except Exception:
+        # A prewarm is pure optimisation; it must never break the sidebar.
+        logger.debug("Widget-chunk prewarm failed", exc_info=True)
 
 
 def restore_saved_session() -> None:
@@ -718,6 +795,37 @@ def restore_saved_session() -> None:
                             # so the SAME run goes on to render the signed-in
                             # page. The rerun this replaced was a whole wasted
                             # script run against a blank window.
+                        else:
+                            # The saved token could not be CONFIRMED this launch.
+                            # Only a genuine AUTH rejection (expired/revoked/401)
+                            # should drop the user to the login page - that is the
+                            # one case a fresh token actually fixes. Everything
+                            # else is a TRANSIENT reachability failure (offline,
+                            # captive-portal wifi, a cross-continent timeout, a
+                            # corporate/university TLS intercept, or Canvas being
+                            # momentarily down) - none of which the user can fix
+                            # by re-pasting the same token, and all of which would
+                            # otherwise strand a valid, previously-verified
+                            # session behind a blip. So restore OPTIMISTICALLY:
+                            # trust the token (it validated on a prior launch),
+                            # and let the first real Canvas call be the arbiter -
+                            # a truly dead token surfaces there as an auth error
+                            # and is routed to the clean reconnect flow
+                            # (force_reauth), while a still-offline launch gets a
+                            # calm, retryable "couldn't reach Canvas" screen
+                            # instead of a red traceback. This is the single most
+                            # important robustness property of the login path for
+                            # users on unreliable or high-latency networks.
+                            from core.canvas_logic import is_auth_error
+                            if is_auth_error(msg):
+                                logger.info("Saved token rejected (auth error) - "
+                                            "routing to login for a fresh token.")
+                            else:
+                                st.session_state['is_authenticated'] = True
+                                logger.info(
+                                    "Saved session restored optimistically; the "
+                                    "token could not be confirmed this launch due "
+                                    "to a non-auth (network) error: %s", msg)
             except Exception:
                 logger.warning("Saved session could not be restored", exc_info=True)
 
@@ -1370,6 +1478,139 @@ def render_login_page(fetch_courses_fn):
         transform: scale(1.1) !important; /* Delicate heart scale pulse on hover */
         opacity: 1 !important;
     }
+
+    /* First-run "getting started" strip - shown only when there is no saved
+       config (a truly fresh install). Turns the bare credential form into a
+       short, guided first run and pre-empts the "is this safe?" fear. */
+    .login-getstarted {
+        background: rgba(31, 119, 180, 0.06) !important;
+        border: 1px solid rgba(31, 119, 180, 0.22) !important;
+        border-radius: 8px !important;
+        padding: 8px 14px 16px 14px !important; /* less on top, more on bottom */
+        /* Top margin is NEGATIVE on purpose: it collapses with the title's
+           20px margin-bottom, so only a negative value can shrink the gap
+           above the strip. Bottom margin gives the URL field real breathing
+           room (was glued 4px below). Balanced ~14px on each side. */
+        margin: -6px 0 14px 0 !important;
+    }
+    .lgs-head {
+        font-size: 0.9rem !important;
+        font-weight: 700 !important;
+        color: #cfe0f0 !important;
+        margin-bottom: 10px !important;
+    }
+    .lgs-step {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 9px !important;
+        margin-bottom: 7px !important;
+        font-size: 0.85rem !important;
+        line-height: 1.4 !important;
+        color: #b8c5d6 !important;
+    }
+    .lgs-step b {
+        color: #cfe0f0 !important;
+        font-weight: 700 !important;
+    }
+    .lgs-num {
+        flex: 0 0 auto !important;
+        width: 18px !important;
+        height: 18px !important;
+        border-radius: 50% !important;
+        background: #1f77b4 !important;
+        color: #ffffff !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-top: 1px !important;
+    }
+    .lgs-safe {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 7px !important;
+        margin-top: 10px !important;
+        padding-top: 9px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+        font-size: 0.8rem !important;
+        line-height: 1.4 !important;
+        color: #8a99ad !important;
+    }
+    .lgs-safe svg {
+        flex: 0 0 auto !important;
+        margin-top: 2px !important;
+        color: #8a99ad !important;
+    }
+
+    /* Cut-to-the-bone reconnect header (reauth mode): the token expired
+       mid-use, the URL is already known, so this replaces the full login
+       header with just a reason + the saved URL + a nudge to paste a token. */
+    .lra-title {
+        font-size: 1.3rem !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        letter-spacing: -0.01em !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 14px !important;
+    }
+    .lra-reason {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 9px !important;
+        background: rgba(249, 115, 22, 0.10) !important;
+        border: 1px solid rgba(249, 115, 22, 0.35) !important;
+        border-radius: 8px !important;
+        padding: 11px 13px !important;
+        color: #fcd9b6 !important;
+        font-size: 0.9rem !important;
+        line-height: 1.5 !important;
+        margin-bottom: 14px !important;
+    }
+    .lra-reason svg { flex: 0 0 auto !important; margin-top: 2px !important; }
+    .lra-url {
+        font-size: 0.85rem !important;
+        color: #94a3b8 !important;
+        margin-bottom: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+    .lra-url-chip {
+        color: #93c5fd !important;
+        background: rgba(147, 197, 253, 0.1) !important;
+        border: 1px solid rgba(147, 197, 253, 0.25) !important;
+        padding: 2px 8px !important;
+        border-radius: 5px !important;
+        font-weight: 600 !important;
+        word-break: break-all !important;
+    }
+    .lra-hint {
+        font-size: 0.9rem !important;
+        color: #b8c5d6 !important;
+        line-height: 1.5 !important;
+    }
+    /* The "use the full sign-in screen" escape - a quiet, link-like button */
+    div[class*="st-key-reauth_full_login"] button {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #64748b !important;
+        font-size: 0.85rem !important;
+        font-weight: 500 !important;
+        min-height: unset !important;
+        height: auto !important;
+        padding: 4px 6px !important;
+        text-decoration: underline !important;
+        text-underline-offset: 3px !important;
+        transition: color 0.15s ease !important;
+    }
+    div[class*="st-key-reauth_full_login"] button:hover {
+        color: #cbd5e1 !important;
+        background: transparent !important;
+    }
     </style>""")
 
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -1396,12 +1637,48 @@ def render_login_page(fetch_courses_fn):
         </div>
         """, unsafe_allow_html=True)
 
+        # First-run onboarding signal: a config file only exists after a
+        # successful login on this machine, so its absence means this user has
+        # never completed login here. Used to (a) show a compact "getting
+        # started" strip in the card and (b) auto-open the URL/token help guides,
+        # so a first-time user is guided instead of facing a bare credential
+        # form. A returning-but-logged-out user has a config file and keeps the
+        # quieter layout. The value is constant for the whole logged-out
+        # lifetime (config is only written on the login that leaves this page),
+        # so nothing below changes its element COUNT between reruns - the strip
+        # is folded into the title markdown and the expanders always render.
+        _first_run = not os.path.exists(CONFIG_FILE)
+
+        # Reauth mode: force_reauth cleared an expired/revoked token mid-use and
+        # routed here, and we still hold the previously-verified Canvas URL. Show
+        # a cut-to-the-bone reconnect screen (token field + "how to get one"
+        # guide only) instead of the full login form - the only thing that
+        # changed is the token. An escape link drops to the full sign-in screen.
+        _reauth_reason = st.session_state.get('reauth_reason')
+        _saved_url = (st.session_state.get('api_url') or '').strip()
+        _reauth_mode = bool(_reauth_reason) and bool(_saved_url)
+
         with st.container(key="login_card_wrapper"):
-            # Re-auth banner: shown when the app cleared an expired/revoked token
-            # and routed the user back here (see force_reauth). Persists across
-            # failed re-login attempts; cleared only on a successful reconnect.
-            _reauth_reason = st.session_state.get('reauth_reason')
-            if _reauth_reason:
+            if _reauth_mode:
+                # Prominent, self-contained reconnect header (replaces the title
+                # + form heading). Both interpolations are HTML-escaped via _he.
+                st.markdown(
+                    "<div class='lra-title'>Reconnect to Canvas</div>"
+                    "<div class='lra-reason'>"
+                    "<svg viewBox='0 0 24 24' width='18' height='18' fill='none' stroke='#f97316' "
+                    "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+                    "<path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/>"
+                    "<line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/></svg>"
+                    f"<span>{_he(str(_reauth_reason))}</span></div>"  # audit-ignore: escaped via _he
+                    "<div class='lra-url'>Your Canvas address is saved:"
+                    f"<span class='lra-url-chip'>{_he(_saved_url)}</span></div>"  # audit-ignore: escaped via _he
+                    "<div class='lra-hint'>Generate a fresh access token (guide below) and paste it here "
+                    "&mdash; that's the only thing that changed.</div>",
+                    unsafe_allow_html=True,
+                )
+            elif _reauth_reason:
+                # Reason set but no saved URL to run reauth mode - keep the
+                # compact banner above the full login form.
                 st.markdown(
                     "<div style='display:flex; align-items:flex-start; gap:10px; "
                     "background:rgba(249,115,22,0.10); border:1px solid rgba(249,115,22,0.35); "
@@ -1415,14 +1692,49 @@ def render_login_page(fetch_courses_fn):
                     unsafe_allow_html=True,
                 )
 
-            st.markdown('<div class="login-form-title">Log in to Canvas Downloader</div>', unsafe_allow_html=True)
+            # Title + (first-run only) a compact "getting started" strip, in ONE
+            # markdown call so the element count is identical whether or not the
+            # strip shows, and so there is no Streamlit block gap between them
+            # (the gap is controlled purely by CSS - same reason the dialog
+            # title/subtitle are combined). Content is Markdown-safe raw HTML.
+            # In reauth mode both are empty (the reconnect header above stands in),
+            # but the st.markdown still renders so the element count never shifts.
+            _getstarted_html = (
+                "<div class='login-getstarted'>"
+                "<div class='lgs-head'>New here? You'll be set up in about 2 minutes.</div>"
+                "<div class='lgs-step'><span class='lgs-num'>1</span>"
+                "<span>Paste your Canvas web address below "
+                "(e.g. https://schoolname.instructure.com).</span></div>"
+                "<div class='lgs-step'><span class='lgs-num'>2</span>"
+                "<span>Generate a Canvas access token &mdash; the "
+                "<b>How to get a Canvas Access Token</b> guide below walks you "
+                "through it, with a one-click link straight to the right page.</span></div>"
+                "<div class='lgs-step'><span class='lgs-num'>3</span>"
+                "<span>Paste the token below and press Log In.</span></div>"
+                "<div class='lgs-safe'>"
+                "<svg viewBox='0 0 24 24' width='14' height='14' fill='none' "
+                "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
+                "stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' "
+                "rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>"
+                "<span>Your token is stored only on this device, in your operating "
+                "system &mdash; nothing is ever uploaded.</span></div></div>"
+            ) if (_first_run and not _reauth_mode) else ""
+            _title_html = "" if _reauth_mode else '<div class="login-form-title">Log in to Canvas Downloader</div>'
+            st.markdown(
+                _title_html + _getstarted_html,
+                unsafe_allow_html=True,
+            )
 
             with st.form("auth_form", clear_on_submit=False, border=False):
-                st.text_input(
-                    'Your Canvas URL',
-                    key="url_input",
-                    placeholder="https://schoolname.instructure.com"
-                )
+                # In reauth mode the URL is already known and shown as a saved
+                # chip above - only the token needs re-entering. The full form
+                # renders the URL field.
+                if not _reauth_mode:
+                    st.text_input(
+                        'Your Canvas URL',
+                        key="url_input",
+                        placeholder="https://schoolname.instructure.com"
+                    )
 
                 st.text_input(
                     'Your Canvas Access Token',
@@ -1436,24 +1748,66 @@ def render_login_page(fetch_courses_fn):
                     )
                 )
 
-                submitted = st.form_submit_button('Log In', type="primary", use_container_width=True, key="login_submit_btn")
+                submitted = st.form_submit_button(
+                    'Reconnect' if _reauth_mode else 'Log In',
+                    type="primary", use_container_width=True, key="login_submit_btn")
 
             if submitted:
-                # Normalize the URL (accepts 'cbscanvas' shorthand, missing scheme,
-                # trailing paths/slashes) before validating - reduces the #1 first-run
-                # login failure: a slightly-wrong Canvas URL.
-                input_url = normalize_canvas_url(st.session_state.url_input)
-                input_token = st.session_state.token_input.strip()
+                # Cheap, specific input checks BEFORE the network round-trip.
+                # Without them the two most common first-run mistakes produce
+                # misleading errors: an empty token + a URL comes back as "your
+                # token was revoked" (they never entered one), and a token pasted
+                # into the URL field is expanded by normalize_canvas_url into a
+                # garbage `https://<token>.instructure.com` that fails as a
+                # generic "Connection Failed". Naming the real mistake is the
+                # lowest-friction fix there is - no round-trip, no guesswork.
+                # In reauth mode there is no URL field - use the saved, already-
+                # verified Canvas URL. Otherwise read what the user typed.
+                raw_url = _saved_url if _reauth_mode else (st.session_state.get('url_input') or '').strip()
+                input_token = (st.session_state.token_input or '').strip()
+                input_url = normalize_canvas_url(raw_url)
 
-                st.session_state['api_url'] = input_url
-                st.session_state['api_token'] = input_token
-                # Optimistically un-verify: this URL is only "trusted" once the
-                # token validates against it below. A failed attempt must not
-                # leave a stale verified flag pointing at the wrong URL.
-                st.session_state['url_verified'] = False
+                from ui.amber_notice import render_amber_notice
+                _input_error = None
+                if not raw_url and not input_token:
+                    _input_error = ("Enter your details",
+                                    "Add your Canvas URL and access token above, then press Log In. "
+                                    "The guides below walk you through finding each one.")
+                elif not raw_url:
+                    _input_error = ("Canvas URL needed",
+                                    "Add your Canvas web address (e.g. https://schoolname.instructure.com). "
+                                    "See 'How to find your Canvas URL' below.")
+                elif not input_token:
+                    _input_error = ("Access token needed",
+                                    "Paste your Canvas access token above. See 'How to get a Canvas "
+                                    "Access Token' below - it takes about a minute to generate one.")
+                elif _reauth_mode and _looks_like_url(input_token):
+                    # Reauth has no URL field, so "swapped" would be nonsense -
+                    # the user simply pasted a URL where the token goes.
+                    _input_error = ("That looks like a URL, not a token",
+                                    "Paste the access token you generate in Canvas (a long code) - "
+                                    "not a web address. Your Canvas URL is already saved.")
+                elif _looks_like_token(raw_url) or _looks_like_url(input_token):
+                    # The two fields look swapped (a token in the URL box, or a
+                    # URL in the token box). Say so instead of failing obscurely.
+                    _input_error = ("Check your URL and token",
+                                    "Your Canvas URL and access token look swapped. The URL is your "
+                                    "school's web address (e.g. https://schoolname.instructure.com); "
+                                    "the token is the long code you generate in Canvas.")
 
-                manager = CanvasManager(input_token, input_url)
-                is_valid, message = manager.validate_token()
+                if _input_error:
+                    render_amber_notice(_input_error[0], detail=_input_error[1])
+                    is_valid, message, manager = False, None, None
+                else:
+                    st.session_state['api_url'] = input_url
+                    st.session_state['api_token'] = input_token
+                    # Optimistically un-verify: this URL is only "trusted" once the
+                    # token validates against it below. A failed attempt must not
+                    # leave a stale verified flag pointing at the wrong URL.
+                    st.session_state['url_verified'] = False
+
+                    manager = CanvasManager(input_token, input_url)
+                    is_valid, message = manager.validate_token()
 
                 if is_valid:
                     st.session_state['api_token'] = input_token
@@ -1523,14 +1877,17 @@ def render_login_page(fetch_courses_fn):
                         )
 
                     st.rerun()
-                else:
+                # `message is None` only when an input pre-check above already
+                # rendered its own specific notice (empty field / swapped
+                # fields) - don't stack a second, generic error on top of it.
+                elif message is not None:
                     err_text_lower = str(message).lower()
                     from ui.amber_notice import render_amber_notice
-                    
+
                     if any(kw in err_text_lower for kw in ["missing schema", "no connection adapters", "invalid url"]):
                         render_amber_notice(
-                            "Invalid URL Format",
-                            detail="Please ensure your Canvas URL starts with 'https://' (e.g., https://canvas.schoolname.edu or https://schoolname.instructure.com)."
+                            "That Canvas address didn't work",
+                            detail="We couldn't read that as a Canvas web address. Copy it straight from your browser's address bar while you're logged in to Canvas (e.g. https://schoolname.instructure.com)."
                         )
                     # Expiry is checked FIRST because it is the more specific
                     # diagnosis, and it must stay specific: `validate_token`
@@ -1590,17 +1947,27 @@ def render_login_page(fetch_courses_fn):
         # Standardized expandable help vertically below the card
         st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
         with st.container(key="login_help_expanders"):
-            with st.expander('How to find your Canvas URL?'):
-                st.markdown(
-                    "1. Log in to Canvas in your web browser.\n"
-                    "2. Examine the address bar **after** logging in (most schools use one of two formats):\n"
-                    "   * **Format 1:** `canvas.[university].edu` (e.g., canvas.schoolname.edu)\n"
-                    "   * **Format 2:** `[university].instructure.com` (e.g., schoolname.instructure.com)\n"
-                    "3. Copy the base portion of the URL (including the `https://`, e.g., `https://canvas.schoolname.edu` or `https://schoolname.instructure.com`) and paste it here.\n\n"
-                    "**Important:** While your university's URL (like canvas.schoolname.edu) may be accepted, pasting the **real Canvas URL** (ending in `.instructure.com`) is always the best and most reliable option to prevent login issues.\n"
-                )
+            # URL guide is hidden in reauth mode - the address is already saved
+            # and shown as a chip, so "how to find your URL" is just noise there.
+            if not _reauth_mode:
+                with st.expander('How to find your Canvas URL?', expanded=_first_run):
+                    st.markdown(
+                        # Kept deliberately lean: normalize_canvas_url + CanvasManager's
+                        # redirect resolution already add https://, strip paths and follow
+                        # a vanity domain to its .instructure.com target, so the old
+                        # "include https / use .instructure.com" caveats were explaining
+                        # friction the code already removes. The one real edge case (a
+                        # vanity domain that lands on an SSO portal) is covered just-in-time
+                        # by its own submit error, so here it is only a quiet footnote.
+                        "1. Open Canvas in your web browser.\n"
+                        "2. Copy the address from your browser's address bar — for example "
+                        "`schoolname.instructure.com` or `canvas.schoolname.edu`.\n"
+                        "3. Paste it here — the exact format doesn't matter.\n\n"
+                        "If a login attempt fails, use the address ending in `.instructure.com` "
+                        "(you'll see it in the address bar once you're inside Canvas) — that's the most reliable one.\n"
+                    )
 
-            with st.expander('How to get a Canvas Access Token?'):
+            with st.expander('How to get a Canvas Access Token?', expanded=(_first_run or _reauth_mode)):
                 # Direct link to the user's own Canvas token settings page. Canvas
                 # has no deep-link to the token generator itself, so the settings
                 # page (with the Approved Integrations section) is the closest we
@@ -1680,11 +2047,10 @@ def render_login_page(fetch_courses_fn):
                         use_container_width=False,
                     )
                 st.markdown(
-                    "1. Open the link above (or in Canvas: **Account → Settings**).\n"
-                    "2. Scroll down to the **Approved Integrations** section.\n"
-                    "3. Click the button labeled **+ New Access Token**.\n"
-                    "4. Set a purpose (e.g., 'Canvas Downloader') and click **Generate Token**.\n"
-                    "5. Copy the long generated string immediately (it will only be displayed once) and paste it here.\n"
+                    "1. Open the link above *(or in Canvas: click your **Profile** → **Settings**)*.\n"
+                    "2. Scroll to **Approved Integrations** and click **+ New Access Token**.\n"
+                    "3. Give it any purpose (e.g. \"Canvas Downloader\"), then click **Generate Token**.\n"
+                    "4. Copy the token right away — Canvas shows it only once — and paste it here.\n"
                 )
 
         st.markdown(
@@ -1694,6 +2060,22 @@ def render_login_page(fetch_courses_fn):
             '</a>',
             unsafe_allow_html=True
         )
+
+        # Reauth-mode escape hatch: drop the cut-to-the-bone reconnect screen for
+        # the full sign-in form (to change the Canvas URL or use a different
+        # account). Screen-replacing navigation, so `if st.button(): ...; rerun`
+        # is correct. The saved URL is pre-filled so it need not be retyped.
+        if _reauth_mode:
+            _esc1, _esc2, _esc3 = st.columns([1, 3, 1])
+            with _esc2:
+                if st.button(
+                    "Use the full sign-in screen (different account or URL)",
+                    key="reauth_full_login",
+                    use_container_width=True,
+                ):
+                    st.session_state['url_input'] = _saved_url
+                    st.session_state.pop('reauth_reason', None)
+                    st.rerun()
 
         # No dynamic spacer used to guarantee footer visibility at all times
 

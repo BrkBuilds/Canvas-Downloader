@@ -1,15 +1,16 @@
 """core.today_store - persistence for the Today dashboard & daily auto-sync.
 
-Stores four things in ``today_dashboard.json`` (config dir):
+Stores the daily-sync SETTINGS in ``today_dashboard.json`` (config dir):
   - ``auto_sync_enabled``     master toggle for the daily auto-sync
-  - ``pairs``                 the full course/folder pairs (course_id +
-                              course_name + local_folder) the user imported from
-                              the Saved Groups & Pairs hub into the daily set.
-                              Stored as standalone copies so the daily sync is
-                              self-contained and survives edits/deletes in the hub.
   - ``last_auto_sync_date``   the logical date the daily run last fired
   - ``fda_nudge_dismissed``   macOS: the Full Disk Access nudge card was closed
                               (it then only reopens via its subtle link)
+
+The daily-sync COURSE SELECTION is NOT stored here any more. Today is a child of
+the library (``core.library``): the daily set is simply the saved pairs whose
+``in_daily_sync`` flag is set. ``load_today_config()["pairs"]`` reads that flag
+live, and ``set_today_pairs`` / ``remove_today_pair`` write it - so there is one
+source of truth, no self-contained copy, and nothing to reconcile.
 
 Atomic writes (tmp + ``os.replace``) under a module ``threading.Lock``, mirroring
 ``sync/persistence.py``. All reads degrade to defaults on a corrupt/missing file.
@@ -77,37 +78,64 @@ def _norm_pair(p: dict) -> dict | None:
     }
 
 
-def load_today_config() -> dict:
-    """Load the Today config. Always returns a well-formed dict, never raises."""
-    p = _path()
-    if not p.exists():
-        return _default()
+def _daily_pairs_from_library() -> list[dict]:
+    """The daily selection, read from the library's ``in_daily_sync`` flag and
+    projected to Today's ``{course_id, course_name, local_folder}`` shape.
+
+    Each pair also carries its library ``saved_id`` (the STABLE id) so a Today /
+    daily run records it in sync history and the user's name resolves via
+    ``core.pair_labels.label_for_id`` even after the folder is later moved - the
+    same parity a Sync-page run gets. ``saved_id`` is an identity reference, not
+    a label, so it is safe to carry here; ``set_today_pairs``'s ``_norm_pair``
+    strips it again on write, so it never round-trips back into the store.
+    """
     try:
-        with open(p, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        if not isinstance(data, dict):
-            return _default()
-        d = _default()
-        for k in d:
-            d[k] = data.get(k, d[k])
-        if not isinstance(d["pairs"], list):
-            d["pairs"] = []
-        else:
-            d["pairs"] = [np for np in (_norm_pair(p) for p in d["pairs"]) if np]
-        d["auto_sync_enabled"] = bool(d["auto_sync_enabled"])
-        d["last_auto_sync_date"] = str(d["last_auto_sync_date"] or "")
-        d["fda_nudge_dismissed"] = bool(d["fda_nudge_dismissed"])
-        return d
+        import core.library as library
+        out = []
+        for p in library.daily_pairs():
+            np = _norm_pair(p)
+            if np:
+                np["saved_id"] = p.get("id")
+                out.append(np)
+        return out
     except Exception:
-        return _default()
+        return []
+
+
+def load_today_config() -> dict:
+    """Load the Today config. Always returns a well-formed dict, never raises.
+
+    Settings come from ``today_dashboard.json``; the ``pairs`` come LIVE from the
+    library's ``in_daily_sync`` flag (Today is a child of the library)."""
+    d = _default()
+    p = _path()
+    if p.exists():
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                d["auto_sync_enabled"] = bool(data.get("auto_sync_enabled", False))
+                d["last_auto_sync_date"] = str(data.get("last_auto_sync_date", "") or "")
+                d["fda_nudge_dismissed"] = bool(data.get("fda_nudge_dismissed", False))
+        except Exception:
+            pass
+    d["pairs"] = _daily_pairs_from_library()
+    return d
+
+
+_SETTING_KEYS = ("auto_sync_enabled", "last_auto_sync_date", "fda_nudge_dismissed")
 
 
 def _save(data: dict) -> None:
+    # SETTINGS ONLY - the daily course selection lives on the library's
+    # in_daily_sync flag, never in this file (load_today_config injects it live,
+    # so writing it back would create the stale copy this refactor removed).
+    out = {k: data.get(k, _default()[k]) for k in _SETTING_KEYS}
     p = _path()
     tmp = p.with_suffix(".tmp")
     try:
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+            json.dump(out, f, indent=2, ensure_ascii=False)
             f.flush()
             try:
                 os.fsync(f.fileno())
@@ -138,37 +166,41 @@ def set_fda_nudge_dismissed(dismissed: bool = True) -> None:
     _update(fda_nudge_dismissed=bool(dismissed))
 
 
-def _dedupe(pairs: list[dict]) -> list[dict]:
-    """Drop duplicates by (course_id, local_folder), preserving first-seen order."""
-    seen: set = set()
-    out: list[dict] = []
+def set_today_pairs(pairs: list[dict]) -> None:
+    """Replace the daily-sync set with *pairs* by flipping ``in_daily_sync`` on
+    the library. Only SAVED pairs can be in the daily set (Today is a child of
+    the library); a selection for a link that somehow isn't saved yet is claimed
+    into the library first, so the user's choice is never silently dropped."""
+    import core.library as library
+    want = set()
     for p in pairs:
         np = _norm_pair(p)
-        if not np:
-            continue
-        sig = (np["course_id"], np["local_folder"])
-        if sig in seen:
-            continue
-        seen.add(sig)
-        out.append(np)
-    return out
-
-
-def set_today_pairs(pairs: list[dict]) -> None:
-    """Replace the curated daily-sync set with *pairs* (deduped, normalised)."""
-    _update(pairs=_dedupe(pairs))
+        if np:
+            want.add(library.link_key(np["course_id"], np["local_folder"]))
+    with _lock:
+        data = library.load_library()
+        have = {library.link_key(p["course_id"], p["local_folder"]): p for p in data["pairs"]}
+        # turn OFF pairs no longer selected
+        for key, rec in have.items():
+            if rec.get("in_daily_sync") and key not in want:
+                library.set_daily(rec["id"], False)
+        # turn ON selected pairs, claiming any that aren't saved yet
+        for p in pairs:
+            np = _norm_pair(p)
+            if not np:
+                continue
+            rec = library.pair_for(np["course_id"], np["local_folder"])
+            pid = rec["id"] if rec else library.save_pair(
+                np["course_id"], np["local_folder"], np["course_name"], standalone=True)
+            library.set_daily(pid, True)
 
 
 def remove_today_pair(course_id, local_folder) -> None:
-    """Remove a single pair from the curated set by its signature."""
-    with _lock:
-        data = load_today_config()
-        data["pairs"] = [
-            p for p in data.get("pairs", [])
-            if not (p.get("course_id") == course_id
-                    and p.get("local_folder") == local_folder)
-        ]
-        _save(data)
+    """Drop one pair from the daily set (clears its ``in_daily_sync`` flag)."""
+    import core.library as library
+    rec = library.pair_for(course_id, local_folder)
+    if rec is not None:
+        library.set_daily(rec["id"], False)
 
 
 def mark_auto_synced(date_str: str) -> None:

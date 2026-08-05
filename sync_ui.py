@@ -26,7 +26,7 @@ from shared.components import (
     SVG_FOLDER_YELLOW, SVG_CLOCK, SVG_SAVE_COLORFUL, SVG_COURSE_PILL,
 )
 from core.sync_manager import SyncManager, SavedGroupsManager
-from core.pair_labels import canvas_name_label_index, label_for, pair_display
+from core.pair_labels import canvas_name_label_index, label_for, label_for_id, pair_display
 from shared.helpers import (
     esc,
     open_folder,
@@ -66,6 +66,9 @@ logger = logging.getLogger(__name__)
 # One line under each sync action. Third person ("Compares…", "Downloads…") so
 # each reads as what the button will do, not as an instruction - these two are
 # the hard choice on this page and their names alone don't separate them.
+# Rendered in a row of their OWN after the sticky action bar (never inside it),
+# so they reveal under the buttons only as the bar releases into place - exactly
+# like the download page's Custom/Quick captions. See the caption block below.
 _ANALYZE_HINT = "Compares with Canvas, then you pick what to download"
 _QUICK_SYNC_HINT = "Downloads every new file and update in one click"
 
@@ -634,17 +637,23 @@ def history_course_display_names(entry: dict, name_labels: dict | None = None) -
 
     for g in (entry.get('synced_groups') or []):
         if isinstance(g, dict) and g.get('files'):
-            _add(label_for(g.get('course_id'), g.get('local_folder'))
+            _add(label_for_id(g.get('saved_id'))
+                 or label_for(g.get('course_id'), g.get('local_folder'))
                  or friendly_course_name(g.get('course_name') or '') or None)
     if out:
         return out
 
     for sig in (entry.get('course_sigs') or []):
         try:
-            cid, folder, cname = sig
-        except (TypeError, ValueError):
+            cid, folder, cname = sig[0], sig[1], sig[2]
+        except (TypeError, ValueError, IndexError):
             continue
-        _add(label_for(cid, folder) or friendly_course_name(cname or '') or None)
+        # 4th element (this version on) is the STABLE saved-pair id: resolves the
+        # user's name even if the folder was moved after the run. Older entries
+        # have only three, so this is optional.
+        sid = sig[3] if isinstance(sig, (list, tuple)) and len(sig) > 3 else None
+        _add(label_for_id(sid) or label_for(cid, folder)
+             or friendly_course_name(cname or '') or None)
     if out:
         return out
 
@@ -663,6 +672,62 @@ def history_course_display_names(entry: dict, name_labels: dict | None = None) -
              or name_labels.get(friendly.strip().casefold())
              or friendly)
     return out
+
+
+def _clear_bulk_add_state():
+    """Drop any in-progress bulk multi-folder add state. Called when starting a
+    fresh single "Add Course" so a lingering queue can never mislabel a normal
+    add as a bulk one. Keys mirror ui.sync_dialogs / state_registry."""
+    for _k in ('_bulk_folders_raw', '_bulk_total', '_bulk_index',
+               '_bulk_folder_queue'):
+        st.session_state.pop(_k, None)
+
+
+def _inject_ctrl_remove_bridge():
+    """Ctrl/Cmd+click a pair's Remove button to remove ALL pairs at once.
+
+    Streamlit buttons never expose the click's modifier keys to Python, so the
+    gesture is detected in JS: a capture-phase ``click`` listener on
+    ``window.parent.document`` cancels the normal single-remove when a modifier
+    is held and instead clicks the hidden "remove all" button (a real st.button,
+    so the removal still routes through Streamlit).
+
+    Follows the CLAUDE.md ``components.html`` rules: the iframe is rebuilt each
+    rerun and a listener from a dead realm silently stops firing, so this
+    re-binds a fresh listener every injection (removing the previous one first)
+    and keeps its state on ``window.parent``. It also stamps each Remove button
+    with a hover hint so the gesture is discoverable without a nagging tooltip.
+    """
+    import streamlit.components.v1 as components
+    components.html(
+        """<script>
+(function(){
+  var win = window.parent, doc = win.document;
+  var reg = win._cdCtrlRemove || (win._cdCtrlRemove = {handler:null});
+  var REMSEL = 'div[class*="st-key-remove_pair_"]';
+  var ALLSEL = 'div[class*="st-key-remove_all_pairs_hidden"] button';
+  if (reg.handler) { try { doc.removeEventListener('click', reg.handler, true); } catch(_e){} }
+  reg.handler = function(e){
+    var btn = e.target && e.target.closest ? e.target.closest(REMSEL) : null;
+    if (!btn) return;
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      var all = doc.querySelector(ALLSEL);
+      if (all) all.click();
+    }
+  };
+  doc.addEventListener('click', reg.handler, true);
+  try {
+    var mac = (win.navigator.platform || '').toLowerCase().indexOf('mac') !== -1;
+    var hint = (mac ? 'Cmd' : 'Ctrl') + '+click to remove ALL courses from the list';
+    var btns = doc.querySelectorAll(REMSEL + ' button');
+    for (var i = 0; i < btns.length; i++) { btns[i].title = hint; }
+  } catch(_e){}
+})();
+</script>""",
+        height=0,
+    )
 
 
 def _sync_pairs_section(courses, course_names, course_options):
@@ -709,6 +774,17 @@ def _sync_pairs_section(courses, course_names, course_options):
     # their styling. st.markdown injects into the main DOM and survives the dialog rerun.
     # (CLAUDE.md "Headless Injection Rule" - ghost-box margin is killed by global.css.)
     st.markdown(f"""<style>
+    /* The Ctrl/Cmd+click "remove all" target - a real button parked off-screen.
+       Still receives programmatic .click() (which ignores visibility). */
+    div[class*="st-key-remove_all_pairs_hidden"] {{
+        position: absolute !important;
+        left: -9999px !important;
+        top: 0 !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
+    }}
+
     /* General styling for the 4 action buttons - shared light-grey resting state */
     div[class*="st-key-open_folder_"] button,
     div[class*="st-key-edit_pair_"] button,
@@ -947,6 +1023,12 @@ def _sync_pairs_section(courses, course_names, course_options):
                     # actually chose one, and then this card renders exactly as
                     # it always has.
                     pair_label, display_name = pair_display(pair)
+                    # A missing folder does NOT drop the name: a moved folder or a
+                    # disconnected drive is temporary, and showing the user's own
+                    # "Macro" next to the amber "folder missing" notice is more
+                    # recognisable than reverting to the raw Canvas name. The name
+                    # is forgotten ONLY by deleting the saved pair in the hub
+                    # (2026-08-03 rule: kept for reuse, forgotten only via the hub).
                     folder_display = short_path(pair['local_folder'])
 
                     # Pre-compute save state for inline button
@@ -1082,6 +1164,21 @@ def _sync_pairs_section(courses, course_names, course_options):
                 _remove_pairs_by_signature(signatures)
                 st.session_state.pop("_ignored_files_cache", None)
                 st.rerun(scope="app")
+
+            # Hidden "remove all" button, clicked programmatically by the
+            # Ctrl/Cmd+click bridge below when the user modifier-clicks any
+            # Remove button. It is a real st.button so the removal routes through
+            # Streamlit exactly like a normal Remove; CSS parks it off-screen.
+            if st.button("Remove all courses", key="remove_all_pairs_hidden"):
+                _all_sigs = [{'course_id': p.get('course_id'),
+                              'local_folder': p.get('local_folder')} for p in sync_pairs]
+                st.session_state['pending_toast'] = (
+                    f"Removed all {len(sync_pairs)} courses from Sync List")
+                _remove_pairs_by_signature(_all_sigs)
+                st.session_state.pop("_ignored_files_cache", None)
+                st.rerun(scope="app")
+            _inject_ctrl_remove_bridge()
+
             if st.session_state.get('pending_sync_folder') is not None and st.session_state.get('editing_pair_idx') is None:
                 _render_pending_folder_ui(courses, course_names, course_options)
             else:
@@ -1115,6 +1212,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                             st.session_state['pending_sync_folder'] = ""
                             st.session_state['sync_selected_course_id'] = None
                             st.session_state.pop('editing_pair_idx', None)
+                            _clear_bulk_add_state()
                             st.rerun(scope="app")
 
                     with col_save:
@@ -1141,6 +1239,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                             st.session_state['pending_sync_folder'] = ""
                             st.session_state['sync_selected_course_id'] = None
                             st.session_state.pop('editing_pair_idx', None)
+                            _clear_bulk_add_state()
                             st.rerun(scope="app")
 
                     pad_slot_children(1)   # the columns row is child 1 of 5
@@ -1373,12 +1472,13 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     # (7) Removed "Select Folders to Sync" header - wizard is enough context.
 
-    # Fetch courses - already edited with .is_favorite by fetch_courses()
-    courses = fetch_courses_fn(
-        st.session_state['api_token'],
-        st.session_state['api_url'],
-    )
-    
+    # Fetch courses - already edited with .is_favorite by fetch_courses().
+    # Via the shared handler so a dead token here routes to the reconnect screen
+    # and a network failure shows a calm retry screen - never a red traceback on
+    # the sync page (the same treatment the download course list gets).
+    from shared.components import resolve_courses_or_stop
+    courses = resolve_courses_or_stop(fetch_courses_fn, retry_key="sync_courses_conn_retry")
+
     # 1. Generate base friendly names
     # We want "Friendly Name" usually, but if two courses have same friendly name,
     # we must disambiguate so the user can select the right one.
@@ -1511,205 +1611,217 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
 
     # Returns which dialog (if any) the list's buttons asked for. Opened at the
     # very END of this function, never here - see the note at that call site.
-    _pending_list_dialog = _sync_pairs_section(courses, course_names, course_options) or {}
+    with st.container():  # sticky-bar scope: bounds the action bar so it lands above Sync History
+        _pending_list_dialog = _sync_pairs_section(courses, course_names, course_options) or {}
 
-    # Read sync_pairs here so the Analyze/Quick Sync buttons below can check it.
-    # The fragment may have mutated session state (add/remove via scope="app" reruns).
-    sync_pairs = st.session_state.get('sync_pairs', [])
+        # Read sync_pairs here so the Analyze/Quick Sync buttons below can check it.
+        # The fragment may have mutated session state (add/remove via scope="app" reruns).
+        sync_pairs = st.session_state.get('sync_pairs', [])
 
-    # Heads-up directly under the sync list: a course here is configured to create
-    # Panopto Transcripts/Subtitles but the transcription engine/model isn't ready
-    # (e.g. the model was deleted after setup). Offers one-click setup; clears the
-    # instant a model is installed. Shared renderer with the sync-review notice.
-    from shared.components import render_transcription_setup_notice
-    render_transcription_setup_notice(
-        _sync_pairs_want_transcription(sync_pairs),
-        key="sync_list_setup_tx",
-    )
-
-    # --- (5) Analyze + Quick Sync action buttons ---
-
-    # ----- State-aware guardrails for Analyze / Quick Sync buttons -----
-    _has_missing_folders = False
-    _missing_folder_names = []
-    if sync_pairs:
-        for p in sync_pairs:
-            if not Path(p['local_folder']).exists():
-                _has_missing_folders = True
-                _missing_folder_names.append(short_path(p['local_folder']))
-
-    _can_sync = bool(sync_pairs) and not _has_missing_folders
-
-    # The tooltip carries ONLY the reason a button is unavailable. What each
-    # button does is a caption underneath it (_ANALYZE_HINT / _QUICK_SYNC_HINT)
-    # - a tooltip that fires every time you move to click a button you already
-    # understand reads as nagging, and these two are clicked constantly.
-    if not sync_pairs:
-        _blocked = "Add at least one course folder above first."
-    elif _has_missing_folders:
-        _blocked = "Can't sync - a folder is missing or disconnected. Fix or remove it first."
-    else:
-        _blocked = None
-
-    # Captions under the two buttons. Third person on purpose - they describe
-    # what the button will DO, which is the thing a user is actually choosing
-    # between here (the names alone don't separate "review first" from "just
-    # fetch it").
-    _show_hints = help_text_enabled()
-
-    # --- Amber notice cards (rendered ABOVE the buttons) ---
-    if sync_pairs and _has_missing_folders:
-        from ui.amber_notice import render_amber_notice
-        _folder_list = ", ".join(_missing_folder_names[:3])
-        _extra = f" (+{len(_missing_folder_names) - 3} more)" if len(_missing_folder_names) > 3 else ""
-        render_amber_notice(
-            f"Folder not found: {_folder_list}{_extra}",
-            detail="The folder may have been moved, renamed, or the drive is disconnected. Edit or remove the pair to continue.",
+        # Heads-up directly under the sync list: a course here is configured to create
+        # Panopto Transcripts/Subtitles but the transcription engine/model isn't ready
+        # (e.g. the model was deleted after setup). Offers one-click setup; clears the
+        # instant a model is installed. Shared renderer with the sync-review notice.
+        from shared.components import render_transcription_setup_notice
+        render_transcription_setup_notice(
+            _sync_pairs_want_transcription(sync_pairs),
+            key="sync_list_setup_tx",
         )
 
-    # H-3: Aggregate mismatch notice - show ALL binding mismatches at once.
-    _mismatches = st.session_state.pop('sync_mismatched_pairs', [])
-    if _mismatches:
-        from ui.amber_notice import render_amber_notice
-        _mismatch_lines = "\n".join(
-            f"  • '{short_path(m['pair']['local_folder'])}' is bound to "
-            f"\"{esc(m['bound_course_name'])}\" but you selected "
-            f"\"{esc(m['requested_course_name'])}\""
-            for m in _mismatches
-        )
-        render_amber_notice(
-            f"{len(_mismatches)} folder{'s' if len(_mismatches) != 1 else ''} "
-            f"{'are' if len(_mismatches) != 1 else 'is'} bound to a different Canvas course.",
-            detail=(
-                f"{_mismatch_lines}\n\n"
-                "Edit each pair to point at the correct course, or remove and re-add it."
-            ),
-        )
+        # --- (5) Analyze + Quick Sync action buttons ---
 
-    # Ratios: 0.75 is ~75% of the previous 1.0 width (relative to page)
-    # gap="small" brings the OR closer
-    # vertical_alignment="top" so both captions start on the same line even
-    # when one wraps and the other does not.
-    col_analyze, col_or, col_quick, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small", vertical_alignment="top")
+        # ----- State-aware guardrails for Analyze / Quick Sync buttons -----
+        _has_missing_folders = False
+        _missing_folder_names = []
+        if sync_pairs:
+            for p in sync_pairs:
+                if not Path(p['local_folder']).exists():
+                    _has_missing_folders = True
+                    _missing_folder_names.append(short_path(p['local_folder']))
 
-    # Force identical styling for the two primary buttons in this section
-    # We target specific children of these columns to ensure parity.
-    st.html("""
-    <style>
-    /* Target buttons inside the main column containers - scoped to Analyze/Quick Sync */
-    div.st-key-btn_analyze_sync button[kind="primary"],
-    div.st-key-btn_quick_sync button[kind="primary"] {
-        height: 3.2em !important;
-        min-height: 3.2em !important;
-        border-radius: 6px !important;
-        width: 100% !important;
-        padding: 0px 10px !important; /* Balanced vertical padding */
-        float: none !important;
-        margin: 0 auto !important;
-    }
-    /* RECURSIVE CENTERING: START - Universal child selector */
-    /* This forces EVERY element inside the button to be flex-centered */
-    div.st-key-btn_analyze_sync button[kind="primary"] > div,
-    div.st-key-btn_analyze_sync button[kind="primary"] > div > p,
-    div.st-key-btn_quick_sync button[kind="primary"] > div,
-    div.st-key-btn_quick_sync button[kind="primary"] > div > p {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        text-align: center !important;
-        width: 100% !important;
-        height: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    /* Extra safety: Target * recursive if above fails */
-    div.st-key-btn_analyze_sync button[kind="primary"] *,
-    div.st-key-btn_quick_sync button[kind="primary"] * {
-        text-align: center !important;
-        align-items: center !important;
-        justify-content: center !important;
-    }
-    div.st-key-btn_analyze_sync button[kind="primary"] p,
-    div.st-key-btn_quick_sync button[kind="primary"] p {
-        font-size: 1rem !important;
-        font-weight: 600 !important;
-        line-height: 1.2 !important;
-    }
-    </style>
-    """)
+        _can_sync = bool(sync_pairs) and not _has_missing_folders
+
+        # The tooltip carries ONLY the reason a button is unavailable - a
+        # tooltip that fires every time you move to click a button you already
+        # understand reads as nagging, and these two are clicked constantly.
+        # What each button DOES is a caption underneath it (_ANALYZE_HINT /
+        # _QUICK_SYNC_HINT), rendered as its own row AFTER the sticky bar - never
+        # inside it - so it reveals under the buttons only as the bar releases.
+        if not sync_pairs:
+            _blocked = "Add at least one course folder above first."
+        elif _has_missing_folders:
+            _blocked = "Can't sync - a folder is missing or disconnected. Fix or remove it first."
+        else:
+            _blocked = None
+
+        # --- Amber notice cards (rendered ABOVE the buttons) ---
+        if sync_pairs and _has_missing_folders:
+            from ui.amber_notice import render_amber_notice
+            _folder_list = ", ".join(_missing_folder_names[:3])
+            _extra = f" (+{len(_missing_folder_names) - 3} more)" if len(_missing_folder_names) > 3 else ""
+            render_amber_notice(
+                f"Folder not found: {_folder_list}{_extra}",
+                detail="The folder may have been moved, renamed, or the drive is disconnected. Edit or remove the pair to continue.",
+            )
+
+        # H-3: Aggregate mismatch notice - show ALL binding mismatches at once.
+        _mismatches = st.session_state.pop('sync_mismatched_pairs', [])
+        if _mismatches:
+            from ui.amber_notice import render_amber_notice
+            _mismatch_lines = "\n".join(
+                f"  • '{short_path(m['pair']['local_folder'])}' is bound to "
+                f"\"{esc(m['bound_course_name'])}\" but you selected "
+                f"\"{esc(m['requested_course_name'])}\""
+                for m in _mismatches
+            )
+            render_amber_notice(
+                f"{len(_mismatches)} folder{'s' if len(_mismatches) != 1 else ''} "
+                f"{'are' if len(_mismatches) != 1 else 'is'} bound to a different Canvas course.",
+                detail=(
+                    f"{_mismatch_lines}\n\n"
+                    "Edit each pair to point at the correct course, or remove and re-add it."
+                ),
+            )
+
+        # Ratios: 0.75 is ~75% of the previous 1.0 width (relative to page)
+        # gap="small" brings the OR closer. vertical_alignment="top" keeps the
+        # two buttons and the "OR" separator on the same top edge.
+        col_analyze, col_or, col_quick, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small", vertical_alignment="top")
+
+        # Force identical styling for the two primary buttons in this section
+        # We target specific children of these columns to ensure parity.
+        st.html("""
+        <style>
+        /* Target buttons inside the main column containers - scoped to Analyze/Quick Sync */
+        div.st-key-btn_analyze_sync button[kind="primary"],
+        div.st-key-btn_quick_sync button[kind="primary"] {
+            height: 3.2em !important;
+            min-height: 3.2em !important;
+            border-radius: 6px !important;
+            width: 100% !important;
+            padding: 0px 10px !important; /* Balanced vertical padding */
+            float: none !important;
+            margin: 0 auto !important;
+        }
+        /* RECURSIVE CENTERING: START - Universal child selector */
+        /* This forces EVERY element inside the button to be flex-centered */
+        div.st-key-btn_analyze_sync button[kind="primary"] > div,
+        div.st-key-btn_analyze_sync button[kind="primary"] > div > p,
+        div.st-key-btn_quick_sync button[kind="primary"] > div,
+        div.st-key-btn_quick_sync button[kind="primary"] > div > p {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        /* Extra safety: Target * recursive if above fails */
+        div.st-key-btn_analyze_sync button[kind="primary"] *,
+        div.st-key-btn_quick_sync button[kind="primary"] * {
+            text-align: center !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        div.st-key-btn_analyze_sync button[kind="primary"] p,
+        div.st-key-btn_quick_sync button[kind="primary"] p {
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+            line-height: 1.2 !important;
+        }
+        </style>
+        """)
     
-    with col_analyze:
-        if st.button('Analyze, Review & Sync', type="primary",
-                     key="btn_analyze_sync",
-                     use_container_width=True,
-                     disabled=not _can_sync,
-                     help=_blocked):
-            # Nuclear reset of all cancel flags - stale flags from a previous download/sync
-            # would break the analysis loop on the very first iteration, producing zero results.
-            st.session_state['cancel_requested'] = False
-            st.session_state['sync_cancelled'] = False
-            st.session_state['sync_cancel_requested'] = False
-            st.session_state['download_cancelled'] = False
-            st.session_state['step'] = 4
-            st.session_state['download_status'] = 'analyzing'
-            st.session_state['analysis_pass'] = 1
-            st.session_state.pop('sync_quick_mode', None)
-            st.session_state.pop('qs_cancel_route', None)
-            # (No main_placeholder.empty() here any more - app.py renders the
-            # page in a plain container now. See the comment there: the
-            # st.empty() wrapper blanked the WHOLE PAGE for ~20ms on ~1.3% of
-            # reruns, and all it bought was a blank screen for the ~200ms
-            # before this st.rerun() replaced it anyway.)
-            st.rerun()
-        if _show_hints:
-            st.markdown(f"<div class='cd-action-hint'>{esc(_ANALYZE_HINT)}</div>",
-                        unsafe_allow_html=True)
-
-    with col_or:
-        st.markdown(f"<div class='cd-action-or' style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap; word-break:keep-all;'>OR</div>", unsafe_allow_html=True)
-
-    with col_quick:
-        if st.button('Quick Sync',
-                     key="btn_quick_sync",
-                     type="primary",
-                     use_container_width=True,
-                     disabled=not _can_sync,
-                     help=_blocked):
-            # Acceptable-use notice, ACTIVE trigger. Asked BEFORE the analysis
-            # starts because Quick Sync has no Review screen: it runs straight
-            # through to the sync, so there is no later point at which declining
-            # has anywhere to land (see _sync_pairs_want_panopto).
-            #
-            # No early return - the rest of the page must still render or its
-            # element indices shift under the modal. Withholding the status
-            # change holds the run on its own.
-            _qs_resume = {
-                'cancel_requested': False, 'sync_cancelled': False,
-                'sync_cancel_requested': False, 'download_cancelled': False,
-                'step': 4, 'download_status': 'analyzing',
-                'sync_quick_mode': True, 'qs_cancel_route': True,
-                'analysis_pass': 1,
-            }
-            if not _sync_pairs_want_panopto(sync_pairs) or require_panopto_notice(
-                    resume=_qs_resume):
-                clear_panopto_skip()
+        with col_analyze:
+            if st.button('Analyze, Review & Sync', type="primary",
+                         key="btn_analyze_sync",
+                         use_container_width=True,
+                         disabled=not _can_sync,
+                         help=_blocked):
                 # Nuclear reset of all cancel flags - stale flags from a previous download/sync
-                # would break the analysis loop on the very first iteration, producing zero results
-                # and causing Quick Sync to silently fall back to the Review page.
+                # would break the analysis loop on the very first iteration, producing zero results.
                 st.session_state['cancel_requested'] = False
                 st.session_state['sync_cancelled'] = False
                 st.session_state['sync_cancel_requested'] = False
                 st.session_state['download_cancelled'] = False
                 st.session_state['step'] = 4
                 st.session_state['download_status'] = 'analyzing'
-                st.session_state['sync_quick_mode'] = True
-                st.session_state['qs_cancel_route'] = True
                 st.session_state['analysis_pass'] = 1
-                # (See the matching note on the Analyze button above.)
+                st.session_state.pop('sync_quick_mode', None)
+                st.session_state.pop('qs_cancel_route', None)
+                # (No main_placeholder.empty() here any more - app.py renders the
+                # page in a plain container now. See the comment there: the
+                # st.empty() wrapper blanked the WHOLE PAGE for ~20ms on ~1.3% of
+                # reruns, and all it bought was a blank screen for the ~200ms
+                # before this st.rerun() replaced it anyway.)
                 st.rerun()
-        if _show_hints:
-            st.markdown(f"<div class='cd-action-hint'>{esc(_QUICK_SYNC_HINT)}</div>",
-                        unsafe_allow_html=True)
+
+        with col_or:
+            st.markdown(f"<div class='cd-action-or' style='text-align:center; font-weight:bold; color:{theme.TEXT_DIM}; font-size:0.9em; white-space:nowrap; word-break:keep-all;'>OR</div>", unsafe_allow_html=True)
+
+        with col_quick:
+            if st.button('Quick Sync',
+                         key="btn_quick_sync",
+                         type="primary",
+                         use_container_width=True,
+                         disabled=not _can_sync,
+                         help=_blocked):
+                # Acceptable-use notice, ACTIVE trigger. Asked BEFORE the analysis
+                # starts because Quick Sync has no Review screen: it runs straight
+                # through to the sync, so there is no later point at which declining
+                # has anywhere to land (see _sync_pairs_want_panopto).
+                #
+                # No early return - the rest of the page must still render or its
+                # element indices shift under the modal. Withholding the status
+                # change holds the run on its own.
+                _qs_resume = {
+                    'cancel_requested': False, 'sync_cancelled': False,
+                    'sync_cancel_requested': False, 'download_cancelled': False,
+                    'step': 4, 'download_status': 'analyzing',
+                    'sync_quick_mode': True, 'qs_cancel_route': True,
+                    'analysis_pass': 1,
+                }
+                if not _sync_pairs_want_panopto(sync_pairs) or require_panopto_notice(
+                        resume=_qs_resume):
+                    clear_panopto_skip()
+                    # Nuclear reset of all cancel flags - stale flags from a previous download/sync
+                    # would break the analysis loop on the very first iteration, producing zero results
+                    # and causing Quick Sync to silently fall back to the Review page.
+                    st.session_state['cancel_requested'] = False
+                    st.session_state['sync_cancelled'] = False
+                    st.session_state['sync_cancel_requested'] = False
+                    st.session_state['download_cancelled'] = False
+                    st.session_state['step'] = 4
+                    st.session_state['download_status'] = 'analyzing'
+                    st.session_state['sync_quick_mode'] = True
+                    st.session_state['qs_cancel_route'] = True
+                    st.session_state['analysis_pass'] = 1
+                    # (See the matching note on the Analyze button above.)
+                    st.rerun()
+
+        # Captions go AFTER the bar, in a row of their own - never inside the
+        # button columns above, which ARE the sticky bar (matched by the
+        # btn_analyze_sync key). Inside, their height was reserved in the pinned
+        # bar and they were pinned along with it; out here the bar is exactly as
+        # tall with help text on or off, and each caption scrolls into view under
+        # its own button as the bar releases into place at the end of scroll -
+        # exactly like the download page. Still inside the plain sticky-bar-scope
+        # container so the bar's containing block ends below them (above Sync
+        # History), and gated by Settings -> Show help text. Same column ratios,
+        # so each caption stays under its button. The `action_hints_` key prefix
+        # picks up the flush-under-the-bar spacing in global.css.
+        if help_text_enabled():
+            with st.container(key="action_hints_sync"):
+                _hc, _ho, _hq, _ = st.columns([0.75, 0.16, 0.75, 2.34], gap="small",
+                                               vertical_alignment="top")
+                with _hc:
+                    st.markdown(f"<div class='cd-action-hint'>{esc(_ANALYZE_HINT)}</div>",
+                                unsafe_allow_html=True)
+                with _hq:
+                    st.markdown(f"<div class='cd-action-hint'>{esc(_QUICK_SYNC_HINT)}</div>",
+                                unsafe_allow_html=True)
 
     # --- (6) Sync History (bottom of page) - the single collection point;
     # every resolvable file carries inline Open / Reveal actions + its path. ---
@@ -3226,11 +3338,28 @@ def _run_sync_panopto():
             elif kind == 'error':
                 err = kw.get('error')
                 if err is not None:
+                    _raw_name = str(getattr(err, 'item_name', '') or '').strip()
+                    _msg = str(getattr(err, 'message', err) or '').strip() or 'Unknown error'
+                    # Name the recording that failed, not the bare word "Panopto".
+                    # This used to store f"Panopto: {message}", so EVERY failed
+                    # recording rendered as "Panopto" in Sync History regardless
+                    # of which lecture it was - impossible to trace back to Canvas.
+                    # Sanitize the title the same way its saved folder is named:
+                    # that strips ": " (titles like "Forelæsningsvideo (1):
+                    # organisationsprojekt" are the norm), which the shared
+                    # "Error syncing NAME: reason" protocol that Sync History and
+                    # the completion screen both parse would otherwise mis-split.
+                    try:
+                        _name = cm._sanitize_filename(_raw_name) if _raw_name else ''
+                    except Exception:
+                        _name = _raw_name.replace(':', '')
+                    if not _name or _name == 'untitled':
+                        _name = 'Panopto recording'
                     _e = list(st.session_state.get('sync_errors', []))
-                    _e.append(f"Panopto: {getattr(err, 'message', err)}")
+                    _e.append(f"Error syncing {_name}: {_msg}")
                     st.session_state['sync_errors'] = _e
-                    dq.append(log_line('error', f"{getattr(err, 'item_name', '')}",
-                                       detail=str(getattr(err, 'message', err)))); _render()
+                    dq.append(log_line('error', _raw_name or _name,
+                                       detail=_msg)); _render()
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception:
@@ -3504,7 +3633,7 @@ def _run_sync_panopto():
         raise
     except Exception as e:
         logger.error(f"Sync Panopto pass crashed: {e}", exc_info=True)
-        progress('error', error=SimpleNamespace(item_name='Panopto', message=str(e)))
+        progress('error', error=SimpleNamespace(item_name='Panopto recordings', message=str(e)))
     finally:
         # Runs on the cancel-interrupt unwind too - see _record_pan_results.
         _record_pan_results()

@@ -364,6 +364,10 @@ def _build_synced_groups(sync_selections, synced_details, synced_actual_rels=Non
             'course_name': pair.get('course_name', ''),
             'course_id': pair.get('course_id'),
             'local_folder': str(course_root) if course_root is not None else '',
+            # The saved library pair id (if this pair references one), so history
+            # can resolve the user's name by the STABLE id even after the folder
+            # is later moved - see core.pair_labels.label_for_id.
+            'saved_id': pair.get('saved_id'),
             'files': files,
         })
     return groups
@@ -2003,6 +2007,7 @@ def run_sync():
                     course_sigs.append([
                         _hp.get('course_id'), _hp.get('local_folder', ''),
                         _hp.get('course_name', ''),
+                        _hp.get('saved_id'),   # STABLE id -> name survives a later folder move
                     ])
                     if pair_files:
                         synced_course_names.append(sel['res_data']['pair']['course_name'])

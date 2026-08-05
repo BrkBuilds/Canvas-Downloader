@@ -26,7 +26,8 @@ sys.path.insert(0, str(REPO))
 from shared.helpers import (  # noqa: E402
     LOCKED_FILE_ERROR_TYPE, LOCKED_FILE_REASON,
     LTI_STREAM_ERROR_TYPE, LTI_STREAM_REASON,
-    split_delivery_errors,
+    PANOPTO_UNAVAILABLE_ERROR_TYPE, PANOPTO_UNAVAILABLE_REASON,
+    declined_reason_sentence, split_delivery_errors,
 )
 
 
@@ -97,7 +98,7 @@ def test_the_sync_flow_classifies_its_own_sentences():
         "Error syncing slides.pptx: Connection reset",
     ])
     assert s["unresolvable"] == 2
-    assert s["reasons"] == {"locked": 1, "stream": 1, "other": 0}
+    assert s["reasons"] == {"locked": 1, "stream": 1, "unavailable": 0, "other": 0}
     assert s["retriable"] == 1
 
 
@@ -193,9 +194,62 @@ def test_a_None_entry_does_not_crash_or_go_silent():
 def test_an_empty_list_is_all_zeros():
     s = split_delivery_errors([])
     assert s == {"retriable": 0, "unresolvable": 0, "app": 0,
-                 "reasons": {"locked": 0, "stream": 0, "other": 0}}
+                 "reasons": {"locked": 0, "stream": 0, "unavailable": 0, "other": 0}}
 
 
 def test_None_instead_of_a_list_is_tolerated():
     """Called straight off session state, which can be unset on the first run."""
     assert split_delivery_errors(None)["retriable"] == 0
+
+
+# --------------------------------------------------------------------------
+# a deleted Panopto recording is a permanent decline, like a locked file
+# --------------------------------------------------------------------------
+
+def test_a_deleted_panopto_recording_object_is_not_a_failure():
+    """Download flow: the runner stamps PANOPTO_UNAVAILABLE_ERROR_TYPE, so the
+    completion card treats a gone recording like a locked file - reported, never
+    a retriable failure. (Real Panopto errors carry no filepath.)"""
+    s = split_delivery_errors([_Err(PANOPTO_UNAVAILABLE_ERROR_TYPE, filepath=None)])
+    assert s["retriable"] == 0 and s["app"] == 0
+    assert s["unresolvable"] == 1 and s["reasons"]["unavailable"] == 1
+
+
+def test_a_deleted_panopto_recording_sentence_is_not_a_failure():
+    """Sync flow: the string the handler stores carries the shared reason, so it
+    classifies the same way the download object does - while a genuine failure
+    beside it still colours the card."""
+    s = split_delivery_errors([
+        f"Error syncing Forelaesning 3: {PANOPTO_UNAVAILABLE_REASON}",
+        "Error syncing slides.pptx: Connection reset",
+    ])
+    assert s["unresolvable"] == 1 and s["reasons"]["unavailable"] == 1
+    assert s["retriable"] == 1
+
+
+def test_the_panopto_constant_is_what_the_producers_actually_write():
+    """The classifier matches on the exact constant, so a producer that inlined
+    its own wording would silently reclassify every deleted recording as a
+    retriable failure - the same trap the locked/stream check above guards."""
+    stream_src = (REPO / "panopto" / "stream.py").read_text(encoding="utf-8")
+    assert "return PANOPTO_UNAVAILABLE_REASON" in stream_src
+    runner_src = (REPO / "panopto" / "runner.py").read_text(encoding="utf-8")
+    assert "PANOPTO_UNAVAILABLE_ERROR_TYPE" in runner_src
+
+
+def test_a_run_whose_only_problem_is_deleted_recordings_is_a_success():
+    """The headline: a daily sync that downloaded its lectures fine but hit two
+    deleted ones is GREEN, not amber. This was the reported case."""
+    assert _variant(13, unresolvable=2) == "success"
+
+
+def test_nothing_downloaded_and_every_recording_deleted_is_not_up_to_date():
+    assert _variant(0, unresolvable=2) == "nothing-downloadable"
+
+
+def test_the_declined_sentence_names_deleted_recordings():
+    out = declined_reason_sentence(
+        {"locked": 0, "stream": 0, "unavailable": 2, "other": 0}, 2)
+    assert "2 Panopto recordings are no longer available" in out
+    one = declined_reason_sentence({"unavailable": 1}, 1)
+    assert "1 Panopto recording is no longer available" in one

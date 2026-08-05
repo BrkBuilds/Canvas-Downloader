@@ -55,63 +55,16 @@ def unreachable_today_pairs() -> list[dict]:
 
 
 def reconcile_daily_list_with_hub() -> int:
-    """Re-point or drop daily-sync courses to match Saved Groups & Pairs.
+    """No-op since the Today/library unification (kept for its call sites).
 
-    The daily list stores standalone COPIES of each pair so the daily sync is
-    self-contained. That is what let it hold courses the user had already
-    deleted from the hub: the copies outlived their source, and with their
-    folders gone too they became permanently unsyncable entries that could not
-    be fixed from anywhere.
-
-    The hub is the source of truth for what a saved pair IS, so after any hub
-    edit this reconciles the copies against it:
-
-    * the pair still exists with the same folder -> untouched;
-    * the course is still in the hub under a DIFFERENT folder (the user used
-      "Edit Pair" to re-link it) -> the daily copy adopts the new folder, so
-      re-linking in one place fixes it everywhere;
-    * the course is no longer in the hub at all (pair/group deleted) -> dropped
-      from the daily list too. Deleting a saved pair is the user saying they are
-      done with that course; it must not linger in a second list.
-
-    Returns the number of daily entries changed (re-pointed or dropped).
+    The daily set used to be a self-contained COPY of hub pairs that drifted, so
+    this walked the hub and re-pointed or dropped the copies to match. There is
+    no copy any more: the daily set is the library's own ``in_daily_sync`` flag
+    (``core.library``), so a hub re-link or delete is reflected instantly and
+    there is nothing to reconcile. Deleting a library pair clears its flag with
+    it; re-linking edits the same record. Returns 0 (nothing changed).
     """
-    from core.sync_manager import SavedGroupsManager
-    from core.today_store import load_today_config, set_today_pairs
-    from shared.helpers import get_config_dir
-
-    daily = load_today_config().get("pairs", [])
-    if not daily:
-        return 0
-
-    # course_id -> folder, across every saved group and pair in the hub.
-    hub_folders: dict = {}
-    hub_sigs: set = set()
-    try:
-        for group in SavedGroupsManager(get_config_dir()).load_groups():
-            for p in group.get("pairs", []) or []:
-                cid, folder = p.get("course_id"), p.get("local_folder")
-                if not folder:
-                    continue
-                hub_sigs.add((cid, folder))
-                hub_folders.setdefault(cid, folder)
-    except Exception:
-        # Never let a hub read failure silently empty the user's daily list.
-        return 0
-
-    out, changed = [], 0
-    for p in daily:
-        sig = (p.get("course_id"), p.get("local_folder"))
-        if sig in hub_sigs:
-            out.append(p)
-        elif p.get("course_id") in hub_folders:
-            out.append({**p, "local_folder": hub_folders[p["course_id"]]})
-            changed += 1
-        else:
-            changed += 1   # gone from the hub -> gone from the daily list
-    if changed:
-        set_today_pairs(out)
-    return changed
+    return 0
 
 
 def should_auto_sync() -> bool:
