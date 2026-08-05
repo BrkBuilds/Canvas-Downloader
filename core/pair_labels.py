@@ -78,9 +78,6 @@ progress UI, so this must not depend on a ScriptRunContext.
 
 from __future__ import annotations
 
-import os
-import threading
-
 from shared.helpers import friendly_course_name, norm_folder_key
 
 # A label is a TITLE. It becomes the heading on the sync-list card, the review
@@ -96,6 +93,7 @@ __all__ = [
     "build_label_index",
     "label_index",
     "label_for",
+    "label_for_id",
     "label_for_pair",
     "pair_display",
     "pair_display_name",
@@ -103,9 +101,6 @@ __all__ = [
     "canvas_name_label_index",
 ]
 
-_memo_lock = threading.Lock()
-# (stat_signature, index) - see the CACHING note above.
-_memo: tuple | None = None
 
 
 # ── identity ─────────────────────────────────────────────────────────────────
@@ -177,39 +172,19 @@ def build_label_index(groups) -> dict:
     return idx
 
 
-def _groups_stat(path) -> tuple:
-    """Cheap change signature for the groups file. ``()`` when unreadable."""
-    try:
-        st_ = os.stat(path)
-        return (st_.st_mtime_ns, st_.st_size)
-    except OSError:
-        return ()
-
-
 def label_index(config_dir: str | None = None) -> dict:
-    """The live ``{pair_key: label}`` map, memoised on the groups file's mtime.
+    """The live ``{pair_key: label}`` map. Delegates to :mod:`core.library`, the
+    single source of truth, which memoises on the library file's mtime - so a
+    hub write invalidates it by construction, with no invalidate() to forget.
 
-    Total: any failure to read the hub degrades to "no labels", i.e. every
+    Total: any failure to read the library degrades to "no labels", i.e. every
     surface shows the Canvas name it showed before this feature existed. A
-    naming feature must never be able to break a sync screen.
+    naming feature must never be able to break a sync screen. ``config_dir`` is
+    accepted for back-compat but ignored (the library resolves it itself).
     """
-    global _memo
     try:
-        from core.sync_manager import SavedGroupsManager
-        if config_dir is None:
-            from shared.helpers import get_config_dir
-            config_dir = get_config_dir()
-        mgr = SavedGroupsManager(config_dir)
-        sig = (str(mgr.groups_path),) + _groups_stat(mgr.groups_path)
-
-        with _memo_lock:
-            if _memo is not None and _memo[0] == sig and sig[1:]:
-                return _memo[1]
-
-        idx = build_label_index(mgr.load_groups())
-        with _memo_lock:
-            _memo = (sig, idx)
-        return idx
+        import core.library as library
+        return library.name_index()
     except Exception:
         return {}
 
@@ -229,27 +204,19 @@ def canvas_name_label_index(config_dir: str | None = None) -> dict:
     """
     out: dict = {}
     try:
-        from core.sync_manager import SavedGroupsManager
-        if config_dir is None:
-            from shared.helpers import get_config_dir
-            config_dir = get_config_dir()
-        idx = label_index(config_dir)
+        import core.library as library
+        idx = library.name_index()
         if not idx:
             return out
-        for record in SavedGroupsManager(config_dir).load_groups():
-            if not isinstance(record, dict):
+        for p in library.pairs():
+            label = idx.get(pair_key(p.get("course_id"), p.get("local_folder")))
+            if not label:
                 continue
-            for p in record.get("pairs") or []:
-                if not isinstance(p, dict):
-                    continue
-                label = idx.get(pair_key(p.get("course_id"), p.get("local_folder")))
-                if not label:
-                    continue
-                raw = (p.get("course_name") or "").strip()
-                for variant in (raw, friendly_course_name(raw) or ""):
-                    key = variant.strip().casefold()
-                    if key:
-                        out.setdefault(key, label)
+            raw = (p.get("course_name") or "").strip()
+            for variant in (raw, friendly_course_name(raw) or ""):
+                key = variant.strip().casefold()
+                if key:
+                    out.setdefault(key, label)
     except Exception:
         return {}
     return out
@@ -262,6 +229,23 @@ def label_for(course_id, local_folder) -> str:
     if not local_folder:
         return ""
     return label_index().get(pair_key(course_id, local_folder), "")
+
+
+def label_for_id(saved_id) -> str:
+    """The user's name for a saved pair by its STABLE id, or ``''``.
+
+    Unlike :func:`label_for`, this survives a folder MOVE - the id does not
+    change when the pair is re-linked - which is why sync history records the id
+    and resolves through here first. ``''`` when the id is falsy or the pair has
+    since been deleted (then the caller falls back to the Canvas name)."""
+    if not saved_id:
+        return ""
+    try:
+        import core.library as library
+        p = library.get_pair(saved_id)
+        return (p.get("name") or "").strip() if p else ""
+    except Exception:
+        return ""
 
 
 def label_for_pair(pair: dict) -> str:

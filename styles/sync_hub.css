@@ -716,6 +716,14 @@ div[class*="st-key-sync_pair_card_"] {
     padding: 5px 12px 20px 12px !important;
     overflow: visible !important;
     position: relative;
+    /* Make each card its own stacking context so the absolutely-positioned
+       Save-as-Pair button below (z-index: 99) is SCOPED to the card instead of
+       competing in the root context. Without this, `position: relative` with
+       z-index:auto is NOT a stacking context, so the button's z:99 beat the
+       sticky Analyze/Quick-Sync bar (z:20) and poked through it while a card
+       scrolled underneath the pinned bar. The bar must stay the topmost layer;
+       isolating the card keeps the whole card - button included - below it. */
+    isolation: isolate;
 }
 
 div[class*="st-key-sync_pair_card_"][data-testid="stVerticalBlock"] {

@@ -44,6 +44,31 @@ def _strip_label(pair: dict) -> dict:
     return {k: v for k, v in pair.items() if k != 'label'}
 
 
+def _with_saved_id(pair: dict) -> dict:
+    """Tag a pair with the id of the saved library pair it references, so the
+    working sync list follows a later hub rename / re-link by that STABLE id
+    (folder moves included). A raw pair with no saved match is left untouched.
+
+    Persisting the id is what makes a re-link followable: until an entry has been
+    written through here (or through ``_resolve_active_pairs`` on any
+    ``atomic_update_sync_pairs`` write), it is bound to its library pair only by
+    LINK, so a hub re-link that moves the folder before any write breaks that
+    link and the entry degrades to a raw copy (keeps its last-known folder/name)
+    rather than following. It self-heals on the next add / remove / sync, all of
+    which persist the id. In practice writes are frequent (every sync stamps
+    last_synced), so the window is small."""
+    if not isinstance(pair, dict) or pair.get('saved_id'):
+        return pair
+    try:
+        import core.library as library
+        p = library.pair_for(pair.get('course_id'), pair.get('local_folder'))
+        if p is not None:
+            return {**pair, 'saved_id': p['id']}
+    except Exception:
+        pass
+    return pair
+
+
 def _validate_pair_folder(folder: str) -> bool:
     """Return False if folder is an obviously dangerous system root."""
     try:
@@ -76,7 +101,7 @@ def load_persistent_pairs() -> None:
 
 def add_pair(new_pair: dict) -> None:
     """Add a single sync pair (deduplicates by course_id + local_folder)."""
-    new_pair = _strip_label(new_pair)
+    new_pair = _with_saved_id(_strip_label(new_pair))
     target_folder = new_pair.get('local_folder', '')
     if not _validate_pair_folder(target_folder):
         st.toast(f"Folder rejected - system folders cannot be used as sync folders: {target_folder}", icon="⚠️")
@@ -96,7 +121,7 @@ def add_pair(new_pair: dict) -> None:
 def add_pairs_batch(new_pairs_list: list[dict]) -> None:
     """Add multiple sync pairs in a single atomic operation."""
     rejected = []
-    new_pairs_list = [_strip_label(p) for p in new_pairs_list]
+    new_pairs_list = [_with_saved_id(_strip_label(p)) for p in new_pairs_list]
     def modifier(fresh_pairs):
         for new_pair in new_pairs_list:
             target_cid = new_pair.get('course_id')

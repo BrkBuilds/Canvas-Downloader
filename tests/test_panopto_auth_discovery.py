@@ -591,3 +591,305 @@ def test_delivery_error_messages_are_html_stripped():
     assert "<" not in cleaned and ">" not in cleaned
     assert cleaned == ("This session isn't available. It may have been "
                        "deleted. See other videos")
+
+
+# ── 8. vanity / on-prem host detection ───────────────────────────────────────
+#
+# An institution can front Panopto with a vanity CNAME (video.university.edu) or
+# self-host it on a fully custom domain - the hostname then carries no "panopto"
+# at all, but the "/Panopto/" product route in the PATH does. Matching only the
+# host used to return panopto_base=None for these tenants, so the runner
+# concluded "no Panopto session" and every download failed even though the LTI
+# session was valid. Detection must key off host OR the /Panopto/ route, and must
+# never fire on the query string (a Canvas OIDC hop carries the encoded Panopto
+# target in redirect_uri).
+
+def test_panopto_base_from_cloud_hosts():
+    # US and EU cloud tenants, plus a plain panopto.<uni> host: matched by host.
+    assert (pauth.panopto_base_from_url(
+        f"https://cbs.hosted.panopto.com/Panopto/Pages/Viewer.aspx?id={GUID_A}")
+        == "https://cbs.hosted.panopto.com")
+    assert (pauth.panopto_base_from_url(
+        f"https://uni.cloud.panopto.eu/Panopto/Pages/Embed.aspx?id={GUID_A}")
+        == "https://uni.cloud.panopto.eu")
+    assert (pauth.panopto_base_from_url(
+        "https://panopto.university.edu/Panopto/Pages/Sessions/List.aspx")
+        == "https://panopto.university.edu")
+
+
+def test_panopto_base_from_vanity_and_onprem_hosts():
+    # THE FIX: host carries no "panopto"; the /Panopto/ route in the PATH is the
+    # only signal. Both a vanity CNAME and an on-prem custom domain must resolve.
+    assert (pauth.panopto_base_from_url(
+        f"https://video.university.edu/Panopto/Pages/Viewer.aspx?id={GUID_A}")
+        == "https://video.university.edu")
+    assert (pauth.panopto_base_from_url(
+        "https://lecturecapture.uni.ac.uk/Panopto/Pages/Embed.aspx"
+        f"?id={GUID_A}&v=1")
+        == "https://lecturecapture.uni.ac.uk")
+    # Case-insensitive on the route, and a reverse-proxy path prefix is tolerated.
+    assert (pauth.panopto_base_from_url(
+        "https://media.uni.edu/lms/panopto/Pages/Viewer.aspx")
+        == "https://media.uni.edu")
+
+
+def test_panopto_base_ignores_panopto_in_query_only():
+    # A Canvas OIDC/authorize hop carries the encoded Panopto target in its
+    # QUERY, not its path. It is NOT a Panopto landing - matching it here would
+    # break the handshake one hop early (the regression guarded in test #6).
+    authorize = ("https://canvas.university.edu/api/lti/authorize?redirect_uri="
+                 "https%3A%2F%2Fvideo.uni.edu%2FPanopto%2FLTI%2FLTI.aspx"
+                 f"&custom_context_delivery={GUID_B}")
+    assert pauth.panopto_base_from_url(authorize) is None
+
+
+def test_panopto_base_none_for_non_panopto_and_garbage():
+    # A vanity host OUTSIDE the /Panopto/ route (e.g. its SSO login page) is not
+    # yet a Panopto landing; unrelated hosts and junk are never Panopto.
+    assert pauth.panopto_base_from_url(
+        "https://video.university.edu/idp/login?target=x") is None
+    assert pauth.panopto_base_from_url("https://canvas.university.edu/courses/1") is None
+    # "panopto" as a mere path substring on an unrelated host is not the route.
+    assert pauth.panopto_base_from_url("https://example.com/panoptolike/thing") is None
+    assert pauth.panopto_base_from_url("") is None
+    assert pauth.panopto_base_from_url(None) is None
+    assert pauth.panopto_base_from_url("not a url") is None
+
+
+def test_lti_launch_resolves_on_vanity_host(monkeypatch):
+    """End-to-end: an institution whose Panopto host carries no "panopto" (a
+    vanity CNAME) must complete the handshake and hand the runner a usable
+    session, base and id. Before the path-marker fix this returned base=None and
+    the whole course failed with 'no Panopto session' despite valid cookies."""
+    tool_page = "https://canvas.university.edu/courses/1/external_tools/42"
+    vanity_oidc = "https://video.university.edu/Panopto/oidc"
+    vanity_viewer = (
+        f"https://video.university.edu/Panopto/Pages/Viewer.aspx?id={GUID_A}")
+
+    session = _FakeSession([
+        # GET launch -> Canvas tool page (host has no "panopto", path is not the
+        # product route) -> must NOT be treated as terminal; post the form.
+        _FakeResp(tool_page, _form(vanity_oidc, state="1")),
+        # POST lands on the vanity Panopto viewer: host has no "panopto" either,
+        # only the /Panopto/ path proves it. This is the hop that used to fail.
+        _FakeResp(vanity_viewer, ""),
+    ])
+    _patch_http(monkeypatch, session)
+
+    s, final_url, vid, base, folder = pauth.lti_launch(
+        "https://canvas.university.edu/api/sessionless_launch", "tok")
+
+    assert len(session.posts) == 1              # tool page posted, not broken on
+    assert vid == GUID_A
+    assert base == "https://video.university.edu"
+    assert folder is None
+    assert s is session                         # the authed session is returned
+
+
+def test_lti_launch_vanity_folder_landing_surfaces_folder_id(monkeypatch):
+    """A vanity host whose per-item launch lands on the self-posting course
+    session list must break on the self-post and surface the folder id - the
+    same folder-landing discovery path cloud hosts get, previously unreachable
+    for vanity tenants (the host was never recognised as Panopto)."""
+    list_page = "https://video.university.edu/Panopto/Pages/Sessions/List.aspx"
+    body = _form("./List.aspx", query="") + f'<script>"folderId": "{FOLDER}"</script>'
+
+    session = _FakeSession([_FakeResp(list_page, body)])
+    _patch_http(monkeypatch, session)
+
+    s, final_url, vid, base, folder = pauth.lti_launch(
+        "https://canvas.university.edu/api/sessionless_launch", "tok")
+
+    assert session.posts == []                  # never posts the self-form
+    assert vid is None
+    assert base == "https://video.university.edu"
+    assert folder == FOLDER
+
+
+# ── 9. course-folder fallback: nav-tab-only courses + multiple deployments ────
+#
+# A course can link recordings ONLY through the course-level Panopto navigation
+# tab / a linked folder, with no module item, page, assignment or announcement to
+# key off. The content scan then finds nothing to launch and the folder is never
+# enumerated - so such a course used to yield ZERO recordings. In folder scope,
+# discovery now launches the Panopto tool at COURSE level and enumerates the
+# course folder directly, trying every deployment a multi-deployment campus
+# exposes.
+
+def test_course_level_launch_urls_one_per_deployment(monkeypatch):
+    """A multiple-deployment campus exposes more than one Panopto tool id; the
+    fallback must offer a launch for EACH (sorted), so the caller can try every
+    deployment - a course belongs to one and Canvas doesn't say which."""
+    import panopto.institution as pinst
+    scan = pinst.ToolScan(resolved=True, has_panopto=True,
+                          panopto_tool_ids=frozenset({77, 42}),
+                          known_tool_ids=frozenset({77, 42, 9}))
+    monkeypatch.setattr(pinst, "cached_scan", lambda rest, cid: scan)
+
+    class _Rest:
+        base = "https://canvas.university.edu"
+
+    urls = pdisc.course_level_launch_urls(_Rest(), 55)
+    assert urls == [
+        "https://canvas.university.edu/api/v1/courses/55/external_tools/"
+        "sessionless_launch?id=42",
+        "https://canvas.university.edu/api/v1/courses/55/external_tools/"
+        "sessionless_launch?id=77",
+    ]
+    # The singular helper keeps returning the first (the last-resort beacon).
+    assert pdisc.course_level_launch_url(_Rest(), 55) == urls[0]
+
+
+def test_course_level_launch_urls_empty_without_panopto(monkeypatch):
+    """No Panopto tool -> no launch URLs, so the caller falls back to "no
+    session" exactly as before (never a blind launch of an unknown tool)."""
+    import panopto.institution as pinst
+    monkeypatch.setattr(pinst, "cached_scan",
+                        lambda rest, cid: pinst.ToolScan(resolved=True))
+
+    class _Rest:
+        base = "https://canvas.university.edu"
+
+    assert pdisc.course_level_launch_urls(_Rest(), 1) == []
+    assert pdisc.course_level_launch_url(_Rest(), 1) == ""
+
+
+def _nav_tab_only_rest():
+    """A course with NO module items and no page/assignment/announcement embeds -
+    every content endpoint answers empty."""
+    class _FakeREST:
+        def __init__(self, *a, **k):
+            pass
+
+        def get_all(self, path, params=None):
+            return []
+
+        def get_one(self, path):
+            return {}
+
+    return _FakeREST
+
+
+def test_discovery_course_folder_fallback_enumerates_nav_tab_only_course(monkeypatch):
+    """The whole course folder is discovered from a course-level launch even when
+    nothing in the course content links a single recording."""
+    launched = []
+
+    def _fake_lti(url, token):
+        launched.append(url)
+        return (object(),
+                "https://pan.panopto.test/Panopto/Pages/Sessions/List.aspx",
+                None, "https://pan.panopto.test", FOLDER)
+
+    enumerated = []
+
+    def _fake_folder_sessions(session, base, folder_id):
+        enumerated.append(folder_id)
+        return _SESSIONS
+
+    monkeypatch.setattr(pdisc, "_CanvasREST", _nav_tab_only_rest())
+    monkeypatch.setattr(pdisc, "lti_launch", _fake_lti)
+    monkeypatch.setattr(pdisc, "_discover_folder_sessions", _fake_folder_sessions)
+    monkeypatch.setattr(pdisc, "course_level_launch_urls",
+                        lambda rest, cid: [
+                            "https://canvas.test/api/v1/courses/1/external_tools/"
+                            "sessionless_launch?id=863"])
+
+    videos = pdisc.discover_course_videos(
+        "https://canvas.test", "tok", 1, include_folder_sessions=True)
+
+    by_id = {v.video_id: v for v in videos}
+    assert set(by_id) == {GUID_A, GUID_B, GUID_C}   # the whole folder
+    assert enumerated == [FOLDER]                    # course folder, enumerated once
+    assert all(v.source == "folder" for v in videos)
+    # These recordings carry no launch URL of their own; the working course-level
+    # launch becomes their auth beacon so the runner can still authenticate.
+    assert all("sessionless_launch" in v.auth_launch_url for v in videos)
+
+
+def test_course_folder_fallback_tries_every_deployment(monkeypatch):
+    """On a multi-deployment campus the first deployment may not resolve the
+    course folder; the fallback must try the next until one does, and adopt the
+    working launch as the beacon."""
+    DEAD = ("https://canvas.test/api/v1/courses/1/external_tools/"
+            "sessionless_launch?id=10")
+    LIVE = ("https://canvas.test/api/v1/courses/1/external_tools/"
+            "sessionless_launch?id=20")
+
+    def _fake_lti(url, token):
+        if url == DEAD:
+            return (None, None, None, None, None)      # deployment 10: no session
+        return (object(),
+                "https://pan.panopto.test/Panopto/Pages/Sessions/List.aspx",
+                None, "https://pan.panopto.test", FOLDER)
+
+    monkeypatch.setattr(pdisc, "_CanvasREST", _nav_tab_only_rest())
+    monkeypatch.setattr(pdisc, "lti_launch", _fake_lti)
+    monkeypatch.setattr(pdisc, "_discover_folder_sessions",
+                        lambda *a, **k: _SESSIONS)
+    monkeypatch.setattr(pdisc, "course_level_launch_urls",
+                        lambda rest, cid: [DEAD, LIVE])
+
+    videos = pdisc.discover_course_videos(
+        "https://canvas.test", "tok", 1, include_folder_sessions=True)
+
+    assert {v.video_id for v in videos} == {GUID_A, GUID_B, GUID_C}
+    # The working deployment's launch is the beacon, never the dead one.
+    assert all(v.auth_launch_url == LIVE for v in videos)
+
+
+def test_course_folder_fallback_skipped_when_a_folder_already_enumerated(monkeypatch):
+    """A course whose module items already landed on (and enumerated) their
+    folder must NOT pay for a second course-level launch: the guard is an empty
+    folder-sessions cache."""
+    modules = [{
+        "id": 1, "name": "Tema 2",
+        "items": [{"id": 11, "title": "Video (1): kultur", "type": "ExternalTool"}],
+    }]
+
+    class _FakeREST:
+        def __init__(self, *a, **k):
+            pass
+
+        def get_all(self, path, params=None):
+            return modules if path.endswith("/modules") else []
+
+        def get_one(self, path):
+            return {"url": f"https://canvas.test/api/sessionless_launch?item={path}"}
+
+    def _fake_lti(url, token):
+        # The module item lands on the course folder (folder-landing shape).
+        return (object(), "https://pan.panopto.test/Panopto/Pages/Sessions/List.aspx",
+                None, "https://pan.panopto.test", FOLDER)
+
+    course_level_calls = []
+
+    def _spy_course_urls(rest, cid):
+        course_level_calls.append(cid)
+        return ["https://canvas.test/x/sessionless_launch?id=863"]
+
+    monkeypatch.setattr(pdisc, "_CanvasREST", _FakeREST)
+    monkeypatch.setattr(pdisc, "lti_launch", _fake_lti)
+    monkeypatch.setattr(pdisc, "_discover_folder_sessions", lambda *a, **k: _SESSIONS)
+    monkeypatch.setattr(pdisc, "course_level_launch_urls", _spy_course_urls)
+
+    videos = pdisc.discover_course_videos(
+        "https://canvas.test", "tok", 1, include_folder_sessions=True)
+
+    assert {v.video_id for v in videos}                # folder was expanded
+    assert course_level_calls == []                    # fallback never fired
+
+
+def test_course_folder_fallback_not_in_directly_linked_scope(monkeypatch):
+    """Outside folder scope (include_folder_sessions=False) the fallback must
+    NOT run - that mode returns only directly-linked recordings, never a folder
+    dump."""
+    called = []
+    monkeypatch.setattr(pdisc, "_CanvasREST", _nav_tab_only_rest())
+    monkeypatch.setattr(pdisc, "course_level_launch_urls",
+                        lambda rest, cid: called.append(cid) or ["x"])
+
+    videos = pdisc.discover_course_videos("https://canvas.test", "tok", 1)
+
+    assert videos == []
+    assert called == []

@@ -1029,6 +1029,109 @@ def _render_single_select_list(
         st.html(f'<style>{"".join(dynamic_css)}</style>')
         st.html('<div style="padding-bottom: 1rem;"></div>')
 
+def inject_scroll_anchor_bridge(namespace: str) -> None:
+    """Hold the page's scroll position across a checkbox-driven fragment rerun.
+
+    Ticking a course row reruns the list fragment. In the overwhelming majority
+    of cases Streamlit reconciles the list in place and the browser keeps the
+    scroll position - verified exhaustively in-app (every fully-visible click
+    held scroll to the pixel). But the ONE way a rerun can hard-reset the page
+    to the top is if the scrollable content momentarily **collapses in height**:
+    the list is swapped through an ``st.empty()`` slot (for the atomic Refresh
+    spinner), and if that empty ever ships on its own for a frame - or any other
+    transient shortens ``stMain`` - the browser clamps ``scrollTop`` down to the
+    new (tiny) max and it STAYS there once the list grows back. The user sees
+    "it undid my scroll". It is rare and timing-dependent, so it hides from a
+    short test and surfaces once in a long selection session.
+
+    This guard neutralises that outcome without trying to out-guess the race:
+
+    * On ``mousedown`` inside a ``{ns}_chk_`` row it records the current
+      ``stMain.scrollTop`` and arms a brief (~700ms) window. It arms ONLY for a
+      real click on a course row, so search-as-you-type, the CBS filters, the
+      favorites/all pill and Refresh - all of which legitimately reshape or
+      shorten the list - are never touched.
+    * While armed, a ``requestAnimationFrame`` loop re-asserts the saved
+      position whenever ``scrollTop`` has dropped below it. A checkbox toggle
+      changes nothing above the list, so if scroll held this is a no-op; if the
+      content collapsed and clamped, the value is restored the instant the list
+      is tall again. It only ever restores DOWNWARD-lost scroll (``pre > 120``),
+      so it can never yank a user who was already near the top.
+    * Any genuine user scroll gesture during the window (wheel / touch / arrow /
+      Page keys) disarms it immediately, so the guard can never fight the user.
+
+    Reliability follows the same rules as the other bridges here: state lives on
+    ``window.parent`` so it survives the iframe being torn down, listeners are
+    delegated on ``document`` and re-bound on every injection (a listener from a
+    destroyed iframe realm silently stops firing), and the rAF loop is installed
+    once and kept alive on the parent.
+
+    Args:
+        namespace: The same prefix passed to ``render_course_list`` (e.g. ``'dl'``).
+    """
+    import streamlit.components.v1 as components
+
+    ns = namespace.lower()
+    components.html(
+        f"""<script>
+(function(){{
+    var win = window.parent, doc = win.document;
+    var NS = {ns!r};
+    var reg = win._cdScrollAnchor || (win._cdScrollAnchor = {{}});
+    var st = reg[NS] || (reg[NS] = {{pre: 0, until: 0, listeners: [], loop: false}});
+
+    var ROW_SEL = 'div[class*="st-key-' + NS + '_chk_"]';
+    // The page's scroll container. Fall back to the document scroller if the
+    // testid ever changes, so the guard degrades to a no-op rather than throwing.
+    function scroller() {{ return doc.querySelector('[data-testid="stMain"]') || doc.scrollingElement || doc.documentElement; }}
+
+    // Drop previously-bound listeners (their iframe realm may already be dead)
+    // and re-attach fresh ones from this live realm.
+    (st.listeners || []).forEach(function(l) {{
+        try {{ doc.removeEventListener(l[0], l[1], true); }} catch (_e) {{}}
+    }});
+    st.listeners = [];
+    function bind(type, fn) {{ doc.addEventListener(type, fn, true); st.listeners.push([type, fn]); }}
+
+    // Arm on a real press inside a course row: remember where we were and open
+    // a short restore window. Recording on mousedown captures the position
+    // BEFORE any focus/label side effects.
+    bind('mousedown', function(ev) {{
+        var t = ev.target;
+        if (!t || !t.closest || !t.closest(ROW_SEL)) return;
+        st.pre = scroller().scrollTop;
+        st.until = win.performance.now() + 700;
+    }});
+
+    // Any real scroll intent from the user cancels the window at once.
+    function disarm() {{ st.until = 0; }}
+    bind('wheel', disarm);
+    bind('touchmove', disarm);
+    bind('keydown', function(ev) {{
+        var k = ev.key;
+        if (k === 'PageUp' || k === 'PageDown' || k === 'Home' || k === 'End' ||
+            k === 'ArrowUp' || k === 'ArrowDown' || k === ' ' || k === 'Spacebar') disarm();
+    }});
+
+    // One rAF loop for the lifetime of the parent page. While armed, re-assert
+    // the saved position whenever the rerun has let scrollTop fall below it.
+    if (!st.loop) {{
+        st.loop = true;
+        (function tick() {{
+            var s = reg[NS];
+            if (s && s.until && win.performance.now() < s.until && s.pre > 120) {{
+                var el = scroller();
+                if (el && el.scrollTop < s.pre - 2) el.scrollTop = s.pre;
+            }}
+            win.requestAnimationFrame(tick);
+        }})();
+    }}
+}})();
+</script>""",
+        height=0,
+    )
+
+
 def inject_shift_select_bridge(namespace: str) -> None:
     """Enable Shift-click range selection on a multi-select course checkbox list.
 
@@ -1675,6 +1778,9 @@ def _course_list_section(
             )
         # Shift-click range selection across the checkbox rows above.
         inject_shift_select_bridge("dl")
+        # Hold scroll position if a checkbox rerun ever collapses the list's
+        # height and the browser clamps scrollTop to the top (see the bridge).
+        inject_scroll_anchor_bridge("dl")
     else:
         # Distinct key → symmetric vertical padding so the notice sits evenly
         # between the top (buttons row) and bottom separators. Same slot, so
@@ -2163,7 +2269,26 @@ def render_course_selector(fetch_courses_fn):
                 force_reauth("Your Canvas Access Token has expired. Please reconnect with a new token.")
             else:
                 force_reauth("Your Canvas connection expired or the access token was revoked. Please reconnect with a new token.")
-        raise
+        # Non-auth failure: offline, captive-portal wifi, a cross-continent
+        # timeout, a corporate/university TLS intercept, or Canvas momentarily
+        # down. Re-raising here surfaced a red Streamlit traceback - alarming,
+        # and the likely first screen for a session restored OPTIMISTICALLY
+        # behind a flaky connection (see restore_saved_session). Show a calm,
+        # RETRYABLE screen instead; the sidebar (logout, navigation) stays
+        # available throughout, so the user is never trapped. A screen-replacing
+        # retry legitimately uses `if st.button(): ...; st.rerun()`.
+        with _boot_area.container():
+            from ui.amber_notice import render_amber_notice
+            render_amber_notice(
+                "We couldn't reach Canvas",
+                detail=("Check your internet connection and try again. On campus or "
+                        "office wifi you may need to open a browser and sign in to the "
+                        "network first, or switch off a VPN. Your login is still saved."),
+            )
+            if st.button("Try again", key="courses_conn_retry", type="primary"):
+                fetch_courses_fn.clear()
+                st.rerun()
+        st.stop()
     st.session_state['_dl_courses_loaded_once'] = True
     courses = [c for c in all_courses if c.is_favorite] if favorites_only else all_courses
 

@@ -216,6 +216,9 @@ SYNC_TRANSIENT_KEYS = {
     '_office_quit_fired', '_tcc_batch_active',
     # Sync history filters
     'sync_history_course', 'sync_hist_course_select', 'sync_history_filter',
+    # Bulk "Add Course" (multi-folder selection) - transient while the add form
+    # is open; must never survive a navigation away from the Sync page.
+    '_bulk_folders_raw', '_bulk_total', '_bulk_index', '_bulk_folder_queue',
 }
 
 

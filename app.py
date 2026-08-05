@@ -854,6 +854,21 @@ def _write_nav_to_query_params() -> None:
 _restore_nav_from_query_params()
 ensure_download_state()
 
+# Unify the legacy saved-pairs / sync-list / daily-set stores into core.library
+# on the first launch after this shipped. Runs here, before anything reads a
+# pair: idempotent (guarded by sync_library.json), reversible (backs the legacy
+# files up to *.bak), and total - a failure degrades to an empty library, i.e.
+# Canvas names everywhere, never a crash. Checked once per SESSION: migration is
+# a one-time event guarded by the library file's existence, so re-reading and
+# JSON-parsing that file on every rerun buys nothing.
+if not st.session_state.get('_library_migration_checked'):
+    st.session_state['_library_migration_checked'] = True
+    try:
+        from core.library_migrate import migrate_if_needed
+        migrate_if_needed()
+    except Exception:
+        pass
+
 # Adopt the saved settings + login BEFORE anything renders. This must sit here,
 # between ensure_download_state() (which installs the defaults it overrides) and
 # _write_nav_to_query_params() (which writes ?mode=auth when signed out). It used
@@ -1076,6 +1091,34 @@ with st.container():
 
     elif st.session_state['step'] == 3:
         current_status = st.session_state.get('download_status', 'scanning')
+
+        # ── Debug log: ONE lifecycle for BOTH quick and custom download ──
+        # Set up here, at the FIRST render of step 3, BEFORE the scan phase - so
+        # discovery logs are captured too - and for EITHER entry path. The only
+        # wiring used to be set_active_debug_file() deep in the per-course
+        # 'running' loop below: it installed the bridge AFTER the scan (so a
+        # session's first scan logged nothing to disk), and only *custom*
+        # download cleared the file per run - quick download relied on the
+        # once-per-session clear at startup, so its log silently accumulated or
+        # stayed stale. Both paths reach step 3, so one block here covers both.
+        # set_active_debug_file is idempotent and re-dedupes any bridge a
+        # hot-reload left behind, so it runs every rerun; the clear + header run
+        # once per run (the flag is reset at each run's start handler).
+        if st.session_state.get('debug_mode', False):
+            from core.canvas_debug import (
+                clear_debug_log as _run_clear_dbg,
+                set_active_debug_file as _run_set_dbg,
+                log_session_header as _run_hdr_dbg,
+            )
+            _run_dbg_file = str(Path(st.session_state['download_path']) / 'debug_log.txt')
+            if not st.session_state.get('_dl_debug_run_inited'):
+                st.session_state['_dl_debug_run_inited'] = True
+                _run_clear_dbg(_run_dbg_file)
+                _run_n_courses = len(st.session_state.get('courses_to_download', []))
+                _run_mode = 'quick' if st.session_state.get('quick_download_mode') else 'custom'
+                _run_hdr_dbg(_run_dbg_file,
+                             context=f"Download mode ({_run_mode}) | {_run_n_courses} course(s)")
+            _run_set_dbg(_run_dbg_file)
 
         # The scan is its own step now. It always WAS its own phase - it renders
         # the analysis dashboard, and its Cancel button says "Cancel Analysis" -
@@ -1628,15 +1671,10 @@ with st.container():
                 }
                 if st.session_state.get('debug_mode', False):
                     from core.canvas_debug import log_debug as _app_log
-                    from core.canvas_debug import set_active_debug_file as _set_dbg, log_session_header as _dbg_header
+                    # The logging bridge + session header + per-run clear are set
+                    # up once at step-3 entry (shared by quick and custom, ahead
+                    # of the scan). Here we only stamp the per-course markers.
                     _dl_dbg = str(Path(st.session_state['download_path']) / 'debug_log.txt')
-                    # Register for the logging bridge: from here on, every
-                    # logger.info/error from any app module (converters,
-                    # post-processing, applescript bridge...) is mirrored
-                    # into this file automatically.
-                    _set_dbg(_dl_dbg)
-                    if current_idx == 0:
-                        _dbg_header(_dl_dbg, context=f"Download mode | {total} course(s)")
                     _pp_active = [k.replace('convert_', '') for k, v in _pp_settings.items() if v and k.startswith('convert_')]
                     _sec_active = [k.replace('download_', '') for k, v in _secondary_settings.items() if v and k.startswith('download_')]
                     _app_log(f"=== Download Start: {course.name} | Course {current_idx + 1}/{total} ===", _dl_dbg)

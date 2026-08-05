@@ -36,7 +36,8 @@ def hub(tmp_path, monkeypatch):
     every test that reads back through the resolver clears the memo explicitly
     via ``fresh()`` rather than trusting the clock.
     """
-    monkeypatch.setattr(pl, "_memo", None, raising=False)
+    import core.library as _lib
+    monkeypatch.setattr(_lib, "_memo", None, raising=False)
     monkeypatch.setattr("shared.helpers.get_config_dir", lambda: str(tmp_path))
     mgr = SavedGroupsManager(str(tmp_path))
     mgr._config_dir = str(tmp_path)
@@ -44,8 +45,10 @@ def hub(tmp_path, monkeypatch):
 
 
 def fresh():
-    """Drop the memo so the next resolve re-reads the file."""
-    pl._memo = None
+    """Drop the memo so the next resolve re-reads the file. The label memo lives
+    in core.library (pair_labels delegates to it), so clear it there."""
+    import core.library as _lib
+    _lib._memo = None
 
 
 def _pair(cid, folder, name="Makroøkonomi (XB E26 BINTO1035U)", **extra):
@@ -133,7 +136,9 @@ def test_renaming_clears_auto_named(hub):
     hub.update_group(rec["group_id"], {"group_name": "My economics course"})
     fresh()
     assert pl.label_for(1, "/x") == "My economics course"
-    assert "auto_named" not in hub.load_groups()[0]
+    # A named pair is no longer auto-named (behaviour, not storage shape: the
+    # unified library carries the flag as False rather than dropping the key).
+    assert hub.load_groups()[0].get("auto_named") is False
 
 
 # ── the persistence trap ────────────────────────────────────────────────────

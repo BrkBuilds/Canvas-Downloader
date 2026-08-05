@@ -1188,10 +1188,8 @@ div.st-key-page_nav_quick_start button:active {{
             settings = dict(preset['settings'])
             settings['download_mode'] = selected_org
 
-            all_courses = fetch_courses_fn(
-                st.session_state['api_token'],
-                st.session_state['api_url'],
-            )
+            from shared.components import resolve_courses_or_stop
+            all_courses = resolve_courses_or_stop(fetch_courses_fn, retry_key="quick_start_conn_retry")
             course_map          = {c.id: c for c in all_courses}
             courses_to_download = [
                 course_map[cid]
@@ -1220,6 +1218,9 @@ div.st-key-page_nav_quick_start button:active {{
                 'retry_isolated_details', 'retry_mb_tracker', 'is_post_processing',
                 'start_time', 'total_items', 'total_mb', 'sync_has_ignored_files',
                 'sync_newversion_files',
+                # Reset the debug-log per-run guard so step 3 clears + headers a
+                # fresh log for this run (same lifecycle custom download gets).
+                '_dl_debug_run_inited',
             ]:
                 st.session_state.pop(_stale, None)
 

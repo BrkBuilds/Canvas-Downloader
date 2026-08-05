@@ -107,15 +107,18 @@ def _render_dashboard(ui: UIBridge, current: int, total: int, task_name: str):
         pct = min(100, int((current / total) * 100) if total > 0 else 0)
 
         # Map internal task names to detailed from → to descriptions for headers and metric cards
+        # Heading copy: NO file-extension parentheticals here - the exact
+        # formats live in the "Type" metric (type_name_map) below, so repeating
+        # them in the H3 only bloats it. Keep these clean and human.
         display_name_map = {
-            'Archives':           'ZIP/TAR archives to folders',
-            'PowerPoint files':   'PowerPoint (PPTX/PPT) to PDF',
+            'Archives':           'Archives to Folders',
+            'PowerPoint files':   'PowerPoint to PDF',
             'HTML files':         'HTML Pages to Markdown',
-            'Code files':         'Code/Data files to .TXT',
-            'Legacy Word files':  'Word (DOC) to PDF',
-            'Excel data files':   'Excel (XLSX) to AI Data (TXT)',
-            'Excel files':        'Excel (XLSX/XLS) to PDF',
-            'Video files':        'Video to Audio (MP3)',
+            'Code files':         'Code & Data files to Text',
+            'Legacy Word files':  'Legacy Word to PDF',
+            'Excel data files':   'Excel to AI Data',
+            'Excel files':        'Excel to PDF',
+            'Video files':        'Video to Audio',
         }
         
         type_name_map = {

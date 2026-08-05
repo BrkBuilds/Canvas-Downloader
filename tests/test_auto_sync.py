@@ -368,63 +368,53 @@ def _hub_group(config_dir, group_name, pairs):
     SavedGroupsManager(str(config_dir)).save_group(group_name, pairs)
 
 
-def test_hub_delete_removes_the_course_from_the_daily_list(config_dir):
-    """Deleting a saved pair is the user saying they're done with that course -
-    it must not linger in the daily sync as an entry with no source."""
+def test_deleting_a_saved_pair_removes_it_from_daily(config_dir):
+    """Deleting a saved pair from the hub clears its daily membership too - the
+    daily flag lives ON the pair (core.library), so it cannot outlive it."""
     folder = _folder(config_dir, 21)
-    _hub_group(config_dir, "P21", [
-        {"course_id": 21, "course_name": "C21", "local_folder": folder}])
-    today_store.set_today_pairs([
-        {"course_id": 21, "course_name": "C21", "local_folder": folder}])
-
-    # Hub emptied (pair deleted) -> the daily copy goes with it.
     from core.sync_manager import SavedGroupsManager
     mgr = SavedGroupsManager(str(config_dir))
-    for g in mgr.load_groups():
-        mgr.delete_group(g["group_id"])
+    rec = mgr.save_group("P21", [
+        {"course_id": 21, "course_name": "C21", "local_folder": folder}],
+        is_single_pair=True)
+    today_store.set_today_pairs([
+        {"course_id": 21, "course_name": "C21", "local_folder": folder}])
+    assert [p["course_id"] for p in today_store.load_today_config()["pairs"]] == [21]
 
-    assert auto_sync.reconcile_daily_list_with_hub() == 1
+    mgr.delete_group(rec["group_id"])   # delete the saved pair
     assert today_store.load_today_config()["pairs"] == []
 
 
-def test_hub_relink_repoints_the_daily_list(config_dir):
-    """"Edit Pair" to re-link a moved folder fixes it on the Today page too -
-    the user must never have to repair the same pair in two places."""
+def test_relinking_a_saved_pair_moves_its_daily_membership(config_dir):
+    """"Edit Pair" to re-link a moved folder fixes it on the Today page too, with
+    no reconcile - it is the SAME record, so its daily flag follows the move."""
     old = _folder(config_dir, 22, create=False)      # where it used to live
     new = _folder(config_dir, 23)                    # where the user re-linked it
-    _hub_group(config_dir, "P22", [
-        {"course_id": 22, "course_name": "C22", "local_folder": new}])
+    from core.sync_manager import SavedGroupsManager
+    mgr = SavedGroupsManager(str(config_dir))
+    rec = mgr.save_group("P22", [
+        {"course_id": 22, "course_name": "C22", "local_folder": old}],
+        is_single_pair=True)
     today_store.set_today_pairs([
         {"course_id": 22, "course_name": "C22", "local_folder": old}])
 
-    assert auto_sync.reconcile_daily_list_with_hub() == 1
-    assert today_store.load_today_config()["pairs"][0]["local_folder"] == new
-    # ...and it is runnable again, without the user touching the Today page.
+    mgr.update_group(rec["group_id"], {"pairs": [
+        {"course_id": 22, "course_name": "C22", "local_folder": new}]})   # hub Edit Pair
+
+    cfg = today_store.load_today_config()
+    assert cfg["pairs"][0]["local_folder"] == new    # daily followed the re-link
     assert [p["course_id"] for p in auto_sync.resolve_today_pairs()] == [22]
 
 
-def test_reconcile_leaves_matching_entries_alone(config_dir):
+def test_reconcile_is_a_noop_now(config_dir):
+    """The daily set is the library's own flag, so there are no copies to
+    reconcile: the function stays (its call sites are harmless) but does nothing."""
     folder = _folder(config_dir, 24)
-    pair = {"course_id": 24, "course_name": "C24", "local_folder": folder}
-    _hub_group(config_dir, "P24", [pair])
-    today_store.set_today_pairs([pair])
-
-    assert auto_sync.reconcile_daily_list_with_hub() == 0
-    assert today_store.load_today_config()["pairs"] == [pair]
-
-
-def test_reconcile_never_empties_the_list_when_the_hub_is_unreadable(config_dir, monkeypatch):
-    """A hub read failure must not be mistaken for "the user deleted everything"."""
-    folder = _folder(config_dir, 25)
     today_store.set_today_pairs([
-        {"course_id": 25, "course_name": "C25", "local_folder": folder}])
-
-    class _Boom:
-        def __init__(self, *a, **k): raise OSError("hub unreadable")
-    monkeypatch.setattr("core.sync_manager.SavedGroupsManager", _Boom)
-
+        {"course_id": 24, "course_name": "C24", "local_folder": folder}])
+    before = today_store.load_today_config()["pairs"]
     assert auto_sync.reconcile_daily_list_with_hub() == 0
-    assert len(today_store.load_today_config()["pairs"]) == 1
+    assert today_store.load_today_config()["pairs"] == before
 
 
 def test_unreachable_pairs_are_reported_as_skipped(config_dir, fake_session):

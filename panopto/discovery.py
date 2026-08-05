@@ -414,6 +414,52 @@ def _discover_folder_sessions(session, panopto_base, folder_id) -> list[tuple[st
     return out
 
 
+def course_level_launch_urls(rest, course_id) -> list[str]:
+    """Generic course-level Panopto LTI launch URLs - ONE per Panopto tool the
+    institution exposes, sorted by tool id (empty when there is no Panopto tool).
+
+    Two jobs, both for recordings that carry NO launch URL of their own -
+    recordings found only in a Page/Assignment/Announcement body, and courses
+    that link recordings ONLY through the course-level Panopto navigation tab /
+    folder (no per-item launch, so no per-item auth beacon):
+      * authenticate a Panopto session (the ``sessionless_launch`` is
+        course-scoped, so Panopto maps the course context to its provisioned
+        folder and lands on the course FOLDER with no session id - all that is
+        needed, since ``DeliveryInfo`` keys off each recording's own delivery
+        id, not the landing URL); and
+      * expose that folder so :func:`discover_course_videos` can enumerate it
+        directly when nothing in the course content pointed at it.
+
+    A campus can install Panopto under MORE THAN ONE LTI 1.3 deployment; a course
+    belongs to exactly one, but Canvas does not tell us which, so we return a
+    launch for EVERY Panopto tool and let the caller try each until one
+    authenticates and reaches the course folder. The tool ids are RESOLVED at
+    runtime from the memoised institution scan (``looks_panopto`` union of
+    name/domain/url), never hardcoded and never a blind launch of an unidentified
+    tool - so a course at a non-Panopto institution, or one whose tool we could
+    not positively identify, yields ``[]`` and the caller falls back to "no
+    session" exactly as before.
+    """
+    try:
+        from panopto.institution import cached_scan
+        scan = cached_scan(rest, course_id)
+    except Exception:
+        return []
+    return [
+        f"{rest.base}/api/v1/courses/{course_id}"
+        f"/external_tools/sessionless_launch?id={tid}"
+        for tid in sorted(scan.panopto_tool_ids)
+    ]
+
+
+def course_level_launch_url(rest, course_id) -> str:
+    """First course-level Panopto launch URL, or ``""``. Thin wrapper over
+    :func:`course_level_launch_urls` for the single-beacon fallback (the runner
+    tries per-video launch URLs after it, so one best-effort URL suffices)."""
+    urls = course_level_launch_urls(rest, course_id)
+    return urls[0] if urls else ""
+
+
 def discover_course_videos(
     canvas_base: str,
     token: str,
@@ -720,6 +766,59 @@ def discover_course_videos(
                 "; ".join(name for _vid, name in _sessions[:12]),
             )
 
+    # ── Course-folder fallback (folder scope only) ──
+    # A course can surface its recordings ONLY through the course-level Panopto
+    # navigation tab / a linked folder - with no per-lecture module item, page,
+    # assignment or announcement to key off - so the scan above finds nothing to
+    # launch and the course folder is never enumerated. Many courses worldwide
+    # are laid out exactly this way; without this they yield ZERO recordings.
+    #
+    # When folder scope is on and NO folder has been enumerated this run, launch
+    # the institution's Panopto tool at COURSE level (course-scoped
+    # sessionless_launch, no session id: Panopto maps the course context to its
+    # provisioned folder and lands on Sessions/List.aspx) and enumerate that
+    # folder directly. Guarded on an empty ``_folder_sessions_cache``, so a course
+    # whose module items already landed on their folder pays nothing extra. Every
+    # deployment is tried (a multi-deployment campus exposes several Panopto
+    # tools; a course belongs to one and Canvas will not say which), stopping at
+    # the first that reaches an enumerable folder - which also becomes the auth
+    # beacon for these otherwise launch-less recordings.
+    if (include_folder_sessions and not _cancelled()
+            and not _folder_sessions_cache):
+        _course_launches = course_level_launch_urls(rest, course_id)
+        if _course_launches:
+            _emit('stage', name='Course recordings')
+        for _cl_launch in _course_launches:
+            if _cancelled():
+                break
+            try:
+                cl = lti_launch(_cl_launch, token)
+            except Exception as e:
+                logger.debug("Course-level Panopto launch failed: %s", e)
+                continue
+            cl_session, _cl_final, _cl_id, cl_base, cl_folder = cl
+            if not (cl_session is not None and cl_base and cl_folder):
+                continue
+            _sessions = _discover_folder_sessions(cl_session, cl_base, cl_folder)
+            _folder_sessions_cache[(cl_base, cl_folder.lower())] = _sessions
+            logger.info(
+                "Panopto course-folder fallback: enumerated %d session(s) in the "
+                "course folder for course %s via a course-level launch (no content "
+                "link required).", len(_sessions), course_id,
+            )
+            for vid, vtitle in _sessions:
+                add(vid, vtitle, source="folder")
+            if not _auth_beacon:
+                _auth_beacon = _cl_launch
+            break
+        else:
+            if _course_launches:
+                logger.info(
+                    "Panopto course-folder fallback: no course-level launch "
+                    "reached an enumerable folder for course %s (%d deployment(s) "
+                    "tried).", course_id, len(_course_launches),
+                )
+
     # Heal stale direct ids: a module item can embed a delivery GUID that no
     # longer exists after a Panopto migration (the June-era CBS links carry
     # ids the platform has since re-homed - DeliveryInfo answers "This session
@@ -747,15 +846,9 @@ def discover_course_videos(
                 _v.video_id = _new_id
                 videos[_new_id] = videos.pop(_old_id)
 
-    # Hand the runner a VERIFIED auth launch: legacy items can carry launch
-    # URLs whose own LTI chain no longer completes (they die on the Canvas
-    # tool page), which left the session bootstrap with nothing that works
-    # even though discovery just authenticated 30 times. Every video gets the
-    # beacon; the bootstrap tries it before the per-item URLs.
-    if _auth_beacon:
-        for v in videos.values():
-            if not v.auth_launch_url:
-                v.auth_launch_url = _auth_beacon
+    # The auth beacon is applied to EVERY recording once, at the end of the scan
+    # (see below) - after Pages/Assignments/Announcements have been added too, so
+    # a page-embedded recording gets a session just like a module-linked one.
 
     # ── Pages ──
     if not _cancelled():
@@ -786,5 +879,27 @@ def discover_course_videos(
         ):
             for vid in extract_panopto_ids(ann.get("message") or ""):
                 add(vid, ann.get("title", "Announcement"), source="announcement")
+
+    # Hand the runner a usable auth launch for EVERY recording, from all sources.
+    #   * Module-linked items set `_auth_beacon` above to a per-item launch this
+    #     run VERIFIED reaches Panopto - legacy items can carry launch URLs whose
+    #     own LTI chain no longer completes (they die on the Canvas tool page),
+    #     which left the session bootstrap with nothing that works even though
+    #     discovery just authenticated 30 times.
+    #   * Recordings found ONLY in a Page/Assignment/Announcement body carry no
+    #     launch URL at all, and a course with no module-linked Panopto items
+    #     produces no beacon - so fall back to a generic course-level launch of
+    #     the institution's Panopto tool, which authenticates a session the
+    #     per-recording DeliveryInfo call can use. This is why a lecture embedded
+    #     only in a Canvas page is now downloadable instead of failing auth.
+    # Applied here, after every source, so a page-sourced recording (added below
+    # the module pass) is covered too. The bootstrap tries the beacon first.
+    if videos:
+        if not _auth_beacon:
+            _auth_beacon = course_level_launch_url(rest, course_id)
+        if _auth_beacon:
+            for v in videos.values():
+                if not v.auth_launch_url:
+                    v.auth_launch_url = _auth_beacon
 
     return list(videos.values())

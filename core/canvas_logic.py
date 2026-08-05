@@ -942,14 +942,20 @@ class CanvasManager:
             else:
                 try:
                     import requests
-                    # Attempt to follow redirects to find the true Canvas domain (e.g. .instructure.com)
+                    # Attempt to follow redirects to find the true Canvas domain (e.g. .instructure.com).
+                    # Match on the HOSTNAME, never a substring: an SSO redirect whose URL merely
+                    # CONTAINS "instructure.com" (typically in a ?return=/?url= query param pointing
+                    # back at the Canvas host) would otherwise hijack resolution onto the SSO host and
+                    # every API call would then hit a login portal. Prefer the final destination; fall
+                    # back to the first genuinely-canonical hop in the redirect chain.
                     res = requests.get(api_url, timeout=5)
-                    for r in res.history:
-                        if 'instructure.com' in r.url:
-                            api_url = r.url
-                            break
-                    if 'instructure.com' in res.url:
+                    if _is_canonical_canvas_host(res.url):
                         api_url = res.url
+                    else:
+                        for r in res.history:
+                            if _is_canonical_canvas_host(r.url):
+                                api_url = r.url
+                                break
                 except Exception:
                     # Not cached: a resolution that failed because the network
                     # was down must be retried, not remembered as "no redirect".

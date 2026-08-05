@@ -432,30 +432,85 @@ def format_relative_date(raw_time: str, include_time: bool = False, include_emoj
         return raw_time
 
 
-# --- Persistent Sync Pairs ---
+# --- Persistent Sync Pairs (the working "active" sync list) ---
+#
+# An entry is EITHER a reference to a saved library pair (it carries ``saved_id``)
+# or a RAW, unsaved pair (no ``saved_id``). A referenced entry is resolved against
+# ``core.library`` on every read/write, so a hub rename or re-linked folder shows
+# up on the working list with no reconcile - the id is stable, so it even survives
+# a folder move. If the saved pair is deleted, the entry degrades to a raw copy
+# (keeps its last-known fields, drops the dangling ``saved_id``) rather than
+# vanishing from the user's working list.
+
+def _resolve_active_pairs(raw_entries) -> list[dict]:
+    """Bind active-list entries to their library pairs and refresh their fields.
+
+    ``course_id`` / ``local_folder`` / ``course_name`` for a referenced entry come
+    from the library (current), so a stale on-disk cache can never be authoritative
+    for a saved pair. Entries with no ``saved_id`` are bound opportunistically by
+    link, so pre-existing lists (and this feature's first run) pick up a reference.
+    """
+    if not isinstance(raw_entries, list):
+        return []
+    try:
+        import core.library as _library
+        by_id = {p["id"]: p for p in _library.pairs()}
+    except Exception:
+        _library, by_id = None, {}
+
+    out = []
+    for e in raw_entries:
+        if not isinstance(e, dict):
+            continue
+        p = None
+        sid = e.get("saved_id")
+        if sid:
+            p = by_id.get(sid)
+        elif _library is not None:
+            p = _library.pair_for(e.get("course_id"), e.get("local_folder"))
+        if p is not None:
+            # Preserve the entry's own keys (last_synced, ...); override only the
+            # fields the library is authoritative for, and stamp the reference.
+            merged = dict(e)
+            merged["course_id"] = p["course_id"]
+            merged["local_folder"] = p["local_folder"]
+            # Prefer the library's cached name, but a BLANK library name must
+            # not wipe a good one the entry already carries: `.get(k, default)`
+            # returns the stored "" (the key is always present), so fall back
+            # with `or`, not a default. A saved pair claimed without a course
+            # name (e.g. via the daily set) would otherwise blank the sync-list
+            # card's course name on every resolve.
+            merged["course_name"] = (
+                (p.get("course_name") or "").strip()
+                or merged.get("course_name", ""))
+            merged["saved_id"] = p["id"]
+            out.append(merged)
+        else:   # raw (unsaved), or a reference whose saved pair was deleted
+            raw = dict(e)
+            raw.pop("saved_id", None)   # drop a dangling reference
+            out.append(raw)
+    return out
+
 
 def load_sync_pairs(config_dir: str = None) -> list[dict]:
-    """Load saved sync pairs from disk.
-    
+    """Load the working sync list from disk, resolved against the library.
+
     Returns:
-        List of dicts with keys: local_folder, course_id, course_name, last_synced
+        List of dicts with keys: course_id, local_folder, course_name,
+        last_synced (+ saved_id for entries that reference a saved library pair).
     """
     if config_dir is None:
         config_dir = get_config_dir()
-    
+
     path = Path(config_dir) / SYNC_PAIRS_FILENAME
-    
+
     with _sync_pairs_lock:
         if not path.exists():
             return []
-        
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 pairs = json.load(f)
-            # Validate structure
-            if not isinstance(pairs, list):
-                return []
-            return pairs
+            return _resolve_active_pairs(pairs)
         except (json.JSONDecodeError, IOError):
             return []
 
@@ -487,7 +542,13 @@ def atomic_update_sync_pairs(modifier_func: callable, config_dir: str = None) ->
                         pairs = data
             except (json.JSONDecodeError, IOError):
                 pass
-                
+
+        # Resolve references against the library BEFORE the modifier runs, so it
+        # matches the caller's signatures against CURRENT (course_id, folder) - a
+        # saved pair re-linked in the hub is found by its new folder, not the
+        # stale one on disk.
+        pairs = _resolve_active_pairs(pairs)
+
         # 2. MODIFY
         new_pairs = modifier_func(pairs)
         
@@ -615,9 +676,22 @@ def native_folder_picker(initial_dir: str | None = None) -> str | None:
         except Exception:
             return None
 
-    # Tkinter is mandatory for the Windows folder picker. tk.Tk() will raise
-    # tkinter.TclError if no display is available (headless container, broken
-    # X server on Linux, etc.). Wrap the whole construction so a missing GUI
+    # Windows: the modern shell picker (IFileOpenDialog), shown modal to the app
+    # window so it opens as a proper owned dialog instead of a stray top-level
+    # window with its own taskbar button. Only a genuine COM error falls through
+    # to the tkinter picker below; a user cancel returns None with no fallback.
+    if platform.system() == 'Windows':
+        try:
+            res = _win_shell_folder_picker(
+                start_dir, multi=False, owner_hwnd=_app_owner_hwnd())
+            if res is not None:
+                return res[0] if res else None
+        except Exception as e:
+            logger.warning(f"Windows shell folder picker failed, using tkinter: {e}")
+
+    # tkinter is the FALLBACK picker (a COM failure above, plus Linux/dev). tk.Tk()
+    # raises tkinter.TclError if no display is available (headless container,
+    # broken X server, etc.). Wrap the whole construction so a missing GUI
     # surfaces as "no folder selected" instead of crashing the script thread.
     try:
         import tkinter as tk
@@ -651,6 +725,323 @@ def native_folder_picker(initial_dir: str | None = None) -> str | None:
                 root.destroy()
             except Exception:
                 pass
+
+
+def _resolve_picker_start_dir(initial_dir: str | None) -> str:
+    """Best starting directory for a folder picker: given path → session
+    default → the user's Downloads folder → home. Shared by the single- and
+    multi-folder pickers so they always open in the same place."""
+    if initial_dir and os.path.isdir(initial_dir):
+        return initial_dir
+    try:
+        import streamlit as st
+        default = st.session_state.get('default_download_path', '') or ''
+        if default and os.path.isdir(default):
+            return default
+    except Exception:
+        pass
+    downloads = str(Path.home() / 'Downloads')
+    return downloads if os.path.isdir(downloads) else str(Path.home())
+
+
+def _app_owner_hwnd() -> int:
+    """HWND of this process's top-level ``Canvas Downloader`` window (the pywebview
+    shell), or ``0`` when there is none - e.g. under ``streamlit run`` in dev,
+    where the picker stays an un-owned standalone dialog exactly as before.
+
+    Used as the OWNER of the native folder dialog so it opens as a proper modal of
+    the app window instead of spawning its own top-level window with its own
+    taskbar button (which reads as "a second Canvas Downloader instance"). Matching
+    on PID + title needs no coupling to pywebview and degrades to ``0`` safely, so a
+    wrong/missing match can never do worse than the old un-owned behaviour.
+
+    Explicit ``argtypes``/``restype`` on a private ``WinDLL`` (not the shared
+    ``windll`` cache) keep 64-bit handles from being passed as 32-bit ``c_int``.
+    """
+    if os.name != 'nt':
+        return 0
+    import ctypes
+    from ctypes import wintypes
+    try:
+        user32 = ctypes.WinDLL('user32', use_last_error=True)
+        user32.IsWindowVisible.argtypes = [wintypes.HWND]
+        user32.IsWindowVisible.restype = wintypes.BOOL
+        user32.GetWindow.argtypes = [wintypes.HWND, wintypes.UINT]
+        user32.GetWindow.restype = wintypes.HWND
+        user32.GetWindowThreadProcessId.argtypes = [wintypes.HWND,
+                                                    ctypes.POINTER(wintypes.DWORD)]
+        user32.GetWindowThreadProcessId.restype = wintypes.DWORD
+        user32.GetWindowTextLengthW.argtypes = [wintypes.HWND]
+        user32.GetWindowTextLengthW.restype = ctypes.c_int
+        user32.GetWindowTextW.argtypes = [wintypes.HWND, wintypes.LPWSTR, ctypes.c_int]
+        user32.GetWindowTextW.restype = ctypes.c_int
+        _WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+        user32.EnumWindows.argtypes = [_WNDENUMPROC, wintypes.LPARAM]
+        user32.EnumWindows.restype = wintypes.BOOL
+
+        our_pid = ctypes.windll.kernel32.GetCurrentProcessId()
+        found: list[int] = []
+
+        @_WNDENUMPROC
+        def _enum(hwnd, _lparam):
+            if not user32.IsWindowVisible(hwnd):
+                return True
+            if user32.GetWindow(hwnd, 4):        # GW_OWNER set -> owned window, skip
+                return True
+            pid = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            if pid.value != our_pid:
+                return True
+            length = user32.GetWindowTextLengthW(hwnd)
+            buf = ctypes.create_unicode_buffer(length + 1)
+            user32.GetWindowTextW(hwnd, buf, length + 1)
+            if buf.value == 'Canvas Downloader':
+                found.append(int(hwnd) if hwnd else 0)
+                return False                     # found it - stop enumerating
+            return True
+
+        user32.EnumWindows(_enum, 0)
+        return found[0] if found else 0
+    except Exception as e:
+        logger.warning(f"Could not resolve app owner window for folder picker: {e}")
+        return 0
+
+
+# The shared Windows folder picker: drives the shell's IFileOpenDialog directly
+# over its COM vtables via ctypes. It backs BOTH the single picker (native_folder_
+# picker) and the multi picker (native_folder_multi_picker) - FOS_ALLOWMULTISELECT
+# is the only native Windows control that lets the user pick SEVERAL folders in one
+# dialog (tkinter's askdirectory is single-folder only), and single-select is the
+# same dialog without that flag. It runs on a dedicated STA thread (the shell
+# dialog requires apartment threading); any failure returns None so the caller
+# falls back (to the single picker for multi, to tkinter for single).
+#
+# The multi picker used to shell out to PowerShell + Add-Type, which showed a
+# PowerShell window and took ~1s to JIT-compile on every open; the single picker
+# used tkinter. The in-process COM call is the same native Explorer dialog for
+# both, opens instantly, never flashes a console, and (given an owner_hwnd) opens
+# as a proper owned modal of the app window.
+
+def _win_shell_folder_picker(start_dir: str, *, multi: bool,
+                             owner_hwnd: int = 0) -> list[str] | None:
+    """Windows native folder picker via the shell ``IFileOpenDialog``.
+
+    ``multi=True`` sets ``FOS_ALLOWMULTISELECT`` so several folders can be chosen
+    at once; ``multi=False`` is an ordinary single-folder picker. Either way
+    ``GetResults`` returns an ``IShellItemArray``, so one code path serves both.
+
+    ``owner_hwnd`` is the window the dialog is shown modal to - pass the app's main
+    window (see :func:`_app_owner_hwnd`) so it opens as an OWNED modal instead of
+    an un-owned top-level window that spawns its own taskbar button. ``0``/NULL
+    keeps the old un-owned behaviour (e.g. dev, where there is no app window).
+
+    Returns a list of absolute paths (empty on cancel), or None if the picker
+    could not run at all - the caller then falls back. Driven by ctypes over the
+    COM vtables on a dedicated STA thread.
+    """
+    import ctypes
+    import threading
+    from ctypes import wintypes, POINTER, byref, c_void_p
+
+    class _GUID(ctypes.Structure):
+        _fields_ = [("Data1", ctypes.c_ulong), ("Data2", ctypes.c_ushort),
+                    ("Data3", ctypes.c_ushort), ("Data4", ctypes.c_ubyte * 8)]
+
+    def _guid(s: str) -> "_GUID":
+        g = _GUID()
+        ctypes.oledll.ole32.CLSIDFromString(ctypes.c_wchar_p(s), byref(g))
+        return g
+
+    def _method(ptr, index, restype, *argtypes):
+        """Bind vtable slot *index* of the interface at *ptr* as a callable."""
+        vtable = ctypes.cast(ptr, POINTER(c_void_p))[0]
+        fn_addr = ctypes.cast(vtable, POINTER(c_void_p))[index]
+        return ctypes.WINFUNCTYPE(restype, c_void_p, *argtypes)(fn_addr)
+
+    HR = ctypes.c_long
+    DW = wintypes.DWORD
+    # vtable indices (IUnknown 0-2 first): see the CLR interface above for order.
+    _RELEASE = 2
+    _DLG_SHOW, _DLG_SETOPTS, _DLG_GETOPTS, _DLG_SETFOLDER, _DLG_GETRESULTS = 3, 9, 10, 12, 27
+    _ARR_GETCOUNT, _ARR_GETITEMAT = 7, 8
+    _ITEM_GETDISPLAYNAME = 5
+    _FOS = 0x20 | 0x40           # PICKFOLDERS | FORCEFILESYSTEM
+    if multi:
+        _FOS |= 0x200            # ALLOWMULTISELECT
+    _SIGDN_FILESYSPATH = 0x80058000
+    _CLSID_FileOpenDialog = "{DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7}"
+    _IID_IFileOpenDialog = "{D57C7288-D4AD-4768-BE02-9D969532D960}"
+    _IID_IShellItem = "{43826D1E-E718-42EE-BC55-A1E261C37BFE}"
+
+    result: dict = {"paths": None, "error": None}
+
+    def _worker():
+        ole32 = ctypes.oledll.ole32
+        # CoTaskMemFree and CoUninitialize return void, so their "HRESULT" is a
+        # garbage register: calling them through oledll (which validates the
+        # return) can raise OSError spuriously and abort the whole pick. Drive
+        # those two through windll, which ignores the return, so a successful
+        # multi-select is never mistaken for a failure.
+        ole32_void = ctypes.windll.ole32
+        initialized = False
+        try:
+            try:
+                ole32.CoInitializeEx(None, 0x2)   # COINIT_APARTMENTTHREADED
+                initialized = True
+            except OSError:
+                pass  # already initialised on this thread - fine
+            p_dlg = c_void_p()
+            clsid = _guid(_CLSID_FileOpenDialog)
+            iid = _guid(_IID_IFileOpenDialog)
+            ole32.CoCreateInstance(byref(clsid), None, 1, byref(iid), byref(p_dlg))  # CLSCTX_INPROC_SERVER
+            try:
+                opts = DW()
+                _method(p_dlg, _DLG_GETOPTS, HR, POINTER(DW))(p_dlg, byref(opts))
+                _method(p_dlg, _DLG_SETOPTS, HR, DW)(p_dlg, DW(opts.value | _FOS))
+                if start_dir:
+                    try:
+                        item_iid = _guid(_IID_IShellItem)
+                        p_start = c_void_p()
+                        ctypes.oledll.shell32.SHCreateItemFromParsingName(
+                            ctypes.c_wchar_p(start_dir), None, byref(item_iid), byref(p_start))
+                        if p_start:
+                            _method(p_dlg, _DLG_SETFOLDER, HR, c_void_p)(p_dlg, p_start)
+                            _method(p_start, _RELEASE, ctypes.c_ulong)(p_start)
+                    except OSError:
+                        pass  # bad initial dir - open at the default location
+                owner = c_void_p(owner_hwnd) if owner_hwnd else None
+                hr = _method(p_dlg, _DLG_SHOW, HR, c_void_p)(p_dlg, owner)
+                if hr != 0:
+                    result["paths"] = []   # user cancelled (or dialog closed)
+                    return
+                p_arr = c_void_p()
+                _method(p_dlg, _DLG_GETRESULTS, HR, POINTER(c_void_p))(p_dlg, byref(p_arr))
+                if not p_arr:
+                    result["paths"] = []
+                    return
+                try:
+                    count = DW()
+                    _method(p_arr, _ARR_GETCOUNT, HR, POINTER(DW))(p_arr, byref(count))
+                    paths = []
+                    for i in range(count.value):
+                        p_item = c_void_p()
+                        _method(p_arr, _ARR_GETITEMAT, HR, DW, POINTER(c_void_p))(
+                            p_arr, DW(i), byref(p_item))
+                        if not p_item:
+                            continue
+                        try:
+                            p_name = c_void_p()
+                            _method(p_item, _ITEM_GETDISPLAYNAME, HR, ctypes.c_uint, POINTER(c_void_p))(
+                                p_item, _SIGDN_FILESYSPATH, byref(p_name))
+                            if p_name:
+                                s = ctypes.wstring_at(p_name)
+                                ole32_void.CoTaskMemFree(p_name)
+                                if s:
+                                    paths.append(s)
+                        finally:
+                            _method(p_item, _RELEASE, ctypes.c_ulong)(p_item)
+                    result["paths"] = paths
+                finally:
+                    _method(p_arr, _RELEASE, ctypes.c_ulong)(p_arr)
+            finally:
+                _method(p_dlg, _RELEASE, ctypes.c_ulong)(p_dlg)
+        except OSError as e:
+            result["error"] = e
+        finally:
+            # Never leave the app window disabled if the modal loop is torn down
+            # abnormally (a clean dialog close re-enables its owner itself). The
+            # owner lives on the pywebview UI thread; EnableWindow is cross-thread
+            # safe, and re-enabling an already-enabled window is a no-op.
+            if owner_hwnd:
+                try:
+                    ctypes.windll.user32.EnableWindow(wintypes.HWND(owner_hwnd), True)
+                except Exception:
+                    pass
+            if initialized:
+                try:
+                    ole32_void.CoUninitialize()
+                except Exception:
+                    pass
+
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+    t.join()
+    if result["error"] is not None:
+        logger.warning(f"Shell folder picker (Windows COM) failed: {result['error']}")
+        return None
+    return result["paths"]
+
+
+def _mac_multi_folder_picker(start_dir: str) -> list[str] | None:
+    """macOS native multi-folder picker via AppleScript ``choose folder`` with
+    ``multiple selections allowed``. Returns a list of POSIX paths (empty on
+    cancel), or None on a genuine failure so the caller falls back."""
+    import subprocess
+    safe_dir = (
+        (start_dir or '')
+        .replace('\\', '\\\\')
+        .replace('"', '\\"')
+        .replace('\n', ' ')
+        .replace('\r', ' ')
+    )
+    script = (
+        f'set theFolders to choose folder default location (POSIX file "{safe_dir}") '
+        'with multiple selections allowed\n'
+        'set out to ""\n'
+        'repeat with f in theFolders\n'
+        '  set out to out & POSIX path of f & linefeed\n'
+        'end repeat\n'
+        'return out'
+    )
+    try:
+        result = subprocess.run(
+            ['osascript', '-e', script], capture_output=True, text=True,
+        )
+    except Exception as e:
+        logger.warning(f"Multi-folder picker (macOS) failed to launch: {e}")
+        return None
+    if result.returncode != 0:
+        err = (result.stderr or '')
+        # -128 / "User canceled" is a normal cancel, not a failure.
+        if 'User canceled' in err or '-128' in err:
+            return []
+        logger.warning("Multi-folder picker (macOS) error: %s", err.strip())
+        return None
+    out = result.stdout or ''
+    return [line.strip() for line in out.splitlines() if line.strip()]
+
+
+def native_folder_multi_picker(initial_dir: str | None = None) -> list[str]:
+    """Open a native picker that allows selecting MULTIPLE folders at once.
+
+    Used by the Sync page's "Add Course" flow to add several course folders in
+    one action. Supported on Windows (IFileOpenDialog) and macOS (AppleScript);
+    on any other platform, or if the multi-picker can't run, it falls back to
+    the single :func:`native_folder_picker` and returns a one-element list.
+
+    Returns a list of absolute folder paths - empty if the user cancelled.
+    """
+    start_dir = _resolve_picker_start_dir(initial_dir)
+
+    import platform
+    system = platform.system()
+    try:
+        if system == 'Windows':
+            res = _win_shell_folder_picker(
+                start_dir, multi=True, owner_hwnd=_app_owner_hwnd())
+            if res is not None:
+                return res
+        elif system == 'Darwin':
+            res = _mac_multi_folder_picker(start_dir)
+            if res is not None:
+                return res
+    except Exception as e:
+        logger.warning(f"Multi-folder picker failed, falling back to single: {e}")
+
+    # Fallback: the single-folder picker (also covers Linux and any error above).
+    single = native_folder_picker(initial_dir=initial_dir)
+    return [single] if single else []
+
 
 def _win_short_path(path: str) -> str:
     """Return the Windows 8.3 short path for *path* (unchanged on failure or
@@ -1309,6 +1700,18 @@ LTI_STREAM_REASON = "LTI/Media Stream (Cannot directly download)"
 LOCKED_FILE_ERROR_TYPE = "Locked File"
 LTI_STREAM_ERROR_TYPE = "LTI/Media Stream"
 
+# A Panopto recording whose session Panopto reports as gone (deleted or moved).
+# It is the SAME kind of outcome as the two above - a permanent fact about the
+# course, not a failure of the run: no retry, setting or wait brings it back.
+# Counting it as a failure made a Today quick-sync that hit two deleted lectures
+# render amber "Sync Completed with Errors", the colour that is supposed to mean
+# "look at this". The producer (panopto.stream.friendly_stream_error) returns
+# this exact REASON string; the download flow stamps this ERROR_TYPE on the
+# DownloadError object, so both shapes classify identically.
+PANOPTO_UNAVAILABLE_REASON = ("This Panopto recording is no longer available - "
+                              "it may have been deleted or moved.")
+PANOPTO_UNAVAILABLE_ERROR_TYPE = "Recording No Longer Available"
+
 
 def declined_reason_sentence(reasons: dict, total: int = 0) -> str:
     """Name WHY Canvas would not serve these items, in one sentence.
@@ -1326,6 +1729,7 @@ def declined_reason_sentence(reasons: dict, total: int = 0) -> str:
     reasons = reasons or {}
     locked = int(reasons.get('locked', 0) or 0)
     stream = int(reasons.get('stream', 0) or 0)
+    unavailable = int(reasons.get('unavailable', 0) or 0)
     other = int(reasons.get('other', 0) or 0)
     bits = []
     if locked:
@@ -1334,8 +1738,11 @@ def declined_reason_sentence(reasons: dict, total: int = 0) -> str:
     if stream:
         bits.append(f"{stream} {'video is' if stream == 1 else 'videos are'} "
                     f"streamed through a Canvas plugin and cannot be saved as a file")
+    if unavailable:
+        bits.append(f"{unavailable} Panopto {'recording is' if unavailable == 1 else 'recordings are'} "
+                    f"no longer available (deleted or moved)")
     if other or not bits:
-        n = other or total or (locked + stream)
+        n = other or total or (locked + stream + unavailable)
         bits.append(f"Canvas will not serve {n} {'item' if n == 1 else 'items'}")
     joined = bits[0] if len(bits) == 1 else "; ".join(bits)
     return (joined[0].upper() + joined[1:]
@@ -1359,7 +1766,7 @@ def split_delivery_errors(errors) -> dict:
       count reads as an unexplained loss.
     """
     out = {'retriable': 0, 'unresolvable': 0, 'app': 0,
-           'reasons': {'locked': 0, 'stream': 0, 'other': 0}}
+           'reasons': {'locked': 0, 'stream': 0, 'unavailable': 0, 'other': 0}}
     for err in (errors or []):
         if isinstance(err, str):
             if LOCKED_FILE_REASON in err:
@@ -1368,6 +1775,9 @@ def split_delivery_errors(errors) -> dict:
             elif LTI_STREAM_REASON in err:
                 out['unresolvable'] += 1
                 out['reasons']['stream'] += 1
+            elif PANOPTO_UNAVAILABLE_REASON in err:
+                out['unresolvable'] += 1
+                out['reasons']['unavailable'] += 1
             else:
                 out['retriable'] += 1
             continue
@@ -1397,6 +1807,9 @@ def split_delivery_errors(errors) -> dict:
         elif etype == LTI_STREAM_ERROR_TYPE:
             out['unresolvable'] += 1
             out['reasons']['stream'] += 1
+        elif etype == PANOPTO_UNAVAILABLE_ERROR_TYPE:
+            out['unresolvable'] += 1
+            out['reasons']['unavailable'] += 1
         elif isinstance(ctx, dict) and ctx.get('filepath') \
                 and not getattr(err, 'retry_exhausted', False):
             # A real file failure with somewhere to retry TO.

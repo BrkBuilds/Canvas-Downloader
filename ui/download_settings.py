@@ -2774,7 +2774,8 @@ div.st-key-review_browse_folder button:hover {
                         st.stop()
 
                     # Initialize download state
-                    all_courses = fetch_courses_fn(st.session_state['api_token'], st.session_state['api_url'])
+                    from shared.components import resolve_courses_or_stop
+                    all_courses = resolve_courses_or_stop(fetch_courses_fn, retry_key="dl_start_conn_retry")
                     course_map = {c.id: c for c in all_courses}
                     courses_to_download = [course_map[cid] for cid in st.session_state['selected_course_ids'] if cid in course_map]
 
@@ -2824,10 +2825,11 @@ div.st-key-review_browse_folder button:hover {
                         st.session_state[f'persistent_{_pk}'] = st.session_state.get(_pk, False)
                     st.session_state['persistent_pan_layout'] = st.session_state.get('pan_layout', 'match')
 
-                    # Clear debug log once at session start (subsequent courses append)
-                    if st.session_state.get('debug_mode', False):
-                        from core.canvas_debug import clear_debug_log
-                        clear_debug_log(Path(st.session_state['download_path']) / "debug_log.txt")
+                    # Debug log clear + header + bridge install now happen once at
+                    # the run's first step-3/step-4 render (shared by quick and
+                    # custom download, and ahead of the scan phase). Reset the
+                    # per-run guard so that init fires fresh for this run.
+                    st.session_state.pop('_dl_debug_run_inited', None)
 
                     from core.cancellation import reset_download_cancel, reset_sync_cancel
                     reset_download_cancel()

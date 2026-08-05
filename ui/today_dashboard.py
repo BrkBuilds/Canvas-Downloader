@@ -1415,7 +1415,7 @@ def _render_panopto_optin_card() -> None:
             st.markdown(
                 "<div class='today-notice-inner'>"
                 "<div class='today-notice-head'>"
-                "<span class='today-notice-title'>Panopto lecture recordings "
+                "<span class='today-notice-title'>Notice: Panopto lecture recordings "
                 "aren&#39;t included in your daily sync</span></div>"
                 "<div class='today-notice-desc'>Your daily sync downloads files "
                 "only. To include lecture recordings, review and accept the "
@@ -1424,7 +1424,7 @@ def _render_panopto_optin_card() -> None:
                 "</div>",
                 unsafe_allow_html=True,
             )
-            st.button("Include lecture recordings",
+            st.button("I want to include lecture recordings",
                       key="today_pan_optin_btn", on_click=_open_panopto_optin)
         with c_close:
             st.button("​", key="today_pan_optin_close",

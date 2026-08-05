@@ -19,7 +19,9 @@ ui/
   sync_confirmation.py      # Final confirmation before sync
   presets.py                # Preset engine + hub UI
 core/
-  pair_labels.py            # The user's own name for a (course_id, local_folder) link - resolved at render
+  library.py                # THE unified store: saved pairs (stable id + name), groups (by id), in_daily_sync flag. See "THE LIBRARY".
+  library_migrate.py        # One-time, reversible migration of the 3 legacy pair files into core/library (hooked in app.py init)
+  pair_labels.py            # The user's own name for a (course_id, local_folder) link - resolved at render via library.name_index()
   state_registry.py         # Single source of truth for session state keys & defaults
   cancellation.py           # Global cancel flags + polling logic
   canvas_logic.py           # Canvas API wrapper, sanitization, async download engine
@@ -87,6 +89,16 @@ The SQLite manifest (`.canvas_sync.db`) is the **single source of truth** for sy
 - The md5 has to be stored *with* the product path (`_record_conversion_product`) because by the time post-processing runs, the manifest row has been repointed at the freshly downloaded source and no longer describes the product.
 - **`convert_code` must be passed an explicit `dst=`** - it computed its own `<stem>_<ext>.txt` and so bypassed the shared resolver entirely. Its `default_name` is a stem rewrite, not a suffix swap.
 - Quick Sync is unaffected: it declines locally-edited files outright and says so.
+
+### THE LIBRARY: one store for saved pairs, groups, and daily membership (2026-08-04)
+A course linked to a folder used to live as up to THREE drifting copies keyed on a fragile PATH - the hub (`saved_sync_groups.json`), the active sync list (`canvas_sync_pairs.json`), and the daily set (`today_dashboard.json`) - which is why moving a folder lost its name, re-downloading resurrected a deleted one, and even the developer couldn't hold the model. That is now unified in **`core/library.py`**.
+- **One first-class SAVED pair per `(course_id, folder)` link, with a STABLE id** (`pair_<uuid>`). The pair record is `{id, course_id, course_name, local_folder, name, standalone, in_daily_sync, created_at, updated_at}`. **The name lives on the id**, so `relink_pair` (a moved folder) carries the name with it, and `delete_pair` frees the id so re-adding the same path is a NEW pair with no name - both headline bugs fixed at the source, no `retarget` hack needed.
+- **`name` replaces the `group_name`/`auto_named` warts**: `""` means "use the live Canvas name". **`standalone`** = the user saved it on its own (a hub "Pair" card); a pair that exists only because a GROUP references it is `standalone=False` (still named/daily-able, just not its own card). `standalone` is only ever raised, never lowered.
+- **Groups reference pairs by id** (`{id, name, member_ids}`); a group names the SET and can never touch a member's name (the old `_project_pair` clobber trap is gone). `delete_group` keeps standalone members and GCs exclusive ones (including out of daily).
+- **Today is a CHILD of the library, not a copy**: the daily set is `pairs where in_daily_sync` - a query, not a file. So `reconcile_daily_list_with_hub()` is now a **no-op**, `today_store` keeps only settings (`auto_sync_enabled`/`last_auto_sync_date`/`fda_nudge_dismissed`), and a hub re-link/delete reflects in daily instantly.
+- **The mental model (from the user)**: the **sync list** is the working cart (raw, unsaved pairs allowed - forgotten on remove); the **hub/library** is where you SAVE pairs you care about, and saving is what lets you NAME them (naming stays a hub action); **Today** draws only from saved pairs.
+- **Migration + adapters** (`core/library_migrate.py`, hooked in `app.py` init): idempotent (guarded by `sync_library.json` version), reversible (legacy files copied to `*.bak`). During the transition `SavedGroupsManager` and `today_store` are thin FACADES over the library (kept so the hub UI is unchanged); `pair_labels` reads `library.name_index()` directly. Validated in the real app: boots, migrates real data, hub renders all pairs+groups with names, Add-to-Sync-List resolves the name.
+- **The three sections below describe the SUPERSEDED path** (labels resolved from the hub file, the daily-list copy + reconcile). The RULES they state still hold - a label belongs to the `(course_id, local_folder)` link; Today is a lens on history; Today's `sync_pairs` is a curated subset the engine must not overwrite - but the STORAGE is now `core/library.py`. Read this section first.
 
 ### A course has TWO names, and the user's one belongs to the LINK
 - **The Canvas name is IDENTITY; the user's name is a LABEL, resolved at render and stored nowhere else** (`core/pair_labels.py`). Before this, the user could write a name - "Save as Pair" asks for one - but it was trapped in the hub: `Add to Sync List` copies `{local_folder, course_id, course_name}` and drops `group_name` on the floor, so the one place they had said what they call a course was the one place it was never shown.

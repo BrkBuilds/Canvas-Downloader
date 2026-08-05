@@ -293,7 +293,13 @@ def test_health_record_is_not_offered_on_the_completion_screens():
     body = comp[start:comp.index("\ndef ", start + 10)]
     assert "health_log_path" not in body
     auth = open(_os.path.join(root, "ui", "auth.py"), encoding="utf-8").read()
-    assert "stg_btn_diag_dl" in auth and "health_log_path" in auth
+    # Settings surfaces the record via the Diagnostics card's action button.
+    # That button used to be a "Download record" st.download_button
+    # (stg_btn_diag_dl); it is now a "Show in Explorer"/"Reveal in Finder"
+    # button (stg_btn_diag_reveal), because the card prints the file's own path
+    # right above it - copying a local file to the same disk helped nobody,
+    # revealing it in the file manager is the whole job.
+    assert "stg_btn_diag_reveal" in auth and "health_log_path" in auth
 
 
 def test_webview_runtime_version_is_parsed_from_the_exe_path():

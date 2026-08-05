@@ -22,6 +22,12 @@ canvas_sync_history.json
 canvas_sync_pairs.json
 .canvas_sync.db
 saved_sync_groups.json
+# The unified saved-pairs/groups/daily store (core.library). Contains the user's
+# real course names, folder paths and daily selection - never commit it.
+sync_library.json
+# Reversible backups the library migration writes (core.library_migrate) - real
+# user data, same as the originals above.
+*.json.bak
 saved_download_presets.json
 update_banner_dismissed.json
 Streamlit UI Manipulation Guide.md

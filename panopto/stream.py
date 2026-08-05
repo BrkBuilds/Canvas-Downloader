@@ -17,7 +17,7 @@ import subprocess
 import sys
 import time
 
-from shared.helpers import make_long_path
+from shared.helpers import make_long_path, PANOPTO_UNAVAILABLE_REASON
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,34 @@ def _clean_error(msg) -> str:
     """
     text = _html.unescape(_TAG_RE.sub(" ", str(msg or "")))
     return re.sub(r"\s+", " ", text).strip()
+
+
+# Panopto's DeliveryInfo returns operator-facing error copy - most commonly
+# "This session isn't available. It may have been deleted." trailed by a
+# "See other videos" link into Panopto's own web UI. Once _clean_error has
+# stripped the tags, that anchor text survives as a dangling "See other videos"
+# that points nowhere in this app, and "session" is Panopto's word, not a
+# student's. This maps the well-known "the recording is gone" family to one
+# plain sentence a student can act on, and drops a trailing "See other videos"
+# from anything else. Everything unrecognised passes through unchanged.
+_SEE_OTHER_VIDEOS_RE = re.compile(r"\s*See other videos\.?\s*$", re.IGNORECASE)
+
+
+def friendly_stream_error(msg) -> str:
+    """Turn a raw Panopto stream/delivery error into student-facing text.
+
+    Idempotent: safe to call on a message that has already been cleaned or
+    friendlied (its own output re-matches the "no longer available" branch).
+    """
+    text = _clean_error(msg)
+    low = text.lower()
+    if ("isn't available" in low or "is not available" in low
+            or "may have been deleted" in low or "no longer available" in low):
+        # The shared constant, so the classifier (split_delivery_errors) can
+        # recognise this exact reason and treat the recording as a permanent
+        # decline rather than a retriable failure.
+        return PANOPTO_UNAVAILABLE_REASON
+    return _SEE_OTHER_VIDEOS_RE.sub("", text).strip()
 
 
 def ffmpeg_exe() -> str:
@@ -77,10 +105,13 @@ def get_delivery_info(session, panopto_base: str, video_id: str):
         return None, str(e)
 
     if data.get("ErrorCode"):
-        msg = _clean_error(
+        # Keep the raw (tag-stripped) message in the log for diagnostics, but
+        # hand callers the student-facing rewrite - this is what reaches the
+        # completion screen and Sync History as the failure reason.
+        raw = _clean_error(
             data.get("ErrorMessage", f"ErrorCode {data.get('ErrorCode')}"))
-        logger.info("Panopto DeliveryInfo error for %s: %s", video_id, msg)
-        return None, msg
+        logger.info("Panopto DeliveryInfo error for %s: %s", video_id, raw)
+        return None, friendly_stream_error(raw)
     delivery = data.get("Delivery", {}) or {}
     logger.debug(
         "Panopto DeliveryInfo %s: HTTP %s, duration=%.0fs, podcast=%d streams=%d",

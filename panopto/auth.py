@@ -130,13 +130,56 @@ def _id_from_page_body(body: str) -> tuple[str | None, int]:
     return None, len(counts)
 
 
+# A Panopto server is identified two ways, because the hostname alone is not
+# reliable across institutions:
+#   * HOST marker - the cloud tenants carry "panopto" in the host itself
+#     (``<name>.hosted.panopto.com``, ``<name>.cloud.panopto.eu``, or a plain
+#     ``panopto.university.edu``).
+#   * PATH marker - Panopto's web application is ALWAYS mounted at the
+#     ``/Panopto/`` product route (Viewer.aspx, Embed.aspx, DeliveryInfo.aspx,
+#     LTI/LTI.aspx, api/v1 and Services/Data.svc all live beneath it), whatever
+#     hostname the customer fronts it with. This is what recognises a vanity
+#     CNAME (``video.university.edu``) or an on-prem install on a fully custom
+#     domain, whose host carries no "panopto" at all.
+# Matching only the host silently failed EVERY download for a vanity/on-prem
+# institution even though the LTI session was valid: ``panopto_base`` came back
+# None, so the runner concluded "no Panopto session" and the whole course failed
+# with nothing actionable in the log. ``institution.py`` (LTI tool match) and
+# ``stream.py`` (cookie domain match) already key off the path/domain for exactly
+# this reason - this closes the last host-only gate so the three agree.
+_PANOPTO_HOST_MARK = "panopto"
+_PANOPTO_ROUTE_MARK = "/panopto/"
+
+
+def _is_panopto_location(netloc: str, path: str) -> bool:
+    """True when a URL's (host, path) belongs to a Panopto server. Never raises.
+
+    The path test is applied to the PATH ONLY - never the query - so a Canvas
+    OIDC hop that carries the encoded Panopto target
+    (``redirect_uri=...%2FPanopto%2FLTI.aspx``) in its query string is correctly
+    NOT mistaken for a Panopto landing (which would break the handshake one hop
+    early, on a Canvas URL, with no cookies). A trailing slash is appended before
+    matching so a bare ``/Panopto`` still counts while ``/Panoptolike/...`` on
+    some unrelated host does not.
+    """
+    if _PANOPTO_HOST_MARK in (netloc or "").lower():
+        return True
+    return _PANOPTO_ROUTE_MARK in ((path or "").lower() + "/")
+
+
 def panopto_base_from_url(url: str) -> str | None:
-    """Derive the Panopto origin (scheme://host) from any Panopto URL."""
+    """Derive the Panopto origin (``scheme://host``) from any Panopto URL.
+
+    Recognises the host by the "panopto" marker in the hostname (cloud tenants)
+    OR by the ``/Panopto/`` product route in the path (vanity CNAMEs and on-prem
+    installs on a custom domain). Returns None for anything not identifiably
+    Panopto.
+    """
     if not url:
         return None
     try:
         p = urlparse(url)
-        if p.scheme and p.netloc and "panopto" in p.netloc.lower():
+        if p.scheme and p.netloc and _is_panopto_location(p.netloc, p.path):
             return f"{p.scheme}://{p.netloc}"
     except Exception:
         pass
