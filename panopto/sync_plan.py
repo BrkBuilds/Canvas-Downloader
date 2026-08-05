@@ -43,7 +43,7 @@ _TRANSCRIPT_KINDS = ("txt", "srt")
 def wanted_kinds(settings: dict) -> list[str]:
     """Configured output kinds, ordered mp4, mp3, txt, srt.
 
-    model_ready is IGNORED here — classification always considers every
+    model_ready is IGNORED here - classification always considers every
     configured kind so that previously-produced txt/srt files that have been
     deleted locally still appear in the "Deleted Locally" review bucket, and
     new recordings with txt/srt configured still appear in "New Files".

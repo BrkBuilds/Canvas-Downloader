@@ -356,7 +356,7 @@ def _render_transcription_setup_notice(results):
 
     "Wants transcription" is determined by whether any *actionable* recording
     actually has txt/srt in its download_kinds (what will run on the next sync).
-    Checking settings alone is wrong — a restore-from-deleted MP4 only ever
+    Checking settings alone is wrong - a restore-from-deleted MP4 only ever
     re-downloads the mp4 even if txt/srt are enabled in settings, so the notice
     must not fire in that case.
     """
@@ -1901,7 +1901,7 @@ def show_analysis_review(on_confirm_sync):
                                                     f"You may already have this file. "
                                                     f"“{Path(_lookalike).name}” in your folder is the same "
                                                     f"size and type, but its name is too different to be sure "
-                                                    f"it is the same file — so it was not matched.\n\n"
+                                                    f"it is the same file - so it was not matched.\n\n"
                                                     f"Keep it checked to download a fresh copy (your file is "
                                                     f"never overwritten), or uncheck it if you know you "
                                                     f"already have it."
@@ -2208,8 +2208,8 @@ def show_analysis_review(on_confirm_sync):
                 "but the names are too different to be certain it is the same file, "
                 f"so it was not matched. {_eg}"
                 "Hover the ⚠️ next to a file to see which of your files it resembles.  "
-                "You can leave it checked to download a fresh copy — your own files "
-                "are never renamed, overwritten or deleted — uncheck it if you know "
+                "You can leave it checked to download a fresh copy - your own files "
+                "are never renamed, overwritten or deleted - uncheck it if you know "
                 "you already have it, or use the eye icon to skip it for good."
             ),
             key="sync_review_lookalike_notice",

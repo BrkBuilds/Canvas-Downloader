@@ -1960,11 +1960,11 @@ def render_login_page(fetch_courses_fn):
                         # vanity domain that lands on an SSO portal) is covered just-in-time
                         # by its own submit error, so here it is only a quiet footnote.
                         "1. Open Canvas in your web browser.\n"
-                        "2. Copy the address from your browser's address bar — for example "
+                        "2. Copy the address from your browser's address bar - for example "
                         "`schoolname.instructure.com` or `canvas.schoolname.edu`.\n"
-                        "3. Paste it here — the exact format doesn't matter.\n\n"
+                        "3. Paste it here - the exact format doesn't matter.\n\n"
                         "If a login attempt fails, use the address ending in `.instructure.com` "
-                        "(you'll see it in the address bar once you're inside Canvas) — that's the most reliable one.\n"
+                        "(you'll see it in the address bar once you're inside Canvas) - that's the most reliable one.\n"
                     )
 
             with st.expander('How to get a Canvas Access Token?', expanded=(_first_run or _reauth_mode)):
@@ -2050,7 +2050,7 @@ def render_login_page(fetch_courses_fn):
                     "1. Open the link above *(or in Canvas: click your **Profile** → **Settings**)*.\n"
                     "2. Scroll to **Approved Integrations** and click **+ New Access Token**.\n"
                     "3. Give it any purpose (e.g. \"Canvas Downloader\"), then click **Generate Token**.\n"
-                    "4. Copy the token right away — Canvas shows it only once — and paste it here.\n"
+                    "4. Copy the token right away - Canvas shows it only once - and paste it here.\n"
                 )
 
         st.markdown(

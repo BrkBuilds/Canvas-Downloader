@@ -14,7 +14,11 @@
   <meta property="og:description"
     content="Batch-download your Canvas courses. Smart sync, AI-ready conversion. Free." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="icon.png" />
+  <meta property="og:image" content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/icon.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Canvas Downloader" />
+  <meta name="twitter:description" content="Batch-download your Canvas courses. Smart sync, AI-ready conversion. Free." />
+  <meta name="twitter:image" content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/icon.png" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -2705,14 +2709,24 @@
       transform: scale(1.1);
     }
 
-    .expandable-video {
+    .expandable-video,
+    .expandable-img {
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .expandable-video:hover {
+    .expandable-video:hover,
+    .expandable-img:hover {
       transform: scale(1.02);
       box-shadow: 0 24px 60px rgba(59, 130, 246, 0.2) !important;
+    }
+
+    .video-modal img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+      max-height: 90vh;
     }
 
     /* Feature Expander */
@@ -2963,7 +2977,7 @@
               </span>
             </span>
           </h1>
-          <p>The ultimate tool for university students. Batch-download courses and canvas content. Sync & download the
+          <p>The ultimate tool for university students. Batch-download courses and Canvas content. Sync & download the
             newest course files in one click.<br> 100% free and AI-ready.</p>
         </div>
         <div class="hero-actions reveal" id="hero-actions-container">
@@ -3026,8 +3040,8 @@
               style="inset: -32px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;">
             </div>
             <div class="hero-media">
-              <img src="assets/hero.png" alt="Canvas Downloader turning a Canvas course into an organised folder of files"
-                class="hero-media-img" width="1600" height="1000" fetchpriority="high"
+              <img src="assets/CanvasDownloaderHero.png" alt="Canvas Downloader turning a Canvas course into an organised folder of files"
+                class="hero-media-img" width="2048" height="2048" fetchpriority="high"
                 onerror="this.closest('.hero-media').classList.add('is-empty'); this.remove();" />
               <div class="hero-media-fallback" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
@@ -3158,7 +3172,7 @@
               configuration, and let the app pull <b>all your course files</b> from Canvas, into course folders
               organized exactly like your Canvas courses. <br><br>But that's not all: The app also downloads <b>Canvas
                 Content</b> - all your assignments, announcements, quizzes, etc. and any <b> file attachments</b>, so
-              your pc has a 1:1 copy of each course.</p>
+              your PC has a 1:1 copy of each course.</p>
             <label for="p1-open" class="pillar-expander-label desktop-only">See exactly what you can download, and how
               <span class="pex-arrow"></span></label>
           </div>
@@ -3297,12 +3311,12 @@
         <div class="pillar-row rev reveal">
           <div class="pillar-text">
             <div class="section-kicker">2. Quick Sync</div>
-            <h3>Get new files from canvas with one click</h3>
+            <h3>Get new files from Canvas with one click</h3>
             <p>Imagine this - It’s Monday morning. Instead of digging through Canvas to find the files for your first
               class, just open Canvas Downloader, and hit <b>Quick Sync</b>. The app instantly finds and downloads only
-              the newest files your professors added to canvas.<br><br><b>Pro-tip:</b> Save your courses as a group, and
+              the newest files your professors added to Canvas.<br><br><b>Pro-tip:</b> Save your courses as a group, and
               add them to the Sync List. Then one press of <b>Quick Sync All</b> fetches everything new, straight to
-              your pc. Want it fully automatic? That's the next section.</p>
+              your PC. Want it fully automatic? That's the next section.</p>
             <label for="p2-open" class="pillar-expander-label desktop-only">What is downloaded and how does it work?
               <span class="pex-arrow"></span></label>
           </div>
@@ -3378,45 +3392,14 @@
             <label for="p6-open" class="pillar-expander-label desktop-only">How daily sync works
               <span class="pex-arrow"></span></label>
           </div>
-          <!-- Static mock rather than a clip, like the Lecture Recordings pillar
-               below. The Today page is mostly one toggle and a list, so a
-               recording of it would be a still image with a cursor in it. -->
+          <!-- Real screenshot of the Today page rather than a clip. The page is
+               mostly one toggle and a list, so a recording would be a still
+               image with a cursor in it. -->
           <div class="pillar-vis aligned-to-title"
-            style="display:flex; align-items:center; justify-content:center; padding:32px 26px; background:radial-gradient(120% 120% at 50% 0%, rgba(56,189,248,0.10), transparent 70%); border:1px solid var(--border); border-radius:var(--rad-l); box-shadow:0 16px 40px rgba(0,0,0,0.2);">
-            <div class="today-mock">
-              <div class="today-mock-toggle">
-                <div>
-                  <div class="today-mock-toggle-title">Daily auto-sync</div>
-                  <div class="today-mock-toggle-sub">Runs on your first launch each day</div>
-                </div>
-                <div class="today-mock-switch"><span></span></div>
-              </div>
-              <div class="today-mock-label">Today's files</div>
-              <div class="today-mock-row">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-                <span class="today-mock-course">Financial Accounting</span>
-                <span class="today-mock-count">4 new</span>
-              </div>
-              <div class="today-mock-row">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-                <span class="today-mock-course">Statistics II</span>
-                <span class="today-mock-count">2 new</span>
-              </div>
-              <div class="today-mock-row">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                </svg>
-                <span class="today-mock-course">Organisation Theory</span>
-                <span class="today-mock-count">1 lecture</span>
-              </div>
-            </div>
+            style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
+            <img class="expandable-img" src="assets/TodayMode_Auto-download-new-files.png"
+              alt="The Today page: a daily auto-sync toggle above a list of courses and the new files that arrived today"
+              style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);" />
           </div>
         </div>
         <label for="p6-open" class="pillar-expander-label mobile-only"
@@ -3757,8 +3740,8 @@
           <div class="expand-note">
             <b>Before your first lecture download, the app asks you to read a short notice.</b> Panopto's player has a
             download button your institution can switch on or off - and Canvas Downloader doesn't read that setting. It
-            saves the same stream the player already sends to your browser. That's worth knowing, so you get the
-            choice: <b>accept</b> and recordings download, or <b>continue without recordings</b> and everything else in
+            saves the same stream the player already sends to your browser. That's worth knowing, which is why the app
+            asks first: <b>accept</b> and recordings download, or <b>continue without recordings</b> and everything else in
             the run goes ahead exactly as normal. You can also switch lecture recordings off for good in
             <b>Settings</b>. Whatever you save is for your own study - never re-share a recording. The full story is on
             the <a href="disclaimer.html">Disclaimer &amp; Acceptable Use</a> page.
@@ -3800,7 +3783,7 @@
             </svg>
             Why is Windows / Mac warning me?
           </summary>
-          <p class="qa-body">Code-signing certificates-the thing that makes these warnings go away-cost $99 to $300 a
+          <p class="qa-body">Code-signing certificates - the thing that makes these warnings go away - cost $99 to $300 a
             year, paid to Apple or Microsoft. Since this is a free project built by a student, for students, and makes
             absolutely no money, paying for these certificates is unfortunately out of the question right now. To keep
             the app completely free, it remains unsigned. I hope to sign it in the future, but for now, the warning
@@ -3825,7 +3808,7 @@
           <p class="qa-body">Your courses and files come from your university's Canvas server - the same URL you log
             into in your browser. There's no backend, no analytics server, no developer receiving anything from your
             machine. Your Canvas Access Token is stored in your OS's password vault (Windows Credential Manager or
-            macOS Keychain), not in a file on disk, and is only ever sent to your university's Canvas.</p>
+            macOS Keychain), never in a plain-text file, and is only ever sent to your university's Canvas.</p>
           <p class="qa-body">Three other connections exist, and none of them carry your data:
             <b>your university's Panopto server</b>, only if you download lecture recordings;
             <b>Hugging Face and PyPI</b>, only if you set up on-device transcription or GPU acceleration - a one-time
@@ -3876,7 +3859,7 @@
               style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">canvas_logic.py</code>
             (all requests go to your Canvas URL), and <code
               style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">ui/auth.py</code>
-            (token saved to OS keyring, never written to a file).</p>
+            (token saved to your OS keyring, never written to a plain-text file).</p>
           <p class="qa-note">If you're not a developer, the fact that the source is fully public and has been since day
             one is itself the most meaningful signal.</p>
           <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
@@ -4718,20 +4701,37 @@
     <div class="video-modal-content">
       <button class="close-modal" id="closeModal">&times;</button>
       <video id="modalVideo" controls autoplay loop playsinline></video>
+      <img id="modalImage" alt="" style="display:none;" />
     </div>
   </div>
   <script>
     // Video Modal Logic
     const modal = document.getElementById('videoModal');
     const modalVideo = document.getElementById('modalVideo');
+    const modalImage = document.getElementById('modalImage');
     const closeBtn = document.getElementById('closeModal');
     const expandableVideos = document.querySelectorAll('.expandable-video');
+    const expandableImages = document.querySelectorAll('.expandable-img');
 
     expandableVideos.forEach(v => {
       v.addEventListener('click', () => {
+        modalImage.style.display = 'none';
+        modalImage.src = '';
+        modalVideo.style.display = 'block';
         modalVideo.src = v.src;
         modal.classList.add('active');
         modalVideo.play();
+      });
+    });
+
+    expandableImages.forEach(img => {
+      img.addEventListener('click', () => {
+        modalVideo.pause();
+        modalVideo.style.display = 'none';
+        modalVideo.src = '';
+        modalImage.style.display = 'block';
+        modalImage.src = img.src;
+        modal.classList.add('active');
       });
     });
 
@@ -4739,6 +4739,7 @@
       modal.classList.remove('active');
       modalVideo.pause();
       modalVideo.src = '';
+      modalImage.src = '';
     };
 
     closeBtn.addEventListener('click', closeModal);

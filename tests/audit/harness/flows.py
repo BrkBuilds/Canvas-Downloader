@@ -150,18 +150,18 @@ class Flow:
         opened = self.s.click("nav_btn_settings")
         if not opened.get("clicked"):
             raise FlowError(f"Settings button not clickable: {opened}")
-        # The Settings dialog is a portal invoked at the END of app.py's render on
-        # the NEXT rerun (the button only sets a flag), so it can land just after
-        # the click's settle. Poll for it rather than sampling once - the cold
-        # first row of a lane raced this as "Settings dialog did not open".
-        if not self._await_dialog_present():
-            raise FlowError("Settings dialog did not open")
-        dlg = self.s.page.locator('[data-testid="stDialog"]').first
-        # The dialog CONTAINER mounts a beat before its BODY renders, so waiting
-        # for stDialog alone then reading the toggle/Save button races the body -
-        # the cold first row saw "Save Settings button not found" here. Wait for
-        # the first body control we touch before interacting.
+        # The dialog is a portal invoked at the END of app.py's render on the NEXT
+        # rerun (the button only sets a flag), and its BODY renders a beat after the
+        # container - so on a cold first row a single sample raced it ("Settings
+        # dialog did not open" / "Save Settings button not found"). Wait for the
+        # toggle: it is the first body control we touch and renders together with
+        # the container and the Save button, so gating on it covers all three.
+        # probe_key polls the WIDGET, not the dialog, so the dialog-close polling
+        # accounting below is unchanged.
         self._await_key("temp_max_size_enabled", "checkbox", 20)
+        dlg = self.s.page.locator('[data-testid="stDialog"]').first
+        if dlg.count() == 0:
+            raise FlowError("Settings dialog did not open")
 
         tog = self.s.set_checkbox("temp_max_size_enabled", want_on)
         if want_on:
@@ -176,9 +176,6 @@ class Flow:
             self.s.settle()
 
         save = dlg.get_by_role("button", name="Save Settings")
-        _end = time.time() + 15
-        while save.count() == 0 and time.time() < _end:
-            time.sleep(0.3)
         if save.count() == 0:
             raise FlowError("Save Settings button not found in the dialog")
         save.first.click(timeout=20000)
@@ -204,14 +201,6 @@ class Flow:
         return self._log("set_size_cap", mb=mb, toggle=tog,
                          dialog_closed=closed, closed_with_escape=forced,
                          ok=closed)
-
-    def _await_dialog_present(self, timeout: float = 20.0) -> bool:
-        end = time.time() + timeout
-        while time.time() < end:
-            if self.s.page.locator('[data-testid="stDialog"]').count() > 0:
-                return True
-            time.sleep(0.25)
-        return False
 
     def _await_dialog_gone(self, timeout: float = 10.0) -> bool:
         end = time.time() + timeout

@@ -1933,7 +1933,7 @@ def render_today_dashboard(fetch_courses_fn=None):
                                  help=_SYNC_RUNNING_HELP if sync_running else None):
                         _request_import_dialog()
 
-        # ── Running sync (in-page) — STABLE SLOT ────────────────────────────────
+        # ── Running sync (in-page) - STABLE SLOT ───────────────────────────────
         # A daily/Quick Sync is in flight: surface it as a slim progress card right
         # here, directly BELOW the "Courses in your daily sync" card, instead of the
         # sync engine taking over the whole screen. The sections above and below stay
@@ -1956,7 +1956,7 @@ def render_today_dashboard(fetch_courses_fn=None):
             if sync_running:
                 _render_today_running_sync()
 
-        # ── Last-run success notice — floats in the gap ABOVE the hero ──────────
+        # ── Last-run success notice - floats in the gap ABOVE the hero ─────────
         # Written by the today completion handler (sync_ui.render_sync_step4) when a
         # daily/Quick Sync finishes. Rendered as a standalone sibling in the space
         # BETWEEN the "Courses in your daily sync" card and the "Today's files" hero
@@ -1973,7 +1973,7 @@ def render_today_dashboard(fetch_courses_fn=None):
         # nothing after it is dismissed.
         _render_panopto_optin_card()
 
-        # ── Today's files — the HERO card (page highlight) ──────────────────────
+        # ── Today's files - the HERO card (page highlight) ─────────────────────
         # The main event and primary action of the page: a prominent, accented card
         # that owns its own title and either a tall "all caught up" empty state or a
         # highlighted inner panel holding the per-course file expanders (for visual
@@ -2094,7 +2094,7 @@ def render_today_dashboard(fetch_courses_fn=None):
                         st.button("​", key="today_offlist_close_btn",
                                   on_click=_dismiss_offlist_notice, args=(_off_sig,))
 
-        # ── Quick Sync now — the manual, on-demand alternative to auto-sync ─────
+        # ── Quick Sync now - the manual, on-demand alternative to auto-sync ────
         # Rebuilt as an integrated action CARD in the page's card language (icon
         # badge + explainer on the left, brand Quick Sync button on the right).
         # Daily auto-sync (the toggle up top) is the hands-off primary path; this
