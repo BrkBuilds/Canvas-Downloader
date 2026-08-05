@@ -1105,7 +1105,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 'border: 1px solid rgba(56,139,253,0.45); border-radius: 6px; '
                 'padding: 8px 12px; margin: 0 0 6px 0; font-size: 0.9rem; line-height: 1.45;">'
                 f'<span style="color:#79c0ff; font-weight:700;">Bulk add · folder {_b_idx} of {_b_total}</span>'
-                f'<span style="color:#c9d1d9;"> — {esc(_hint)}</span>'
+                f'<span style="color:#c9d1d9;"> - {esc(_hint)}</span>'
                 '</div>'
             )
 

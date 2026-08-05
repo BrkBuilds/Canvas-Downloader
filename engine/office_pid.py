@@ -47,6 +47,23 @@ def find_new_office_pid(exe_name: str, pre_pids: set) -> int | None:
     return None
 
 
+def pid_is_process(pid: int, exe_name: str) -> bool:
+    """True iff *pid* is currently a live process named *exe_name*.
+
+    Used to force-kill a leaked Office COM process SAFELY: it confirms the PID we
+    tracked at init is still the Office exe we spawned before killing it, so a
+    PID the OS may have recycled (after a clean Quit already exited the process)
+    is never mistaken for our orphan and killed.
+    """
+    if not pid:
+        return False
+    try:
+        import psutil
+        return (psutil.Process(pid).name() or '').upper() == exe_name.upper()
+    except Exception:
+        return False
+
+
 def kill_office_pid(pid: int, exe_name_fallback: str) -> None:
     """Kill the Office process with *pid*.
 

@@ -77,13 +77,31 @@ class ExcelToPDF:
             self.app = None
 
     def _kill_app(self):
-        """Forcefully shut down the COM instance (safe to call anytime)."""
+        """Forcefully shut down the COM instance (safe to call anytime).
+
+        Quit() alone is NOT enough: when the RPC channel is dead - the exact
+        COM Error -2147023174 ("RPC server is unavailable") the self-heal path
+        hits - Quit() itself throws and is swallowed, so the EXCEL.EXE we spawned
+        is left running as an orphaned, empty Excel window. So after the graceful
+        Quit we force-kill the PID we tracked at init, but ONLY if it is still an
+        EXCEL.EXE (guards the tiny PID-reuse window after a clean Quit) and ONLY
+        that one PID (targeted /PID kill, never a broad /IM) so a workbook the
+        user has open in their own Excel is never touched.
+        """
         if self.app:
             try:
                 self.app.Quit()
             except Exception:
                 pass
         self.app = None
+        if self._com_pid:
+            try:
+                from engine.office_pid import kill_office_pid, pid_is_process
+                if pid_is_process(self._com_pid, 'EXCEL.EXE'):
+                    kill_office_pid(self._com_pid, 'EXCEL.EXE')
+            except Exception:
+                pass
+        self._com_pid = None
 
     def _is_alive(self) -> bool:
         """Quick COM channel health check - catches stale RPC handles."""

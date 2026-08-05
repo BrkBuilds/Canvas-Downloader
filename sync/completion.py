@@ -63,7 +63,7 @@ def build_newversion_notice(records) -> dict | None:
         f"new version from Canvas was saved next to {'it' if one else 'them'} "
         f"with \"_NewVersion\" in the name"
         + (f" (for example: {example})." if example else ".")
-        + " Your copy is untouched — compare the two and keep whichever you "
+        + " Your copy is untouched - compare the two and keep whichever you "
           "want, then delete the other."
     )
     return {"message": message, "detail": detail, "count": n, "example": example}
