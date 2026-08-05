@@ -150,9 +150,18 @@ class Flow:
         opened = self.s.click("nav_btn_settings")
         if not opened.get("clicked"):
             raise FlowError(f"Settings button not clickable: {opened}")
-        dlg = self.s.page.locator('[data-testid="stDialog"]').first
-        if dlg.count() == 0:
+        # The Settings dialog is a portal invoked at the END of app.py's render on
+        # the NEXT rerun (the button only sets a flag), so it can land just after
+        # the click's settle. Poll for it rather than sampling once - the cold
+        # first row of a lane raced this as "Settings dialog did not open".
+        if not self._await_dialog_present():
             raise FlowError("Settings dialog did not open")
+        dlg = self.s.page.locator('[data-testid="stDialog"]').first
+        # The dialog CONTAINER mounts a beat before its BODY renders, so waiting
+        # for stDialog alone then reading the toggle/Save button races the body -
+        # the cold first row saw "Save Settings button not found" here. Wait for
+        # the first body control we touch before interacting.
+        self._await_key("temp_max_size_enabled", "checkbox", 20)
 
         tog = self.s.set_checkbox("temp_max_size_enabled", want_on)
         if want_on:
@@ -167,6 +176,9 @@ class Flow:
             self.s.settle()
 
         save = dlg.get_by_role("button", name="Save Settings")
+        _end = time.time() + 15
+        while save.count() == 0 and time.time() < _end:
+            time.sleep(0.3)
         if save.count() == 0:
             raise FlowError("Save Settings button not found in the dialog")
         save.first.click(timeout=20000)
@@ -193,6 +205,14 @@ class Flow:
                          dialog_closed=closed, closed_with_escape=forced,
                          ok=closed)
 
+    def _await_dialog_present(self, timeout: float = 20.0) -> bool:
+        end = time.time() + timeout
+        while time.time() < end:
+            if self.s.page.locator('[data-testid="stDialog"]').count() > 0:
+                return True
+            time.sleep(0.25)
+        return False
+
     def _await_dialog_gone(self, timeout: float = 10.0) -> bool:
         end = time.time() + timeout
         while time.time() < end:
@@ -208,6 +228,23 @@ class Flow:
 
 class DownloadFlow(Flow):
 
+    def _await_key(self, key: str, role: str = "checkbox", timeout: float = 60.0) -> bool:
+        """Poll until ``st-key-<key>`` carries an interactive element, or timeout.
+
+        ``goto(ready=True)`` only proves the boot overlay lifted; on a COLD app
+        (every lane worker's first row) the course list is fetched and rendered
+        AFTER that, so a click/tick issued immediately races a list that does not
+        exist yet. ``set_checkbox`` probes once with no retry, so the race showed
+        up as an 81s dead wait ending in "could not select 43667" - deterministic,
+        and it cascaded the whole lane. This is the wait that closes that gap.
+        """
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            if self.s.probe_key(key, role).get("found"):
+                return True
+            time.sleep(0.5)
+        return False
+
     def select_courses(self, course_ids: list[int], view: str = "all") -> dict:
         """Tick the given courses on step 1.
 
@@ -216,6 +253,10 @@ class DownloadFlow(Flow):
         exactly like a broken selector and cost a debugging detour the first time.
         """
         self.s.goto(self.s.app_url("download", "1"))
+        # Wait for the course-list toolbar before touching anything: it renders
+        # only once the (cold) app has fetched the course list, so this warms the
+        # app before the view switch instead of racing it.
+        self._await_key("btn_course_clear_selection", "button", 120)
         if view == "all":
             self.s.click("btn_fav_all_dl")
         elif view == "favorites":
@@ -224,7 +265,11 @@ class DownloadFlow(Flow):
 
         results = []
         for cid in course_ids:
-            r = self.s.set_checkbox(f"dl_chk_{cid}", True)
+            # The Favorites->All switch (and any non-favorite like 43667) appears
+            # only after that rerun lands; wait for THIS target before ticking.
+            present = self._await_key(f"dl_chk_{cid}", "checkbox", 60)
+            r = self.s.set_checkbox(f"dl_chk_{cid}", True) if present \
+                else {"set": False, "reason": "checkbox never appeared (view switch or list render)"}
             results.append({"course_id": cid, "ok": r.get("verified", r.get("set"))})
         bad = [r for r in results if not r["ok"]]
         if bad:
@@ -235,7 +280,16 @@ class DownloadFlow(Flow):
         r = self.s.click("btn_custom_download")
         if not r.get("clicked"):
             raise FlowError(f"Custom Download not clickable: {r}")
+        # The click SCHEDULES a rerun; the step tracker flips to 2 only once that
+        # rerun lands, and Card 2's content lazy-loads (a "Loading..." spinner is
+        # visible on screen), so a single settle can return during a transient
+        # quiet BEFORE the transition. Poll the step off the tracker rather than
+        # reading it once - measured landing on step 1 on the very next frame.
+        deadline = time.time() + 20.0
         st = self.s.extract("screen")
+        while st.get("step") != "2" and time.time() < deadline:
+            time.sleep(0.3)
+            st = self.s.extract("screen")
         if st.get("step") != "2":
             raise FlowError(f"Expected step 2, got {st.get('step')}")
         return self._log("open_custom", step=st.get("step"))

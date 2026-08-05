@@ -574,10 +574,21 @@ def _recover(rp: RunPaths, appctl, browser, spec: dict) -> None:
         pass
     try:
         appctl.start(rp, port=spec["app_port"])
-        browser.open_browser(rp, headed=not spec.get("headless", True),
-                             port=spec["cdp_port"])
     except Exception:
         pass
+    # Reopen the browser with retries. The Chrome just killed by close_browser can
+    # hold its CDP port and profile lock for a moment, so a single reopen races it
+    # and fails - and a failed reopen leaves the lane with NO browser, so every
+    # later row dies "Browser is not open". That turns one row's failure into a
+    # whole lane of false failures, which is the exact opposite of what recovery
+    # is for. Retry until the port/lock clears.
+    for _attempt in range(5):
+        try:
+            browser.open_browser(rp, headed=not spec.get("headless", True),
+                                 port=spec["cdp_port"])
+            return
+        except Exception:
+            time.sleep(3)
 
 
 def execute(rp: RunPaths, job: Job) -> dict:
