@@ -187,6 +187,44 @@ def _safe_keyring_delete(service: str, username: str) -> bool:
         logger.warning(f"Keyring delete_password failed: {e}")
         return False
 
+def write_config_atomically(config: dict) -> bool:
+    """Persist the settings file without a window where it is truncated.
+
+    ``open(CONFIG_FILE, 'w')`` truncates FIRST and writes second, so a crash,
+    a full disk or a kill in between leaves the user's settings file empty or
+    half-written. tmp + fsync + ``os.replace`` never exposes that state: the
+    old file is intact until the new one is complete.
+
+    This exists because the config was being written in FIVE places and only
+    three of them did it safely. The two that did not were the legacy
+    token-migration paths in ``restore_saved_session`` - which run at STARTUP,
+    on the run that moves a token out of the JSON and into the keyring, i.e.
+    exactly when the file is most worth not corrupting.
+
+    Returns False (never raises) if nothing reached disk; a settings write must
+    not be able to abort a login.
+    """
+    tmp = CONFIG_FILE + '.tmp'
+    try:
+        with open(tmp, 'w', encoding='utf-8') as f:
+            json.dump(config, f)
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except OSError:
+                pass
+        os.replace(tmp, CONFIG_FILE)
+        return True
+    except Exception as e:
+        logger.warning("Could not write settings to %s: %s", CONFIG_FILE, e)
+        try:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+        except OSError:
+            pass
+        return False
+
+
 def _get_fallback_path() -> Path:
     from shared.helpers import get_config_dir
     from pathlib import Path
@@ -762,8 +800,7 @@ def restore_saved_session() -> None:
                                 if not kr_ok:
                                     _save_fallback_token(keyring_user, loaded_token)
                                 config.pop('mac_api_token', None)
-                                with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
-                                    json.dump(config, fw)
+                                write_config_atomically(config)
                             except Exception:
                                 pass
                         except Exception:
@@ -778,8 +815,7 @@ def restore_saved_session() -> None:
                             if not kr_ok:
                                 _save_fallback_token(keyring_user, loaded_token)
                             config.pop('api_token', None)
-                            with open(CONFIG_FILE, 'w', encoding='utf-8') as fw:
-                                json.dump(config, fw)
+                            write_config_atomically(config)
                         except Exception:
                             pass
 

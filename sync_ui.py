@@ -1979,7 +1979,14 @@ def _render_sync_history():
         if '_sync_history_cache' not in st.session_state:
             st.session_state['_sync_history_cache'] = history_mgr.load_history()
         history = st.session_state['_sync_history_cache']
-    except Exception:
+    except Exception as _hist_err:
+        # Degrading to [] is right - a history panel must never break step 1 -
+        # but it renders as "you have no sync history", which is exactly the
+        # confusion this repo already calls out for the hub read: a failure must
+        # never be mistaken for the user having deleted everything. Nothing
+        # recorded it, so a permanently unreadable history file looked like an
+        # empty one for ever.
+        logger.warning(f"Could not load sync history: {_hist_err}", exc_info=True)
         history = []
 
     if history:
@@ -3165,6 +3172,11 @@ def _run_sync_panopto():
         'dl_total': 0, 'dl_done': 0,
         'tx_total': 0, 'tx_done': 0, 'tx_pct': 0, 'tx_pct_shown': -10,
     }
+    # How many times the progress hook below has blown up. A one-element list,
+    # not an int, because the hook is a closure that only READS its enclosing
+    # scope - rebinding an int there would need `nonlocal`, and this stays
+    # consistent with the mutable-dict state above it.
+    _pan_hook_errs = [0]
     # Pre-fill the header's course line (the h3 under the phase label - the
     # same slot the file-sync dashboard fills with the course name). Without
     # it the download/transcribe phases rendered an EMPTY h3: a phantom gap
@@ -3362,8 +3374,27 @@ def _run_sync_panopto():
                                        detail=_msg)); _render()
         except (KeyboardInterrupt, SystemExit):
             raise
-        except Exception:
-            pass
+        except Exception as _hook_err:
+            # Swallowed on purpose - a progress repaint must never abort a
+            # Panopto run - but LOGGED, because this is the exact shape that hid
+            # a NameError in sync/analysis.py's hook for months: it fired on
+            # every tick, the panel simply never painted, and nothing anywhere
+            # said why. 123 lines of event handling sit under this handler.
+            #
+            # Only the FIRST failure carries a traceback. Unlike the analysis
+            # hook (once per course) this one fires per download/transcribe
+            # event, so an unconditional exc_info would bury the run's real
+            # errors under hundreds of identical stacks. The first one is the
+            # diagnostic; the rest only need to be countable.
+            _pan_hook_errs[0] += 1
+            if _pan_hook_errs[0] == 1:
+                logger.warning(
+                    f"Panopto progress repaint failed (kind={kind!r}): {_hook_err}",
+                    exc_info=True)
+            else:
+                logger.debug(
+                    f"Panopto progress repaint failed again "
+                    f"(#{_pan_hook_errs[0]}, kind={kind!r}): {_hook_err}")
 
     cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
     _render()

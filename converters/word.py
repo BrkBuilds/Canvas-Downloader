@@ -207,6 +207,19 @@ class WordToPDF:
                 doc = None
                 _timer.cancel()
 
+                # Word can return from SaveAs without raising and without having
+                # written anything (protected/repaired documents, locked-down
+                # AutomationSecurity). Deleting the original on that basis
+                # destroyed the user's only copy - so prove the PDF is real first.
+                from converters.verify import pdf_looks_real
+                _ok, _why = pdf_looks_real(safe_pdf)
+                if not _ok:
+                    logger.error(
+                        f"[COM Converter] Word reported success for {abs_doc_path.name} "
+                        f"but {_why}; keeping the original."
+                    )
+                    return None
+
                 # Delete the original legacy file (from the true long path)
                 abs_doc_path.unlink(missing_ok=True)
 

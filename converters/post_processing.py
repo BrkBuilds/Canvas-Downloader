@@ -359,11 +359,30 @@ def _update_manifest_path(sm, original_file: Path, converted_path: Path):
     except ValueError:
         return
 
-    manifest = sm.load_manifest()
-    for file_id, info in manifest.get('files', {}).items():
-        if info.get('local_path', '') == original_rel:
-            sm.update_converted_file(int(file_id), new_rel)
-            break
+    # BOOKKEEPING MUST NOT UNDO WORK THAT ALREADY SUCCEEDED. By the time this
+    # runs the converted file is on disk and the original is gone; the only
+    # thing left is repointing a manifest row. `load_manifest` deliberately
+    # RE-RAISES database errors ("Aborting to prevent data loss"), and none of
+    # the conversion runners has a per-item handler - so a manifest that was
+    # briefly locked (antivirus, or the sync that just finished writing to it)
+    # aborted the whole conversion phase mid-way, leaving the remaining files
+    # unconverted, the active-file line stuck on the last one, and the phase's
+    # own "complete" message never emitted.
+    #
+    # The cost of swallowing it is one stale manifest row, which the next sync's
+    # heal pass fixes; the cost of propagating it is every later file in the
+    # phase. Logged, never silent.
+    try:
+        manifest = sm.load_manifest()
+        for file_id, info in manifest.get('files', {}).items():
+            if info.get('local_path', '') == original_rel:
+                sm.update_converted_file(int(file_id), new_rel)
+                break
+    except Exception as e:
+        logger.warning(
+            "Could not repoint the manifest from %s to %s (%s: %s). The file was "
+            "converted; only the sync record is stale.",
+            original_rel, new_rel, type(e).__name__, e)
 
 
 def _is_locked(path: Path) -> bool:
@@ -462,6 +481,40 @@ def retry_failed_conversions(attempts: list, ui: UIBridge) -> list:
     if recovered:
         _emit(ui, 'meta', f"{len(recovered)} recovered on retry")
     return still
+
+
+def _run_phase(runner, items, ui) -> bool:
+    """Run ONE conversion phase, absorbing anything it raises. Returns success.
+
+    The nine ``run_*`` runners are siblings, and a failure in one says nothing
+    about the next: a wedged COM server has no bearing on HTML→Markdown. But
+    only ``run_excel_data_conversion`` had a per-item handler, and
+    ``run_all_conversions`` called them all bare - so ONE unexpected exception
+    anywhere took down every phase after it AND ``retry_failed_conversions``,
+    which is the thing that would otherwise have recovered the files.
+
+    One guard here rather than nine inside the runners: it is the boundary the
+    phases are already independent across, it cannot be forgotten when a tenth
+    converter is added, and it mirrors the handler ``retry_failed_conversions``
+    already uses for exactly the same reason.
+    """
+    try:
+        runner(items, ui)
+        return True
+    except Exception as e:
+        label = runner.__name__.replace('run_', '').replace('_', ' ')
+        logger.error("Conversion phase %s failed: %s", runner.__name__, e, exc_info=True)
+        try:
+            _emit(ui, 'error', f"{label} stopped early", detail=str(e))
+        except Exception:
+            pass
+        # The runner clears this on its normal exit; on this path it would stay
+        # stuck on whichever file was in flight when it blew up.
+        try:
+            ui.active_file_placeholder.empty()
+        except Exception:
+            pass
+        return False
 
 
 def _still_present(item) -> bool:
@@ -1159,15 +1212,15 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
             # to every converter below - see the note at the top of this
             # function for why that was reversed. A zip is unpacked; what comes
             # out of it is left alone.
-            run_archive_extraction(
-                [(f, sm, course_name) for f in archive_files], ui)
+            _run_phase(run_archive_extraction,
+                       [(f, sm, course_name) for f in archive_files], ui)
 
     # PPTX → PDF
     if contract.get('convert_pptx', False):
         pptx_files = _glob_files(course_folder, {'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, explicit_files)
         if pptx_files:
             _items = [(f, sm, course_name) for f in pptx_files]
-            run_pptx_conversion(_items, ui)
+            _run_phase(run_pptx_conversion, _items, ui)
             _attempts.append((run_pptx_conversion, _items))
 
     # HTML → Markdown
@@ -1175,7 +1228,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
         html_files = _glob_files(course_folder, {'.html'}, explicit_files)
         if html_files:
             _items = [(f, sm, course_name) for f in html_files]
-            run_html_conversion(_items, ui)
+            _run_phase(run_html_conversion, _items, ui)
             _attempts.append((run_html_conversion, _items))
 
     # Code → TXT
@@ -1184,7 +1237,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
         code_files = _glob_files(course_folder, CODE_EXTENSIONS, explicit_files)
         if code_files:
             _items = [(f, sm, course_name) for f in code_files]
-            run_code_conversion(_items, ui)
+            _run_phase(run_code_conversion, _items, ui)
             _attempts.append((run_code_conversion, _items))
 
     # URL Compilation
@@ -1193,16 +1246,16 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
              # PATH NORMALIZATION CONSTRAINT: Resolve paths to avoid slashes breaking isolation
              has_shortcut = any(Path(p).resolve().suffix.lower() in {'.url', '.webloc'} for p in explicit_files)
              if has_shortcut:
-                 run_url_compilation([(course_folder, course_name)], ui)
+                 _run_phase(run_url_compilation, [(course_folder, course_name)], ui)
         else:
-             run_url_compilation([(course_folder, course_name)], ui)
+             _run_phase(run_url_compilation, [(course_folder, course_name)], ui)
 
     # Legacy Word → PDF
     if contract.get('convert_word', False):
         word_files = _glob_files(course_folder, {'.doc', '.rtf', '.odt'}, explicit_files)
         if word_files:
             _items = [(f, sm, course_name) for f in word_files]
-            run_word_conversion(_items, ui)
+            _run_phase(run_word_conversion, _items, ui)
             _attempts.append((run_word_conversion, _items))
 
     # Excel → AI Data + PDF (single toggle, dual pipeline)
@@ -1213,12 +1266,13 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
         # ExcelToPDF via COM/AppleScript handles .xls fine - it stays in the PDF glob below.
         excel_data_files = _glob_files(course_folder, {'.xlsx', '.xlsm'}, explicit_files)
         if excel_data_files:
-            run_excel_data_conversion([(f, sm, course_name) for f in excel_data_files], ui)
+            _run_phase(run_excel_data_conversion,
+                       [(f, sm, course_name) for f in excel_data_files], ui)
 
         excel_pdf_files = _glob_files(course_folder, {'.xlsx', '.xls', '.xlsm'}, explicit_files)
         if excel_pdf_files:
             _items = [(f, sm, course_name) for f in excel_pdf_files]
-            run_excel_conversion(_items, ui)
+            _run_phase(run_excel_conversion, _items, ui)
             _attempts.append((run_excel_conversion, _items))
 
     # Video → MP3
@@ -1226,7 +1280,7 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
         video_files = _glob_files(course_folder, {'.mp4', '.mov', '.mkv', '.avi', '.m4v'}, explicit_files)
         if video_files:
             _items = [(f, sm, course_name) for f in video_files]
-            run_video_conversion(_items, ui)
+            _run_phase(run_video_conversion, _items, ui)
             _attempts.append((run_video_conversion, _items))
 
     # One retry pass over everything that failed, then a precise reason for

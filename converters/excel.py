@@ -255,6 +255,19 @@ class ExcelToPDF:
                 _timer.cancel()
                 time.sleep(0.2)
 
+                # ExportAsFixedFormat goes through a printer driver and can
+                # return normally having written nothing at all. Deleting the
+                # spreadsheet on that basis destroyed the user's only copy, so
+                # the PDF has to be shown to exist and be a real PDF first.
+                from converters.verify import pdf_looks_real
+                _ok, _why = pdf_looks_real(safe_pdf)
+                if not _ok:
+                    logger.error(
+                        f"[COM Converter] Excel reported success for {src.name} "
+                        f"but {_why}; keeping the original."
+                    )
+                    return None, f"Excel reported success but {_why}"
+
                 # Remove the original spreadsheet (from the true long path)
                 src.unlink(missing_ok=True)
                 # Return the true long-path PDF location (context manager moves it back)

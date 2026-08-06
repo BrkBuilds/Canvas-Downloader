@@ -14,12 +14,18 @@ from __future__ import annotations
 
 import base64
 import functools
+import logging
 import os
 import sys
 import time
 from pathlib import Path
 
 import streamlit as st
+
+# Module level, never inside a function: `import logging` in a function body
+# makes the name local to that whole function, so any earlier reference raises
+# UnboundLocalError - silently, whenever an enclosing handler catches it.
+logger = logging.getLogger(__name__)
 
 from shared import theme
 from shared.helpers import (
@@ -49,12 +55,31 @@ def _resolve_path(path):
 
 
 @functools.lru_cache(maxsize=64)
+def _load_b64_cached(path):
+    """Cached disk read - only reached on success; exceptions propagate uncached."""
+    with open(_resolve_path(path), "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
 def _load_b64(path):
-    """Load a file and base64-encode it. Cached: assets don't change at runtime."""
+    """Load an asset and base64-encode it, or "" if it cannot be read.
+
+    Split into a cached inner + an uncached guard, mirroring
+    ``shared.helpers.get_base64_image``. The single cached function this
+    replaced had both problems that pattern exists to avoid:
+
+    * it caught only ``FileNotFoundError``, so a ``PermissionError`` - the
+      realistic one, since these assets live in PyInstaller's ``_MEIxxxx`` temp
+      directory, which Windows antivirus is known to lock transiently -
+      propagated out of a page render as a traceback;
+    * the handler sat INSIDE the ``lru_cache``, so a momentary failure was
+      cached and the icon stayed missing for the rest of the session. That is
+      the M-20 bug ``get_base64_image`` documents having fixed, recurring here.
+    """
     try:
-        with open(_resolve_path(path), "rb") as f:
-            return base64.b64encode(f.read()).decode()
-    except FileNotFoundError:
+        return _load_b64_cached(path)
+    except Exception as e:
+        logger.warning("Could not load asset %s: %s", path, e)
         return ""
 
 

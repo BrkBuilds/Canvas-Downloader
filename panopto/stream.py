@@ -137,6 +137,12 @@ def pick_audio_stream(delivery: dict) -> str | None:
 # Recordings that aren't downloaded yet have no file on disk to measure, so we
 # estimate from the recording's duration. Audio is CBR so the estimate is exact;
 # video bitrate varies, so the video figure is an approximation (shown as "~").
+# How long a running ffmpeg may produce NO new bytes before it is treated as
+# wedged. Generous on purpose: it must clear the initial connect + HLS manifest
+# fetch on a slow link, and a lecture that is merely downloading slowly is still
+# growing its .part file and so never trips it.
+_STALL_TIMEOUT_SECONDS = 180
+
 _AUDIO_BITS_PER_SEC = 128_000          # matches download_audio_mp3's -ab 128k
 _VIDEO_BITS_PER_SEC = 1_500_000        # ~1.5 Mbps: typical mixed lecture
 
@@ -441,18 +447,57 @@ def _run_ffmpeg_download(cmd: list[str], out_path: str, *, is_cancelled=None) ->
     )
     _stderr_thread.start()
 
+    def _stop_ffmpeg() -> None:
+        """terminate, then kill, then REAP. Without the final wait() the child
+        is left unreaped on POSIX, and on Windows its handle on the .part file
+        may outlive the cleanup below, turning the removal into a silent no-op
+        that strands a partial recording."""
+        try:
+            proc.terminate()
+            proc.wait(timeout=5)
+        except Exception:
+            try:
+                proc.kill()
+                proc.wait(timeout=5)
+            except Exception:
+                pass
+
     stderr_text = ""
     try:
+        # Stall watchdog. ffmpeg is given no timeout of its own (adding CLI
+        # flags risks breaking every download on a version that does not accept
+        # them), and the poll loop had no wall-clock bound - so a Panopto stream
+        # that simply stops sending left ffmpeg waiting on a socket for ever and
+        # this loop spinning behind it. Interactively the user can cancel; the
+        # DAILY AUTO-SYNC runs unattended, so there is nobody to click it.
+        #
+        # Progress is measured as growth of the .part file rather than elapsed
+        # time, so a genuinely slow download is never killed - only one that has
+        # stopped producing bytes.
+        _last_size = -1
+        _last_progress_at = time.time()
         while proc.poll() is None:
             if is_cancelled and is_cancelled():
-                proc.terminate()
-                try:
-                    proc.wait(timeout=5)
-                except Exception:
-                    proc.kill()
+                _stop_ffmpeg()
                 # Clean up the partial file.
                 _cleanup_part()
                 return False, "cancelled"
+            try:
+                _sz = os.path.getsize(part_path) if os.path.exists(part_path) else 0
+            except OSError:
+                _sz = _last_size
+            _now = time.time()
+            if _sz > _last_size:
+                _last_size = _sz
+                _last_progress_at = _now
+            elif _now - _last_progress_at > _STALL_TIMEOUT_SECONDS:
+                _stop_ffmpeg()
+                _cleanup_part()
+                logger.warning(
+                    "Panopto download stalled (%s): no bytes for %ds; giving up.",
+                    os.path.basename(out_path), _STALL_TIMEOUT_SECONDS)
+                return False, (f"the download stalled - no data for "
+                               f"{_STALL_TIMEOUT_SECONDS}s")
             time.sleep(0.25)
         rc = proc.returncode
     finally:

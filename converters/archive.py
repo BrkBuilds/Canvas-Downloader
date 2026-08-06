@@ -1,7 +1,15 @@
+import logging
 import os
 import zipfile
 import tarfile
 from pathlib import Path
+
+# Module level, NOT inside the except handler where it used to live: a function
+# that does `import logging` anywhere in its body makes `logging` a LOCAL name
+# for the WHOLE function, so any earlier reference raises UnboundLocalError -
+# silently, because the surrounding handler catches it and reports the wrong
+# reason. Same trap as the `isolate` bug in core/canvas_logic.py.
+logger = logging.getLogger(__name__)
 
 MAX_UNCOMPRESSED_SIZE = 50 * 1024 * 1024 * 1024  # 50 GB
 MAX_COMPRESSION_RATIO = 100.0
@@ -68,8 +76,12 @@ def extract_archive(archive_path: str | Path,
 
     # Apply long-path prefix only to the extraction directory so that deeply
     # nested members don't silently fail on Windows MAX_PATH (260 chars).
-    if os.name == 'nt' and not str(extract_dir).startswith('\\\\?\\'):
-        extract_dir = Path('\\\\?\\' + str(extract_dir))
+    # Via the shared helper, NOT a hand-rolled concatenation: the prefix has to
+    # take the "UNC\" form for a network share and needs backslash separators,
+    # neither of which a bare "\\?\" + str(...) does.
+    if os.name == 'nt':
+        from shared.helpers import make_long_path as _mlp
+        extract_dir = Path(_mlp(extract_dir))
         
 
     
@@ -167,12 +179,26 @@ def extract_archive(archive_path: str | Path,
         else:
             return None
             
-        # Delete the heavy original archive (Sync Engine Bypass handles the missing file)
+        # Delete the heavy original archive (Sync Engine Bypass handles the
+        # missing file) - but ONLY once something actually came out of it.
+        #
+        # Both extraction paths can legitimately produce nothing while raising
+        # nothing: _filter_zip_members strips every __MACOSX/ and ._* entry, and
+        # tarfile's `data` filter SILENTLY SKIPS members it considers unsafe. An
+        # archive whose entire content is filtered away therefore reached this
+        # line with an empty folder, and deleted the user's only copy of the
+        # archive to show for it.
+        if not any(os.scandir(str(extract_dir))):
+            logger.warning(
+                "Extracted nothing from %s (every member was filtered or skipped); "
+                "keeping the archive.", abs_archive.name)
+            _decline(extract_dir)          # remove the empty folder we made
+            return None
+
         abs_archive.unlink(missing_ok=True)
-        
+
         return True
         
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).error(f"Failed to extract {abs_archive.name}: {e}")
+        logger.error(f"Failed to extract {abs_archive.name}: {e}")
         return None

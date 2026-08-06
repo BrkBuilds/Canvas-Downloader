@@ -66,11 +66,56 @@ def get_base64_image(image_path) -> str:
 
 
 def make_long_path(p: str | Path) -> str:
-    """Prepend Windows long path prefix to absolute paths to prevent WinError 206."""
+    """Prepend Windows long path prefix to absolute paths to prevent WinError 206.
+
+    The ``\\\\?\\`` prefix turns OFF Win32 path parsing, which is exactly what
+    lifts MAX_PATH - and exactly why the path handed to it must already be in
+    the one form the kernel accepts. Two shapes were being produced that the
+    kernel rejects, both measured on 2026-08-06:
+
+    * **UNC.** ``\\\\server\\share\\f`` became ``\\\\?\\\\\\server\\share\\f``,
+      which fails with **WinError 123** ("the filename, directory or volume
+      label syntax is incorrect"). A UNC path takes the ``UNC\\`` form instead:
+      ``\\\\?\\UNC\\server\\share\\f``. Verified by error KIND - the malformed
+      prefix gives WinError 123 while the correct one gives the ordinary
+      WinError 53 ("network path not found"). Anyone syncing to a network share
+      hit this on *every* file write, sqlite connect and existence check.
+    * **Forward slashes.** ``\\\\?\\C:/Users/x`` does not resolve at all -
+      ``os.path.exists`` returns **False** and ``open`` raises "No such file or
+      directory", so the file silently looks absent rather than erroring. Tk's
+      ``filedialog.askdirectory`` (the fallback folder picker, used whenever the
+      COM shell picker fails) returns forward slashes on Windows, so this was
+      reachable from the UI.
+
+    ``normpath`` fixes both by canonicalising separators and resolving ``.`` /
+    ``..`` - which the prefix would otherwise take literally, since it disables
+    the normalisation that would ordinarily do it.
+
+    Paths that are already extended-length (``\\\\?\\``) or Win32 device paths
+    (``\\\\.\\``) are returned untouched, as are relative paths (unchanged from
+    the original behaviour: the caller's relative path is its own business).
+    """
     s = str(p)
-    if os.name == 'nt' and Path(p).is_absolute() and not s.startswith('\\\\?\\'):
-        return '\\\\?\\' + s
-    return s
+    if os.name != 'nt':
+        return s
+    # Already extended-length, or a device path (\\.\pipe\..., \\.\PhysicalDrive0)
+    # - both are parsed raw by the kernel already; prefixing again corrupts them.
+    if s.startswith('\\\\?\\') or s.startswith('\\\\.\\'):
+        return s
+    try:
+        # Path.is_absolute() is the ORIGINAL gate and is kept deliberately: it
+        # is False for a drive-relative root like "\Users\x" (no drive letter),
+        # which cannot be expressed as an extended-length path at all. Widening
+        # this to ntpath.isabs() would start emitting "\\?\\Users\x", which is
+        # invalid.
+        if not Path(s).is_absolute():
+            return s
+        norm = os.path.normpath(s)
+    except (OSError, ValueError):
+        return s
+    if norm.startswith('\\\\'):
+        return '\\\\?\\UNC\\' + norm[2:]
+    return '\\\\?\\' + norm
 
 
 def archive_file_limit() -> int | None:
@@ -165,8 +210,19 @@ def office_safe_path(original_path: Path, dst: Path | None = None):
     temp_pdf = temp_dir / f"{short_name}.pdf"
 
     try:
-        # Copy the source file to the short temp path
-        shutil.copy2(str(resolved), str(temp_source))
+        # Copy the source file to the short temp path.
+        #
+        # Through make_long_path, and note the asymmetry: OUR OWN file
+        # operations need the prefix, while the paths we YIELD must not have it
+        # (Office COM is what chokes on long paths, and it chokes on a "\\?\"
+        # prefix too - that asymmetry is the whole reason this shadowing
+        # exists). This branch only runs for paths >= 240 chars, so without the
+        # prefix the copy fails on a DEFAULT Windows install, where
+        # LongPathsEnabled is 0 - i.e. the function whose only purpose is long
+        # paths could not read the long source or write the long destination.
+        # Not reproducible on a machine with LongPathsEnabled=1; same reasoning
+        # (and same fix) as the note in panopto/stream.py.
+        shutil.copy2(make_long_path(resolved), str(temp_source))
         logger.debug(
             f"[Path Shadow] Shadowed long path ({len(str(resolved))} chars) "
             f"to temp: {temp_source.name}"
@@ -180,9 +236,10 @@ def office_safe_path(original_path: Path, dst: Path | None = None):
             if temp_pdf.exists():
                 try:
                     # Ensure the true destination directory exists
-                    original_pdf.parent.mkdir(parents=True, exist_ok=True)
+                    Path(make_long_path(original_pdf.parent)).mkdir(
+                        parents=True, exist_ok=True)
                     # Cross-drive safe move with overwrite
-                    shutil.move(str(temp_pdf), str(original_pdf))
+                    shutil.move(str(temp_pdf), make_long_path(original_pdf))
                     logger.debug(
                         f"[Path Shadow] Moved PDF back: {temp_pdf.name} → "
                         f"{original_pdf.name}"
@@ -511,7 +568,13 @@ def load_sync_pairs(config_dir: str = None) -> list[dict]:
             with open(path, 'r', encoding='utf-8') as f:
                 pairs = json.load(f)
             return _resolve_active_pairs(pairs)
-        except (json.JSONDecodeError, IOError):
+        except (json.JSONDecodeError, IOError, ValueError):
+            # ValueError also covers UnicodeDecodeError, which is a SIBLING of
+            # JSONDecodeError (both ValueError), not a subclass - so the old
+            # tuple let a file re-saved in a non-UTF-8 codepage escape and crash
+            # the sync page instead of degrading to an empty list.
+            logging.getLogger(__name__).warning(
+                "Could not read sync pairs at %s; treating the list as empty.", path)
             return []
 
 
@@ -540,8 +603,34 @@ def atomic_update_sync_pairs(modifier_func: callable, config_dir: str = None) ->
                     data = json.load(f)
                     if isinstance(data, list):
                         pairs = data
-            except (json.JSONDecodeError, IOError):
-                pass
+            except OSError as e:
+                # The file is there but unreachable right now. It is NOT empty,
+                # and continuing would write the caller's single change over the
+                # whole list - the same silent-wipe shape that cost the daily
+                # sync its pairs. Abort the write; nothing is lost.
+                logging.getLogger(__name__).warning(
+                    f"Sync pairs at {path} could not be read ({e}); skipping this "
+                    "update rather than overwriting the file.")
+                return _resolve_active_pairs(pairs)
+            except Exception as e:
+                # Damaged CONTENT (bad JSON, or bytes that are not valid UTF-8 -
+                # a sibling of JSONDecodeError, so the old handler missed it).
+                # Move it aside so the list can be rebuilt without destroying
+                # what was there; mirrors core.library._quarantine.
+                try:
+                    for _n in range(1, 20):
+                        _bak = path.with_name(
+                            f"{path.stem}.corrupt{'' if _n == 1 else f'-{_n}'}{path.suffix}")
+                        if not _bak.exists():
+                            os.replace(str(path), str(_bak))
+                            break
+                    logging.getLogger(__name__).error(
+                        f"Sync pairs at {path} are unreadable ({type(e).__name__}: {e}); "
+                        "moved aside and starting from an empty list.")
+                except OSError as _mv:
+                    logging.getLogger(__name__).error(
+                        f"Sync pairs at {path} are unreadable and could not be moved "
+                        f"aside: {_mv}")
 
         # Resolve references against the library BEFORE the modifier runs, so it
         # matches the caller's signatures against CURRENT (course_id, folder) - a

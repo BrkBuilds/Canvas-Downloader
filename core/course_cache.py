@@ -118,8 +118,21 @@ def fetch_courses(token, url):
 
     if entry is not None and age < COURSES_MAX_AGE_S:
         if mine:
-            threading.Thread(target=_refresh, args=(key, token, url),
-                             daemon=True, name="course-refresh").start()
+            try:
+                threading.Thread(target=_refresh, args=(key, token, url),
+                                 daemon=True, name="course-refresh").start()
+            except RuntimeError:
+                # Thread creation can fail (resource exhaustion). The claim in
+                # _inflight was made on the promise that _refresh would run and
+                # pop it; if it never starts, every later call with an ancient
+                # entry waits the full 90 s on an Event nothing will ever set.
+                # Release the claim and just serve what we have.
+                logger.warning("Could not start course refresh thread; serving "
+                               "the cached list", exc_info=True)
+                with _lock:
+                    ev = _inflight.pop(key, None)
+                if ev:
+                    ev.set()
         return entry['courses']
 
     # Nothing usable on hand - this one has to block.
