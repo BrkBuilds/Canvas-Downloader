@@ -238,12 +238,16 @@ class PowerPointToPDF:
                 presentation = None
                 _timer.cancel()
 
-                # Verify the PDF was actually created (at the safe path)
-                if not safe_pdf.exists():
+                # Verify the PDF was actually created (at the safe path).
+                # exists() alone passes a 0-byte stub, and the next statement
+                # DELETES the user's original - so require a real PDF.
+                from converters.verify import pdf_looks_real
+                _ok, _why = pdf_looks_real(safe_pdf)
+                if not _ok:
                     _log_conversion_error(
                         self.error_log_path,
                         pptx_path.name,
-                        "PowerPoint reported success but PDF file was not found on disk."
+                        f"PowerPoint reported success but {_why}. The original file was kept."
                     )
                     return None
 

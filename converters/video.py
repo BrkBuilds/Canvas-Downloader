@@ -25,6 +25,13 @@ logger = logging.getLogger(__name__)
 
 _CLOSE_TIMEOUT_SECONDS = 10  # Max wait for FFmpeg subprocess cleanup
 
+# Floor for "this is really an MP3, not a stub", checked before the source VIDEO
+# is deleted. One second of 128 kbps audio is ~16 KB, so 1 KB is far below any
+# real extraction while still catching the empty/truncated writes that matter.
+# Erring low is deliberate: a false negative merely keeps a video the user
+# already has, a false positive deletes it.
+_MIN_AUDIO_BYTES = 1024
+
 
 def _safe_close(clip, label="clip"):
     """Close a moviepy clip with a timeout guard against FFmpeg hangs.
@@ -107,10 +114,38 @@ def convert_video_to_mp3(video_path: str | Path, dst: str | Path | None = None) 
             
         # Extract audio and write to mp3. logger=None prevents console spam.
         video_clip.audio.write_audiofile(abs_mp3, logger=None)
-        
+
+        # PROVE the MP3 before the `finally` below deletes the video.
+        #
+        # `conversion_success` used to be set the instant write_audiofile
+        # RETURNED, and nothing looked at the result. write_audiofile drives
+        # ffmpeg through a pipe; it can return without having produced usable
+        # audio, and the file it leaves behind is then 0 bytes or a stub. The
+        # thing deleted on that evidence is a lecture VIDEO - the largest and
+        # least replaceable artifact this app handles, and for a Panopto
+        # recording it may not be re-downloadable at all.
+        #
+        # Verified here rather than in the `finally`, because by the time the
+        # finally runs this function has already RETURNED abs_mp3 - the caller
+        # would record a success and repoint the manifest at a file that is not
+        # there. Returning None instead leaves conversion_success False, so the
+        # video is kept and the caller reports an honest failure.
+        from converters.verify import file_has_content
+        _ok, _why = file_has_content(abs_mp3, min_bytes=_MIN_AUDIO_BYTES, what="MP3")
+        if not _ok:
+            logger.error(
+                f"Audio extraction reported success for {Path(abs_video).name} "
+                f"but {_why}; keeping the original video."
+            )
+            try:
+                Path(abs_mp3).unlink(missing_ok=True)   # drop the stub
+            except OSError:
+                pass
+            return None
+
         conversion_success = True
         return abs_mp3
-        
+
     except Exception as e:
         logger.error(f"Failed to convert video {abs_video}: {e}")
         # Remove any partial .mp3 that write_audiofile may have created before failing.

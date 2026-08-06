@@ -1135,11 +1135,13 @@ def run_sync():
                                             # returns BOTH 403 ("Rate Limit Exceeded") and 429 under
                                             # pressure; the download engine already retried 403 - the
                                             # sync engine now matches it instead of failing the file.
-                                            _retry_after_raw = response.headers.get('Retry-After', '')
-                                            try:
-                                                should_sleep_duration = int(_retry_after_raw)
-                                            except (ValueError, TypeError):
-                                                should_sleep_duration = SYNC_RETRY_DELAY * (2 ** attempt)
+                                            # Clamped: an unbounded server-chosen
+                                            # Retry-After parks the whole sync on a
+                                            # cancel-polling sleep that reads as a hang.
+                                            from core.canvas_logic import parse_retry_after
+                                            should_sleep_duration = parse_retry_after(
+                                                response.headers.get('Retry-After', ''),
+                                                SYNC_RETRY_DELAY * (2 ** attempt))
                                             if attempt < SYNC_MAX_RETRIES - 1:
                                                 terminal_log.append(log_line('attention', display_file_name, icon=file_icon_svg(display_file_name), detail=f'rate limited ({response.status}) · retry in {should_sleep_duration}s'))
                                                 _paint_metrics()

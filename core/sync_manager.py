@@ -319,11 +319,16 @@ def _is_archive_path(path_str: str) -> bool:
 
 
 def make_long_path(p: str | Path) -> str:
-    """Prepend Windows long path prefix to absolute paths to prevent WinError 206."""
-    s = str(p)
-    if os.name == 'nt' and Path(p).is_absolute() and not s.startswith('\\\\?\\'):
-        return '\\\\?\\' + s
-    return s
+    """Prepend the Windows long-path prefix. Re-exported from ``shared.helpers``.
+
+    This module used to carry its OWN copy of the implementation, and all 26
+    manifest call sites below used that copy - so a correctness fix applied to
+    the shared one silently did not reach the sync database at all. It is now a
+    thin alias: one implementation, one place to fix, and the name stays
+    importable for the call sites (and tests) that already reference it here.
+    """
+    from shared.helpers import make_long_path as _shared_make_long_path
+    return _shared_make_long_path(p)
 
 
 def make_secondary_id(entity_type: str, raw_id: int) -> int:
@@ -391,6 +396,58 @@ def secondary_raw_id(canvas_file_id: int) -> int:
 # magic string) keeps the tri-state contract explicit at every call site:
 #   int  -> bound course id     None -> no DB yet     DB_UNREADABLE -> warn user
 DB_UNREADABLE = 'unreadable'
+
+
+# The manifest is the folder's ONLY record of what has been synced, so the
+# question "is this database corrupt, or is it merely unreachable right now?"
+# decides whether the user keeps that record or loses it. sqlite3 does not
+# answer it structurally: `OperationalError` IS a `sqlite3.DatabaseError`, so a
+# handler written against DatabaseError catches BOTH, and every one of these
+# purely transient conditions arrives as an OperationalError (verified
+# 2026-08-06):
+#
+#     unable to open database file      network share dropped, disk full,
+#                                       permissions, a malformed path
+#     database is locked                another process, antivirus, a stuck WAL
+#     attempt to write a readonly db    read-only attribute / ACL
+#
+# Treating those as corruption cost the whole manifest: the recovery path
+# renamed the DB aside, and on the NEXT attempt deleted that very backup before
+# failing to rename again - measured, a folder left with no manifest and no
+# backup at all, from a transient error whose file on disk was never damaged.
+#
+# So corruption must be proven, not assumed. Only messages that actually say
+# the file is damaged count; everything else is transient and is retried and
+# then reported, never destroyed.
+_DB_CORRUPTION_MARKERS = (
+    'file is not a database',
+    'database disk image is malformed',
+    'malformed database schema',
+    'integrity check failed',       # raised by our own quick_check below
+    'file is encrypted',
+    'unsupported file format',
+    'database corruption',
+)
+
+# Transient failures get a short bounded retry before we give up and SAY so.
+_DB_TRANSIENT_RETRIES = 3
+_DB_TRANSIENT_BACKOFF = 0.4     # seconds, doubled per attempt
+# Cap on distinct corrupted-DB backups kept beside a folder's manifest. The
+# FIRST one is the valuable one (it is the copy closest to the last good sync),
+# so new backups take a fresh name and an existing backup is never overwritten.
+_DB_MAX_BACKUPS = 5
+
+
+def _is_db_corruption(exc: BaseException) -> bool:
+    """True only when SQLite actually reports a damaged file.
+
+    Deliberately a whitelist. An unrecognised error is treated as transient,
+    because the cost of being wrong is asymmetric: a transient error misread as
+    corruption destroys the user's sync record, while corruption misread as
+    transient merely shows an error and asks them to try again.
+    """
+    msg = str(exc).lower()
+    return any(marker in msg for marker in _DB_CORRUPTION_MARKERS)
 
 
 class SyncManager:
@@ -558,10 +615,23 @@ class SyncManager:
 
     def _init_db_locked(self, attempt=0):
         """Internal _init_db body - must only be called while holding self._db_lock."""
-        self.local_path.mkdir(parents=True, exist_ok=True)
+        # A folder that cannot be created is the same class of problem as a
+        # database that cannot be opened (share offline, disk full, no
+        # permission) and must fail the same way: flagged, not raised. This runs
+        # inside SyncManager.__init__, so an uncaught OSError here surfaced as a
+        # raw traceback on the sync page instead of a handled "folder is
+        # unreachable" state.
+        try:
+            self.local_path.mkdir(parents=True, exist_ok=True)
+        except OSError as mkdir_err:
+            logger.error(
+                f"Could not create/reach sync folder {self.local_path}: {mkdir_err}"
+            )
+            self._db_init_failed = True
+            return
         if os.name == 'nt':
             self._windows_unhide_file(self.db_path)
-        
+
         try:
             with closing(sqlite3.connect(make_long_path(self.db_path), timeout=30.0)) as conn, conn:
                 cursor = conn.cursor()
@@ -650,7 +720,29 @@ class SyncManager:
                 cursor.execute('INSERT OR REPLACE INTO sync_metadata (key, value) VALUES (?, ?)', ('course_name', self.course_name))
                 conn.commit()
         except sqlite3.DatabaseError as e:
-            # Database is corrupted - rescue by renaming and re-initializing
+            # --- Transient, NOT corruption: retry, then report. Never destroy. ---
+            # See _is_db_corruption: a locked / unreachable / read-only database
+            # is an OperationalError, which is a DatabaseError, and the file on
+            # disk is undamaged. Renaming or deleting it here threw away a
+            # perfectly good manifest.
+            if not _is_db_corruption(e):
+                if attempt < _DB_TRANSIENT_RETRIES:
+                    logger.warning(
+                        f"Sync database at {self.db_path} is temporarily unavailable "
+                        f"({e}); retry {attempt + 1}/{_DB_TRANSIENT_RETRIES}."
+                    )
+                    time.sleep(_DB_TRANSIENT_BACKOFF * (2 ** attempt))
+                    self._init_db_locked(attempt=attempt + 1)
+                    return
+                logger.error(
+                    f"Sync database at {self.db_path} could not be opened after "
+                    f"{_DB_TRANSIENT_RETRIES} retries: {e}. Leaving it untouched - "
+                    "the manifest is intact, the folder is just unreachable right now."
+                )
+                self._db_init_failed = True
+                return
+
+            # --- Genuine corruption: quarantine, then start fresh. ---
             logger.error(f"Database corrupted at {self.db_path}: {e}. Resetting to fresh database.")
             self.db_was_reset = True  # callers can surface a warning to the user
             if attempt >= 3:
@@ -658,24 +750,43 @@ class SyncManager:
                 self._db_init_failed = True
                 return
             try:
-                corrupted_path = self.db_path.with_name('.canvas_sync_corrupted.db')
-                if corrupted_path.exists():
-                    try:
-                        corrupted_path.unlink()
-                    except OSError as unlink_err:
-                        logger.warning(f"Could not unlink previous corrupted DB: {unlink_err}")
+                # Never overwrite an existing backup. The FIRST quarantined copy
+                # is the one closest to the last good sync, so it is the one
+                # worth keeping; unlinking it (as this used to) meant a second
+                # failure destroyed the only remaining evidence.
+                corrupted_path = None
+                for _n in range(_DB_MAX_BACKUPS):
+                    cand = self.db_path.with_name(
+                        '.canvas_sync_corrupted.db' if _n == 0
+                        else f'.canvas_sync_corrupted_{_n + 1}.db')
+                    if not cand.exists():
+                        corrupted_path = cand
+                        break
+                if corrupted_path is None:
+                    logger.warning(
+                        f"All {_DB_MAX_BACKUPS} corrupted-DB backup slots beside "
+                        f"{self.db_path} are taken; leaving the damaged file in place."
+                    )
+                    self._db_init_failed = True
+                    return
                 try:
                     self.db_path.rename(corrupted_path)
                     logger.info(f"Corrupted database backed up to {corrupted_path}")
                 except OSError as rename_err:
-                    logger.warning(f"Could not rename corrupted DB: {rename_err}. Deleting instead.")
-                    try:
-                        self.db_path.unlink(missing_ok=True)
-                    except OSError as unlink_err2:
-                        logger.error(f"Could not delete corrupted DB: {unlink_err2}")
+                    # Do NOT fall back to deleting it. A corrupt manifest can
+                    # still be salvaged by hand (or by sqlite's own recovery);
+                    # a deleted one cannot. Report instead.
+                    logger.error(
+                        f"Could not quarantine corrupted DB: {rename_err}. "
+                        "Leaving it in place rather than deleting the user's manifest."
+                    )
+                    self._db_init_failed = True
+                    return
             except Exception as outer_err:
                 logger.error(f"Unexpected error during DB recovery: {outer_err}")
-            
+                self._db_init_failed = True
+                return
+
             # Re-init with a clean slate (already holding lock, so call locked variant directly)
             self._init_db_locked(attempt=attempt + 1)
             return
@@ -696,9 +807,22 @@ class SyncManager:
         """
         if self._db_init_failed:
             logger.error(f"Cannot load manifest: DB initialization failed for {self.db_path}")
+            # This message is the DETAIL line of the amber notice the user
+            # actually reads, so it has to cover both ways of getting here and
+            # end with something they can do.
+            #
+            # It used to assert "locked by another process". Since transient
+            # errors stopped being treated as corruption, that is the common
+            # case but no longer the only one: a damaged database whose sqlite
+            # message falls outside _DB_CORRUPTION_MARKERS also lands here, and
+            # for that one the folder no longer self-heals. Naming the file is
+            # what makes the second case recoverable without support.
             raise RuntimeError(
-                f"Sync database could not be initialized for '{self.course_name}'. "
-                "Cannot load manifest - the sync database may be locked by another process."
+                f"The sync database for '{self.course_name}' could not be opened. "
+                "The folder may be offline, read-only, or in use by another "
+                "program - reconnect it and try again. If this keeps happening, "
+                f"close the app and delete '{DB_FILENAME}' in that folder; the "
+                "next sync rebuilds it (your files are not touched)."
             )
 
         manifest = {

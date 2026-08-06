@@ -115,7 +115,13 @@ async def manage_download_lock(filepath):
             entry = _download_locks.get(filepath)
             if entry:
                 entry["count"] -= 1
-                if entry["count"] == 0:
+                # <= 0, not == 0: when a run on a NEW event loop replaces a
+                # stale entry (the branch above), the previous loop's holders
+                # still release against the replacement and drive its count
+                # negative. An exact-zero test then never fires and the entry
+                # is pinned in the dict for the life of the process, once per
+                # distinct file path.
+                if entry["count"] <= 0:
                     _download_locks.pop(filepath, None)
 
     file_lock = await current_loop.run_in_executor(None, _acquire_slot)
@@ -128,6 +134,36 @@ async def manage_download_lock(filepath):
 # --- Constants ---
 MAX_RETRIES = 5
 RETRY_DELAY = 1
+
+# Upper bound on a server-supplied Retry-After, in seconds. `Retry-After` is a
+# number chosen by the other end, and it was being obeyed literally: a header of
+# 86400 parked the run on a one-second cancel-polling loop for a DAY, looking
+# for all the world like a hang. Two minutes is far longer than any real Canvas
+# throttle and still bounded; past that the retry budget runs out and the file
+# is reported honestly instead of waiting in silence.
+MAX_RETRY_AFTER_SECONDS = 120
+
+
+def parse_retry_after(raw, fallback) -> int:
+    """Whole seconds to wait from a ``Retry-After`` header, clamped to something
+    sane.
+
+    RFC 7231 also permits an HTTP-date, and a hostile or misconfigured proxy can
+    send anything at all, so a value that is not a usable positive number falls
+    back to the caller's own backoff. Returns an ``int`` because both call sites
+    put the number in front of the user ("retry in 3s") and count it out one
+    second at a time.
+    """
+    try:
+        wait = int(raw)
+    except (ValueError, TypeError):
+        wait = 0
+    if wait <= 0:
+        try:
+            return max(0, int(fallback))
+        except (ValueError, TypeError):
+            return RETRY_DELAY
+    return min(wait, MAX_RETRY_AFTER_SECONDS)
 
 # --- Secondary Content Configuration Defaults ---
 # These are the settings that the UI will eventually expose as checkboxes.
@@ -4340,20 +4376,47 @@ class CanvasManager:
                         else:
                             _diverted = self._handle_conflict(
                                 filepath.parent / f"{filepath.stem}_NewVersion{filepath.suffix}")
+                            # REDIRECT FIRST, announce second. These two lines used
+                            # to sit AFTER the progress_callback, so anything the
+                            # callback raised skipped the redirect and left
+                            # `filepath` pointing at the user's edited copy - which
+                            # the download below then overwrote. A UI callback is
+                            # exactly the kind of thing that raises (the analysis
+                            # hook threw NameError on every tick for months), and
+                            # the outer handler swallowed it without a word. The
+                            # commit to the safe path must not depend on the
+                            # cosmetic step that follows it.
+                            #
+                            # Reordering means `filename` is already the NEW name
+                            # by the time the message is built, so keep the old
+                            # one - the sentence is about the file the user
+                            # edited, not the one being written.
+                            _original_name = filename
+                            filepath = _diverted
+                            filename = filepath.name
                             log_debug(
                                 f"File exists with size mismatch and local edits (or no "
                                 f"baseline to verify against). Preserving the local copy; "
                                 f"downloading new version as: {_diverted.name}", debug_file)
                             if progress_callback:
                                 progress_callback(
-                                    f"'{filename}' was changed locally - new Canvas version "
-                                    f"saved as '{_diverted.name}'",
+                                    f"'{_original_name}' was changed locally - new Canvas "
+                                    f"version saved as '{_diverted.name}'",
                                     progress_type='log',
                                 )
-                            filepath = _diverted
-                            filename = filepath.name
-                except Exception:
-                    pass
+                except Exception as _exists_err:
+                    # Swallowed so a odd stat/permission error cannot abort the
+                    # whole file - but LOGGED, because everything above decides
+                    # whether the user's EDITED copy is preserved or overwritten,
+                    # and a silent failure here is indistinguishable from the
+                    # protection having worked.
+                    log_debug(
+                        f"Existing-file handling failed for {filename}: "
+                        f"{type(_exists_err).__name__}: {_exists_err}", debug_file)
+                    logger.warning(
+                        "Existing-file handling failed for %s; the local copy may "
+                        "not have been diverted to _NewVersion", filename,
+                        exc_info=True)
 
             # This run may already hold these exact bytes: the same Canvas file
             # reaches the engine once per phase that references it, and each
@@ -4433,11 +4496,9 @@ class CanvasManager:
                         log_debug(f"Requesting URL: {url} (Attempt {attempt+1})", debug_file)
                         async with session.get(url) as response:
                             if response.status in (403, 429, 503):
-                                _retry_after_raw = response.headers.get('Retry-After', '')
-                                try:
-                                    wait = int(_retry_after_raw)
-                                except (ValueError, TypeError):
-                                    wait = RETRY_DELAY * (2 ** attempt)
+                                wait = parse_retry_after(
+                                    response.headers.get('Retry-After', ''),
+                                    RETRY_DELAY * (2 ** attempt))
                                 raise ValueError(f"RATE_LIMIT:{wait}")
                             elif 500 <= response.status < 600:
                                 raise ValueError(f"SERVER_ERROR:{response.status}")
@@ -4622,7 +4683,13 @@ class CanvasManager:
                 except ValueError as ve:
                     msg = str(ve)
                     if msg.startswith("RATE_LIMIT:"):
-                        wait_time = int(msg.split(":")[1])
+                        # float(), not int(): parse_retry_after returns a float,
+                        # and int("2.0") raises ValueError - which this very
+                        # handler would then re-raise as an opaque failure.
+                        try:
+                            wait_time = float(msg.split(":", 1)[1])
+                        except (ValueError, IndexError):
+                            wait_time = RETRY_DELAY * (2 ** attempt)
                         log_debug(f"Rate limited (403/429). Sleeping {wait_time}s outside semaphore.", debug_file)
                         # Cancel-aware sleep: poll the cancel flag every second
                         # instead of blocking for the full Retry-After. Without
@@ -6550,80 +6617,112 @@ class CanvasManager:
 
         download_tasks = []  # Async tasks for attachment downloads
 
-        # 1. Assignments
-        if settings.get('download_assignments'):
-            self._fetch_and_save_assignments(
-                course, base_path, sem, session,
-                progress_callback, mb_tracker, check_cancellation,
-                settings, error_root_path, debug_file,
-                sync_manager, module_handled_ids, download_tasks,
-            )
+        def _sec_category(label, fn, *args):
+            """Run ONE secondary-content category, absorbing what it raises.
 
-        # 2. Syllabus
-        if settings.get('download_syllabus'):
-            self._fetch_and_save_syllabus(
-                course, base_path, progress_callback, settings,
-                error_root_path, debug_file, sync_manager,
-            )
+            The seven categories below are independent - a malformed quiz says
+            nothing about the user's submissions - but they were seven bare
+            calls in a row, so the FIRST one to raise silently skipped every
+            category after it. The user asked for quizzes + submissions +
+            rubrics and got one generic "Canvas Content Error" with no way to
+            tell which of them actually ran.
 
-        # 3. Announcements
-        if settings.get('download_announcements'):
-            self._fetch_and_save_announcements(
-                course, base_path, sem, session,
-                progress_callback, mb_tracker, check_cancellation,
-                settings, error_root_path, debug_file,
-                sync_manager, download_tasks,
-            )
+            Reported per category, so the error names the part that failed.
+            """
+            try:
+                fn(*args)
+                return True
+            except Exception as _cat_err:
+                log_debug(f"Canvas Content: {label} failed: "
+                          f"{type(_cat_err).__name__}: {_cat_err}", debug_file)
+                logger.warning("Secondary-content category %s failed", label,
+                               exc_info=True)
+                err = DownloadError(
+                    course.name, f"Canvas Content: {label}",
+                    "Canvas Content Error", str(_cat_err),
+                    raw_error=_cat_err, is_app_error=True,
+                )
+                if progress_callback:
+                    progress_callback(err, progress_type='error')
+                self._log_error(error_root_path, err)
+                return False
 
-        # 4. Discussions
-        if settings.get('download_discussions'):
-            self._fetch_and_save_discussions(
-                course, base_path, progress_callback,
-                check_cancellation, settings,
-                error_root_path, debug_file,
-                sync_manager, module_handled_ids,
-            )
+        try:
+            # 1. Assignments
+            if settings.get('download_assignments'):
+                _sec_category('assignments', self._fetch_and_save_assignments,
+                    course, base_path, sem, session,
+                    progress_callback, mb_tracker, check_cancellation,
+                    settings, error_root_path, debug_file,
+                    sync_manager, module_handled_ids, download_tasks)
 
-        # 5. Quizzes
-        if settings.get('download_quizzes'):
-            self._fetch_and_save_quizzes(
-                course, base_path, progress_callback,
-                check_cancellation, settings,
-                error_root_path, debug_file,
-                sync_manager, module_handled_ids,
-            )
+            # 2. Syllabus
+            if settings.get('download_syllabus'):
+                _sec_category('syllabus', self._fetch_and_save_syllabus,
+                    course, base_path, progress_callback, settings,
+                    error_root_path, debug_file, sync_manager)
 
-        # 6. Submission feedback (grade, rubric, teacher comments + their files).
-        #    NOT the student's own uploads - see _fetch_and_save_submissions.
-        if settings.get('download_submissions'):
-            self._fetch_and_save_submissions(
-                course, base_path, sem, session,
-                progress_callback, mb_tracker, check_cancellation,
-                settings, error_root_path, debug_file,
-                sync_manager, download_tasks,
-            )
+            # 3. Announcements
+            if settings.get('download_announcements'):
+                _sec_category('announcements', self._fetch_and_save_announcements,
+                    course, base_path, sem, session,
+                    progress_callback, mb_tracker, check_cancellation,
+                    settings, error_root_path, debug_file,
+                    sync_manager, download_tasks)
 
-        # 7. Rubrics (temporarily disabled via RUBRICS_ENABLED - see flag definition)
-        if RUBRICS_ENABLED and settings.get('download_rubrics'):
-            self._fetch_and_save_rubrics(
-                course, base_path, progress_callback,
-                check_cancellation, settings,
-                error_root_path, debug_file, sync_manager,
-            )
+            # 4. Discussions
+            if settings.get('download_discussions'):
+                _sec_category('discussions', self._fetch_and_save_discussions,
+                    course, base_path, progress_callback,
+                    check_cancellation, settings,
+                    error_root_path, debug_file,
+                    sync_manager, module_handled_ids)
 
-        # Gather all attachment download tasks
-        if download_tasks:
-            log_debug(f"Waiting for {len(download_tasks)} attachment downloads...", debug_file)
-            results = await asyncio.gather(*download_tasks, return_exceptions=True)
-            for result in results:
-                if isinstance(result, Exception):
-                    err = DownloadError(
-                        course.name, "Attachment Task", "Async Error",
-                        str(result), raw_error=result,
-                    )
-                    if progress_callback:
-                        progress_callback(err, progress_type='error')
-                    self._log_error(error_root_path, err)
+            # 5. Quizzes
+            if settings.get('download_quizzes'):
+                _sec_category('quizzes', self._fetch_and_save_quizzes,
+                    course, base_path, progress_callback,
+                    check_cancellation, settings,
+                    error_root_path, debug_file,
+                    sync_manager, module_handled_ids)
+
+            # 6. Submission feedback (grade, rubric, teacher comments + their files).
+            #    NOT the student's own uploads - see _fetch_and_save_submissions.
+            if settings.get('download_submissions'):
+                _sec_category('submissions', self._fetch_and_save_submissions,
+                    course, base_path, sem, session,
+                    progress_callback, mb_tracker, check_cancellation,
+                    settings, error_root_path, debug_file,
+                    sync_manager, download_tasks)
+
+            # 7. Rubrics (temporarily disabled via RUBRICS_ENABLED - see flag definition)
+            if RUBRICS_ENABLED and settings.get('download_rubrics'):
+                _sec_category('rubrics', self._fetch_and_save_rubrics,
+                    course, base_path, progress_callback,
+                    check_cancellation, settings,
+                    error_root_path, debug_file, sync_manager)
+        finally:
+            # Gather all attachment download tasks.
+            #
+            # In a `finally` because these are already-scheduled
+            # asyncio.create_task() coroutines: anything raising above would
+            # skip the gather, asyncio.run() would cancel them at loop close,
+            # and every attachment assignments/announcements had queued would
+            # vanish - reported as nothing more specific than one generic
+            # Canvas Content error. Awaiting them is what makes the work
+            # already in flight survive a failure in a LATER category.
+            if download_tasks:
+                log_debug(f"Waiting for {len(download_tasks)} attachment downloads...", debug_file)
+                results = await asyncio.gather(*download_tasks, return_exceptions=True)
+                for result in results:
+                    if isinstance(result, Exception):
+                        err = DownloadError(
+                            course.name, "Attachment Task", "Async Error",
+                            str(result), raw_error=result,
+                        )
+                        if progress_callback:
+                            progress_callback(err, progress_type='error')
+                        self._log_error(error_root_path, err)
 
         log_debug("=== Canvas Content Download Complete ===", debug_file)
 

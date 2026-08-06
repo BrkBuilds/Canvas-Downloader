@@ -61,6 +61,12 @@ _FILENAME = "sync_library.json"
 _VERSION = 2
 _lock = threading.Lock()
 
+# Marks a library dict that is a DEFAULT standing in for a file we could not
+# read, as opposed to a genuinely empty one. Only `_update` consults it, and
+# only to refuse the write - see the note there. Stripped before saving, so it
+# can never reach disk.
+_READ_FAILED = "_read_failed"
+
 # name_index memo, keyed on the file's (mtime_ns, size) - correct by
 # construction, because every write goes through _save's os.replace.
 _memo_lock = threading.Lock()
@@ -142,6 +148,37 @@ def _norm_group_record(g: dict, valid_ids: set) -> dict | None:
     }
 
 
+def _quarantine(p: Path, reason: str) -> None:
+    """Move an unreadable library aside so the next write cannot overwrite it.
+
+    ``_update`` is load -> mutate -> save, and a load that degraded to an empty
+    default therefore PERSISTED that emptiness: one unreadable byte and every
+    saved pair, group, name and daily-sync membership was gone on the next
+    rename, with nothing on disk to recover from. Renaming the file first means
+    the wipe still cannot be un-done in the app, but the user's data is still
+    sitting in the config folder.
+
+    Mirrors ``core.preset_manager.load_presets``' proven pattern. Best effort by
+    design - if the rename fails there is nothing further to try, and a naming
+    store must never be able to break a sync screen.
+    """
+    import logging
+    log = logging.getLogger(__name__)
+    try:
+        for n in range(1, 20):
+            bak = p.with_name(f"{p.stem}.corrupt{'' if n == 1 else f'-{n}'}{p.suffix}")
+            if not bak.exists():
+                os.replace(str(p), str(bak))
+                log.error("Sync library at %s is unreadable (%s); moved to %s. "
+                          "Saved pairs/groups have been reset.", p, reason, bak.name)
+                return
+        log.error("Sync library at %s is unreadable (%s) and all quarantine slots "
+                  "are taken; leaving it in place.", p, reason)
+    except OSError as e:
+        log.error("Sync library at %s is unreadable (%s) and could not be moved "
+                  "aside: %s", p, reason, e)
+
+
 def load_library() -> dict:
     """Load the library. Always returns a well-formed dict, never raises."""
     p = _path()
@@ -151,20 +188,46 @@ def load_library() -> dict:
         with open(p, "r", encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, dict):
+            _quarantine(p, f"root is {type(data).__name__}, not an object")
             return _default()
         raw_pairs = data.get("pairs")
         pairs = [np for np in (_norm_pair_record(x) for x in (raw_pairs or [])) if np] \
             if isinstance(raw_pairs, list) else []
-        valid_ids = {p["id"] for p in pairs}
+        valid_ids = {p_["id"] for p_ in pairs}
         raw_groups = data.get("groups")
         groups = [ng for ng in (_norm_group_record(x, valid_ids) for x in (raw_groups or [])) if ng] \
             if isinstance(raw_groups, list) else []
         return {"version": _VERSION, "pairs": pairs, "groups": groups}
-    except (json.JSONDecodeError, OSError):
+    except OSError as e:
+        # The file is there but unreachable THIS time (share offline, locked,
+        # no permission). Nothing is wrong with its contents, so it must not be
+        # quarantined - and the caller must not be allowed to overwrite it
+        # either, which is what _READ_FAILED below signals to _update.
+        import logging
+        logging.getLogger(__name__).warning("Could not read sync library at %s: %s", p, e)
+        d = _default()
+        d[_READ_FAILED] = True
+        return d
+    except Exception as e:
+        # Damaged CONTENT: malformed JSON, or bytes that are not valid UTF-8.
+        # UnicodeDecodeError is a sibling of JSONDecodeError (both ValueError),
+        # not a subclass, so the old `except (json.JSONDecodeError, OSError)`
+        # let it escape and crash the sync page outright - reachable from any
+        # editor that re-saved the file in a non-UTF-8 codepage, which for
+        # Danish course names ("Makroøkonomi") is a single keystroke away.
+        _quarantine(p, f"{type(e).__name__}: {e}")
         return _default()
 
 
-def _save(data: dict, config_dir=None) -> None:
+def _save(data: dict, config_dir=None) -> bool:
+    """Atomically write the library. Returns False if nothing reached disk.
+
+    A failed write used to be completely silent, so a full disk or a read-only
+    config folder made every rename, save and daily-sync toggle appear to work
+    and then quietly revert on the next render. It still must not raise (a
+    naming store may not break a sync screen), but it now says so in the log
+    and reports the failure to callers that care.
+    """
     p = _path(config_dir)
     tmp = p.with_suffix(".tmp")
     try:
@@ -176,12 +239,16 @@ def _save(data: dict, config_dir=None) -> None:
             except OSError:
                 pass
         os.replace(str(tmp), str(p))
-    except OSError:
+        return True
+    except (OSError, TypeError, ValueError) as e:
+        import logging
+        logging.getLogger(__name__).error("Could not save sync library to %s: %s", p, e)
         try:
             if tmp.exists():
                 tmp.unlink()
         except OSError:
             pass
+        return False
 
 
 def replace_all(data: dict, config_dir=None) -> dict:
@@ -206,11 +273,23 @@ def _update(mutator) -> dict:
     *mutator* receives the fresh library dict and mutates it in place (its return
     value is ignored). Solves cross-thread tearing the same way
     ``sync.persistence.atomic_update_sync_pairs`` does.
+
+    A load that FAILED (file present, momentarily unreadable) is not a library
+    with nothing in it, and writing on top of it would replace every saved pair
+    with the handful this one mutation happens to add. The write is skipped
+    instead; the caller sees its own change reflected in the returned dict, and
+    the next successful load restores the truth.
     """
     with _lock:
         data = load_library()
         mutator(data)
         data["version"] = _VERSION
+        if data.pop(_READ_FAILED, False):
+            import logging
+            logging.getLogger(__name__).warning(
+                "Skipping sync-library write: the existing file could not be read, "
+                "so saving now would discard its contents.")
+            return data
         _save(data)
         return data
 
