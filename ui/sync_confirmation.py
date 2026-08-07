@@ -20,6 +20,7 @@ from shared import theme
 from core.sync_manager import SyncManager
 from core.pair_labels import pair_display_name
 from shared.helpers import (
+    format_available_space,
     format_file_size,
     esc,
     effective_ext,
@@ -27,6 +28,9 @@ from shared.helpers import (
 from shared.components import _FILETYPE_SVGS, _FILETYPE_SVG_DEFAULT, SVG_FOLDER_YELLOW, SVG_SAVE_COLORFUL
 
 _PAN_FMT_LABELS = {
+    # 'url' is the Shortcut output; it is a link file, not a URL the user typed,
+    # so the label says what it does rather than repeating the extension.
+    "url": "Link to recording",
     "mp3": "Audio Track",
     "txt": "Transcript",
     "srt": "Subtitles",
@@ -177,7 +181,14 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     folder_list_html = f"<ul style='margin:0 !important;padding:0 !important;list-style-type:none !important;display:block !important;'>{_folder_lis}</ul>"
     
     # --- UI Logic ---
-    avail_bytes = avail_mb * 1024 * 1024
+    # check_disk_space() reports its -1 sentinel when it could not read the
+    # volume at all. format_available_space() is the ONE renderer for that -
+    # spelling the test out here is how this screen came to print
+    # "Available Disk Space: -1048576 B" for an unreachable drive.
+    # avail_bytes stays 0 for the unknown case so the ratio maths below (all of
+    # it gated on > 0) suppresses the bar instead of drawing a false one.
+    avail_text = format_available_space(avail_mb)
+    avail_bytes = avail_mb * 1024 * 1024 if avail_text != "Unknown" else 0
     
     # VISUAL PROGRESS CALCULATION
     # User feedback: if < 1% show 1%, else show linearly.
@@ -496,8 +507,8 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
         f'<div class="custom-progress-fill" style="width: {fill_percent}%;"></div>'
         f'</div>'
         f'<div class="metrics-line">'
-        f'<div>{size} of {format_file_size(avail_bytes)}</div>'
-        f'<div>Available Disk Space: {format_file_size(avail_bytes)}</div>'
+        f'<div>{size} of {avail_text}</div>'
+        f'<div>Available Disk Space: {avail_text}</div>'
         f'</div>'
         f'</div>'
     )

@@ -3014,6 +3014,7 @@ def render_panopto_summary(summary: dict | None) -> None:
     # 25 over-limit Canvas files + 36 over-limit recordings = the 61 reported.
     _did_work = (int(summary.get('downloaded', 0) or 0)
                  or int(summary.get('transcribed', 0) or 0)
+                 or int(summary.get('shortcuts', 0) or 0)
                  or int(summary.get('failed', 0) or 0)
                  or (selected if is_sync else 0))
     if not _did_work:
@@ -3030,6 +3031,7 @@ def render_panopto_summary(summary: dict | None) -> None:
     from shared import theme as _theme
     downloaded = int(summary.get('downloaded', 0) or 0)
     transcribed = int(summary.get('transcribed', 0) or 0)
+    shortcuts = int(summary.get('shortcuts', 0) or 0)
     failed = int(summary.get('failed', 0) or 0)
     courses = int(summary.get('courses', 0) or 0)
 
@@ -3047,6 +3049,13 @@ def render_panopto_summary(summary: dict | None) -> None:
         "<path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/>"
         "<polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/>"
         "<line x1='16' y1='17' x2='8' y2='17'/><line x1='10' y1='9' x2='8' y2='9'/></svg>"
+    )
+    _link_icon = (
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
+        "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' "
+        "style='width:18px;height:18px;flex-shrink:0;'>"
+        "<path d='M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71'/>"
+        "<path d='M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71'/></svg>"
     )
     _skip_icon = (
         "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' "
@@ -3080,6 +3089,11 @@ def render_panopto_summary(summary: dict | None) -> None:
     _want_tx = bool(summary.get('want_transcription'))
     if transcribed or _want_tx:
         cards.append(_stat(_tx_icon, transcribed, "Transcribed"))
+    # "Links" only when links were actually written. Unlike Transcribed there is
+    # no want_* companion to show a deliberate zero against: a shortcut that was
+    # wanted and not produced is a failure, and failures have their own box.
+    if shortcuts:
+        cards.append(_stat(_link_icon, shortcuts, "Links"))
     if failed:
         cards.append(_stat(_skip_icon, failed, "Errors", error=True))
 
@@ -3190,6 +3204,7 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     # panopto.settings.contract_to_ui_keys so this stays a single renderer.
     c_pan = "#b89dfe"
     _pan_outputs = [
+        (settings.get('pan_out_url'), 'Shortcut'),
         (settings.get('pan_out_mp4'), 'Video'),
         (settings.get('pan_out_mp3'), 'Audio'),
         (settings.get('pan_out_txt'), 'Transcript'),

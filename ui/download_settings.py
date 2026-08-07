@@ -119,9 +119,21 @@ _PAN_GEAR_SVG = ("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' v
                  "c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z'"
                  " clip-rule='evenodd' /%3E%3C/svg%3E")
 
-# (session key, label, description, asset icon) for the four output toggles,
-# ordered left-to-right: mp4, mp3, txt, srt.
+# (session key, label, description, asset icon) for the five output toggles,
+# ordered left-to-right: url, mp4, mp3, txt, srt.
+#
+# Shortcut comes FIRST because it is the cheapest thing on the card - no
+# download, no disk, no wait - and because it is the answer for the user who
+# does not want a 2 GB video but does want to get back to the lecture. It is
+# also the only output here that is not a copy of the recording, which is why
+# its description says where it goes rather than what format it is.
+#
+# This list is the ONLY definition of that order and of the key names; keep
+# core.state_registry.PANOPTO_OUTPUT_KEYS in step with it (a test asserts they
+# match, because a key that exists in one and not the other is a toggle whose
+# state is never reset between runs).
 PANOPTO_OUTPUT_DEFS = [
+    ('pan_out_url', 'Shortcut',  'Link to the recording online', 'pan_url.png'),
     ('pan_out_mp4', 'Video',     'Full lecture video (MP4)', 'pan_mp4.png'),
     ('pan_out_mp3', 'Audio',     'Audio only (MP3)',         'pan_mp3.png'),
     ('pan_out_txt', 'Transcript', 'Plain-text transcript',    'pan_txt.png'),
@@ -2101,7 +2113,7 @@ def render_download_settings(fetch_courses_fn):
                 pan_css.append('''
                 div[class*="st-key-panopto_outputs_grid"] {
                     display: grid !important;
-                    grid-template-columns: repeat(4, 1fr) !important;
+                    grid-template-columns: repeat(5, 1fr) !important;
                     grid-auto-rows: 1fr !important;
                     gap: 12px !important;
                 }
@@ -2116,6 +2128,14 @@ def render_download_settings(fetch_courses_fn):
                 div[class*="st-key-panopto_outputs_grid"] [data-testid="stTooltipHoverTarget"],
                 div[class*="st-key-panopto_outputs_grid"] button {
                     height: 100% !important;
+                }
+                /* Five across needs one more step down than four did: at 1100px
+                   a five-column row gives each card ~130px, of which 50 is the
+                   icon gutter, and every description wraps to three lines. */
+                @media (max-width: 1250px) {
+                    div[class*="st-key-panopto_outputs_grid"] {
+                        grid-template-columns: repeat(3, 1fr) !important;
+                    }
                 }
                 @media (max-width: 1100px) {
                     div[class*="st-key-panopto_outputs_grid"] {
@@ -2399,7 +2419,7 @@ def render_download_settings(fetch_courses_fn):
 
                 pan_css_html = "<style>" + "".join(pan_css) + "</style>"
                 st.markdown(f"""{pan_css_html}
-<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 12px;'>Download your Canvas Panopto lecture recordings - as video, audio, transcripts or subtitles - saved into your course folders like every other file.</p>""", unsafe_allow_html=True)
+<p style='font-size: 0.95rem; color: #e2e8f0; margin-top: -15px; margin-bottom: 12px;'>Download your Canvas Panopto lecture recordings - as video, audio, transcripts or subtitles - saved into your course folders like every other file. Or save just a shortcut, so you can jump straight back to the lecture without downloading it.</p>""", unsafe_allow_html=True)
 
                 # ── Element 0: transcription status card (collapsible) ──
                 # Header button shows the status headline + CSS-injected dot; the

@@ -201,4 +201,15 @@ def extract_archive(archive_path: str | Path,
         
     except Exception as e:
         logger.error(f"Failed to extract {abs_archive.name}: {e}")
+        # Same reasoning as _decline's: the target folder is created before the
+        # member list can be read, so a guard that trips afterwards (a zip bomb,
+        # a blocked path traversal) left an empty directory next to the
+        # untouched archive - something the user did not ask for and the sync
+        # analyzer then has to reason about. _decline uses os.rmdir, which
+        # removes ONLY an empty directory, so a PARTIAL extraction that failed
+        # halfway keeps everything it managed to write.
+        try:
+            _decline(extract_dir)
+        except Exception:
+            pass
         return None

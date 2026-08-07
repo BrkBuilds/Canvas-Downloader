@@ -875,6 +875,7 @@ def render_login_page(fetch_courses_fn):
         return
 
     from shared.helpers import get_base64_image
+    from ui import institution_picker
 
     icon_b64 = get_base64_image("assets/icon.png")
 
@@ -1647,6 +1648,280 @@ def render_login_page(fetch_courses_fn):
         color: #cbd5e1 !important;
         background: transparent !important;
     }
+
+    /* ── Institution picker ────────────────────────────────────────────────
+       A searchable directory sitting to the RIGHT of the Canvas URL field.
+       Picking writes into that field; the field itself stays fully editable,
+       so the picker is a shortcut and never a gate.
+
+       It is hand-built markup rather than st.selectbox for two reasons: a
+       Streamlit widget inside st.form cannot rerun, so a native picker could
+       not fill the field until submit; and the baseweb select cannot be
+       styled into this card without fighting its portal. Both buttons and the
+       search input are inside a real form element, so every control carries
+       type="button" and the bridge swallows Enter - otherwise clicking an
+       option would SUBMIT the login form. (Note the deliberate absence of an
+       angle-bracket tag name in this comment: one would close the style
+       element early and silently kill every rule below it.) */
+    div[class*="st-key-login_card_wrapper"] .cd-inst {
+        position: relative !important;
+        width: 100% !important;
+    }
+    /* The row's markdown must not shrink its own container: Streamlit puts
+       margin-bottom:-16px on every stMarkdownContainer, which would pull the
+       trigger up out of alignment with the input beside it. */
+    div[class*="st-key-login_card_wrapper"]
+        [data-testid="stMarkdownContainer"]:has(> .cd-inst) {
+        margin-bottom: 0 !important;
+    }
+    /* The panel is absolutely positioned, so every ancestor between it and the
+       card must not clip. Streamlit's column/block wrappers default to visible,
+       but the keyed card sets overflow on its inputs - restate it here so a
+       future change to the card cannot silently crop the dropdown. */
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stHorizontalBlock"],
+    div[class*="st-key-login_card_wrapper"] div[data-testid="stColumn"] {
+        overflow: visible !important;
+    }
+
+    div[class*="st-key-login_card_wrapper"] .cd-inst-trigger {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        height: 40px !important;
+        padding: 0 10px !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 6px !important;
+        background-color: rgba(0, 0, 0, 0.2) !important;
+        color: #b8c5d6 !important;
+        font-size: 0.86rem !important;
+        font-weight: 500 !important;
+        font-family: inherit !important;
+        cursor: pointer !important;
+        text-align: left !important;
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out,
+                    background-color 0.2s ease-in-out !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-trigger:hover {
+        border-color: rgba(255, 255, 255, 0.22) !important;
+        background-color: rgba(0, 0, 0, 0.28) !important;
+        color: #cfe0f0 !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst[data-open="1"] .cd-inst-trigger {
+        border-color: #1f77b4 !important;
+        box-shadow: 0 0 0 2px rgba(31, 119, 180, 0.2) !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-ico {
+        flex: 0 0 auto !important;
+        color: #64748b !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst[data-picked="1"] .cd-inst-ico {
+        color: #4ade80 !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-label {
+        flex: 1 1 auto !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-chev {
+        flex: 0 0 auto !important;
+        color: #64748b !important;
+        transition: transform 0.18s ease !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst[data-open="1"] .cd-inst-chev {
+        transform: rotate(180deg) !important;
+    }
+
+    div[class*="st-key-login_card_wrapper"] .cd-inst-panel {
+        display: none !important;
+        position: absolute !important;
+        top: calc(100% + 6px) !important;
+        right: 0 !important;
+        width: min(430px, 86vw) !important;
+        z-index: 60 !important;
+        background: #1a222c !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        border-radius: 8px !important;
+        box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.65) !important;
+        padding: 8px !important;
+        box-sizing: border-box !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst[data-open="1"] .cd-inst-panel {
+        display: block !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-searchwrap {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 0 9px !important;
+        height: 36px !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 6px !important;
+        background-color: rgba(0, 0, 0, 0.25) !important;
+        margin-bottom: 8px !important;
+        transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-searchwrap:focus-within {
+        border-color: #1f77b4 !important;
+        box-shadow: 0 0 0 2px rgba(31, 119, 180, 0.2) !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-searchwrap svg {
+        flex: 0 0 auto !important;
+        color: #64748b !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-input {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        border: none !important;
+        outline: none !important;
+        background: transparent !important;
+        color: #e2e8f0 !important;
+        font-size: 0.86rem !important;
+        font-family: inherit !important;
+        padding: 0 !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-input::placeholder {
+        color: #64748b !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-list {
+        max-height: 264px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        scrollbar-width: thin !important;
+        scrollbar-color: rgba(255, 255, 255, 0.18) transparent !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-list::-webkit-scrollbar {
+        width: 8px !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-list::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.18) !important;
+        border-radius: 4px !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-opt {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1px !important;
+        width: 100% !important;
+        padding: 7px 9px !important;
+        border: none !important;
+        border-radius: 6px !important;
+        background: transparent !important;
+        color: #e2e8f0 !important;
+        font-family: inherit !important;
+        text-align: left !important;
+        cursor: pointer !important;
+        transition: background-color 0.12s ease !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-opt:hover {
+        background-color: rgba(31, 119, 180, 0.20) !important;
+    }
+    /* The KEYBOARD-active row is deliberately stronger than hover and carries a
+       left rail: with a mouse hover and an arrow-key cursor both on screen, two
+       identical highlights make it impossible to tell which one Enter takes. */
+    div[class*="st-key-login_card_wrapper"] .cd-inst-opt[data-active="1"] {
+        background-color: rgba(31, 119, 180, 0.32) !important;
+        box-shadow: inset 3px 0 0 0 #4da8da !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-opt[hidden] {
+        display: none !important;
+    }
+    /* Search-term highlighting. `mark` is a real element, so it must be
+       repainted for a dark surface or it renders as black-on-yellow. */
+    div[class*="st-key-login_card_wrapper"] .cd-inst-opt mark {
+        background: rgba(77, 168, 218, 0.28) !important;
+        color: #ffffff !important;
+        border-radius: 3px !important;
+        padding: 0 1px !important;
+    }
+    /* Live result count. Fixed height so a query that goes from matches to no
+       matches cannot change the panel's height and shift the list under the
+       pointer mid-selection. */
+    div[class*="st-key-login_card_wrapper"] .cd-inst-meta {
+        height: 15px !important;
+        margin: 0 2px 6px 2px !important;
+        font-size: 0.72rem !important;
+        line-height: 15px !important;
+        color: #64748b !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+        text-overflow: ellipsis !important;
+    }
+    /* With no matches the count row has nothing to say, and its reserved height
+       plus margin sat as ~21px of dead space above the "Not in the list"
+       panel. The height is only reserved to stop the list jumping BETWEEN
+       result counts - a state with no list at all does not need it. */
+    div[class*="st-key-login_card_wrapper"] .cd-inst[data-empty="1"] .cd-inst-meta {
+        display: none !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst[data-empty="1"] .cd-inst-list {
+        display: none !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-nm {
+        font-size: 0.86rem !important;
+        font-weight: 600 !important;
+        line-height: 1.3 !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-dm {
+        font-size: 0.75rem !important;
+        color: #64748b !important;
+        line-height: 1.3 !important;
+    }
+    /* Empty state. Worded as an instruction, not a failure: a student whose
+       school is missing must not read it as "this app does not support me". */
+    div[class*="st-key-login_card_wrapper"] .cd-inst-none {
+        display: none !important;
+        padding: 2px 10px 8px 10px !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst[data-empty="1"] .cd-inst-none {
+        display: block !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-none-h {
+        font-size: 0.85rem !important;
+        font-weight: 700 !important;
+        color: #cfe0f0 !important;
+        margin-bottom: 5px !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-none-b {
+        font-size: 0.8rem !important;
+        line-height: 1.5 !important;
+        color: #8a99ad !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-inst-none-b b {
+        color: #b8c5d6 !important;
+        font-weight: 600 !important;
+    }
+
+
+    /* Live URL feedback. One row, three states, driven by the bridge - never
+       rendered from Python, so it costs no rerun and no element-count change. */
+    div[class*="st-key-login_card_wrapper"] .cd-url-status {
+        display: none !important;
+        /* Grouped with the field ABOVE, which is what it describes. Its own
+           markdown block sits in Streamlit's 1rem flow, which put 24px above it
+           and 0 below - i.e. visually attached to the NEXT field's label, the
+           opposite of what it means. Measured target: ~6px up, ~20px down. */
+        align-items: flex-start !important;
+        gap: 7px !important;
+        /* ONE margin declaration. A `margin-top` above a `margin` shorthand is
+           silently overwritten by it - which is exactly what made the first
+           attempt at this look like the CSS was not applying at all. */
+        margin: -0.65rem 0 0.75rem 0 !important;
+        font-size: 0.79rem !important;
+        line-height: 1.45 !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state] {
+        display: flex !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-url-status svg {
+        flex: 0 0 auto !important;
+        margin-top: 2px !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state="ok"] { color: #4ade80 !important; }
+    div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state="info"] { color: #8a99ad !important; }
+    div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state="warn"] { color: #fbbf24 !important; }
+    div[class*="st-key-login_card_wrapper"] .cd-url-status b { font-weight: 700 !important; }
     </style>""")
 
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -1709,7 +1984,7 @@ def render_login_page(fetch_courses_fn):
                     "<div class='lra-url'>Your Canvas address is saved:"
                     f"<span class='lra-url-chip'>{_he(_saved_url)}</span></div>"  # audit-ignore: escaped via _he
                     "<div class='lra-hint'>Generate a fresh access token (guide below) and paste it here "
-                    "&mdash; that's the only thing that changed.</div>",
+                    "- that's the only thing that changed.</div>",
                     unsafe_allow_html=True,
                 )
             elif _reauth_reason:
@@ -1742,7 +2017,7 @@ def render_login_page(fetch_courses_fn):
                 "<span>Paste your Canvas web address below "
                 "(e.g. https://schoolname.instructure.com).</span></div>"
                 "<div class='lgs-step'><span class='lgs-num'>2</span>"
-                "<span>Generate a Canvas access token &mdash; the "
+                "<span>Generate a Canvas access token - the "
                 "<b>How to get a Canvas Access Token</b> guide below walks you "
                 "through it, with a one-click link straight to the right page.</span></div>"
                 "<div class='lgs-step'><span class='lgs-num'>3</span>"
@@ -1753,7 +2028,7 @@ def render_login_page(fetch_courses_fn):
                 "stroke-linejoin='round'><rect x='3' y='11' width='18' height='11' "
                 "rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>"
                 "<span>Your token is stored only on this device, in your operating "
-                "system &mdash; nothing is ever uploaded.</span></div></div>"
+                "system - nothing is ever uploaded.</span></div></div>"
             ) if (_first_run and not _reauth_mode) else ""
             _title_html = "" if _reauth_mode else '<div class="login-form-title">Log in to Canvas Downloader</div>'
             st.markdown(
@@ -1766,11 +2041,30 @@ def render_login_page(fetch_courses_fn):
                 # chip above - only the token needs re-entering. The full form
                 # renders the URL field.
                 if not _reauth_mode:
-                    st.text_input(
-                        'Your Canvas URL',
-                        key="url_input",
-                        placeholder="https://schoolname.instructure.com"
-                    )
+                    # The institution picker sits to the RIGHT of the field and
+                    # writes into it; the field stays editable, so a school that
+                    # is not in the list is never blocked - it is typed or
+                    # pasted exactly as before. `vertical_alignment="bottom"`
+                    # is what lines the trigger up with the input rather than
+                    # with the input's LABEL.
+                    _c_url, _c_pick = st.columns([1.6, 1], vertical_alignment="bottom")
+                    with _c_url:
+                        st.text_input(
+                            'Your Canvas URL',
+                            key="url_input",
+                            placeholder="https://schoolname.instructure.com"
+                        )
+                    with _c_pick:
+                        st.markdown(institution_picker.picker_html(),
+                                    unsafe_allow_html=True)
+                    # The live status line, pulled up tight under the URL
+                    # field it describes. There is no standing "not listed"
+                    # caveat here any more: it repeated what the picker's own
+                    # empty state says, and it belongs THERE - beside the
+                    # search that just came up empty - not permanently under a
+                    # field it has nothing to do with.
+                    st.markdown(institution_picker.url_status_html(),
+                                unsafe_allow_html=True)
 
                 st.text_input(
                     'Your Canvas Access Token',
@@ -2178,6 +2472,17 @@ def render_login_page(fetch_courses_fn):
                 "</div>",
                 unsafe_allow_html=True
             )
+
+    # The picker's behaviour, mounted LAST and UNCONDITIONALLY.
+    #   * last, because a components.html iframe is a real element and emitting
+    #     it mid-page would sit between the card and the help expanders;
+    #   * unconditionally, so reauth mode (which renders no URL field and no
+    #     picker) keeps the same element count as the full form - a component
+    #     that comes and goes shifts every element after it by one slot, and
+    #     Streamlit hands a block the CHILDREN of whatever held its index.
+    # Every handler in the script is guarded on the picker actually being on
+    # the page, so in reauth mode it simply finds nothing and does nothing.
+    institution_picker.inject_bridge()
 
 
 # ─── Private helpers ────────────────────────────────────────────────────

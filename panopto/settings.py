@@ -25,6 +25,12 @@ PANOPTO_DEFAULTS: dict = {
     # Master toggle: include Panopto recordings in download / sync runs.
     "enabled": False,
     # Output formats the user wants written per recording.
+    # Default OFF, unlike the three below: this key did not exist before the
+    # Shortcut output shipped, so every stored contract and every legacy folder
+    # answers False for it. Defaulting it True would start writing a new file
+    # beside every recording in every folder the app has ever synced, on the
+    # first run after an update, without anyone asking for it.
+    "output_url": False,       # link to the recording on Panopto
     "output_mp3": True,        # audio
     "output_txt": True,        # plain-text transcript
     "output_srt": True,        # timestamped subtitles
@@ -175,8 +181,15 @@ def set_globally_enabled(enabled: bool) -> bool:
 
 
 def active_outputs(settings: dict) -> list[str]:
-    """Return the list of enabled output kinds, e.g. ['mp3', 'txt', 'srt']."""
+    """Return the list of enabled output kinds, e.g. ['url', 'mp3', 'txt'].
+
+    Order is the DISPLAY order (shortcut first, then video, audio, transcript,
+    subtitles) and is load-bearing: it reaches the user as the badge order in
+    the sync review and confirm screens via ``panopto.sync_plan.wanted_kinds``.
+    """
     out = []
+    if settings.get("output_url"):
+        out.append("url")
     if settings.get("output_mp4"):
         out.append("mp4")
     if settings.get("output_mp3"):
@@ -208,9 +221,24 @@ def wants_transcription(settings: dict) -> bool:
 # output_srt, layout}. ``compose_settings`` rehydrates a full settings dict by
 # layering the contract over the persisted engine config, deriving ``enabled``.
 
-_OUTPUT_KEYS = ("output_mp4", "output_mp3", "output_txt", "output_srt")
+_OUTPUT_KEYS = ("output_url", "output_mp4", "output_mp3", "output_txt", "output_srt")
 _CONTRACT_KEYS = (*_OUTPUT_KEYS, "layout")
 _ENGINE_KEYS = ("model", "language", "device")
+
+# The session-state keys the download settings page writes its Section 4 choices
+# to (``persistent_`` + these on Confirm). Paired with the contract key they
+# feed, so "read the user's Panopto choices" is ONE mapping instead of the five
+# hand-written copies that used to sit in app.py, sync_ui.py, sync/analysis.py
+# and ui/sync_dialogs.py - four of which had to be found and edited to add a
+# single output, and any one of which could be missed with no symptom but a
+# format the user selected quietly never being produced.
+_UI_OUTPUT_KEYS = {
+    "output_url": "pan_out_url",
+    "output_mp4": "pan_out_mp4",
+    "output_mp3": "pan_out_mp3",
+    "output_txt": "pan_out_txt",
+    "output_srt": "pan_out_srt",
+}
 
 
 def engine_settings() -> dict:
@@ -220,15 +248,52 @@ def engine_settings() -> dict:
 
 
 def make_contract(*, mp4: bool, mp3: bool, txt: bool, srt: bool,
-                  layout: str) -> dict:
-    """Build the per-run contract dict from individual output toggles + layout."""
+                  layout: str, url: bool = False) -> dict:
+    """Build the per-run contract dict from individual output toggles + layout.
+
+    ``url`` (the Shortcut output) defaults to False so a stored contract written
+    before it existed rehydrates unchanged. Live call sites pass it explicitly -
+    ``contract_from_ui_state`` is the one that reads the user's actual choices.
+    """
     return {
+        "output_url": bool(url),
         "output_mp4": bool(mp4),
         "output_mp3": bool(mp3),
         "output_txt": bool(txt),
         "output_srt": bool(srt),
         "layout": layout if layout in ("match", "separate") else "match",
     }
+
+
+def contract_from_ui_state(state, *, prefix: str = "persistent_") -> dict:
+    """Build a contract from the download page's Section 4 session keys.
+
+    *state* is any mapping (``st.session_state`` in the app), read through
+    ``prefix`` + the ``pan_out_*`` / ``pan_layout`` names. A missing key reads as
+    False, which is the correct answer for these: they are session-only and
+    reset at every app launch (see ``core.state_registry``).
+
+    This exists because the same dict was hand-written at five call sites - the
+    download run, the sync analysis, the sync list, the pair dialog and the
+    transcription highlight - each one an independent chance to omit an output.
+    Keep it the only place that maps a UI key to a contract key; it takes a
+    mapping rather than importing Streamlit so this module stays UI-free.
+    """
+    def _get(name, default=False):
+        try:
+            return state.get(prefix + name, default)
+        except AttributeError:
+            return default
+
+    layout = _get("pan_layout", "match")
+    return make_contract(
+        url=bool(_get(_UI_OUTPUT_KEYS["output_url"])),
+        mp4=bool(_get(_UI_OUTPUT_KEYS["output_mp4"])),
+        mp3=bool(_get(_UI_OUTPUT_KEYS["output_mp3"])),
+        txt=bool(_get(_UI_OUTPUT_KEYS["output_txt"])),
+        srt=bool(_get(_UI_OUTPUT_KEYS["output_srt"])),
+        layout=layout if layout in ("match", "separate") else "match",
+    )
 
 
 def infer_contract_from_manifest(manifest: dict | None) -> dict | None:
@@ -264,7 +329,7 @@ def infer_contract_from_manifest(manifest: dict | None) -> dict | None:
         if not isinstance(per_video, dict):
             continue
         for kind, rel in per_video.items():
-            if kind in ("mp4", "mp3", "txt", "srt"):
+            if kind in ("url", "mp4", "mp3", "txt", "srt"):
                 kinds.add(kind)
             if isinstance(rel, str) and "panopto recordings/" in rel.replace("\\", "/").lower():
                 separate = True
@@ -275,6 +340,7 @@ def infer_contract_from_manifest(manifest: dict | None) -> dict | None:
     # A transcript on disk implies the audio step ran, but the user may have since
     # had mp3 output turned off - only assert what the artifacts actually show.
     return make_contract(
+        url="url" in kinds,
         mp4="mp4" in kinds,
         mp3="mp3" in kinds,
         txt="txt" in kinds,
@@ -337,6 +403,7 @@ def contract_to_ui_keys(contract: dict | None) -> dict:
     c = contract or {}
     layout = c.get("layout", "match")
     return {
+        "pan_out_url": bool(c.get("output_url")),
         "pan_out_mp4": bool(c.get("output_mp4")),
         "pan_out_mp3": bool(c.get("output_mp3")),
         "pan_out_txt": bool(c.get("output_txt")),

@@ -1,6 +1,8 @@
 import platform
 from pathlib import Path
 
+from shared.shortcuts import read_shortcut
+
 def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path | None, list[Path]]:
     """
     Scans a course directory for shortcut files (.url on Windows, .webloc on macOS),
@@ -41,7 +43,19 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
     
     # 2. Deduplication
     for shortcut_file in shortcut_files:
-        raw_link = _extract_url(shortcut_file)
+        raw_link, produced_by = read_shortcut(shortcut_file)
+
+        # An app-PRODUCED shortcut is an output the user asked for, not a Canvas
+        # link waiting to be gathered up. This loop's caller deletes everything
+        # it returns in ``processed_shortcuts``, so without this check the
+        # Panopto Shortcut output would be compiled away and deleted on every
+        # single run - and, because the folder's panopto manifest still recorded
+        # it, the next sync would dutifully restore it so the next compilation
+        # could delete it again. Endless churn, one "restored" line per
+        # recording per run, and never a link left on disk.
+        if produced_by:
+            continue
+
         if raw_link:
             link = raw_link.strip()
 
@@ -104,26 +118,8 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
     return output_path, processed_shortcuts
 
 
-def _extract_url(shortcut_file: Path) -> str | None:
-    """Extract URL from a .url (Windows INI) or .webloc (macOS plist) file."""
-    if shortcut_file.suffix.lower() == '.webloc':
-        try:
-            import plistlib
-            with open(shortcut_file, 'rb') as f:
-                plist = plistlib.load(f)
-                return plist.get('URL', None)
-        except Exception:
-            import logging
-            logging.getLogger(__name__).error(f"Failed to parse webloc: {shortcut_file.name}")
-            return None
-    else:
-        # Windows .url INI format
-        try:
-            with open(shortcut_file, 'r', encoding='utf-8', errors='ignore') as f:
-                for line in f:
-                    if line.strip().upper().startswith("URL="):
-                        return line.strip()[4:]
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).error(f"Failed to read {shortcut_file.name}: {e}")
-        return None
+# The reader used to live here as ``_extract_url``. It now comes from
+# ``shared.shortcuts`` alongside the WRITER, because this module deletes what it
+# reads: whether a shortcut may be consumed is a property of how it was written,
+# and two implementations of one file format is how that answer drifts. The
+# shared reader is also long-path safe and never raises.

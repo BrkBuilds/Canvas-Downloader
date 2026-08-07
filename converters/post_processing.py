@@ -21,6 +21,7 @@ from typing import Any, Callable, Optional
 
 from shared import theme
 from shared.helpers import esc, make_long_path
+from shared.shortcuts import is_produced_shortcut
 from engine.estimation import stepwise_estimator
 from engine.progress_dashboard import (
     render_active_file, build_terminal_html, build_metrics_row, build_progress_bar_html,
@@ -1244,7 +1245,15 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
     if contract.get('convert_urls', False):
         if explicit_files is not None:
              # PATH NORMALIZATION CONSTRAINT: Resolve paths to avoid slashes breaking isolation
-             has_shortcut = any(Path(p).resolve().suffix.lower() in {'.url', '.webloc'} for p in explicit_files)
+             # An app-PRODUCED shortcut (the Panopto Shortcut output) must not
+             # trigger this phase: the compiler skips it by design, so a run
+             # whose only shortcut is one of those would sweep the entire course
+             # folder to compile nothing - and would still delete every OTHER
+             # pre-existing link in it, which this run never touched.
+             has_shortcut = any(
+                 Path(p).resolve().suffix.lower() in {'.url', '.webloc'}
+                 and not is_produced_shortcut(p)
+                 for p in explicit_files)
              if has_shortcut:
                  _run_phase(run_url_compilation, [(course_folder, course_name)], ui)
         else:

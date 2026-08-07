@@ -3014,8 +3014,40 @@ def compute_local_md5(filepath: Path) -> str | None:
 # compute_local_md5 is now a proper @staticmethod on SyncManager (see class body)
 
 
-def format_file_size(size_bytes: int) -> str:
-    """Format file size in human-readable format."""
+def format_file_size(size_bytes) -> str:
+    """Format a byte count in human-readable form. Never raises.
+
+    This is a DISPLAY CELL in the same sense as ``engine.progress_dashboard``'s
+    metric builders, and it is bound by the same rule that module states: a cell
+    that raises takes its whole surface with it, and the values arrive from a
+    dozen subsystems that do not agree about what "no size" looks like. It is
+    simply the one such cell that lives outside that module, so the hardening
+    pass there never reached it - while 18 render sites call it, several of them
+    inside an ``@st.dialog`` where an exception blanks the modal.
+
+    Two coercions, each for a case that is REACHABLE, not hypothetical:
+
+    * **Non-numeric** (None / a string / NaN) -> 0. Canvas populates sizes via
+      ``getattr(file_obj, 'size', 0)``, and that default only applies when the
+      attribute is ABSENT - an attribute present and null yields None. The
+      codebase is visibly split on this already (``core/canvas_logic.py`` writes
+      ``... or 0`` at one ``original_size=`` site and not at the four others),
+      so the value can reach a manifest row and come back out of it.
+    * **Negative -> 0.** ``shared.helpers.check_disk_space`` returns **-1** as
+      its "could not determine" sentinel, and the Confirm Sync dialog feeds it
+      straight here: an unreachable drive rendered as
+      *"Available Disk Space: -1048576 B"*. Callers that want to SAY "unknown"
+      must test the sentinel themselves (the dialog now does); what this
+      function guarantees is only that it can never print a negative size.
+    """
+    try:
+        size_bytes = float(size_bytes)
+    except (TypeError, ValueError):
+        size_bytes = 0.0
+    # NaN, either infinity, or a negative sentinel -> nothing printable.
+    if size_bytes != size_bytes or size_bytes == float("inf") or size_bytes < 0:
+        size_bytes = 0.0
+    size_bytes = int(size_bytes) if size_bytes < 1024 else size_bytes
     if size_bytes < 1024:
         return f"{size_bytes} B"
     elif size_bytes < 1024 * 1024:

@@ -19,6 +19,10 @@ progress(kind, **kw) event kinds:
     'found'          course=..., count=int               (finished scanning a course)
     'skipped'        title=..., paths=[...]              (already fully on disk)
     'discovery_done' found=int, courses=int, scanned=int
+    # ── Shortcuts ──
+    'shortcut_phase' total=int                           (links about to be written)
+    'shortcut'       title=..., path=..., course=...     (one link file written)
+    'shortcut_done'  total=int, ok=int
     # ── Download ──
     'download_phase' total=int
     'video_start'    title=...
@@ -58,6 +62,10 @@ from panopto.transcribe import (
     _clean_part_files,
 )
 from panopto.settings import wants_transcription
+from panopto.shortcut import (
+    MEDIA_KINDS, SHORTCUT_KIND, kind_extensions, kind_from_path,
+    resolve_recording_url, resolve_shortcut_path, write_recording_shortcut,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +105,12 @@ def make_recorder(sync_manager, course_root):
     folder's dedicated panopto_manifest table. Best-effort; never raises."""
     def _rec(video, produced_paths):
         for p in produced_paths:
-            kind = Path(p).suffix.lower().lstrip(".") or "file"
+            # kind_from_path, not a bare suffix strip: a shortcut is kind 'url'
+            # even when the file is a macOS '.webloc'. Recorded as 'webloc' the
+            # row would answer a question nothing ever asks, while the 'url' the
+            # analyzer looks for would read as missing on every sync - a link
+            # rewritten for ever, and a manifest that grows a junk row per run.
+            kind = kind_from_path(p)
             try:
                 rel = str(Path(p).relative_to(course_root)).replace("\\", "/")
             except Exception:
@@ -193,6 +206,16 @@ def recording_base_candidates(out_dir: Path, safe_title: str,
     return [Path(out_dir) / s for s in stems]
 
 
+def _ours_shortcut_at(base: Path) -> bool:
+    """True if a link file WE produced already sits at this stem.
+
+    Asked instead of probing the name, because in the match layout the Canvas
+    file sync writes ``<lecture title>.url`` for the very same module item.
+    """
+    p = resolve_shortcut_path(base)
+    return p is not None and path_exists(p)
+
+
 def _unique_base(directory: Path, safe_title: str, seen: set) -> Path:
     """Return a collision-free <directory>/<safe_title> stem (no extension)."""
     base = directory / safe_title
@@ -226,7 +249,11 @@ def _recording_base(course_root: Path, out_dir: Path, safe_title: str,
     """
     if manifest:
         mani = manifest.get(video_id) or manifest.get(str(video_id)) or {}
-        for kind in ("mp4", "mp3", "txt", "srt"):
+        # 'url' is in this list on purpose. A folder whose ONLY produced output
+        # is the shortcut still has a stem the manifest knows, and skipping the
+        # kind here would send a later mp3/transcript to a freshly de-duplicated
+        # 'Title (1)' beside the link the user already has.
+        for kind in (SHORTCUT_KIND, "mp4", "mp3", "txt", "srt"):
             rel = mani.get(kind)
             if not rel:
                 continue
@@ -244,8 +271,14 @@ def _recording_base(course_root: Path, out_dir: Path, safe_title: str,
     # before ever syncing it.
     if legacy_title:
         for cand in recording_base_candidates(out_dir, legacy_title, settings or {}):
-            if any(path_exists(Path(str(cand) + "." + k))
-                   for k in ("mp4", "mp3", "txt", "srt")):
+            # The shortcut kind is asked through resolve_shortcut_path, not by
+            # probing the name: in the match layout a Canvas ExternalTool link
+            # sits at exactly that path for exactly these recordings, and
+            # adopting a stem on the strength of somebody else's file would
+            # point a whole recording's artifacts at it.
+            if (any(path_exists(Path(str(cand) + "." + k))
+                    for k in ("mp4", "mp3", "txt", "srt"))
+                    or _ours_shortcut_at(cand)):
                 seen.add(str(cand).lower())
                 return cand
     return _unique_base(out_dir, safe_title, seen)
@@ -265,6 +298,12 @@ class _Task:
     mp3_path: Path
     txt_path: Path
     srt_path: Path
+    # The Shortcut output: where the link file goes, and where it points. The
+    # URL is resolved during PLANNING, while the recording's discovery context
+    # (host, source, module item) is still at hand - the write itself must not
+    # have to reason about any of that.
+    url_path: object      # Path, or None when every candidate name is taken
+    shortcut_url: str
     record_fn: object
     # Marks an oversized recording as ignored when the size-limit gate trips
     # (parallel to record_fn; resolved per target during planning). None when no
@@ -289,6 +328,8 @@ class _Task:
     # work flags
     need_video: bool = False     # download the kept MP4
     need_audio: bool = False     # download the MP3 (kept, and/or transcription source)
+    need_url: bool = False       # write the shortcut (no network, Phase 1b)
+    want_url: bool = False
     want_tx: bool = False        # this recording wants a transcript/subtitle written
     want_mp3: bool = False
     want_mp4: bool = False
@@ -410,7 +451,7 @@ def _run_panopto_batch(
 
     progress = progress or _noop
     is_cancelled = is_cancelled or (lambda: False)
-    summary = {"found": 0, "downloaded": 0, "transcribed": 0,
+    summary = {"found": 0, "downloaded": 0, "transcribed": 0, "shortcuts": 0,
                "skipped": 0, "size_skipped": 0, "failed": 0, "courses": 0}
 
     # Max-file-size gate (skip-large-files Setting): a recording whose estimated
@@ -485,6 +526,7 @@ def _run_panopto_batch(
 
         # This target's output/layout contract (per-folder in sync mode).
         t_settings = _ts(target)
+        t_want_url = bool(t_settings.get("output_url"))
         t_want_mp4 = bool(t_settings.get("output_mp4"))
         t_want_mp3 = bool(t_settings.get("output_mp3"))
         t_want_txt = bool(t_settings.get("output_txt"))
@@ -575,6 +617,26 @@ def _run_panopto_batch(
         # migration), so trying only the per-video URLs used to leave the
         # whole course without a session even though 30 working launches had
         # just run during discovery.
+        #
+        # ...but ONLY when this target actually fetches something. The Shortcut
+        # output needs no Panopto session at all: discovery already captured the
+        # host on each recording. Bootstrapping anyway would spend an LTI
+        # handshake per course to learn nothing, and - worse - would make the
+        # cheapest output in the app depend on the most failure-prone step in
+        # it, so a course whose LTI chain is broken (a real, observed state at
+        # CBS post-1.3) would lose its links too.
+        _media_wanted = bool(t_want_mp4 or t_want_mp3 or t_want_txt or t_want_srt)
+        if _media_wanted and per_video_kinds:
+            # Sync mode narrows each recording to the kinds Review selected. If
+            # every one of them is the shortcut, there is still nothing to fetch.
+            # A recording the map does not cover falls back to the target's own
+            # contract below, so an incomplete map must count as media wanted.
+            _uncovered = any(str(v.video_id).lower() not in per_video_kinds
+                             for v in videos)
+            _media_wanted = _uncovered or any(
+                k in MEDIA_KINDS
+                for kinds in per_video_kinds.values() for k in (kinds or ()))
+
         session = panopto_base = None
         _auth_candidates: list[str] = []
         for v in videos:
@@ -585,7 +647,7 @@ def _run_panopto_batch(
             if (v.launch_url and "sessionless_launch" in v.launch_url
                     and v.launch_url not in _auth_candidates):
                 _auth_candidates.append(v.launch_url)
-        for _try_no, _cand in enumerate(_auth_candidates, 1):
+        for _try_no, _cand in enumerate(_auth_candidates if _media_wanted else [], 1):
             session, _final, _rid, panopto_base, _folder = lti_launch(_cand, cm.api_key)
             _ok = bool(session and panopto_base)
             logger.info(
@@ -596,7 +658,11 @@ def _run_panopto_batch(
             if _ok:
                 break
             session = panopto_base = None
-        if session is None or panopto_base is None:
+        if not _media_wanted:
+            logger.info(
+                "Panopto: '%s' needs no media this run (Shortcut output only) - "
+                "skipping the per-course session bootstrap.", course.name)
+        elif session is None or panopto_base is None:
             logger.warning(
                 "Panopto auth could NOT be established for '%s' - downloads for "
                 "this course will fail (no Panopto session/host).", course.name)
@@ -639,18 +705,29 @@ def _run_panopto_batch(
             mp3_path = Path(str(base) + ".mp3")
             txt_path = Path(str(base) + ".txt")
             srt_path = Path(str(base) + ".srt")
+            # The shortcut's destination is RESOLVED, not computed: the plain
+            # <stem>.url is routinely occupied by the Canvas link this app writes
+            # for the same module item. See resolve_shortcut_path - it is the one
+            # function the analyzer asks the same question of.
+            url_path = resolve_shortcut_path(base)
 
             # Narrow to the kinds this specific recording is allowed to produce.
             # In sync mode this comes from PanoptoChange.download_kinds (what the
             # analysis determined needs action); e.g. a restore-from-deleted mp4
             # only has 'mp4' in its allowed set even if settings have txt=True.
             v_kinds = (per_video_kinds or {}).get(str(v.video_id).lower()) if per_video_kinds else None
+            v_want_url = t_want_url and (v_kinds is None or SHORTCUT_KIND in v_kinds)
             v_want_mp4 = t_want_mp4 and (v_kinds is None or 'mp4' in v_kinds)
             v_want_mp3 = t_want_mp3 and (v_kinds is None or 'mp3' in v_kinds)
             v_want_txt = t_want_txt and (v_kinds is None or 'txt' in v_kinds)
             v_want_srt = t_want_srt and (v_kinds is None or 'srt' in v_kinds)
             v_model_ready = engine_ready and (v_want_txt or v_want_srt)
 
+            # url_path is None only when every candidate name is taken by a
+            # foreign shortcut. Nothing is missing then because nothing can be
+            # written - the shortcut phase reports it rather than overwriting
+            # somebody else's file.
+            url_missing = v_want_url and (url_path is None or not path_exists(url_path))
             mp4_missing = v_want_mp4 and not path_exists(mp4_path)
             mp3_missing = v_want_mp3 and not path_exists(mp3_path)
             txt_missing = v_want_txt and v_model_ready and not path_exists(txt_path)
@@ -658,11 +735,22 @@ def _run_panopto_batch(
             tx_missing = txt_missing or srt_missing
 
             # Nothing to do -> already fully present on disk.
-            if not (mp4_missing or mp3_missing or txt_missing or srt_missing):
-                existing = [str(p) for p in (mp4_path, mp3_path, txt_path, srt_path) if path_exists(p)]
+            if not (url_missing or mp4_missing or mp3_missing or txt_missing or srt_missing):
+                existing = [str(p) for p in (url_path, mp4_path, mp3_path, txt_path, srt_path)
+                            if p is not None and path_exists(p)]
                 progress("skipped", title=v.title, paths=existing, course=course.name)
                 summary["skipped"] += 1
                 continue
+
+            # Resolve the link HERE, where the recording's discovery context is
+            # still in hand, and only when one is actually wanted (the Canvas
+            # fallback formats a URL, but the intent check is what keeps it out
+            # of runs that never asked for a shortcut).
+            shortcut_url = ""
+            if url_missing:
+                shortcut_url = resolve_recording_url(
+                    v, panopto_base=panopto_base or "",
+                    canvas_base=cm.api_url, course_id=course.id) or ""
 
             # Transcription reads its audio from the kept MP4 when we have one
             # (avoids downloading the same lecture twice); otherwise from the MP3.
@@ -674,6 +762,7 @@ def _run_panopto_batch(
             tasks.append(_Task(
                 video=v, course=course, course_name=course.name,
                 mp4_path=mp4_path, mp3_path=mp3_path, txt_path=txt_path, srt_path=srt_path,
+                url_path=url_path, shortcut_url=shortcut_url,
                 record_fn=record_fn, ignore_fn=target.get("ignore_fn"),
                 max_bytes=_gate_bytes,
                 session=session, panopto_base=panopto_base,
@@ -681,6 +770,8 @@ def _run_panopto_batch(
                 tx_source=tx_source,
                 need_video=need_video,
                 need_audio=need_audio,
+                need_url=url_missing,
+                want_url=v_want_url,
                 want_tx=(v_model_ready and tx_missing),
                 want_mp3=v_want_mp3,
                 want_mp4=v_want_mp4,
@@ -706,11 +797,13 @@ def _run_panopto_batch(
 
     _n_dl = sum(1 for t in tasks if t.need_video or t.need_audio)
     _n_tx = sum(1 for t in tasks if t.want_tx)
+    _n_sc = sum(1 for t in tasks if t.need_url)
     logger.info(
         "Discovery complete: %d found across %d course(s); planned %d download(s) "
-        "(%d video), %d transcription(s), %d skipped (already on disk).",
+        "(%d video), %d transcription(s), %d shortcut(s), %d skipped (already on "
+        "disk).",
         summary["found"], summary["courses"], _n_dl,
-        sum(1 for t in tasks if t.need_video), _n_tx, summary["skipped"],
+        sum(1 for t in tasks if t.need_video), _n_tx, _n_sc, summary["skipped"],
     )
 
     if is_cancelled() or not tasks:
@@ -734,6 +827,77 @@ def _run_panopto_batch(
                 t.record_fn(t.video, t.produced)
             except Exception as e:
                 logger.debug(f"Panopto record_fn failed for '{t.video.title}': {e}")
+
+    # ═══ Phase 1b: Write the Shortcut output ═══
+    # Roughly a hundred bytes per recording and no network behind any of it, so
+    # this is a phase in name only. It runs BEFORE the downloads deliberately:
+    # a run that is cancelled halfway, or whose Panopto session never
+    # authenticates, still leaves the user a working link to every recording it
+    # found - which is the whole reason someone picks this output over a 2 GB
+    # video. Each link is recorded as it lands (``_record_now``), for the same
+    # reason every other phase does: a cancel interrupts the batch wherever it
+    # stands, and an artifact missing from the manifest is one the next sync
+    # writes all over again.
+    sc_tasks = [t for t in tasks if t.need_url]
+    if sc_tasks:
+        logger.info("Shortcut phase: %d link file(s).", len(sc_tasks))
+        progress("shortcut_phase", total=len(sc_tasks))
+        for t in sc_tasks:
+            if is_cancelled():
+                logger.info("Panopto shortcut phase cancelled by user.")
+                break
+            v = t.video
+            if t.url_path is None:
+                logger.warning(
+                    "Every candidate shortcut name for '%s' is taken by a file "
+                    "this app did not write - no link saved.", v.title)
+                progress("error", error=DownloadError(
+                    t.course_name, v.title, "Link Error",
+                    "Couldn't save a shortcut for this recording - a file of "
+                    "that name already exists and is not one of ours."))
+                if not t.failed:
+                    summary["failed"] += 1
+                    t.failed = True
+                continue
+            if not t.shortcut_url:
+                # We know the recording exists but have no address for it. That
+                # is a real outcome and it is reported: a silently absent file
+                # would read as "the app skipped my lecture" with nothing to go
+                # on, and the next sync would try again just as blindly.
+                logger.warning(
+                    "No shareable URL for '%s' (host=%r source=%r item=%s) - "
+                    "shortcut skipped.", v.title,
+                    getattr(v, "panopto_host", ""), getattr(v, "source", ""),
+                    getattr(v, "module_item_id", 0))
+                progress("error", error=DownloadError(
+                    t.course_name, v.title, "Link Error",
+                    "Could not work out this recording's Panopto address, so no "
+                    "shortcut was saved. Its other formats are unaffected."))
+                if not t.failed:
+                    summary["failed"] += 1
+                    t.failed = True
+                continue
+            try:
+                write_recording_shortcut(t.url_path, t.shortcut_url)
+            except Exception as e:
+                logger.error("Could not write shortcut for '%s': %s", v.title, e)
+                progress("error", error=DownloadError(
+                    t.course_name, v.title, "Link Error", str(e), raw_error=e))
+                if not t.failed:
+                    summary["failed"] += 1
+                    t.failed = True
+                continue
+            t.produced.append(str(t.url_path))
+            summary["shortcuts"] += 1
+            progress("shortcut", title=v.title, path=str(t.url_path),
+                     course=t.course_name)
+            progress("produced", title=v.title, path=str(t.url_path),
+                     course=t.course_name)
+            _record_now(t)
+        progress("shortcut_done", total=len(sc_tasks), ok=summary["shortcuts"])
+
+    if is_cancelled():
+        return summary
 
     # ═══ Phase 2: Download every recording's media (video and/or audio) ═══
     # Downloads run CONCURRENTLY. Each recording is an independent ffmpeg
@@ -835,7 +999,11 @@ def _run_panopto_batch(
                     if res.total_bytes == 0:
                         # Nothing came down (every media failed) -> a failure; don't
                         # advance the "downloaded" tally.
-                        if res.rec_failed:
+                        if res.rec_failed and not t.failed:
+                            # `not t.failed`: the shortcut phase may already have
+                            # counted this recording. "Errors" on the completion
+                            # card counts RECORDINGS, so one lecture that fails
+                            # twice is still one error.
                             summary["failed"] += 1
                             t.failed = True
                         continue
@@ -1055,8 +1223,8 @@ def _run_panopto_batch(
 
     logger.info(
         "Panopto batch done: found=%(found)d downloaded=%(downloaded)d "
-        "transcribed=%(transcribed)d skipped=%(skipped)d failed=%(failed)d "
-        "courses=%(courses)d", summary,
+        "transcribed=%(transcribed)d shortcuts=%(shortcuts)d "
+        "skipped=%(skipped)d failed=%(failed)d courses=%(courses)d", summary,
     )
     return summary
 

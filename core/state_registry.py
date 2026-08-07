@@ -36,8 +36,12 @@ TOTAL_SECONDARY_SUBS = len(SECONDARY_CONTENT_KEYS)
 # Panopto output toggles (Section 4 of the download settings page). Session-only
 # and reset each app launch, EXACTLY like the Canvas Content keys above: the
 # engine config (model/device/language) is the only persisted part. Ordered
-# mp4, mp3, txt, srt (left-to-right display order).
-PANOPTO_OUTPUT_KEYS = ['pan_out_mp4', 'pan_out_mp3', 'pan_out_txt', 'pan_out_srt']
+# url, mp4, mp3, txt, srt (left-to-right display order), matching
+# ui.download_settings.PANOPTO_OUTPUT_DEFS - which is the definition; this list
+# is what RESETS them, so a key present there and missing here is a toggle that
+# silently survives a run and turns itself on again in the next one.
+PANOPTO_OUTPUT_KEYS = ['pan_out_url', 'pan_out_mp4', 'pan_out_mp3',
+                       'pan_out_txt', 'pan_out_srt']
 
 TOTAL_PANOPTO_OUTPUTS = len(PANOPTO_OUTPUT_KEYS)
 

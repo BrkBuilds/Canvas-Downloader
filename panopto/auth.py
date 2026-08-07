@@ -89,6 +89,47 @@ def extract_panopto_ids(text: str) -> list[str]:
     return list(ids)
 
 
+#: A Panopto HOST, recognised by the product route that follows it. The path
+#: ``/Panopto/`` is Panopto's own, so it survives a vanity CNAME (``video.uni.edu``)
+#: where the hostname carries no "panopto" substring at all - the same reasoning
+#: ``panopto.institution`` uses to identify the LTI tool.
+#:
+#: The host class excludes ``/`` on purpose. Allowing it (with a lazy quantifier)
+#: still matches, but it matches from the FIRST scheme in the text: a Canvas
+#: ``external_tools/retrieve?url=https://host/Panopto/...`` link then yields
+#: ``https://canvas.edu/courses/1/external_tools/retrieve?url=https://host`` -
+#: a string that looks like a URL, passes every truthiness check, and produces a
+#: shortcut pointing at nothing. Barring the separator makes the group a
+#: hostname and nothing else.
+_PANOPTO_HOST_PATTERN = re.compile(
+    r"""(https?://[^\s"'<>\\/]+)/Panopto/""", re.IGNORECASE)
+
+
+def extract_panopto_host(text: str) -> str | None:
+    """Return the Panopto base URL (``https://host``) found in *text*, or None.
+
+    Same raw + two-decode-pass sweep as :func:`extract_panopto_ids`, because the
+    host arrives in the same places and just as often encoded: a Canvas
+    ``external_tools/retrieve?url=https%3A%2F%2Fhost%2FPanopto%2F...`` link hides
+    it behind one pass, an interstitial login behind two.
+
+    Returned without a trailing slash, which is the shape every consumer expects
+    (``panopto.stream`` builds ``f"{base}/Panopto/Pages/Viewer.aspx"``).
+    """
+    if not text:
+        return None
+    seen = text
+    for _ in range(3):  # raw + 2 decode passes
+        m = _PANOPTO_HOST_PATTERN.search(seen)
+        if m:
+            return m.group(1).rstrip("/")
+        decoded = unquote(seen)
+        if decoded == seen:
+            break
+        seen = decoded
+    return None
+
+
 # High-confidence body markers for the SESSION a Panopto page is about. Used
 # only as a fallback when the final handshake URL itself carries no id.
 _BODY_VIEWER_PATTERN = re.compile(

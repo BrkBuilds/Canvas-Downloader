@@ -35,7 +35,7 @@ _QUICK_PRESETS = [
             'convert_excel': False, 'convert_html': False, 'convert_code': False,
             'convert_urls': False, 'convert_video': False,
             # Panopto: full video, saved alongside course files (modules).
-            'pan_out_mp4': True, 'pan_out_mp3': False,
+            'pan_out_url': False, 'pan_out_mp4': True, 'pan_out_mp3': False,
             'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'match',
         },
     },
@@ -55,7 +55,7 @@ _QUICK_PRESETS = [
             'convert_excel': False, 'convert_html': False, 'convert_code': False,
             'convert_urls': False, 'convert_video': False,
             # Panopto: video + audio, saved alongside course files (modules).
-            'pan_out_mp4': True, 'pan_out_mp3': True,
+            'pan_out_url': False, 'pan_out_mp4': True, 'pan_out_mp3': True,
             'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'match',
         },
     },
@@ -75,7 +75,7 @@ _QUICK_PRESETS = [
             'convert_excel': True, 'convert_html': True, 'convert_code': True,
             'convert_urls': True,  'convert_video': True,
             # Panopto: audio only, in a separate "Panopto Recordings" folder.
-            'pan_out_mp4': False, 'pan_out_mp3': True,
+            'pan_out_url': False, 'pan_out_mp4': False, 'pan_out_mp3': True,
             'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'separate',
         },
     },
@@ -95,7 +95,7 @@ _QUICK_PRESETS = [
             'convert_excel': False, 'convert_html': False, 'convert_code': False,
             'convert_urls': False, 'convert_video': False,
             # Panopto: none.
-            'pan_out_mp4': False, 'pan_out_mp3': False,
+            'pan_out_url': False, 'pan_out_mp4': False, 'pan_out_mp3': False,
             'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'match',
         },
     },
@@ -118,7 +118,7 @@ _QUICK_PRESETS = [
             # lecture recordings are a separate, opt-in content type, so this
             # preset must NOT pull multi-GB Panopto videos (matches its
             # "no distractions" promise and "Slides & PDFs Only" above).
-            'pan_out_mp4': False, 'pan_out_mp3': False,
+            'pan_out_url': False, 'pan_out_mp4': False, 'pan_out_mp3': False,
             'pan_out_txt': False, 'pan_out_srt': False, 'pan_layout': 'match',
         },
     },

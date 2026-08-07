@@ -797,23 +797,14 @@ def show_course_ignored_files(course_name, course_id, course_data):
                         except Exception:
                             _pan_contract = None
                     if _pan_contract is None:
-                        _pan_contract = {
-                            'output_mp4': st.session_state.get('persistent_pan_out_mp4', False),
-                            'output_mp3': st.session_state.get('persistent_pan_out_mp3', False),
-                            'output_txt': st.session_state.get('persistent_pan_out_txt', False),
-                            'output_srt': st.session_state.get('persistent_pan_out_srt', False),
-                            'layout': st.session_state.get('persistent_pan_layout', 'match'),
-                        }
+                        from panopto.settings import contract_from_ui_state as _pan_from_state
+                        _pan_contract = _pan_from_state(st.session_state)
                     _pan_settings = _compose_pan(_pan_contract)
-                    _default_kinds = []
-                    if _pan_settings.get("output_mp4"):
-                        _default_kinds.append("mp4")
-                    if _pan_settings.get("output_mp3"):
-                        _default_kinds.append("mp3")
-                    if _pan_settings.get("output_txt"):
-                        _default_kinds.append("txt")
-                    if _pan_settings.get("output_srt"):
-                        _default_kinds.append("srt")
+                    # The configured kinds, in the app's one display order.
+                    # Hand-listing them here is what let this dialog fall a
+                    # format behind the card that configures them.
+                    from panopto.sync_plan import wanted_kinds as _pan_wanted
+                    _default_kinds = _pan_wanted(_pan_settings)
 
                     for vid, title in pan_ignored.items():
                         _psz = _pan_rec_size(vid)
