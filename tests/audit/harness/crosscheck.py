@@ -470,7 +470,16 @@ def download_run(ev: Evidence) -> list[Finding]:
 
 
 # Outputs the Panopto pass can produce, and the extension each lands as.
-PANOPTO_OUTPUTS = {"pan_out_mp3": ".mp3", "pan_out_mp4": ".mp4",
+#
+# The Shortcut output's extension is the PLATFORM's (.url on Windows, .webloc on
+# macOS) rather than its own name, so it is read from the app rather than typed
+# here - the checker runs on the machine that produced the files, and a
+# hardcoded ".url" would report every macOS link as a stray "other file type"
+# under the Slides & PDFs filter.
+from panopto.shortcut import kind_extension as _pan_kind_ext  # noqa: E402
+
+PANOPTO_OUTPUTS = {"pan_out_url": _pan_kind_ext("url"),
+                   "pan_out_mp3": ".mp3", "pan_out_mp4": ".mp4",
                    "pan_out_txt": ".txt", "pan_out_srt": ".srt"}
 
 
@@ -594,9 +603,13 @@ def _panopto_delivery(ev: Evidence) -> list[Finding]:
     for f in ev.disk.get("files", []):
         on_disk[f.get("ext", "")] = on_disk.get(f.get("ext", ""), 0) + 1
 
+    from panopto.shortcut import kind_from_path as _pan_kind_of
     for key in sorted(wanted):
         ext = PANOPTO_OUTPUTS[key]
-        kind = ext.lstrip(".")
+        # Through the app's own mapping: a manifest row for a macOS shortcut is
+        # kind 'url', not 'webloc', so stripping the dot off the extension would
+        # look for a kind the engine never records and report every link missing.
+        kind = _pan_kind_of("x" + ext)
         rows = int(kinds.get(kind, 0) or 0)
         if discovered and not rows:
             out.append(ev._d("O1", "O4",

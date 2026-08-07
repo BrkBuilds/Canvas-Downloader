@@ -3,8 +3,8 @@
 This is the single source of truth that lets the **sync analysis/review** phase
 treat a Panopto recording exactly like any other file. Discovery (slow, done
 once in analysis) yields a list of ``PanoptoVideo``; this module compares each
-recording's *configured* outputs (mp4/mp3/txt/srt) against what is actually on
-disk + the per-folder ``panopto_manifest`` and assigns a state:
+recording's *configured* outputs (url/mp4/mp3/txt/srt) against what is actually
+on disk + the per-folder ``panopto_manifest`` and assigns a state:
 
     'new'      - never downloaded; nothing on disk            -> New bucket
     'partial'  - some configured outputs missing (e.g. a newly
@@ -32,16 +32,23 @@ from panopto.runner import (
     video_dir, recording_stem_name, recording_base_candidates,
 )
 from panopto.settings import active_outputs
+from panopto.shortcut import (
+    SHORTCUT_KIND, kind_extension, kind_extensions, resolve_shortcut_path,
+)
 
 logger = logging.getLogger(__name__)
 
-# Output kinds we can actually produce, in badge display order (video first).
-_SUPPORTED_KINDS = ("mp4", "mp3", "txt", "srt")
+# Output kinds we can actually produce, in badge display order (shortcut first,
+# then video). Must stay in step with panopto.settings.active_outputs, which
+# decides the same order for the same reason - one of them is a filter over the
+# other, and a kind missing here is a configured output the analyzer never looks
+# for, i.e. one the sync silently never produces.
+_SUPPORTED_KINDS = ("url", "mp4", "mp3", "txt", "srt")
 _TRANSCRIPT_KINDS = ("txt", "srt")
 
 
 def wanted_kinds(settings: dict) -> list[str]:
-    """Configured output kinds, ordered mp4, mp3, txt, srt.
+    """Configured output kinds, ordered url, mp4, mp3, txt, srt.
 
     model_ready is IGNORED here - classification always considers every
     configured kind so that previously-produced txt/srt files that have been
@@ -211,11 +218,28 @@ def classify_videos(cm, videos, course_root, download_mode: str, settings: dict,
             _cands = recording_base_candidates(base.parent, _safe_title, settings)
 
             def _find(kind, _c=_cands, _b=base):
+                # The shortcut kind is RESOLVED, never probed by name. Two
+                # things make its path unlike every other kind's, and both are
+                # answered by the one function the runner writes through:
+                #   * the suffix is the PLATFORM's (.url / .webloc), so a folder
+                #     first synced on Windows and opened on a Mac must have its
+                #     .url files adopted rather than duplicated;
+                #   * the plain <stem>.url is routinely occupied by the CANVAS
+                #     link this app writes for the same module item, which is
+                #     not our file and does not satisfy this output.
+                if kind == SHORTCUT_KIND:
+                    for cand in list(_c) + [_b]:
+                        q = resolve_shortcut_path(cand)
+                        if q is not None and path_exists(q):
+                            return q, True
+                    return (resolve_shortcut_path(_b)
+                            or Path(str(_b) + kind_extension(kind))), False
                 for cand in _c:
-                    q = Path(str(cand) + "." + kind)
-                    if path_exists(q):
-                        return q, True
-                return Path(str(_b) + "." + kind), False
+                    for ext in kind_extensions(kind):
+                        q = Path(str(cand) + ext)
+                        if path_exists(q):
+                            return q, True
+                return Path(str(_b) + kind_extension(kind)), False
 
             for kind in wanted:
                 rel = mani.get(kind)

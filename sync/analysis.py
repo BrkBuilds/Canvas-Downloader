@@ -314,6 +314,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
         from panopto.settings import (
             wants_transcription as _pan_wants_tx,
             compose_settings as _pan_compose, is_enabled as _pan_is_enabled,
+            contract_from_ui_state as _pan_contract_from_state,
         )
         # Per-folder Panopto contract (output formats + layout), mirroring the
         # secondary_content_contract: read from this folder's manifest, falling
@@ -328,13 +329,7 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             except (json.JSONDecodeError, TypeError, ValueError):
                 _pan_contract = None
         if _pan_contract is None:
-            _pan_contract = {
-                'output_mp4': st.session_state.get('persistent_pan_out_mp4', False),
-                'output_mp3': st.session_state.get('persistent_pan_out_mp3', False),
-                'output_txt': st.session_state.get('persistent_pan_out_txt', False),
-                'output_srt': st.session_state.get('persistent_pan_out_srt', False),
-                'layout': st.session_state.get('persistent_pan_layout', 'match'),
-            }
+            _pan_contract = _pan_contract_from_state(st.session_state)
             # Those persistent_* keys are session-only and reset to False at every
             # app launch, so on a fresh launch this fallback disables Panopto
             # outright. For a folder that ALREADY holds Panopto artifacts that is

@@ -17,7 +17,8 @@ from dataclasses import dataclass
 import requests
 
 from panopto.auth import (
-    PANOPTO_FOLDER_PATTERN, extract_panopto_ids, lti_launch,
+    PANOPTO_FOLDER_PATTERN, extract_panopto_host, extract_panopto_ids,
+    lti_launch,
 )
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,13 @@ class PanoptoVideo:
     # detail-fetched launch lands authenticated on Panopto) - the runner's
     # session bootstrap tries this validated URL FIRST.
     auth_launch_url: str = ""
+    # The Panopto base URL this recording lives on ("https://host"), captured
+    # from whichever launch or link revealed it during THIS scan. It is what the
+    # Shortcut output points at, and capturing it here is what makes that output
+    # free: discovery already performs these launches, so a shortcut-only run
+    # needs no Panopto session of its own. Empty when the scan never saw a
+    # Panopto URL - see panopto.shortcut.resolve_recording_url for the fallback.
+    panopto_host: str = ""
 
 
 class _CanvasREST:
@@ -500,14 +508,25 @@ def discover_course_videos(
         except Exception:
             pass
 
-    def add(vid, title, *, module="", launch="", source="module", item_id=0):
+    def add(vid, title, *, module="", launch="", source="module", item_id=0,
+            host=""):
         vid = (vid or "").lower()
-        if vid and vid not in videos:
+        if not vid:
+            return
+        if vid not in videos:
             videos[vid] = PanoptoVideo(
                 video_id=vid, title=title, module_name=module,
                 launch_url=launch, source=source, module_item_id=item_id,
+                panopto_host=(host or ""),
             )
             _emit('video', title=title, source=source)
+        elif host and not videos[vid].panopto_host:
+            # A recording can be reached twice - once from a link that named no
+            # host, once from a launch that did. Only the host is upgraded (and
+            # only from empty): everything else about the FIRST sighting is
+            # deliberate, because add() is idempotent by design and the first
+            # source is the one whose title and module the user will see.
+            videos[vid].panopto_host = host
 
     def _cancelled() -> bool:
         return bool(is_cancelled and is_cancelled())
@@ -544,10 +563,14 @@ def discover_course_videos(
 
             launch_url = item.get("url", "") or ""
             direct_vids: list[str] = []
+            direct_host = ""
             for field_name in ("external_url", "url", "html_url"):
-                for vid in extract_panopto_ids(item.get(field_name) or ""):
+                _field = item.get(field_name) or ""
+                for vid in extract_panopto_ids(_field):
                     if vid not in direct_vids:
                         direct_vids.append(vid)
+                if not direct_host:
+                    direct_host = extract_panopto_host(_field) or ""
 
             # quiz_lti marks Canvas New Quizzes - an LTI tool, never Panopto;
             # launching it would waste a full handshake per quiz.
@@ -570,11 +593,11 @@ def discover_course_videos(
                     _skipped_tools += 1
                     continue
                 pending.append((mod, item, mod_name, item_title, item_id,
-                                launch_url, direct_vids))
+                                launch_url, direct_vids, direct_host))
             else:
                 for vid in direct_vids:
                     add(vid, item_title, module=mod_name, launch=launch_url,
-                        source="module", item_id=item_id)
+                        source="module", item_id=item_id, host=direct_host)
 
     if _skipped_tools:
         logger.info(
@@ -590,7 +613,8 @@ def discover_course_videos(
     # Finding them concurrently turns N×2s of sequential waiting into a handful
     # of round-trips. add()/folder-expansion stay sequential in pass 3.
     def _resolve(entry):
-        mod, item, mod_name, item_title, item_id, launch_url, direct_vids = entry
+        (mod, item, mod_name, item_title, item_id, launch_url, direct_vids,
+         direct_host) = entry
         direct: list[str] = list(direct_vids)
         d_launch = launch_url
         lti = None
@@ -631,9 +655,12 @@ def discover_course_videos(
                 detail = {}
             d_launch = detail.get("url", launch_url) or launch_url
             for field_name in ("external_url", "url", "html_url"):
-                for vid in extract_panopto_ids(detail.get(field_name) or ""):
+                _field = detail.get(field_name) or ""
+                for vid in extract_panopto_ids(_field):
                     if vid not in direct:
                         direct.append(vid)
+                if not direct_host:
+                    direct_host = extract_panopto_host(_field) or ""
             if (lti is None and not direct and d_launch
                     and "sessionless_launch" in d_launch and d_launch != mi_launch):
                 try:
@@ -642,7 +669,11 @@ def discover_course_videos(
                     attempt = None
                 if attempt and attempt[0] is not None:
                     lti, used_launch = attempt, d_launch
-        return entry, d_launch, direct, lti, used_launch
+        # direct_host is returned SEPARATELY even though the entry carries one:
+        # the detail fetch above can discover a host the module item's own JSON
+        # never named, and ``entry`` is a tuple, so that upgrade would otherwise
+        # be dropped on the floor with nothing to show for it.
+        return entry, d_launch, direct, lti, used_launch, direct_host
 
     resolved: list[tuple] = []
     if pending and not _cancelled():
@@ -673,22 +704,27 @@ def discover_course_videos(
     # Every module item of a course shares that home folder, so sniff it once
     # per course instead of once per item (36 sequential GETs on the CBS run).
     _viewer_folder_sniffed = False
-    for entry, d_launch, direct, lti, used_launch in resolved:
+    for entry, d_launch, direct, lti, used_launch, direct_host in resolved:
         if _cancelled():
             break
-        mod, item, mod_name, item_title, item_id, launch_url, _p1_vids = entry
+        (mod, item, mod_name, item_title, item_id, launch_url, _p1_vids,
+         _p1_host) = entry
         # The stored launch is the one that actually REACHED Panopto this run
         # (the runner re-uses it for the per-video DeliveryInfo auth fallback).
         item_launch = used_launch or d_launch
         _before = len(videos)
         real_id = lti[2] if lti is not None else None
+        # A completed launch names the host authoritatively (it is where the
+        # browser landed); a host parsed out of the item's own JSON is the
+        # fallback for the items whose launch chain is dead.
+        item_host = (lti[3] if lti is not None else "") or direct_host or ""
         if real_id:
             # Launch-resolved id is authoritative: it is what a browser click
             # on this item plays TODAY. Any GUID embedded in the item JSON that
             # disagrees is a leftover from before an LTI migration - adding it
             # would download dead/wrong content, so it is dropped (logged).
             add(real_id, item_title, module=mod_name, launch=item_launch,
-                source="module", item_id=item_id)
+                source="module", item_id=item_id, host=item_host)
             _stale = [d for d in direct if d != real_id]
             if _stale:
                 logger.info(
@@ -699,14 +735,14 @@ def discover_course_videos(
         else:
             for vid in direct:
                 add(vid, item_title, module=mod_name, launch=item_launch,
-                    source="module", item_id=item_id)
+                    source="module", item_id=item_id, host=item_host)
         if lti is not None:
             session, final_url, _rid, pbase, lti_folder = lti
             if pbase and session and item_launch and not _auth_beacon:
                 _auth_beacon = item_launch
             for vid in extract_panopto_ids(final_url or ""):
                 add(vid, item_title, module=mod_name, launch=item_launch,
-                    source="module", item_id=item_id)
+                    source="module", item_id=item_id, host=pbase or item_host)
 
             if len(videos) == _before and session and pbase and lti_folder:
                 _fkey = (pbase, lti_folder)
@@ -724,7 +760,7 @@ def discover_course_videos(
                 )
                 if _match:
                     add(_match, item_title, module=mod_name, launch=item_launch,
-                        source="module", item_id=item_id)
+                        source="module", item_id=item_id, host=pbase or item_host)
                 else:
                     _unmatched_titles.append(item_title)
 
@@ -749,7 +785,8 @@ def discover_course_videos(
                         )
                     for vid, vtitle in _folder_sessions_cache[_fkey]:
                         add(vid, vtitle, module=mod_name, launch=item_launch,
-                            source="folder", item_id=item_id)
+                            source="folder", item_id=item_id,
+                            host=pbase or item_host)
 
     if _unmatched_titles:
         logger.info(
@@ -807,7 +844,7 @@ def discover_course_videos(
                 "link required).", len(_sessions), course_id,
             )
             for vid, vtitle in _sessions:
-                add(vid, vtitle, source="folder")
+                add(vid, vtitle, source="folder", host=cl_base)
             if not _auth_beacon:
                 _auth_beacon = _cl_launch
             break
@@ -860,15 +897,20 @@ def discover_course_videos(
             if _title:
                 _emit('scan', detail=f"Page: {_title}")
             page = rest.get_one(f"/api/v1/courses/{course_id}/pages/{stub.get('url', '')}")
-            for vid in extract_panopto_ids(page.get("body") or ""):
-                add(vid, page.get("title", "Page"), source="page")
+            _body = page.get("body") or ""
+            _body_host = extract_panopto_host(_body) or ""
+            for vid in extract_panopto_ids(_body):
+                add(vid, page.get("title", "Page"), source="page", host=_body_host)
 
     # ── Assignments ──
     if not _cancelled():
         _emit('stage', name='Assignments')
         for a in rest.get_all(f"/api/v1/courses/{course_id}/assignments"):
-            for vid in extract_panopto_ids(a.get("description") or ""):
-                add(vid, a.get("name", "Assignment"), source="assignment")
+            _desc = a.get("description") or ""
+            _desc_host = extract_panopto_host(_desc) or ""
+            for vid in extract_panopto_ids(_desc):
+                add(vid, a.get("name", "Assignment"), source="assignment",
+                    host=_desc_host)
 
     # ── Announcements ──
     if not _cancelled():
@@ -877,8 +919,11 @@ def discover_course_videos(
             f"/api/v1/courses/{course_id}/discussion_topics",
             {"only_announcements": "true"},
         ):
-            for vid in extract_panopto_ids(ann.get("message") or ""):
-                add(vid, ann.get("title", "Announcement"), source="announcement")
+            _msg = ann.get("message") or ""
+            _msg_host = extract_panopto_host(_msg) or ""
+            for vid in extract_panopto_ids(_msg):
+                add(vid, ann.get("title", "Announcement"), source="announcement",
+                    host=_msg_host)
 
     # Hand the runner a usable auth launch for EVERY recording, from all sources.
     #   * Module-linked items set `_auth_beacon` above to a per-item launch this
@@ -901,5 +946,19 @@ def discover_course_videos(
             for v in videos.values():
                 if not v.auth_launch_url:
                     v.auth_launch_url = _auth_beacon
+
+        # Same idea for the Panopto HOST, for the same reason. A course has one
+        # Panopto deployment, so any host this scan proved belongs to the course
+        # belongs to every recording in it - and the recordings that end up
+        # without one are precisely the ones found in a page body or a folder
+        # listing that named no host. Filling them from a sibling is what lets
+        # the Shortcut output cover a whole course when only some of its links
+        # were resolvable. Never OVERWRITES a host: a recording that named its
+        # own is authoritative, deployment migrations included.
+        _known_host = next((v.panopto_host for v in videos.values() if v.panopto_host), "")
+        if _known_host:
+            for v in videos.values():
+                if not v.panopto_host:
+                    v.panopto_host = _known_host
 
     return list(videos.values())

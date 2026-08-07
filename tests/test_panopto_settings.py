@@ -234,8 +234,8 @@ def test_extract_contract_takes_the_per_run_keys_only(config_dir):
     full = {**S.PANOPTO_DEFAULTS, "model": "large-v3", "output_mp4": True,
             "layout": "separate"}
     c = S.extract_contract(full)
-    assert set(c) == {"output_mp4", "output_mp3", "output_txt", "output_srt",
-                      "layout"}
+    assert set(c) == {"output_url", "output_mp4", "output_mp3", "output_txt",
+                      "output_srt", "layout"}
     assert "model" not in c, "engine config must never be stored per folder"
     assert c["output_mp4"] is True and c["layout"] == "separate"
 
@@ -388,8 +388,8 @@ def test_an_inferred_contract_is_enabled():
 
 def test_an_inferred_contract_has_the_full_contract_shape():
     c = S.infer_contract_from_manifest({"v1": {"mp3": "a.mp3"}})
-    assert set(c) == {"output_mp4", "output_mp3", "output_txt", "output_srt",
-                      "layout"}
+    assert set(c) == {"output_url", "output_mp4", "output_mp3", "output_txt",
+                      "output_srt", "layout"}
 
 
 def test_inference_asserts_only_what_the_artifacts_show():

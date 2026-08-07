@@ -950,18 +950,16 @@ def _panopto_run_contract() -> dict:
 
     Mirrors the Canvas Content flow: Section 4's toggles are saved to
     ``persistent_pan_*`` session keys on Confirm; this reads them back into the
-    {output_mp4/mp3/txt/srt, layout} contract shape that the runtime consumes.
-    The engine config (model/device/language) is layered in by
+    {output_url/mp4/mp3/txt/srt, layout} contract shape that the runtime
+    consumes. The engine config (model/device/language) is layered in by
     ``panopto.settings.compose_settings``.
+
+    The mapping itself lives in ``panopto.settings.contract_from_ui_state`` -
+    every place that needs the user's Panopto choices reads them through that
+    one function, so adding an output cannot leave one caller behind.
     """
-    from panopto.settings import make_contract
-    return make_contract(
-        mp4=st.session_state.get('persistent_pan_out_mp4', False),
-        mp3=st.session_state.get('persistent_pan_out_mp3', False),
-        txt=st.session_state.get('persistent_pan_out_txt', False),
-        srt=st.session_state.get('persistent_pan_out_srt', False),
-        layout=st.session_state.get('persistent_pan_layout', 'match'),
-    )
+    from panopto.settings import contract_from_ui_state
+    return contract_from_ui_state(st.session_state)
 
 
 def _next_phase_after_courses() -> str:
@@ -2315,6 +2313,7 @@ with st.container():
                 'courses_total': len(st.session_state.get('courses_to_download', [])),
                 'courses_scanned': 0, 'found': 0,
                 'dl_total': 0, 'dl_done': 0,
+                'sc_total': 0, 'sc_done': 0,
                 'tx_total': 0, 'tx_done': 0, 'tx_pct': 0, 'tx_pct_shown': -10,
             }
             # Pre-fill the header's course line (the h3 under the phase label -
@@ -2350,6 +2349,22 @@ with st.container():
                         metric_count('Recordings', _pan['dl_done'], _pan['dl_total'],
                                      accent=PHASE_BAR_COLOR['panopto']),
                         metric_eta(_pan_eta['download'].eta_text()),
+                    ])
+                elif ph == 'links':
+                    # Writing link files is instant, so this phase is usually a
+                    # single frame - but it must exist: a Shortcut-only run has
+                    # no other phase, and leaving the header on "Searching for
+                    # Panopto Recordings" would describe the wrong activity for
+                    # the whole run. No speed or ETA: nothing crosses the
+                    # network, and a transfer rate for a 100-byte local write is
+                    # noise dressed up as information.
+                    render_progress_header(_pan_dp, "Saving Lecture Links", _pan['course'])
+                    pct = int(_pan['sc_done'] / _pan['sc_total'] * 100) if _pan['sc_total'] else 0
+                    render_progress_bar(_pan_dp, min(100, pct), color=PHASE_BAR_COLOR['panopto'])
+                    render_metrics(_pan_dp, [
+                        metric_count('Links Saved', _pan['sc_done'], _pan['sc_total'],
+                                     accent=PHASE_BAR_COLOR['panopto']),
+                        metric_elapsed(time.time() - pan_start),
                     ])
                 elif ph == 'transcribe':
                     render_progress_header(_pan_dp, "Transcribing Recordings", _pan['course'])
@@ -2439,6 +2454,25 @@ with st.container():
                         log_deque.append(log_line('skip', kw.get('title', ''),
                                                   icon=file_icon_svg('x.mp3'),
                                                   detail='already saved'))
+                        _render_pan()
+
+                    # ── Shortcut phase ──
+                    elif kind == 'shortcut_phase':
+                        _pan['phase'] = 'links'
+                        _pan['sc_total'] = kw.get('total', 0)
+                        _pan['sc_done'] = 0
+                        log_deque.append(log_divider(
+                            f"Saving {_pan['sc_total']} lecture link{'s' if _pan['sc_total'] != 1 else ''}"))
+                        _render_pan()
+                    elif kind == 'shortcut':
+                        _pan['sc_done'] += 1
+                        log_deque.append(log_line('success', kw.get('title', ''),
+                                                  icon=file_icon_svg(kw.get('path') or 'x.url'),
+                                                  detail='link saved'))
+                        render_active_file(active_file_placeholder, kw.get('title', ''),
+                                           phase='panopto', label='Saving link')
+                        _render_pan()
+                    elif kind == 'shortcut_done':
                         _render_pan()
 
                     # ── Download phase ──

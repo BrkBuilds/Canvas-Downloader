@@ -368,6 +368,45 @@ def _reap_recorded_orphans(prev: dict) -> tuple[int, list[str]]:
     killed: list[str] = []
     try:
         import psutil
+
+        # ── The session must actually be OVER ────────────────────────────────
+        # ``clean_exit: False`` does NOT mean "that session died". It is what
+        # the state file says while a session is RUNNING - _save_state() writes
+        # it on every sample and only session_end() clears it. So a second
+        # instance booting alongside a live first one reads the first one's
+        # CURRENT children and, with nothing else to stop it, kills them: the
+        # running app's WebView2 window, or the ffmpeg/transcription worker of a
+        # sync in flight. Reproduced directly against this function - a live
+        # child was recorded, reaped and dead in one call.
+        #
+        # start.py's single-instance guard normally makes that unreachable, but
+        # it fails OPEN by design in three ways (mutex creation failure, the
+        # CANVAS_DL_ALLOW_MULTI escape hatch, and any exception on the flock
+        # path), and its Windows mutex is session-local - two Terminal Services
+        # sessions for one user share %APPDATA% but not the mutex. A reaper that
+        # can destroy a live session must not rest on a guard that is allowed to
+        # let a second instance through.
+        #
+        # Conservative on purpose, in the one direction that is safe: if the
+        # recording pid still resolves to a live process we skip the sweep
+        # entirely. The cost of skipping is one leaked process that the next
+        # clean launch reaps; the cost of a wrong kill is a running sync losing
+        # its worker, or the user's window vanishing.
+        #
+        # A MISSING or unreadable pid falls THROUGH to the per-child identity
+        # proofs below rather than refusing. Refusing looks safer and is not:
+        # _save_state has written "pid" beside "children" since this module
+        # existed, so a record with children and no pid cannot have come from a
+        # live session - which is the only thing this guard defends against.
+        # Refusing would instead disable the sweep for a damaged file (the leak
+        # this module exists to clear) AND make the sparing tests below vacuous,
+        # since they would then pass without the identity proofs doing anything.
+        try:
+            _prev_pid = int(prev.get("pid") or 0)
+        except (TypeError, ValueError):
+            _prev_pid = 0
+        if _prev_pid and psutil.pid_exists(_prev_pid):
+            return 0, []
         for entry in recorded:
             try:
                 pid = int(entry.get("pid", 0))

@@ -42,7 +42,10 @@ class PresetManager:
         'notebooklm_master',
         *NOTEBOOK_SUB_KEYS,
         # Panopto (Section 4) output formats + layout. pan_layout is a string
-        # ('match'|'separate'); the four pan_out_* keys are booleans.
+        # ('match'|'separate'); the pan_out_* keys are booleans. Spread from the
+        # registry rather than listed, so an output added to the card is part of
+        # every preset by construction - a user preset that silently omitted one
+        # would carry the previous preset's setting for it.
         *PANOPTO_OUTPUT_KEYS,
         'pan_layout',
     ]
@@ -82,6 +85,7 @@ class PresetManager:
                 'convert_code': False,
                 'convert_urls': False,
                 'convert_video': False,
+                'pan_out_url': False,
                 'pan_out_mp4': True,
                 'pan_out_mp3': False,
                 'pan_out_txt': False,
@@ -121,6 +125,7 @@ class PresetManager:
                 'convert_code': False,
                 'convert_urls': False,
                 'convert_video': False,
+                'pan_out_url': False,
                 'pan_out_mp4': True,
                 'pan_out_mp3': True,
                 'pan_out_txt': False,
@@ -160,6 +165,7 @@ class PresetManager:
                 'convert_code': True,
                 'convert_urls': True,
                 'convert_video': True,
+                'pan_out_url': False,
                 'pan_out_mp4': False,
                 'pan_out_mp3': True,
                 'pan_out_txt': False,
@@ -198,6 +204,7 @@ class PresetManager:
                 'convert_code': False,
                 'convert_urls': False,
                 'convert_video': False,
+                'pan_out_url': False,
                 'pan_out_mp4': False,
                 'pan_out_mp3': False,
                 'pan_out_txt': False,
@@ -243,6 +250,7 @@ class PresetManager:
                 # multi-GB lecture videos (matching its "no distractions"
                 # promise and "Slides & PDFs Only" above). Guarded by
                 # tests/test_preset_parity.py.
+                'pan_out_url': False,
                 'pan_out_mp4': False,
                 'pan_out_mp3': False,
                 'pan_out_txt': False,

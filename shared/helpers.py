@@ -710,6 +710,38 @@ def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.
         return True, -1, -1
 
 
+#: What ``check_disk_space`` reports for available/total when it could not
+#: determine them at all (invalid drive, disconnected share, any OSError). It is
+#: a SENTINEL, not a measurement, and every surface that shows free space has to
+#: know that - which is why the renderer for it lives here, beside the function
+#: that produces it, rather than being spelled out again at each call site.
+DISK_SPACE_UNKNOWN = -1
+
+
+def format_available_space(avail_mb) -> str:
+    """Human-readable free space, or ``"Unknown"`` for the sentinel above.
+
+    The Confirm Sync dialog used to multiply ``avail_mb`` out and print it
+    verbatim, so a target whose volume could not be read rendered
+    **"Available Disk Space: -1048576 B"**.
+
+    "0 B" is NOT the fix and must not be substituted: it reads as a completely
+    full disk, which is wrong in the opposite direction and would make a user
+    cancel a sync that had plenty of room. The only honest answer for a value
+    that was never measured is that it is unknown.
+
+    A genuine zero (a real, genuinely full volume) is distinct from the sentinel
+    and still formats as "0 B".
+    """
+    try:
+        mb = float(avail_mb)
+    except (TypeError, ValueError):
+        return "Unknown"
+    if mb != mb or mb < 0:          # NaN, or the "could not determine" sentinel
+        return "Unknown"
+    return format_file_size(mb * 1024 * 1024)
+
+
 # --- Folder Opener ---
 
 def native_folder_picker(initial_dir: str | None = None) -> str | None:
