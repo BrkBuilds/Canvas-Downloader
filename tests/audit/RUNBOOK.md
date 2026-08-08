@@ -81,9 +81,11 @@ Top to bottom once, then work from the phase list. The parts, in order:
 | Phases 1-5 | as you run them |
 | The sync matrix | before any sync work — it is a different space, not a mirror |
 | Traps this harness already knows about | before debugging anything odd |
-| **Checker defects (2026-07-28 and 2026-07-29)** | **before adding or trusting a check** — 24 entries, each a confident wrong answer |
+| **Planning the NEXT run** | **first, when starting a run** — the ranked gaps the last run left, and how the machine's RAM decides the lane count |
+| **Checker defects (2026-07-28, 07-29 and 08-08)** | **before adding or trusting a check** — 31 entries, each a confident wrong answer |
 | Do NOT report: `Page X (1).html` | before filing any duplicate — identity is the entity id, never the name |
 | Known limitation: the GPU lane | when planning how long a run takes |
+| Leaked Office process (open) | at teardown — the orphan reaper structurally cannot see it |
 | Verifying the two engine fixes | when re-verifying those specific fixes |
 | Two KINDS of stale finding | before reporting any matrix result |
 
@@ -876,6 +878,127 @@ this lesson once.
     `counted == own` so the counter check correctly stays silent on them), 54
     all-locked, 28 clean. Blocking pile 32 → 5, and those 5 name the item.
 
+## Seven more checker defects (2026-08-08)
+
+From a deliberately MINIMAL run - 47 download rows, 43 sync rows, no Panopto -
+that produced **1** real product defect and **7** checker defects. That ratio is
+the point, and it is the same ratio the two sections above report. Numbering
+continues from 24.
+
+**Two of these fabricated findings, one produced NO output at all, and the last
+inflated a number.** The blind one is the most important entry here.
+
+25. **A row was judged against config the driver never applied - it fabricated a
+    HIGH.** `flows.configure` recorded `control not present (card collapsed?)`
+    for `convert_excel` and four siblings on m014, so the app was never told to
+    convert. Its contract therefore correctly recorded `convert_excel=False` and
+    it correctly left all 50 `.xlsx` alone - and because `crosscheck` received
+    `expect=job.config` (what was REQUESTED, not what was APPLIED), that correct
+    behaviour produced *"Converter 'convert_excel' was set to True but the folder
+    contract says False"* at HIGH, plus two mediums. Identical class to defect 9.
+    `parallel.expect_for()` now drops any factor the row's own trace reports as
+    unapplied, and is shared by the live pass AND `recheck` so the two cannot
+    drift - the reason `seed_expectations` exists on the sync side. The factor is
+    **dropped, not set False**: `_conversions` and the OFF-must-not-consume mirror
+    both skip an ABSENT key, while a `False` would assert the opposite
+    expectation just as wrongly. An `observation` names the skipped factors, so a
+    narrowed expectation can never quietly become a **pass**.
+
+26. **The parser invents 3 of the 6 sync category labels, so O2 is blind for the
+    categories that matter most.** `PATTERNS['analysis_row']` matches
+    `(NEW|UPDATE-CLEAN|UPDATE-MODIFIED|DELETED-CANVAS|DELETED-LOCAL|IGNORED)`.
+    `sync/analysis.py` writes `NEW`, `UPDATE-CLEAN`, **`UPDATE-EDIT`**,
+    **`CANVAS-DEL`**, **`LOCAL-DEL`**, `IGNORED`. So `analysis_rows` is
+    permanently empty for locally-edited, deleted-on-Canvas and deleted-locally -
+    including the category this file calls the most consequential in the suite,
+    because getting edited files wrong is data loss.
+    - **Second layer**: `crosscheck._LOG_DETAILED_CATS` restricts trust to
+      `{new, updated_clean}` and justifies it with *"the other five appear in the
+      Analysis complete counts and nowhere else ... Measured on a run whose
+      analysis reported 2 deleted-on-Canvas and 2 ignored: the log contained zero
+      rows for either."* **That measurement is stale** - the app was since changed
+      to emit per-file rows for every category (its own comment says ignored files
+      were "previously counted nowhere and listed nowhere").
+    - **Not a false-finding source today**, which is why it was left alone
+      mid-run: with the regex broken, `got_log` is None and `_categories_match`
+      correctly falls back to the review screen. But the selector is
+      `if want in _LOG_DETAILED_CATS or got_log`, so **repairing the regex alone
+      silently moves those fixtures from O1 to O2 and can CREATE findings.**
+    - Safe order, the same shape as the ERROR-line narrowing below: repair the
+      regex, sweep both directions over the corpus comparing O1 vs O2 placement
+      per fixture, then widen `_LOG_DETAILED_CATS` and refresh its comment in the
+      same commit.
+    - **Found only because the parser's own miss-rate monitor fired at 25% and
+      the samples were read.** Nothing else in the output could have shown it: a
+      blind spot produces no finding to notice. Treat that monitor as a finding,
+      not as noise.
+
+27. **`matrix collect` appended instead of replacing, doubling every count.** It
+    opens the parent ledger with mode `"a"` and dedupes only WITHIN one
+    invocation. The documented workflow invites running it twice - `matrix
+    collect` in the setup section, then `matrix recheck` + `matrix collect
+    --rechecked` in the re-check section - and the second call appends a full
+    second copy. Measured: 92 findings became **186**, all 92 keys duplicated
+    exactly twice. It never changes a VERDICT (0 defects stayed 0) but it doubles
+    every total the report prints, which is the number a reader trusts. Now
+    rewrites the ledger, **keeping findings that carry no `lane` key** - that
+    split is load-bearing, because lane findings are re-derivable and a finding
+    the agent added by hand is not, so a plain truncate would destroy exactly the
+    judgment findings this file asks for.
+
+28. **`confirm_and_run` waited 900s for a phase that can no longer occur.** It
+    waited on `download_running`, which reads the step tracker for
+    `active.id === 'download'`. A course that delivers in under a second reaches
+    the completion screen before a 2.0s poll can ever observe step 4, so the wait
+    burns its full timeout and the terminal check then returns `waited_s: 0.0`.
+    Measured on m010 (course 43667, one ExternalUrl): the engine logged `Course
+    Finished` at 17:49:47 and the flow returned at 18:04:51 - **958s of row time
+    for under a second of work.** New condition `download_running_or_done` stops
+    on running OR terminal, and the phase capture is gated on `running` so a
+    completion screen is never filed as evidence of the download phase.
+    - **The tell for "dead wait" vs "real work" is the `phase_download` capture,
+      not the duration.** m011's comparable 981s was genuine zip-extraction work
+      and HAS its capture; m010 was the only row missing one. Reading duration
+      alone produced a confident wrong hypothesis that had to be retracted.
+
+29. **A bridged INFO progress note reported as a `medium` robustness defect.**
+    `oracles/log.py` classifies a line `suspicious` on the WORD "failed"
+    appearing in the payload, without reading the LEVEL. Panopto discovery on a
+    course with no recordings logs, at INFO, `GetFolders failed for folder <id>:
+    HTTP 500 ... not in role (FolderEnumerate)` - one probe inside a documented
+    fallback chain that then resolves the folder another way, reports
+    `Discovered 0 recording(s)` (the CORRECT answer, O5 confirms 0) and closes
+    `Errors: 0`. **Downgraded, not dropped**: nothing else reports this channel,
+    so deleting the event would be an under-report if an INFO line ever carried a
+    real failure. Swept over all 73 logs in the corpus: moves exactly those 3
+    events out of the defect pile and leaves every other unexpected event -
+    including a genuine `high` COM error - reported unchanged.
+    - **The first version of this fix could never have fired**: it matched on
+      `msg`, which has the `[LEVEL] [module]` prefix already stripped.
+      `unexpected` entries now carry `raw`. Only the both-directions validation
+      caught it, which is the whole argument for that rule.
+
+30. **`set_size_cap` resolved Save by accessible name instead of the key the app
+    provides.** `ui/auth.py` keys it `stg_btn_save` with a comment saying it did
+    so *"so the live audit can drive it"*; the flow did
+    `dlg.get_by_role("button", name="Save Settings").count()` - a SINGLE sample
+    against an accessibility tree that the preceding number-input Enter commit
+    rebuilds. It killed the first row of two lanes with *"Save Settings button
+    not found in the dialog"* against a dialog that renders it perfectly.
+    **When the app has gone to the trouble of keying a control for the audit,
+    address it by that key.**
+
+31. **`open_custom` clicked the primary action without waiting for the CSS
+    selection gate.** The download page's primary actions sit OUTSIDE the
+    course-list fragment, so `disabled=` cannot see a tick made inside it;
+    availability is published by a `components.html` bridge as `data-cd-has-sel`
+    on BODY. That bridge is an iframe whose boot is not synchronous with the tick
+    React has already committed, so `set_checkbox` can VERIFY a course is
+    selected in the same frame the gate still reads "nothing selected" - exactly
+    what the failure recorded (`gated: True, found: True, disabled: False`). Now
+    polls `pointer-events` on the button itself, the property a user's pointer
+    meets, rather than the attribute behind it.
+
 ### A register `invalid` can silence a DIFFERENT defect with the same sentence
 
 `register.fingerprint` is `(category + digit-normalised + quote-stripped title)`,
@@ -971,6 +1094,112 @@ change is a new check firing on old evidence - which is the proof it *can* fire.
 table is where that shows up.
 
 ---
+
+## Planning the NEXT run: what 2026-08-08 left uncovered
+
+That run was deliberately minimal (download + sync, no Panopto) and produced
+**1 product defect and 7 checker defects**. It also mapped its own blind spots
+precisely, so the next run does not have to rediscover them. Work this list in
+order; it is ranked by what the last run could not see, not by what is easy.
+
+### The machine changes what is worth running
+
+The 2026-08-08 run was on a **13.9 GB laptop** and that single fact shaped it:
+
+| lanes | free RAM | what happened |
+|---|---|---|
+| 4 | drops to ~2.2 GB | **lane Chromes die**, and a dead lane browser cascades into `Browser is not open` for every remaining row in that lane |
+| 3 | 2.6-3.0 GB | survives, but **Excel COM hangs 180s per workbook** and one office row took 41 minutes |
+| 1-2 | 5+ GB | Excel converts cleanly - **0 timeouts on the same 50 workbooks** |
+
+The 2026-08-05 run shows the identical 4-lane cascade in two lanes, so this is
+reproducible and not a one-off. **On a bigger machine, go back to 4 lanes and
+prefer more lanes over trimming rows** - the office lane went 2 rows -> 11 in
+about 40 minutes the moment it had memory to itself.
+
+**The controlled comparison is worth keeping as a technique**: m014 re-ran the
+SAME course over the SAME 50 workbooks three hours later with 5+ GB free and
+logged zero timeouts. That is what separated "the app hangs" (false) from "this
+machine starves Excel" (true), and it cost one row.
+
+### Ranked gaps
+
+1. **Panopto - the single largest untested surface** (course 43660: 36
+   recordings, 140 files, 890 MB). Nothing in the 2026-08-08 run touched it, and
+   it is also the most recently CHANGED area (the Shortcut output landed
+   2026-08-07). Phase 4 above is the script. On a machine with a real GPU, also
+   exercise the **CPU downgrade path** deliberately - the audit has never proven
+   it end to end, only that `_is_vad_engine_error` exists.
+2. **macOS - a whole platform, and this repo has a documented history of
+   platform-asymmetric misses.** CLAUDE.md records that the Office
+   delete-the-original guard was fixed on Windows and left broken on macOS for a
+   full round, on THREE converters, and that `office_safe_path` had the same
+   shape. Anything that ends in `platform.system()` or `sys.platform` is a
+   candidate. Highest-value macOS targets, in order:
+   - the three Office converters' AppleScript branch (`run_applescript` returns
+     True on `dst.exists()`, which a 0-byte stub satisfies);
+   - `.webloc` Panopto shortcuts, including the Canvas ExternalTool name
+     collision, and whether **Finder** actually opens one (the 2026-08-07 work
+     could verify the plist but not Finder itself);
+   - keychain prompts on a REBUILD with a new ad-hoc signature;
+   - NFD/NFC path handling on an **HFS+ external drive**, which is the one place
+     `_path_key`'s Unicode normalisation is not a no-op. Danish `å` decomposes
+     while `ø` and `æ` do not, so the symptom reads as random.
+3. **Sync contract shapes.** All 43 sync rows replayed against ONE snapshot
+   (`c45899_sync`: modules + html/code/urls). The flat, isolated and study-filter
+   shapes were never synced, which is exactly the failure this file already
+   records under "The sync matrix". Capture `c*_flat`, `c*_isolated` and
+   `c*_study` first; a snapshot costs one download and every later row is
+   seconds.
+4. **The 9 gpu-lane rows**, if the machine can afford them. Skipping them cost
+   **40 of 817 pairs** (95.1% instead of 100%), and the losses are NOT confined
+   to Panopto - `matrix.classify` sends a row needing both gpu and office to gpu,
+   so `mode=flat x convert_pptx`, `file_filter=study x convert_word`,
+   `mode=flat x dl_quizzes` and `mode=flat x dl_submissions` went with them.
+5. **Checker defect 26** (the sync category labels). Fix it BEFORE the next sync
+   matrix, in the safe order given there, or the sync side keeps running on one
+   oracle where it should have two.
+6. **A second Canvas instance / account**, if one is reachable. Every run so far
+   is one CBS account with one permission set. The `403 Files tab` shape that
+   makes 45899 and 43665 valuable is a property of that account.
+
+### Carry these forward
+
+- **The one real product defect is still open**: a COM-spawned `EXCEL.EXE` that
+  leaks. Measured at **5h54m**, outliving all 12 office rows, the app and the
+  browser, while the app correctly killed every instance it DID track (three
+  different pids in one row). Not pinned to a trigger - it appeared inside
+  m014's window, a row whose `convert_excel` was never applied. **Reproduce by
+  running the office lane alone and watching for an `EXCEL.EXE` that survives a
+  COMPLETED row**; that is a 20-minute experiment and it is the whole finding.
+- **Check for a leaked Office process as part of teardown, every time.** The
+  session orphan reaper structurally cannot see one (it is a child of DCOM, not
+  of us), so nothing but a manual check will find it:
+  `wmic process where "name='EXCEL.EXE'" get ProcessId,CreationDate,CommandLine`.
+- **Ports collide when two runs overlap.** A sync run prepared while a download
+  lane is alive gets `app 8800 / cdp 9400`, which is lane 0's band in BOTH runs.
+  Either finish one first, or edit `lanes.json` and each `lane_spec.json` to a
+  free band (8850/8860, 9450/9460 worked) before launching.
+- **Run the sync matrix in its OWN run directory when a download matrix still
+  needs re-checking.** `matrix prepare --kind sync` overwrites `lanes.json`, and
+  `recheck` iterates the lane specs - so replacing them makes every download row
+  un-re-checkable.
+
+### What "0 defects" is worth, and what it is not
+
+The 2026-08-08 run found no delivery, placement, classification or persistence
+defect in 47 download configurations and 43 sync world-states, and the strongest
+evidence in it was **unplanned**: Excel died for environmental reasons and the
+app killed the hung pid, retried, recovered 3 of 4 workbooks, refused to delete
+the original of the one that failed twice, and reported the true final count of
+1 with a cause and a remedy, with O1, O2 and O3 agreeing.
+
+Temper it with two facts. **Seven checker defects in one run** means the
+instrument was still moving, and one of them produced no output at all - so the
+zero partly reflects a suite that has not finished stabilising. And **O2 was
+blind for three sync categories**, so the sync zero rests on the review screen
+alone for locally-edited and both delete categories. Two runs with the checker
+holding still would make the same number mean considerably more.
 
 ## Known limitation: the GPU lane carries the run
 

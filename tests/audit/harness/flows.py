@@ -103,8 +103,18 @@ class Flow:
         for attempt in range(retries + 1):
             cur = self.is_on(key)
             if not cur.get("found"):
-                return self._log("set_toggle", key=key, ok=False,
-                                 reason="control not present (card collapsed?)")
+                # Do not give up on the first sample. Every toggle click drives a
+                # rerun, and while that rerun is in flight the card's controls can
+                # be absent for a beat - so a single read says "collapsed" about a
+                # card that is merely re-rendering. Measured 2026-08-08 on m014:
+                # convert_zip/pptx/word were set, then the next FIVE in the same
+                # loop all reported "control not present" and the row silently
+                # tested none of them. Poll before believing it; `_reopen` below
+                # then handles a card that really did close.
+                if not self._await_key(key, "button", 8):
+                    return self._log("set_toggle", key=key, ok=False,
+                                     reason="control not present (card collapsed?)")
+                cur = self.is_on(key)
             if bool(cur.get("on")) == bool(want):
                 return self._log("set_toggle", key=key, want=want, ok=True,
                                  changed=attempt > 0)
@@ -112,6 +122,20 @@ class Flow:
         final = self.is_on(key)
         ok = bool(final.get("on")) == bool(want)
         return self._log("set_toggle", key=key, want=want, ok=ok, final=final)
+
+    def _set_toggle_in_card(self, card_key: str, key: str, want: bool) -> dict:
+        """set_toggle, but re-open the card once if the control is really gone.
+
+        A card that has genuinely collapsed cannot be recovered by polling, and
+        the loops set several toggles in a row - so one collapse mid-loop drops
+        every remaining factor on that card. Re-expanding costs one click on the
+        rare path and nothing on the normal one.
+        """
+        r = self.set_toggle(key, want)
+        if r.get("ok") or "not present" not in str(r.get("reason", "")):
+            return r
+        self.expand_card(card_key)
+        return self.set_toggle(key, want)
 
     def expand_card(self, card_key: str, want_open: bool = True) -> dict:
         """Card 2/3/4 headers are buttons whose contents mount only when open."""
@@ -365,7 +389,8 @@ class DownloadFlow(Flow):
             self.expand_card("toggle_card3")
             for name in [k for k in TOGGLES if k.startswith("convert_")]:
                 if name in config:
-                    r = self.set_toggle(TOGGLES[name], bool(config[name]))
+                    r = self._set_toggle_in_card("toggle_card3", TOGGLES[name],
+                                                 bool(config[name]))
                     if r["ok"]:
                         applied[name] = config[name]
                     else:

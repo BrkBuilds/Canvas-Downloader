@@ -447,7 +447,13 @@ def summarize(pl: ParsedLog) -> dict:
                    "error", "suspicious"):
         msg = e.data.get("msg", e.raw)
         if not any(b in msg for b in BENIGN_WARNINGS):
-            unexpected.append({"line": e.line_no, "kind": e.kind, "msg": msg[:300]})
+            # `raw` carries the ORIGINAL line, level marker and all. `msg` is
+            # the payload with the `[LEVEL] [module]` prefix already stripped,
+            # so a consumer that needs to tell a bridged INFO progress note from
+            # a real outcome cannot do it from `msg` alone - and a check written
+            # against `msg` for that purpose silently never fires.
+            unexpected.append({"line": e.line_no, "kind": e.kind, "msg": msg[:300],
+                               "raw": e.raw[:400]})
 
     return {
         "path": pl.path,
