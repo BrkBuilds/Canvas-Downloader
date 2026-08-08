@@ -9,29 +9,49 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260805_220433_sync-matrix` on 2026-08-05.
+Last updated by run `20260808_170617_minimal-dl-sync-2026-08` on 2026-08-08.
 
-**2 open** · 43 total · 22 fixed · 19 invalid
+**5 open** · 58 total · 23 fixed · 30 invalid
 
 ---
 
-### Unexpected bridged_error in debug log: VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;
-<!-- fp:958f127d0717 -->
+### A COM-spawned EXCEL.EXE outlived 4+ rows (2h08m) while the app correctly killed every instance it tracked
+<!-- fp:6759ff4ce798 -->
 
-**Status**: fixed
-**Severity**: high
+**Status**: open
+**Severity**: medium
 **Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-05 (20260805_154112_matrix-dl)
-**Last seen**: 2026-08-05 (20260805_154112_matrix-dl)
-**Occurrences**: 1
-**Scenario**: m008 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+**Oracles**: O3
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028 · 43665
 
 **Detail**:
 
-VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;, None, None)
+REFINES the earlier 'attribution uncertain' note by separating two phenomena I had conflated. The HANGS are plausibly aggravated by this audit's memory pressure (3 lanes on a 13.9 GB machine). The LEAK is not: memory pressure does not explain a process outliving its owner. Measured directly. The app spawns one Excel per conversion attempt and reclaims a hung one by PID - in row m028 alone it logged 'Excel hung >180s on <file>. Killing PID 26740 / 21420 / 27204', three different PIDs, all gone. Yet EXCEL.EXE PID 20872, CreationDate 20260808172055, was still alive at 19:29 - 2h08m, spanning at least m012, m013, m014 and m028. Its command line is 'EXCEL.EXE /automation -Embedding' with ParentProcessId 1396 (DCOM/RPCSS), so it is COM-launched and headless, NOT a user's own Excel window, and CLAUDE.md notes the session orphan reaper cannot see it precisely because it is a child of DCOM rather than of us. This is the class the 2026-08-08 _init_app hardening addresses (capture the PID immediately after DispatchEx, guard the property sets, _kill_app on failure) - one instance reachable from neither direction. User-visible consequence: a ~175 MB headless Excel that never exits, per occurrence, for the life of the session. NOT tied to a specific row by this evidence - 20872 appeared at 17:20:55, inside m014's window, which is a row whose convert_excel toggle was never applied, so the trigger is worth pinning down before fixing. To reproduce cleanly: run the office lane alone and watch for an EXCEL.EXE that survives a COMPLETED row.
 
-**Notes**: Fixed 2026-08-05. The Office->PDF converters left an orphaned, empty process when the RPC channel died (Quit() threw and was swallowed). converters/{excel,word,pdf}.py _kill_app now force-kills the tracked PID via engine.office_pid.kill_office_pid, guarded by pid_is_process (targeted /PID, never a broad /IM). Validated live; full suite green. The RPC blip itself is a transient Excel hiccup the converter self-heals from.
+**Notes**: 
+
+---
+
+### CONFIRMED LEAK: the orphaned EXCEL.EXE survived the entire audit - 5h54m, outliving every lane, the app and the browser
+<!-- fp:b79fd1dd2b22 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O3
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 1
+**Scenario**:  · 43665
+
+**Detail**:
+
+Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full teardown. At 23:15, with zero audit Streamlit apps and zero audit Chrome processes remaining, EXCEL.EXE PID 20872 (CreationDate 20260808172055, command line 'EXCEL.EXE /automation -Embedding', ParentProcessId 1396 = DCOM/RPCSS) was STILL RUNNING - 5 hours 54 minutes old. It outlived all 12 office-lane rows, the app that spawned it, and the browser. That excludes the last benign explanation: it cannot be an instance a live conversion was using, because nothing was live. It is also not the user's own Excel - '/automation -Embedding' means COM-launched and headless. Contrast with the instances the app DOES track: during m028 it logged '[COM Timeout] Excel hung >180s ... Killing PID 26740 / 21420 / 27204', three different pids, every one reclaimed. So the app reclaims what it holds a handle or pid for, and 20872 was reachable from neither - exactly the failure the 2026-08-08 _init_app hardening describes (capture the pid immediately after DispatchEx, guard the property sets, _kill_app on failure). CLAUDE.md already notes the session orphan reaper cannot see such a process because it is a child of DCOM rather than of us. User-visible cost: a ~175 MB headless Excel that never exits. STILL NOT PINNED to a trigger: 20872 appeared at 17:20:55, inside m014's window - a row whose convert_excel toggle was never applied - so the spawning path is worth identifying before fixing. Reproduce by running the office lane alone and watching for an EXCEL.EXE that survives a COMPLETED row.
+
+**Notes**: 
 
 ---
 
@@ -51,11 +71,53 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1': Encountered an error: status code 502
 
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
+### CONFIRMED GOOD: 3 transient Excel COM failures, 2 recovered by retry, 1 permanent - original kept and the UI reported the TRUE final count
+<!-- fp:854cd2ac81f9 -->
+
+**Status**: open
+**Severity**: info
+**Category**: regression-guard
+**Oracles**: O1,O2,O3
+**First seen**: 2026-08-08 (20260808_223701_minimal-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_223701_minimal-sync-2026-08)
+**Occurrences**: 1
+**Scenario**: m028_c43665 · 43665
+
+**Detail**:
+
+Full reconciliation of the only genuine conversion survivor in the matrix. O2 (log) records THREE Excel timeouts on m028: 'ekstraopgave 1 - VL.xlsx', 'HA.IT-reeksamen-2020-VL-Endelig1.xlsx' and 'OmkostningerAfsaetning - Ekstra - LOESNING.xlsx', each '[COM Timeout] Excel hung >180s ... Killing PID <n>' with a DIFFERENT pid, so the app spawned a fresh instance per attempt and reclaimed each hung one. O3 (disk) then shows exactly ONE surviving .xlsx and 60 PDFs - the other two converted on a later attempt in the same phase. O1 (completion screen) says '1 file could not be converted', i.e. the TRUE FINAL count, not the 3 transient errors, and explains it in the user's terms: 'The original file downloaded fine and is in your course folder - only the converted copy could not be made ... Close any open Office windows and run this course again to retry just it. Details are in download_errors.txt in each course folder.' Same screen also reports '24 files skipped because they exceeded the 5 MB limit'. So all three oracles agree at 1, the source-deleting converter kept the file it could not convert (the 2026-08-08 pdf_looks_real gate), and the user is told what happened and what to do. CORRECTS an earlier mid-run note of mine that said two originals were kept - that was a snapshot taken while the phase was still running; the end state is one.
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
+### CONFIRMED GOOD: a real Excel COM failure did NOT delete the user's original workbook
+<!-- fp:6b63263260b9 -->
+
+**Status**: open
+**Severity**: info
+**Category**: regression-guard
+**Oracles**: O2,O3
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028 · 43665
+
+**Detail**:
+
+Reproduced live, not synthetically. The office lane hit '[ERROR] [converters.excel] [COM] Excel init failed: (-2146959355, Server-udfoerelse mislykkedes)' = CO_E_SERVER_EXEC_FAILURE, followed by '[ERROR] [converters.post_processing] ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)'. O3 then shows the source STILL PRESENT at 'Ekstra traening (traening i gl. eksamensopgaver)/ekstraopgave 1 - VL.xlsx', with its 'ekstraopgave 1 - VL_Data.txt' sidecar beside it. This is the exact condition the 2026-08-08 hardening was written for ('An Office converter deletes the user's original - so the PDF must be PROVEN first'): the COM call did not raise cleanly, no usable PDF was produced, pdf_looks_real refused the delete and the workbook was kept. The run also continued to later files rather than aborting the phase, which is _run_phase's isolation doing its job. Worth recording as evidence that the guard holds against a REAL Office failure and not only against a seeded stub.
+
 **Notes**: 
 
 ---
 
-### ~~'readonly:gk2 vejl_løsn_js.txt' was locally edited but no _NewVersion sibling was created~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'readonly:gk2 vejl_løsn_js.txt' was locally edited but no _NewVersion sibling was created~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6a83c06e72be -->
 
 **Status**: invalid
@@ -76,7 +138,7 @@ The product's stated contract is that local edits are never overwritten and the 
 
 ---
 
-### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~~~~~~~~~~~~~
+### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:bc9703c2e9f2 -->
 
 **Status**: fixed
@@ -143,7 +205,7 @@ THE OTHER DIRECTION, verified separately and at least as important: this resolve
 
 ---
 
-### ~~Sync post-processing crashes with NameError: _attempts is not defined~~~~~~
+### ~~Sync post-processing crashes with NameError: _attempts is not defined~~~~~~~~~~~~
 <!-- fp:5d735855a0d8 -->
 
 **Status**: fixed
@@ -164,7 +226,7 @@ sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initia
 
 ---
 
-### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:2e38f73c0857 -->
 
 **Status**: invalid
@@ -185,7 +247,7 @@ Renamed, row dropped, and another file shares its size and extension. The unique
 
 ---
 
-### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:1d964fc34314 -->
 
 **Status**: fixed
@@ -214,7 +276,7 @@ Options: require a name-similarity floor for tier (c) as heal Tier 3 already doe
 
 ---
 
-### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6fe18c5a9b2f -->
 
 **Status**: fixed
@@ -254,7 +316,7 @@ Guarded by tests/test_link_content_sig_parity.py, which runs BOTH directions and
 
 ---
 
-### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:91d640ef7d5a -->
 
 **Status**: invalid
@@ -275,7 +337,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:78c7871b2180 -->
 
 **Status**: invalid
@@ -296,7 +358,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~Download finished with 1 unexplained error(s)~~~~~~~~~~~~~~
+### ~~Download finished with 1 unexplained error(s)~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa2cae30e286 -->
 
 **Status**: fixed
@@ -317,7 +379,7 @@ Errors this course logged that are not teacher-locked files. Each names the item
 
 ---
 
-### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~~~~~~~~~~~~~
+### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa247ec01d02 -->
 
 **Status**: fixed
@@ -344,7 +406,7 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 
 ---
 
-### ~~2 Canvas file(s) were downloaded more than once in one run~~~~~~~~~~~~~~
+### ~~2 Canvas file(s) were downloaded more than once in one run~~~~~~~~~~~~~~~~~~~~
 <!-- fp:d05cc83d973a -->
 
 **Status**: fixed
@@ -365,7 +427,7 @@ Each of these ids went to the network twice. Two phases both claimed the file, s
 
 ---
 
-### ~~2 content file(s) on disk with no manifest row~~~~~~~~~~~~~~
+### ~~2 content file(s) on disk with no manifest row~~~~~~~~~~~~~~~~~~~~
 <!-- fp:371b678dbdf1 -->
 
 **Status**: invalid
@@ -390,7 +452,7 @@ Verified on a fresh, never-seeded download of 45899 with every converter on: 0 d
 
 ---
 
-### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:09c8ffb50041 -->
 
 **Status**: invalid
@@ -413,7 +475,7 @@ Now derived from the folder's stored `sync_contract`. Re-checked on the same pri
 
 ---
 
-### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~~~~~~~~~~~~~
+### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f5c9f9d3c10f -->
 
 **Status**: fixed
@@ -461,7 +523,7 @@ TWO WAYS TO IMPLEMENT, both needing a verifying run:
 
 ---
 
-### ~~2 partial-write artifact(s) left on disk~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 partial-write artifact(s) left on disk~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:62da7c0a9988 -->
 
 **Status**: invalid
@@ -482,7 +544,7 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:18cc3b9d802a -->
 
 **Status**: invalid
@@ -503,7 +565,7 @@ Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8224b9e3a4a1 -->
 
 **Status**: invalid
@@ -524,7 +586,238 @@ Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:
 
 ---
 
-### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel stopped resp~~
+<!-- fp:f4ec25425a4b -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel stopped responding)
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~Unexpected bridged_error in debug log: OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s (Excel stop~~
+<!-- fp:7d8d6987eef9 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s (Excel stopped responding)
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~Unexpected bridged_error in debug log: Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped respond~~
+<!-- fp:bacba60611c0 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped responding)
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~Unexpected bridged_error in debug log: VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;~~~~~~
+<!-- fp:958f127d0717 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-05 (20260805_154112_matrix-dl)
+**Last seen**: 2026-08-05 (20260805_154112_matrix-dl)
+**Occurrences**: 1
+**Scenario**: m008 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+
+**Detail**:
+
+VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;, None, None)
+
+**Notes**: Fixed 2026-08-05. The Office->PDF converters left an orphaned, empty process when the RPC channel died (Quit() threw and was swallowed). converters/{excel,word,pdf}.py _kill_app now force-kills the tracked PID via engine.office_pid.kill_office_pid, guarded by pid_is_process (targeted /PID, never a broad /IM). Validated live; full suite green. The RPC blip itself is a transient Excel hiccup the converter self-heals from.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on HA.IT-reeksamen-2020-VL-Endelig1.xlsx. Killing PID 21420~~
+<!-- fp:f7950a0ff1d0 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+[COM Timeout] Excel hung >180s on HA.IT-reeksamen-2020-VL-Endelig1.xlsx. Killing PID 21420.
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on OmkostningerAfsætning - Ekstra - LØSNING.xlsx. Killing P~~
+<!-- fp:41de4d13af9a -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+[COM Timeout] Excel hung >180s on OmkostningerAfsætning - Ekstra - LØSNING.xlsx. Killing PID 27204.
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on Productionanalysis - Eksempel.xlsx. Killing PID 17556.~~
+<!-- fp:d5dff49dc678 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+[COM Timeout] Excel hung >180s on Productionanalysis - Eksempel.xlsx. Killing PID 17556.
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on ekstraopgave 1 - VL.xlsx. Killing PID 22472.~~
+<!-- fp:fe53cd768483 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 4
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+[COM Timeout] Excel hung >180s on ekstraopgave 1 - VL.xlsx. Killing PID 22472.
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~Unexpected bridged_error in debug log: [COM] Excel init failed: (-2146959355, 'Server-udførelse mislykkedes', None, None)~~
+<!-- fp:74a494b938a5 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+[COM] Excel init failed: (-2146959355, 'Server-udførelse mislykkedes', None, None)
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion failed twice~~
+<!-- fp:23015c7d7ccf -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+ekstraopgave 1 - VL.xlsx  Conversion failed twice
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)~~
+<!-- fp:b751e7a4c30f -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:0995f8315ce5 -->
 
 **Status**: invalid
@@ -545,7 +838,7 @@ g1 darts vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:ac0b7c1a10e5 -->
 
 **Status**: invalid
@@ -566,7 +859,7 @@ gk2 vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8badba1fc12c -->
 
 **Status**: invalid
@@ -610,7 +903,7 @@ Reverted to the original single dimming rule and verified in the running app: po
 
 ---
 
-### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~~~~~~~~~~~
+### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~~~~~~~~~~~~~~~~~
 <!-- fp:7e2221df01e0 -->
 
 **Status**: fixed
@@ -631,7 +924,7 @@ Both Page call sites pass isolate=False literally, so with isolation ON in flat 
 
 ---
 
-### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:815c4edf0cb8 -->
 
 **Status**: invalid
@@ -656,7 +949,7 @@ Not data loss - files are present and usable - but it defeats the AI-optimisatio
 
 ---
 
-### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:689a00875c36 -->
 
 **Status**: invalid
@@ -679,7 +972,7 @@ Fixed by routing both flows through one shared helper (converters.post_processin
 
 ---
 
-### ~~convert_code did not reach 54 file(s) unpacked from archives~~~~
+### ~~convert_code did not reach 54 file(s) unpacked from archives~~
 <!-- fp:5a22b016415d -->
 
 **Status**: invalid
@@ -687,21 +980,41 @@ Fixed by routing both flows through one shared helper (converters.post_processin
 **Category**: conversion
 **Oracles**: O1,O3
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Last seen**: 2026-08-05 (20260805_154112_matrix-dl)
-**Occurrences**: 5
-**Scenario**: m027 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 11
+**Scenario**: m040 · m040
 
 **Detail**:
 
 convert_zip extracted these, but post-processing filters every converter through explicit_files - the list of paths the DOWNLOADER wrote - and extraction output is never added to it. So enabling both toggles applies only the first to archive contents.
 
 **Notes**: Fixed 2026-07-27: `run_archive_extraction` now returns its extraction roots and `_glob_files` accepts anything under them, so unpacked files get the same treatment as any other teacher-uploaded file. Guarded by `tests/test_archive_conversion_scope.py`.  
-> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.  
-> Not observed in the latest run.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
 
 ---
 
-### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~
+### ~~convert_excel enabled but 1 source file(s) survived conversion~~
+<!-- fp:449c42444584 -->
+
+**Status**: invalid
+**Severity**: medium
+**Category**: conversion
+**Oracles**: O1,O3
+**First seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 2
+**Scenario**: m028_c43665 · m028_c43665
+
+**Detail**:
+
+This converter is documented to replace its source. A surviving source at module level means the conversion ran and failed for that file - check whether the failure was reported to the user or only swallowed.
+
+**Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
+>
+
+---
+
+### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~
 <!-- fp:24e9563de29e -->
 
 **Status**: invalid
@@ -709,21 +1022,20 @@ convert_zip extracted these, but post-processing filters every converter through
 **Category**: conversion
 **Oracles**: O1,O3
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Last seen**: 2026-08-05 (20260805_154112_matrix-dl)
-**Occurrences**: 3
-**Scenario**: m020_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
+**Occurrences**: 5
+**Scenario**: m032_c45899 · m032_c45899
 
 **Detail**:
 
 convert_zip extracted these, but post-processing filters every converter through explicit_files - the list of paths the DOWNLOADER wrote - and extraction output is never added to it. So enabling both toggles applies only the first to archive contents.
 
 **Notes**: Fixed 2026-07-27: `run_archive_extraction` now returns its extraction roots and `_glob_files` accepts anything under them, so unpacked files get the same treatment as any other teacher-uploaded file. Guarded by `tests/test_archive_conversion_scope.py`.  
-> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.  
-> Not observed in the latest run.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
 
 ---
 
-### ~~2 file(s) differ from their recorded md5~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 file(s) differ from their recorded md5~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8a7f0ead05f4 -->
 
 **Status**: invalid
@@ -744,7 +1056,7 @@ original_md5 is what classifies the next update as clean (overwrite) or modified
 
 ---
 
-### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:72054c302758 -->
 
 **Status**: invalid
@@ -765,7 +1077,7 @@ original_size decides whether the next Canvas change is treated as a real update
 
 ---
 
-### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~~~~~~~~~~~
+### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~~~~~~~~~~~~~~~~~
 <!-- fp:c52480b4f905 -->
 
 **Status**: fixed
@@ -782,7 +1094,7 @@ original_size decides whether the next Canvas change is treated as a real update
 
 ---
 
-### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:4b3b4fd09677 -->
 
 **Status**: fixed
@@ -809,7 +1121,7 @@ Fixed in sync/analysis.py: every category now writes one line per file through a
 
 ---
 
-### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~~~~~~~~~~~~~
+### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:d433d4f13087 -->
 
 **Status**: fixed
@@ -842,7 +1154,7 @@ Verified by cancelling three real runs: before, both .part files remained; after
 
 ---
 
-### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~~~~~~~~~~~~~
+### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~~~~~~~~~~~~~~~~~~~
 <!-- fp:98608167bec2 -->
 
 **Status**: fixed
@@ -863,7 +1175,7 @@ Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': N
 
 ---
 
-### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~~~~~~~~~~~~~
+### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~~~~~~~~~~~~~~~~~~~
 <!-- fp:257805fd303c -->
 
 **Status**: fixed
@@ -884,7 +1196,7 @@ ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funk
 
 ---
 
-### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~~~~~~~~~~~~~
+### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~~~~~~~~~~~~~~~~~~~
 <!-- fp:92e8dcc3c9f9 -->
 
 **Status**: fixed
@@ -913,7 +1225,7 @@ Measured on course 43660: 10 quizzes saved via the quiz path all explain themsel
 
 ---
 
-### ~~Course Finished reports 2 error(s) but this course's log records 0~~~~~~~~~~~~~~
+### ~~Course Finished reports 2 error(s) but this course's log records 0~~~~~~~~~~~~~~~~~~~~
 <!-- fp:eee718626a2e -->
 
 **Status**: fixed
@@ -934,7 +1246,7 @@ The engine's error counter is not reset per course, so a later course in a batch
 
 ---
 
-### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~~~~~~~~~~~~~
+### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6b8c9476a66a -->
 
 **Status**: fixed
@@ -976,7 +1288,7 @@ What was actually wrong was only the other half - the Panopto card rendering '36
 
 ---
 
-### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~~~~~~~~~~~~~
+### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~~~~~~~~~~~~~~~~~~~
 <!-- fp:eb27c313381a -->
 
 **Status**: fixed
@@ -1005,7 +1317,7 @@ FIXED: count only entries whose DownloadError.course_name matches the course. Gu
 
 ---
 
-### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:7eaa8671abd1 -->
 
 **Status**: fixed
@@ -1038,7 +1350,7 @@ Guarded by tests/test_newversion_notice.py, including a check that every _NewVer
 
 ---
 
-### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~~~~~~~~~~~~~
+### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa5b7101bfd4 -->
 
 **Status**: fixed
@@ -1067,7 +1379,7 @@ Found while building the readonly_target fixture: it had been locking a CONVERSI
 
 ---
 
-### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f695845da958 -->
 
 **Status**: invalid
@@ -1089,7 +1401,7 @@ Consequence: a shared debug log cannot answer WHICH file the app put in those ca
 
 ---
 
-### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:70a043d21429 -->
 
 **Status**: fixed
@@ -1114,7 +1426,7 @@ Fixed with its own rule using rgba(245,158,11) = theme.WARNING, which is the col
 
 ---
 
-### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~~~~~~~~~~~~~
+### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:aa56baa0771b -->
 
 **Status**: fixed

@@ -41,6 +41,10 @@ from .findings import Finding, disagreement, observation
 #   * convert_excel DELETES the .xlsx once the PDF exists. A later sync must
 #     therefore not report the workbook as deleted locally.
 # --------------------------------------------------------------------------
+# A bridged log record's LEVEL, e.g. `[INFO] [panopto.discovery] ...`. Used to
+# tell a progress note from an outcome - see the downgrade in `invariants`.
+_BRIDGED_INFO = re.compile(r"\[INFO\]\s*\[")
+
 CONVERTERS = {
     "convert_pptx":  {"sources": {".ppt", ".pptx", ".pptm", ".pot", ".potx"},
                       "produces": ".pdf", "removes_source": True},
@@ -195,6 +199,29 @@ def invariants(ev: Evidence) -> list[Finding]:
 
     for u in log.get("unexpected", [])[:25]:
         sev = "high" if u["kind"] in ("bridged_error", "bridged_critical", "error") else "medium"
+        # A "suspicious" event is matched on the WORD "failed" appearing in the
+        # payload; it does not read the log LEVEL. Our own modules log a real
+        # problem at WARNING or above (CLAUDE.md states that rule outright, as
+        # the fix for the silently-swallowed analysis hook), so a bridged INFO
+        # record saying "failed" is a progress note about one probe inside a
+        # fallback chain, not an outcome. Worked example, 2026-08-08: Panopto
+        # discovery on a course with no recordings logs `GetFolders failed ...
+        # not in role (FolderEnumerate)` at INFO, then resolves the folder by
+        # another route, reports `Discovered 0 recording(s)` - the correct
+        # answer, O5 confirms 0 - and closes `Errors: 0`.
+        #
+        # It is DOWNGRADED, never dropped. Deleting it would be an under-report
+        # if an INFO line ever did carry a real failure, and nothing else in the
+        # suite reports this channel. Swept over all 73 logs in the corpus: this
+        # moves exactly the 3 events of that one class out of the defect pile
+        # and leaves all 17 others (11 `Files tab listing failed`, 6 `ERROR
+        # [Locked File]`, none of them bridged-INFO) reported exactly as before.
+        if u["kind"] == "suspicious" and _BRIDGED_INFO.search(u.get("raw") or ""):
+            out.append(observation(
+                title=f"Bridged INFO note containing 'failed': {u['msg'][:90]}",
+                detail=u["msg"], scenario=ev.scenario, course=ev.course,
+                evidence={"line": u["line"], "log": log.get("path")}))
+            continue
         out.append(ev._f(
             title=f"Unexpected {u['kind']} in debug log: {u['msg'][:90]}",
             severity=sev, category="robustness", oracles=("O2",),

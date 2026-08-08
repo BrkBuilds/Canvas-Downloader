@@ -630,6 +630,8 @@ def _execute_download(rp: RunPaths, job: Job) -> dict:
     ui = _ui_capture(rp, f"{job.name}_complete")
     ledger = Ledger(rp.findings)
 
+    _expect, _unapplied = expect_for(rp, job)
+
     per_course, found, missing = [], [], []
     for cid in job.course_ids:
         folder = _course_folder(rp, cid)
@@ -650,8 +652,9 @@ def _execute_download(rp: RunPaths, job: Job) -> dict:
             # a recording title rather than a course. Checks read `log` first
             # and fall back to this; see _panopto_delivery.
             batch_log=_row_log_summary(olog, row_log),
-            expect=job.config, scenario=label)
-        got = ledger.extend(crosscheck.invariants(ev) + crosscheck.download_run(ev))
+            expect=_expect, scenario=label)
+        got = ledger.extend(crosscheck.invariants(ev) + crosscheck.download_run(ev)
+                            + _unapplied_note(_unapplied, label, cid))
         found.extend(got)
         per_course.append({"course_id": cid, "folder": str(folder),
                            "findings": len(got),
@@ -1156,6 +1159,70 @@ def _tally(items) -> dict:
 # aggregation
 # --------------------------------------------------------------------------
 
+def _unapplied_note(factors: list[str], label: str, cid: int) -> list:
+    """Say out loud that the row did not test what its plan claims.
+
+    Silently narrowing the expectation would turn a fabricated defect into a
+    fabricated PASS, which is the worse direction - the row still counts toward
+    the coverage the report prints.
+    """
+    if not factors:
+        return []
+    # Deferred, like every other crosscheck use in this module - importing it at
+    # module scope pulls the oracle stack into the CLI's cold path.
+    from . import crosscheck
+    return [crosscheck.observation(
+        title=f"{len(factors)} factor(s) were never applied to the UI on this row",
+        detail="The driver could not reach these controls, so the app was never "
+               "asked for them and this row does not exercise them. They are "
+               "excluded from its expectations rather than reported as product "
+               "defects. The row is marked failed and re-runs on resume: "
+               + ", ".join(factors),
+        scenario=label, course=str(cid), evidence={"factors": factors})]
+
+
+def unapplied_factors(rp: RunPaths, name: str) -> list[str]:
+    """Factors the UI driver could NOT set on this row, read from its trace.
+
+    `configure` records every toggle it failed to reach (a card that re-rendered
+    mid-loop leaves the later controls absent for a beat). Those factors were
+    never delivered to the app, so the row did not test them.
+    """
+    try:
+        t = json.loads((Path(rp.ui) / f"{name}_flow.json").read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    return sorted({f.get("factor") for f in (t.get("configure") or {}).get("failed", [])
+                   if f.get("factor")})
+
+
+def expect_for(rp: RunPaths, job: Job) -> tuple[dict, list[str]]:
+    """The row's config, minus anything the UI never actually applied.
+
+    **A factor the driver failed to set must not be held against the product.**
+    Measured 2026-08-08 on m014: `configure` reported `convert_excel` and four
+    siblings as "control not present (card collapsed?)", so the app was never
+    told to convert; its contract correctly recorded convert_excel=False and it
+    correctly left the 50 .xlsx alone. Checked against the REQUESTED config that
+    produced three findings - a HIGH ("set to True but the folder contract says
+    False") plus two mediums - all three describing the audit's own failure to
+    click a button. Same class as RUNBOOK checker-defect 9, where the size cap
+    was accepted into every row and applied to none.
+
+    Dropping the key is deliberately different from setting it False: `_conversions`
+    and the OFF-must-not-consume mirror check both skip a factor that is ABSENT,
+    so the row is judged on what it really ran, while a False would assert the
+    opposite expectation just as wrongly.
+
+    Shared by the live pass and `recheck` so the two cannot drift - the same
+    reason `seed_expectations` exists on the sync side.
+    """
+    bad = unapplied_factors(rp, job.name)
+    if not bad:
+        return job.config, []
+    return {k: v for k, v in job.config.items() if k not in bad}, bad
+
+
 def _recheck_sync(lrp: RunPaths, job: Job, ui: dict, ledger, skipped: list,
                   lane: str) -> int:
     """Re-derive one sync row's findings from its saved evidence."""
@@ -1289,6 +1356,7 @@ def recheck(parent: RunPaths) -> dict:
                 n += _recheck_sync(lrp, job, ui, ledger, skipped, lane["lane"])
                 continue
 
+            _rc_expect, _rc_unapplied = expect_for(lrp, job)
             for cid in job.course_ids:
                 label = job.id if len(job.course_ids) == 1 else f"{job.id}_c{cid}"
                 disk_p = Path(lrp.evidence) / f"disk_{label}.json"
@@ -1324,10 +1392,11 @@ def recheck(parent: RunPaths) -> dict:
                     batch_log=_row_log_summary(olog, str(row_log_p))
                     if row_log_p.is_file() else {},
                     ui=ui, canvas=ocanvas.snapshot(cid, lrp.canvas),
-                    expect=job.config)
+                    expect=_rc_expect)
                 checks = (crosscheck.invariants(ev) +
                           (crosscheck.download_run(ev) if job.kind == "download"
-                           else []))
+                           else []) +
+                          _unapplied_note(_rc_unapplied, label, cid))
                 ledger.extend(checks)
                 n += len(checks)
         lanes.append({"lane": lane["lane"], "findings": n, "path": str(fresh)})
@@ -1376,9 +1445,33 @@ def collect(parent: RunPaths, *, rechecked: bool = False) -> dict:
             seen.add(k)
             merged.append(f)
 
-    with parent.findings.open("a", encoding="utf-8") as fh:
-        for f in merged:
-            fh.write(json.dumps(f, ensure_ascii=False, default=str) + "\n")
+    # REPLACE the previous merge rather than appending to it. `collect` dedupes
+    # only WITHIN one invocation, so running it twice - which the documented
+    # workflow invites: `matrix collect` in the setup section, then `matrix
+    # recheck` + `matrix collect --rechecked` in the re-check section - appended
+    # both sets and inflated every count. Measured 2026-08-08 on the sync run:
+    # 92 findings became 186, all 92 keys duplicated exactly twice, so "0
+    # defects" stayed right while every total doubled.
+    #
+    # A finding that came from a lane carries `lane`; one the agent recorded by
+    # hand does not. Only the lane half is rebuilt, so `finding add` survives a
+    # re-collect - otherwise a routine command would destroy the agent's own
+    # judgment findings, which are exactly the ones no check can produce.
+    kept = []
+    if parent.findings.is_file():
+        for line in parent.findings.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                prev = json.loads(line)
+            except Exception:
+                continue
+            if not prev.get("lane"):
+                kept.append(prev)
+    with parent.findings.open("w", encoding="utf-8") as fh:
+        for f in kept + merged:
+            fh.write(json.dumps(f, ensure_ascii=False, default=str) + chr(10))
     out = {"parent": parent.run_id, "merged": len(merged),
            "source": "rechecked" if rechecked else "as-run",
            "lanes": [l["lane"] for l in plan["lanes"]],
