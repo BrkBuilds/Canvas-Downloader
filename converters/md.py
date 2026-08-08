@@ -40,6 +40,25 @@ def convert_html_to_md(html_path: Path | str, dst: Path | str | None = None) -> 
         # Convert to Markdown
         md_content = markdownify.markdownify(str(soup), heading_style="ATX")
 
+        # Refuse to convert away to NOTHING. markdownify returns an empty (or
+        # whitespace-only) string for a page whose visible content is all
+        # script/style - which this function has just decomposed - and Canvas
+        # Pages that render through an embedded widget, an LTI iframe or an H5P
+        # embed are exactly that shape. Measured: such a page produced a 0-byte
+        # .md and the source HTML was deleted, because the check below was a
+        # bare exists() and a 0-byte file exists.
+        #
+        # Checked BEFORE the write, so a page with no extractable text leaves
+        # the folder untouched rather than gaining an empty .md that the next
+        # sync then has to reason about.
+        if not md_content.strip():
+            logger.error(
+                f"Markdown converter extracted no text from {html_path.name} "
+                "(the page's content is probably script-rendered); "
+                "keeping the original HTML."
+            )
+            return None
+
         # Enforce UTF-8 encoding for writing, then fsync so the data is
         # durable on disk before we delete the original HTML.  Without fsync
         # a power-loss between close() and remove() can lose the file.
@@ -51,10 +70,17 @@ def convert_html_to_md(html_path: Path | str, dst: Path | str | None = None) -> 
             except OSError:
                 pass
 
-        # Verify the output exists before deleting the source.
-        if not md_path.exists():
+        # Verify the output REACHED DISK before deleting the source, through the
+        # gate the rest of the family uses (code.py checks st_size, video.py and
+        # the Office trio call into converters.verify). A bare exists() was the
+        # odd one out, and file_has_content's own docstring names this exact
+        # moment: "whenever a converter is about to delete the file it converted
+        # FROM, this is the question it has to answer first".
+        from converters.verify import file_has_content
+        _ok, _why = file_has_content(md_path, what="Markdown file")
+        if not _ok:
             logger.error(
-                f"Markdown converter produced no output for {html_path.name}; "
+                f"Markdown conversion of {html_path.name} failed: {_why}; "
                 "keeping original HTML."
             )
             return None

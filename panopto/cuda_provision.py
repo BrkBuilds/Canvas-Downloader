@@ -581,5 +581,20 @@ def start_provision() -> bool:
     run.thread = threading.Thread(target=_worker, args=(run,), daemon=True,
                                   name=f"cuda-provision-{run.gen}")
     _RUN = run
-    run.thread.start()
+    try:
+        run.thread.start()
+    except RuntimeError:
+        # Thread creation can fail (resource exhaustion). _STATE was just set to
+        # "Finding" on the promise that _worker would run and reach a final
+        # status; if it never starts, nothing else writes that state, so
+        # is_running() stays True for ever - the GPU card sits on a motionless
+        # "Starting…" and start_provision's own is_running() guard refuses every
+        # retry. Same guard, same reasoning as core.course_cache.fetch_courses.
+        logger.warning("Could not start the CUDA provisioning thread.",
+                       exc_info=True)
+        with _LOCK:
+            _STATE.update(status="error", phase="Could not start the download.",
+                          error="Could not start the download. Please try again.",
+                          final=True)
+        return False
     return True

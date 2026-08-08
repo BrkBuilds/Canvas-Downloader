@@ -671,6 +671,25 @@ RUBRICS_ENABLED = False
 _ERR_PAYLOAD_MAX_CHARS = 64_000
 _ERR_PAYLOAD_MAX_DEPTH = 40
 
+#: Deepest reply nesting rendered into a discussion's HTML export.
+#:
+#: Same rule as ``_ERR_PAYLOAD_MAX_DEPTH`` above and as the folder walk in
+#: ``panopto.discovery._discover_folder_sessions`` (depth <= 3, <= 40 folders):
+#: a recursive walk over SERVER-shaped data needs a bound of its own. Two things
+#: made this one worth capping rather than trusting:
+#:
+#:   * ``entry.get_replies()`` is a NETWORK call, so the recursion costs one
+#:     HTTP request per level per entry - unbounded work driven by the other
+#:     end, the same shape as the pagination loops in panopto/discovery;
+#:   * a reply graph that ever came back cyclic would recurse until
+#:     RecursionError, which the enclosing ``except Exception`` swallows into
+#:     an empty string - i.e. the whole Replies section silently vanishes from
+#:     the export rather than failing loudly.
+#:
+#: 30 is far past anything real: Canvas's own UI nests a handful of levels, and
+#: this renderer's indent already saturates at depth 5 (``min(depth*30, 150)``).
+_DISCUSSION_MAX_REPLY_DEPTH = 30
+
 
 def humanize_canvas_error(exc) -> str:
     """Turn a Canvas/canvasapi exception into text that is safe to show a user.
@@ -5611,15 +5630,45 @@ class CanvasManager:
                 html_out.append(attachments_html)
                 
                 if hasattr(entry, 'get_replies'):
-                    try:
-                        for sub_entry in entry.get_replies():
-                            render_entry(sub_entry, depth + 1)
-                    except Exception as e:
+                    if depth >= _DISCUSSION_MAX_REPLY_DEPTH:
+                        # Say what is being hidden rather than truncating in
+                        # silence - the export is the user's only copy of this
+                        # thread.
+                        html_out.append(
+                            "<div style='color: #71717a; font-size: 0.9em;'>"
+                            "<em>Further nested replies were not exported "
+                            "(maximum reply depth reached).</em></div>")
                         if debug_file:
-                            log_debug(f"Could not fetch sub-replies: {e}", debug_file)
+                            log_debug(
+                                f"Discussion reply depth cap "
+                                f"({_DISCUSSION_MAX_REPLY_DEPTH}) reached; "
+                                "deeper replies skipped.", debug_file)
+                    else:
+                        try:
+                            for sub_entry in entry.get_replies():
+                                # A reply graph that came back cyclic would
+                                # otherwise recurse until RecursionError, which
+                                # the outer handler swallows into an empty
+                                # Replies section. Mirrors the `seen` set that
+                                # guards the Panopto subfolder walk.
+                                _sub_id = getattr(sub_entry, 'id', None)
+                                if _sub_id is not None:
+                                    if _sub_id in _seen_entry_ids:
+                                        continue
+                                    _seen_entry_ids.add(_sub_id)
+                                render_entry(sub_entry, depth + 1)
+                        except Exception as e:
+                            if debug_file:
+                                log_debug(f"Could not fetch sub-replies: {e}", debug_file)
                 html_out.append("</div>")
 
+            _seen_entry_ids: set = set()
             for entry in entries:
+                _eid = getattr(entry, 'id', None)
+                if _eid is not None:
+                    if _eid in _seen_entry_ids:
+                        continue
+                    _seen_entry_ids.add(_eid)
                 render_entry(entry, 0)
                 
             return "\n".join(html_out)

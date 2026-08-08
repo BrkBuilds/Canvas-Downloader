@@ -70,19 +70,30 @@ class PowerPointToPDF:
             from engine.office_pid import snapshot_office_pids, find_new_office_pid
             _pre = snapshot_office_pids('POWERPNT.EXE')
             self.app = win32com.client.DispatchEx("PowerPoint.Application")
+            # Track the PID FIRST - see the matching comment in word.py.
+            # POWERPNT.EXE is already running by this line, and a COM-spawned
+            # Office process is a child of DCOM/RPCSS rather than of us, so an
+            # exception before this point left an orphan nothing could reach.
+            # Guarded in turn: if the lookup itself failed we still want a
+            # usable instance and a reachable self.app, not an abandoned process.
+            try:
+                self._com_pid = find_new_office_pid('POWERPNT.EXE', _pre)
+            except Exception:
+                self._com_pid = None
             try:
                 self.app.Visible = False
                 self.app.DisplayAlerts = False
             except Exception:
                 pass  # Some Office 365 builds restrict these flags
-            self._com_pid = find_new_office_pid('POWERPNT.EXE', _pre)
             logger.debug(f"[COM] PowerPoint started with PID {self._com_pid}")
         except ImportError:
             logger.warning("pywin32 not installed or not on Windows. PowerPoint conversion disabled.")
             self.app = None
         except Exception as e:
             logger.warning(f"COM Initialization failed: {e}")
-            self.app = None
+            # Quit + PID-kill whatever DispatchEx started, rather than dropping
+            # the reference and leaving an orphaned POWERPNT.EXE behind.
+            self._kill_app()
 
     def _kill_app(self):
         """Forcefully shut down the COM instance.
@@ -182,6 +193,20 @@ class PowerPointToPDF:
         # macOS: AppleScript bridge
         if sys.platform == 'darwin':
             if self._convert_applescript_pptx(pptx_path, pdf_path):
+                # Prove the PDF before deleting the user's only copy - the same
+                # gate the COM branch below applies. run_applescript's success
+                # test is `dst.exists()`, and this converter's own history is
+                # the reason that is not enough: PowerPoint used to be the one
+                # that tested exists(), which "is better but still passes a
+                # 0-byte stub".
+                from converters.verify import pdf_looks_real
+                _ok, _why = pdf_looks_real(pdf_path)
+                if not _ok:
+                    logger.error(
+                        f"[AppleScript] PowerPoint reported success for "
+                        f"{pptx_path.name} but {_why}; keeping the original."
+                    )
+                    return None
                 try:
                     pptx_path.unlink()
                 except OSError as e:

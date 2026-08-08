@@ -277,3 +277,103 @@ SEEDS: list[tuple[str, str]] = [
     ("Houston Community College", "US"), ("Northern Virginia Community College", "US"),
     ("Salt Lake Community College", "US"), ("Austin Community College", "US"),
 ]
+
+
+# ── Local-language names ─────────────────────────────────────────────────────
+# English seed name -> the name the institution's OWN STUDENTS use.
+#
+# Why this exists. The seeds above are English because that is the language the
+# Instructure finder is searchable in, and it is how this list gets built. It is
+# not how a student looks their school up. A Dane types "Københavns" or "KU",
+# not "University of Copenhagen"; a Swede types "Chalmers tekniska högskola".
+# Shipping only the English name makes the picker's search miss on the very
+# first thing its intended user types.
+#
+# The display form is ``Local (English)`` - see ``display_name`` in the builder.
+# Both halves are therefore searchable, and the entry stays recognisable to an
+# exchange student who only knows the English name. Where a school's own name IS
+# the English one (Maastricht University, Tilburg University, INSEAD, CBS), there
+# is no entry here: an invented "translation" would be worse than nothing.
+#
+# THE SECOND JOB, and the reason this lives beside the seeds rather than in the
+# UI: every name here is also fed to the MATCHER as a probe (``local_probes``).
+# The generator compares an English seed against an account's self-declared
+# name, and those two share no tokens at all when the account publishes locally
+# ("Göteborgs Universitet" vs "University of Gothenburg" score 0.0). Without
+# this, the ``contradicts`` veto would read one institution's two names as two
+# different institutions and drop it. Adding the local name is what makes the
+# strict veto safe.
+#
+# Sourced from each institution's own Canvas account name where the finder
+# publishes one, otherwise from the institution's official local title. Keep it
+# to schools whose local name genuinely differs - not transliterations.
+LOCAL_NAMES: dict[str, str] = {
+    # ── Denmark ──
+    "University of Copenhagen": "Københavns Universitet",
+    "Technical University of Denmark": "Danmarks Tekniske Universitet",
+    "Aarhus University": "Aarhus Universitet",
+    "Aalborg University": "Aalborg Universitet",
+    "Roskilde University": "Roskilde Universitet",
+    "University of Southern Denmark": "Syddansk Universitet",
+    "IT University of Copenhagen": "IT-Universitetet i København",
+
+    # ── Norway ──
+    "University of Oslo": "Universitetet i Oslo",
+    "University of Bergen": "Universitetet i Bergen",
+    "University of Stavanger": "Universitetet i Stavanger",
+    "University of Agder": "Universitetet i Agder",
+    "Norwegian University of Science and Technology": "Norges teknisk-naturvitenskapelige universitet",
+    "Norwegian University of Life Sciences": "Norges miljø- og biovitenskapelige universitet",
+    "UiT The Arctic University of Norway": "UiT Norges arktiske universitet",
+    "Nord University": "Nord universitet",
+
+    # ── Sweden ──
+    "KTH Royal Institute of Technology": "Kungliga Tekniska högskolan",
+    "Chalmers University of Technology": "Chalmers tekniska högskola",
+    "Stockholm University": "Stockholms universitet",
+    "University of Gothenburg": "Göteborgs universitet",
+    "Uppsala University": "Uppsala universitet",
+    "Lund University": "Lunds universitet",
+    "Linköping University": "Linköpings universitet",
+    "Umeå University": "Umeå universitet",
+    "Luleå University of Technology": "Luleå tekniska universitet",
+    "Karlstad University": "Karlstads universitet",
+    "Mid Sweden University": "Mittuniversitetet",
+    "Dalarna University": "Högskolan Dalarna",
+    "Malmö University": "Malmö universitet",
+    "Linnaeus University": "Linnéuniversitetet",
+    "Örebro University": "Örebro universitet",
+
+    # ── Finland / Iceland ──
+    "University of Helsinki": "Helsingin yliopisto",
+    "Aalto University": "Aalto-yliopisto",
+    "University of Turku": "Turun yliopisto",
+    "Tampere University": "Tampereen yliopisto",
+    "University of Iceland": "Háskóli Íslands",
+    "Reykjavik University": "Háskólinn í Reykjavík",
+
+    # ── Germany / Austria / Switzerland ──
+    "Heidelberg University": "Universität Heidelberg",
+    "University of Technology Nuremberg": "Technische Universität Nürnberg",
+    "Technical University of Munich": "Technische Universität München",
+    "University of Vienna": "Universität Wien",
+    "University of St Gallen": "Universität St. Gallen",
+
+    # ── Netherlands / Belgium ──
+    "Erasmus University Rotterdam": "Erasmus Universiteit Rotterdam",
+    "University of Twente": "Universiteit Twente",
+    "Eindhoven University of Technology": "Technische Universiteit Eindhoven",
+    "University of Amsterdam": "Universiteit van Amsterdam",
+    "Utrecht University": "Universiteit Utrecht",
+    "Leiden University": "Universiteit Leiden",
+    "KU Leuven": "Katholieke Universiteit Leuven",
+
+    # ── Southern Europe / Latin America ──
+    "Complutense University of Madrid": "Universidad Complutense de Madrid",
+    "University of Barcelona": "Universitat de Barcelona",
+    "University of Lisbon": "Universidade de Lisboa",
+    "University of Porto": "Universidade do Porto",
+    "University of Sao Paulo": "Universidade de São Paulo",
+    "Pontifical Catholic University of Chile": "Pontificia Universidad Católica de Chile",
+    "National Autonomous University of Mexico": "Universidad Nacional Autónoma de México",
+}

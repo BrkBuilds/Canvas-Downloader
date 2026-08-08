@@ -3077,9 +3077,16 @@ def render_panopto_summary(summary: dict | None) -> None:
 
     # Show only what this run produced; never a "Skipped"/"already present" stat
     # (see the note above). Errors appear only when something actually failed.
-    cards = [
-        _stat(_dl_icon, downloaded, "Downloaded"),
-    ]
+    # "Downloaded" follows the same rule as "Transcribed" below: show it when
+    # this run either downloaded something or was CONFIGURED to. A Shortcut-only
+    # run is the case that made this necessary - it does real work and finishes
+    # clean, so the card renders, and an unconditional box reported "0
+    # Downloaded" beside "12 Links". `want_media` is absent from older summaries
+    # and from the "already up to date" one, so the fallback keeps the box.
+    _want_media = summary.get('want_media', True)
+    cards = []
+    if downloaded or _want_media:
+        cards.append(_stat(_dl_icon, downloaded, "Downloaded"))
     # "Transcribed" appears only when transcription was actually in play: either
     # the run's config requested a transcript (want_transcription), or we in fact
     # produced one (transcribed > 0). A course with transcription switched off

@@ -54,6 +54,34 @@ REJECT: dict[str, str] = {
     # Too ambiguous to verify.
     "Universitat Politecnica de Valencia": "politecnica.instructure.com",
     "York University": "york1.instructure.com",
+
+    # ── Found in the shipped list on 2026-08-08, all ten live ────────────────
+    # Every one of these reached users: the picker offered a real, working
+    # Canvas login page belonging to a DIFFERENT university, which is the exact
+    # failure this file exists to stop.
+    #
+    # READ THIS BEFORE ADDING THE NEXT ENTRY. Four of the ten domains were
+    # ALREADY listed above as a trap - for a different seed. `northpark` was
+    # blocked for "North-West University" and then captured "University of
+    # North Texas"; `centralstate` was blocked for "Central European
+    # University" and captured "University of Central Florida";
+    # `oklahomachristian` was blocked for "University of Oklahoma" and captured
+    # "Oklahoma State University"; `usaonline.southalabama.edu` was blocked for
+    # "University of South Australia" and captured "University of South
+    # Carolina". A hand-review gate keyed on ONE pairing cannot close a hole
+    # that any similarly-shaped name walks straight back into - which is why
+    # the real fix is `contradicts()` in the builder, and why these entries are
+    # a backstop rather than the remedy.
+    "University of British Columbia": "courseworks2.columbia.edu",   # Columbia University, US
+    "Duke Kunshan University": "canvas.duke.edu",                    # Duke University, US
+    "Colorado State University": "canvas.colorado.edu",              # U. of Colorado Boulder
+    "Oklahoma State University": "oklahomachristian.instructure.com",# Oklahoma Christian U.
+    "University of Central Florida": "centralstate.instructure.com", # Central State U., Ohio
+    "University of North Texas": "northpark.instructure.com",        # North Park U., Chicago
+    "University of South Carolina": "usaonline.southalabama.edu",    # U. of South Alabama
+    "Manchester Metropolitan University": "canvas.manchester.ac.uk", # The University of Manchester
+    "University of Western Australia": "western.instructure.com",    # Western Colorado University
+    "American University in Dubai": "american.instructure.com",      # American University, Washington DC
 }
 
 
@@ -98,4 +126,13 @@ REJECT_DOMAINS: dict[str, str] = {
 RENAME: dict[str, str] = {
     # The only NYU account the finder publishes, and it is Steinhardt's.
     "steinhardt-nyu.instructure.com": "New York University (Steinhardt)",
+
+    # This account publishes itself CORRECTLY as "University of North Carolina
+    # - Charlotte"; it was `clean_name()` that broke it. That function splits a
+    # name on " - " to collapse tenant qualifiers ("... - non-SSO"), and here
+    # the tail is not a qualifier but the CAMPUS - so a correctly-named campus
+    # tenant was promoted into a claim on the whole UNC system, sitting in the
+    # list one row above the real Chapel Hill. Any "X - <campus>" account has
+    # this shape; rename rather than drop, because its own students need it.
+    "instructure.charlotte.edu": "University of North Carolina at Charlotte",
 }

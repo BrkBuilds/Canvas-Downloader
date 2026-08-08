@@ -83,6 +83,30 @@ CONDITIONS: dict[str, str] = {
       return { done: !!active && active.flow === 'download' && active.id === 'download', ...ctx };
     """),
 
+    # The download phase, OR a run that has already finished without one.
+    #
+    # A course small enough to deliver in under a second reaches the completion
+    # screen before a 2s poll can ever observe the tracker on step 4, so waiting
+    # for `download_running` alone waits for a state that CANNOT still occur -
+    # it burns the full timeout and then the terminal check returns instantly.
+    # Measured 2026-08-08 on m010 (course 43667, one ExternalUrl): the engine
+    # logged `Course Finished` at 17:49:47 and the flow returned at 18:04:51,
+    # 900s of pure dead wait on a row whose own work took under a second. It is
+    # a race, so it costs nothing on most rows and a quarter of an hour on the
+    # unlucky ones.
+    #
+    # `running` is reported SEPARATELY from `done` on purpose: the caller must
+    # only capture a "download phase" screenshot when the phase was really
+    # observed. Folding the two together would file the completion screen as
+    # evidence of the download phase, which is worse than having no shot.
+    "download_running_or_done": _c("""
+      const running = !!active && active.flow === 'download' && active.id === 'download';
+      const complete = !!active && active.flow === 'download' && active.id === 'complete';
+      const stopped = !dash && (hasKey('dl_fc_') || anyKey('front_page') ||
+                                anyKey('go_to_front') || anyKey('start_new'));
+      return { done: running || complete || stopped, running, ...ctx };
+    """),
+
     # Terminal = the app has stopped working, whether it succeeded, was
     # cancelled, or fell into the isolated-retry tail. Accepting all three is
     # deliberate: a run that ends in an unexpected way must still unblock the

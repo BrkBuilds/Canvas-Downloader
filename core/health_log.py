@@ -585,8 +585,18 @@ def session_end(reason: str = "clean") -> None:
         try:
             with open(_state_path(), encoding="utf-8") as fh:
                 snap = json.load(fh)
-        except Exception:
+        except FileNotFoundError:
             snap = {}
+        except Exception as _e:
+            # The snapshot carries this session's pid and the child processes
+            # recorded for the orphan reaper. Degrading an unreadable file to {}
+            # and writing anyway erased both, so the next launch had nothing to
+            # reap and the orphans leaked for good. Stamping the exit reason is
+            # strictly less important than not destroying that record: leave the
+            # file alone and let the reaper's own liveness check handle it.
+            _write(f"SESSION STATE UNREADABLE ({type(_e).__name__}) - "
+                   "left untouched so the recorded children survive")
+            return
         snap["clean_exit"] = (reason == "clean")
         snap["end_reason"] = reason
         tmp = _state_path() + ".tmp"

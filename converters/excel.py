@@ -56,9 +56,32 @@ class ExcelToPDF:
             from engine.office_pid import snapshot_office_pids, find_new_office_pid
             _pre = snapshot_office_pids('EXCEL.EXE')
             self.app = win32com.client.DispatchEx("Excel.Application")
-            self.app.Visible = False
-            self.app.DisplayAlerts = False
-            self.app.EnableEvents = False          # block VBA macros
+            # Track the PID FIRST - see the matching comment in word.py. EXCEL.EXE
+            # exists from the moment DispatchEx returns, and a COM-spawned Office
+            # process is a child of DCOM/RPCSS rather than of us, so an exception
+            # before this line left an orphan nothing in the app could reach.
+            # Guarded in turn: if the lookup itself failed we still want a
+            # usable instance and a reachable self.app, not an abandoned process.
+            try:
+                self._com_pid = find_new_office_pid('EXCEL.EXE', _pre)
+            except Exception:
+                self._com_pid = None
+            # Every property set is guarded: a locked-down Office build can
+            # refuse any of them, and an unguarded raise here leaked the
+            # instance. Failing to set one is a degraded-but-usable Excel;
+            # failing to start one at all is caught by the handler below.
+            try:
+                self.app.Visible = False
+            except Exception:
+                pass
+            try:
+                self.app.DisplayAlerts = False
+            except Exception:
+                pass
+            try:
+                self.app.EnableEvents = False      # block VBA macros
+            except Exception:
+                pass
             try:
                 self.app.AutomationSecurity = 3    # msoAutomationSecurityForceDisable
             except Exception:
@@ -67,14 +90,15 @@ class ExcelToPDF:
                 self.app.Interactive = False        # suppress "Publishing…" dialog
             except Exception:
                 pass
-            self._com_pid = find_new_office_pid('EXCEL.EXE', _pre)
             logger.debug(f"[COM] Excel started with PID {self._com_pid}")
         except ImportError:
             logger.warning("pywin32 not installed or not on Windows. Excel conversion disabled.")
             self.app = None
         except Exception as e:
             logger.error(f"[COM] Excel init failed: {e}")
-            self.app = None
+            # Quit + PID-kill whatever DispatchEx started, rather than dropping
+            # the reference and leaving an orphaned EXCEL.EXE window behind.
+            self._kill_app()
 
     def _kill_app(self):
         """Forcefully shut down the COM instance (safe to call anytime).
@@ -186,6 +210,19 @@ class ExcelToPDF:
         # macOS: AppleScript bridge
         if sys.platform == 'darwin':
             if self._convert_applescript_excel(src, dst):
+                # Prove the PDF before deleting the user's only copy - the same
+                # gate the COM branch below applies. run_applescript's success
+                # test is `dst.exists()`, which passes a 0-byte stub; Excel's
+                # PDF export goes through a printer driver and can produce
+                # exactly that without raising.
+                from converters.verify import pdf_looks_real
+                _ok, _why = pdf_looks_real(dst)
+                if not _ok:
+                    logger.error(
+                        f"[AppleScript] Excel reported success for {src.name} "
+                        f"but {_why}; keeping the original."
+                    )
+                    return None, f"Excel reported success but {_why}"
                 src.unlink(missing_ok=True)
                 return str(dst), ""
             from engine.applescript_bridge import get_last_error

@@ -47,7 +47,15 @@ test-results/
 Thumbs.db
 
 #claude
-.claude/
+# Everything under .claude/ is local EXCEPT skills/, which are project
+# assets: tests/test_audit_docs_match_cli.py asserts the existence AND
+# content of .claude/skills/audit-live/SKILL.md. Ignoring the whole tree
+# made those four tests unpassable on a fresh clone and in CI, while
+# presenting as a missing file rather than as a packaging mistake.
+# `.claude/*` (not `.claude/`) is required: git will not descend into an
+# excluded DIRECTORY, so a negation inside one can never re-include it.
+.claude/*
+!.claude/skills/
 
 # Local AI/meta docs (never ship)
 memory-bank/

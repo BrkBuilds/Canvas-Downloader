@@ -23,6 +23,25 @@ from panopto.auth import (
 
 logger = logging.getLogger(__name__)
 
+#: Hard ceiling on pages for any listing loop in this module.
+#:
+#: Every one of them advances a page counter and exits only when the server
+#: returns a SHORT page. That makes the termination condition the SERVER's to
+#: honour: a tenant (or a caching proxy) that ignores the page parameter and
+#: re-serves page 0 loops for ever - on the Streamlit script thread, where
+#: Panopto discovery runs, so there is no Cancel to press - while the results
+#: list grows by a full page each time and nothing bounds the memory.
+#:
+#: The asymmetry this closes is inside one function: `_discover_folder_sessions`
+#: bounds its own folder walk explicitly (depth <= 3, <= 40 folders) and its
+#: docstring advertises that, but the per-folder page loops it calls up to 40
+#: times had no bound at all.
+#:
+#: 100 pages x 100 rows is 10,000 sessions in a SINGLE folder - orders of
+#: magnitude past anything real (the largest course folder measured here held
+#: 36), so a legitimate listing can never reach it.
+_MAX_LIST_PAGES = 100
+
 
 def _norm_title(s: str) -> str:
     """Whitespace-collapsed, casefolded title for session-name matching."""
@@ -101,6 +120,7 @@ class _CanvasREST:
 
     def get_all(self, path: str, params: dict | None = None) -> list:
         results: list = []
+        pages = 0
         url = f"{self.base}{path}"
         p = dict(params or {})
         p.setdefault("per_page", 100)
@@ -122,6 +142,14 @@ class _CanvasREST:
                 return data
             url = r.links.get("next", {}).get("url")
             p = {}
+            pages += 1
+            if pages >= _MAX_LIST_PAGES:
+                logger.warning(
+                    "Canvas %s still offered a next page after %d - stopping. "
+                    "A next-link that points at itself would otherwise loop "
+                    "for ever; %d row(s) are kept.",
+                    path, _MAX_LIST_PAGES, len(results))
+                break
         return results
 
     def get_one(self, path: str) -> dict:
@@ -179,6 +207,13 @@ def _folder_sessions_api_v1(session, panopto_base, folder_id) -> list[tuple[str,
         if len(results) < 100:
             break
         page += 1
+        if page >= _MAX_LIST_PAGES:
+            logger.warning(
+                "Panopto api/v1 folder %s kept returning full pages past the "
+                "%d-page cap - stopping. The tenant is most likely ignoring "
+                "pageNumber; %d session(s) collected so far are kept.",
+                folder_id, _MAX_LIST_PAGES, len(found))
+            break
     return found
 
 
@@ -286,6 +321,13 @@ def _folder_sessions_data_svc(session, panopto_base, folder_id) -> list[tuple[st
         if isinstance(total, int) and len(found) >= total:
             break
         page += 1
+        if page >= _MAX_LIST_PAGES:
+            logger.warning(
+                "Panopto GetSessions for folder %s kept returning full pages "
+                "past the %d-page cap - stopping. TotalNumber was %r, so the "
+                "secondary bound could not fire; %d session(s) are kept.",
+                folder_id, _MAX_LIST_PAGES, total, len(found))
+            break
     return found
 
 

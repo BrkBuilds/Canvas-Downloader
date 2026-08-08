@@ -45,19 +45,42 @@ class WordToPDF:
             from engine.office_pid import snapshot_office_pids, find_new_office_pid
             _pre = snapshot_office_pids('WINWORD.EXE')
             self.app = win32com.client.DispatchEx("Word.Application")
+            # Track the PID FIRST, before touching a single property. DispatchEx
+            # has already spawned WINWORD.EXE by this line, and a COM-spawned
+            # Office process is a child of DCOM/RPCSS - not of us - so nothing
+            # else in the app can find it: the session orphan reaper only knows
+            # about processes recorded as OUR children. If anything below raises,
+            # the handler drops self.app, and with the PID still unset the
+            # instance became unreachable and stayed running for the life of the
+            # session. Capturing here is what makes the handler's _kill_app able
+            # to clean up. (find_new_office_pid returns on its first poll once
+            # DispatchEx has returned, so this costs nothing.) Guarded in turn:
+            # if the lookup itself failed we still want a usable Word and a
+            # reachable self.app, not an abandoned process.
+            try:
+                self._com_pid = find_new_office_pid('WINWORD.EXE', _pre)
+            except Exception:
+                self._com_pid = None
             try:
                 self.app.Visible = False
             except Exception:
                 pass
-            self.app.DisplayAlerts = False
-            self._com_pid = find_new_office_pid('WINWORD.EXE', _pre)
+            try:
+                # Guarded for the same reason the PowerPoint sibling guards it:
+                # some Office 365 / locked-down enterprise builds restrict these
+                # flags and raise. Unguarded, that raise leaked the instance.
+                self.app.DisplayAlerts = False
+            except Exception:
+                pass
             logger.debug(f"[COM] Word started with PID {self._com_pid}")
         except ImportError:
             logger.warning("pywin32 not installed or not on Windows. Word conversion disabled.")
             self.app = None
         except Exception as e:
             logger.error(f"[COM] Word init failed: {e}")
-            self.app = None
+            # Quit + PID-kill whatever DispatchEx managed to start, instead of
+            # dropping the reference and leaving an orphaned WINWORD.EXE.
+            self._kill_app()
 
     def _kill_app(self):
         """Forcefully shut down the COM instance.
@@ -160,6 +183,23 @@ class WordToPDF:
         # macOS: AppleScript bridge
         if sys.platform == 'darwin':
             if self._convert_applescript_word(abs_doc_path, abs_pdf_path):
+                # Prove the PDF before deleting the user's only copy - the same
+                # gate the Windows branch below applies, for the same reason.
+                # run_applescript's success test is `dst.exists()`, which is
+                # exactly the check CLAUDE.md records as too weak ("still passes
+                # a 0-byte stub"): Word can be told to export and leave a stub
+                # behind (a protected or repaired document, a locked-down
+                # AutomationSecurity policy). The COM path was hardened against
+                # that and this one was not, so on macOS the original was still
+                # being destroyed on the strength of a file merely existing.
+                from converters.verify import pdf_looks_real
+                _ok, _why = pdf_looks_real(abs_pdf_path)
+                if not _ok:
+                    logger.error(
+                        f"[AppleScript] Word reported success for "
+                        f"{abs_doc_path.name} but {_why}; keeping the original."
+                    )
+                    return None
                 abs_doc_path.unlink(missing_ok=True)
                 return str(abs_pdf_path.resolve())
             return None
