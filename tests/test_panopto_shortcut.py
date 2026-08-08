@@ -773,3 +773,185 @@ def test_a_folder_synced_on_windows_is_adopted_on_a_mac(tmp_path, macos, no_engi
 
     assert summary["shortcuts"] == 0 and summary["skipped"] == 1
     assert not list(tmp_path.glob("*.webloc"))
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 8. The SYNC round trip, through the REAL manifest
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Everything above proves the writer and the analyzer AGREE on paper: the
+# runner is driven with a stub recorder, and classification is driven with a
+# hand-built manifest dict. Neither has ever seen the two connected by the
+# actual SQLite table that carries a row from one sync to the next - and that
+# hand-off is precisely where this feature's stated failure mode lives:
+#
+#   "If the writer and the analyzer ever disagree about that, nothing crashes -
+#    every recording simply reads as missing on every sync, for ever."
+#
+# A link rewritten every sync raises nothing, logs nothing, and shows up only
+# as a "restored" line the user never asked for. So the round trip is driven
+# here for real: runner -> SyncManager -> get_panopto_manifest -> classifier,
+# then a SECOND run over the same folder.
+
+def _sync_manager(tmp_path):
+    from core.sync_manager import SyncManager
+    return SyncManager(tmp_path, course_id=9, course_name="Course A")
+
+
+def _run_with_manager(tmp_path, contract, mgr, video=None, per_video_kinds=None):
+    """One sync-mode Panopto pass over a real folder + real manifest."""
+    course = types.SimpleNamespace(id=9, name="Course A")
+    events = []
+    target = {
+        "course": course,
+        "course_root": tmp_path,
+        "download_mode": "flat",
+        "videos": [video or _video(panopto_host="https://cbs.cloud.panopto.eu",
+                                   launch_url="https://canvas.edu/sessionless_launch?x=1")],
+        "record_fn": R.make_recorder(mgr, tmp_path),
+        "settings": contract,
+    }
+    if per_video_kinds is not None:
+        target["per_video_kinds"] = per_video_kinds
+    summary = R.run_panopto_batch(
+        _CM(), [target], settings=S.compose_settings(contract),
+        progress=lambda kind, **kw: events.append((kind, kw)),
+        is_cancelled=lambda: False,
+    )
+    return summary, events
+
+
+def test_the_shortcut_survives_the_manifest_and_the_next_sync_is_a_no_op(
+        tmp_path, no_engine, launches):
+    """The whole contract in one test: write, record, re-read, do nothing.
+
+    The second run is the assertion that matters. If the analyzer looked for
+    the shortcut anywhere other than where the runner put it, this run would
+    write the link a second time and every sync after it would too.
+    """
+    contract = S.make_contract(url=True, mp4=False, mp3=False, txt=False,
+                               srt=False, layout="match")
+    mgr = _sync_manager(tmp_path)
+
+    s1, _ = _run_with_manager(tmp_path, contract, mgr)
+    assert s1["shortcuts"] == 1 and s1["failed"] == 0
+
+    link = tmp_path / ("Lecture 3" + SC.kind_extension("url"))
+    assert link.exists()
+    stamp = link.stat().st_mtime_ns
+
+    # The row really is in the SQLite table, under the kind the analyzer wants.
+    manifest = mgr.get_panopto_manifest()
+    assert manifest.get("abc-123", {}).get("url") == link.name, manifest
+
+    # The analyzer, reading that same manifest, sees nothing left to do.
+    change = SP.classify_videos(_CM(), [_video()], tmp_path, "flat",
+                                S.compose_settings(contract), manifest)[0]
+    assert change.state == "uptodate", (change.state, change.missing_kinds)
+    assert change.download_kinds == []
+
+    # ...and a second sync writes nothing.
+    s2, ev2 = _run_with_manager(tmp_path, contract, mgr)
+    assert s2["shortcuts"] == 0
+    assert s2["skipped"] == 1
+    assert [k for k, _ in ev2 if k.startswith("shortcut")] == []
+    assert link.stat().st_mtime_ns == stamp, "the link was rewritten"
+
+
+def test_deleting_the_link_makes_the_next_sync_restore_exactly_it(
+        tmp_path, no_engine, launches):
+    """A user deletes the shortcut. It must come back - and nothing else must."""
+    contract = S.make_contract(url=True, mp4=False, mp3=False, txt=False,
+                               srt=False, layout="match")
+    mgr = _sync_manager(tmp_path)
+    _run_with_manager(tmp_path, contract, mgr)
+
+    link = tmp_path / ("Lecture 3" + SC.kind_extension("url"))
+    link.unlink()
+
+    manifest = mgr.get_panopto_manifest()
+    change = SP.classify_videos(_CM(), [_video()], tmp_path, "flat",
+                                S.compose_settings(contract), manifest)[0]
+    assert change.state == "restore", change.state
+    assert change.download_kinds == ["url"]
+
+    # Drive the runner the way the sync page does: narrowed to what Review
+    # decided, keyed by lower-case video id.
+    s2, _ = _run_with_manager(
+        tmp_path, contract, mgr,
+        per_video_kinds={"abc-123": set(change.download_kinds)})
+    assert s2["shortcuts"] == 1
+    assert SH.read_shortcut(link) == (VIEWER, SH.SOURCE_PANOPTO)
+
+
+def test_a_restore_of_the_link_alone_still_needs_no_panopto_session(
+        tmp_path, no_engine, launches):
+    """The per-recording narrowing must not defeat the auth skip.
+
+    `per_video_kinds` is what sync mode passes and download mode never does, so
+    this branch of `_media_wanted` only ever runs in a sync - the one place the
+    saving was never exercised by the download-mode tests."""
+    contract = S.make_contract(url=True, mp4=True, mp3=False, txt=False,
+                               srt=False, layout="match")
+    mgr = _sync_manager(tmp_path)
+    _run_with_manager(tmp_path, contract, mgr,
+                      per_video_kinds={"abc-123": {"url"}})
+    assert launches == [], (
+        "a link-only restore authenticated even though mp4 was configured but "
+        "not selected for this recording")
+
+
+def test_the_manifest_row_is_the_kind_not_the_extension_on_macos(
+        tmp_path, macos, no_engine, launches):
+    """A Mac writes `.webloc`; the row must still say `url`, or the analyzer
+    looks for a kind that never appears and rewrites the link every sync."""
+    contract = S.make_contract(url=True, mp4=False, mp3=False, txt=False,
+                               srt=False, layout="match")
+    mgr = _sync_manager(tmp_path)
+    _run_with_manager(tmp_path, contract, mgr)
+
+    manifest = mgr.get_panopto_manifest()
+    assert manifest.get("abc-123", {}).get("url") == "Lecture 3.webloc", manifest
+    change = SP.classify_videos(_CM(), [_video()], tmp_path, "flat",
+                                S.compose_settings(contract), manifest)[0]
+    assert change.state == "uptodate"
+
+
+# ── The completion card must not report a zero nobody asked for ──────────────
+
+def test_a_link_only_run_publishes_that_no_media_was_wanted(
+        tmp_path, no_engine, launches):
+    """The Shortcut output made "downloaded nothing" a SUCCESSFUL outcome for
+    the first time. Before it, a run with 0 downloads never rendered the
+    completion card at all, so an unconditional "Downloaded" box was safe; now
+    it reads "0 Downloaded" beside "12 Links" on a run that did exactly what
+    was asked."""
+    summary, _ = _run_with_manager(
+        tmp_path,
+        S.make_contract(url=True, mp4=False, mp3=False, txt=False, srt=False,
+                        layout="match"),
+        _sync_manager(tmp_path))
+    assert summary["shortcuts"] == 1
+    assert summary["want_media"] is False
+
+
+def test_a_run_that_wants_media_still_says_so(tmp_path, no_engine, launches):
+    summary, _ = _run_with_manager(
+        tmp_path,
+        S.make_contract(url=True, mp4=True, mp3=False, txt=False, srt=False,
+                        layout="match"),
+        _sync_manager(tmp_path))
+    assert summary["want_media"] is True
+
+
+def test_the_downloaded_stat_is_hidden_only_when_no_media_was_wanted():
+    """Asserted on the renderer, because the summary key is useless if the card
+    ignores it - and an older summary (no key at all) must keep the box."""
+    import inspect
+    from shared import components
+    src = inspect.getsource(components.render_panopto_summary)
+    assert "_want_media = summary.get('want_media', True)" in src, (
+        "the default must KEEP the box: a summary written before this key "
+        "existed says nothing about intent"
+    )
+    assert "if downloaded or _want_media:" in src

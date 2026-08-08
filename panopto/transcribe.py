@@ -41,6 +41,12 @@ def _is_vad_engine_error(exc: BaseException) -> bool:
     return any(n in msg for n in ("onnxruntime", "onnx", "silero", "vad"))
 
 
+#: Seconds to wait for the worker PROCESS to exit after its stdout has closed.
+#: Only ever spent on the pathological path - a clean finish exits immediately.
+#: See the note at the wait() call for why this is not the stall watchdog that
+#: was deliberately declined for transcription.
+_EXIT_GRACE_SECONDS = 10.0
+
 # (model_dir, device, compute_type) -> WhisperModel
 _MODEL_CACHE: dict = {}
 
@@ -167,10 +173,17 @@ def transcribe(
     # recorder turns into a relative path), so prefixing the variables would put
     # a "\?\" absolute into the manifest the moment relative_to() failed - and
     # every later comparison against a clean path would then miss.
-    txt_f = open(make_long_path(txt_tmp), "w", encoding="utf-8") if want_txt else None
-    srt_f = open(make_long_path(srt_tmp), "w", encoding="utf-8") if want_srt else None
-
+    # Both opens live INSIDE the try. Opened above it, a failure on the SECOND
+    # one (disk full, permissions, an antivirus hold) left the first handle open
+    # with the try not yet entered, so the finally never ran. That is not
+    # academic on Windows: the traceback keeps the frame - and therefore the
+    # handle - alive for as long as Streamlit displays it, so the partial
+    # `<name>.txt.part` stays locked and cannot be cleaned up or rewritten.
+    txt_f = srt_f = None
     try:
+        txt_f = open(make_long_path(txt_tmp), "w", encoding="utf-8") if want_txt else None
+        srt_f = open(make_long_path(srt_tmp), "w", encoding="utf-8") if want_srt else None
+
         idx = 0
         _txt_started = False  # have we written the first non-empty txt segment?
         for seg in segments:
@@ -476,7 +489,34 @@ def transcribe_in_subprocess(
                           "language": evt.get("language") or "?"}
             elif kind == "error":
                 error_msg = evt.get("error") or "Transcription failed."
-        rc = proc.wait()
+        # Bounded, because this line is reached on a `break` out of the loop
+        # above and one of those breaks is stdout EOF - which means the reader
+        # thread saw the pipe close, NOT necessarily that the worker exited. A
+        # worker that closes stdout and then wedges (or one whose exit is being
+        # held up by a stuck native library) parked this on an unbounded wait
+        # with nothing left to rescue it: the `finally` below only kills the
+        # child AFTER wait() returns. The daily auto-sync runs unattended, so
+        # there is no user to cancel it.
+        #
+        # This is NOT the stall watchdog that was deliberately declined for
+        # transcription (see CLAUDE.md): that would have to bound the whole
+        # transcribe, where slow and wedged are genuinely hard to tell apart.
+        # By this line the worker has finished producing output and all that is
+        # left is process teardown, so a few seconds is generous.
+        try:
+            rc = proc.wait(timeout=_EXIT_GRACE_SECONDS)
+        except subprocess.TimeoutExpired:
+            logger.warning(
+                "Transcribe worker (pid=%s) closed stdout but had not exited "
+                "after %.0fs - killing it.", proc.pid, _EXIT_GRACE_SECONDS)
+            try:
+                proc.kill()
+            except Exception:
+                pass
+            try:
+                rc = proc.wait(timeout=_EXIT_GRACE_SECONDS)
+            except Exception:
+                rc = None
     finally:
         # Never leave the worker transcribing in the background when we unwind for
         # a reason OTHER than a clean finish. The important case is a user Cancel:

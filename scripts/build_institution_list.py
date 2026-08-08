@@ -85,7 +85,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from institution_seeds import SEEDS                        # noqa: E402
+from institution_seeds import SEEDS, LOCAL_NAMES          # noqa: E402
 from institution_rejects import REJECT, REJECT_DOMAINS, RENAME  # noqa: E402
 
 FINDER = "https://canvas.instructure.com/api/v1/accounts/search"
@@ -101,7 +101,14 @@ _STOP = {"the", "of", "at", "and", "for", "in", "de", "del", "la", "el", "des", 
 _GENERIC = {"university", "universitat", "universitet", "universiteit", "universidad",
             "universidade", "universite", "universiti", "universitas", "college",
             "school", "institute", "institution", "state", "national", "technology",
-            "science", "sciences", "business", "online", "academy", "polytechnic"}
+            "science", "sciences", "business", "online", "academy", "polytechnic",
+            # Honorifics. 'Royal' identifies nobody: KTH publishes as "KTH" and
+            # its seed is "KTH Royal Institute of Technology", so counting it as
+            # a distinguishing token makes an institution contradict ITSELF.
+            "royal", "pontificia", "pontifical",
+            # LMS words. An account routinely publishes as "UBC Canvas" or
+            # "Chalmers LMS"; the platform's own name identifies nobody.
+            "canvas", "lms", "learning", "learn", "moodle", "portal"}
 
 # Non-production or adjacent tenants of a real institution. Matching one sends a
 # student to a Canvas holding none of their courses, with nothing on screen
@@ -188,6 +195,34 @@ def labels(domain: str) -> list:
                 out.append(lab[len(affix):])
             if lab.endswith(affix) and len(lab) > len(affix):
                 out.append(lab[:-len(affix)])
+        # ...and with a fused GENERIC word removed. Institutions contract their
+        # own name into the host - `colostate` is "Colorado State" - and the
+        # remainder is a prefix of the real token where the whole label is not.
+        # Without this, Colorado State University cannot corroborate
+        # colostate.instructure.com, which is its actual Canvas.
+        for gen in ("state", "university", "college", "institute", "uni"):
+            if lab.endswith(gen) and len(lab) - len(gen) >= 3:
+                out.append(lab[:-len(gen)])
+    return out
+
+
+def acronyms(name: str) -> set:
+    """Initialisms a school is plausibly known by.
+
+    BOTH forms, and the stopword-free one is the fix for a measured defect: the
+    original built the acronym from every word, so "University of Central
+    Florida" produced ``uocf`` and never ``ucf``. An institution whose Canvas
+    host IS its acronym therefore could not corroborate its own domain -
+    ``ucf``, ``unt``, ``ubc``, ``uio`` all failed - and the matcher settled for
+    some other host that could. That is not a cosmetic miss: it is half of why
+    ``University of Central Florida`` shipped pointing at Central State.
+    """
+    words = [w for w in re.sub(r"[^a-z0-9 ]", " ", name.lower()).split() if w]
+    out = set()
+    for seq in (words, [w for w in words if w not in _STOP]):
+        acro = "".join(w[0] for w in seq)
+        if len(acro) >= 3:
+            out.add(acro)
     return out
 
 
@@ -202,12 +237,15 @@ def corroborates(seed: str, domain: str, probes: list | None = None) -> bool:
     cand: set = set()
     for p in (probes or [seed]):
         cand |= {t for t in toks(p) if len(t) >= 3 and t not in _GENERIC}
-        acro = "".join(w[0] for w in re.sub(r"[^a-z ]", " ", p.lower()).split() if w)
-        if len(acro) >= 3:
-            cand.add(acro)
+        cand |= acronyms(p)
     for t in cand:
         for lab in labs:
-            if lab == t or (len(t) >= 4 and lab.startswith(t)):
+            # Both directions. `lab.startswith(t)` covers a host that EXTENDS
+            # the name (`manchestermet`); `t.startswith(lab)` covers one that
+            # CONTRACTS it, which is what `labels()` produces when it strips a
+            # fused generic word - `colostate` -> `colo`, a prefix of Colorado.
+            if (lab == t or (len(t) >= 4 and lab.startswith(t))
+                    or (len(lab) >= 4 and t.startswith(lab))):
                 return True
     return False
 
@@ -223,14 +261,118 @@ def tld_vetoes(cc: str, domain: str) -> bool:
 
 
 def tld_matches(cc: str, domain: str) -> bool:
+    # `.edu` is effectively US-only and ``cc_of`` already treats it that way, so
+    # a US seed on a .edu host has a real country signal. Without this a US
+    # school whose name matches EXACTLY still needed its acronym to appear in
+    # the host, which is how `canvas.okstate.edu` lost Oklahoma State's slot to
+    # `oklahomachristian.instructure.com`.
+    if cc == "US" and (domain or "").lower().endswith(".edu"):
+        return True
     t = _tld_of(domain)
     return t is not None and t == _TLD_FOR.get(cc, cc.lower())
+
+
+def local_probes(seed: str) -> list:
+    """The seed's local-language name, as a matcher probe. Empty when it has none."""
+    loc = LOCAL_NAMES.get(seed)
+    return [loc] if loc else []
+
+
+def display_name(seed: str) -> str:
+    """What the picker SHOWS for a seeded institution.
+
+    ``Local (English)`` when the two differ - local first, because that is what
+    the institution's own students call it and what they will type. The English
+    half stays because an exchange student may know only that, and because both
+    halves land in the search haystack this way.
+    """
+    loc = LOCAL_NAMES.get(seed)
+    return f"{loc} ({seed})" if loc and loc.lower() != seed.lower() else seed
+
+
+def distinctive(s: str) -> set:
+    """The tokens that actually IDENTIFY an institution.
+
+    Everything a thousand universities share ("university", "state", "college",
+    "royal", ...) is dropped, so what remains is the part a student would use to
+    tell two schools apart: the place, the person, the founding body.
+    """
+    return {t for t in toks(s) if t not in _GENERIC and len(t) > 2}
+
+
+def is_acronym_of(name: str, probe: str) -> bool:
+    """True if *name* is *probe* written as its initials and nothing more."""
+    a = distinctive(name)
+    return bool(a) and a <= (distinctive(probe) | acronyms(probe))         and bool(a & acronyms(probe))
+
+
+def contradicts(domain: str, name: str, probes: list) -> bool:
+    """True when the seed and the account name are DIFFERENT institutions.
+
+    THE HOLE THIS CLOSES, and why a threshold could never close it. Scoring is
+    a similarity measure, and similarity is exactly the wrong question here:
+    "University of British Columbia" and "Columbia University" are genuinely
+    similar - they share two of three tokens - and the domain
+    ``courseworks2.columbia.edu`` genuinely corroborates the shared one. Every
+    gate agreed, and the pairing scored 0.667, comfortably over the 0.50 bar.
+    The single word that decides it, ``british``, is the one the score throws
+    away. Measured on the shipped list, eight pairings failed exactly this way:
+
+        British Columbia -> Columbia University      (courseworks2.columbia.edu)
+        Duke Kunshan     -> Duke University          (canvas.duke.edu)
+        Colorado State   -> U. of Colorado Boulder   (canvas.colorado.edu)
+        Oklahoma State   -> Oklahoma Christian U.    (oklahomachristian...)
+        Central Florida  -> Central State University (centralstate...)
+        North Texas      -> North Park University    (northpark...)
+        South Carolina   -> U. of South Alabama      (usaonline.southalabama.edu)
+        Manchester Met   -> The University of Manchester (canvas.manchester.ac.uk)
+
+    So ask a DIFFERENT question, one a score cannot express: does either name
+    carry a distinctive token the other lacks *and* the domain does not vouch
+    for? A word like ``british`` / ``kunshan`` / ``boulder`` / ``christian``
+    present on one side only, with nothing in the host to back it, is not a
+    spelling variation - it is the name of another school.
+
+    Corroboration is what keeps this from rejecting honest matches: an account
+    published as "UBC Canvas" on ``canvas.ubc.ca`` has ``ubc`` vouched by its
+    own host, and a seed's local-language name reaches here as a *probe* (see
+    LOCAL_NAMES), so "Goteborgs universitet" and "University of Gothenburg" are
+    compared as the one institution they are rather than as two.
+
+    ANY probe that is compatible clears the pairing - the probes are alternative
+    names for one school, so agreeing with one of them is agreement.
+    """
+    labs = labels(domain)
+
+    def vouched(tok: str) -> bool:
+        return any(lab == tok or (len(tok) >= 4 and lab.startswith(tok))
+                   for lab in labs)
+
+    acct = distinctive(name)
+    for p in probes:
+        seed_t = distinctive(p)
+        if not seed_t or not acct:
+            continue          # nothing distinctive to compare - other gates decide
+
+        # An account may publish as the seed's INITIALISM ("UBC" for University
+        # of British Columbia). The expansion it drops is then not a missing
+        # qualifier but the same name written out, so those tokens must not
+        # count against it - provided the account adds nothing of its own.
+        acct_extra = acct - (seed_t | acronyms(p))
+        reduced = is_acronym_of(name, p)
+        seed_extra = set() if reduced else seed_t - acct
+
+        if all(vouched(t) for t in seed_extra) and all(vouched(t) for t in acct_extra):
+            return False
+    return True
 
 
 def accepts(seed: str, cc: str, domain: str, name: str) -> bool:
     if tld_vetoes(cc, domain):
         return False
-    probes = [seed] + ALIASES.get(seed, [])
+    probes = [seed] + ALIASES.get(seed, []) + local_probes(seed)
+    if contradicts(domain, name, probes):
+        return False
     j = max(jaccard(p, name) for p in probes)
     ct = max(containment(p, name) for p in probes)
     corr = corroborates(seed, domain, probes)
@@ -240,6 +382,13 @@ def accepts(seed: str, cc: str, domain: str, name: str) -> bool:
         return True
     # Abbreviation path, e.g. 'KTH', 'Chalmers', 'OsloMet'.
     if ct >= 0.999 and corr and len([t for t in toks(name) if t not in _GENERIC]) <= 1:
+        return True
+    # INITIALISM path. "UBC Canvas" and "University of British Columbia" share
+    # not one token, so jaccard and containment are both 0.0 and every branch
+    # above is blind to a pairing that is obviously right. Safe because it is
+    # the strictest branch here: the account must reduce ENTIRELY to the seed's
+    # own initials, and the host must independently confirm them.
+    if corr and any(is_acronym_of(name, p) for p in probes):
         return True
     return False
 
@@ -375,7 +524,7 @@ def build(pool: dict, limit: int) -> tuple[list, list]:
               if not _BAD_ACCOUNT.search(n) and not _BAD_ACCOUNT.search(d)]
     core, rejected = [], []
     for seed, cc in SEEDS:
-        probes = [seed] + ALIASES.get(seed, [])
+        probes = [seed] + ALIASES.get(seed, []) + local_probes(seed)
         best = None
         for dom, name in usable:
             if not accepts(seed, cc, dom, name):
@@ -383,7 +532,7 @@ def build(pool: dict, limit: int) -> tuple[list, list]:
             key = (max(jaccard(p, name) for p in probes),
                    corroborates(seed, dom, probes), tld_matches(cc, dom))
             if best is None or key > best[0]:
-                best = (key, {"name": seed, "domain": dom, "cc": cc})
+                best = (key, {"name": display_name(seed), "domain": dom, "cc": cc})
         if best is None:
             continue
         if REJECT.get(seed) == best[1]["domain"]:

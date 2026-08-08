@@ -175,10 +175,18 @@ class Flow:
             box.press("Enter")
             self.s.settle()
 
-        save = dlg.get_by_role("button", name="Save Settings")
-        if save.count() == 0:
+        # Address Save by its KEY, not by its accessible name. The app keys it
+        # `stg_btn_save` with a comment saying it did so "so the live audit can
+        # drive it", and a role+name lookup is a single sample against an
+        # accessibility tree that a dialog rerun rebuilds - the number input's
+        # Enter commit above IS such a rerun. Measured on 2026-08-08: two lanes
+        # died on their first row with "Save Settings button not found" against
+        # a dialog that had rendered it perfectly, and neither could be
+        # reproduced by hand. `_await_key` polls, so a rebuild in flight costs
+        # a retry instead of the row.
+        if not self._await_key("stg_btn_save", "button", 20):
             raise FlowError("Save Settings button not found in the dialog")
-        save.first.click(timeout=20000)
+        self.s.click("stg_btn_save")
         self.s.settle()
 
         # WAIT for the dialog to go, do not sample once. `settle()` returns when
@@ -216,6 +224,23 @@ class Flow:
 # ==========================================================================
 
 class DownloadFlow(Flow):
+
+    def _await_gate_open(self, timeout: float = 20.0) -> bool:
+        """Poll until the selection gate stops covering the primary actions.
+
+        Reads the button the same way a user's pointer does - `pointer-events`
+        - rather than the `data-cd-has-sel` attribute behind it, so the wait
+        cannot pass while the paint the attribute drives is still absent. A
+        timeout is NOT swallowed: it returns False and the click below then
+        fails with the full probe, which is the finding.
+        """
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            p = self.s.probe_key("btn_custom_download", "button")
+            if p.get("found") and not p.get("gated"):
+                return True
+            time.sleep(0.3)
+        return False
 
     def _await_key(self, key: str, role: str = "checkbox", timeout: float = 60.0) -> bool:
         """Poll until ``st-key-<key>`` carries an interactive element, or timeout.
@@ -266,6 +291,16 @@ class DownloadFlow(Flow):
         return self._log("select_courses", courses=course_ids, results=results)
 
     def open_custom(self) -> dict:
+        # The primary actions are gated in CSS, not server-side: the button sits
+        # OUTSIDE the course-list fragment, so `disabled=` cannot see a tick made
+        # inside it (ui/course_selector._gate_actions_on_selection). Availability
+        # is published by a components.html bridge as `data-cd-has-sel` on BODY,
+        # and that bridge is an iframe whose boot is not synchronous with the
+        # tick React has already committed. So `set_checkbox` can verify a course
+        # is selected in the very frame the gate still reads "nothing selected" -
+        # measured on a cold lane 2026-08-08, one row lost per lane. The gate
+        # lifts on its own; wait for it rather than sampling once.
+        self._await_gate_open()
         r = self.s.click("btn_custom_download")
         if not r.get("clicked"):
             raise FlowError(f"Custom Download not clickable: {r}")
@@ -381,9 +416,13 @@ class DownloadFlow(Flow):
             time.sleep(3.0)
             shots.append(self.s.capture(f"{name}_phase_scan",
                                         ("screen", "wizard", "dashboard")))
-            got = self.s.wait_for(conditions.get("download_running"), timeout=900,
-                                  poll=2.0, label="download_running")
-            if got.get("done"):
+            # Stop as soon as the phase is observed OR the run is already
+            # terminal - see `download_running_or_done`. The capture is gated on
+            # `running`, never on `done`, so a row that finished too fast to have
+            # an observable download phase simply has no shot of one.
+            got = self.s.wait_for(conditions.get("download_running_or_done"),
+                                  timeout=900, poll=2.0, label="download_running")
+            if got.get("running"):
                 time.sleep(2.0)
                 shots.append(self.s.capture(f"{name}_phase_download",
                                             ("screen", "wizard", "dashboard")))

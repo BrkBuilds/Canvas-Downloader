@@ -9,6 +9,7 @@ import hashlib
 import logging
 import re
 import sqlite3
+import unicodedata
 import time
 import uuid
 import difflib
@@ -50,6 +51,37 @@ def _match_key(name: str) -> str:
     """
     from shared.helpers import robust_filename_normalize
     return _FS_UNSAFE_RE.sub('', robust_filename_normalize(name))
+
+
+def _path_key(p) -> str:
+    """Canonical key for comparing a MANIFEST path against an ``os.walk`` path.
+
+    One primitive, because there were three and they disagreed. Every place that
+    asks "is this file on disk already tracked?" compares a path the downloader
+    constructed against a path the filesystem handed back, and the two can
+    differ without naming different files:
+
+    * **Case** - ``normcase`` (a no-op off Windows). A user renaming
+      ``Notes.pdf`` to ``notes.pdf`` is legal and invisible on a
+      case-insensitive volume, but the raw strings stop matching. Only
+      ``analyze_course`` handled this; ``heal_manifest`` and the untracked-file
+      count did not, so a case-only rename made a tracked file read as an
+      orphan - and inflated the "untracked files" number the review screen
+      shows, whose entire job is to match what the user sees in the folder.
+
+    * **Unicode normalisation** - NFC. APFS is normalisation-*preserving*, so a
+      modern Mac hands back exactly the NFC the downloader wrote. **HFS+ is
+      not**: it stores the NFD form, so ``os.walk`` returns decomposed names
+      there and no site handled it. That is a live concern for an external
+      drive, which is a perfectly ordinary place to keep a course folder.
+      Danish ``å`` decomposes (as do ``é ü ö ã ñ``); ``ø`` and ``æ`` do not,
+      which is exactly the kind of partial symptom that reads as random.
+
+    Both transforms are safe in the direction that matters: they can only make
+    two spellings of ONE name compare equal, never two different names.
+    """
+    return os.path.normcase(
+        os.path.normpath(unicodedata.normalize('NFC', str(p))))
 
 
 # Auto-discovery tier (c) name floor.
@@ -303,11 +335,23 @@ _ARCHIVE_EXTS = {'.zip', '.tar', '.gz'}
 
 def _is_partial_artifact(filename: str) -> bool:
     """True for in-flight/crashed atomic-write artifacts (``x.ext.part`` from
-    the file engines, ``x.part.ext`` from the Panopto ffmpeg downloader).
-    These must never be healed onto a missing entry, auto-discovered, counted
-    as untracked study material, or picked up by post-processing."""
+    the file engines, ``x.part.ext`` from the Panopto ffmpeg downloader,
+    ``x.tmp`` from the tmp+os.replace writers). These must never be healed onto
+    a missing entry, auto-discovered, counted as untracked study material, or
+    picked up by post-processing.
+
+    ``.tmp`` belongs here because two writers put their temp file INSIDE the
+    course folder rather than the config dir, so a crash or power loss between
+    the write and the ``os.replace`` strands one where the analyzer will find
+    it: ``shared.shortcuts.write_shortcut`` (``<name>.url.tmp`` /
+    ``<name>.webloc.tmp``, one per Panopto Shortcut output) and
+    ``converters.url`` (``Compiled_External_Links.tmp``). Left unrecognised,
+    a stranded temp file reads as study material the user never got - and is
+    eligible to be healed onto a genuinely missing manifest row, which would
+    point that row at a half-written file.
+    """
     low = filename.lower()
-    return low.endswith('.part') or '.part.' in low
+    return low.endswith('.part') or '.part.' in low or low.endswith('.tmp')
 
 
 def _is_archive_path(path_str: str) -> bool:
@@ -1012,7 +1056,7 @@ class SyncManager:
         # 2. Gather ALL existing orphaned local files (files not currently tracked)
         # We need to build a pool of candidates to test our missing entries against.
         tracked_local_paths = {
-            os.path.normpath(str(self.local_path / info.get('local_path', '')))
+            _path_key(self.local_path / info.get('local_path', ''))
             for cid, info in files_section.items()
             if not info.get('is_ignored') and cid not in missing_entries
         }
@@ -1026,7 +1070,7 @@ class SyncManager:
                         or _is_partial_artifact(filename)):
                     continue
                 filepath = Path(root) / filename
-                norm_str = os.path.normpath(str(filepath))
+                norm_str = _path_key(filepath)
                 if norm_str not in tracked_local_paths:
                     try:
                         sz = filepath.stat().st_size
@@ -1229,9 +1273,10 @@ class SyncManager:
             return _candidate_md5(cand)
 
         def _claim_key(p) -> str:
-            """Canonical key for the claimed-paths set (case/sep-insensitive on
-            Windows so a manifest-recorded path always matches its os.walk form)."""
-            return os.path.normcase(os.path.normpath(str(p)))
+            """Canonical key for the claimed-paths set. Delegates to the shared
+            _path_key so this cannot drift from the other two comparison sites -
+            it already had, by the Unicode-normalisation half."""
+            return _path_key(p)
 
         # M-3 hardening: a local file that already backs a manifest entry must
         # never be auto-discovered as the body of a SECOND canvas id (that
@@ -1761,13 +1806,13 @@ class SyncManager:
         # Count ALL untracked local files so they reflect in the "up to date" UI
         # This ensures the student's Course Folder count matches what the app reports
         tracked_local_paths = {
-            os.path.normpath(str(self.local_path / entry.get('local_path', '')))
+            _path_key(self.local_path / entry.get('local_path', ''))
             for entry in files_section.values()
         }
         
         untracked_count = 0
         for filepath in all_local_files:
-            if os.path.normpath(str(filepath)) not in tracked_local_paths:
+            if _path_key(filepath) not in tracked_local_paths:
                 # We count all untracked files (shortcuts, pages, personal notes, etc.)
                 # except the internal sync log
                 if not filepath.name.endswith("Canvas Updates & Deletions.txt") and filepath.name != "download_errors.txt":
@@ -2168,10 +2213,31 @@ class SyncManager:
         try:
             canvas_dt = datetime.fromisoformat(canvas_file.modified_at.replace('Z', '+00:00'))
             manifest_dt = datetime.fromisoformat(manifest_date_str.replace('Z', '+00:00'))
+            # Both sides must be timezone-AWARE before they can be compared:
+            # Python raises TypeError on a naive-vs-aware comparison, and that
+            # comparison used to sit OUTSIDE this try - so the one exception the
+            # handler names (TypeError) was the one it could not catch. Nothing
+            # above catches it either: analyze_course has no try around this
+            # call, so it would abort the whole course's analysis.
+            #
+            # Both strings are server-controlled and never validated. Canvas
+            # documents its timestamps as UTC and normally stamps the trailing
+            # Z that makes them aware, but "normally" is not a guarantee we
+            # hold - and fromisoformat happily accepts an offset-less
+            # "2026-07-01T10:00:00" or a bare "2026-07-01", both of which parse
+            # NAIVE. Assuming UTC for such a value is what Canvas documents, so
+            # this yields the RIGHT verdict rather than merely a safe one;
+            # falling into the handler below would answer "not updated" and
+            # silently skip a genuine update.
+            if canvas_dt.tzinfo is None:
+                canvas_dt = canvas_dt.replace(tzinfo=timezone.utc)
+            if manifest_dt.tzinfo is None:
+                manifest_dt = manifest_dt.replace(tzinfo=timezone.utc)
+            canvas_is_newer = canvas_dt > manifest_dt
         except (ValueError, TypeError):
             return False
 
-        if canvas_dt <= manifest_dt:
+        if not canvas_is_newer:
             return False
 
         # Canvas timestamp is newer. When we have NO md5 on either side to confirm

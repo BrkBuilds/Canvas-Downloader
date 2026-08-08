@@ -12,6 +12,7 @@ than invented.
 
 from __future__ import annotations
 
+import os
 import pathlib
 
 import pytest
@@ -500,11 +501,89 @@ def test_settings_save_is_read_modify_write():
     src = _auth_src()
     save = src.index("config_data['api_url'] = st.session_state.get('api_url', '')")
     head = src[max(0, save - 1200):save]
-    # The dict must come from the file, not from a bare literal at the top.
-    assert "json.load" in head, (
+    # The dict must come from the FILE, not from a bare literal at the top.
+    # Anchored on the behaviour rather than on one spelling of it: the read now
+    # lives in read_config_for_update(), which additionally distinguishes a
+    # damaged file from a temporarily unreadable one. Either form satisfies the
+    # invariant this test exists to protect; a fresh `config_data = {}` does not.
+    assert ("read_config_for_update()" in head or "json.load" in head), (
         "the settings save no longer reads the existing config first - "
         "unrelated top-level keys (the Panopto acknowledgement) will be lost"
     )
+
+
+def test_read_config_for_update_refuses_to_write_over_an_unreadable_file():
+    """The other half of the invariant above, and the one that actually lost data.
+
+    Reading the file first is not enough if a FAILED read degrades to {} and the
+    handler writes anyway - that discards every key it was not given a new value
+    for, which is the whole set this test is about. A transient OSError (config
+    dir on an offline share, an antivirus lock) must therefore forbid the write,
+    while damaged CONTENT is quarantined and allowed to start fresh.
+    """
+    import json
+    import tempfile
+    import ui.auth as auth
+
+    tmp = tempfile.mkdtemp()
+    cfg = os.path.join(tmp, "canvas_downloader_settings.json")
+    original = auth.CONFIG_FILE
+    auth.CONFIG_FILE = cfg
+    try:
+        kept = {"panopto_notice_ack_version": 3,
+                "panopto": {"model": "medium"},
+                "show_help_text": False}
+        with open(cfg, "w", encoding="utf-8") as f:
+            json.dump(kept, f)
+
+        # 1. healthy read round-trips every key
+        data, may_write = auth.read_config_for_update()
+        assert may_write is True and data == kept
+
+        # 2. a transient read failure forbids the write and leaves the file alone
+        real_open = open
+
+        def exploding_open(path, *a, **k):
+            if str(path) == cfg and (not a or "r" in str(a[0])):
+                raise OSError(13, "Permission denied")
+            return real_open(path, *a, **k)
+
+        import builtins
+        builtins.open = exploding_open
+        try:
+            data, may_write = auth.read_config_for_update()
+        finally:
+            builtins.open = real_open
+        assert may_write is False, (
+            "a transient read failure must forbid the write - saving now would "
+            "replace the user's settings with only the handler's own keys")
+        with real_open(cfg, encoding="utf-8") as f:
+            assert json.load(f) == kept, "the intact file must not be touched"
+
+        # 3. damaged CONTENT is preserved on disk, and a fresh write is allowed
+        with open(cfg, "wb") as f:
+            f.write("{'not': json,,".encode("utf-8"))
+        data, may_write = auth.read_config_for_update()
+        assert may_write is True and data == {}
+        assert any("corrupt" in n for n in os.listdir(tmp)), (
+            "a damaged settings file must be quarantined, not silently dropped")
+    finally:
+        auth.CONFIG_FILE = original
+
+
+def test_both_config_writers_honour_the_read_verdict():
+    """Every read-modify-write of the settings file must consult may_write.
+
+    Two handlers do this dance - the Settings dialog and the login success path.
+    A new one that reads through the helper and then writes unconditionally
+    would reintroduce exactly the loss the helper exists to prevent.
+    """
+    src = _auth_src()
+    assert src.count("read_config_for_update()") >= 2, (
+        "a settings read-modify-write is not going through the shared helper")
+    # The dialog refuses to save; login skips the write but still logs in.
+    assert "if not _cfg_may_write:" in src
+    assert "if _cfg_may_write:" in src
 
 
 def test_no_hardcoded_tool_id_in_the_source():

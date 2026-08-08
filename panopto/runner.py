@@ -478,6 +478,14 @@ def _run_panopto_batch(
     # stat at all: a course with transcription switched off shouldn't display a
     # "0 Transcribed" box (reads as a bug). See render_panopto_summary.
     summary["want_transcription"] = bool(any_want_tx)
+    # Same idea, for the DOWNLOAD stat. The Shortcut output made a run with zero
+    # downloads a normal, successful outcome for the first time - before it, a
+    # run that downloaded nothing never rendered the card at all. Without this
+    # the completion screen greets a link-only run with a "0 Downloaded" box,
+    # which is the exact misreading the transcription companion above exists to
+    # prevent. See render_panopto_summary.
+    summary["want_media"] = any(
+        any(_ts(t).get("output_" + k) for k in MEDIA_KINDS) for t in targets)
     model_path = str(pmodels.model_dir(model_id)) if engine_ready else None
     device = settings.get("device", "cpu")
     language = settings.get("language", "auto")

@@ -443,7 +443,22 @@ def start_download(model_id: str) -> bool:
         target=_download_worker, args=(model_id, entry), daemon=True,
         name=f"panopto-model-dl-{model_id}",
     )
-    t.start()
+    try:
+        t.start()
+    except RuntimeError:
+        # Thread creation can fail (resource exhaustion). The "downloading"
+        # claim above was made on the promise that _download_worker would run
+        # and reach a terminal status. If it never starts, nothing else ever
+        # writes that state: is_downloading() stays True for the life of the
+        # process, the card shows a progress bar that cannot move, and the
+        # early-return at the top of this function refuses every retry - so the
+        # user can never install the model again without restarting the app.
+        # Same guard, same reasoning as core.course_cache.fetch_courses.
+        logger.warning("Could not start the model download thread for '%s'.",
+                       model_id, exc_info=True)
+        _set_state(model_id, status="error",
+                   error="Could not start the download. Please try again.")
+        return False
     return True
 
 
@@ -476,13 +491,20 @@ def _stream_file(url: str, dest: Path, model_id: str, done_before: int) -> int:
 
 
 def _download_worker(model_id: str, entry: dict) -> None:
-    from huggingface_hub import HfApi, hf_hub_url
-
-    repo = entry["repo"]
-    target = model_dir(model_id)
-    target.mkdir(parents=True, exist_ok=True)
-
     try:
+        # Inside the try, not above it. Every one of these can raise on a real
+        # machine - the import (a broken/partial huggingface_hub), the key
+        # lookup, and above all mkdir (read-only volume, full disk, a config
+        # dir on an offline share) - and an exception here killed the thread
+        # with the state still reading "downloading". Nothing else writes that
+        # state, so the card showed a progress bar that could never move and
+        # start_download refused to retry for the rest of the session.
+        from huggingface_hub import HfApi, hf_hub_url
+
+        repo = entry["repo"]
+        target = model_dir(model_id)
+        target.mkdir(parents=True, exist_ok=True)
+
         api = HfApi(token=False)
         all_files = api.list_repo_files(repo)
         wanted = [

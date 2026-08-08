@@ -528,14 +528,27 @@ def test_highlight_regex_is_compiled_once_per_render_not_per_row():
     )
 
 
-def test_highlighting_escapes_before_inserting_markup():
-    """Highlighting inserts HTML, so escaping MUST come first or an institution
-    name becomes an injection vector."""
+def test_highlighting_never_emits_unescaped_institution_text():
+    """Highlighting inserts HTML, so every piece of the name that reaches
+    innerHTML must go through esc().
+
+    This used to assert that mark() escaped the WHOLE string up front, which
+    was the safest thing that also produced the entity-splice bug: the query is
+    then matched against the escaped text, so a term containing `&` lands
+    inside the `&amp;` escaping just produced. The invariant that actually
+    matters is not the ordering - it is that no branch concatenates raw text.
+    Verified against the real function: `<img src=x> College` searched for
+    "img" renders `&lt;<mark>img</mark> src=x&gt; College`.
+    """
     i = _JS.find("function mark(")
-    body = _JS[i:i + 300]
-    assert body.find("esc(text)") < body.find("replace(re"), (
-        "mark() must escape before inserting <mark>"
-    )
+    body = _JS[i:_JS.find("function render()")]
+    emitted = [ln.strip() for ln in body.splitlines()
+               if "out +=" in ln or "return" in ln]
+    assert emitted, "mark() body not found"
+    for line in emitted:
+        if "text" not in line:
+            continue
+        assert "esc(" in line, f"mark() emits unescaped text: {line}"
 
 
 def test_scroll_into_view_is_keyboard_only():
@@ -642,3 +655,369 @@ def test_the_default_label_comes_from_python_not_a_js_copy():
     assert picker.TRIGGER_LABEL not in _JS, (
         "the default label must be read off the element, not duplicated in JS"
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# The wrong-university class (found in the shipped list, 2026-08-08)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Ten seeded rows pointed at a real, working Canvas belonging to a DIFFERENT
+# university. That is the single most damaging thing this feature can do - a
+# missing school costs one paste into the field right beside the picker, a
+# wrong one hands a student someone else's login page with no hint that the
+# address is the problem.
+#
+# Two independent defects produced them, and BOTH are pinned below, because
+# fixing either alone leaves the list wrong:
+#
+#   1. `accepts()` scored SIMILARITY, and the deciding word is the one a
+#      similarity score discards. "University of British Columbia" vs
+#      "Columbia University" scores 0.667 and the domain corroborates the
+#      shared token; `british` - the whole answer - is simply not counted.
+#      Closed by `contradicts()`.
+#
+#   2. `corroborates()` built an institution's acronym from EVERY word, so
+#      "University of Central Florida" produced `uocf`, never `ucf`. A school
+#      whose Canvas host is its own acronym could not corroborate its own
+#      domain, so the matcher passed over the RIGHT host and settled for a
+#      wrong one that happened to corroborate. Closed by `acronyms()`.
+#
+# Defect 2 is why this is not merely a rejection problem: rejecting the wrong
+# pairing without fixing corroboration would have dropped five real
+# universities out of the list entirely.
+
+_TRUE_OWNER = [
+    # domain, the institution that actually owns it
+    ("courseworks2.columbia.edu",         "Columbia University"),
+    ("canvas.duke.edu",                   "Duke University"),
+    ("canvas.colorado.edu",               "University of Colorado Boulder"),
+    ("oklahomachristian.instructure.com", "Oklahoma Christian University"),
+    ("centralstate.instructure.com",      "Central State University"),
+    ("northpark.instructure.com",         "North Park University"),
+    ("usaonline.southalabama.edu",        "University of South Alabama"),
+    ("canvas.manchester.ac.uk",           "The University of Manchester"),
+    ("western.instructure.com",           "Western Colorado University"),
+    ("american.instructure.com",          "American University"),
+    # Published itself correctly; `clean_name` promoted the campus tenant into
+    # a claim on the whole system. Held by RENAME.
+    ("instructure.charlotte.edu",         "University of North Carolina at Charlotte"),
+]
+
+
+@pytest.mark.parametrize("domain,owner", _TRUE_OWNER)
+def test_domain_is_labelled_with_its_real_owner(domain, owner):
+    row = next((r for r in inst.DATA if r[1] == domain), None)
+    assert row is not None, f"{domain} vanished; it belongs to {owner}"
+    assert row[0] == owner, (
+        f"{domain} is labelled {row[0]!r} but belongs to {owner!r} - "
+        "this is the wrong-university failure, not a cosmetic label"
+    )
+
+
+# The other half: the displaced schools must be present, at their OWN host.
+# Without this the suite would pass on a list that simply deleted them.
+_DISPLACED = [
+    ("University of British Columbia", "canvas.ubc.ca"),
+    ("Colorado State University",      "colostate.instructure.com"),
+    ("Oklahoma State University",      "canvas.okstate.edu"),
+    ("University of Central Florida",  "webcourses.ucf.edu"),
+    ("University of North Texas",      "unt.instructure.com"),
+]
+
+
+@pytest.mark.parametrize("name,domain", _DISPLACED)
+def test_displaced_school_is_back_on_its_own_host(name, domain):
+    row = next((r for r in inst.DATA if r[0] == name), None)
+    assert row is not None, f"{name} lost its entry entirely"
+    assert row[1] == domain, f"{name} points at {row[1]}, not its own {domain}"
+
+
+def test_no_two_institutions_share_a_domain():
+    """One host, one school. A duplicate means a mispairing survived beside the
+    real owner rather than replacing it."""
+    seen = {}
+    for name, domain, _cc in inst.DATA:
+        assert domain not in seen, f"{domain} claimed by {seen[domain]!r} and {name!r}"
+        seen[domain] = name
+
+
+def test_no_institution_appears_twice():
+    names = [n.lower() for n, _d, _c in inst.DATA]
+    dupes = sorted({n for n in names if names.count(n) > 1})
+    assert not dupes, f"duplicate institutions: {dupes}"
+
+
+# ── Local-language display names ────────────────────────────────────────────
+#
+# A Dane types "Københavns", not "University of Copenhagen". The display form
+# is `Local (English)` so both are searchable and an exchange student who only
+# knows the English name still recognises the row.
+
+_LOCAL_NAMED = [
+    ("absalon.instructure.com", "Københavns Universitet", "University of Copenhagen"),
+    ("canvas.kth.se", "Kungliga Tekniska högskolan", "KTH Royal Institute of Technology"),
+    ("canvas.gu.se", "Göteborgs universitet", "University of Gothenburg"),
+    ("helsinki.instructure.com", "Helsingin yliopisto", "University of Helsinki"),
+    ("uit.instructure.com", "UiT Norges arktiske universitet", "UiT The Arctic University of Norway"),
+    ("heidelberg.instructure.com", "Universität Heidelberg", "Heidelberg University"),
+]
+
+
+@pytest.mark.parametrize("domain,local,english", _LOCAL_NAMED)
+def test_local_name_leads_and_english_is_kept(domain, local, english):
+    row = next((r for r in inst.DATA if r[1] == domain), None)
+    assert row is not None, f"{local} dropped out of the list"
+    assert row[0] == f"{local} ({english})", row[0]
+
+
+@pytest.mark.parametrize("domain,local,english", _LOCAL_NAMED)
+def test_both_names_are_searchable(domain, local, english):
+    """The whole point of carrying two names is that either one finds the row.
+
+    Searched through the picker's own haystack, not a re-implementation of it -
+    the bridge filters on exactly this string.
+    """
+    row = next(r for r in inst.DATA if r[1] == domain)
+    blob = picker.search_blob(row).lower()
+    for term in (local.split()[0].lower(), english.split()[-1].lower()):
+        assert term in blob, f"{term!r} does not find {row[0]!r}"
+
+
+def test_english_only_schools_keep_a_plain_name():
+    """`Local (English)` must not be applied where there is no local name -
+    "Harvard University (Harvard University)" would be absurd."""
+    for domain in ("canvas.harvard.edu", "cbscanvas.instructure.com"):
+        row = next((r for r in inst.DATA if r[1] == domain), None)
+        if row is not None:
+            assert "(" not in row[0], row[0]
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# The MATCHER itself (scripts/build_institution_list.py)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# The data tests above pin the ten rows that were wrong. These pin the RULE, so
+# a regeneration cannot reintroduce the class under a different pair of names.
+# Loaded by path because scripts/ is tooling and not an importable package.
+
+def _builder():
+    import importlib.util
+    p = Path(__file__).resolve().parents[1] / "scripts" / "build_institution_list.py"
+    spec = importlib.util.spec_from_file_location("_bil", p)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+# (seed, cc, domain, the account's self-declared name)
+_MUST_REJECT = [
+    # The ten that shipped. Account names are the finder's real ones.
+    ("University of British Columbia", "CA", "courseworks2.columbia.edu", "Columbia University"),
+    ("Duke Kunshan University", "CN", "canvas.duke.edu", "Duke University"),
+    ("Colorado State University", "US", "canvas.colorado.edu", "University of Colorado Boulder - CU Boulder"),
+    ("Oklahoma State University", "US", "oklahomachristian.instructure.com", "Oklahoma Christian University"),
+    ("University of Central Florida", "US", "centralstate.instructure.com", "Central State University"),
+    ("University of North Texas", "US", "northpark.instructure.com", "North Park University"),
+    ("University of South Carolina", "US", "usaonline.southalabama.edu", "University of South Alabama"),
+    ("Manchester Metropolitan University", "GB", "canvas.manchester.ac.uk", "The University of Manchester"),
+    ("University of Western Australia", "AU", "western.instructure.com", "Western Colorado University"),
+    ("American University in Dubai", "AE", "american.instructure.com", "American University"),
+    # The classes CLAUDE.md records as already-learned, kept so a future
+    # loosening of the vocabulary re-breaks them here first.
+    ("Boston University", "US", "bc.instructure.com", "Boston College"),
+    ("University of California Berkeley", "US", "berkeleycollege.instructure.com", "Berkeley College"),
+    ("University of Florida", "US", "floridacollege.instructure.com", "Florida College"),
+    ("KTH Royal Institute of Technology", "SE", "rmit.instructure.com", "RMIT University"),
+    ("Korea University", "KR", "yamaha.instructure.com", "Yamaha Music Korea"),
+    ("Cairo University", "EG", "aucegypt.instructure.com", "American University in Cairo"),
+    ("Open University", "GB", "canvas.open.uts.edu.au", "UTS Open"),
+]
+
+
+@pytest.mark.parametrize("seed,cc,domain,name", _MUST_REJECT)
+def test_matcher_refuses_a_different_institution(seed, cc, domain, name):
+    assert not _builder().accepts(seed, cc, domain, name), (
+        f"{seed!r} would be paired with {name!r} at {domain} - a different school"
+    )
+
+
+_MUST_ACCEPT = [
+    # Identical or near-identical names.
+    ("Copenhagen Business School", "DK", "cbscanvas.instructure.com", "Copenhagen Business School"),
+    ("Stockholm University", "SE", "canvas.su.se", "Stockholm University"),
+    ("Harvard University", "US", "canvas.harvard.edu", "Harvard University"),
+    ("The University of Melbourne", "AU", "canvas.lms.unimelb.edu.au", "The University of Melbourne"),
+    ("Erasmus University Rotterdam", "NL", "canvas.eur.nl", "Erasmus University of Rotterdam"),
+    # Published as an alias or an acronym - `contradicts` must not read a
+    # school's own short form as a rival school.
+    ("University of Copenhagen", "DK", "absalon.instructure.com", "UCPH"),
+    ("University of Copenhagen", "DK", "absalon.instructure.com", "Absalon"),
+    ("KTH Royal Institute of Technology", "SE", "canvas.kth.se", "KTH"),
+    ("Chalmers University of Technology", "SE", "canvas.chalmers.se", "Chalmers"),
+    ("University of British Columbia", "CA", "canvas.ubc.ca", "UBC Canvas"),
+    # Published in the local language: only reachable because LOCAL_NAMES is
+    # fed to the matcher as a probe. Delete that wiring and these fail.
+    ("University of Gothenburg", "SE", "canvas.gu.se", "Göteborgs Universitet"),
+    ("UiT The Arctic University of Norway", "NO", "uit.instructure.com", "UiT Norges arktiske universitet"),
+    ("University of Oslo", "NO", "uio.instructure.com", "Universitetet i Oslo"),
+    # The five whose OWN host the old corroboration bug could not recognise.
+    ("Colorado State University", "US", "colostate.instructure.com", "Colorado State University"),
+    ("Oklahoma State University", "US", "canvas.okstate.edu", "Oklahoma State University"),
+    ("University of Central Florida", "US", "webcourses.ucf.edu", "University of Central Florida"),
+    ("University of North Texas", "US", "unt.instructure.com", "University of North Texas"),
+    ("Duke University", "US", "canvas.duke.edu", "Duke University"),
+]
+
+
+@pytest.mark.parametrize("seed,cc,domain,name", _MUST_ACCEPT)
+def test_matcher_still_accepts_a_genuine_pairing(seed, cc, domain, name):
+    assert _builder().accepts(seed, cc, domain, name), (
+        f"{seed!r} no longer matches its own Canvas {domain} ({name!r}) - "
+        "the veto is over-strict and would drop this school from the list"
+    )
+
+
+def test_acronym_is_built_without_stopwords():
+    """The specific defect: 'University of Central Florida' must yield `ucf`.
+
+    Asserted directly because the symptom is silent - the school keeps an
+    entry, just pointing at somebody else's Canvas.
+    """
+    acro = _builder().acronyms
+    assert "ucf" in acro("University of Central Florida")
+    assert "unt" in acro("University of North Texas")
+    assert "ubc" in acro("University of British Columbia")
+
+
+def test_local_names_are_offered_to_the_matcher():
+    """LOCAL_NAMES has two jobs and the second one is invisible: it is what
+    lets an English seed match a locally-named account. A display-only change
+    would pass every rendering test and silently drop these schools."""
+    b = _builder()
+    assert b.local_probes("University of Gothenburg") == ["Göteborgs universitet"]
+    assert b.local_probes("Harvard University") == []
+
+
+def test_display_name_puts_the_local_name_first():
+    b = _builder()
+    assert b.display_name("University of Copenhagen") == \
+        "Københavns Universitet (University of Copenhagen)"
+    assert b.display_name("Harvard University") == "Harvard University"
+
+
+def test_every_shipped_reject_pairing_stays_out_of_the_data():
+    """The hand-review gate is only worth having if it is enforced."""
+    import importlib.util
+    p = Path(__file__).resolve().parents[1] / "scripts" / "institution_rejects.py"
+    spec = importlib.util.spec_from_file_location("_rej", p)
+    rej = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(rej)
+    by_domain = {d: n for n, d, _c in inst.DATA}
+    for seed, domain in rej.REJECT.items():
+        assert by_domain.get(domain) != seed, (
+            f"{seed!r} is paired with {domain} despite being rejected"
+        )
+    for domain in rej.REJECT_DOMAINS:
+        assert domain not in by_domain, f"{domain} is rejected outright but shipped"
+
+
+# ── Escaping in the bridge ──────────────────────────────────────────────────
+#
+# Both of these are invisible in review and neither raises: one corrupts an
+# attribute, the other corrupts the rendered name. Verified against the real
+# functions in node while fixing them; asserted here on the source, so the
+# suite needs no JS runtime.
+
+def test_bridge_escaper_covers_attribute_quotes():
+    """`render()` builds `data-u='https://...'`, so esc() is doing attribute
+    duty. Escaping only `& < >` leaves an apostrophe free to close the
+    attribute early."""
+    body = _JS.split("function esc(", 1)[1].split("function ", 1)[0]
+    for entity in ("&amp;", "&lt;", "&gt;", "&quot;", "&#39;"):
+        assert entity in body, f"esc() does not produce {entity}"
+
+
+def test_highlight_matches_before_it_escapes():
+    """Escaping first makes the query search the ESCAPED text, so a term
+    containing `&` matches inside the `&amp;` escaping just produced and
+    splices a <mark> into the middle of an entity."""
+    body = _JS.split("function mark(", 1)[1].split("\n  function ", 1)[0]
+    assert "re.exec(text)" in body, (
+        "mark() must run the regex over the RAW text"
+    )
+    assert "esc(text)" not in body.split("if (!re)", 1)[1].split("\n", 1)[1], (
+        "mark() escapes the whole string before matching - the entity-splice bug"
+    )
+    assert "re.lastIndex++" in body, (
+        "a zero-width match would spin forever without the guard"
+    )
+
+
+# ── Accent folding ──────────────────────────────────────────────────────────
+#
+# Introduced BY the local-name change and found by driving the running app:
+# every Nordic row became unreachable from a keyboard without its accents.
+# `kobenhavn`, `goteborg`, `hogskolan`, `lulea`, `haskolinn` and `nurnberg` each
+# matched zero rows - the exact students the local names were added for.
+
+@pytest.mark.parametrize("raw,folded", [
+    ("Københavns Universitet", "kobenhavns universitet"),
+    ("Göteborgs universitet", "goteborgs universitet"),
+    ("Háskólinn í Reykjavík", "haskolinn i reykjavik"),
+    ("Technische Universität Nürnberg", "technische universitat nurnberg"),
+    ("Luleå tekniska universitet", "luleaa tekniska universitet"),
+    ("Universitatea Politehnica", "universitatea politehnica"),
+])
+def test_fold_writes_what_a_plain_keyboard_types(raw, folded):
+    assert picker.fold(raw) == folded
+
+
+def test_fold_handles_the_letters_nfkd_cannot():
+    """`ø`, `æ` and `ß` are letters, not accented forms - NFKD leaves them be,
+    so they need an explicit mapping or folding silently does nothing."""
+    import unicodedata
+    for ch in ("ø", "æ", "ß"):
+        stripped = "".join(c for c in unicodedata.normalize("NFKD", ch)
+                           if not unicodedata.combining(c))
+        assert stripped == ch, f"NFKD unexpectedly decomposes {ch!r}"
+        assert picker.fold(ch) != ch, f"fold() leaves {ch!r} untouched"
+
+
+_UNACCENTED_QUERIES = [
+    ("kobenhavn", "absalon.instructure.com"),
+    ("goteborg", "canvas.gu.se"),
+    ("hogskolan", "canvas.du.se"),
+    ("lulea", "canvas.ltu.se"),
+    ("haskolinn", "reykjavik.instructure.com"),
+    ("nurnberg", "canvas.utn.de"),
+]
+
+
+@pytest.mark.parametrize("query,domain", _UNACCENTED_QUERIES)
+def test_a_keyboard_without_the_accents_still_finds_the_school(query, domain):
+    """Searched through the real haystack - this is the string the bridge
+    substring-matches, so a pass here is a pass in the app."""
+    row = next((r for r in inst.DATA if r[1] == domain), None)
+    assert row is not None, f"{domain} not in the list"
+    assert query in picker.search_blob(row).lower(), (
+        f"{query!r} cannot find {row[0]!r}"
+    )
+
+
+@pytest.mark.parametrize("query,domain", [
+    ("københavn", "absalon.instructure.com"),
+    ("göteborg", "canvas.gu.se"),
+])
+def test_the_accented_spelling_keeps_working(query, domain):
+    """Folding must ADD a spelling, never replace one."""
+    row = next(r for r in inst.DATA if r[1] == domain)
+    assert query in picker.search_blob(row).lower()
+
+
+def test_folding_only_adds_a_copy_where_it_changes_something():
+    """An ASCII-only row must not carry a duplicate of itself - 1,797 rows go
+    into one attribute and the payload is re-parsed on every rerun."""
+    row = next(r for r in inst.DATA if r[1] == "canvas.harvard.edu")
+    blob = picker.search_blob(row)
+    assert blob.lower().count("harvard") == blob.count("harvard"), blob
+    assert blob == f"{inst.search_blob(row)} {picker.COUNTRY_NAMES.get(row[2], '')}".strip()

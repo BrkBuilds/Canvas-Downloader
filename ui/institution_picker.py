@@ -67,6 +67,8 @@ KEYBOARD AND SCREEN READERS
 """
 from __future__ import annotations
 
+import unicodedata
+
 
 
 from shared.helpers import esc as _he
@@ -159,6 +161,33 @@ COUNTRY_NAMES = {
 }
 
 
+#: Letters that do NOT decompose under NFKD, with what a keyboard without them
+#: types instead. `ø` and `æ` are single code points with no combining form, so
+#: no amount of Unicode normalisation turns them into `o` and `ae`.
+_FOLD_PAIRS = (
+    ("ø", "o"), ("æ", "ae"), ("å", "aa"), ("ß", "ss"),
+    ("ð", "d"), ("þ", "th"), ("ł", "l"), ("đ", "d"), ("ı", "i"), ("œ", "oe"),
+)
+
+
+def fold(text: str) -> str:
+    """*text* as someone would type it on a keyboard without the accents.
+
+    NFKD splits a letter from its combining mark so the mark can be dropped -
+    which handles `ö`, `ü`, `é`, `í`. It does NOT handle `ø`, `æ` or `ß`, which
+    are letters in their own right, so those are mapped explicitly first.
+
+    `å` folds to `aa`, not `a`: that is the Danish/Norwegian substitution people
+    actually type (Aarhus, Aalborg), and it still matches a query of `a` by
+    prefix. `aa` also survives the NFKD pass unchanged.
+    """
+    out = (text or "").lower()
+    for src, dst in _FOLD_PAIRS:
+        out = out.replace(src, dst)
+    return "".join(c for c in unicodedata.normalize("NFKD", out)
+                   if not unicodedata.combining(c))
+
+
 def search_blob(row) -> str:
     """The searchable haystack for one institution.
 
@@ -167,8 +196,27 @@ def search_blob(row) -> str:
     than in the generated data because it is a presentation concern, and it is
     the ONE place the haystack is defined - the payload the bridge searches is
     produced from this function, so the two cannot drift.
+
+    It also carries an ACCENT-FOLDED copy of the whole thing, which local-
+    language names made necessary the moment they shipped: the row is called
+    "Københavns Universitet", and a student who types `kobenhavn` - because
+    their keyboard has no `ø`, or because they simply did not bother - matched
+    nothing at all. Measured in the running app: `kobenhavn`, `goteborg`,
+    `hogskolan`, `lulea`, `haskolinn` and `nurnberg` each returned ZERO rows.
+    Folding the HAYSTACK rather than the query is what keeps the bridge
+    untouched: both spellings are present, so a plain substring test finds the
+    row whichever way it was typed, and the accented query keeps working
+    because the original text is still there beside the folded copy.
+
+    Known and accepted: an UNACCENTED query finds the row but does not
+    highlight it, because `mark()` runs against the displayed (accented) text
+    and the two strings differ in length. Mapping folded offsets back onto the
+    original is real work for a yellow background; being findable is the part
+    that matters, and an accented query still highlights normally.
     """
-    return f"{_inst.search_blob(row)} {COUNTRY_NAMES.get(row[2], '')}".strip()
+    blob = f"{_inst.search_blob(row)} {COUNTRY_NAMES.get(row[2], '')}".strip()
+    folded = fold(blob)
+    return blob if folded == blob else f"{blob} {folded}"
 
 
 def build_payload() -> str:
@@ -298,8 +346,14 @@ _BRIDGE_JS = """
     info: "<svg viewBox='0 0 24 24' width='13' height='13' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><line x1='12' y1='16' x2='12' y2='12'/><line x1='12' y1='8' x2='12.01' y2='8'/></svg>"
   };
 
+  // Escapes for BOTH element text and an attribute VALUE. The quotes matter:
+  // `render()` builds `data-u='https://...'`, so an unescaped apostrophe would
+  // close the attribute early. No shipped domain contains one today - which is
+  // exactly the kind of fact that stops being true when someone adds a row, and
+  // the failure would be markup corruption, not a visible error.
   function esc(s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   // Look the host up in the SERVER-RENDERED option list. Reusing that markup
@@ -459,11 +513,26 @@ _BRIDGE_JS = """
     try { return new RegExp('(' + pat + ')', 'gi'); } catch (e) { return null; }
   }
 
+  // Match on the RAW text, escape each piece afterwards.
+  //
+  // The order is the whole point. Escaping first and then matching searches the
+  // ESCAPED string, so a query containing `&` matches inside the `&amp;` that
+  // escaping just produced and splices a <mark> into the middle of an entity -
+  // `<mark>&</mark>amp;` renders as literal "&amp;" in an institution's name.
+  // Matching first also means a term is highlighted where the user actually
+  // sees it, since `matches()` searched the raw text too.
   function mark(text, re) {
-    var safe = esc(text);
-    if (!re) return safe;
+    text = String(text);
+    if (!re) return esc(text);
     re.lastIndex = 0;
-    return safe.replace(re, '<mark>$1</mark>');
+    var out = '', last = 0, m;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index > last) out += esc(text.slice(last, m.index));
+      out += '<mark>' + esc(m[0]) + '</mark>';
+      last = m.index + m[0].length;
+      if (m[0].length === 0) re.lastIndex++;   // a zero-width match would spin
+    }
+    return out + esc(text.slice(last));
   }
 
   function render() {

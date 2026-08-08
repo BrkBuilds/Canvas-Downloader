@@ -207,14 +207,30 @@ def _timeout_for(src: Path, base: int = 180) -> int:
 def _as_posix(path: Path) -> str:
     """Return a POSIX path string safe for embedding in an AppleScript string literal.
 
-    Escapes backslashes first, then double-quotes. Use inside AppleScript
-    string literals as: ``POSIX file "{_as_posix(path)}"``
+    Escapes backslashes first, then double-quotes, then flattens line breaks.
+    Use inside AppleScript string literals as: ``POSIX file "{_as_posix(path)}"``
 
     IMPORTANT: Callers that build AppleScript ``script`` strings must use this
     function for every path interpolated into the script to prevent AppleScript
     injection via filenames containing double-quotes or backslashes.
+
+    The line breaks matter and were missing. An AppleScript string literal
+    cannot span lines, so a raw newline inside one is a SYNTAX error that takes
+    the whole script down - meaning the conversion fails with an opaque
+    osascript message rather than doing anything. macOS permits every byte
+    except ``/`` and NUL in a filename, so this is reachable two ways: the
+    user's own download folder (the picker returns whatever they chose), and an
+    extracted archive member, whose name comes from the zip and never passes
+    through ``_sanitize_filename``. ``shared.helpers.native_folder_picker``
+    already escapes ``\\n``/``\\r`` for exactly this reason when it builds its
+    own AppleScript - this is the same rule, applied at the shared helper the
+    module docstring points every caller at.
     """
-    return str(path.resolve()).replace('\\', '\\\\').replace('"', '\\"')
+    return (str(path.resolve())
+            .replace('\\', '\\\\')
+            .replace('"', '\\"')
+            .replace('\n', ' ')
+            .replace('\r', ' '))
 
 
 def _try_close_document_after_timeout(app_name: str, posix_src: str) -> None:

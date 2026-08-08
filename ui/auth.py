@@ -187,6 +187,77 @@ def _safe_keyring_delete(service: str, username: str) -> bool:
         logger.warning(f"Keyring delete_password failed: {e}")
         return False
 
+def read_config_for_update() -> tuple[dict, bool]:
+    """``(config, may_write)`` for a read-modify-write of the settings file.
+
+    Every handler that changes ONE setting has to read the whole file first,
+    because the file is shared: ``panopto`` (the engine block),
+    ``panopto_notice_ack_version`` (a legal acknowledgement), the download
+    defaults, ``show_help_text``, ``default_download_path``, and more. The
+    Settings dialog's own comment already states the rule - "this handler is a
+    read-modify-write of the whole config, so panopto_notice_ack_version and the
+    'panopto' engine block survive untouched - which is exactly why it must not
+    be rewritten as a fresh dict."
+
+    Its ``except`` branch did exactly that. A read that FAILED degraded to ``{}``
+    and the handler wrote anyway, so one unreadable read silently replaced every
+    key it had not been given a new value for. This is the same class the sync
+    stores were hardened against (``core.library._update``,
+    ``shared.helpers.atomic_update_sync_pairs``); the settings file was simply
+    never swept with them.
+
+    Split by CAUSE, exactly as those two do, because the right answer differs:
+
+    * **damaged content** - malformed JSON, or bytes that are not valid UTF-8
+      (``UnicodeDecodeError`` is a *sibling* of ``JSONDecodeError``, not a
+      subclass; both are ``ValueError``). The file cannot be preserved in place,
+      so it is quarantined to ``*.corrupt.json`` - the ``core.preset_manager``
+      pattern, which keeps the data on disk - and writing proceeds, so the user
+      gets a working settings file back.
+    * **transient ``OSError``** - the config dir on a share that is offline, an
+      antivirus lock, a permissions blip. Nothing is wrong with the file, so the
+      caller must NOT write: ``may_write`` is False and the settings the user
+      just changed are not persisted this time, which is recoverable. Silently
+      discarding their Panopto model, their acknowledged notice and their
+      download folder is not.
+    * **missing file** - a genuinely fresh install. ``({}, True)``.
+    """
+    if not os.path.exists(CONFIG_FILE):
+        return {}, True
+    try:
+        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+            return _migrate_config(json.load(f)), True
+    except OSError as e:
+        logger.warning(
+            "Could not read settings at %s (%s); skipping this write so the "
+            "existing settings are not discarded.", CONFIG_FILE, e)
+        return {}, False
+    except Exception as e:
+        _quarantine_config(f"{type(e).__name__}: {e}")
+        return {}, True
+
+
+def _quarantine_config(reason: str) -> None:
+    """Move a damaged settings file aside so its content survives on disk.
+
+    Never overwrites an existing quarantine file: the FIRST one is the copy
+    closest to the last good state, so later ones take a numeric suffix. Mirrors
+    ``core.library._quarantine``.
+    """
+    try:
+        base = os.path.splitext(CONFIG_FILE)[0]
+        target = f"{base}.corrupt.json"
+        n = 1
+        while os.path.exists(target):
+            n += 1
+            target = f"{base}.corrupt-{n}.json"
+        os.replace(CONFIG_FILE, target)
+        logger.warning("Settings file was unreadable (%s); moved it to %s",
+                       reason, target)
+    except OSError as e:
+        logger.warning("Could not quarantine the damaged settings file: %s", e)
+
+
 def write_config_atomically(config: dict) -> bool:
     """Persist the settings file without a window where it is truncated.
 
@@ -258,6 +329,19 @@ def _save_fallback_token(username: str, token: str) -> None:
                     existing = json.load(f)
                 if existing.get("_version") == 2:
                     data = existing
+            except OSError as e:
+                # Intact but unreadable right now (antivirus lock, share
+                # offline). Writing would replace the store with just THIS
+                # account, silently logging the user out of every other Canvas
+                # they have saved. A token that is not cached is a re-login;
+                # a token that is deleted is the same re-login for every other
+                # account too, so decline the write. (Damaged content still
+                # falls through to a fresh v2 store below - there is nothing
+                # to preserve, and refusing would strand the user with no
+                # fallback at all on the one path where keyring already failed.)
+                logger.warning(
+                    "Fallback token store unreadable (%s); not overwriting it.", e)
+                return
             except Exception:
                 pass
         data[username] = encrypted_b64
@@ -2148,14 +2232,13 @@ def render_login_page(fetch_courses_fn):
                     # Successful reconnect clears any "your connection expired" banner.
                     st.session_state.pop('reauth_reason', None)
 
-                    # Setup base config data
-                    config_data = {}
-                    if os.path.exists(CONFIG_FILE):
-                        try:
-                            with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                                config_data = _migrate_config(json.load(f))
-                        except Exception:
-                            pass
+                    # Setup base config data. Through the shared helper so an
+                    # unreadable-but-intact settings file SKIPS the write below
+                    # instead of replacing it with just the three keys set here
+                    # - which is what the old `except Exception: pass` did, on
+                    # the one run per install that migrates a token to the
+                    # keyring. See read_config_for_update.
+                    config_data, _cfg_may_write = read_config_for_update()
 
                     config_data['api_url'] = st.session_state['api_url']
                     if 'concurrent_downloads' in st.session_state:
@@ -2186,25 +2269,31 @@ def render_login_page(fetch_courses_fn):
                             detail=f"Could not save your token securely to your device ({e}). You can continue using the app, but you may need to log in again next time."
                         )
 
-                    try:
-                        _tmp_config = CONFIG_FILE + '.tmp'
-                        with open(_tmp_config, 'w', encoding='utf-8') as f:
-                            json.dump(config_data, f)
-                            f.flush()
-                            os.fsync(f.fileno())
-                        os.replace(_tmp_config, CONFIG_FILE)
-                    except Exception as e:
-                        # Clean up orphaned temp file on failure
+                    # A login must never be blocked by a settings write, so an
+                    # unwritable config is skipped silently here rather than
+                    # surfaced: the token is already in the keyring and the
+                    # session is live. Writing anyway is the one thing that
+                    # would do damage.
+                    if _cfg_may_write:
                         try:
-                            if os.path.exists(_tmp_config):
-                                os.unlink(_tmp_config)
-                        except OSError:
-                            pass
-                        from ui.amber_notice import render_amber_notice
-                        render_amber_notice(
-                            "Settings Storage Warning",
-                            detail=f"Could not save your preferences ({e}). Your session is active, but your settings may not persist."
-                        )
+                            _tmp_config = CONFIG_FILE + '.tmp'
+                            with open(_tmp_config, 'w', encoding='utf-8') as f:
+                                json.dump(config_data, f)
+                                f.flush()
+                                os.fsync(f.fileno())
+                            os.replace(_tmp_config, CONFIG_FILE)
+                        except Exception as e:
+                            # Clean up orphaned temp file on failure
+                            try:
+                                if os.path.exists(_tmp_config):
+                                    os.unlink(_tmp_config)
+                            except OSError:
+                                pass
+                            from ui.amber_notice import render_amber_notice
+                            render_amber_notice(
+                                "Settings Storage Warning",
+                                detail=f"Could not save your preferences ({e}). Your session is active, but your settings may not persist."
+                            )
 
                     st.rerun()
                 # `message is None` only when an input pre-check above already
@@ -3741,14 +3830,13 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 if new_default_path and live_path in (prev_default_path, _downloads_default, ''):
                     st.session_state['download_path'] = new_default_path
 
-                if os.path.exists(CONFIG_FILE):
-                    try:
-                        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                            config_data = _migrate_config(json.load(f))
-                    except Exception:
-                        config_data = {}
-                else:
-                    config_data = {}
+                # Read-modify-write through the ONE helper that distinguishes
+                # "the file is damaged" from "the file could not be read right
+                # now". The old inline form degraded BOTH to {} and then wrote,
+                # which discarded every key this handler does not set - the
+                # Panopto engine block and the acknowledged legal notice
+                # included. See read_config_for_update.
+                config_data, _cfg_may_write = read_config_for_update()
 
                 config_data['api_url'] = st.session_state.get('api_url', '')
                 config_data.pop('api_token', None)
@@ -3774,6 +3862,19 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 # rewritten as a fresh dict.
                 from panopto.settings import GLOBAL_ENABLED_KEY as _PAN_ENABLED_KEY
                 config_data[_PAN_ENABLED_KEY] = bool(temp_pan_enabled)
+
+                if not _cfg_may_write:
+                    # The existing file is intact but unreadable right now, so
+                    # writing would replace it with only the keys set above.
+                    # Say so rather than reporting a save that discarded things.
+                    from ui.amber_notice import render_error_notice
+                    render_error_notice(
+                        "Could not save settings: your settings file could not be "
+                        "read just now, and saving would have discarded the "
+                        "settings it holds. Please try again.")
+                    st.session_state.pop('_temp_default_path', None)
+                    st.session_state.pop('_stg_dialog_open', None)
+                    st.rerun(scope="app")
 
                 try:
                     _tmp_config = CONFIG_FILE + '.tmp'
