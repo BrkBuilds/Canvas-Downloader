@@ -38,6 +38,16 @@ REJECT: dict[str, str] = {
     "University of Arizona": "arizonachristian.instructure.com",
     "University of Arkansas": "arkansasstateuniversity.instructure.com",
     "University of Kansas": "canvas.kansascity.edu",                 # Kansas City University
+    # NC State vs UNC Charlotte. The Charlotte tenant publishes itself
+    # correctly, but `clean_name` strips the campus off " - Charlotte" and what
+    # is left shares every distinctive token with this seed, on a host
+    # (`charlotte.edu`) that vouches for the one word that would have separated
+    # them. Measured 2026-08-09: the seed took it, and because core rows beat
+    # fill rows in the dedupe the RENAME below never applied - so the row
+    # shipped as "North Carolina State University" pointing at UNC Charlotte,
+    # and Charlotte lost its own entry. NC State keeps a row either way: its
+    # own tenant publishes as "NC State University" and arrives through FILL.
+    "North Carolina State University": "instructure.charlotte.edu",
     "University of Missouri": "missouriwestern.instructure.com",
     "University of Nebraska Lincoln": "lincoln.instructure.com",     # Lincoln University
     "University of Oklahoma": "oklahomachristian.instructure.com",
@@ -135,4 +145,19 @@ RENAME: dict[str, str] = {
     # list one row above the real Chapel Hill. Any "X - <campus>" account has
     # this shape; rename rather than drop, because its own students need it.
     "instructure.charlotte.edu": "University of North Carolina at Charlotte",
+
+    # Same shape, via the PARENTHETICAL half of clean_name rather than the
+    # " - " half: this account publishes as "The Hong Kong University of
+    # Science and Technology (GuangZhou)" and the qualifier that is stripped is
+    # the campus. Measured 2026-08-09 - it then outscored `canvas.ust.hk`, the
+    # main Clear Water Bay campus, which publishes only as the acronym "HKUST"
+    # and so has almost no token overlap with the seed. A student at the main
+    # campus picked their own university's name and got Guangzhou's Canvas.
+    # The ALIASES entry for the seed is the other half of this fix.
+    # NOTE the qualifier is NOT parenthesised. `dedupe_key` runs `clean_name`
+    # again on the finished label, so a "(...)" or " - ..." tail is stripped
+    # right back off and the row collides with the one it was renamed to be
+    # distinct FROM - measured: with "(Guangzhou)" this account vanished
+    # entirely instead of sitting beside the main campus.
+    "hkust-gz.instructure.com": "Hong Kong University of Science and Technology Guangzhou",
 }

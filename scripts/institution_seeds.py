@@ -32,6 +32,20 @@ SEEDS: list[tuple[str, str]] = [
     ("KTH Royal Institute of Technology", "SE"), ("Chalmers University of Technology", "SE"),
     ("University of Gothenburg", "SE"), ("Linkoping University", "SE"), ("Umea University", "SE"),
     ("Karolinska Institutet", "SE"), ("Stockholm School of Economics", "SE"), ("Malmo University", "SE"),
+    # These eight had a LOCAL_NAMES entry but no seed, so the local name could
+    # never reach the list: LOCAL_NAMES is only consulted for a SEED. The
+    # previously shipped module contains "Hogskolan Dalarna (Dalarna
+    # University)" and "Technische Universitat Nurnberg (...)", which this
+    # generator can no longer reproduce - i.e. the data was ahead of the code,
+    # and a regeneration silently dropped the Swedish and German names. A local
+    # name is not decoration: it is what the institution's own students type,
+    # and `local_probes` also feeds it to the matcher, so without it a
+    # locally-named account and its English seed read as two different schools.
+    ("Lulea University of Technology", "SE"), ("Karlstad University", "SE"),
+    ("Mid Sweden University", "SE"), ("Dalarna University", "SE"),
+    ("Linnaeus University", "SE"), ("Orebro University", "SE"),
+    ("University of Technology Nuremberg", "DE"),
+    ("Pontifical Catholic University of Chile", "CL"),
     ("University of Helsinki", "FI"), ("Aalto University", "FI"), ("Tampere University", "FI"),
     ("University of Turku", "FI"), ("University of Oulu", "FI"), ("University of Jyvaskyla", "FI"),
     ("University of Iceland", "IS"), ("Reykjavik University", "IS"),

@@ -76,6 +76,7 @@ import re
 import string
 import sys
 import time
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -116,33 +117,139 @@ _GENERIC = {"university", "universitat", "universitet", "universiteit", "univers
 _BAD_ACCOUNT = re.compile(
     r"\b(non-sso|nonsso|dev|test|testing|sandbox|beta|demo|training|trial|archive|"
     r"archived|old|legacy|staging|stage|qa|practice|template|sample|catalog|guest|"
+    # A pre-college / visiting-student tenant is a real programme, but it is
+    # not the university, and it can OUTRANK the university's own account:
+    # measured, `app.opvs.georgetown.edu` ("Georgetown University - Pre-College
+    # & Visiting Student Programs") beat `georgetown.instructure.com` on ccTLD
+    # alone and then evicted it in the dedupe. The FILL blocklist has excluded
+    # `pre-college` since it existed; the SEED pool never did.
+    r"pre[- ]?college|visiting student|"
     r"alumni|athletics|bulldogs|parents|k-?12|extension|continuing|summer|pilot|"
     r"executive|exec ed|bookstore|conference|camp|canvascon|isd|county|district|"
     r"high school|public schools|academy)\b", re.I)
 
-_HIGHER_ED = re.compile(
-    r"\b(universit\w*|college|institute of technology|polytechnic|hochschule|"
-    r"escuela|faculdade|instituto|school of \w+)\b", re.I)
+# ── The FILL gate: is this account an educational institution? ───────────────
+#
+# THIS IS NOT A LEVEL FILTER, and it used to be one. The app is for every
+# institution and every level that uses Canvas - erhvervsakademier, VUC,
+# gymnasier, konservatorier, K-12 districts - not only universities (confirmed
+# with the product owner 2026-08-09). The old `_HIGHER_ED` allowlist named only
+# English, Spanish, Portuguese and German higher-ed words, so it silently
+# excluded two whole categories at once:
+#
+#   * every non-university institution, whatever its language; and
+#   * every institution whose own published name is not in one of those four
+#     languages - which is most of the Nordic market. Measured: Denmark shipped
+#     TWO entries (KU and CBS, both rescued by SEEDS) while Erhvervsakademi
+#     Aarhus, Den Danske Filmskole, VUC Roskilde, Det Kgl. Danske
+#     Musikkonservatorium and IBA all verified as live Canvas hosts and were
+#     dropped on the word gate alone. The same regex loses the Norwegian
+#     "Hogskolen" family and the Finnish "korkeakoulu" family entirely.
+#
+# WHY WIDENING THIS IS SAFE, and the reason it is the fill gate that moved and
+# not `_BAD_ACCOUNT`: the two paths in `build()` have completely different risk.
+# The SEED path PAIRS a curated name with some account's domain, and that is
+# where a wrong university comes from - the ten shipped in 2026-08-08 all came
+# from there. The FILL path maps an account's OWN published name onto its OWN
+# domain; there is nothing to mispair, by construction. `_BAD_ACCOUNT`, which
+# gates the seed pool, is deliberately UNTOUCHED, so no seed pairing can change
+# because of anything here. `tests/test_institution_gate.py` pins that.
+#
+# Matching is done on an accent-FOLDED name so the table can be written in
+# plain ASCII: "Universitetet", "Universitat" and "Universite" are one entry.
+# Nordic and German compounds are matched as substrings without a leading word
+# boundary on purpose - "Erhvervsakademi" and "Fachhochschule" carry the
+# education word in the middle of a single token, so \b would reject them.
+_EDUCATION = re.compile(
+    # --- English and international --------------------------------------
+    r"\buniversit\w*|\bcolleges?\b|\bschools?\b|\bschooling\b|"
+    r"\binstitutes?\b|\bpolytechnics?\b|\bseminary\b|\bconservator\w*|"
+    r"\bacadem(?:y|ies|ia|ie)\b|\bcampus\b|\bfacult(?:y|ies)\b|"
+    r"\beducation(?:al)?\b|\bk-?12\b|\bisd\b|\bschool district\b|"
+    r"\b(?:high|middle|elementary|primary|secondary|grammar|charter)\b|"
+    r"\bpreparatory\b|\bprep\b|\bmontessori\b|\bgymnasium\b|\blyce(?:e|um)\b|"
+    # US school-district and secondary shorthand, from a review of what the
+    # allowlist still rejected: "Madera Unified", "Oyster Bay-East Norwich
+    # CSD", "Uvalde CISD", "Life Skills HS" and "Warren County Career Center"
+    # are all real schools carrying no spelled-out education word.
+    r"\bunified\b|\b(?:c|u|ci|uf)?sd\b|\bhs\b|"
+    r"\bcareer (?:center|centre|technical)\b|\byeshiva\w*|\bmadrasa\w*|"
+    # --- Nordic (da / no / sv / is / fi) ---------------------------------
+    r"universitet\w*|hogskol\w*|hoyskol\w*|hojskol\w*|"
+    r"\w*skole\w*|\w*skola\w*|\w*skolan\b|\w*skolen\b|"
+    r"gymnasie\w*|\w*akademi\w*|"
+    r"konservatori\w*|larosate\w*|laereanstalt\w*|videregaende\w*|"
+    r"yliopisto\w*|korkeakoulu\w*|\bkoulu\w*|\blukio\w*|"
+    r"haskol\w*|menntaskol\w*|\bvuc\b|"
+    # --- German / Dutch --------------------------------------------------
+    r"hochschul\w*|\w*schule\w*|berufskolleg\w*|universiteit\w*|"
+    r"hogeschool\w*|onderwijs\w*|"
+    # --- Romance ---------------------------------------------------------
+    r"universidad\w*|universidade\w*|universita\w*|"
+    r"escuela\w*|escola\w*|\bcolegi\w*|instituto\w*|"
+    r"\binstitut\b|facultad\w*|faculdade\w*|\becole\w*|\bscuola\w*|"
+    r"\bliceo\w*|accademia\w*",
+    re.I)
 
-_NOT_HIGHER_ED = re.compile(
-    r"\b(high school|secondary|primary|elementary|middle school|isd|district|county|"
-    r"public schools|academy|grammar|k-?12|charter|sandbox|test|testing|dev|demo|"
-    r"training|catalog|guest|alumni|athletics|parents|conference|camp|bootcamp|"
-    r"church|ministry|hospital|clinic|inc\.?|llc|corp|prep|preparatory|montessori|"
-    r"daycare|driving|beauty|barber|massage|yoga|dance|music school|tutoring|"
-    # "College" is a SECONDARY school in much AU/UK/IE naming; these qualifiers
-    # are what distinguish it, since the word itself cannot.
-    r"anglican|christian college|catholic college|lutheran|baptist college|"
-    r"seminary|bible college|boys|girls|junior high|"
-    # Outreach/adjacent tenants sold under a university's brand.
-    r"press|credentials|continuing education|continuing studies|executive education|"
-    r"staff and students|corporate|partners|vendor|"
+# Things that are NOT an institution, or are a SUB-TENANT of one.
+#
+# This is the surviving half of the old `_NOT_HIGHER_ED`. Everything in it is
+# here because it is not a school at all (a church, a vendor, a hospital, a
+# corporate training portal) or because it is one school's side entrance
+# (alumni, catalog, continuing education, athletics, a sandbox). The LEVEL words
+# that used to sit here - high school, secondary, primary, elementary, middle
+# school, academy, grammar, charter, k-12, prep, montessori, isd, district,
+# county, public schools, boys, girls, junior high - are gone, because those are
+# now exactly the institutions we are trying to include.
+#
+# `seminary` and `bible college` are likewise gone: a theological college is a
+# real institution whose students have Canvas courses. `church` and `ministry`
+# stay - those are congregations, not schools.
+_NOT_AN_INSTITUTION = re.compile(
+    r"\b(sandbox|test|testing|dev|demo|training|catalog|guest|alumni|athletics|"
+    r"parents|conference|camp|bootcamp|church|ministry|hospital|clinic|"
+    r"inc\.?|llc|corp|daycare|driving|beauty|barber|massage|yoga|dance|"
+    r"tutoring|press|credentials|continuing education|continuing studies|"
+    r"executive education|staff and students|corporate|partners|vendor|"
     r"pre-?college|professional development|micro-?credential|mooc)\b", re.I)
 
-# Australian state education namespaces and the like are unambiguously K-12.
-_SCHOOL_DOMAIN = re.compile(
-    r"\.(nsw|vic|qld|wa|sa|tas|act|nt)\.(edu|gov)\.au$|\.sch\.uk$|\.k12\.|"
-    r"\.college$|\.school$", re.I)
+
+def fold(s: str) -> str:
+    """Accent-folded lowercase, so one ASCII table matches every spelling.
+
+    o-slash and ae are not accented forms of anything, so NFKD leaves them
+    alone and they need an explicit map - the same trap `search_blob` in
+    ui/institution_picker.py documents for the search haystack.
+    """
+    s = (s.replace("\u00f8", "o").replace("\u00d8", "O")
+          .replace("\u00e6", "ae").replace("\u00c6", "AE")
+          .replace("\u00e5", "a").replace("\u00c5", "A")
+          .replace("\u00df", "ss"))
+    return "".join(c for c in unicodedata.normalize("NFKD", s)
+                   if not unicodedata.combining(c)).lower()
+
+
+# An ACADEMIC top-level domain is proof on its own. `.edu` is restricted to
+# accredited US institutions, and the `ac.*` / `edu.*` / `sch.*` / `k12.*`
+# namespaces are their national equivalents - so a tenant there is a school
+# whatever it chose to call itself. This is what reaches the accounts published
+# only as an acronym, which no word list can express: measured on the crawl,
+# 2,194 accounts carry no education word at all, and among them are real
+# institutions like NJIT, XLRI and VMI beside genuine non-schools like Hubspot
+# and a medical-software vendor. The TLD separates those two groups without
+# needing to guess from the name.
+_ACADEMIC_TLD = re.compile(
+    r"\.edu$|\.edu\.[a-z]{2}$|\.ac\.[a-z]{2}$|\.sch\.[a-z]{2}$|\.k12\.[a-z]{2}\.us$",
+    re.I)
+
+
+def is_institution(name: str, domain: str) -> bool:
+    """The whole FILL gate, in one place so the audit script can reuse it."""
+    n, d = fold(name), fold(domain)
+    if not (_EDUCATION.search(n) or _ACADEMIC_TLD.search(d)):
+        return False
+    return not (_NOT_AN_INSTITUTION.search(n) or _NOT_AN_INSTITUTION.search(d))
+
 
 # Institutions published in the local language or as an acronym sharing no
 # tokens with the English seed. Confirmed by hand against the crawl. Keep short
@@ -150,6 +257,37 @@ _SCHOOL_DOMAIN = re.compile(
 ALIASES: dict[str, list[str]] = {
     "University of Copenhagen": ["UCPH", "Absalon"],
     "UiT The Arctic University of Norway": ["UiT Norges arktiske universitet"],
+    # A REORDERED initialism, which `acronyms()` cannot reach: the seed reads
+    # "University of Hong Kong" and its in-order initials are UHK, but the
+    # school is universally HKU and its tenant publishes as exactly "HKU" on
+    # `hku.instructure.com`. Without the alias `contradicts()` correctly reads
+    # "hku" as a distinctive token the seed lacks and vetoes the pairing - and
+    # because the account name carries no education word, the FILL path cannot
+    # rescue it either. Measured 2026-08-09: the seed then settled on
+    # `canvas.cityu.edu.hk`, i.e. City University of Hong Kong, a different
+    # university; that row was won back by CityU's own seed, so the visible
+    # symptom was not a wrong label but the University of Hong Kong being
+    # ABSENT from the picker entirely. Do NOT "fix" this by permuting initials
+    # in `acronyms()` - that widens every seed's reach at once.
+    "University of Hong Kong": ["HKU"],
+    # Same reordered-initialism trap, same city. The main Clear Water Bay
+    # campus publishes only as "HKUST" on `canvas.ust.hk`, so it has almost no
+    # token overlap with the seed, while the Guangzhou campus publishes the
+    # full name and won on overlap alone. See RENAME for the other half.
+    # "UST" is here for the TIEBREAK, not for the name match. With "HKUST"
+    # alone both campuses score a full 1.00 on overlap, and the next key is
+    # corroboration - which the Guangzhou host wins, because `hkust-gz` starts
+    # with the acronym and the main campus's `ust` label does not. Adding UST
+    # lets the main campus corroborate its own host, and the third key (ccTLD)
+    # then decides for `.hk` over `.instructure.com`.
+    #
+    # UST is also University of Santo Tomas, so this was checked rather than
+    # assumed: with the alias in place the HKUST seed accepts exactly one
+    # `ust`-labelled account, the Guangzhou one, and Santo Tomas still takes
+    # `ust.instructure.com`. `contradicts()` is what holds that line - "santo"
+    # and "tomas" are distinctive tokens the probes lack and the host does not
+    # vouch for.
+    "Hong Kong University of Science and Technology": ["HKUST", "UST"],
 }
 
 _TLD_FOR = {"GB": "uk"}
@@ -272,9 +410,30 @@ def tld_matches(cc: str, domain: str) -> bool:
     return t is not None and t == _TLD_FOR.get(cc, cc.lower())
 
 
+# LOCAL_NAMES keyed by the ACCENT-FOLDED seed, because the two tables disagree
+# about spelling and the lookup failed silently when they did.
+#
+# `SEEDS` writes "Malmo University", "Umea University", "Linkoping University";
+# `LOCAL_NAMES` keys the same schools "Malmö University", "Umeå University",
+# "Linköping University". A plain dict lookup therefore returned None, so those
+# universities shipped with no Swedish name at all - neither as a matcher probe
+# nor in the display label - and a student typing "Malmö universitet" found
+# nothing. It fails silently in the worst way: `display_name` simply returns
+# the English name, which looks like a deliberate choice.
+#
+# Folding the KEY rather than aligning the two tables is what stops it coming
+# back the next time somebody adds a seed without the accents.
+_LOCAL_BY_FOLD = {fold(k): v for k, v in LOCAL_NAMES.items()}
+
+
+def local_name(seed: str) -> str | None:
+    """The seed's local-language name, however either table spells the seed."""
+    return LOCAL_NAMES.get(seed) or _LOCAL_BY_FOLD.get(fold(seed))
+
+
 def local_probes(seed: str) -> list:
     """The seed's local-language name, as a matcher probe. Empty when it has none."""
-    loc = LOCAL_NAMES.get(seed)
+    loc = local_name(seed)
     return [loc] if loc else []
 
 
@@ -286,7 +445,7 @@ def display_name(seed: str) -> str:
     half stays because an exchange student may know only that, and because both
     halves land in the search haystack this way.
     """
-    loc = LOCAL_NAMES.get(seed)
+    loc = local_name(seed)
     return f"{loc} ({seed})" if loc and loc.lower() != seed.lower() else seed
 
 
@@ -447,26 +606,48 @@ def verify_domain(domain: str, timeout: float = 12.0) -> str:
 
 
 def verify_many(domains: list, workers: int = 16) -> dict:
-    """Verify in parallel, then RETRY every failure slowly before believing it.
+    """Verify in parallel, then RETRY every failure - patiently, and REPEATEDLY.
 
-    Measured while building this: a 16-way sweep across ~300 hosts produced
-    sporadic timeouts, and Copenhagen Business School, the University of
-    Copenhagen and the University of Melbourne silently vanished from a build -
-    all three verify fine on their own. A transient network error is not
-    evidence that a domain is dead, and treating it as such makes the shipped
-    list quietly depend on the weather. Same asymmetry as everywhere else here:
-    a slow retry costs seconds, a wrong drop costs a country.
+    A transient network error is not evidence that a domain is dead, and
+    treating it as such makes the shipped list quietly depend on the weather.
+    The asymmetry is the whole design: a slow retry costs seconds, a wrong drop
+    costs an institution - or, measured once, three countries.
+
+    **One retry pass is not enough, and the failure scales with the sweep.**
+    Measured 2026-08-09 on a 4,452-domain run: the parallel sweep plus a single
+    serial retry still reported 178 hosts "genuinely unreachable", and 16 of
+    them - sampled and checked by hand - answered on the FIRST try when asked
+    on their own, every one in under 1.5 seconds. Among them were the
+    University of Kansas, Georgetown, Rhode Island School of Design and Wake
+    Technical Community College. Nothing was wrong with those hosts; the sweep
+    itself was the problem, so retrying it the same way reproduces it.
+
+    Hence: back off between passes, drop the concurrency to 1 for the last one,
+    and only believe a failure that survives all of them. A pass that fixes
+    nothing costs one cooldown, which is why the loop exits as soon as a pass
+    clears the backlog.
     """
     with cf.ThreadPoolExecutor(max_workers=workers) as ex:
         res = dict(zip(domains, ex.map(verify_domain, domains)))
 
-    retry = [d for d, v in res.items() if v != "ok"]
-    if not retry:
-        return res
-    print(f"  retrying {len(retry)} verification failure(s) serially...", flush=True)
-    with cf.ThreadPoolExecutor(max_workers=3) as ex:
-        for d, v in zip(retry, ex.map(lambda x: verify_domain(x, timeout=25.0), retry)):
-            res[d] = v
+    # (workers, timeout, cooldown before the pass) - progressively gentler.
+    for pass_workers, timeout, cooldown in ((3, 25.0, 0.0), (1, 30.0, 20.0)):
+        retry = [d for d, v in res.items() if v != "ok"]
+        if not retry:
+            break
+        if cooldown:
+            print(f"  cooling down {cooldown:.0f}s before the final pass...", flush=True)
+            time.sleep(cooldown)
+        print(f"  retrying {len(retry)} verification failure(s) "
+              f"({pass_workers} worker(s), {timeout:.0f}s)...", flush=True)
+        if pass_workers == 1:
+            for d in retry:
+                res[d] = verify_domain(d, timeout=timeout)
+        else:
+            with cf.ThreadPoolExecutor(max_workers=pass_workers) as ex:
+                for d, v in zip(retry, ex.map(lambda x: verify_domain(x, timeout=timeout), retry)):
+                    res[d] = v
+
     still = [d for d, v in res.items() if v != "ok"]
     if still:
         print(f"  {len(still)} genuinely unreachable: {', '.join(sorted(still)[:6])}"
@@ -529,8 +710,27 @@ def build(pool: dict, limit: int) -> tuple[list, list]:
         for dom, name in usable:
             if not accepts(seed, cc, dom, name):
                 continue
+            # `domain_rank` is the LAST word, and without it the winner among
+            # equals was whichever the crawl dict happened to yield first.
+            #
+            # An institution routinely publishes one tenant per campus, and
+            # `jaccard` scores token SETS - so "University of Michigan - Ann
+            # Arbor", "- Dearborn" and "- Flint" are all exactly 1.00 against
+            # the seed, as are "University of Kansas - KU" and "University of
+            # Kansas - kuconnect.ku.edu". Corroboration and ccTLD tie too, at
+            # which point `key > best[0]` keeps the FIRST one seen. Measured
+            # 2026-08-09: the seed "University of Michigan" settled on
+            # DEARBORN, and Kansas on `kuconnect` over `canvas.ku.edu` - a
+            # student picking their own university by name got another campus.
+            #
+            # It is negated because `domain_rank` reads low-is-better while
+            # this key reads high-is-better. Note the fix belongs HERE and not
+            # in the dedupe below: that pass already sorts by `domain_rank`,
+            # but core rows are ordered ahead of fill rows, so by then the
+            # seed's choice is frozen and the better host has already lost.
             key = (max(jaccard(p, name) for p in probes),
-                   corroborates(seed, dom, probes), tld_matches(cc, dom))
+                   corroborates(seed, dom, probes), tld_matches(cc, dom),
+                   tuple(-int(x) for x in domain_rank(dom)))
             if best is None or key > best[0]:
                 best = (key, {"name": display_name(seed), "domain": dom, "cc": cc})
         if best is None:
@@ -544,13 +744,15 @@ def build(pool: dict, limit: int) -> tuple[list, list]:
     used = {c["domain"] for c in core}
     fill = []
     for dom, name in pool.items():
-        if dom in used or dom in REJECT_DOMAINS or not _HIGHER_ED.search(name):
+        if dom in used or dom in REJECT_DOMAINS:
             continue
-        if (_NOT_HIGHER_ED.search(name) or _NOT_HIGHER_ED.search(dom)
-                or _SCHOOL_DOMAIN.search(dom)):
+        if not is_institution(name, dom):
             continue
         nm = clean_name(re.split(r"\s+\|\s+", name)[0])
-        if not (4 <= len(nm) <= 64) or not _HIGHER_ED.search(nm):
+        # Re-test the CLEANED name: `clean_name` strips parentheticals and
+        # everything after " - ", so the education word can be the thing it
+        # just removed, leaving a label that names no institution at all.
+        if not (4 <= len(nm) <= 64) or not _EDUCATION.search(fold(nm)):
             continue
         # A hand-written label wins: it is there because the account's own name
         # over-claims (names a whole university while serving one of its

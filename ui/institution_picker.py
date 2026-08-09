@@ -108,6 +108,29 @@ TRIGGER_LABEL = "Find your institution"
 _FS = "»"   # field separator, between name/domain/country
 _RS = "«"   # record separator, between institutions
 
+# `.instructure.com` is a QUARTER of the payload, so it travels as one byte.
+#
+# Most Canvas tenants have no vanity domain, so the same 16 characters repeat
+# once in the domain field and again inside the search blob. Measured on the
+# 2026-08-09 list: 7,844 occurrences, 123 KB, 28% of a 437 KB payload - on the
+# login page, which is the slowest screen in the app and the one a user
+# reported hanging. The picker is the whole point of that screen (it is how
+# nearly everyone finds their Canvas URL, and typing one by hand is the
+# friction it exists to remove), so the answer is to make rows CHEAP, never to
+# ship fewer of them.
+#
+# The bridge expands it on both fields at parse time, so nothing downstream can
+# tell the difference: the displayed domain, the `https://` link and the search
+# haystack are all byte-identical to the uncompressed form. Expansion happens
+# once per mount - `rows()` memoises on the raw attribute - so the cost is two
+# string operations per row, once.
+#
+# `*` is safe for the same reason as the delimiters above: it cannot occur in a
+# hostname, `build_payload` strips it from names anyway, and a test proves the
+# shipped payload carries none of its own.
+_SUF = ".instructure.com"
+_SUF_TOKEN = "*"
+
 # Country names, so "denmark" finds Danish schools rather than only "dk".
 # Only countries actually present in the shipped data need an entry; anything
 # missing simply falls back to the two-letter code, which still searches.
@@ -240,11 +263,21 @@ def build_payload() -> str:
         name, domain, _cc = row
         blob = search_blob(row)
         out.append(_FS.join((
-            name.replace(_FS, " ").replace(_RS, " "),
-            domain,
-            blob.replace(_FS, " ").replace(_RS, " "),
+            _clean_field(name),
+            domain.replace(_SUF, _SUF_TOKEN),
+            _clean_field(blob).replace(_SUF, _SUF_TOKEN),
         )))
     return _RS.join(out)
+
+
+def _clean_field(s: str) -> str:
+    """Strip every character the payload format reserves.
+
+    The suffix token joins the two delimiters here: a literal `*` arriving from
+    an institution's name would be expanded into `.instructure.com` by the
+    bridge and corrupt both the displayed name and the search haystack.
+    """
+    return s.replace(_FS, " ").replace(_RS, " ").replace(_SUF_TOKEN, " ")
 
 
 def picker_html() -> str:
@@ -462,6 +495,13 @@ _BRIDGE_JS = """
   // because the iframe closure does not survive a remount. Re-derived if the
   // payload string itself changes (a rebuilt list), never otherwise.
   var FS = '\\u00bb', RS = '\\u00ab';
+  // `.instructure.com` travels as a single `*` - a quarter of the payload was
+  // that one string repeated. Expanded here, on BOTH the domain and the search
+  // blob, so every consumer downstream sees exactly what it saw before the
+  // compression: the rendered domain, the https:// link and the haystack are
+  // byte-identical. Runs once per mount (see the memo below), not per keystroke.
+  var SUF = '.instructure.com', SUF_TOKEN = '*';
+  function expand(s) { return s.indexOf(SUF_TOKEN) < 0 ? s : s.split(SUF_TOKEN).join(SUF); }
   // Nobody scrolls 100 unranked rows; the count line tells them to narrow.
   var RENDER_CAP = 60;
 
@@ -473,7 +513,7 @@ _BRIDGE_JS = """
     var out = [], recs = raw ? raw.split(RS) : [];
     for (var i = 0; i < recs.length; i++) {
       var f = recs[i].split(FS);
-      if (f.length >= 3) out.push({ name: f[0], domain: f[1], q: f[2] });
+      if (f.length >= 3) out.push({ name: f[0], domain: expand(f[1]), q: expand(f[2]) });
     }
     reg.raw = raw; reg.rows = out;
     return out;
