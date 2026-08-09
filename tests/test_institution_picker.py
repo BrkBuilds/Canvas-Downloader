@@ -308,12 +308,61 @@ def test_every_shipped_country_has_a_searchable_name():
     assert not missing, f"countries with no search name: {missing}"
 
 
+def _parsed_payload() -> dict:
+    """The payload as the BRIDGE sees it - suffix token expanded, keyed by domain.
+
+    Mirrors `expand()` in the JS. Reading the payload without expanding would
+    let a compression bug through silently: every assertion below would still
+    hold, against a haystack the user can never actually match on.
+    """
+    out = {}
+    for rec in picker.build_payload().split(picker._RS):
+        f = rec.split(picker._FS)
+        out[f[1].replace(picker._SUF_TOKEN, picker._SUF)] = \
+            f[2].replace(picker._SUF_TOKEN, picker._SUF)
+    return out
+
+
 def test_payload_records_carry_the_haystack():
-    payload = picker.build_payload()
-    recs = {r.split(picker._FS)[1]: r.split(picker._FS)[2]
-            for r in payload.split(picker._RS)}
+    recs = _parsed_payload()
     for row in list(inst.DATA)[:25]:
         assert recs[row[1]] == picker.search_blob(row)
+
+
+def test_the_suffix_compression_round_trips_exactly():
+    """`.instructure.com` ships as one byte and is expanded by the bridge.
+
+    A quarter of the payload was that one string repeated, and the picker is
+    the login page's whole reason for existing, so rows have to be cheap. What
+    must NOT change is what anything downstream sees: the displayed domain, the
+    https:// link and the search haystack are all built from these two fields.
+    """
+    recs = _parsed_payload()
+    assert set(recs) == {d for _n, d, _c in inst.DATA}, (
+        "a domain did not survive the compression round-trip"
+    )
+    for name, domain, _cc in inst.DATA:
+        assert recs[domain] == picker.search_blob((name, domain, _cc))
+
+    raw = picker.build_payload()
+    assert picker._SUF not in raw, (
+        "the suffix is still being shipped in full; the compression is not applied"
+    )
+    # ...and it really is the common case, so the saving is real.
+    assert raw.count(picker._SUF_TOKEN) >= len(inst.DATA), (
+        "fewer suffix tokens than institutions - the payload is not compressed"
+    )
+
+
+def test_no_field_can_carry_the_suffix_token_itself():
+    """A literal `*` in a name would be expanded into `.instructure.com` by the
+    bridge, corrupting both the displayed name and the haystack."""
+    for rec in picker.build_payload().split(picker._RS):
+        name, domain, blob = rec.split(picker._FS)
+        assert picker._SUF_TOKEN not in name, f"suffix token leaked into a name: {name!r}"
+        # In the other two it is only ever the token the builder put there.
+        assert picker._SUF_TOKEN not in domain.replace(picker._SUF_TOKEN, "", 1)
+        assert domain.count(picker._SUF_TOKEN) <= 1
 
 
 # ── 4. Bridge safety ─────────────────────────────────────────────────────────
@@ -704,11 +753,33 @@ _TRUE_OWNER = [
 ]
 
 
+def _same_institution(a: str, b: str) -> bool:
+    """Two labels naming the SAME school, ignoring cosmetic differences.
+
+    The guard here is "is this the right institution", not "is this the exact
+    string". A row legitimately arrives with either the account's own name or
+    the seed's curated one, and those differ in a leading article and in
+    punctuation - `canvas.manchester.ac.uk` is correct as both "The University
+    of Manchester" and "University of Manchester". Comparing raw strings turned
+    that into a failure that reads like a wrong-university bug, which is the
+    one signal this test must not blunt by crying wolf.
+
+    `dedupe_key` is reused deliberately: it is the generator's own answer to
+    "are these the same institution", so the test cannot drift from the code.
+    """
+    import importlib.util
+    p = Path(__file__).resolve().parents[1] / "scripts" / "build_institution_list.py"
+    spec = importlib.util.spec_from_file_location("_bil_owner", p)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.dedupe_key(a) == mod.dedupe_key(b)
+
+
 @pytest.mark.parametrize("domain,owner", _TRUE_OWNER)
 def test_domain_is_labelled_with_its_real_owner(domain, owner):
     row = next((r for r in inst.DATA if r[1] == domain), None)
     assert row is not None, f"{domain} vanished; it belongs to {owner}"
-    assert row[0] == owner, (
+    assert _same_institution(row[0], owner), (
         f"{domain} is labelled {row[0]!r} but belongs to {owner!r} - "
         "this is the wrong-university failure, not a cosmetic label"
     )

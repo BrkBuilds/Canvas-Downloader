@@ -1450,6 +1450,16 @@ def _gate_actions_on_selection(*button_keys: str) -> None:
     button is already correct. The CSS is written as ``:not([...="1"])`` for the
     same reason: unknown state has to read as unavailable, never as available.
 
+    **The stylesheet is STATIC and lives in styles/global.css** (moved
+    2026-08-09). It used to be written into a `<style>` element by the script
+    below, which meant it did not exist until the `components.html` iframe had
+    loaded and executed - so on a cold page load the two primary actions painted
+    at FULL brightness for as long as that took, then dropped to the disabled
+    paint. Reported as "the buttons showed up bright and then went disabled".
+    The `<body>` flag above is what makes an unknown state read as unavailable,
+    but a flag can only be read by a rule that already exists: global.css goes
+    out with the page itself, so the very first frame is correct.
+
     A MutationObserver on the marker keeps the paint in sync without polling.
     Following the CLAUDE.md rule for ``components.html`` bridges, the observer and
     listeners are rebound on EVERY injection (a listener created inside an iframe
@@ -1461,27 +1471,11 @@ def _gate_actions_on_selection(*button_keys: str) -> None:
 
     keys = [k.lower() for k in button_keys]
     wrappers = ', '.join(f'div[class*="st-key-{k}"]' for k in keys)
-    # Same recipe as global.css `button[disabled]` and live_enable_button, so the
-    # app has exactly ONE way of looking unavailable. These three used to differ:
-    # this one and live_enable_button painted a flat rgba(255,255,255,0.075) slab
-    # while native disabled desaturated the real colours.
-    #
-    # A `filter` on the button also dims its ::before icon glyphs, so the separate
-    # opacity rule those needed under the old flat-slab approach is now redundant.
-    _unsel = 'body:not([data-cd-has-sel="1"])'
-    css = (
-        f'{", ".join(f"""{_unsel} div[class*="st-key-{k}"] button""" for k in keys)} {{'
-        '  filter: brightness(0.5) saturate(0.5) !important;'
-        '  box-shadow: none !important;'
-        '  cursor: not-allowed !important;'
-        '  pointer-events: none !important;'
-        '}'
-        # cursor must also sit on the wrapper - pointer-events:none on the button
-        # stops it resolving there, and it carries the explanatory title.
-        f'{", ".join(f"""{_unsel} div[class*="st-key-{k}"]""" for k in keys)} {{'
-        '  cursor: not-allowed !important;'
-        '}'
-    )
+    # The rules for these keys are in styles/global.css, under
+    # "COURSE-ACTION GATE". They are static, so they must not be built here -
+    # see the docstring. tests/test_action_gate_css.py asserts every key passed
+    # to this function is covered there, because a missing rule is silent: the
+    # button simply stays bright and clickable.
 
     components.html(
         f"""<script>
@@ -1489,13 +1483,7 @@ def _gate_actions_on_selection(*button_keys: str) -> None:
     var win = window.parent, doc = win.document;
     var WRAP_SEL = {json.dumps(wrappers)};
     var TIP = "Select at least one course above first.";
-    var reg = win._cdSelGate || (win._cdSelGate = {{observer: null, styleId: 'cd-sel-gate-css'}});
-
-    var st = doc.getElementById(reg.styleId);
-    if (!st) {{
-        st = doc.createElement('style'); st.id = reg.styleId; doc.head.appendChild(st);
-    }}
-    st.textContent = {json.dumps(css)};
+    var reg = win._cdSelGate || (win._cdSelGate = {{observer: null}});
 
     function apply() {{
         var marker = doc.getElementById('cdp_selected_courses_count');

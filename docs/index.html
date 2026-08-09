@@ -3039,13 +3039,6 @@
                 <img src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft"
                   style="display: block; width: 100%;" />
               </a>
-              <a href="releases.html" class="btn-dl btn-dl-ghost" id="hero-get-win" data-latest-exe
-                style="padding: 10px 16px; font-size: 13px; width: 100%; justify-content: center; box-shadow: none;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2.5 2.5h8.5v8.5H2.5zM13 2.5h8.5v8.5H13zM2.5 13h8.5v8.5H2.5zM13 13h8.5v8.5H13z" />
-                </svg>
-                Download direct (.exe)
-              </a>
             </div>
             <a href="thanks-mac.html" class="btn-dl btn-win" id="hero-get-mac" style="display: none;">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
@@ -3190,18 +3183,9 @@
             <polyline points="19 12 12 19 5 12"></polyline>
           </svg>
         </div>
-        <div class="section-kicker"
-          style="justify-content: center; width: 100%; margin-bottom: 16px; color: var(--green);">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-          The Solution
-        </div>
         <h3
           style="font-size: clamp(24px, 3vw, 32px); font-weight: 800; letter-spacing: -0.02em; color: #fff; margin: 0;">
-          Canvas Downloader puts an end to that.</h3>
+          <span style="border-bottom: 3px solid var(--green); padding-bottom: 6px; display: inline-block;">Canvas Downloader puts an end to that.</span></h3>
       </div>
     </div>
   </section>
@@ -3485,115 +3469,12 @@
         </div>
       </div>
 
-      <!-- Pillar 4: Sync Review -->
-      <div class="pillar-section">
-        <input type="checkbox" id="p3-open" class="pillar-toggle">
-        <div class="pillar-row rev reveal">
-          <div class="pillar-text">
-            <div class="section-kicker">4. Sync Review</div>
-            <h3>Full control over your files.</h3>
-            <p>Get the full status overview of your local course folders. <b>Sync Review mode</b> compares your local
-              files directly against your Canvas courses and runs advanced algorithms to show you exactly what's
-              different.<br><br>The app categorizes the results so you can select and download exactly what you need:
-              New files, deleted files, updates or changes, giving you <b>full control</b> and confidence that your
-              materials are always 100% up-to-date.</p>
-            <label for="p3-open" class="pillar-expander-label desktop-only">The file categories, and how Sync Review works
-              <span class="pex-arrow"></span></label>
-          </div>
-          <div class="pillar-vis aligned-to-title"
-            style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
-            <video class="expandable-video" src="assets/Sync_Review_Demo.mp4" autoplay loop muted playsinline
-              style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
-          </div>
-        </div>
-        <label for="p3-open" class="pillar-expander-label mobile-only"
-          style="display: flex; width: fit-content; margin: 24px auto 0;">The file categories, and how Sync Review works
-          <span class="pex-arrow"></span></label>
-        <div class="pillar-expand-content">
-          <div class="expand-section-label">The Sync Categories</div>
-          <p class="expand-intro">Every file in a sync Review is sorted into a category - the 5 that need decisions are
-            shown below (two more, <b>Ignored</b> and <b>Up to Date</b>, are handled automatically). Each category has
-            its own action and default state. You can check or uncheck individual files to download, or use the
-            built-in tools to bulk-select. See the <a href="guide.html#sync-review"
-              style="color:var(--cyan);text-decoration:none;">Sync Review guide</a> for the full breakdown.</p>
-          <div class="sync-cats-grid">
-
-            <div class="app-card" style="border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(30, 60, 90, 0.2);">
-              <div class="app-card-header" style="color: #60a5fa; display:flex; gap:8px; padding: 10px 14px;"><img
-                  src="assets/Icon_Sync_Review_New_File.png" style="width:14px;" /> New Files</div>
-              <div class="app-card-body"
-                style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
-                <div>Files added by your teacher, not in your folder yet.<br><span style="color:#60a5fa;">→ Downloaded
-                    fresh into the correct subfolder.</span></div>
-                <div
-                  style="font-weight: 600; color: #fff; background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">
-                  &#10003; Checked by default</div>
-              </div>
-            </div>
-
-            <div class="app-card" style="border: 1px solid rgba(34, 197, 94, 0.4); background: rgba(20, 70, 40, 0.2);">
-              <div class="app-card-header" style="color: #4ade80; display:flex; gap:8px; padding: 10px 14px;"><img
-                  src="assets/Icon_Sync_Review_Update.png" style="width:14px;" /> Updates (Clean)</div>
-              <div class="app-card-body"
-                style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
-                <div>Canvas has a newer version, your local copy is untouched.<br><span style="color:#4ade80;">→
-                    Replaced in place - same name, same location.</span></div>
-                <div
-                  style="font-weight: 600; color: #fff; background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">
-                  &#10003; Checked by default</div>
-              </div>
-            </div>
-
-            <div class="app-card" style="border: 1px solid rgba(245, 158, 11, 0.4); background: rgba(90, 60, 20, 0.2);">
-              <div class="app-card-header" style="color: #fbbf24; display:flex; gap:8px; padding: 10px 14px;"><img
-                  src="assets/Icon_Sync_Review_Update.png" style="width:14px; filter:hue-rotate(290deg) saturate(3);" />
-                Edited Locally</div>
-              <div class="app-card-body"
-                style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
-                <div>Canvas is newer, but you've modified your local copy.<br><span style="color:#fbbf24;">→ New version
-                    saved as _NewVersion. Your edits are never touched.</span></div>
-                <div
-                  style="font-weight: 600; color: var(--txt3); background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">
-                  &#9744; Unchecked by default</div>
-              </div>
-            </div>
-
-            <div class="app-card" style="border: 1px solid rgba(168, 85, 247, 0.4); background: rgba(60, 30, 90, 0.2);">
-              <div class="app-card-header" style="color: #c084fc; display:flex; gap:8px; padding: 10px 14px;"><img
-                  src="assets/Icon_Sync_Review_Locally_Deleted.png" style="width:14px;" /> Deleted Locally</div>
-              <div class="app-card-body"
-                style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
-                <div>You deleted it, Canvas still has it.<br><span style="color:#c084fc;">→ Your deletion is respected.
-                    Won't redownload unless you check the box.</span></div>
-                <div
-                  style="font-weight: 600; color: var(--txt3); background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">
-                  &#9744; Unchecked by default</div>
-              </div>
-            </div>
-
-            <div class="app-card" style="border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(90, 30, 35, 0.2);">
-              <div class="app-card-header" style="color: #f87171; display:flex; gap:8px; padding: 10px 14px;"><img
-                  src="assets/Icon_Sync_Review_Deleted_On_Canvas.png" style="width:14px;" /> Deleted on Canvas</div>
-              <div class="app-card-body"
-                style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
-                <div>Teacher removed it from Canvas, it's still in your folder.<br><span style="color:#f87171;">→ Your
-                    local copy stays exactly where it is. The app never deletes files.</span></div>
-                <div
-                  style="font-weight: 600; color: var(--txt3); background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">
-                  Info only - no action</div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <!-- Pillar 4 -->
+      <!-- Pillar 4: AI Optimization -->
       <div class="pillar-section">
         <input type="checkbox" id="p4-open" class="pillar-toggle">
-        <div class="pillar-row reveal">
+        <div class="pillar-row rev reveal">
           <div class="pillar-text">
-            <div class="section-kicker">5. AI Optimization</div>
+            <div class="section-kicker">4. AI Optimization</div>
             <h3>Supercharge your exam prep</h3>
             <p>Canvas Downloader is built for the modern studying workflow, where <b>AI-assisted learning</b> is at the
               core. <br><br> When enabled, the app <b>automatically converts</b> all your course materials to
@@ -3696,7 +3577,110 @@
         </div>
       </div>
 
-      <!-- Pillar 5: Panopto Lecture Recordings -->
+      <!-- Pillar 5: Sync Review -->
+      <div class="pillar-section">
+        <input type="checkbox" id="p3-open" class="pillar-toggle">
+        <div class="pillar-row reveal">
+          <div class="pillar-text">
+            <div class="section-kicker">5. Sync Review</div>
+            <h3>Full control over your files.</h3>
+            <p>Get the full status overview of your local course folders. <b>Sync Review mode</b> compares your local
+              files directly against your Canvas courses and runs advanced algorithms to show you exactly what's
+              different.<br><br>The app categorizes the results so you can select and download exactly what you need:
+              New files, deleted files, updates or changes, giving you <b>full control</b> and confidence that your
+              materials are always 100% up-to-date.</p>
+            <label for="p3-open" class="pillar-expander-label desktop-only">The file categories, and how Sync Review works
+              <span class="pex-arrow"></span></label>
+          </div>
+          <div class="pillar-vis aligned-to-title"
+            style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
+            <video class="expandable-video" src="assets/Sync_Review_Demo.mp4" autoplay loop muted playsinline
+              style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
+          </div>
+        </div>
+        <label for="p3-open" class="pillar-expander-label mobile-only"
+          style="display: flex; width: fit-content; margin: 24px auto 0;">The file categories, and how Sync Review works
+          <span class="pex-arrow"></span></label>
+        <div class="pillar-expand-content">
+          <div class="expand-section-label">The Sync Categories</div>
+          <p class="expand-intro">Every file in a sync Review is sorted into a category - the 5 that need decisions are
+            shown below (two more, <b>Ignored</b> and <b>Up to Date</b>, are handled automatically). Each category has
+            its own action and default state. You can check or uncheck individual files to download, or use the
+            built-in tools to bulk-select. See the <a href="guide.html#sync-review"
+              style="color:var(--cyan);text-decoration:none;">Sync Review guide</a> for the full breakdown.</p>
+          <div class="sync-cats-grid">
+
+            <div class="app-card" style="border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(30, 60, 90, 0.2);">
+              <div class="app-card-header" style="color: #60a5fa; display:flex; gap:8px; padding: 10px 14px;"><img
+                  src="assets/Icon_Sync_Review_New_File.png" style="width:14px;" /> New Files</div>
+              <div class="app-card-body"
+                style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
+                <div>Files added by your teacher, not in your folder yet.<br><span style="color:#60a5fa;">→ Downloaded
+                    fresh into the correct subfolder.</span></div>
+                <div
+                  style="font-weight: 600; color: #fff; background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">
+                  &#10003; Checked by default</div>
+              </div>
+            </div>
+
+            <div class="app-card" style="border: 1px solid rgba(34, 197, 94, 0.4); background: rgba(20, 70, 40, 0.2);">
+              <div class="app-card-header" style="color: #4ade80; display:flex; gap:8px; padding: 10px 14px;"><img
+                  src="assets/Icon_Sync_Review_Update.png" style="width:14px;" /> Updates (Clean)</div>
+              <div class="app-card-body"
+                style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
+                <div>Canvas has a newer version, your local copy is untouched.<br><span style="color:#4ade80;">→
+                    Replaced in place - same name, same location.</span></div>
+                <div
+                  style="font-weight: 600; color: #fff; background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">
+                  &#10003; Checked by default</div>
+              </div>
+            </div>
+
+            <div class="app-card" style="border: 1px solid rgba(245, 158, 11, 0.4); background: rgba(90, 60, 20, 0.2);">
+              <div class="app-card-header" style="color: #fbbf24; display:flex; gap:8px; padding: 10px 14px;"><img
+                  src="assets/Icon_Sync_Review_Update.png" style="width:14px; filter:hue-rotate(290deg) saturate(3);" />
+                Edited Locally</div>
+              <div class="app-card-body"
+                style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
+                <div>Canvas is newer, but you've modified your local copy.<br><span style="color:#fbbf24;">→ New version
+                    saved as _NewVersion. Your edits are never touched.</span></div>
+                <div
+                  style="font-weight: 600; color: var(--txt3); background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">
+                  &#9744; Unchecked by default</div>
+              </div>
+            </div>
+
+            <div class="app-card" style="border: 1px solid rgba(168, 85, 247, 0.4); background: rgba(60, 30, 90, 0.2);">
+              <div class="app-card-header" style="color: #c084fc; display:flex; gap:8px; padding: 10px 14px;"><img
+                  src="assets/Icon_Sync_Review_Locally_Deleted.png" style="width:14px;" /> Deleted Locally</div>
+              <div class="app-card-body"
+                style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
+                <div>You deleted it, Canvas still has it.<br><span style="color:#c084fc;">→ Your deletion is respected.
+                    Won't redownload unless you check the box.</span></div>
+                <div
+                  style="font-weight: 600; color: var(--txt3); background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">
+                  &#9744; Unchecked by default</div>
+              </div>
+            </div>
+
+            <div class="app-card" style="border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(90, 30, 35, 0.2);">
+              <div class="app-card-header" style="color: #f87171; display:flex; gap:8px; padding: 10px 14px;"><img
+                  src="assets/Icon_Sync_Review_Deleted_On_Canvas.png" style="width:14px;" /> Deleted on Canvas</div>
+              <div class="app-card-body"
+                style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
+                <div>Teacher removed it from Canvas, it's still in your folder.<br><span style="color:#f87171;">→ Your
+                    local copy stays exactly where it is. The app never deletes files.</span></div>
+                <div
+                  style="font-weight: 600; color: var(--txt3); background: rgba(255,255,255,0.05); padding: 3px 7px; border-radius: 4px; display: inline-flex; width: fit-content; font-size: 11px;">
+                  Info only - no action</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Pillar 6: Panopto Lecture Recordings -->
       <div class="pillar-section">
         <input type="checkbox" id="p5-open" class="pillar-toggle">
         <div class="pillar-row rev reveal">
@@ -3768,9 +3752,6 @@
               </div>
             </div>
             <div class="pp-btn active">
-              <div class="check"><svg viewBox="0 0 10 8">
-                  <polyline points="1,4 3.5,6.5 9,1" />
-                </svg></div>
               <img src="assets/pan_txt.png" alt="Transcript" />
               <div class="pp-btn-text">
                 <div class="pp-title">Transcript (.txt)</div>
@@ -3800,134 +3781,6 @@
 
     </div>
   </section>
-
-  <hr class="div" />
-
-  <!-- Section 5: Technical Trust -->
-  <section class="security-section" id="security">
-    <div class="container">
-      <div class="sh reveal">
-        <div class="section-kicker">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          Security
-        </div>
-        <h2>Fair questions, straight answers.</h2>
-        <p>Downloading an "unsigned" app can feel sketchy, and it's a completely reasonable thing to be cautious about.
-          Here is the transparent truth:</p>
-      </div>
-
-      <div class="sec-qa-grid reveal">
-
-        <!-- Card 1: The warning -->
-        <details class="sec-qa-card">
-          <summary>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            Why is Windows / Mac warning me?
-          </summary>
-          <p class="qa-body">Code-signing certificates - the thing that makes these warnings go away - cost $99 to $300 a
-            year, paid to Apple or Microsoft. Since this is a free project built by a student, for students, and makes
-            absolutely no money, paying for these certificates is unfortunately out of the question right now. To keep
-            the app completely free, it remains unsigned. I hope to sign it in the future, but for now, the warning
-            simply means the app is from an independent developer, not that it's dangerous. I've done the absolute best
-            job I can to build it securely and transparently.</p>
-          <p class="qa-note">The certificate program isn't a safety check - it's a publisher registry. Any developer,
-            including a malicious one, can buy one and appear clean to your OS. Skipping it doesn't say anything about
-            the code.</p>
-        </details>
-
-        <!-- Card 2: What it connects to -->
-        <details class="sec-qa-card">
-          <summary>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-              <line x1="8" y1="21" x2="16" y2="21" />
-              <line x1="12" y1="17" x2="12" y2="21" />
-            </svg>
-            What does it actually connect to?
-          </summary>
-          <p class="qa-body">Your courses and files come from your university's Canvas server - the same URL you log
-            into in your browser. There's no backend, no analytics server, no developer receiving anything from your
-            machine. Your Canvas Access Token is stored in your OS's password vault (Windows Credential Manager or
-            macOS Keychain), never in a plain-text file, and is only ever sent to your university's Canvas.</p>
-          <p class="qa-body">Three other connections exist, and none of them carry your data:
-            <b>your university's Panopto server</b>, only if you download lecture recordings;
-            <b>Hugging Face and PyPI</b>, only if you set up on-device transcription or GPU acceleration - a one-time
-            file download; and a <b>version check against GitHub</b> when the app starts, so it can tell you an update
-            is out. That last one sends nothing but the request itself: no token, no course data, no identifier. The
-            full list is in the <a href="privacy.html" style="color:var(--cyan);text-decoration:none;">privacy
-              policy</a>.
-          </p>
-          <p class="qa-note">The app's local interface runs on 127.0.0.1 - your own computer only. It cannot be reached
-            from the internet or your local network. None of this requires trusting our word: the source code is
-            publicly readable on GitHub.</p>
-        </details>
-
-        <!-- Card 3: The breach -->
-        <details class="sec-qa-card">
-          <summary>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            What about the Instructure / Canvas breach?
-          </summary>
-          <p class="qa-body">This app has no connection to Instructure beyond using their public student API - the same
-            one used by the Canvas mobile apps and other third-party integrations. It's not built by them, not
-            affiliated with them, and the breach happened on their servers, not on your computer. Using this app doesn't
-            change your exposure to that incident in either direction.</p>
-          <p class="qa-note">The practical step is the same regardless of this app: update your Canvas password, and in
-            Canvas → Account Settings → Approved Integrations, remove any Canvas Access Tokens you don't recognize.</p>
-        </details>
-
-        <!-- Card 4: Verify yourself -->
-        <details class="sec-qa-card">
-          <summary>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="16 18 22 12 16 6" />
-              <polyline points="8 6 2 12 8 18" />
-            </svg>
-            You don't have to take our word for it
-          </summary>
-          <p class="qa-body">The full source code is public on GitHub and has been since the beginning. If you're
-            unsure, read it before downloading - that's exactly the right approach. The things worth checking are in
-            three files: <code
-              style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">start.py</code>
-            (server binds to 127.0.0.1), <code
-              style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">canvas_logic.py</code>
-            (all requests go to your Canvas URL), and <code
-              style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">ui/auth.py</code>
-            (token saved to your OS keyring, never written to a plain-text file).</p>
-          <p class="qa-note">If you're not a developer, the fact that the source is fully public and has been since day
-            one is itself the most meaningful signal.</p>
-          <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
-            class="sec-verify-link">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-            </svg>
-            Read the source on GitHub
-          </a>
-        </details>
-
-      </div>
-    </div>
-  </section>
-
-  <hr class="div" />
-
-
 
   <hr class="div" />
 
@@ -4429,6 +4282,130 @@
     });
   </script>
 
+
+  <!-- Section 5: Technical Trust -->
+  <section class="security-section" id="security">
+    <div class="container">
+      <div class="sh reveal">
+        <div class="section-kicker">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Security
+        </div>
+        <h2>Fair questions, straight answers.</h2>
+        <p>Downloading an "unsigned" app can feel sketchy, and it's a completely reasonable thing to be cautious about.
+          Here is the transparent truth:</p>
+      </div>
+
+      <div class="sec-qa-grid reveal">
+
+        <!-- Card 1: The warning -->
+        <details class="sec-qa-card">
+          <summary>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            Why is Windows / Mac warning me?
+          </summary>
+          <p class="qa-body">Code-signing certificates - the thing that makes these warnings go away - cost $99 to $300 a
+            year, paid to Apple or Microsoft. Since this is a free project built by a student, for students, and makes
+            absolutely no money, paying for these certificates is unfortunately out of the question right now. To keep
+            the app completely free, it remains unsigned. I hope to sign it in the future, but for now, the warning
+            simply means the app is from an independent developer, not that it's dangerous. I've done the absolute best
+            job I can to build it securely and transparently.</p>
+          <p class="qa-note">The certificate program isn't a safety check - it's a publisher registry. Any developer,
+            including a malicious one, can buy one and appear clean to your OS. Skipping it doesn't say anything about
+            the code.</p>
+        </details>
+
+        <!-- Card 2: What it connects to -->
+        <details class="sec-qa-card">
+          <summary>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            What does it actually connect to?
+          </summary>
+          <p class="qa-body">Your courses and files come from your university's Canvas server - the same URL you log
+            into in your browser. There's no backend, no analytics server, no developer receiving anything from your
+            machine. Your Canvas Access Token is stored in your OS's password vault (Windows Credential Manager or
+            macOS Keychain), never in a plain-text file, and is only ever sent to your university's Canvas.</p>
+          <p class="qa-body">Three other connections exist, and none of them carry your data:
+            <b>your university's Panopto server</b>, only if you download lecture recordings;
+            <b>Hugging Face and PyPI</b>, only if you set up on-device transcription or GPU acceleration - a one-time
+            file download; and a <b>version check against GitHub</b> when the app starts, so it can tell you an update
+            is out. That last one sends nothing but the request itself: no token, no course data, no identifier. The
+            full list is in the <a href="privacy.html" style="color:var(--cyan);text-decoration:none;">privacy
+              policy</a>.
+          </p>
+          <p class="qa-note">The app's local interface runs on 127.0.0.1 - your own computer only. It cannot be reached
+            from the internet or your local network. None of this requires trusting our word: the source code is
+            publicly readable on GitHub.</p>
+        </details>
+
+        <!-- Card 3: The breach -->
+        <details class="sec-qa-card">
+          <summary>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            What about the Instructure / Canvas breach?
+          </summary>
+          <p class="qa-body">This app has no connection to Instructure beyond using their public student API - the same
+            one used by the Canvas mobile apps and other third-party integrations. It's not built by them, not
+            affiliated with them, and the breach happened on their servers, not on your computer. Using this app doesn't
+            change your exposure to that incident in either direction.</p>
+          <p class="qa-note">The practical step is the same regardless of this app: update your Canvas password, and in
+            Canvas → Account Settings → Approved Integrations, remove any Canvas Access Tokens you don't recognize.</p>
+        </details>
+
+        <!-- Card 4: Verify yourself -->
+        <details class="sec-qa-card">
+          <summary>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+            You don't have to take our word for it
+          </summary>
+          <p class="qa-body">The full source code is public on GitHub and has been since the beginning. If you're
+            unsure, read it before downloading - that's exactly the right approach. The things worth checking are in
+            three files: <code
+              style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">start.py</code>
+            (server binds to 127.0.0.1), <code
+              style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">canvas_logic.py</code>
+            (all requests go to your Canvas URL), and <code
+              style="font-family:monospace;font-size:12px;background:var(--surf2);border:1px solid var(--border2);padding:1px 5px;border-radius:3px;">ui/auth.py</code>
+            (token saved to your OS keyring, never written to a plain-text file).</p>
+          <p class="qa-note">If you're not a developer, the fact that the source is fully public and has been since day
+            one is itself the most meaningful signal.</p>
+          <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
+            class="sec-verify-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+            </svg>
+            Read the source on GitHub
+          </a>
+        </details>
+
+      </div>
+    </div>
+  </section>
+
+  <hr class="div" />
 
   <!-- FAQ -->
   <section class="faq-section" style="padding-top:90px;" id="faq">
