@@ -292,7 +292,22 @@ def _clean_part_files(mp3_path: str, want_txt: bool, want_srt: bool) -> None:
         last_err = None
         for attempt in range(6):
             try:
-                os.remove(target)
+                # make_long_path, for the same reason every WRITE in this module
+                # already uses it (the sidecar opens at lines ~184/185 and the
+                # os.replace commits below). Deleting was the one direction that
+                # did not, and it fails in the most misleading way possible: on a
+                # default Windows install (LongPathsEnabled = 0, which is most
+                # users) a path over 260 chars raises ERROR_PATH_NOT_FOUND, which
+                # Python surfaces as FileNotFoundError - and the handler just
+                # below reads that as "already gone" and reports success. So the
+                # leftover stays, no retry happens, and NOTHING is logged.
+                #
+                # Not hypothetical for this course: the 2026-08-09 audit measured
+                # 259 paths over 255 characters in course 43660, and the two
+                # sidecars actually left behind were 341 characters. It did not
+                # bite on that machine only because it has LongPathsEnabled = 1 -
+                # the same reason `office_safe_path`'s long-path bug survived.
+                os.remove(make_long_path(target))
                 last_err = None
                 break
             except FileNotFoundError:

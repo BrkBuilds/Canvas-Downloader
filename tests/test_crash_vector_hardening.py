@@ -445,14 +445,28 @@ def test_as_posix_flattens_line_breaks():
 
 
 def test_as_posix_matches_the_apps_own_escaping_rule():
-    """shared.helpers.native_folder_picker builds its own AppleScript and
-    escapes backslash, quote AND newline. The shared helper every converter is
-    told to use must not be weaker than the one ad-hoc site."""
-    bridge = _src("engine/applescript_bridge.py")
-    fn = bridge[bridge.index("def _as_posix"):]
-    fn = fn[:fn.index("\ndef ", 1)]
-    for token in ("'\\\\'", "'\"'", "'\\n'", "'\\r'"):
-        assert token in fn, f"_as_posix no longer escapes {token}"
+    """No AppleScript builder may be weaker than any other.
+
+    This used to read the SOURCE of ``_as_posix`` and require the four escape
+    literals to appear inside it. That anchored on a spelling: the escaping was
+    later lifted into the shared ``applescript_string`` (because a third
+    builder, ``engine.notifications``, had diverged and was flattening only
+    ``\\n``), and this test then reported the guard as MISSING while it was
+    right there one call away - the brittle-anchor trap, again. Assert the
+    BEHAVIOUR, and assert it of every builder rather than of one.
+    """
+    from engine.applescript_bridge import _as_posix, applescript_string
+    from pathlib import Path as _P
+
+    probe = 'a\nb\rc"d\\e'
+    for name, out in (
+        ("applescript_string", applescript_string(probe)),
+        ("_as_posix", _as_posix(_P("/tmp") / probe.replace("\\", "_"))),
+    ):
+        assert "\n" not in out and "\r" not in out, f"{name} leaves a line break"
+    shared = applescript_string(probe)
+    assert '\\"' in shared, "double quotes must still be escaped"
+    assert "\\\\" in shared, "backslashes must still be escaped"
 
 
 # ── Atomic-write leftovers inside a course folder ────────────────────────────

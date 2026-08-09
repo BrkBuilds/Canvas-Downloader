@@ -2263,6 +2263,24 @@ _SKIP_ARCHIVE_SVG = (
     "%3Cpath d='M1 3h22v5H1V3zm2 6h18v12H3V9zm6 2h6v2H9v-2z'/%3E"
     "%3C/svg%3E"
 )
+# FILLED and in the same grey as its two siblings above, for the reason stated
+# there: these notices are meant to read as one family, and a lighter glyph
+# beside two solid ones reads as an element of a different one. A film strip
+# rather than a play button - the subject is the recording, not playback.
+#
+# MEASURED, not assumed. The first version added an inner `M8 6h8v12H8V6z`
+# subpath, which under `fill-rule: evenodd` PUNCHES THE CENTRE OUT - so the
+# glyph became a hollow frame carrying a fraction of the ink of the solid
+# funnel and archive box beside it. At 4x zoom in the real gallery it was
+# plainly the odd one out, which is the exact failure the note above describes.
+# The body is now solid and only the six sprocket holes are punched.
+_SKIP_PANOPTO_SVG = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
+    " fill='%239ca3af' fill-rule='evenodd'%3E"
+    "%3Cpath d='M2 4h20v16H2V4zm2 2v2h2V6H4zm14 0v2h2V6h-2zM4 10v4h2v-4H4zm14 0v4h2v-4h-2z"
+    "M4 16v2h2v-2H4zm14 0v2h2v-2h-2z'/%3E"
+    "%3C/svg%3E"
+)
 
 
 def render_archives_skipped_notice():
@@ -2332,6 +2350,128 @@ def render_archives_skipped_notice():
         f"{'them' if n != 1 else 'it'} yourself, or raise the limit in "
         "<b>Settings &rsaquo; Skip huge archives</b>.</div>"
         f"<div class='skip-file-list'>{_rows_html}</div>"
+        "</div></details>",
+        unsafe_allow_html=True,
+    )
+
+
+def panopto_disabled_courses(mode: str) -> list[str]:
+    """Course names whose configuration wanted recordings this run, or ``[]``.
+
+    Resolved at RENDER from what is already stored, never plumbed through the
+    engine - the analysis pass is skipped entirely while Panopto is off, so it
+    has nothing to report, and a stateless read cannot go stale. Same principle
+    as ``core/pair_labels``.
+
+    * sync - each pair's stored ``panopto_contract``, which is that folder's
+      durable configuration and is exactly what the run would have honoured.
+    * download - the run contract from the ``persistent_pan_out_*`` keys. Not
+      hypothetical even though Card 4 is unreachable while the switch is off:
+      three of the five Quick Download presets set those keys directly.
+
+    Never raises - it decorates a terminal screen, which must appear in one
+    frame and must not be the thing that breaks.
+    """
+    try:
+        from panopto.settings import is_enabled, contract_from_ui_state
+    except Exception:
+        return []
+
+    names: list[str] = []
+    try:
+        if mode == 'sync':
+            import json as _json
+            from core.sync_manager import SyncManager
+            from core.pair_labels import pair_display_name
+            for pair in (st.session_state.get('sync_pairs') or []):
+                folder = pair.get('local_folder')
+                if not folder or not Path(folder).exists():
+                    continue
+                try:
+                    sm = SyncManager(folder, pair.get('course_id'),
+                                     pair.get('course_name', ''))
+                    raw = sm._load_metadata('panopto_contract')
+                    if raw and is_enabled(_json.loads(raw)):
+                        names.append(pair_display_name(pair))
+                except Exception:
+                    continue
+        else:
+            if is_enabled(contract_from_ui_state(st.session_state)):
+                for c in (st.session_state.get('courses_to_download') or []):
+                    nm = getattr(c, 'name', None) or (
+                        c.get('name') if isinstance(c, dict) else None)
+                    if nm:
+                        names.append(str(nm))
+    except Exception:
+        return []
+    return names
+
+
+def render_panopto_disabled_notice(mode: str = 'download') -> None:
+    """Say that lecture recordings were left out because the switch is off.
+
+    The THIRD member of the "deliberately left alone" family (size-skipped
+    files, unpacked archives), sharing their markup and CSS exactly - see the
+    icon block above. It belongs there and not in an amber warning for the same
+    reason those two do: nothing failed and nothing is missing that the user
+    had. It is noted, not shouted.
+
+    **It counts COURSES, not recordings, and that is forced by the fix itself.**
+    Switching Panopto off skips discovery entirely, so the number of recordings
+    is genuinely unknown - the only honest number is how many course folders
+    were configured to fetch them, which is a cheap local read. Claiming a
+    recording count here would mean running the very scan the switch exists to
+    avoid.
+
+    Silent when the switch is on, and silent when nothing was configured for
+    recordings - otherwise it would appear on every run of every files-only
+    course, which is nearly all of them.
+    """
+    try:
+        from panopto.settings import is_globally_enabled
+        if is_globally_enabled():
+            return
+    except Exception:
+        return
+
+    # Guarded HERE as well as inside the resolver, which is the boundary these
+    # completion panels are already independent across (the same reasoning as
+    # post-processing's `_run_phase`). The resolver cannot raise today - every
+    # path in it returns [] - but it reads a SQLite manifest per pair, and this
+    # panel is a sibling of the error section and the folder cards on a screen
+    # where a raise blanks everything below it. One line of guard costs nothing;
+    # relying on a callee staying total is how the next edit takes the screen out.
+    try:
+        names = panopto_disabled_courses(mode)
+    except Exception:
+        return
+    if not names:
+        return
+
+    n = len(names)
+    rows_html = ''.join(
+        f'<div class="skip-file-row">'
+        f'<img class="skip-file-icon" src="{_SKIP_PANOPTO_SVG}" alt=""/>'
+        f'<span class="skip-file-name">{esc(name)}</span>'
+        f'</div>'
+        for name in names[:50]
+    )
+    st.markdown(
+        "<details class='skip-panel skip-panel-solo'>"
+        "<summary class='skip-panel-header'><div class='sp-header-row'>"
+        f'<img class="sp-chevron" src="{_SKIP_CHEVRON_SVG}" alt="toggle"/>'
+        f'<img class="sp-funnel" src="{_SKIP_PANOPTO_SVG}" alt=""/>'
+        f"<span class='sp-title'>Lecture recordings were not fetched for "
+        f"<b>{n}</b> course{'s' if n != 1 else ''} &mdash; Panopto is switched "
+        f"off in <b>Settings</b>.</span>"
+        "</div></summary>"
+        "<div class='skip-panel-body'>"
+        "<div class='sp-subtitle'>Nothing is missing that you already had &mdash; "
+        "recordings already on your computer are untouched, and each folder keeps "
+        "the recording formats it was set up with. Turn it back on in "
+        "<b>Settings &rsaquo; Panopto lecture recordings</b> and the next run "
+        "picks them up again.</div>"
+        f"<div class='skip-file-list'>{rows_html}</div>"
         "</div></details>",
         unsafe_allow_html=True,
     )
@@ -3226,10 +3366,35 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     else:
         pan_badges = "<div style='width: 100%;'><span style='display:inline-flex; align-items:center; padding:3px 10px; background-color:rgba(255, 255, 255, 0.05); color:#94a3b8; border-radius:12px; font-size:0.78rem; border:1px solid #475569;'>None selected</span></div>"
 
+    # The global switch ANNOTATES this column; it never edits it. A config viewer
+    # answers "what is this preset / folder configured for", and that stays true
+    # while Panopto is switched off - rewriting the pills to "None selected"
+    # would report that a folder set up for recordings never was, and dropping
+    # the column would take away the one question the Sync Hub's viewer exists
+    # to answer. So the pills stay, dimmed by the app's single disabled recipe,
+    # under one line that says what will actually happen. Stated ONCE per column
+    # rather than per pill - five "won't run" badges say nothing five times.
+    pan_note = ""
+    pan_dim = ""
+    if _pan_on:
+        try:
+            from panopto.settings import is_globally_enabled as _pan_glob
+            _pan_switched_off = not _pan_glob()
+        except Exception:
+            _pan_switched_off = False
+        if _pan_switched_off:
+            pan_dim = "filter: brightness(0.5) saturate(0.5);"
+            pan_note = (
+                "<div style='width:100%; font-size:0.72rem; color:#94a3b8; "
+                "margin-bottom:4px; line-height:1.35;'>"
+                "Won&#39;t run &mdash; Panopto is off in Settings.</div>"
+            )
+
     pan_html = f"""
 <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
     <div style='width: 100%; font-size:0.8rem; color:#ffffff; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Panopto Recordings</div>
-    {pan_badges}
+    {pan_note}
+    <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; width: 100%; {pan_dim}'>{pan_badges}</div>
 </div>
 """
 

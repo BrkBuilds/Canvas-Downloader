@@ -204,33 +204,53 @@ def _timeout_for(src: Path, base: int = 180) -> int:
     return min(600, int(base + size_mb * 8))
 
 
+def applescript_string(text) -> str:
+    """Make *text* safe to interpolate into an AppleScript string literal.
+
+    Escapes backslashes first, then double-quotes, then flattens BOTH line
+    break characters. Use as: ``display notification "{applescript_string(s)}"``.
+
+    **This is the one implementation, and it is here because the rule had three
+    - one of which was wrong.** An AppleScript string literal cannot span lines,
+    so a raw ``\\n`` *or* ``\\r`` inside one is a SYNTAX error that takes the
+    whole script down; a double-quote or backslash is an injection. Every
+    builder in this app agreed on quotes and backslashes and then diverged on
+    line breaks: this module and ``shared.helpers.native_folder_picker``
+    flattened both, while ``engine.notifications._show_macos_notification``
+    flattened only ``\\n`` - so a lone ``\\r`` (a Canvas course name reaches
+    that one, via the daily-sync summary) produced an invalid script that
+    osascript rejected, and the notification silently never appeared. Same
+    divergent-primitive shape as ``make_long_path``'s duplicate in
+    ``core/sync_manager.py``: the fix landed on some callers and not others
+    because the rule was written more than once.
+
+    This module imports nothing from the app, so every caller can reach it
+    without a cycle.
+    """
+    return (str(text)
+            .replace('\\', '\\\\')
+            .replace('"', '\\"')
+            .replace('\n', ' ')
+            .replace('\r', ' '))
+
+
 def _as_posix(path: Path) -> str:
     """Return a POSIX path string safe for embedding in an AppleScript string literal.
 
-    Escapes backslashes first, then double-quotes, then flattens line breaks.
     Use inside AppleScript string literals as: ``POSIX file "{_as_posix(path)}"``
 
     IMPORTANT: Callers that build AppleScript ``script`` strings must use this
     function for every path interpolated into the script to prevent AppleScript
     injection via filenames containing double-quotes or backslashes.
 
-    The line breaks matter and were missing. An AppleScript string literal
-    cannot span lines, so a raw newline inside one is a SYNTAX error that takes
-    the whole script down - meaning the conversion fails with an opaque
-    osascript message rather than doing anything. macOS permits every byte
-    except ``/`` and NUL in a filename, so this is reachable two ways: the
-    user's own download folder (the picker returns whatever they chose), and an
-    extracted archive member, whose name comes from the zip and never passes
-    through ``_sanitize_filename``. ``shared.helpers.native_folder_picker``
-    already escapes ``\\n``/``\\r`` for exactly this reason when it builds its
-    own AppleScript - this is the same rule, applied at the shared helper the
-    module docstring points every caller at.
+    The line breaks matter and were missing. macOS permits every byte except
+    ``/`` and NUL in a filename, so a path carrying one is reachable two ways:
+    the user's own download folder (the picker returns whatever they chose), and
+    an extracted archive member, whose name comes from the zip and never passes
+    through ``_sanitize_filename``. The escaping itself now lives in
+    :func:`applescript_string` - see there for why it is only written once.
     """
-    return (str(path.resolve())
-            .replace('\\', '\\\\')
-            .replace('"', '\\"')
-            .replace('\n', ' ')
-            .replace('\r', ' '))
+    return applescript_string(path.resolve())
 
 
 def _try_close_document_after_timeout(app_name: str, posix_src: str) -> None:

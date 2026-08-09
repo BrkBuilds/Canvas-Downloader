@@ -130,6 +130,24 @@ def build_today_sync_notice() -> dict:
     except Exception:
         skipped = []
 
+    # Courses whose recordings the run left out because Panopto is switched off
+    # globally. A SEPARATE field from `skipped`, deliberately: that one means
+    # "the folder is gone, go fix it" and this one means "this is working
+    # exactly as you configured it". One needs an action and the other needs
+    # none, so merging them into one sentence would misreport both.
+    #
+    # This matters most HERE. The daily sync is the run nobody watches, so it is
+    # where a silent omission does the most damage - and it is the one path that
+    # honoured the switch even before the engine gates existed, which means it
+    # has been quietly dropping recordings with nothing on screen to say so.
+    try:
+        from panopto.settings import is_globally_enabled
+        from shared.components import panopto_disabled_courses
+        panopto_off = ([] if is_globally_enabled()
+                       else panopto_disabled_courses('sync'))
+    except Exception:
+        panopto_off = []
+
     return {
         "is_auto": bool(st.session_state.get("today_sync_is_auto")),
         "completed_at": datetime.now().strftime("%H:%M"),
@@ -137,6 +155,7 @@ def build_today_sync_notice() -> dict:
         "courses": courses,
         "errors": len(st.session_state.get("sync_errors") or []),
         "skipped": skipped,
+        "panopto_off": panopto_off,
     }
 
 

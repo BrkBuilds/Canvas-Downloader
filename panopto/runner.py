@@ -1068,149 +1068,159 @@ def _run_panopto_batch(
         active_device = device
         _ok = 0
         i = 0
-        while i < len(tx_tasks):
-            if is_cancelled() or engine_failed:
-                break
-            t = tx_tasks[i]
-            v = t.video
-            progress("transcribe_start", title=v.title, index=i + 1,
-                     total=len(tx_tasks), course=t.course_name)
-            logger.info("Transcribing [%d/%d] '%s' (device=%s, source=%s)...",
-                        i + 1, len(tx_tasks), v.title, active_device,
-                        Path(t.tx_source).name)
-            try:
-                # Runs in an isolated child process: a native CUDA crash can no
-                # longer take down the host (the "server closed itself" bug).
-                result = transcribe_in_subprocess(
-                    t.tx_source, model_path,
-                    language=language, device=active_device,
-                    want_txt=t.want_txt, want_srt=t.want_srt,
-                    progress=lambda pct, _lang, _t=v.title: progress(
-                        "transcribe", title=_t, pct=pct),
-                    is_cancelled=is_cancelled,
-                )
-                summary["transcribed"] += 1
-                _ok += 1
-                made = []
-                for key in ("txt", "srt"):
-                    p = result.get(key)
-                    if p:
-                        made.append(p)
-                        t.produced.append(p)
-                        progress("produced", title=v.title, path=p, course=t.course_name)
-                progress("transcribed", title=v.title, paths=made)
-                _record_now(t)
-                # Transcription succeeded: drop the intermediate audio unless kept.
-                if not t.want_mp3 and path_exists(t.mp3_path):
-                    try:
-                        # make_long_path, to match the path_exists above it: the
-                        # check can see the file and a plain unlink cannot, which
-                        # would leave the intermediate audio behind for ever on
-                        # exactly the recordings whose paths are longest.
-                        os.remove(make_long_path(t.mp3_path))
-                    except OSError:
-                        pass
-                i += 1
-            except PanoptoCancelled:
-                logger.info("Transcription cancelled by user at [%d/%d] '%s'.",
-                            i + 1, len(tx_tasks), v.title)
-                break
-            except TranscriptionEngineCrash as e:
-                # The child process died NATIVELY (e.g. a CUDA/cuDNN access
-                # violation) - uncatchable in-process, which is exactly why it now
-                # runs in a subprocess. The host server is unharmed.
-                logger.error("Transcription worker crashed for '%s' (exit=%s): %s\n%s",
-                             v.title, getattr(e, "exit_code", "?"), e,
-                             getattr(e, "stderr_tail", "") or "(no stderr)")
-                if active_device != "cpu":
-                    # GPU path crashes on this machine -> CPU for the rest, retry.
-                    progress("warn", message=(
-                        "GPU transcription crashed on this PC - switching to CPU "
-                        "for the remaining recordings (transcripts still produced)."))
-                    logger.warning("Downgrading transcription to CPU after GPU worker crash.")
-                    active_device = "cpu"
-                    continue  # retry this same recording on CPU
-                # CPU worker also crashed -> the engine is unusable here. Stop
-                # trying (every remaining recording would crash identically).
-                engine_failed = True
-                progress("error", error=DownloadError(
-                    t.course_name, "Transcription", "Transcription Engine Error",
-                    "The transcription engine crashed on this computer. Audio was "
-                    "downloaded but transcripts were skipped.",
-                    raw_error=e, is_app_error=True))
-                progress("warn", message=(
-                    "Transcription skipped for the remaining recordings - engine "
-                    "crashed. Downloaded audio has been kept."))
-                if path_exists(t.mp3_path) and str(t.mp3_path) not in t.produced:
-                    t.produced.append(str(t.mp3_path))
-                    progress("produced", title=v.title, path=str(t.mp3_path),
-                             course=t.course_name)
-                _record_now(t)
-                i += 1
-            except Exception as e:
-                # GPU runtime failure (cuBLAS/cuDNN missing, OOM, ...): downgrade
-                # the whole remaining phase to CPU and RETRY this same recording.
-                if active_device != "cpu" and _is_cuda_runtime_error(e):
-                    logger.warning("GPU transcription failed (%s); falling back to CPU "
-                                   "for the rest of the run.", e)
-                    progress("warn", message=(
-                        "GPU transcription failed (CUDA libraries unavailable) - "
-                        "switching to CPU for the remaining recordings."))
-                    active_device = "cpu"
-                    continue  # retry the same recording on CPU
-                if _is_fatal_engine_error(e):
+        try:
+            while i < len(tx_tasks):
+                if is_cancelled() or engine_failed:
+                    break
+                t = tx_tasks[i]
+                v = t.video
+                progress("transcribe_start", title=v.title, index=i + 1,
+                         total=len(tx_tasks), course=t.course_name)
+                logger.info("Transcribing [%d/%d] '%s' (device=%s, source=%s)...",
+                            i + 1, len(tx_tasks), v.title, active_device,
+                            Path(t.tx_source).name)
+                try:
+                    # Runs in an isolated child process: a native CUDA crash can no
+                    # longer take down the host (the "server closed itself" bug).
+                    result = transcribe_in_subprocess(
+                        t.tx_source, model_path,
+                        language=language, device=active_device,
+                        want_txt=t.want_txt, want_srt=t.want_srt,
+                        progress=lambda pct, _lang, _t=v.title: progress(
+                            "transcribe", title=_t, pct=pct),
+                        is_cancelled=is_cancelled,
+                    )
+                    summary["transcribed"] += 1
+                    _ok += 1
+                    made = []
+                    for key in ("txt", "srt"):
+                        p = result.get(key)
+                        if p:
+                            made.append(p)
+                            t.produced.append(p)
+                            progress("produced", title=v.title, path=p, course=t.course_name)
+                    progress("transcribed", title=v.title, paths=made)
+                    _record_now(t)
+                    # Transcription succeeded: drop the intermediate audio unless kept.
+                    if not t.want_mp3 and path_exists(t.mp3_path):
+                        try:
+                            # make_long_path, to match the path_exists above it: the
+                            # check can see the file and a plain unlink cannot, which
+                            # would leave the intermediate audio behind for ever on
+                            # exactly the recordings whose paths are longest.
+                            os.remove(make_long_path(t.mp3_path))
+                        except OSError:
+                            pass
+                    i += 1
+                except PanoptoCancelled:
+                    logger.info("Transcription cancelled by user at [%d/%d] '%s'.",
+                                i + 1, len(tx_tasks), v.title)
+                    break
+                except TranscriptionEngineCrash as e:
+                    # The child process died NATIVELY (e.g. a CUDA/cuDNN access
+                    # violation) - uncatchable in-process, which is exactly why it now
+                    # runs in a subprocess. The host server is unharmed.
+                    logger.error("Transcription worker crashed for '%s' (exit=%s): %s\n%s",
+                                 v.title, getattr(e, "exit_code", "?"), e,
+                                 getattr(e, "stderr_tail", "") or "(no stderr)")
+                    if active_device != "cpu":
+                        # GPU path crashes on this machine -> CPU for the rest, retry.
+                        progress("warn", message=(
+                            "GPU transcription crashed on this PC - switching to CPU "
+                            "for the remaining recordings (transcripts still produced)."))
+                        logger.warning("Downgrading transcription to CPU after GPU worker crash.")
+                        active_device = "cpu"
+                        continue  # retry this same recording on CPU
+                    # CPU worker also crashed -> the engine is unusable here. Stop
+                    # trying (every remaining recording would crash identically).
                     engine_failed = True
-                    logger.error(f"Panopto transcription engine unavailable: {e}")
                     progress("error", error=DownloadError(
                         t.course_name, "Transcription", "Transcription Engine Error",
-                        "The local transcription engine could not start on this "
-                        "computer (a required component failed to load). Audio was "
+                        "The transcription engine crashed on this computer. Audio was "
                         "downloaded but transcripts were skipped.",
                         raw_error=e, is_app_error=True))
                     progress("warn", message=(
                         "Transcription skipped for the remaining recordings - engine "
-                        "unavailable. Downloaded audio has been kept."))
-                else:
-                    logger.error(f"Transcription failed for '{v.title}': {e}", exc_info=True)
-                    summary["failed"] += 1
-                    progress("error", error=DownloadError(
-                        t.course_name, v.title, "Transcription Error", str(e), raw_error=e))
-                # Failure of any kind: keep the audio so the user has SOMETHING,
-                # even if they only asked for a transcript.
-                if path_exists(t.mp3_path) and str(t.mp3_path) not in t.produced:
-                    t.produced.append(str(t.mp3_path))
-                    progress("produced", title=v.title, path=str(t.mp3_path),
-                             course=t.course_name)
-                _record_now(t)
-                i += 1
-        progress("transcribe_done", total=len(tx_tasks), ok=_ok)
+                        "crashed. Downloaded audio has been kept."))
+                    if path_exists(t.mp3_path) and str(t.mp3_path) not in t.produced:
+                        t.produced.append(str(t.mp3_path))
+                        progress("produced", title=v.title, path=str(t.mp3_path),
+                                 course=t.course_name)
+                    _record_now(t)
+                    i += 1
+                except Exception as e:
+                    # GPU runtime failure (cuBLAS/cuDNN missing, OOM, ...): downgrade
+                    # the whole remaining phase to CPU and RETRY this same recording.
+                    if active_device != "cpu" and _is_cuda_runtime_error(e):
+                        logger.warning("GPU transcription failed (%s); falling back to CPU "
+                                       "for the rest of the run.", e)
+                        progress("warn", message=(
+                            "GPU transcription failed (CUDA libraries unavailable) - "
+                            "switching to CPU for the remaining recordings."))
+                        active_device = "cpu"
+                        continue  # retry the same recording on CPU
+                    if _is_fatal_engine_error(e):
+                        engine_failed = True
+                        logger.error(f"Panopto transcription engine unavailable: {e}")
+                        progress("error", error=DownloadError(
+                            t.course_name, "Transcription", "Transcription Engine Error",
+                            "The local transcription engine could not start on this "
+                            "computer (a required component failed to load). Audio was "
+                            "downloaded but transcripts were skipped.",
+                            raw_error=e, is_app_error=True))
+                        progress("warn", message=(
+                            "Transcription skipped for the remaining recordings - engine "
+                            "unavailable. Downloaded audio has been kept."))
+                    else:
+                        logger.error(f"Transcription failed for '{v.title}': {e}", exc_info=True)
+                        summary["failed"] += 1
+                        progress("error", error=DownloadError(
+                            t.course_name, v.title, "Transcription Error", str(e), raw_error=e))
+                    # Failure of any kind: keep the audio so the user has SOMETHING,
+                    # even if they only asked for a transcript.
+                    if path_exists(t.mp3_path) and str(t.mp3_path) not in t.produced:
+                        t.produced.append(str(t.mp3_path))
+                        progress("produced", title=v.title, path=str(t.mp3_path),
+                                 course=t.course_name)
+                    _record_now(t)
+                    i += 1
+            progress("transcribe_done", total=len(tx_tasks), ok=_ok)
 
-        # Sweep any half-written .part sidecars, whatever ended the phase.
-        #
-        # The loop has SEVERAL exits and only one of them used to clean up: the
-        # `except PanoptoCancelled` branch, via transcribe_in_subprocess. The
-        # `if is_cancelled() or engine_failed: break` at the loop head does not,
-        # and neither does an engine failure - so a cancel caught at the top of
-        # the loop left `<name>.txt.part` and `<name>.srt.part` sitting in the
-        # user's course folder. Measured twice: the two exits produce visibly
-        # different logs (one writes "Transcription cancelled by user", the other
-        # writes nothing) and only the logged one cleaned up.
-        #
-        # They are invisible to the app afterwards - the engine deliberately
-        # ignores .part artifacts everywhere (never healed onto a manifest row,
-        # never auto-discovered, never counted as study material), so nothing
-        # would ever remove or even mention them again.
-        #
-        # Sweeping HERE rather than at each exit is the point: it covers every
-        # route out of the phase, including ones added later. Committed outputs
-        # have already been renamed off the .part path, so this can only ever
-        # remove genuinely abandoned work.
-        for _t in tx_tasks:
-            try:
-                if _t.tx_source:
-                    _clean_part_files(str(_t.tx_source), _t.want_txt, _t.want_srt)
-            except Exception:
-                pass
+        finally:
+            # The sweep below MUST stay in a `finally`.
+            #
+            # It used to sit after the loop as ordinary statements, with a comment
+            # claiming it covered "every route out of the phase". It did not cover
+            # the one route that matters most: **cancelling from the UI**. Clicking
+            # Cancel makes Streamlit stop this script run, and it does that by
+            # raising `RerunException`/`StopException` from the next `st.*` call -
+            # which happens inside the `progress()` callback, i.e. INSIDE this loop.
+            # Both are `BaseException`, not `Exception`, so nothing here caught them
+            # and they propagated straight past a sweep that was merely the next
+            # statement.
+            #
+            # Measured on a real cancel (course 43660, 2026-08-09): the worker was
+            # 2.5 minutes into recording [3/30] when Cancel was clicked. The debug
+            # log simply ENDS at the cancellation - no "Transcription cancelled by
+            # user", no `transcribe_done`, nothing after it - and two sidecars,
+            # `<name>.txt.part` (8416 B) and `<name>.srt.part` (16536 B), were left
+            # in the student's course folder. They were not locked: calling
+            # `_clean_part_files` by hand afterwards removed both instantly, which
+            # is what proves the cleanup itself was never reached.
+            #
+            # That matters because the engine deliberately ignores `.part` artifacts
+            # everywhere (never healed onto a manifest row, never auto-discovered,
+            # never counted as study material), so nothing would ever remove or even
+            # mention them again.
+            #
+            # Committed outputs have already been renamed off the .part path, so
+            # this can only ever remove genuinely abandoned work.
+            for _t in tx_tasks:
+                try:
+                    if _t.tx_source:
+                        _clean_part_files(str(_t.tx_source), _t.want_txt, _t.want_srt)
+                except Exception:
+                    pass
 
     # If the engine died mid-phase, retain audio for every not-yet-processed
     # recording too (so nothing is silently deleted as a stale intermediate).

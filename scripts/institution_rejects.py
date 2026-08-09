@@ -122,6 +122,15 @@ REJECT_DOMAINS: dict[str, str] = {
     # publish under the university's name.
     "workforcecenter.instructure.com": "Saint Louis University workforce centre, not the university",
     "uwoms.instructure.com": "University of Washington Merchant Services - not an institution",
+
+    # A domain serving SEVERAL unrelated organisations, so there is no name it
+    # could ship under that is not wrong for somebody. Found 2026-08-09 while
+    # tracing how "Eotvos Lorand University" came to point here: the finder
+    # publishes both "ELU - European Leadership University" and "MCT -
+    # Management Centre Turkiye" on this one host, and neither is ELTE.
+    "elu.instructure.com": "two unrelated organisations share this host",
+    "virtualcampus.instructure.com": "shared host - American University of Nigeria, "
+                                     "Davis & Elkins, Oklahoma Panhandle State and others",
 }
 
 
@@ -160,4 +169,21 @@ RENAME: dict[str, str] = {
     # distinct FROM - measured: with "(Guangzhou)" this account vanished
     # entirely instead of sitting beside the main campus.
     "hkust-gz.instructure.com": "Hong Kong University of Science and Technology Guangzhou",
+
+    # Tenants whose account name claims the whole institution while serving one
+    # school or one mode of study. Each was traced from a shipped row on
+    # 2026-08-09; the pairing gates now decline them for the SEED, but the fill
+    # path still ships them under the name the account gives itself, which is
+    # the over-claim these renames exist for. Real tenants with real students -
+    # rename, never drop.
+    "robinsongsu.instructure.com": "Georgia State University (Robinson College of Business)",
+    "healtharizona.instructure.com": "University of Arizona (College of Public Health)",
+    "onlinestudy.york.ac.uk": "University of York (Online)",
+    "witsstudyonline.instructure.com": "University of the Witwatersrand (Online)",
+    "canvas.westernsydneyonline.edu.au": "Western Sydney University (Online)",
+    "courses.online.usc.edu": "University of Southern California (Online)",
+    "utm.instructure.com": "University of Tennessee at Martin",
+    # NOT uandes.instructure.com: the seed "Universidad de los Andes Chile"
+    # takes that domain, so `fill` never sees it and a rename here would be
+    # dead config that reads as an applied decision.
 }

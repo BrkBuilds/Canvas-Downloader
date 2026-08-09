@@ -245,3 +245,209 @@ def test_the_seed_pool_is_gated_by_bad_account_and_not_by_the_fill_gate():
         "the fill gate now also filters the seed pool; widening coverage would "
         "again change which account a curated name can pair with"
     )
+
+
+def test_an_ambiguous_initialism_is_not_evidence():
+    """"USC" is the initialism of BOTH the University of South Carolina and the
+    University of Southern California, and the account on
+    ``courses.online.usc.edu`` is called simply "USC Online" - so the
+    initialism path accepted it for whichever seed reached it first, and the
+    dedupe then kept the alphabetically earlier name. Shipped result: South
+    Carolina pointing at Southern California's tenant, AND Southern California
+    missing from the list entirely, its domain already taken.
+
+    The initialism branch is the strictest in ``accepts`` and the only one that
+    can fire on zero token overlap, so an ambiguous acronym reaching it is not
+    weak evidence - it is none.
+    """
+    assert "usc" in BIL._AMBIGUOUS_ACRONYMS
+    # A host with NO sub-tenant word in it, so the initialism branch is the one
+    # actually under test. The shipped case (courses.online.usc.edu) is vetoed
+    # earlier by `domain_is_subtenant`, so asserting on it alone passes with
+    # this guard deleted - it proves the other rule, not this one.
+    for seed in ("University of South Carolina", "University of Southern California"):
+        assert not BIL.accepts(seed, "US", "usc.instructure.com", "USC"), (
+            f"{seed!r} claims a host through an initialism two universities share"
+        )
+        assert not BIL.accepts(seed, "US", "courses.online.usc.edu", "USC Online"), (
+            f"{seed!r} still claims a host it can only reach through an "
+            "initialism that two universities share"
+        )
+    # ...while an UNambiguous one still works, or the guard has simply disabled
+    # the branch it was meant to narrow.
+    assert "ubc" not in BIL._AMBIGUOUS_ACRONYMS
+    assert BIL.accepts("University of British Columbia", "CA",
+                       "canvas.ubc.ca", "UBC Canvas")
+
+
+def test_the_crawl_paginates_past_sixty_pages():
+    """The finder has no result cap: measured 2026-08-09, letter 'a' ends at
+    page 94 and 'e' at 106. The old ``range(1, 61)`` therefore discarded ~40%
+    of every common letter - on 'a' alone, pages 61-94 hold 2,433 domains the
+    crawl never saw, 1,400 of which pass ``is_institution``.
+
+    A cap that reads as generous and silently truncates is the worst kind, so
+    pin the floor rather than the exact value.
+    """
+    assert BIL._MAX_PAGES >= 150, (
+        f"_MAX_PAGES is {BIL._MAX_PAGES}; a common letter needs ~110 pages and "
+        "a cap near that truncates the crawl without saying so"
+    )
+    src = (ROOT / "scripts" / "build_institution_list.py").read_text(encoding="utf-8")
+    body = src[src.index("def crawl("):]
+    body = body[:body.index("def best_account_name(")]
+    assert "_MAX_PAGES" in body, "crawl() no longer honours the page bound"
+    assert "range(1, 61)" not in body
+
+
+def test_a_domain_is_seedable_when_ANY_of_its_names_is_clean(monkeypatch):
+    """`_BAD_ACCOUNT` is applied per NAME, and a domain survives if one of its
+    names is clean. Applied to whichever name the crawl stored first - an
+    artefact of alphabetical search order - it excluded the domain from seeding
+    outright.
+
+    Measured on the real crawl: `canvas.lms.unimelb.edu.au` publishes both "The
+    University of Melbourne (non-SSO)" and "The University of Melbourne". The
+    first matches `_BAD_ACCOUNT`, so the seed found no candidate and Australia's
+    best-known university shipped without its curated name - and, once ranking
+    existed, below Melbourne Grammar School for the query `melbourne`.
+    """
+    monkeypatch.setattr(BIL, "verify_many",
+                        lambda domains, workers=16: {d: "ok" for d in domains})
+    pool = {"canvas.lms.unimelb.edu.au": ["The University of Melbourne (non-SSO)",
+                                          "The University of Melbourne"]}
+    rows, _ = BIL.build(pool, limit=10)
+    got = [r for r in rows if r["domain"] == "canvas.lms.unimelb.edu.au"]
+    assert got, "the domain was excluded from seeding by its dirtier name"
+    assert got[0]["name"] == "University of Melbourne", got[0]
+    assert got[0]["flags"] == "s", "a seeded row must carry the prominence flag"
+
+
+def test_a_hand_written_rename_is_not_re_tested_by_the_heuristics(monkeypatch):
+    """RENAME exists because a human looked at this account and decided what it
+    is. Re-running the name gates on their answer dropped four real tenants:
+    `clean_name` strips a trailing "Online", which is the only education word
+    "Western Sydney Online" and "USC Online" have, so the re-test rejected them
+    and the rename never got the chance to apply."""
+    monkeypatch.setattr(BIL, "verify_many",
+                        lambda domains, workers=16: {d: "ok" for d in domains})
+    pool = {"canvas.westernsydneyonline.edu.au": ["Western Sydney Online"]}
+    rows, _ = BIL.build(pool, limit=10)
+    # Scoped to the domain under test:  also emits the DIRECT rows,
+    # which are hand-verified tenants the crawl never sees.
+    got = [r["name"] for r in rows if r["domain"] == "canvas.westernsydneyonline.edu.au"]
+    assert got == ["Western Sydney University (Online)"], rows
+
+
+def test_a_two_letter_tld_that_is_not_a_country_never_becomes_one():
+    """`.eu` is two letters and supranational, so `cc_of` emitted the country
+    code "EU" - a code no country table can name. Such a row is excluded from
+    every regional suggestion list and asks the picker for a label that does
+    not exist.
+
+    Asserted on the FUNCTION, not on the shipped data: the data is regenerated,
+    so a data-only check passes against a builder that has started emitting the
+    bad code again and simply has not been re-run.
+    """
+    assert BIL.cc_of("canvas.example.eu") == ""
+    assert BIL.infer_cc("Some University", "canvas.example.eu") == ""
+    # ...and a real ccTLD still resolves, or the fix is just a blanket disable.
+    assert BIL.cc_of("canvas.example.dk") == "DK"
+    assert BIL.cc_of("canvas.example.edu") == "US"
+
+
+def test_country_is_inferred_from_the_name_when_the_domain_says_nothing():
+    """93% of the list is `*.instructure.com`, which carries no country signal,
+    so before this the picker's opening list had almost nothing to work with -
+    Denmark had two rows with a country while five more Danish institutions
+    shipped as country-unknown."""
+    assert BIL.infer_cc("Erhvervsakademi Aarhus", "eaaa.instructure.com") == "DK"
+    assert BIL.infer_cc("VUC Roskilde", "vucroskilde.instructure.com") == "DK"
+    assert BIL.infer_cc("Giles County Schools - VA", "gilesk12.instructure.com") == "US"
+    assert BIL.infer_cc("Tippecanoe School District", "tsc.instructure.com") == "US"
+    # A proven ccTLD always wins over a guess from the name.
+    assert BIL.infer_cc("Erhvervsakademi Aarhus", "canvas.eaaa.se") == "SE"
+    # ...and an unknown stays unknown. Inventing one to avoid an empty string
+    # is exactly the confident wrong answer this module exists to avoid.
+    assert BIL.infer_cc("Riverside Academy", "riverside.instructure.com") == ""
+
+
+def test_clean_name_keeps_the_tail_that_says_WHICH_institution_this_is():
+    """`clean_name` exists to collapse tenant qualifiers, and it used to strip
+    every parenthetical and everything after a dash unconditionally. That is
+    right for "The University of Melbourne (non-SSO)" and a falsehood for
+    "University of Tennessee - Martin", which it turned into "University of
+    Tennessee" - promoting a branch campus into a claim on the whole
+    university, on the fill path, where no pairing gate can see it.
+
+    Note this uses a DIFFERENT rule from the pairing veto (`tail_tokens`, not
+    `qualifier_tokens`). The veto was deliberately narrowed to
+    institution-like tails so it would stop rejecting "University of Michigan -
+    Ann Arbor"; display must stay broad, or the narrowing silently re-breaks
+    every campus label.
+    """
+    keeps = {
+        "University of Tennessee - Martin": "University of Tennessee - Martin",
+        "Universidad de los Andes - Chile": "Universidad de los Andes - Chile",
+        "University of Michigan - Ann Arbor": "University of Michigan - Ann Arbor",
+        "University of Arizona - College of Public Health":
+            "University of Arizona - College of Public Health",
+        "Xavier University - Ateneo de Cagayan": "Xavier University - Ateneo de Cagayan",
+    }
+    for raw, want in keeps.items():
+        assert BIL.clean_name(raw) == want, f"{raw!r} lost the tail that identifies it"
+
+    drops = {
+        "The University of Melbourne (non-SSO)": "The University of Melbourne",
+        "Central Philippine University (CPU)": "Central Philippine University",
+        "Brentwood School District - Students/Teachers": "Brentwood School District",
+        "Far Eastern University (FEU)": "Far Eastern University",
+    }
+    for raw, want in drops.items():
+        assert BIL.clean_name(raw) == want, f"{raw!r} kept a tenant qualifier"
+
+
+def test_clean_name_keeps_qualifiers_in_source_order():
+    """The tail used to be rebuilt by concatenating every parenthetical AHEAD
+    of every dash-tail, which rewrites the name: "TOS - The Olympia Schools
+    (Teacher, Student)" came out as "TOS - Teacher, Student The Olympia
+    Schools". Segments are judged one at a time and kept where they were."""
+    assert BIL.clean_name("TOS - The Olympia Schools (Teacher, Student)") == \
+        "TOS - The Olympia Schools"
+    assert BIL.tail_segments("A (one) - two - (three)") == ["one", "two", "three"]
+
+
+def test_build_emits_the_direct_tenants_even_with_an_empty_crawl(monkeypatch):
+    """Asserted on `build`, not on the shipped data.
+
+    A data-only check passes against a builder that has stopped emitting these
+    rows and simply has not been re-run - the same hole the `.eu` country test
+    had. With an empty pool there is nothing BUT the direct source, so the
+    assertion is exact.
+    """
+    from institution_direct import DIRECT
+    monkeypatch.setattr(BIL, "verify_many",
+                        lambda domains, workers=16: {d: "ok" for d in domains})
+    rows, _ = BIL.build({}, limit=500)
+    got = {(r["name"], r["domain"], r["cc"], r["flags"]) for r in rows}
+    want = {(n, d, cc, "s") for n, d, cc in DIRECT}
+    assert got == want, f"build() did not emit the DIRECT tenants\n got={got}\nwant={want}"
+
+
+def test_a_country_marker_must_be_unambiguous_in_practice():
+    """Each marker is a word that means ONE thing. Three did not, and each put
+    a real institution in the wrong country's suggestion list: "indian school"
+    is a Native American school in the United States, "islands" caught
+    California State University Channel Islands, and "city college of" is a US
+    pattern that moved San Francisco to the Philippines."""
+    # "" is the right answer, not a US guess: none of these carries a marker
+    # that means one thing, and an unknown country costs one row a place in a
+    # suggestion list while a wrong one puts it in the wrong country entirely.
+    for name, dom in (("Red Cloud Indian School", "redcloudschool.instructure.com"),
+                      ("California State University, Channel Islands", "csuci.instructure.com"),
+                      ("City College of San Francisco", "ccsf.instructure.com"),
+                      ("Association of Commonwealth Universities", "aculms.instructure.com")):
+        assert BIL.infer_cc(name, dom) == "", f"{name} was given a country it has no claim to"
+    # ...and the markers that ARE unambiguous still fire.
+    assert BIL.infer_cc("Universiti Brunei Darussalam", "ubd.instructure.com") == "MY"
+    assert BIL.infer_cc("VUC Roskilde", "vucroskilde.instructure.com") == "DK"

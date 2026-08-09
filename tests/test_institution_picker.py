@@ -67,12 +67,12 @@ def test_payload_carries_every_institution():
     recs = payload.split(picker._RS)
     assert len(recs) == inst.count() == len(inst.DATA)
     for rec in recs:
-        assert rec.count(picker._FS) == 2, f"malformed record: {rec[:60]!r}"
+        assert rec.count(picker._FS) == 4, f"malformed record: {rec[:60]!r}"
 
 
 def test_payload_delimiters_appear_in_no_institution():
     """A delimiter inside a name would silently split one school into two."""
-    for name, domain, _cc in inst.DATA:
+    for name, domain, _cc, _fl in inst.DATA:
         for delim in (picker._FS, picker._RS):
             assert delim not in name, f"{name!r} contains the {delim!r} delimiter"
             assert delim not in domain, f"{domain!r} contains the {delim!r} delimiter"
@@ -83,7 +83,7 @@ def test_payload_is_html_escaped_into_the_attribute():
     and dump the rest of the list into the tag as bogus attributes."""
     real = inst.DATA
     try:
-        inst.DATA = (("Quote\" and <b>bold</b>", "x.instructure.com", "US"),)
+        inst.DATA = (("Quote\" and <b>bold</b>", "x.instructure.com", "US", ""),)
         html = picker.picker_html()
     finally:
         inst.DATA = real
@@ -171,8 +171,9 @@ def test_no_em_or_en_dashes_in_user_facing_copy():
 def test_data_is_well_formed():
     seen = set()
     for row in inst.DATA:
-        assert isinstance(row, tuple) and len(row) == 3, row
-        name, domain, cc = row
+        assert isinstance(row, tuple) and len(row) == 4, row
+        name, domain, cc, flags = row
+        assert set(flags) <= {"s"}, f"unknown flags {flags!r} for {name}"
         assert name and name.strip() == name, f"bad name {name!r}"
         assert domain == domain.lower(), f"domain not lowercased: {domain}"
         for bad in ("://", "/", " ", "?", "#", ":"):
@@ -206,7 +207,7 @@ def test_hand_reviewed_rejections_never_ship():
     # Queens University of Charlotte, and a student there should find it. The
     # defect would be that host appearing labelled "Queens University", the
     # Canadian one. So assert on the pair.
-    shipped = {(n, d) for n, d, _c in inst.DATA}
+    shipped = {(r[0], r[1]) for r in inst.DATA}
     leaked = sorted(p for p in ((s, d) for s, d in REJECT.items()) if p in shipped)
     assert not leaked, f"hand-rejected NAME->DOMAIN pairings shipped: {leaked}"
 
@@ -215,7 +216,7 @@ def test_no_two_entries_are_the_same_institution():
     """A duplicate is not cosmetic: the picker is scanned by eye, and the same
     school twice on two tenants makes the user guess which one is theirs."""
     seen = {}
-    for name, domain, _cc in inst.DATA:
+    for name, domain, _cc, _fl in inst.DATA:
         key = re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]+", " ", name.lower())).strip()
         key = re.sub(r"^the ", "", key)
         assert key not in seen, f"duplicate institution: {name} ({domain}) vs {seen.get(key)}"
@@ -252,12 +253,12 @@ def test_anchor_institutions_survive_regeneration(domain, label):
 def test_the_list_spans_more_than_one_country():
     """The app is international; a build that collapsed to one market would
     still pass every other test here."""
-    ccs = {c for _n, _d, c in inst.DATA if c}
+    ccs = {r[2] for r in inst.DATA if r[2]}
     assert len(ccs) >= 8, f"only {len(ccs)} countries represented: {sorted(ccs)}"
 
 
 def test_match_url_accepts_the_forms_a_student_actually_pastes():
-    name, domain, _cc = inst.DATA[0]
+    name, domain = inst.DATA[0][0], inst.DATA[0][1]
     for form in (
         domain,
         f"https://{domain}",
@@ -272,7 +273,7 @@ def test_match_url_accepts_the_forms_a_student_actually_pastes():
 
 def test_match_url_is_exact_host_never_a_suffix():
     """A suffix rule would let a lookalike domain borrow a real school's name."""
-    _name, domain, _cc = inst.DATA[0]
+    domain = inst.DATA[0][1]
     for impostor in (f"evil-{domain}", f"{domain}.attacker.test", f"x{domain}"):
         assert inst.match_url(impostor) is None, f"{impostor!r} must not match {domain!r}"
 
@@ -286,7 +287,7 @@ def test_search_blob_includes_name_domain_and_country():
     row = inst.DATA[0]
     blob = inst.search_blob(row)
     assert blob == blob.lower()
-    for part in row:
+    for part in row[:3]:
         assert part.lower() in blob
 
 
@@ -303,8 +304,8 @@ def test_search_haystack_includes_the_country_NAME():
 def test_every_shipped_country_has_a_searchable_name():
     """A country with no name entry is searchable only by its two-letter code,
     which no student would think to type."""
-    missing = sorted({c for _n, _d, c in inst.DATA
-                      if c and c not in picker.COUNTRY_NAMES})
+    missing = sorted({r[2] for r in inst.DATA
+                      if r[2] and r[2] not in picker.COUNTRY_NAMES})
     assert not missing, f"countries with no search name: {missing}"
 
 
@@ -317,16 +318,60 @@ def _parsed_payload() -> dict:
     """
     out = {}
     for rec in picker.build_payload().split(picker._RS):
-        f = rec.split(picker._FS)
-        out[f[1].replace(picker._SUF_TOKEN, picker._SUF)] = \
-            f[2].replace(picker._SUF_TOKEN, picker._SUF)
+        f = [x.replace(picker._SUF_TOKEN, picker._SUF) for x in rec.split(picker._FS)]
+        out[f[1]] = {"name": f[0], "cc": f[2][:2].strip(), "flags": f[2][2:],
+                     "folded": f[3], "aliases": f[4]}
     return out
 
 
-def test_payload_records_carry_the_haystack():
+def _country_table() -> dict:
+    return {f[0]: (f[1], f[2])
+            for f in (rec.split(picker._FS)
+                      for rec in picker.country_payload().split(picker._RS))}
+
+
+def test_payload_reassembles_exactly_the_documented_haystack():
+    """`search_blob` says what text finds a row; the payload must still carry
+    all of it, from FOUR fields plus a country table sent once.
+
+    This is the invariant that replaced "the payload contains the blob". The
+    blob used to ride in every record - name and domain repeated a second time
+    inside a string only the search read - which was 169 KB of the 333 KB
+    payload on the login page, the slowest screen in the app. Dropping it is
+    only safe while the bridge can rebuild the same text from what it is given,
+    and that is exactly what this asserts. Compared as TOKEN SETS because the
+    bridge scores the fields separately and has no reason to concatenate them
+    in `search_blob`'s order.
+    """
     recs = _parsed_payload()
-    for row in list(inst.DATA)[:25]:
-        assert recs[row[1]] == picker.search_blob(row)
+    table = _country_table()
+    assert set(recs) == {r[1] for r in inst.DATA}, (
+        "a domain did not survive the payload round-trip"
+    )
+    for row in inst.DATA:
+        r = recs[row[1]]
+        rebuilt = " ".join((r["name"], row[1], r["cc"],
+                            table.get(r["cc"], ("", ""))[0], r["aliases"],
+                            r["folded"]))
+        assert set(rebuilt.lower().split()) == set(picker.search_blob(row).split()), (
+            f"the bridge cannot rebuild the haystack for {row[0]!r}"
+        )
+
+
+def test_payload_does_not_ship_the_name_or_domain_twice():
+    """The saving is the point, so measure it rather than trusting the shape."""
+    payload = picker.build_payload()
+    names = sum(len(r[0]) for r in inst.DATA)
+    # Each name may appear once as the display field and once more as a FOLDED
+    # copy - but only for the minority of rows whose name carries accents.
+    folded = sum(1 for r in inst.DATA if picker.folded_name(r[0]))
+    assert folded < len(inst.DATA) / 2, (
+        "most rows are shipping a folded copy; the 'only when it differs' rule is off"
+    )
+    assert len(payload) < names * 2, (
+        f"payload {len(payload)} is more than twice the name text ({names}) - "
+        "something is being duplicated again"
+    )
 
 
 def test_the_suffix_compression_round_trips_exactly():
@@ -334,31 +379,58 @@ def test_the_suffix_compression_round_trips_exactly():
 
     A quarter of the payload was that one string repeated, and the picker is
     the login page's whole reason for existing, so rows have to be cheap. What
-    must NOT change is what anything downstream sees: the displayed domain, the
-    https:// link and the search haystack are all built from these two fields.
+    must NOT change is what anything downstream sees: the displayed domain and
+    the https:// link are built from these fields.
     """
     recs = _parsed_payload()
-    assert set(recs) == {d for _n, d, _c in inst.DATA}, (
-        "a domain did not survive the compression round-trip"
-    )
-    for name, domain, _cc in inst.DATA:
-        assert recs[domain] == picker.search_blob((name, domain, _cc))
+    assert set(recs) == {r[1] for r in inst.DATA}
+    for row in inst.DATA:
+        assert recs[row[1]]["name"] == row[0]
 
     raw = picker.build_payload()
     assert picker._SUF not in raw, (
         "the suffix is still being shipped in full; the compression is not applied"
     )
     # ...and it really is the common case, so the saving is real.
-    assert raw.count(picker._SUF_TOKEN) >= len(inst.DATA), (
-        "fewer suffix tokens than institutions - the payload is not compressed"
+    assert raw.count(picker._SUF_TOKEN) >= len(inst.DATA) / 2, (
+        "far fewer suffix tokens than institutions - the payload is not compressed"
     )
+
+
+def test_country_table_ships_once_and_carries_a_display_label():
+    """It used to ride inside every row's haystack, which cost 8 KB of repeats
+    and - much worse - made "united states" searchable text on all 220 US rows:
+    194 of the 322 hits for the query `state` matched nothing else."""
+    table = _country_table()
+    assert set(table) == set(picker.COUNTRY_NAMES)
+    for cc, (words, label) in table.items():
+        assert words == picker.COUNTRY_NAMES[cc]
+        assert label == picker.COUNTRY_LABEL[cc] and label, f"no label for {cc}"
+    assert picker.country_payload() not in picker.build_payload()
+
+
+def test_country_label_covers_country_names_in_both_directions():
+    """Two tables, one keyspace. A label missing here is an opening list that
+    silently loses its heading for everyone in that country."""
+    assert set(picker.COUNTRY_LABEL) == set(picker.COUNTRY_NAMES)
+
+
+def test_seed_flag_actually_ships():
+    """The picker's ONLY "many people mean this one" signal. With every row
+    flagged '' the ranking is still plausible and still answers `melbourne`
+    with Melbourne Grammar School - so a flag-less list must fail loudly."""
+    seeded = [r for r in inst.DATA if "s" in picker.row_flags(r)]
+    assert len(seeded) >= 100, f"only {len(seeded)} rows carry the seed flag"
+    payload_flagged = sum(1 for rec in picker.build_payload().split(picker._RS)
+                          if rec.split(picker._FS)[2].endswith("s"))
+    assert payload_flagged == len(seeded)
 
 
 def test_no_field_can_carry_the_suffix_token_itself():
     """A literal `*` in a name would be expanded into `.instructure.com` by the
     bridge, corrupting both the displayed name and the haystack."""
     for rec in picker.build_payload().split(picker._RS):
-        name, domain, blob = rec.split(picker._FS)
+        name, domain, meta, folded, aliases = rec.split(picker._FS)
         assert picker._SUF_TOKEN not in name, f"suffix token leaked into a name: {name!r}"
         # In the other two it is only ever the token the builder put there.
         assert picker._SUF_TOKEN not in domain.replace(picker._SUF_TOKEN, "", 1)
@@ -563,7 +635,7 @@ def test_only_a_capped_number_of_rows_is_ever_rendered():
 def test_the_count_line_tells_the_user_results_were_truncated():
     """Silently showing 60 of 1,079 matches would look like a broken search."""
     assert "keep typing to narrow" in _JS
-    assert "Showing " in _JS
+    assert "Best " in _JS
 
 
 def test_highlight_regex_is_compiled_once_per_render_not_per_row():
@@ -654,11 +726,11 @@ def test_domain_denylist_and_renames_are_applied():
     sys.path.insert(0, str(_ROOT / "scripts"))
     from institution_rejects import REJECT_DOMAINS, RENAME
 
-    shipped = {d for _n, d, _c in inst.DATA}
+    shipped = {r[1] for r in inst.DATA}
     leaked = sorted(set(REJECT_DOMAINS) & shipped)
     assert not leaked, f"denylisted domains shipped: {leaked}"
 
-    by_domain = {d: n for n, d, _c in inst.DATA}
+    by_domain = {r[1]: r[0] for r in inst.DATA}
     for domain, label in RENAME.items():
         if domain in by_domain:
             assert by_domain[domain] == label, (
@@ -671,7 +743,7 @@ def test_no_secondary_school_slipped_in_under_a_college_name():
     exact accounts that reached a build before the denylist existed."""
     banned = ("riverview.instructure.com", "staloysius.instructure.com",
               "stscholastica.instructure.com", "sjccoomera.instructure.com")
-    shipped = {d for _n, d, _c in inst.DATA}
+    shipped = {r[1] for r in inst.DATA}
     assert not (set(banned) & shipped)
 
 
@@ -807,13 +879,13 @@ def test_no_two_institutions_share_a_domain():
     """One host, one school. A duplicate means a mispairing survived beside the
     real owner rather than replacing it."""
     seen = {}
-    for name, domain, _cc in inst.DATA:
+    for name, domain, _cc, _fl in inst.DATA:
         assert domain not in seen, f"{domain} claimed by {seen[domain]!r} and {name!r}"
         seen[domain] = name
 
 
 def test_no_institution_appears_twice():
-    names = [n.lower() for n, _d, _c in inst.DATA]
+    names = [r[0].lower() for r in inst.DATA]
     dupes = sorted({n for n in names if names.count(n) > 1})
     assert not dupes, f"duplicate institutions: {dupes}"
 
@@ -983,7 +1055,7 @@ def test_every_shipped_reject_pairing_stays_out_of_the_data():
     spec = importlib.util.spec_from_file_location("_rej", p)
     rej = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(rej)
-    by_domain = {d: n for n, d, _c in inst.DATA}
+    by_domain = {r[1]: r[0] for r in inst.DATA}
     for seed, domain in rej.REJECT.items():
         assert by_domain.get(domain) != seed, (
             f"{seed!r} is paired with {domain} despite being rejected"
@@ -1088,7 +1160,154 @@ def test_the_accented_spelling_keeps_working(query, domain):
 def test_folding_only_adds_a_copy_where_it_changes_something():
     """An ASCII-only row must not carry a duplicate of itself - 1,797 rows go
     into one attribute and the payload is re-parsed on every rerun."""
-    row = next(r for r in inst.DATA if r[1] == "canvas.harvard.edu")
+    row = next(r for r in inst.DATA if r[1] == "canvas.uw.edu")
+    assert not picker.aliases_of(row), "pick a row with no aliases for this test"
     blob = picker.search_blob(row)
-    assert blob.lower().count("harvard") == blob.count("harvard"), blob
+    assert blob.lower().count("washington") == blob.count("washington"), blob
     assert blob == f"{inst.search_blob(row)} {picker.COUNTRY_NAMES.get(row[2], '')}".strip()
+    assert picker.folded_name(row[0]) == "", "an ASCII name needs no folded copy"
+
+
+def test_search_aliases_point_at_shipped_domains():
+    """An alias keyed on a domain that is not in the list is dead text - it
+    reads as a decision that was applied and never was. The list is
+    regenerated; this table is hand-written, so the two drift by default."""
+    shipped = {r[1] for r in inst.DATA}
+    orphans = sorted(d for d in picker.SEARCH_ALIASES if d not in shipped)
+    assert not orphans, f"aliases for domains that do not ship: {orphans}"
+
+
+def test_an_alias_is_findable_and_scored_as_identity():
+    """`ku` is what every Danish student calls Kobenhavns Universitet, and its
+    Canvas is called `absalon` - so before aliases existed the query returned
+    the University of Kansas and no Danish row at all."""
+    ku = next(r for r in inst.DATA if r[1] == "absalon.instructure.com")
+    assert "ku" in picker.aliases_of(ku).split()
+    assert "ku" in picker.search_blob(ku).split()
+    # Scored on the alias branch, which is the domain-label weight - never as a
+    # word of the name, or it would dilute the coverage bonus.
+    assert "r.at[k] === t" in picker._BRIDGE_JS
+    assert "at: al ?" in picker._BRIDGE_JS
+
+
+def test_ranking_weights_keep_their_order():
+    """The weights are ordinal: a whole-name hit beats a name prefix, which
+    beats a word inside the name, which beats a fragment inside a word, which
+    beats the country's name. Re-tuning one number without the others is how a
+    ranked list quietly goes back to being an unranked one."""
+    import re as _re
+    got = {m.group(1): float(m.group(2)) for m in
+           _re.finditer(r"(S_[A-Z]+|B_[A-Z]+|P_[A-Z]+) = ([0-9]+)", picker._BRIDGE_JS)}
+    for name in ("S_EXACT", "S_PREFIX", "S_WORD", "S_MID", "S_DLAB", "S_DPRE",
+                 "S_DMID", "S_SYN", "S_CC", "B_COVERAGE", "B_SEED", "B_HOME"):
+        assert name in got, f"{name} is no longer declared as a plain constant"
+    assert got["S_EXACT"] > got["S_PREFIX"] > got["S_WORD"] > got["S_MID"] > got["S_CC"]
+    assert got["S_DLAB"] > got["S_DPRE"] > got["S_DMID"]
+    # An exact whole-label domain match outranks a name prefix on purpose:
+    # `ust`, `tip`, `cbs` and `ubc` are how people look their own school up.
+    assert got["S_DLAB"] > got["S_PREFIX"]
+    # A FIXED bonus - one that does not depend on how well the text matched -
+    # must be smaller than the gap between two adjacent match tiers, so it can
+    # only ever order near-equals. It is allowed to lift a word match over a
+    # name prefix (that is precisely what puts the University of Melbourne
+    # above Melbourne Grammar School for `melbourne`); it must never lift a
+    # fragment-inside-a-word over a real word match.
+    for fixed in ("B_SEED", "B_HOME"):
+        assert got[fixed] < got["S_WORD"] - got["S_MID"], (
+            f"{fixed} is large enough to promote a mid-word match over a word match"
+        )
+    # Coverage is not fixed - it scales with how much of the name the query
+    # accounted for - so it may be larger. It must still not outweigh the
+    # difference between matching a name and not matching one.
+    assert got["B_COVERAGE"] <= got["S_WORD"]
+
+
+def test_the_opening_state_is_not_an_alphabetical_slice():
+    """It used to be `all.slice(0, 60)` of a list ordered by country code, so
+    the picker opened on the United Arab Emirates and Australia for every user
+    on earth - the first thing anyone sees of this app's most important
+    screen."""
+    js = picker._BRIDGE_JS
+    assert "function defaults(" in js
+    assert "Institutions in " in js and "Type to search " in js
+    assert "homeCC()" in js and "TZ_CC" in js
+
+
+def test_country_and_flags_are_split_at_a_FIXED_width():
+    """`cc` is two letters or empty and flags are letters too, so an unpadded
+    join is ambiguous exactly when a row has a flag and no country: "" + "s"
+    is "s", which reads back as the country `s`. Such a row matches no country
+    term, never appears in a regional suggestion list, and asks the country
+    table for a label that does not exist - 19 rows were in that state when the
+    packing was written.
+
+    The case is CONSTRUCTED rather than looked for: today every seeded row
+    carries its seed's country, so the shipped data happens not to contain one,
+    and a test that searched for the case would silently stop testing anything
+    the moment that became true - which it already has.
+    """
+    real = inst.DATA
+    try:
+        inst.DATA = (
+            ("Flagged, no country", "x.instructure.com", "", "s"),
+            ("Country, no flag", "y.instructure.com", "DK", ""),
+            ("Both", "z.instructure.com", "PH", "s"),
+            ("Neither", "w.instructure.com", "", ""),
+        )
+        fields = [rec.split(picker._FS)[2]
+                  for rec in picker.build_payload().split(picker._RS)]
+        got = [(f[:2].strip(), f[2:]) for f in fields]
+    finally:
+        inst.DATA = real
+    assert got == [("", "s"), ("DK", ""), ("PH", "s"), ("", "")], got
+
+
+def test_the_opening_list_is_filtered_by_the_users_country():
+    """The locale boost is the whole reason `defaults` takes a country, and a
+    version that ignores it renders exactly like the alphabetical slice this
+    replaced - plausible, and wrong for everyone outside the first country in
+    the list."""
+    js = picker._BRIDGE_JS
+    body = js[js.index("function defaults("):]
+    body = body[:body.index("function matches(")]
+    assert "all[i].cc === home" in body, (
+        "defaults() no longer selects on the user's country"
+    )
+    assert not re.search(r"\bhome\s*=(?!=)", body), (
+        "defaults() reassigns `home`, which silently disables the locale filter"
+    )
+    assert "a.seed !== b.seed" in body, "seeded institutions must lead the opening list"
+
+
+
+def test_directly_verified_tenants_all_ship():
+    """`DIRECT` exists because the account finder is NOT the set of live
+    tenants - `harvard.instructure.com` answers as Canvas and is nowhere in the
+    crawl - so a market can look empty while merely being undiscoverable. India
+    held ONE institution against 33 Store installs.
+
+    An entry that does not reach the shipped list is dead config that reads as
+    an applied decision, which is the failure this whole file is written
+    against."""
+    from institution_direct import DIRECT
+    shipped = {r[1]: r for r in inst.DATA}
+    missing = [(n, d) for n, d, _cc in DIRECT if d not in shipped]
+    assert not missing, f"DIRECT entries that never shipped: {missing}"
+    for name, dom, cc in DIRECT:
+        row = shipped[dom]
+        assert row[0] == name, f"{dom} shipped as {row[0]!r}, not {name!r}"
+        assert row[2] == cc, f"{dom} shipped with country {row[2]!r}, not {cc!r}"
+        assert "s" in row[3], f"{dom} lost the curated flag"
+
+
+def test_direct_entries_are_bare_hosts_with_a_real_country():
+    from institution_direct import DIRECT
+    seen = set()
+    for name, dom, cc in DIRECT:
+        assert dom == dom.lower() and "." in dom, dom
+        for bad in ("://", "/", " ", "?", "#", ":"):
+            assert bad not in dom, f"{dom!r} is not a bare host ({bad!r})"
+        assert re.fullmatch(r"[A-Z]{2}", cc), f"bad country {cc!r} for {name}"
+        assert dom not in seen, f"duplicate DIRECT host {dom}"
+        seen.add(dom)
+        assert 4 <= len(name) <= 64, name

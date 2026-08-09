@@ -24,7 +24,7 @@ from shared.helpers import (
 from shared.components import (
     render_completion_card, render_folder_cards,
     render_pp_warning, render_error_section,
-    render_archives_skipped_notice,
+    render_archives_skipped_notice, render_panopto_disabled_notice,
     fresh_container,
 )
 from core.state_registry import cleanup_sync_state
@@ -191,9 +191,11 @@ def show_sync_complete():
         # between two expanders and the Panopto stat grid sat below both.
         #
         # EXPANDERS. The size-skip panel comes from render_completion_card
-        # above; archives follow it, and the error panel is last because it is
-        # the one the user opens.
+        # above; archives follow it, then the Panopto-off panel (the third
+        # member of the same "deliberately left alone" family), and the error
+        # panel is last because it is the one the user opens.
         render_archives_skipped_notice()
+        render_panopto_disabled_notice(mode='sync')
 
         retry_selections = st.session_state.get('retry_selections', [])
 
@@ -287,6 +289,7 @@ def show_sync_complete():
         # Post-processing failure warning
         render_pp_warning(st.session_state.get('pp_failure_count', 0))
         render_archives_skipped_notice()
+        render_panopto_disabled_notice(mode='sync')
 
         # L-12: Warn user when Office watchdog did a broad /IM kill (may have
         # closed other open Office documents the user had open independently).

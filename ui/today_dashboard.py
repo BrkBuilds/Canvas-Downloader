@@ -1528,6 +1528,22 @@ def _render_sync_notice(notice: dict) -> None:
             f"Saved Groups &amp; Pairs.</div>"
         )
 
+    # Lecture recordings the run left out because Panopto is switched off. Its
+    # OWN line, never folded into `skipped` above: a missing folder is a problem
+    # the user must go and fix, while this is the app doing exactly what it was
+    # told. It names no course chips - unlike a missing folder there is nothing
+    # to go and repair per course, and the one useful destination is the switch.
+    _pan_off = [str(s) for s in (notice.get("panopto_off") or []) if s]
+    panopto_html = ""
+    if _pan_off:
+        _n = len(_pan_off)
+        panopto_html = (
+            f"<div class='today-notice-skipped'>"
+            f"Lecture recordings weren&#39;t included for <b>{_n}</b> course"
+            f"{'s' if _n != 1 else ''} &ndash; Panopto is switched off in "
+            f"<b>Settings</b>.</div>"
+        )
+
     with st.container(key="today_sync_notice_card"):
         c_body, c_close = st.columns([0.95, 0.05], vertical_alignment="center")
         with c_body:
@@ -1536,7 +1552,7 @@ def _render_sync_notice(notice: dict) -> None:
                 f"<div class='today-notice-head'>{_SVG_NOTICE_CHECK}"  # audit-ignore: static SVG constant
                 f"<span class='today-notice-title'>{esc(title)}</span>{when_html}</div>"
                 f"<div class='today-notice-desc'>{headline}</div>"
-                f"{chips_html}{errors_html}{skipped_html}"
+                f"{chips_html}{errors_html}{skipped_html}{panopto_html}"
                 f"</div>",
                 unsafe_allow_html=True,
             )

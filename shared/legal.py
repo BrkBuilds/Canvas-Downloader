@@ -85,16 +85,26 @@ def _config_path() -> Path:
 
 
 def _read_full_config() -> dict:
-    path = _config_path()
-    if not path.exists():
-        return {}
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, dict) else {}
-    except Exception as e:
-        logger.warning(f"Could not read settings file for the Panopto notice: {e}")
-        return {}
+    """The whole settings file, or ``{}``. READ-ONLY callers only.
+
+    ``{}`` is the right degrade for :func:`stored_ack_version`, which then reads
+    as "not acknowledged" - the module docstring's "fails closed". It is the
+    WRONG degrade for a read-modify-write, which would persist ``{}`` plus the
+    acknowledgement and destroy the ``"panopto"`` engine block and every download
+    default. That caller uses :func:`_read_full_config_for_update`.
+    """
+    data, _ = _read_full_config_for_update()
+    return data
+
+
+def _read_full_config_for_update() -> tuple[dict, bool]:
+    """``(config, may_write)`` for a read-modify-write of the settings file.
+
+    Thin wrapper over the ONE shared implementation so this module cannot drift
+    from ``ui.auth`` and ``panopto.settings``, which co-own the same file.
+    """
+    from shared.helpers import read_json_for_update
+    return read_json_for_update(_config_path())
 
 
 def stored_ack_version() -> int:
@@ -122,7 +132,15 @@ def record_panopto_acknowledgement() -> bool:
     keys written by the Settings dialog and the ``"panopto"`` block written by
     ``panopto.settings`` are never clobbered.
     """
-    full = _read_full_config()
+    full, may_write = _read_full_config_for_update()
+    if not may_write:
+        # Returning False re-shows the notice next time, which is the safe
+        # direction: recording acceptance by destroying the rest of the user's
+        # settings would be a far worse trade than asking once more.
+        logger.warning("Not recording the Panopto notice acknowledgement: the "
+                       "settings file could not be read, so a write would "
+                       "discard the rest of it.")
+        return False
     full[ACK_KEY] = PANOPTO_NOTICE_VERSION
 
     path = _config_path()

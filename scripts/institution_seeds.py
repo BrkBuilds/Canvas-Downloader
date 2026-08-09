@@ -290,6 +290,50 @@ SEEDS: list[tuple[str, str]] = [
     ("Santa Monica College", "US"), ("Miami Dade College", "US"),
     ("Houston Community College", "US"), ("Northern Virginia Community College", "US"),
     ("Salt Lake Community College", "US"), ("Austin Community College", "US"),
+
+    # ── The markets this app is ACTUALLY used in ─────────────────────────
+    #
+    # Added 2026-08-09 from the Microsoft Store install mix, which does not
+    # look like the seed list above: Australia 38, India 33, the Philippines
+    # 31, South Africa 29, the United States 29, Brazil 12, the UK 11, New
+    # Zealand 11, Chile 9, Peru 8, Nigeria 8, Ecuador 7, Japan 6, then Uganda,
+    # Ghana, Zambia, Egypt, Taiwan and Honduras. The list was weighted toward
+    # the US, the UK and Europe; its users are not.
+    #
+    # EVERY seed below was confirmed present in the account-finder crawl
+    # before being written here - a seed for an institution the finder does
+    # not publish is dead weight, and this file already carries enough of it.
+    # That is also why there are so few for India, South Africa and Nigeria
+    # despite their install counts: those universities overwhelmingly do not
+    # run Canvas. Probed directly on 2026-08-09, 1,529 conventional Canvas
+    # hostnames across 15 markets (canvas./lms./learn./elearning./... over the
+    # real domains of UCT, Wits, Stellenbosch, Pretoria, UNISA, the IITs,
+    # Manipal, VIT, BITS, Ashoka, UNILAG, Ibadan, USP, Unicamp and 100 more)
+    # answered as Canvas exactly ZERO times, against a control of six known
+    # hosts that all answered. The gap is not this pipeline; it is the LMS
+    # those universities chose.
+    ("University of the Philippines", "PH"), ("Far Eastern University", "PH"),
+    ("Mapua University", "PH"), ("Centro Escolar University", "PH"),
+    ("San Beda University", "PH"), ("National University Philippines", "PH"),
+    ("Technological Institute of the Philippines", "PH"),
+    ("University of Cebu", "PH"), ("Cebu Doctors University", "PH"),
+    ("Central Philippine University", "PH"), ("Lyceum of the Philippines", "PH"),
+    ("Xavier University Ateneo de Cagayan", "PH"),
+    ("Pontifical Catholic University of Parana", "BR"),
+    ("Pontifical Catholic University of Campinas", "BR"),
+    ("Universidade Luterana do Brasil", "BR"),
+    ("Universidade Veiga de Almeida", "BR"), ("Universidade Jorge Amado", "BR"),
+    ("Escola Superior de Propaganda e Marketing", "BR"),
+    ("Universidad Andres Bello", "CL"), ("Universidad de Santiago de Chile", "CL"),
+    ("Universidad Autonoma de Chile", "CL"),
+    ("Universidad Tecnologica Metropolitana", "CL"),
+    ("Universidad de los Andes Chile", "CL"),
+    ("Universidad Tecnologica del Peru", "PE"),
+    ("Universidad Cientifica del Sur", "PE"), ("Universidad Continental", "PE"),
+    ("Nile University", "EG"), ("British University Vietnam", "VN"),
+    ("Hitotsubashi University", "JP"), ("Universiti Brunei Darussalam", "BN"),
+    ("Universitas Pembangunan Jaya", "ID"), ("African Leadership Academy", "ZA"),
+    ("South African Theological Seminary", "ZA"),
 ]
 
 

@@ -184,8 +184,20 @@ def _save_config_dialog():
             if preset_name and preset_name.strip():
                 _settings = mgr.capture_current_settings(st.session_state)
                 _path = st.session_state.get('download_path', '') if include_path else ''
-                mgr.save_preset(preset_name.strip(), preset_desc.strip() if preset_desc else '', _settings, include_path, _path)
-                st.session_state['pending_toast'] = f"✅ Preset '{preset_name.strip()}' saved!"
+                _saved = mgr.save_preset(preset_name.strip(), preset_desc.strip() if preset_desc else '', _settings, include_path, _path)
+                # None means the presets file could not be READ, so saving was
+                # declined rather than allowed to overwrite the user's other
+                # presets with just this one. Say so - toasting success for a
+                # preset that is not on disk is the one unacceptable outcome,
+                # because the user closes the dialog believing it is saved.
+                if _saved is None:
+                    st.session_state['pending_toast'] = (
+                        f"⚠️ Could not save '{preset_name.strip()}' - your saved "
+                        f"presets file could not be read just now, and saving "
+                        f"would have replaced them. Nothing was changed; "
+                        f"please try again.")
+                else:
+                    st.session_state['pending_toast'] = f"✅ Preset '{preset_name.strip()}' saved!"
                 try:
                     st.rerun(scope="app")
                 except TypeError:

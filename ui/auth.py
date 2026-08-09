@@ -221,41 +221,32 @@ def read_config_for_update() -> tuple[dict, bool]:
       discarding their Panopto model, their acknowledged notice and their
       download folder is not.
     * **missing file** - a genuinely fresh install. ``({}, True)``.
+
+    The read/verdict/quarantine logic itself lives in
+    ``shared.helpers.read_json_for_update`` - ONE implementation for the four
+    modules that co-own this file (this one, ``panopto.settings`` twice, and
+    ``shared.legal``). Three of those still degraded to ``{}`` and wrote anyway
+    until 2026-08-09, because this fix was written here and nowhere else. The
+    path is passed in rather than resolved there so ``CONFIG_FILE``'s
+    import-time tempdir fallback stays this module's own business.
+
+    ``_migrate_config`` is layered on HERE and not in the shared primitive: it
+    moves a legacy token out of the JSON and into the keyring, which must not
+    happen as a side effect of another module saving its own settings block.
     """
-    if not os.path.exists(CONFIG_FILE):
-        return {}, True
-    try:
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-            return _migrate_config(json.load(f)), True
-    except OSError as e:
-        logger.warning(
-            "Could not read settings at %s (%s); skipping this write so the "
-            "existing settings are not discarded.", CONFIG_FILE, e)
-        return {}, False
-    except Exception as e:
-        _quarantine_config(f"{type(e).__name__}: {e}")
-        return {}, True
+    from shared.helpers import read_json_for_update
+    config, may_write = read_json_for_update(CONFIG_FILE)
+    return (_migrate_config(config) if config else config), may_write
 
 
 def _quarantine_config(reason: str) -> None:
     """Move a damaged settings file aside so its content survives on disk.
 
-    Never overwrites an existing quarantine file: the FIRST one is the copy
-    closest to the last good state, so later ones take a numeric suffix. Mirrors
-    ``core.library._quarantine``.
+    Delegates to the shared helper; kept as a named function because the login
+    and Settings paths call it directly.
     """
-    try:
-        base = os.path.splitext(CONFIG_FILE)[0]
-        target = f"{base}.corrupt.json"
-        n = 1
-        while os.path.exists(target):
-            n += 1
-            target = f"{base}.corrupt-{n}.json"
-        os.replace(CONFIG_FILE, target)
-        logger.warning("Settings file was unreadable (%s); moved it to %s",
-                       reason, target)
-    except OSError as e:
-        logger.warning("Could not quarantine the damaged settings file: %s", e)
+    from shared.helpers import quarantine_corrupt_json
+    quarantine_corrupt_json(CONFIG_FILE, reason)
 
 
 def write_config_atomically(config: dict) -> bool:
@@ -3491,7 +3482,30 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
             # alone is a dead end: the status line says why, the tooltip says it
             # again on the control the user will actually reach for, and the
             # dimming makes it visible without reading anything.
-            if not temp_pan_enabled:
+            # ...WITH ONE EXCEPTION: the engine card is the ONLY route to the
+            # model manager, which is the only place a downloaded Whisper model
+            # or the CUDA libraries can be DELETED - and those run to multiple
+            # GB. Making the card unavailable therefore stranded that disk space
+            # with no way to reclaim it: the user had to switch Panopto back on,
+            # delete, and switch it off again, which nobody discovers on their
+            # own. So while something is actually installed the card stays
+            # reachable and is relabelled as cleanup rather than setup; with
+            # nothing installed there is nothing to manage and it dims as
+            # before. "Subordinate" was always about not offering to configure
+            # a feature that cannot run - never about trapping the user's disk.
+            _pan_installed = bool(_tx.get("any_installed"))
+            try:
+                from panopto import cuda_provision as _cuda_prov
+                _pan_installed = _pan_installed or bool(_cuda_prov.is_provisioned())
+            except Exception:
+                pass
+            _pan_card_live = bool(temp_pan_enabled or _pan_installed)
+
+            if not temp_pan_enabled and _pan_installed:
+                _tx_dot = "#8b949e"
+                _tx_txt = ("Panopto is switched off &middot; open to remove the "
+                           "installed model or GPU libraries and reclaim the space")
+            elif not temp_pan_enabled:
                 _tx_dot = "#8b949e"
                 _tx_txt = ("Panopto is switched off &middot; turn it on to view "
                            "and configure the engine")
@@ -3507,7 +3521,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 # - a container takes no attributes, and the dimming has to land
                 # on the CARD (once) rather than on each control inside it.
                 with st.container(border=True,
-                                  key="stg_card_pan" if temp_pan_enabled else "stg_card_pan_off"):
+                                  key="stg_card_pan" if _pan_card_live else "stg_card_pan_off"):
                     st.html(_stg_card_head(
                         _stg_i_caption, "Panopto transcription engine",
                         "Configure the local model, language and compute device used "
@@ -3519,10 +3533,15 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                               f'<span style="width:8px;height:8px;border-radius:50%;'
                               f'background:{_tx_dot};flex-shrink:0;"></span>'
                               f'<span>{_tx_txt}</span></div>'))
-                    _stg_pan_label = "Manage transcription configuration" if _tx.get("ready") else "Configure transcription"
+                    if not temp_pan_enabled and _pan_installed:
+                        _stg_pan_label = "Manage installed models"
+                    elif _tx.get("ready"):
+                        _stg_pan_label = "Manage transcription configuration"
+                    else:
+                        _stg_pan_label = "Configure transcription"
                     if st.button(_stg_pan_label, key="stg_btn_pan", use_container_width=True,
-                                 disabled=not temp_pan_enabled,
-                                 help=None if temp_pan_enabled else
+                                 disabled=not _pan_card_live,
+                                 help=None if _pan_card_live else
                                       "Panopto lecture recordings are switched off. Turn "
                                       "them on in the card to the left to configure the "
                                       "transcription engine."):

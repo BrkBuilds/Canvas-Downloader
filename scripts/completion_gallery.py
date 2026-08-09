@@ -39,6 +39,7 @@ from __future__ import annotations
 import sys
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
 
 REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
@@ -47,7 +48,8 @@ if str(REPO) not in sys.path:
 import streamlit as st  # noqa: E402
 
 from shared.components import (  # noqa: E402
-    fresh_container, render_archives_skipped_notice, render_cancelled_card,
+    fresh_container, render_archives_skipped_notice,
+    render_panopto_disabled_notice, render_cancelled_card,
     render_completion_card, render_error_section, render_folder_cards,
     render_pp_warning, inject_material_icons_font,
 )
@@ -294,13 +296,23 @@ def download_screen(*, synced, courses, total_bytes, errors=(),
                     size_skipped=(), size_limit=0, archives=(), archive_limit=0,
                     retry_attempted=False, retry_resolved=0, retry_total=0,
                     retry_failed=False, pp_failures=0, force_kill=False,
-                    panopto=None, folder_courses=3, error_log=False):
+                    panopto=None, folder_courses=3, error_log=False,
+                    panopto_off_courses=()):
     """app.py, `download_status == 'done'` (lines ~2276-2499)."""
     st.session_state["error_log_enabled"] = error_log
     st.session_state["size_skipped_files"] = list(size_skipped)
     st.session_state["max_file_size_mb"] = size_limit
     st.session_state["pp_archives_skipped"] = list(archives)
     st.session_state["archive_max_files"] = archive_limit
+    # The Panopto-off panel resolves at RENDER from the run contract plus the
+    # selected courses, so seeding those two IS the whole mock. It still only
+    # appears when Panopto is genuinely switched off in Settings - run the
+    # gallery under CANVAS_DL_CONFIG_DIR to force that without touching the
+    # real config.
+    if panopto_off_courses:
+        st.session_state["persistent_pan_out_mp3"] = True
+        st.session_state["courses_to_download"] = [
+            SimpleNamespace(name=n) for n in panopto_off_courses]
 
     render_download_wizard(st, 'complete')
     st.markdown('<h2 class="step-header">Download Complete!</h2>',
@@ -331,6 +343,7 @@ def download_screen(*, synced, courses, total_bytes, errors=(),
         # grid, the Panopto grid and the size-skip panel; archives follow; the
         # error panel is the last collapsible; notices come last as one block.
         render_archives_skipped_notice()
+        render_panopto_disabled_notice(mode='download')
         has_retriable = any(
             not e.is_app_error and e.context.get('filepath')
             and e.error_type != LTI_STREAM_ERROR_TYPE and not e.retry_exhausted
@@ -402,6 +415,7 @@ def sync_screen(*, synced, courses, total_bytes, errors=(),
         )
         # ORDER BY KIND, exactly as sync/completion.py does it.
         render_archives_skipped_notice()
+        render_panopto_disabled_notice(mode='sync')
         render_error_section(
             list(errors), key_prefix='sync_complete',
             retry_btn_callback=(lambda: None) if errors else None,
@@ -517,6 +531,18 @@ SCENARIOS: dict[str, tuple[str, str, callable]] = {
         "hardcoded 's' shows up.",
         lambda: download_screen(synced=1, courses=1, total_bytes=int(2.4 * MB),
                                 folder_courses=1),
+    ),
+    "d-panopto-off": (
+        "Download · Success + Panopto switched off",
+        "The third member of the \"deliberately left alone\" family, beside the "
+        "size-skip and archive panels. It counts COURSES, not recordings - the "
+        "switch skips discovery, so a recording count is genuinely unknown. "
+        "Only renders when Panopto is actually off in Settings.",
+        lambda: download_screen(
+            synced=143, courses=3, total_bytes=int(1.24 * GB),
+            size_skipped=SIZE_SKIPPED, size_limit=50,
+            archives=ARCHIVES, archive_limit=1000,
+            panopto_off_courses=("Makroøkonomi (XB)", "Statistik 2. semester")),
     ),
     "d-success-locked": (
         "Download · Success + declined files",
