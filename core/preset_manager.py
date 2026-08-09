@@ -270,43 +270,99 @@ class PresetManager:
     # ── Read ────────────────────────────────────────────────────────
 
     def load_presets(self) -> list[dict]:
-        """Load user-defined presets from disk.
+        """Load user-defined presets from disk. Never raises.
 
-        Returns:
-            List of preset dicts (never includes built-ins).
+        For DISPLAY. A read-modify-write must use
+        :meth:`_load_presets_for_update` instead - see its docstring.
+        """
+        return self._load_presets_for_update()[0]
+
+    def _load_presets_for_update(self) -> tuple[list[dict], bool]:
+        """``(presets, may_write)`` - the stored presets and the write verdict.
+
+        Two defects lived in the single-return version, and they are the same two
+        this repo has already fixed in ``core.library``, ``atomic_update_sync_pairs``
+        and the shared settings file:
+
+        **1. ``UnicodeDecodeError`` escaped entirely.** It is a *sibling* of
+        ``json.JSONDecodeError``, not a subclass - both are ``ValueError`` - so
+        neither the ``JSONDecodeError`` handler nor the ``IOError`` one caught it,
+        and it propagated out of a function documented as returning a list. The
+        caller is ``ui/presets.py``'s hub, inside an ``@st.dialog``, where a raise
+        blanks the modal. Reproduced: one presets file re-saved by an editor in a
+        Danish ANSI codepage (``Økonomi`` as cp1252) is enough, and preset names
+        are typed by the user, so ``æøå`` is ordinary here.
+
+        **2. A transient failure degraded to ``[]``, and the callers then WROTE.**
+        ``save_preset`` and ``delete_preset`` both do load -> mutate -> save, so an
+        antivirus lock or an offline share at the wrong moment replaced the user's
+        entire preset library with the one preset they were adding. The old
+        ``IOError`` branch even said "Do NOT recover or unlink" - it protected the
+        FILE and then handed the caller an empty list to overwrite it with.
+
+        Split by cause, so the answer matches the problem:
+
+        * damaged content -> quarantine (the content survives on disk) and allow
+          the write, so the user gets a working presets file back;
+        * transient ``OSError`` -> ``may_write=False``; the caller must not write.
         """
         with _presets_lock:
             if not self.presets_path.exists():
-                return []
+                return [], True
             try:
                 with open(self.presets_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                if not isinstance(data, dict):
-                    logger.warning(f"Presets file has invalid root type: {type(data)}")
-                    return []
-                presets = data.get('presets', [])
-                if not isinstance(presets, list):
-                    return []
-                return presets
-            except json.JSONDecodeError as e:
-                # Back up the corrupted file before discarding.
-                try:
-                    backup = self.presets_path.with_suffix('.corrupt')
-                    backup.unlink(missing_ok=True)  # Remove stale backup on Windows (rename raises FileExistsError)
-                    self.presets_path.rename(backup)
-                    logger.warning(f"Presets file is corrupted ({e}); backed up to {backup.name}")
-                except Exception:
-                    # Last resort: delete the corrupt file so the next save can succeed
-                    try:
-                        self.presets_path.unlink(missing_ok=True)
-                        logger.warning(f"Presets file is corrupted ({e}) and could not be backed up; deleted.")
-                    except Exception:
-                        pass
-                return []
-            except IOError as e:
-                # Temporary file access error. Do NOT recover or unlink.
+            except OSError as e:
+                # Nothing is wrong with the FILE. Refuse the write rather than
+                # replace a whole preset library with whatever this call adds.
                 logger.error(f"Temporary file access error in load_presets: {e}")
-                return []
+                return [], False
+            except Exception as e:
+                # Damaged content: malformed JSON, or bytes that are not UTF-8.
+                self._quarantine_presets(f"{type(e).__name__}: {e}")
+                return [], True
+
+            # A well-formed file with the wrong SHAPE is deliberately left in
+            # place, not quarantined: it is not corruption, and the next save
+            # overwrites the whole file anyway. That is a pre-existing decision
+            # with its own test - see test_a_structurally_wrong_file_is_NOT_backed_up.
+            if not isinstance(data, dict):
+                logger.warning(f"Presets file has invalid root type: {type(data)}")
+                return [], True
+            presets = data.get('presets', [])
+            if not isinstance(presets, list):
+                return [], True
+            return presets, True
+
+    def _quarantine_presets(self, reason: str) -> None:
+        """Move a damaged presets file aside so its content survives on disk.
+
+        Keeps this module's own long-standing policy rather than adopting the
+        shared helper's: the destination is ``.corrupt`` (not ``.corrupt.json``)
+        and a stale backup is replaced, so the NEWEST corrupt copy is the one
+        preserved. Both are pinned by tests in ``tests/test_preset_manager.py``
+        and both are defensible here - after a first corruption the store is
+        rebuilt from empty, so the newer copy holds the more recent presets. (The
+        sync manifest keeps the FIRST copy instead, for the opposite and equally
+        good reason: there, the earliest backup is the one closest to the last
+        good sync.)
+
+        What is NOT kept is the old "last resort: delete the corrupt file"
+        branch. A corrupt presets file can still be salvaged by hand; a deleted
+        one cannot, and saving works again regardless because
+        ``_save_all_locked`` rewrites the whole file.
+        """
+        try:
+            backup = self.presets_path.with_suffix('.corrupt')
+            # Windows: Path.rename raises FileExistsError when the destination
+            # exists, so the stale backup goes first.
+            backup.unlink(missing_ok=True)
+            self.presets_path.rename(backup)
+            logger.warning(f"Presets file is corrupted ({reason}); backed up to {backup.name}")
+        except Exception as e:
+            logger.warning(
+                f"Presets file is corrupted ({reason}) and could not be backed "
+                f"up ({e}); leaving it in place - the next save overwrites it.")
 
     def get_builtin_presets(self) -> list[dict]:
         """Return the 5 immutable built-in presets (deep copies)."""
@@ -350,14 +406,15 @@ class PresetManager:
         settings: dict,
         include_path: bool,
         download_path: str,
-    ) -> dict:
+    ) -> dict | None:
         """Create and persist a new user preset.
 
         Returns:
-            The newly created preset dict.
+            The newly created preset dict, or ``None`` when the existing presets
+            could not be read and saving would therefore have destroyed them.
         """
         with _presets_lock:
-            presets = self.load_presets()
+            presets, may_write = self._load_presets_for_update()
             new_preset = {
                 'preset_id': f"preset_{uuid.uuid4().hex[:12]}",
                 'preset_name': name.strip(),
@@ -368,6 +425,19 @@ class PresetManager:
                 'include_path': include_path,
                 'download_path': download_path if include_path else '',
             }
+            if not may_write:
+                # The existing presets could not be read. Appending to the empty
+                # list we were handed would persist ONLY this preset and destroy
+                # every other one the user has saved.
+                #
+                # Returns None rather than raising: the call site is inside an
+                # @st.dialog with no handler, where an exception blanks the modal.
+                # Same rule as write_config_atomically - a persistence failure
+                # must not be able to abort the user's action, it must be
+                # REPORTED. The caller says so instead of toasting success.
+                logger.error("Not saving preset %r: the presets file could not "
+                             "be read, so a write would discard the rest.", name)
+                return None
             presets.append(new_preset)
             self._save_all_locked(presets)
         return new_preset
@@ -381,7 +451,16 @@ class PresetManager:
             True if found and deleted, False otherwise.
         """
         with _presets_lock:
-            presets = self.load_presets()
+            presets, may_write = self._load_presets_for_update()
+            if not may_write:
+                # An empty list here is "could not read", NOT "you have no
+                # presets". Falling through would rewrite the file with [] and
+                # delete every preset the user has - while reporting the ordinary
+                # "not found" answer, so nothing on screen would say what
+                # happened.
+                logger.error("Not deleting preset %r: the presets file could "
+                             "not be read.", preset_id)
+                return False
             original_len = len(presets)
             presets = [p for p in presets if p.get('preset_id') != preset_id]
             if len(presets) == original_len:

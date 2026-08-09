@@ -315,20 +315,45 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
             wants_transcription as _pan_wants_tx,
             compose_settings as _pan_compose, is_enabled as _pan_is_enabled,
             contract_from_ui_state as _pan_contract_from_state,
+            is_globally_enabled as _pan_globally_enabled,
         )
+        # THE global Panopto switch, for sync mode - read once per course, ahead
+        # of everything else in this block. This is where the switch is worth the
+        # most: discovery is the slowest thing in an analysis (a per-recording
+        # LTI handshake, and at a university with no Panopto at all it is ~48
+        # handshakes at 1-2s each that can only ever return nothing).
+        #
+        # The switch is read here directly rather than through
+        # ``effective_contract`` because the point is to skip the WORK, not just
+        # to neutralise its result: with Panopto off this course reads no stored
+        # contract, heals nothing, writes nothing and scans nothing.
+        # ``effective_contract`` is the equivalent for a caller that already
+        # holds a contract (app.py's phase trigger, sync_ui's pair helpers).
+        #
+        # panopto_payload stays None, which is already the documented shape for
+        # "the feature is disabled" - so every consumer downstream (Review, the
+        # selection loop, execution's phase routing) needs no change at all.
+        _pan_on = _pan_globally_enabled()
+
         # Per-folder Panopto contract (output formats + layout), mirroring the
         # secondary_content_contract: read from this folder's manifest, falling
         # back to the current Section 4 session toggles on the first-ever sync
         # (read-only here - execution durably seeds it). Engine config
         # (model/device/language) is layered in by compose_settings.
-        _raw_pan = sync_mgr._load_metadata('panopto_contract')
+        #
+        # NOT read while Panopto is off, and the folder's stored contract is
+        # therefore left exactly as it is. That is deliberate: switching Panopto
+        # off is a statement about what happens NEXT, never a rewrite of what a
+        # folder was set up for, so switching it back on resumes recordings with
+        # the outputs the user originally chose.
+        _raw_pan = sync_mgr._load_metadata('panopto_contract') if _pan_on else None
         _pan_contract = None
         if _raw_pan is not None:
             try:
                 _pan_contract = json.loads(_raw_pan)
             except (json.JSONDecodeError, TypeError, ValueError):
                 _pan_contract = None
-        if _pan_contract is None:
+        if _pan_on and _pan_contract is None:
             _pan_contract = _pan_contract_from_state(st.session_state)
             # Those persistent_* keys are session-only and reset to False at every
             # app launch, so on a fresh launch this fallback disables Panopto
@@ -359,8 +384,13 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
                                                 json.dumps(_healed))
                     except Exception as _e:
                         logger.warning(f"Could not re-seed panopto_contract: {_e}")
-        _pan = _pan_compose(_pan_contract)
-        if _pan_is_enabled(_pan_contract):
+        if _pan_on and _pan_is_enabled(_pan_contract):
+            # Composed here rather than above because it is only ever read inside
+            # this branch (the payload's 'settings'). Built unconditionally, it
+            # would also read as a live config for a course that ran no Panopto
+            # pass at all - and compose_settings(None) deliberately returns the
+            # DEFAULTS, which have mp3/txt/srt ON.
+            _pan = _pan_compose(_pan_contract)
             from panopto.discovery import discover_course_videos
             from panopto.sync_plan import (
                 classify_videos, tally as _pan_tally,

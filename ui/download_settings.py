@@ -166,6 +166,91 @@ def _panopto_selectable_keys(ready: bool) -> list[str]:
             if ready or k not in PANOPTO_TRANSCRIPT_KEYS]
 
 
+def _render_card_panopto_off() -> None:
+    """Card 4 while Panopto is switched off globally: a dimmed, inert header row.
+
+    DIMMED RATHER THAN HIDDEN, deliberately. Removing the card would leave the
+    download page with no mention of Panopto at all, so a user who switched it
+    off weeks ago has no route back from the screen where they would look for it
+    - the "a disabled control must say why" rule, whose whole point is that
+    hiding the reason turns an unavailable thing into a dead end. It also keeps
+    the big help card's "Card 4" section from documenting something absent.
+
+    **It must render the same THREE children as the collapsed on-state**
+    (style / icon / header row), because Streamlit reconciles by position: a
+    branch that emits fewer elements hands this container's node - and its
+    children - to whatever inherits the index, which here is the Output Folder
+    separator below. Same reason the header stays a SINGLE line: the row's
+    geometry (`margin-top: -35px`, the icon at `top: -24px`) is tuned for one,
+    so the "switched off" message rides in the TAG, reusing the on-state's own
+    `OFF  |  <detail>` idiom rather than adding a second line.
+    """
+    # 1/3 - the stylesheet. Emitted in BOTH branches at this index so the style
+    # hosts below keep their positions (see CLAUDE.md on conditional <style>).
+    # Dimming follows the app's one disabled recipe and the `stg_card_pan_off`
+    # precedent in ui/auth.py: brightness+saturate on the CARD, then `none` on
+    # the disabled button so the shared button[disabled] rule cannot compound
+    # with it (filter multiplies through nested elements).
+    st.markdown('''<style>
+    div[class*="st-key-card_panopto_off"] {
+        filter: brightness(0.5) saturate(0.5) !important;
+    }
+    div[class*="st-key-card_panopto_off"] button[disabled] {
+        filter: none !important;
+    }
+    /* The chevron slot is kept so the 24px icon gutter and the header's
+       vertical rhythm match every other card; it just does not turn. */
+    div.st-key-header_wrap_panopto {
+        display: flex !important; flex-direction: row !important;
+        align-items: center !important; justify-content: flex-start !important;
+        gap: 12px !important; padding-top: 0px !important;
+        padding-bottom: 0px !important; margin-top: -35px !important;
+    }
+    div.st-key-header_wrap_panopto > div[data-testid="stElementContainer"] {
+        margin-bottom: 0px !important;
+    }
+    div.st-key-header_wrap_panopto > div[data-testid="stElementContainer"]:nth-child(1) {
+        width: 24px !important; min-width: 24px !important; flex: 0 0 24px !important;
+    }
+    div.st-key-header_wrap_panopto > div[data-testid="stElementContainer"]:nth-child(2) {
+        flex: 1 1 auto !important; width: 100% !important;
+    }
+    div.st-key-toggle_panopto button {
+        all: unset !important; display: inline-block !important;
+        width: 24px !important; height: 24px !important;
+        cursor: default !important;
+    }
+    div.st-key-toggle_panopto button > div { display: none !important; }
+    </style>''', unsafe_allow_html=True)
+
+    # 2/3 - the workflow icon, greyed like the card's other inactive state.
+    _b64_icon = _load_b64("assets/icon_workflow_4.png")
+    st.markdown(
+        "<div class='step-2-card-target' style='position: relative; margin-top: -25px; margin-bottom: 0px;'>"
+        f"<img src='data:image/png;base64,{_b64_icon}' style='position: absolute; width: 36px; height: 36px; "
+        "top: -24px; left: -34px; z-index: 10; filter: grayscale(100%) brightness(60%);' /></div>",
+        unsafe_allow_html=True,
+    )
+
+    # 3/3 - the header row. The button is a disabled placeholder holding the
+    # chevron's slot; there is nothing to expand.
+    with st.container(key="header_wrap_panopto"):
+        st.button("​", key="toggle_panopto", disabled=True)
+        st.markdown(
+            "<div style='display: flex; align-items: center; justify-content: space-between; "
+            "padding-right: 10px; width: 100%; transform: translateY(-5px);'>"
+            "<h3 style='margin: 0px !important; padding: 0px !important; line-height: 1 !important;'>"
+            "Panopto Recordings <span style='color: #64748b; font-size: 0.8em; font-weight: normal;'>"
+            "(Optional)</span></h3>"
+            "<span style='background-color: rgba(255, 255, 255, 0.05); color: #94a3b8; "
+            "border: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.8rem; padding: 2px 12px; "
+            "border-radius: 15px; font-weight: 600; white-space: nowrap;'>"
+            "<strong>OFF</strong>&nbsp; |&nbsp; Switched off in Settings</span>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
+
 def _get_pan_layout_segmented_css() -> str:
     """Purple segmented-control CSS for the Panopto organization choice.
 
@@ -1981,7 +2066,19 @@ def render_download_settings(fetch_courses_fn):
         # --- SECTION 4: Panopto Recordings (full-width, collapsible) ---
         @st.fragment
         def _render_card_panopto():
-            with st.container(border=True, key="card_panopto"):
+            # THE global Panopto switch, for the download settings page. The key
+            # changes with it (the `stg_card_pan` / `stg_card_pan_off` trick from
+            # ui/auth.py) because a container carries no attributes and the
+            # dimming has to land on the CARD once, not on each control inside
+            # it. `st-key-card_panopto_off` still contains `st-key-card_panopto`,
+            # so the shared `[class*=]` card chrome above applies unchanged.
+            from panopto.settings import is_globally_enabled as _pan_globally_enabled
+            _pan_globally_on = _pan_globally_enabled()
+            with st.container(border=True,
+                              key="card_panopto" if _pan_globally_on else "card_panopto_off"):
+                if not _pan_globally_on:
+                    _render_card_panopto_off()
+                    return
                 ready, engine_avail, model_id, any_installed = _panopto_transcription_ready()
                 selectable = _panopto_selectable_keys(ready)
                 # Self-heal unavailable outputs: an applied preset (or a restored

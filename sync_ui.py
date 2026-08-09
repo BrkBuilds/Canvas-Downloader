@@ -1320,7 +1320,18 @@ def _resolve_pair_panopto_contract(p) -> dict:
 
 
 def _sync_pairs_want_transcription(sync_pairs) -> bool:
-    """True if any pair's resolved Panopto contract requests Transcript/Subtitles."""
+    """True if any pair's resolved Panopto contract requests Transcript/Subtitles.
+
+    Short-circuits on the global switch BEFORE the loop, for two reasons. It is
+    the honest answer - with Panopto off no pair can produce a transcript, so the
+    "set up transcription" notice this drives would be offering to configure
+    something that cannot run. And it is much cheaper: this runs on every
+    sync-page render and the loop opens a SyncManager per pair, so the switch
+    replaces N SQLite connections with one config read.
+    """
+    from panopto.settings import is_globally_enabled
+    if not is_globally_enabled():
+        return False
     for p in sync_pairs or []:
         contract = _resolve_pair_panopto_contract(p)
         if contract.get('output_txt') or contract.get('output_srt'):
@@ -1342,7 +1353,15 @@ def _sync_pairs_want_panopto(sync_pairs) -> bool:
     never have seen the notice at all; without this check their next Quick Sync
     would fetch recordings having never been asked.
     """
-    from panopto.settings import is_enabled as _pan_is_enabled
+    from panopto.settings import (
+        is_enabled as _pan_is_enabled, is_globally_enabled,
+    )
+    # With Panopto switched off nothing here can fetch a recording, so there is
+    # nothing to seek acknowledgement FOR. Without this the notice would still be
+    # raised on a Quick Sync that the analysis gate has already made files-only -
+    # a legal modal about an action that cannot happen.
+    if not is_globally_enabled():
+        return False
     for p in sync_pairs or []:
         contract = _resolve_pair_panopto_contract(p)
         # Every output, the Shortcut included. A link is not a copy of the
@@ -3108,10 +3127,32 @@ def _run_sync_panopto():
     )
     from shared.helpers import learned_transfer_priors
     from shared import theme as _theme
-    from panopto.settings import compose_settings as _pan_compose
+    from panopto.settings import (
+        compose_settings as _pan_compose,
+        is_globally_enabled as _pan_globally_enabled,
+    )
     from panopto.runner import run_panopto_batch, make_recorder, make_ignorer
     from core.sync_manager import SyncManager
     from shared.helpers import esc as _esc, render_sync_wizard as _wizard
+
+    # Defence in depth for the global Panopto switch, NOT the gate.
+    #
+    # The real gate is in sync/analysis.py, which is what stops the expensive
+    # discovery pass; with it in place this phase is already unreachable, because
+    # execution routes here only when Review selected at least one recording and
+    # a skipped analysis surfaces none. It is still checked, because this is the
+    # last point before the runner fetches anything and the run reaches it
+    # through several independent paths (Review, Quick Sync, the unattended daily
+    # sync). Logged at warning: reaching this line means an earlier gate did not
+    # hold, which is a defect worth a line in the log rather than a silent save.
+    if not _pan_globally_enabled():
+        logger.warning(
+            "Panopto sync pass reached with the feature switched off in Settings "
+            "- skipping it. An earlier gate (sync/analysis.py) should have "
+            "prevented this."
+        )
+        st.session_state['download_status'] = 'sync_complete'
+        st.rerun()
 
     # Batch-level settings carry the global engine config (model/device/
     # language); each target supplies its own output/layout contract in

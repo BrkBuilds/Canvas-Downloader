@@ -433,6 +433,35 @@ Bounded by design: download all 36 recordings, transcribe 2–3.
   **"new / missing outputs"**, not as up to date.
 - Cancel mid-transcription → no orphaned worker process, no `.part` files.
 
+### Do NOT report: `ffmpeg -f null` calls every Panopto mp4 broken
+
+Verifying an mp4 with `ffmpeg -v error -i FILE -f null -` floods stderr with
+
+```
+Application provided invalid, non monotonically increasing dts to muxer in stream 0: 284 >= 284
+```
+
+and it is **your own null MUXER complaining, not a decode failure**. Panopto's
+HLS delivers duplicate DTS values — `panopto/stream.py`'s docstring already
+says so, which is why `_run_ffmpeg_download` drains stderr concurrently — and
+`-c copy` faithfully preserves them. Measured 2026-08-10 on all 36 recordings
+of 43660: every file returned **rc=0 with zero decode errors** while emitting
+1–532 of those lines. A checker that treats non-empty stderr as failure calls
+36 good lectures corrupt.
+
+Classify instead of counting: `non monotonic` / `to muxer` / `Last message
+repeated` is noise; `Invalid data`, `corrupt`, `error while decoding`,
+`moov atom not found`, `Invalid NAL` are real. Then check the things a decode
+pass cannot see — a `-c copy` remux that dropped a stream still decodes
+perfectly:
+
+- **both streams present** (`Video:` and `Audio:` in `ffmpeg -i`),
+- **plausible duration** (36 files, 8.21 h total, mean 13.7 min — a truncated
+  remux shows up here and nowhere else),
+- **`+faststart` honoured** — `moov` must appear *before* `mdat` in the first
+  few MB, or the file will not play while still downloading,
+- **no leftover `.part.mp4`**, which is the atomic pattern's own receipt.
+
 ---
 
 ## The sync matrix — a different space, not a mirrored one
@@ -1135,16 +1164,37 @@ machine starves Excel" (true), and it cost one row.
    delete-the-original guard was fixed on Windows and left broken on macOS for a
    full round, on THREE converters, and that `office_safe_path` had the same
    shape. Anything that ends in `platform.system()` or `sys.platform` is a
-   candidate. Highest-value macOS targets, in order:
-   - the three Office converters' AppleScript branch (`run_applescript` returns
-     True on `dst.exists()`, which a 0-byte stub satisfies);
-   - `.webloc` Panopto shortcuts, including the Canvas ExternalTool name
-     collision, and whether **Finder** actually opens one (the 2026-08-07 work
-     could verify the plist but not Finder itself);
+   candidate.
+
+   **Most of this is reachable FROM WINDOWS and was swept 2026-08-10.** Answer
+   `sys.platform` / `platform.system()` as darwin and call the *real* function;
+   stub only the OS boundary (`run_applescript`, `subprocess.Popen`), never the
+   function under test - the gate usually lives in the caller, above that
+   boundary. 75 assertions across 19 macOS branches; it found one real defect
+   (the divergent AppleScript escaper, see CLAUDE.md). **Every negative suite
+   needs a positive control**: a wrong stub signature made the real function
+   raise before reaching the branch, and every "the original is KEPT" case then
+   passed *because nothing ran* - only the "a real PDF is deleted" case exposed
+   it. Assert the evidence was produced (`assert captured["cmd"]`), not just
+   that it looks right; an empty string satisfies most negative checks.
+
+   Verified clean this way: the three Office converters' delete gates (0-byte /
+   truncated / non-PDF all keep the original, a real PDF replaces it),
+   `_as_posix`, `converters/url.py`'s compile-widely-delete-narrowly split,
+   `.webloc` write/read/marker round trip, `resolve_shortcut_path`'s four cases
+   including cross-platform adoption, `_create_link`'s plist, the token fallback
+   never touching disk off Windows, `health_log`'s macOS probes, and
+   `_worker_command`'s sidecar routing.
+
+   **What driving from Windows CANNOT prove**, and so still needs real hardware:
+   - whether **Finder** opens a `.webloc` and **Office** accepts what osascript
+     sends it (only the bytes we write are checked);
    - keychain prompts on a REBUILD with a new ad-hoc signature;
    - NFD/NFC path handling on an **HFS+ external drive**, which is the one place
      `_path_key`'s Unicode normalisation is not a no-op. Danish `å` decomposes
-     while `ø` and `æ` do not, so the symptom reads as random.
+     while `ø` and `æ` do not, so the symptom reads as random;
+   - TCC / Full Disk Access, the Dock recents tile, and the phantom-instance
+     guard - all of which depend on real POSIX and real macOS services.
 3. **Sync contract shapes.** All 43 sync rows replayed against ONE snapshot
    (`c45899_sync`: modules + html/code/urls). The flat, isolated and study-filter
    shapes were never synced, which is exactly the failure this file already

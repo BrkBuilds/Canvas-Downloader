@@ -88,6 +88,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from institution_seeds import SEEDS, LOCAL_NAMES          # noqa: E402
 from institution_rejects import REJECT, REJECT_DOMAINS, RENAME  # noqa: E402
+from institution_direct import DIRECT                     # noqa: E402
 
 FINDER = "https://canvas.instructure.com/api/v1/accounts/search"
 UA = {"User-Agent": "Mozilla/5.0 (CanvasDownloader institution-list builder)"}
@@ -288,10 +289,45 @@ ALIASES: dict[str, list[str]] = {
     # and "tomas" are distinctive tokens the probes lack and the host does not
     # vouch for.
     "Hong Kong University of Science and Technology": ["HKUST", "UST"],
+    # `wits` is not a prefix of `witwatersrand` - it diverges at the fourth
+    # letter - so the host cannot corroborate the spelled-out name by any rule
+    # in `corroborates`, and South Africa's best-known university therefore
+    # could not be seeded onto its own Canvas at ulwazi.wits.ac.za. It is what
+    # the university calls itself, on its own domain.
+    "University of the Witwatersrand": ["Wits", "Wits University"],
+    # Same shape: the host contracts the name to one label. Needed here for a
+    # second reason - the seed exists to hold `uandes.instructure.com` AWAY
+    # from Colombia's Universidad de los Andes, which the qualifier veto now
+    # correctly refuses, and which would otherwise leave a real Chilean
+    # university shipping under a Colombian one's name.
+    "Universidad de los Andes Chile": ["UANDES", "Universidad de los Andes - Chile"],
+    "Universidad de Santiago de Chile": ["USACH"],
+    "Universidad Andres Bello": ["UNAB", "UNAB Chile"],
+    "Universidad Tecnologica Metropolitana": ["UTEM"],
+    "Technological Institute of the Philippines": ["TIP"],
+    "Far Eastern University": ["FEU"],
+    "Central Philippine University": ["CPU"],
+    "Pontifical Catholic University of Parana": ["PUCPR",
+                                                 "Pontificia Universidade Catolica do Parana"],
+    "Pontifical Catholic University of Campinas": ["PUC Campinas",
+                                                   "Pontificia Universidade Catolica de Campinas"],
+    "Universidade Luterana do Brasil": ["ULBRA"],
+    "Universidade Veiga de Almeida": ["UVA"],
+    "Escola Superior de Propaganda e Marketing": ["ESPM"],
+    "Universidad Tecnologica del Peru": ["UTP"],
+    "Universiti Brunei Darussalam": ["UBD"],
+    "Universitas Pembangunan Jaya": ["UPJ"],
+    "British University Vietnam": ["BUV"],
 }
 
 _TLD_FOR = {"GB": "uk"}
-_NEUTRAL_TLD = {"com", "edu", "org", "net", "int", "info", "io"}
+# `eu` is two letters and is NOT a country - it is supranational, so `cc_of`
+# used to emit the country code "EU", which no country table can name and which
+# therefore ships a row that is excluded from every regional suggestion list and
+# asks the picker for a label that does not exist. Caught by
+# `test_every_shipped_country_has_a_searchable_name`, which is the gate for any
+# future one of these.
+_NEUTRAL_TLD = {"com", "edu", "org", "net", "int", "info", "io", "eu"}
 _LMS_AFFIX = ("canvas", "lms", "learn", "elearning", "online", "my", "courses", "study")
 
 
@@ -299,6 +335,129 @@ _LMS_AFFIX = ("canvas", "lms", "learn", "elearning", "online", "my", "courses", 
 def norm_name(s: str) -> str:
     """Drop parentheticals and trailing qualifiers before comparing."""
     return re.split(r"\s+[-–—|/]\s+", re.sub(r"\([^)]*\)", " ", s or ""))[0]
+
+
+def tail_segments(s: str) -> list:
+    """Each discarded qualifier of *s*, separately and IN SOURCE ORDER.
+
+    Segments rather than one blob because they are judged one at a time: "TOS -
+    The Olympia Schools (Teacher, Student)" has a segment worth keeping and a
+    segment that is pure audience noise, and joining them first forces one
+    verdict on both. Source order because joining parentheticals ahead of
+    dash-tails silently rewrites the name - measured, that example came out as
+    "TOS - Teacher, Student The Olympia Schools".
+    """
+    out, src = [], s or ""
+    for m in re.finditer(r"\(([^)]*)\)", src):
+        out.append((m.start(), m.group(1)))
+    head_and_rest = re.sub(r"\([^)]*\)", lambda m: " " * len(m.group(0)), src)
+    pos = 0
+    for i, part in enumerate(re.split(r"\s+[-–—|/]\s+", head_and_rest)):
+        if i:
+            out.append((pos, part))
+        pos += len(part) + 3
+    return [t.strip() for _p, t in sorted(out) if t.strip()]
+
+
+def tail_of(s: str) -> str:
+    """Everything ``norm_name`` throws away: parentheticals and the trailing
+    qualifier after a dash or pipe.
+
+    **This is the single most consequential omission the pairing gates had.**
+    Every veto in this file compares ``distinctive`` token sets, and those go
+    through ``norm_name`` - so the gates were reasoning about names with the
+    disambiguator already deleted. "University of Tennessee - Martin" arrived
+    as "University of Tennessee", "Universidad de los Andes - Chile" as
+    "Universidad de los Andes", "University of Arizona - College of Public
+    Health" as "University of Arizona". Each then scored a perfect 1.00 against
+    a seed it is not, because the one word that says so had been removed
+    BEFORE the comparison began. All three shipped.
+    """
+    return " ".join(tail_segments(s))
+
+
+#: Qualifier words that describe the TENANT, not the institution: how you log
+#: in, who the audience is, which platform it runs on. A name carrying only
+#: these still names the same school, so they must never be read as evidence of
+#: a different one - "The University of Melbourne (non-SSO)" IS the University
+#: of Melbourne, and treating `non` and `sso` as distinguishing tokens would
+#: veto the university on the strength of its own login method.
+_ADMIN_QUALIFIER = {
+    "sso", "non", "nonsso", "saml", "shibboleth", "cas", "oauth", "ldap",
+    "students", "student", "teachers", "teacher", "staff", "faculty", "parents",
+    "parent", "observers", "observer", "guests", "guest", "alumni", "admin",
+    "canvas", "lms", "moodle", "portal", "login", "site", "prod", "production",
+    "live", "main", "new", "old", "legacy", "beta", "test", "dev", "uat", "qa",
+    "sandbox", "archive", "archived", "copy", "only", "and", "for", "the",
+    "part", "time", "full", "adjunct", "observers", "all", "new",
+}
+
+
+def tail_tokens(name: str) -> set:
+    """Tokens in *name*'s qualifier that carry INFORMATION about which
+    institution this is - a campus, a country, a faculty, a city.
+
+    This is the DISPLAY question ("may I delete this tail from the label?"),
+    and it is deliberately broader than the veto question below. Keeping the
+    two apart matters: narrowing the veto to institution-like qualifiers is
+    what stopped it rejecting "University of Michigan - Ann Arbor", but a label
+    must still say "University of Tennessee - Martin" rather than promoting a
+    branch campus into a claim on the whole university.
+    """
+    return {t for t in toks(tail_of(name))
+            if t not in _ADMIN_QUALIFIER and t not in _GENERIC and len(t) > 2}
+
+
+def qualifier_tokens(name: str) -> set:
+    """Tokens in *name*'s qualifier, but ONLY when the qualifier names an
+    institution rather than a place.
+
+    **The narrowing is the whole rule, and it was arrived at by measurement.**
+    A veto on every unvouched qualifier token is too strong in one specific and
+    very common shape: a university publishing its flagship campus by name.
+    "University of Michigan - Ann Arbor" on ``m.canvas.umich.edu`` was rejected
+    while "- Flint" on ``canvas.flint.umich.edu`` was accepted, because the
+    branch campus names itself in its host and the main campus does not - so
+    the veto reliably picked the WRONG campus of any multi-campus university.
+
+    A qualifier carrying an entity-KIND word is a different thing entirely: it
+    is not a campus, it is a name. "ELU - European Leadership University" is
+    not Eotvos Lorand University, and that pairing shipped. Everything else -
+    a bare place, an initialism, a login method - is left to corroboration and
+    ``domain_rank``, which handle campuses correctly and were already the only
+    gates rejecting "University of Tennessee - Martin" and "Universidad de los
+    Andes - Chile".
+    """
+    tail = tail_of(name)
+    if not kinds(tail):
+        return set()
+    return {t for t in toks(tail)
+            if t not in _ADMIN_QUALIFIER and t not in _GENERIC and len(t) > 2}
+
+
+#: Words naming what KIND of institution this is. They are in ``_GENERIC``
+#: because they cannot corroborate a domain - but between two names they are
+#: highly discriminating, and dropping them is how "UNSW College" (a separate
+#: pathway provider) was accepted as the University of New South Wales and
+#: "UTS College" nearly was for UTS. A kind the account claims and the seed
+#: does not is a different sort of organisation wearing a familiar name.
+_ENTITY_KIND = {
+    "university", "universitat", "universitet", "universiteit", "universidad",
+    "universidade", "universite", "universiti", "universitas", "college",
+    "school", "institute", "academy", "polytechnic", "seminary", "conservatory",
+    "hogskole", "hogskolan", "hochschule", "gymnasium", "escuela", "instituto",
+}
+
+
+def kinds(s: str) -> set:
+    """Entity-kind words anywhere in *s*, QUALIFIER INCLUDED.
+
+    Deliberately not routed through ``toks``, which drops the tail: "University
+    of Arizona - College of Public Health" is a college of a university, and
+    reading only the head makes it indistinguishable from the university.
+    """
+    return {t for t in re.sub(r"[^a-z0-9 ]+", " ", (s or "").lower()).split()
+            if t in _ENTITY_KIND}
 
 
 def toks(s: str) -> set:
@@ -508,6 +667,8 @@ def contradicts(domain: str, name: str, probes: list) -> bool:
                    for lab in labs)
 
     acct = distinctive(name)
+    qual = qualifier_tokens(name)
+    acct_kinds = kinds(name)
     for p in probes:
         seed_t = distinctive(p)
         if not seed_t or not acct:
@@ -521,13 +682,80 @@ def contradicts(domain: str, name: str, probes: list) -> bool:
         reduced = is_acronym_of(name, p)
         seed_extra = set() if reduced else seed_t - acct
 
-        if all(vouched(t) for t in seed_extra) and all(vouched(t) for t in acct_extra):
+        # The QUALIFIER, which `distinctive` never saw because `norm_name`
+        # removed it. A campus, a faculty or a country named here and nowhere
+        # in the seed - and not backed by the host - is another institution.
+        qual_extra = qual - (seed_t | acronyms(p))
+        # ...and the KIND. "UNSW College" is not the University of New South
+        # Wales, and the only word that says so is one `_GENERIC` discards.
+        kind_extra = acct_kinds - kinds(p)
+
+        if (all(vouched(t) for t in seed_extra)
+                and all(vouched(t) for t in acct_extra)
+                and all(vouched(t) for t in qual_extra)
+                and all(vouched(t) for t in kind_extra)):
             return False
     return True
 
 
+#: Initialisms produced by MORE THAN ONE seed. Computed, never hand-listed, so
+#: it cannot fall out of date when a seed is added.
+#:
+#: "USC" is the initialism of BOTH "University of South Carolina" and
+#: "University of Southern California", and the account on
+#: ``courses.online.usc.edu`` is called simply "USC Online" - so the initialism
+#: path accepted it for whichever seed reached it first, and the dedupe then
+#: kept the alphabetically-earlier name. Shipped result: South Carolina
+#: pointing at Southern California's tenant, AND Southern California missing
+#: from the list altogether, because its domain had already been taken.
+#:
+#: An ambiguous initialism is not weak evidence, it is NO evidence, so the
+#: initialism path simply declines it. Both seeds then fall through to the
+#: ordinary branches, which need a real name match.
+def _ambiguous_acronyms() -> set:
+    seen, dupes = set(), set()
+    for seed, _cc in SEEDS:
+        for a in acronyms(seed):
+            (dupes if a in seen else seen).add(a)
+    return dupes
+
+
+_AMBIGUOUS_ACRONYMS = _ambiguous_acronyms()
+
+
+#: A word in a DOMAIN that announces a side entrance rather than the
+#: institution's Canvas. Only a veto when the seed's own name does not contain
+#: it - `online.smc.edu` really is Santa Monica College's Canvas, and "Online"
+#: really is part of "Melbourne University Online".
+#:
+#: `_TENANT_NOISE` above cannot be reused for this: it is written for RANKING
+#: between candidates, so its alternatives are unanchored and `pd`, `dev` and
+#: `prof` match inside ordinary words. As a veto that would delete real
+#: institutions.
+_SUBTENANT_WORDS = ("online", "continuing", "conted", "execed", "executive",
+                    "alumni", "catalog", "summer", "workforce", "precollege",
+                    "professional", "health", "medical", "nursing", "extension")
+
+
+def domain_is_subtenant(domain: str, probes: list) -> bool:
+    """The host names a sub-tenant the institution's own name never mentions.
+
+    Declining here is cheap and self-correcting: the domain simply falls
+    through to the FILL path, where it ships under the account's own name. So
+    the institution is not lost - it is labelled as what it actually is.
+    """
+    d = fold(domain)
+    for w in _SUBTENANT_WORDS:
+        if w in d and not any(w in fold(p) for p in probes):
+            return True
+    return False
+
+
 def accepts(seed: str, cc: str, domain: str, name: str) -> bool:
     if tld_vetoes(cc, domain):
+        return False
+    probes_all = [seed] + ALIASES.get(seed, []) + local_probes(seed)
+    if domain_is_subtenant(domain, probes_all):
         return False
     probes = [seed] + ALIASES.get(seed, []) + local_probes(seed)
     if contradicts(domain, name, probes):
@@ -548,7 +776,7 @@ def accepts(seed: str, cc: str, domain: str, name: str) -> bool:
     # the strictest branch here: the account must reduce ENTIRELY to the seed's
     # own initials, and the host must independently confirm them.
     if corr and any(is_acronym_of(name, p) for p in probes):
-        return True
+        return not (distinctive(name) & _AMBIGUOUS_ACRONYMS)
     return False
 
 
@@ -559,11 +787,50 @@ def finder(term: str, page: int = 1, per: int = 100, timeout: float = 25.0) -> l
         return json.load(r)
 
 
+# The finder paginates as far as its result set goes; there is NO server-side
+# result cap. Measured 2026-08-09 by binary-searching the last non-empty page:
+# 'a' ends at page 94 (~9,369 results), 'e' at 106 (~10,565), 'i' at 105.
+# `_MAX_PAGES` is therefore a runaway guard, not a policy - 250 pages is 25,000
+# results for one letter, an order of magnitude past anything observed.
+#
+# THE OLD `range(1, 61)` WAS SILENTLY DISCARDING ~40% OF EVERY COMMON LETTER.
+# It reads like a generous bound and is not: measured on letter 'a' alone,
+# pages 61-94 hold 2,433 domains pages 1-60 never saw, and 1,400 of those pass
+# `is_institution`. That single cap is the largest reason whole markets were
+# missing from the shipped list - India shipped ONE institution, Nigeria none -
+# and no gate or seed could have rescued them, because the accounts never
+# reached `build()` at all.
+_MAX_PAGES = 250
+
+# Why plain a-z + 0-9 is COMPLETE, and why no market-specific search terms are
+# needed to make it so. The finder substring-matches the DOMAIN as well as the
+# name (verified: 'oskilde' finds vucroskilde.instructure.com, whose account is
+# named "VUC Roskilde"; 'cbscanvas' finds Copenhagen Business School). Every
+# `*.instructure.com` domain therefore contains "instructure", so the single
+# term 'e' alone returns all 9,542 of them, and every vanity domain contains at
+# least one a-z letter in its TLD. The union cannot miss an account.
+#
+# The residual risk this does NOT cover is an account the finder does not
+# publish at all - that is the hard ceiling named in the module header, and no
+# crawl strategy reaches past it.
+_TERMS = list(string.ascii_lowercase) + list(string.digits)
+
+
 def crawl(verbose: bool = True) -> dict:
-    """Every account the finder publishes, as ``{domain: account name}``."""
-    seen: dict[str, str] = {}
-    for term in list(string.ascii_lowercase) + list(string.digits):
-        for page in range(1, 61):
+    """Every account the finder publishes, as ``{domain: [names...]}``.
+
+    **All** names, not the first one seen. Several accounts routinely share one
+    domain - a parents/observers tenant beside the students one, an acronym
+    beside the spelled-out title - and the old ``setdefault`` kept whichever the
+    crawl happened to reach first, i.e. an artefact of alphabetical search
+    order. That is how ``tip.instructure.com`` can ship as "TIP" rather than
+    "Technological Institute of the Philippines": both names exist, and nothing
+    was choosing between them. `best_account_name` does the choosing now.
+    """
+    seen: dict[str, list] = {}
+    for term in _TERMS:
+        pages = 0
+        for page in range(1, _MAX_PAGES + 1):
             got = None
             for attempt in range(3):
                 try:
@@ -573,17 +840,41 @@ def crawl(verbose: bool = True) -> dict:
                     time.sleep(1.2 * (attempt + 1))
             if not got:
                 break
+            pages = page
             for x in got:
                 dom = (x.get("domain") or "").strip().lower()
                 nm = (x.get("name") or "").strip()
                 if dom and nm:
-                    seen.setdefault(dom, nm)
+                    names = seen.setdefault(dom, [])
+                    if nm not in names:
+                        names.append(nm)
             if len(got) < 100:
                 break
             time.sleep(0.12)
         if verbose:
-            print(f"  '{term}' -> {len(seen)} accounts", flush=True)
+            print(f"  '{term}' -> {pages} pages, {len(seen)} domains so far", flush=True)
     return seen
+
+
+def best_account_name(names: list) -> str:
+    """The most useful of several names published on one domain.
+
+    Prefer a name that actually SAYS what the institution is: one carrying an
+    education word beats a bare acronym, because the acronym is unsearchable for
+    anyone who does not already know it. Among equals, prefer the one without a
+    tenant/audience qualifier ("- Parents/Observers", "(SAML)", "| Students &
+    Teachers"), then the longer one - a fuller title carries more of the words a
+    student might type.
+    """
+    def rank(n: str) -> tuple:
+        f = fold(n)
+        return (
+            not bool(_EDUCATION.search(f)),          # education word first
+            bool(_BAD_ACCOUNT.search(f)),            # audience/tenant qualifier last
+            bool(re.search(r"[(|]|\s-\s", n)),       # unqualified first
+            -len(n),                                 # then the fuller title
+        )
+    return sorted(names, key=rank)[0] if names else ""
 
 
 def verify_domain(domain: str, timeout: float = 12.0) -> str:
@@ -603,6 +894,44 @@ def verify_domain(domain: str, timeout: float = 12.0) -> str:
         return "ok" if "unauthenticated" in body.lower() else "401:body"
     except Exception as e:
         return type(e).__name__
+
+
+# Verification verdicts carried between runs.
+#
+# NOTHING IN THIS SCRIPT CHANGES WHAT A HOST ANSWERS, so a verdict from an
+# earlier run is as good as a fresh one - and verification is where all the wall
+# clock goes (a full run is hours, almost all of it the patient serial pass over
+# hosts that really are dead). Reusing it turns "I changed a gate, rebuild"
+# from an afternoon into minutes, which is the difference between iterating on
+# the gates and not.
+#
+# Only ``ok`` is cached. A FAILURE is deliberately never remembered: it is the
+# verdict that can be wrong for reasons outside the host (see `verify_many`),
+# and a cached false negative would delete an institution permanently, silently,
+# and identically on every later run - the one failure mode this whole module is
+# built to avoid.
+_VERIFY_CACHE: dict = {}
+
+
+def load_verify_cache(path) -> None:
+    global _VERIFY_CACHE
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        _VERIFY_CACHE = {d: v for d, v in raw.items() if v == "ok"}
+        print(f"  reusing {len(_VERIFY_CACHE)} cached 'ok' verdicts from {path}")
+    except FileNotFoundError:
+        _VERIFY_CACHE = {}
+    except (json.JSONDecodeError, UnicodeDecodeError, OSError) as e:
+        print(f"  verify cache unreadable ({type(e).__name__}) - verifying everything")
+        _VERIFY_CACHE = {}
+
+
+def save_verify_cache(path) -> None:
+    try:
+        path.write_text(json.dumps(_VERIFY_CACHE, ensure_ascii=False, indent=0),
+                        encoding="utf-8")
+    except OSError as e:
+        print(f"  could not write verify cache: {e}")
 
 
 def verify_many(domains: list, workers: int = 16) -> dict:
@@ -627,11 +956,23 @@ def verify_many(domains: list, workers: int = 16) -> dict:
     nothing costs one cooldown, which is why the loop exits as soon as a pass
     clears the backlog.
     """
+    todo = [d for d in domains if d not in _VERIFY_CACHE]
+    res = {d: "ok" for d in domains if d in _VERIFY_CACHE}
+    if len(todo) < len(domains):
+        print(f"  {len(domains) - len(todo)} already verified, checking {len(todo)}",
+              flush=True)
     with cf.ThreadPoolExecutor(max_workers=workers) as ex:
-        res = dict(zip(domains, ex.map(verify_domain, domains)))
+        res.update(zip(todo, ex.map(verify_domain, todo)))
 
     # (workers, timeout, cooldown before the pass) - progressively gentler.
-    for pass_workers, timeout, cooldown in ((3, 25.0, 0.0), (1, 30.0, 20.0)):
+    #
+    # The last pass is 2 workers rather than 1. At the list sizes this now
+    # builds, a strictly serial sweep over the dead hosts is the entire runtime
+    # of the script: ~500 unreachable domains x a 30s connect timeout is over
+    # four hours, and every second of it is spent waiting on hosts that will
+    # never answer. Two workers halves that while staying far below the
+    # concurrency that produced the false negatives in the first place.
+    for pass_workers, timeout, cooldown in ((3, 25.0, 0.0), (2, 30.0, 20.0)):
         retry = [d for d, v in res.items() if v != "ok"]
         if not retry:
             break
@@ -648,6 +989,7 @@ def verify_many(domains: list, workers: int = 16) -> dict:
                 for d, v in zip(retry, ex.map(lambda x: verify_domain(x, timeout=timeout), retry)):
                     res[d] = v
 
+    _VERIFY_CACHE.update({d: "ok" for d, v in res.items() if v == "ok"})
     still = [d for d, v in res.items() if v != "ok"]
     if still:
         print(f"  {len(still)} genuinely unreachable: {', '.join(sorted(still)[:6])}"
@@ -657,12 +999,33 @@ def verify_many(domains: list, workers: int = 16) -> dict:
 
 # ── Assembly ─────────────────────────────────────────────────────────────────
 def clean_name(n: str) -> str:
-    """Strip tenant qualifiers so 'The University of Melbourne (non-SSO)' and
-    'University of Melbourne Online' collapse onto one recognisable entry."""
-    n = re.sub(r"\([^)]*\)", " ", n)
-    n = re.split(r"\s+[-–—|]\s+", n)[0]
-    n = re.sub(r"\s+(Online|Canvas|LMS|Learning|Global|Digital)$", "", n, flags=re.I)
-    return re.sub(r"\s+", " ", n).strip().strip(",")
+    """Strip TENANT qualifiers, and keep the ones that identify the institution.
+
+    The old version stripped every parenthetical and everything after a dash,
+    unconditionally - which is right for "The University of Melbourne
+    (non-SSO)" and a falsehood for "University of Tennessee - Martin", which it
+    turned into "University of Tennessee". Same for "Universidad de los Andes -
+    Chile" and "University of Arizona - College of Public Health": in each case
+    the account named itself accurately and this function promoted it into a
+    claim on the whole university.
+
+    The tail is dropped only when it says nothing about WHICH institution this
+    is - administrative words, or an initialism of the head (so "Central
+    Philippine University (CPU)" still loses its brackets). Otherwise it stays,
+    and the row is labelled as the campus or faculty it really is.
+    """
+    head = norm_name(n).strip()
+    keep = []
+    for seg in tail_segments(n):
+        # An initialism of the head is the same name written shorter, not a
+        # different institution - and it is how a great many accounts are
+        # titled ("Central Philippine University (CPU)").
+        if not tail_tokens(f"x ({seg})") or is_acronym_of(seg, head):
+            continue
+        keep.append(seg)
+    out = " - ".join([head] + keep) if head else " - ".join(keep)
+    out = re.sub(r"\s+(Online|Canvas|LMS|Learning|Global|Digital)$", "", out, flags=re.I)
+    return re.sub(r"\s+", " ", out).strip().strip(",").strip("-").strip()
 
 
 def dedupe_key(n: str) -> str:
@@ -699,10 +1062,132 @@ def cc_of(domain: str) -> str:
 _TLD_FOR_INV = {v: k for k, v in _TLD_FOR.items()}
 
 
+# ── Country inference for fill rows ──────────────────────────────────────────
+#
+# WHY THIS HAD TO EXIST. `cc_of` reads the ccTLD, and 93% of the shipped list
+# is `*.instructure.com`, which carries no country signal at all - so 3,906 of
+# 4,272 rows had ``cc == ""``. That was tolerable while country only widened
+# the search haystack. It is not tolerable now: the picker opens on the
+# institutions in the user's own country, and a country nobody has costs every
+# user in it that entire feature. Measured before this: DENMARK had two rows
+# with a country, while Erhvervsakademi Aarhus, Den Danske Filmskole, VUC
+# Roskilde, VUC KLAR and VUC Storstrom all shipped as country-unknown.
+#
+# WHAT MAKES IT SAFE. An inferred country is used for exactly two things - it
+# widens the search haystack, and it orders the list shown before anything is
+# typed - and it is NEVER displayed as a claim about the institution. So the
+# cost of a wrong guess is one unexpected row in a suggestion list, which the
+# user simply does not click. That is a different universe of consequence from
+# a wrong name-to-domain pairing, and it is why the evidence bar here is
+# deliberately lower than anywhere else in this file.
+#
+# Each rule is a marker that is essentially unambiguous IN PRACTICE, not merely
+# common: "Erhvervsakademi" is a Danish institution type defined in Danish law,
+# `ISD` is a US school-district suffix, "Hogeschool" is Dutch/Flemish. Words
+# shared across a language family are deliberately ABSENT - "universitet" is
+# Danish, Norwegian AND Swedish, so it proves nothing and is not listed.
+_CC_MARKERS = (
+    ("DK", r"erhvervsakademi|\bvuc\b|professionshojskol|handelsskol|"
+           r"danmarks|dansk\w*|kobenhavn\w*|\baarhus\b|odense|aalborg|"
+           r"gymnasiefaellesskab|hf\s*&\s*vuc|social- og sundhedsskol"),
+    ("NO", r"hogskolen i |hogskulen|videregaende skole|norges |norsk\w*|"
+           r"fylkeskommune|folkehogskole"),
+    ("SE", r"hogskolan|gymnasieskola|larosate|kommun\b|sveriges|svensk\w*|"
+           r"folkhogskola|yrkeshogskola"),
+    ("FI", r"yliopisto|korkeakoulu|ammattikorkeakoulu|\blukio\b|suomen"),
+    # NOT "islands": it put "California State University, Channel Islands"
+    # in Iceland. The Icelandic school words are unambiguous; the English one
+    # was doing nothing but harm.
+    ("IS", r"haskol\w*|menntaskol\w*|framhaldsskol\w*"),
+    ("NL", r"hogeschool|onderwijs|\bmbo\b|\broc\b|scholengemeenschap"),
+    ("DE", r"hochschule|fachhochschule|berufskolleg|gesamtschule|realschule|"
+           # NOT a bare "universitat": Germany, Austria and Switzerland all use
+           # it, and it tagged Austria's Universitat fur Weiterbildung Krems as
+           # German. (Heidelberg keeps DE because it is a SEED, which carries
+           # its own country and never consults this table.)
+           r"gymnasium der|deutsche\w*"),
+    ("BR", r"universidade|faculdade|instituto federal|colegio estadual|senai|sesi"),
+    ("PT", r"politecnico de|universidade de lisboa|instituto superior"),
+    ("ID", r"universitas|sekolah|institut teknologi|politeknik negeri"),
+    # Word-bounded: unbounded, "universiti" is a substring of the English
+    # "Universities" and tagged the Association of Commonwealth Universities as
+    # Malaysian.
+    ("MY", r"\buniversiti\b|\bkolej\b|sekolah menengah"),
+    # NOT "city college of": that is a US pattern, and it put City College of
+    # San Francisco in the Philippines - twice.
+    ("PH", r"philippin\w*|pamantasan|paaralan"),
+    ("ZA", r"\bnwu\b|tshwane|kwazulu|stellenbosch|witwatersrand|"
+           r"south african|\bsandton\b|gauteng"),
+    # NOT "indian school": in the United States that names a Native American
+    # school, and it put "Red Cloud Indian School" (Pine Ridge, South Dakota)
+    # into the list of institutions in India. A marker has to be unambiguous in
+    # PRACTICE, not merely suggestive - the whole table is only safe because
+    # each entry is a word that means one thing.
+    ("IN", r"\bindian institute of\b|\bcbse\b|vidyalaya|vidyapeeth|"
+           r"\bpilani\b|bengaluru|\bmumbai\b|\bchennai\b|\bhyderabad\b"),
+    ("US", r"\b(isd|usd|cisd|csd|ufsd|sd\d+)\b|school district|public schools|"
+           r"unified school|county schools|\bcommunity college\b|"
+           r"\bcharter school\b|\bboe\b|\bboard of education\b"),
+)
+_CC_MARKERS_RX = tuple((cc, re.compile(rx, re.I)) for cc, rx in _CC_MARKERS)
+
+#: A trailing US state/territory code, as school districts publish it
+#: ("Giles County Schools - VA"). Anchored to the END so it cannot fire on an
+#: institution that merely contains the letters.
+_US_STATE_TAIL = re.compile(
+    r"[-,(\s]\s*(AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|"
+    r"MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|"
+    r"VA|WA|WV|WI|WY|DC)\)?\s*$")
+
+
+def infer_cc(name: str, domain: str) -> str:
+    """The institution's country - ccTLD first, then name markers, else ``""``.
+
+    The ccTLD is PROOF and always wins; the markers are evidence and only ever
+    speak for a domain that carries no country of its own. Returning ``""``
+    stays a perfectly good answer: an unknown country costs one row's place in
+    a suggestion list, and inventing one to avoid an empty string would be
+    exactly the kind of confident wrong answer this file exists to avoid.
+    """
+    hard = cc_of(domain)
+    if hard:
+        return hard
+    if _US_STATE_TAIL.search(name):
+        return "US"
+    folded = fold(name)
+    for cc, rx in _CC_MARKERS_RX:
+        if rx.search(folded):
+            return cc
+    return ""
+
+
 def build(pool: dict, limit: int) -> tuple[list, list]:
+    # A domain may publish several account names; a bare string is still
+    # accepted so a cached crawl (and the tests' fixtures) keep working.
+    names_of = {d: (list(v) if isinstance(v, list) else [v]) for d, v in pool.items()}
+
     # --- seed core: curated display names for the best-known institutions ----
-    usable = [(d, n) for d, n in pool.items()
-              if not _BAD_ACCOUNT.search(n) and not _BAD_ACCOUNT.search(d)]
+    #
+    # `_BAD_ACCOUNT` is applied PER NAME, and a domain survives if any of its
+    # names is clean. It used to be applied to whichever name the crawl
+    # happened to store first, which silently excluded the domain from seeding
+    # altogether - and the name it happened to store was an artefact of
+    # alphabetical search order, not a fact about the institution.
+    #
+    # Measured on the real crawl: `canvas.lms.unimelb.edu.au` publishes BOTH
+    # "The University of Melbourne (non-SSO)" and "The University of
+    # Melbourne". The first one matched `_BAD_ACCOUNT`, so the seed "University
+    # of Melbourne" found no candidate at all and the domain fell through to
+    # the fill path - which is why Australia's best-known university shipped
+    # without its curated name and, once ranking existed, ranked below
+    # Melbourne Grammar School for the query `melbourne`.
+    usable = []
+    for d, names in names_of.items():
+        if _BAD_ACCOUNT.search(d):
+            continue
+        clean = [n for n in names if not _BAD_ACCOUNT.search(n)]
+        if clean:
+            usable.append((d, best_account_name(clean)))
     core, rejected = [], []
     for seed, cc in SEEDS:
         probes = [seed] + ALIASES.get(seed, []) + local_probes(seed)
@@ -732,7 +1217,16 @@ def build(pool: dict, limit: int) -> tuple[list, list]:
                    corroborates(seed, dom, probes), tld_matches(cc, dom),
                    tuple(-int(x) for x in domain_rank(dom)))
             if best is None or key > best[0]:
-                best = (key, {"name": display_name(seed), "domain": dom, "cc": cc})
+                best = (key, {"name": display_name(seed), "domain": dom, "cc": cc,
+                              # The picker's only "many people mean this one"
+                              # signal. A seed is here because a human judged
+                              # the institution well known, which is exactly
+                              # the judgement no text score can make - without
+                              # it the query `melbourne` ranks Melbourne
+                              # Business School above the University of
+                              # Melbourne, on the grammatical accident that its
+                              # name starts with the word.
+                              "flags": "s"})
         if best is None:
             continue
         if REJECT.get(seed) == best[1]["domain"]:
@@ -740,24 +1234,55 @@ def build(pool: dict, limit: int) -> tuple[list, list]:
             continue
         core.append(best[1])
 
+    # --- direct: live tenants the finder does not publish at all -------------
+    #
+    # A THIRD source, and the only one that does not begin with the crawl. The
+    # account finder lists accounts that opted into discovery, which is not the
+    # set of live tenants - `harvard.instructure.com` answers as Canvas and is
+    # nowhere in the crawl - so a market can look empty when it is merely
+    # undiscoverable. India held ONE institution against 33 Store installs.
+    #
+    # These rows carry a hand-checked identification (see the module docstring
+    # in `institution_direct.py`), and they still go through `verify_many`
+    # below like everything else, so a stale host drops out by itself. Placed
+    # after `core` and before `fill` so a curated name outranks a crawled one
+    # and neither can be evicted by an account that merely sorts earlier.
+    for _name, _dom, _cc in DIRECT:
+        if _dom in {c["domain"] for c in core} or _dom in REJECT_DOMAINS:
+            continue
+        core.append({"name": _name, "domain": _dom, "cc": _cc, "flags": "s"})
+
     # --- fill: accounts under their OWN name (no pairing risk whatsoever) ----
     used = {c["domain"] for c in core}
     fill = []
-    for dom, name in pool.items():
+    for dom, names in names_of.items():
         if dom in used or dom in REJECT_DOMAINS:
             continue
+        # The most informative of the names published here - an account titled
+        # both "TIP" and "Technological Institute of the Philippines" is
+        # unfindable under the first and obvious under the second.
+        name = best_account_name(names)
         if not is_institution(name, dom):
             continue
-        nm = clean_name(re.split(r"\s+\|\s+", name)[0])
-        # Re-test the CLEANED name: `clean_name` strips parentheticals and
-        # everything after " - ", so the education word can be the thing it
-        # just removed, leaving a label that names no institution at all.
-        if not (4 <= len(nm) <= 64) or not _EDUCATION.search(fold(nm)):
-            continue
-        # A hand-written label wins: it is there because the account's own name
-        # over-claims (names a whole university while serving one of its
-        # schools), and the fix is to disambiguate rather than to drop.
-        fill.append({"name": RENAME.get(dom, nm), "domain": dom, "cc": cc_of(dom)})
+        # A hand-written label wins, and it is consulted BEFORE the name gates
+        # rather than after. It exists because a human looked at this exact
+        # account and decided what it is; re-testing their answer with the
+        # heuristics they were overriding is how four real tenants were
+        # dropped outright - "Western Sydney Online", "USC Online",
+        # "University of York" (online) and Wits's online school all lose
+        # their education word to `clean_name`'s trailing-"Online" strip and
+        # then fail the re-test, so the rename never got the chance to apply.
+        # Missing is safer than wrong, but a renamed row is neither.
+        nm = RENAME.get(dom)
+        if nm is None:
+            nm = clean_name(re.split(r"\s+\|\s+", name)[0])
+            # Re-test the CLEANED name: `clean_name` strips parentheticals and
+            # everything after " - ", so the education word can be the thing it
+            # just removed, leaving a label that names no institution at all.
+            if not (4 <= len(nm) <= 64) or not _EDUCATION.search(fold(nm)):
+                continue
+        fill.append({"name": nm, "domain": dom,
+                     "cc": infer_cc(nm, dom), "flags": ""})
     # Own-domain first: configuring a CNAME is a fair proxy for an established
     # institution, and it is the only ranking signal the finder exposes at all.
     fill.sort(key=lambda r: (r["domain"].endswith(".instructure.com"), r["name"].lower()))
@@ -801,7 +1326,8 @@ def _q(s: str) -> str:
 
 
 def render_module(rows: list) -> str:
-    body = "\n".join("    (%s, %s, %s)," % (_q(r["name"]), _q(r["domain"]), _q(r["cc"]))
+    body = "\n".join("    (%s, %s, %s, %s)," % (_q(r["name"]), _q(r["domain"]),
+                                                _q(r["cc"]), _q(r.get("flags", "")))
                      for r in rows)
     return _TEMPLATE.replace("@@COUNT@@", str(len(rows))).replace("@@ROWS@@", body)
 
@@ -824,9 +1350,19 @@ whether or not it appears here. A student whose school is missing must never
 conclude the app does not support them, which is why the picker's empty state
 is worded as an instruction rather than a failure.
 
-``country`` may be empty: it is inferred from the domain's ccTLD, and a
-``*.instructure.com`` tenant carries no country signal. It only ever widens the
-search haystack and is never displayed, so "unknown" costs nothing.
+``country`` may be empty. It is PROVEN by the domain's ccTLD where there is
+one, and otherwise inferred from unambiguous markers in the institution's own
+name ("Erhvervsakademi" is Danish, "ISD" is a US school district) - see
+``infer_cc``. It is used to widen the search haystack and to decide which
+institutions the picker offers before anything is typed, and it is never
+displayed as a claim about the institution, so an unknown country costs one
+row's place in a suggestion list and nothing else.
+
+``flags`` marks how the row was chosen: ``"s"`` for one of the curated seeds in
+``scripts/institution_seeds.py``, ``""`` for an account taken from the crawl
+under its own name. The picker uses it as its only "many people mean this one"
+signal, which is what keeps a query like ``melbourne`` from answering with
+Melbourne Business School.
 
 Shipped as a ``.py`` rather than a data file on purpose: a module is picked up
 by PyInstaller's import graph automatically, so neither spec file needs a
@@ -834,8 +1370,8 @@ by PyInstaller's import graph automatically, so neither spec file needs a
 """
 from __future__ import annotations
 
-# (display name, canvas domain, ISO 3166-1 alpha-2 country or "")
-DATA: tuple[tuple[str, str, str], ...] = (
+# (display name, canvas domain, ISO 3166-1 alpha-2 country or "", flags)
+DATA: tuple[tuple[str, str, str, str], ...] = (
 @@ROWS@@
 )
 
@@ -890,6 +1426,11 @@ def main() -> int:
     ap.add_argument("--cache", help="reuse a crawl JSON instead of re-crawling")
     ap.add_argument("--save-crawl", help="write the crawl to this path")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--crawl-only", action="store_true",
+                    help="crawl and save, then stop - skips the slow verify pass")
+    ap.add_argument("--verify-cache",
+                    help="JSON {domain: verdict} reused instead of re-verifying; "
+                         "updated in place after the run")
     args = ap.parse_args()
 
     if args.cache:
@@ -901,8 +1442,16 @@ def main() -> int:
         print(f"crawled {len(pool)} accounts")
     if args.save_crawl:
         Path(args.save_crawl).write_text(json.dumps(pool, ensure_ascii=False), encoding="utf-8")
+    if args.crawl_only:
+        print("--crawl-only: nothing built")
+        return 0
+
+    if args.verify_cache:
+        load_verify_cache(Path(args.verify_cache))
 
     rows, rejected = build(pool, args.limit)
+    if args.verify_cache:
+        save_verify_cache(Path(args.verify_cache))
     print(f"\n{len(rows)} institutions "
           f"({sum(1 for r in rows if r['cc']) } with a known country)")
     if rejected:

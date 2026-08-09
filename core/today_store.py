@@ -102,23 +102,41 @@ def _daily_pairs_from_library() -> list[dict]:
         return []
 
 
+def _read_settings() -> tuple[dict, bool]:
+    """``(settings, may_write)`` - the stored settings and the write verdict.
+
+    ONE coercion of the stored shape, shared by the read path
+    (:func:`load_today_config`) and the write path (:func:`_update`), so the two
+    can never disagree about what the file said.
+
+    The verdict is what stops a read-modify-write from destroying the file it
+    could not read - the same class ``core.library``, ``atomic_update_sync_pairs``
+    and the settings file were each hardened against. It matters here because
+    ``_update`` writes only the keys it is given and re-persists the rest from
+    whatever the read produced: degrading to defaults and saving turns an
+    unreadable file into ``auto_sync_enabled: False`` and an empty
+    ``last_auto_sync_date``. That silently switches the daily auto-sync OFF -
+    and the daily sync is the run nobody watches, so nothing would say so.
+    """
+    from shared.helpers import read_json_for_update
+    data, may_write = read_json_for_update(_path())
+    d = _default()
+    d["auto_sync_enabled"] = bool(data.get("auto_sync_enabled", False))
+    d["last_auto_sync_date"] = str(data.get("last_auto_sync_date", "") or "")
+    d["fda_nudge_dismissed"] = bool(data.get("fda_nudge_dismissed", False))
+    return d, may_write
+
+
 def load_today_config() -> dict:
     """Load the Today config. Always returns a well-formed dict, never raises.
 
     Settings come from ``today_dashboard.json``; the ``pairs`` come LIVE from the
-    library's ``in_daily_sync`` flag (Today is a child of the library)."""
-    d = _default()
-    p = _path()
-    if p.exists():
-        try:
-            with open(p, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            if isinstance(data, dict):
-                d["auto_sync_enabled"] = bool(data.get("auto_sync_enabled", False))
-                d["last_auto_sync_date"] = str(data.get("last_auto_sync_date", "") or "")
-                d["fda_nudge_dismissed"] = bool(data.get("fda_nudge_dismissed", False))
-        except Exception:
-            pass
+    library's ``in_daily_sync`` flag (Today is a child of the library).
+
+    Degrading to defaults is correct HERE - a reader wants a usable answer - and
+    wrong in ``_update``, which persists what it was handed. See
+    :func:`_read_settings`."""
+    d, _ = _read_settings()
     d["pairs"] = _daily_pairs_from_library()
     return d
 
@@ -151,10 +169,25 @@ def _save(data: dict) -> None:
 
 
 def _update(**changes) -> dict:
+    """Apply *changes* to the stored settings, persisting only when it is safe.
+
+    On a transient read failure the change is applied in memory and returned -
+    so the caller and the current screen behave as the user asked - but nothing
+    is written, because the write would replace the settings that could not be
+    read with this call's defaults.
+    """
     with _lock:
-        data = load_today_config()
+        data, may_write = _read_settings()
         data.update(changes)
-        _save(data)
+        if may_write:
+            _save(data)
+        else:
+            import logging
+            logging.getLogger(__name__).warning(
+                "Not writing %s: it could not be read, so a write would reset "
+                "auto_sync_enabled and last_auto_sync_date to their defaults.",
+                _FILENAME)
+        data["pairs"] = _daily_pairs_from_library()
         return data
 
 

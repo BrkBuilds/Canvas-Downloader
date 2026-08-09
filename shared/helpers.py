@@ -363,6 +363,93 @@ def get_config_dir() -> str:
         return _REPO_ROOT
 
 
+def quarantine_corrupt_json(path, reason: str) -> None:
+    """Move a damaged JSON config aside so its content survives on disk.
+
+    Never overwrites an existing quarantine file: the FIRST one is the copy
+    closest to the last good state, so later ones take a numeric suffix. Mirrors
+    ``core.library._quarantine`` and ``core.preset_manager``.
+    """
+    path = str(path)
+    try:
+        base = os.path.splitext(path)[0]
+        target = f"{base}.corrupt.json"
+        n = 1
+        while os.path.exists(target):
+            n += 1
+            target = f"{base}.corrupt-{n}.json"
+        os.replace(path, target)
+        logger.warning("Config file %s was unreadable (%s); moved it to %s",
+                       path, reason, target)
+    except OSError as e:
+        logger.warning("Could not quarantine the damaged config file %s: %s", path, e)
+
+
+def read_json_for_update(path) -> tuple[dict, bool]:
+    """``(data, may_write)`` for a read-modify-write of a shared JSON config.
+
+    **THE ONE implementation of this decision.** ``canvas_downloader_settings.json``
+    is CO-OWNED by four modules - ``ui.auth`` (the Settings dialog and the login
+    path), ``panopto.settings`` (the ``"panopto"`` engine block *and* the global
+    on/off preference) and ``shared.legal`` (the acceptable-use acknowledgement) -
+    and each of them has to read the WHOLE file before changing its own key, or it
+    destroys everybody else's.
+
+    Every one of those readers degraded a failed read to ``{}`` and wrote anyway.
+    ``ui.auth`` was hardened for this on 2026-08-08; the other two modules were
+    never swept with it, so three writers still reduced a full settings file to a
+    single key. Reproduced against the real functions: one unreadable read cost
+    ``panopto_notice_ack_version`` (an ACCEPTED LEGAL NOTICE - the user is asked
+    to accept it again), the whole ``"panopto"`` engine block, ``canvas_url``,
+    ``default_download_path``, ``show_help_text`` and ``use_12h_format`` - and
+    each writer returned ``True``, reporting success.
+
+    This lives in ``shared.helpers`` rather than in any one of them because the
+    repo has already paid for the alternative once: ``make_long_path`` had a
+    second copy in ``core.sync_manager`` and the fix reached none of the 26
+    manifest call sites. A shared decision with two implementations is a fix that
+    lands on half the app, silently.
+
+    Split by CAUSE, because the right answer genuinely differs:
+
+    * **damaged content** - malformed JSON, or bytes that are not valid UTF-8.
+      ``UnicodeDecodeError`` is a *sibling* of ``json.JSONDecodeError``, not a
+      subclass (both are ``ValueError``), which is why it has to be named by a
+      handler that means to catch "the file is broken". One editor re-saving one
+      of these files in a local ANSI codepage is enough, and they are full of
+      ``æøå``. The file cannot be preserved in place, so it is quarantined - its
+      content survives on disk - and writing PROCEEDS, so the user gets a working
+      config back instead of a permanently unwritable one.
+    * **transient ``OSError``** - the config dir on a share that is offline, an
+      antivirus lock, a permissions blip. Nothing is wrong with the FILE, so the
+      caller must NOT write: ``may_write`` is False and this one change is not
+      persisted, which is recoverable. Silently discarding the user's accepted
+      notice, their Panopto engine settings and their download folder is not.
+    * **missing file** - a genuinely fresh install. ``({}, True)``.
+
+    A non-dict payload (a JSON list or scalar) is damaged content too: callers
+    subscript the result, so returning it would raise inside the writer.
+    """
+    path = str(path)
+    if not os.path.exists(path):
+        return {}, True
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except OSError as e:
+        logger.warning(
+            "Could not read config at %s (%s); skipping this write so the "
+            "existing settings are not discarded.", path, e)
+        return {}, False
+    except Exception as e:
+        quarantine_corrupt_json(path, f"{type(e).__name__}: {e}")
+        return {}, True
+    if not isinstance(data, dict):
+        quarantine_corrupt_json(path, f"top level is {type(data).__name__}, not an object")
+        return {}, True
+    return data, True
+
+
 def help_text_enabled() -> bool:
     """True when optional explanatory copy should be rendered.
 
@@ -775,14 +862,13 @@ def native_folder_picker(initial_dir: str | None = None) -> str | None:
     if platform.system() == 'Darwin':
         import subprocess
         try:
-            # Escape backslash, double-quote, and newline so a path containing
-            # any of these can never break out of the AppleScript string literal.
-            safe_dir = (
-                start_dir.replace('\\', '\\\\')
-                         .replace('"', '\\"')
-                         .replace('\n', ' ')
-                         .replace('\r', ' ')
-            )
+            # Escape backslash, double-quote and both line breaks so a path
+            # containing any of them can never break out of the AppleScript
+            # string literal. Through the shared escaper: this copy happened to
+            # be correct, but keeping it meant the rule was written three times
+            # and one of the three was wrong (see applescript_string).
+            from engine.applescript_bridge import applescript_string
+            safe_dir = applescript_string(start_dir)
             script = f'POSIX path of (choose folder default location (POSIX file "{safe_dir}"))'
             # No timeout: the user may take an arbitrarily long time to choose
             # a folder.  A subprocess.TimeoutExpired here would silently

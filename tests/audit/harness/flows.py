@@ -47,7 +47,13 @@ TOGGLES = {
     **{f"dl_{n}": f"btn_dl_{n}" for n in
        ("assignments", "syllabus", "announcements", "discussions", "quizzes",
         "submissions")},
-    **{f"pan_out_{n}": f"btn_pan_out_{n}" for n in ("mp4", "mp3", "txt", "srt")},
+    # "url" is the Shortcut output (a .url / .webloc link file), and it was
+    # missing here while `crosscheck.PANOPTO_OUTPUTS` already carried it - so the
+    # checker for the newest Panopto output kind could never fire, which ground
+    # rule 7 calls worse than having no check at all. It is FIRST in the app's
+    # own PANOPTO_OUTPUTS list and is the only output that costs no bandwidth,
+    # so a driver that cannot set it cannot test the cheap path at all.
+    **{f"pan_out_{n}": f"btn_pan_out_{n}" for n in ("url", "mp4", "mp3", "txt", "srt")},
 }
 
 # Cards 2/3/4 collapse; their contents do not exist in the DOM until expanded.

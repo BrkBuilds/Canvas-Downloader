@@ -61,16 +61,28 @@ def _config_path() -> Path:
 
 
 def _read_full_config() -> dict:
-    path = _config_path()
-    if not path.exists():
-        return {}
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, dict) else {}
-    except Exception as e:
-        logger.warning(f"Could not read settings file for Panopto: {e}")
-        return {}
+    """The whole settings file, or ``{}``. READ-ONLY callers only.
+
+    Degrading an unreadable file to ``{}`` is the correct answer for a caller
+    that only wants to READ one key - it falls back to that key's default. It is
+    the wrong answer for a read-modify-WRITE, which would then persist ``{}``
+    plus its own key and destroy every other module's settings. Those callers use
+    :func:`_read_full_config_for_update`.
+    """
+    data, _ = _read_full_config_for_update()
+    return data
+
+
+def _read_full_config_for_update() -> tuple[dict, bool]:
+    """``(config, may_write)`` for a read-modify-write of the settings file.
+
+    Thin wrapper over the ONE shared implementation so this module cannot drift
+    from ``ui.auth`` and ``shared.legal``, which co-own the same file. See
+    :func:`shared.helpers.read_json_for_update` for why the verdict is split by
+    cause rather than collapsed to a dict.
+    """
+    from shared.helpers import read_json_for_update
+    return read_json_for_update(_config_path())
 
 
 def load_settings() -> dict:
@@ -101,7 +113,14 @@ def save_settings(settings: dict) -> bool:
         if k in settings:
             clean[k] = settings[k]
 
-    full = _read_full_config()
+    full, may_write = _read_full_config_for_update()
+    if not may_write:
+        # A transient read failure (offline share, AV lock). Writing now would
+        # replace the accepted acceptable-use notice, the global on/off
+        # preference and every download default with this one block.
+        logger.warning("Not saving Panopto settings: the settings file could "
+                       "not be read, so a write would discard the rest of it.")
+        return False
     full[SETTINGS_KEY] = clean
 
     path = _config_path()
@@ -154,7 +173,11 @@ def set_globally_enabled(enabled: bool) -> bool:
     Atomic read-modify-write so the ``"panopto"`` block and every other
     top-level key written by the Settings dialog survive untouched.
     """
-    full = _read_full_config()
+    full, may_write = _read_full_config_for_update()
+    if not may_write:
+        logger.warning("Not saving the global Panopto preference: the settings "
+                       "file could not be read, so a write would discard it.")
+        return False
     full[GLOBAL_ENABLED_KEY] = bool(enabled)
 
     path = _config_path()
@@ -388,8 +411,64 @@ def compose_settings(contract: dict | None) -> dict:
 
 
 def is_enabled(contract: dict | None) -> bool:
-    """True if a contract selects at least one output kind."""
+    """True if a contract selects at least one output kind.
+
+    A question about the CONTRACT alone - it deliberately knows nothing about the
+    global switch, because several callers ask it in order to DISPLAY what a
+    folder or preset is configured for. Anything deciding what a RUN will do must
+    ask :func:`effective_contract` first. See its docstring for why the two are
+    separate.
+    """
     return bool(contract) and any(contract.get(k) for k in _OUTPUT_KEYS)
+
+
+def effective_contract(stored: dict | None) -> dict | None:
+    """What a run will ACTUALLY do with *stored*, once the global switch applies.
+
+    Returns *stored* unchanged while Panopto is on, and an all-outputs-off
+    contract while it is off. Every execution entry point resolves through this;
+    every DISPLAY surface keeps reading *stored* (see ``contract_to_ui_keys``).
+
+    **Stored vs effective is the whole point.** A folder's ``panopto_contract``,
+    a preset's ``pan_out_*`` and Section 4's session toggles are all statements
+    about what the user CONFIGURED. The global switch is a statement about what
+    should happen NEXT. Conflating them is why the switch used to be almost
+    cosmetic: ``is_enabled(stored)`` was the only gate on the download phase
+    (``app.py:_next_phase_after_courses``) and the sync discovery pass
+    (``sync/analysis.py``), so switching Panopto off left both running - the
+    Settings tooltip promised "the search is skipped entirely" while a Custom
+    Download still fetched every recording. Only the Today daily sync honoured
+    it, and only because ``core/auto_sync.py`` sets the run-scoped decline flag.
+
+    **Turning Panopto off must never rewrite the past**, which is why this
+    returns a value instead of mutating anything:
+
+    * A folder's stored contract stays exactly as it was, so turning the switch
+      back on resumes recordings with the outputs the user originally chose.
+    * The user's Section 4 selections (``persistent_pan_out_*``) are untouched -
+      zeroing them would silently discard the card's state on a preference flip.
+
+    **Where the gate goes is load-bearing, not a style choice.** It must sit at
+    or ABOVE the phase trigger, never only inside ``panopto.runner``: the
+    download-mode phase seeds the folder's ``panopto_contract`` (``app.py``,
+    "Persist this run's contract") BEFORE it calls the batch, and
+    ``sync_ui`` only ever seeds ``if ... is None``, so a download run is the one
+    thing that can overwrite it. A runner-only guard would therefore let the
+    phase start, write an all-off contract over every folder it touched, and turn
+    a reversible preference into permanent per-folder data loss.
+
+    For the same reason this is NOT folded into ``compose_settings`` or
+    ``is_enabled``: the first is what ``extract_contract`` seeds from, and the
+    second is asked by display code (the ignored-recordings dialog resolves which
+    output kinds count as "configured" through it - forcing them off there would
+    render every ignored recording as unconfigured).
+    """
+    if is_globally_enabled():
+        return stored
+    return make_contract(
+        url=False, mp4=False, mp3=False, txt=False, srt=False,
+        layout=(stored or {}).get("layout", "match"),
+    )
 
 
 def contract_to_ui_keys(contract: dict | None) -> dict:

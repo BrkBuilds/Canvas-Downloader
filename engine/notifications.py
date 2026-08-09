@@ -612,8 +612,15 @@ def _show_macos_notification(title: str, body: str):
 
     # 4. Fallback: osascript (notification appears from 'Script Editor', no click handler)
     try:
-        safe_title = title.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ')
-        safe_body = body.replace('\\', '\\\\').replace('"', '\\"').replace('\n', ' ')
+        # Through the SHARED escaper, not a fourth hand-rolled copy. This one
+        # used to flatten '\n' and not '\r', so a lone carriage return - which
+        # reaches here inside *body* as a Canvas course name in the daily-sync
+        # summary - left an unterminated string literal, osascript refused the
+        # script, and the except below swallowed it at debug level. The
+        # notification simply never appeared, with nothing said anywhere.
+        from engine.applescript_bridge import applescript_string
+        safe_title = applescript_string(title)
+        safe_body = applescript_string(body)
         script = (
             f'display notification "{safe_body}" '
             f'with title "Canvas Downloader" '

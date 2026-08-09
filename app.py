@@ -21,7 +21,7 @@ from shared.helpers import (
 from shared.components import (
     render_completion_card, render_folder_cards,
     render_error_section, render_pp_warning,
-    render_archives_skipped_notice,
+    render_archives_skipped_notice, render_panopto_disabled_notice,
     error_log_dialog, render_panopto_summary,
     fresh_container,
 )
@@ -968,10 +968,19 @@ def _next_phase_after_courses() -> str:
     Runs the terminal Panopto phase when the user selected at least one Panopto
     output format in Section 4 of the download settings; otherwise goes straight
     to the completion screen.
+
+    Resolved through ``effective_contract``, which is what applies the global
+    Panopto switch. THIS is the gate for download mode, and it has to be here
+    rather than inside the phase: the phase seeds each folder's stored
+    ``panopto_contract`` before it runs anything (see "Persist this run's
+    contract" below), so a gate any lower would overwrite every folder's saved
+    Panopto configuration with all-off the first time someone switched the
+    feature off. Called twice, both at the END of a run, so the config-file read
+    is not on any render path.
     """
     try:
-        from panopto.settings import is_enabled
-        if is_enabled(_panopto_run_contract()):
+        from panopto.settings import effective_contract, is_enabled
+        if is_enabled(effective_contract(_panopto_run_contract())):
             return 'panopto'
     except Exception:
         pass
@@ -2764,9 +2773,12 @@ with st.container():
                 # stat grid sat below both of them.
                 #
                 # EXPANDERS. The size-skip panel is emitted by
-                # render_completion_card above; archives follow it, and the
-                # error panel is last because it is the one the user opens.
+                # render_completion_card above; archives follow it, then the
+                # Panopto-off panel (the third member of the same "deliberately
+                # left alone" family), and the error panel is last because it is
+                # the one the user opens.
                 render_archives_skipped_notice()
+                render_panopto_disabled_notice(mode='download')
 
                 # (error section: the last expander, plus the retry button and
                 #  the app-error report that belong to it)
