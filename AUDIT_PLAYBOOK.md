@@ -184,6 +184,17 @@ the mutation's.** Budget for a second pass.
 - **Check the anchor matches exactly once.** `_kill_app()` appears three times per
   converter; an ambiguous anchor silently skips.
 - **Never run two mutation scripts concurrently** (this repo has lost real code that way).
+- **A same-size mutation restored within the same SECOND leaves a stale `.pyc`, and Python
+  trusts it — so the run after the restore tests the mutant's bytecode.** Python invalidates
+  cached bytecode on `(source mtime, source size)`, both coarse: the mtime in the pyc header
+  is a whole-second unix timestamp. Measured 2026-08-10 on `version.py`: mutant and original
+  were each 22 bytes and the restore landed in the same second, so `version.__file__` pointed
+  at a file reading `2.0.2` while `version.__version__` was `2.0.1`, and a **correct** tree
+  failed its own test. This is not an exotic case — the classic mutations are operator flips
+  (`<=` → `>=`, `>` → `<`, `==` → `!=`), every one of them byte-for-byte the same length.
+  It can report a mutant CAUGHT when nothing ran, or SURVIVED when the fix was present.
+  Fix: `touch` the file after restoring (or delete its `__pycache__` entry), and never trust
+  `cat file` as proof of what will be imported — import it and print the value.
 - Wrap the pytest call in a **timeout** and count a timeout as CAUGHT — a mutation that
   removes a loop bound makes the suite hang, which is the correct verdict.
 - **A mutation pass writes broken code into the working tree, so anything that COMMITS
