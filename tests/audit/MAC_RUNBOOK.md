@@ -416,12 +416,13 @@ product defects and recorded four more. What it did **not** reach, in the order
 worth picking up — each with what specifically blocks it, so no one re-derives
 that:
 
-1. **The mp4 output.** Never run. Its two checks are the ones a decode pass
-   cannot see: **both streams present** and **`+faststart` honoured** (`moov`
-   before `mdat`). Note the duplicate-DTS muxer noise `RUNBOOK.md` warns about is
-   an **mp4-only** artifact — the 36 mp3s produced *zero* such lines, so that
-   trap is still untested too. ~3.8 GB for the full set; two recordings prove the
-   shape.
+1. ~~**The mp4 output.**~~ **DONE 2026-08-10** — all 36 recordings, both streams
+   and `moov` before `mdat` on every one, and the DTS trap characterised: the
+   warning comes from a *re-mux*, prefixed `[null @ …]`, with the app's own log
+   showing **0** such lines. See the M2 PASS finding. Two things to reuse: the
+   bundle ships **no ffprobe**, so verify with `ffmpeg -i` plus an atom walker;
+   and the recordings are 20–140 MB, not ~100 MB average, so the full set is
+   **2.0 GB and finishes before you can cancel it** — budget for all of them.
 2. **Keychain on a REBUILD.** Blocked, not skipped: the one-time prompt asks for
    the **login keychain's own password**, which is unknown on a cloud image
    (measured — the Scaleway password does not open it). Either set a known
@@ -433,9 +434,25 @@ that:
    it. The picker's *open* half is verified. Same permission unlocks reading a
    wedged app's window list, which is how the Word modal would have been observed
    directly instead of by asking the operator.
-4. **The macOS-15 FDA nudge.** Requires removing Terminal from Full Disk Access
-   before launching, since `has_full_disk_access()` returns True otherwise and
-   the nudge cannot render. One of the reasons macOS 15 was chosen.
+4. ~~**The macOS-15 FDA nudge.**~~ **DONE 2026-08-10**, all four surfaces. The
+   note here used to say it needs Terminal removed from Full Disk Access; that
+   was **wrong twice over** and cost a cycle each time, so read this instead:
+   - Removing Terminal's grant is **not sufficient**. TCC's `access` table went
+     to **zero** rows for `kTCCServiceSystemPolicyAllFiles` and a process spawned
+     seconds later from Terminal still read the protected file — the capability
+     is cached against the responsible process and survives both the revocation
+     and a Terminal restart. Do not go down the `killall tccd` road; it does not
+     clear it either.
+   - It is also **not necessary**. The SSH session's responsible process
+     (`/usr/libexec/sshd-keygen-wrapper`) carries an explicit *denied* FDA row,
+     so **just start the app from the SSH shell instead of the Aqua bridge** and
+     `has_full_disk_access()` is False for real, with nothing patched. The one
+     cost is the Keychain (Aqua-scoped), so `restore_saved_session` lands on the
+     login page — paste URL + token into the real form, which takes seconds and
+     incidentally proves a keyring failure cannot block a login.
+   - Reaching the *card* needs one more step: the audit config ships
+     `fda_nudge_dismissed: true`, so the slot renders the subtle re-spawn link.
+     Click it.
 5. **The notification BANNER, visually.** `UNUserNotifications` reports delivered
    and a `UserNotificationCenter` window appears on every call, but the banner
    outran every capture attempt (~5 s life). Fire it and capture within ~1 s
@@ -448,10 +465,28 @@ that:
    44 fixtures across 21 kinds. The seeded run is what found the duplicate-media
    defect, so the matrix is likely to be worth more here than on Windows.
 
-Two traps this run paid for, both now fixed in the tooling but worth knowing:
-`mac_eyes eyesight` must be checked before believing any screenshot, and Word
-**wedges** after a hostile document — so any Office test needs a positive control
-per case and a fresh Word between them, or every later result is vacuous.
+Traps this run paid for, worth knowing before you spend the same time:
+
+- `mac_eyes eyesight` must be checked before believing any screenshot.
+- Word **wedges** after a hostile document — so any Office test needs a positive
+  control per case and a fresh Word between them, or every later result is
+  vacuous.
+- **Never pass prose to `finding add --detail` inside double quotes.** The shell
+  ran the backticks and brackets in one write-up as command substitution and
+  three fragments were silently deleted from the stored finding — including the
+  `[null @ …]` prefix that was the whole point of the entry. Write the detail to
+  a file and pass `--detail "$(cat file)"`, which does not re-interpret the
+  content. Same family as the heredoc-mangles-backslashes note in CLAUDE.md.
+- **A close-by-name AppleScript is not enough to clean up, and neither is a
+  forgotten dialog.** Two cheap lessons: `mac_aqua.py` must close its Terminal
+  window **by window id** (`saving no`) or windows accumulate by the dozen; and a
+  Streamlit dialog left open makes the *next* `ui click` fail with a
+  pointer-events timeout naming an unrelated element — use `ui press Escape`.
+- **Counting duplicates by filename is a false-positive machine here.** These
+  Canvas lecture titles literally contain `(1)`/`(2)`, so a glob for `*([0-9])*`
+  reported **136** conflict copies where there were **0**. A real
+  `_handle_conflict` copy is a stem *ending* in ` (N)` **whose un-suffixed
+  sibling also exists** — check both halves.
 
 ## The second install (macOS 26)
 
