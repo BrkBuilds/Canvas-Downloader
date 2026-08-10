@@ -409,6 +409,50 @@ that is legitimate evidence here in a way it is not on Windows.
 - Anything already listed in `RUNBOOK.md`'s "Traps this harness already knows
   about" and the checker-defect sections.
 
+## STILL UNPROVEN after the macOS 15 run (2026-08-10)
+
+Run `20260810_151922_macos-15-v2.0.2` covered M1-M4 and part of M5, fixed five
+product defects and recorded four more. What it did **not** reach, in the order
+worth picking up — each with what specifically blocks it, so no one re-derives
+that:
+
+1. **The mp4 output.** Never run. Its two checks are the ones a decode pass
+   cannot see: **both streams present** and **`+faststart` honoured** (`moov`
+   before `mdat`). Note the duplicate-DTS muxer noise `RUNBOOK.md` warns about is
+   an **mp4-only** artifact — the 36 mp3s produced *zero* such lines, so that
+   trap is still untested too. ~3.8 GB for the full set; two recordings prove the
+   shape.
+2. **Keychain on a REBUILD.** Blocked, not skipped: the one-time prompt asks for
+   the **login keychain's own password**, which is unknown on a cloud image
+   (measured — the Scaleway password does not open it). Either set a known
+   keychain password first, or accept that this stays unverified on rented
+   hardware.
+3. **The folder picker's RETURN path** (a folder whose name contains a quote) and
+   **Reveal in Finder / Open Folder**. Both need **Accessibility** for the
+   session's responsible process — `System Events` refuses with `-1728` without
+   it. The picker's *open* half is verified. Same permission unlocks reading a
+   wedged app's window list, which is how the Word modal would have been observed
+   directly instead of by asking the operator.
+4. **The macOS-15 FDA nudge.** Requires removing Terminal from Full Disk Access
+   before launching, since `has_full_disk_access()` returns True otherwise and
+   the nudge cannot render. One of the reasons macOS 15 was chosen.
+5. **The notification BANNER, visually.** `UNUserNotifications` reports delivered
+   and a `UserNotificationCenter` window appears on every call, but the banner
+   outran every capture attempt (~5 s life). Fire it and capture within ~1 s
+   through the bridge.
+6. **A 250-char path component** fails to convert although the escaper passes the
+   path through faithfully (round-trip identical). Measured, **not diagnosed** —
+   it is either Word's own filename limit or `office_container_stage`. Isolate
+   with one component just under and just over the limit.
+7. **The sync matrix** (43 rows) was not run; only a single hand-seeded sync of
+   44 fixtures across 21 kinds. The seeded run is what found the duplicate-media
+   defect, so the matrix is likely to be worth more here than on Windows.
+
+Two traps this run paid for, both now fixed in the tooling but worth knowing:
+`mac_eyes eyesight` must be checked before believing any screenshot, and Word
+**wedges** after a hostile document — so any Office test needs a positive control
+per case and a fresh Word between them, or every later result is vacuous.
+
 ## The second install (macOS 26)
 
 Everything above, in the same order, on the newer OS. Expect the differences to
