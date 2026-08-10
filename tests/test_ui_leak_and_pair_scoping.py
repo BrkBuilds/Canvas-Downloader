@@ -414,3 +414,155 @@ def test_gate_polarity_is_still_fail_closed_while_active():
     from shared.components import live_enable_button
     src = inspect.getsource(live_enable_button)
     assert 'button:not([data-cd-valid="1"])' in src
+
+
+# ── 4. the edited pair is identified by its LINK, never by its position ───────
+#
+# PROVEN reachable 2026-08-11, not merely untidy. `editing_pair_idx` is an index
+# into st.session_state['sync_pairs'], and the list moves under an open edit form:
+# the form replaces its OWN row, but every other row keeps a live Remove button
+# (and a remove-all path exists). The save then did
+# `sync_pairs[editing_pair_idx]`, which gave:
+#
+#   [A,B,C]    edit C (idx 2), remove A -> `0 <= 2 < 2` false -> Save Changes
+#              APPENDED a duplicate pair instead of editing.
+#   [A,B,C,D]  edit C (idx 2), remove A -> idx 2 is now D -> Save Changes
+#              repointed D at C's chosen folder/course and MOVED D's user-given
+#              name to that link (_retarget_saved_pair_lazy). C untouched.
+
+def _sync_dialog_src() -> str:
+    return (REPO / "ui" / "sync_dialogs.py").read_text(encoding="utf-8")
+
+
+def _code_lines(src: str) -> str:
+    """Drop whole-line comments.
+
+    Full string-awareness is not needed here (unlike the AppleScript scan in
+    tests/test_macos_no_accessibility_permission.py, where the thing being
+    policed LIVES in a string literal): the patterns below are Python
+    subscripts, and the only false positive is the explanatory comment that
+    names the very expression it warns against.
+    """
+    return "\n".join(ln for ln in src.splitlines()
+                      if not ln.lstrip().startswith("#"))
+
+
+def test_edit_save_never_indexes_sync_pairs_by_editing_idx():
+    src = _code_lines(_sync_dialog_src())
+    for bad in ("sync_pairs'][editing_idx]", "sync_pairs'][edit_idx]",
+                'sync_pairs"][editing_idx]', 'sync_pairs"][edit_idx]'):
+        assert bad not in src, (
+            f"{bad} resolves the edited pair by POSITION; the list can shift "
+            "while the form is open"
+        )
+
+
+def test_edit_save_resolves_the_pair_through_pair_key():
+    src = _sync_dialog_src()
+    assert "_edit_sig = st.session_state.get('editing_pair_sig')" in src
+    assert "from core.pair_labels import pair_key as _pk" in src, \
+        "must use the app's one link primitive, not a locally-rolled key"
+    assert "_edit_pair = next(" in src
+    assert "old_pair = _edit_pair" in src
+
+
+def test_an_edit_whose_pair_vanished_does_not_become_an_add():
+    """The old else-branch silently turned a lost edit into a duplicate pair."""
+    src = _sync_dialog_src()
+    i = src.index("if is_edit_mode and _edit_pair is None:")
+    j = src.index("_add_pair_lazy(new_pair)")
+    assert i < j, "the guard must come BEFORE the append branch"
+    guard = src[i:j]
+    assert "st.stop()" in guard, "it must stop, not fall through to append"
+    # phrase chosen to sit within one source line - the message is split across
+    # several string literals, so a longer phrase would span a line break and the
+    # test would report a missing guard that is right there
+    assert "removed from the sync list while you" in guard, \
+        "and it must say so - a silently-refused save is worse than a duplicate"
+
+
+def test_edit_form_is_matched_on_the_link_so_it_follows_its_pair():
+    src = (REPO / "sync_ui.py").read_text(encoding="utf-8")
+    assert "editing_sig = st.session_state.get('editing_pair_sig')" in src
+    assert re.search(r"_is_editing_row = \(\s*pair_key\(", src), \
+        "the row match must be on the link, so the form follows a shifted pair"
+    # and a vanished pair must close the form rather than bind it to a stranger
+    assert "_still_listed = any(" in src
+    assert re.search(r"if not _still_listed:\s*\n\s*st\.session_state\['pending_sync_folder'\] = None",
+                     src)
+
+
+def test_edit_state_is_cleared_as_a_SET_everywhere():
+    """editing_pair_sig must be dropped wherever editing_pair_idx is dropped.
+
+    A surviving sig with no idx (or the reverse) is a half-open form - exactly the
+    kind of split state this key was added to remove.
+    """
+    for rel in ("ui/sync_dialogs.py", "sync_ui.py"):
+        src = (REPO / rel).read_text(encoding="utf-8")
+        idx_clears = len(re.findall(r"pop\('editing_pair_idx', None\)", src))
+        sig_clears = len(re.findall(r"pop\('editing_pair_sig', None\)", src))
+        assert idx_clears == sig_clears, (
+            f"{rel}: {idx_clears} idx clears vs {sig_clears} sig clears - a "
+            "clear site was missed, leaving half the edit state behind")
+
+
+def test_editing_pair_sig_is_declared_in_the_state_registry():
+    src = (REPO / "core" / "state_registry.py").read_text(encoding="utf-8")
+    assert src.count("'editing_pair_sig': None,") == 2, \
+        "state_registry is the single source of truth for keys + defaults"
+
+
+# ── the folder picker opens where you can actually choose ─────────────────────
+
+def test_picker_start_for_existing_returns_the_parent(tmp_path):
+    from shared.helpers import picker_start_for_existing as f
+    sub = tmp_path / "Course (LA E25 BINTO1060U)"
+    sub.mkdir()
+    assert f(str(sub)) == str(tmp_path), (
+        "re-choosing a folder must list its SIBLINGS; opening inside it forces "
+        "the user to navigate up before they can pick anything"
+    )
+
+
+@pytest.mark.parametrize("value", ["", None])
+def test_picker_start_passes_empty_through(value):
+    """So the caller's own fallback chain (session default -> ~/Downloads) applies."""
+    from shared.helpers import picker_start_for_existing as f
+    assert f(value) == value
+
+
+def test_picker_start_leaves_a_missing_path_alone(tmp_path):
+    from shared.helpers import picker_start_for_existing as f
+    missing = str(tmp_path / "gone")
+    assert f(missing) == missing
+
+
+def test_picker_start_never_climbs_past_a_root():
+    from shared.helpers import picker_start_for_existing as f
+    assert f("/") == "/"
+
+
+def test_change_folder_call_sites_open_at_the_parent():
+    """The rule is written once and every re-choose site must use it."""
+    for rel in ("app.py", "ui/hub_dialog.py"):
+        src = (REPO / rel).read_text(encoding="utf-8")
+        for m in re.finditer(r"native_folder_picker\(initial_dir=([^)]*)\)", src, re.S):
+            arg = m.group(1)
+            # download-DESTINATION pickers legitimately open inside the folder
+            if "download_path" in arg or "_temp_default_path" in arg:
+                continue
+            assert "picker_start_for_existing" in arg, (
+                f"{rel}: a change-folder picker still opens inside the folder: "
+                f"{arg.strip()[:60]}")
+
+
+def test_duplicate_check_excludes_self_by_identity_not_index():
+    """Excluding a POSITION excluded the wrong pair once the list shifted.
+
+    Both directions are wrong: a real duplicate goes unreported, and a
+    legitimate save can be blocked with "this pair is already on your sync list".
+    """
+    src = _code_lines(_sync_dialog_src())
+    assert "if i != editing_idx" not in src
+    assert "candidates = [p for p in existing if p is not _edit_pair]" in src

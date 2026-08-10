@@ -931,7 +931,11 @@ def select_folder():
 def select_sync_folder():
     """Open folder picker for sync mode and store in pending_sync_folder."""
     from shared.helpers import native_folder_picker
-    folder_path = native_folder_picker(initial_dir=st.session_state.get('pending_sync_folder') or None)
+    from shared.helpers import picker_start_for_existing
+    # Open at the PARENT of the folder already chosen, so its siblings are
+    # listed - see picker_start_for_existing.
+    folder_path = native_folder_picker(initial_dir=picker_start_for_existing(
+        st.session_state.get('pending_sync_folder') or None))
     if folder_path:
         st.session_state['pending_sync_folder'] = folder_path
 

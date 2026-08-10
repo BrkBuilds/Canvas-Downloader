@@ -95,6 +95,9 @@ DOWNLOAD_DEFAULTS = {
     'hub_view_mode': 'View All',
     'hub_layer': 'layer_1',
     'hub_editing_pair_idx': None,
+    # The LINK of the sync-list pair being edited inline. The index
+    # beside it is only "a form is open"; this is WHICH pair.
+    'editing_pair_sig': None,
     'hub_is_adding_new_pair': False,
     'hub_cs_selected_id': None,
     'sync_d_selected_id': None,
@@ -138,6 +141,9 @@ SYNC_DEFAULTS = {
     'hub_view_mode': 'View All',
     'hub_layer': 'layer_1',
     'hub_editing_pair_idx': None,
+    # The LINK of the sync-list pair being edited inline. The index
+    # beside it is only "a form is open"; this is WHICH pair.
+    'editing_pair_sig': None,
     'hub_is_adding_new_pair': False,
     'preset_hub_tab': 'user',
     'hub_cs_selected_id': None,
