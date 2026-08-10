@@ -125,6 +125,8 @@ def build_parser() -> argparse.ArgumentParser:
     g.add_parser("settle", help="Block until the DOM stops changing")
     p = g.add_parser("scroll")
     p.add_argument("to", choices=["top", "bottom"])
+    p = g.add_parser("press", help="Send a key to the page (Escape closes a dialog)")
+    p.add_argument("key", help="Playwright key name, e.g. Escape, Enter, Tab")
 
     # -- flows -----------------------------------------------------------
     g = sub.add_parser("flow", help="Drive a whole user flow end to end"
@@ -995,6 +997,8 @@ def _ui(rp, args) -> int:
         if c == "scroll":
             s.scroll_main(args.to)
             return _out({"ok": True, "scrolled": args.to})
+        if c == "press":
+            return _out({"ok": True, **s.press(args.key)})
         if c == "wait":
             js = conditions.get(args.condition)
             if js is None:
