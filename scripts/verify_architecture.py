@@ -319,9 +319,17 @@ def check_bare_except(tree: ast.AST, filepath: Path, suppressed: set[int]) -> li
 _SAFE_CALL_NAMES = {
     "esc", "get_base64_image",
     # Escaping functions. `esc` is this repo's wrapper, but the stdlib is used
-    # directly in a few modules that predate it (and under a private alias in
-    # engine/progress_dashboard.py) - all three produce escaped output.
-    "escape", "html_escape", "_html_escape", "quote", "quote_plus",
+    # directly in a few modules that predate it (and under private aliases in
+    # engine/progress_dashboard.py and ui/auth.py) - all of them produce
+    # escaped output.
+    #
+    # `_he` is `from html import escape as _he` in ui/auth.py. Adding an alias
+    # here is the second time this list has needed one, which is the cost of
+    # whitelisting by NAME: a new private alias reads as an unescaped
+    # interpolation and Rule 4 reported three, all of them already escaped.
+    # Better a named alias than a suppression comment, since the comment would
+    # also hide a genuine miss on the same line.
+    "escape", "html_escape", "_html_escape", "_he", "quote", "quote_plus",
     # Type conversions / formatters - output is controlled, not user HTML
     "str", "int", "float", "bool", "len", "round", "abs", "max", "min",
     "repr", "format", "sorted", "enumerate", "range", "sum",

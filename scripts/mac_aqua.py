@@ -128,11 +128,24 @@ def run(command: str, cwd: str | None = None, timeout: float = 900.0,
     script.chmod(0o755)
 
     # Only this fixed, quote-free path reaches the AppleScript literal.
-    rc, out = _osascript(f'tell application "Terminal" to do script "{script}"')
+    #
+    # Return the WINDOW ID, not the tab. `do script` answers a tab reference, and
+    # the first version tried to find its window with
+    # `close (every window whose id is (id of window 1 whose selected tab is <tab>))`
+    # - which never matched, so EVERY bridge call leaked a Terminal window. After
+    # ~40 calls the desktop held ~20 of them (measured, and pointed out by the
+    # operator). Harmless here; on Windows a per-call console would be a real
+    # memory cost, and either way a tool that litters is a tool people stop
+    # using. A window id is a plain integer we can close directly.
+    rc, out = _osascript(
+        'tell application "Terminal"\n'
+        f'  do script "{script}"\n'
+        '  return id of front window as text\n'
+        'end tell')
     if rc != 0:
         return {"ok": False, "error": f"could not reach Terminal.app: {out}",
                 "log": str(log)}
-    tab = out
+    tab = out.strip()
 
     if detach:
         return {"ok": True, "detached": True, "log": str(log),
@@ -154,10 +167,12 @@ def run(command: str, cwd: str | None = None, timeout: float = 900.0,
         code = int(rcf.read_text().strip())
     except Exception:
         code = -1
-    if not keep_window:
-        # Close only the tab we opened; leave every other window alone.
-        _osascript(f'tell application "Terminal" to close (every window '
-                   f'whose id is (id of window 1 whose selected tab is {tab}))')
+    if not keep_window and tab.isdigit():
+        # Close only OUR window, by id, and `saving no` so a window whose shell
+        # is still settling cannot raise a "close anyway?" sheet and leave the
+        # window behind - which is the state that accumulated before.
+        _osascript(f'tell application "Terminal" to close '
+                   f'(every window whose id is {tab}) saving no')
     return {"ok": code == 0, "rc": code, "log": str(log),
             "output": body.replace(f"{DONE} rc={code}", "").rstrip()}
 
