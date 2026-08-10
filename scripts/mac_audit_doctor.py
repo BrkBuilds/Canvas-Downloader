@@ -144,6 +144,28 @@ def check_gui_session():
         "      screen sharing shows black and GUI automation is impossible.\n"
         "      Enable auto-login: write /etc/kcpassword and reboot.")
 
+    # Can a capture actually RENDER a window? Reaching the window server is not
+    # the same as being able to see it. Measured on a Scaleway Mac over
+    # NoMachine 2026-08-10: 12 windows listed, `screencapture` returned the bare
+    # desktop every time, and `-l <winid>` refused. WARN not BLOCK - the audit
+    # still runs, it just cannot answer visual questions itself, and the honest
+    # response is to ask the operator rather than to read a blank PNG as a blank
+    # app. That misreading would manufacture a CRITICAL against the packaged
+    # app's WKWebView rendering, which is phase M3's highest-value check.
+    try:
+        sys.path.insert(0, str(REPO / "scripts"))
+        from mac_eyes import eyesight                       # noqa: PLC0415
+        _eye = eyesight()
+        add("screenshots can render window content", _eye["ok"], WARN,
+            f'{_eye.get("window_capture")} ({_eye.get("windows")} window(s), '
+            f'target {_eye.get("target")})',
+            "A remote-desktop display driver is intercepting composition. Hand\n"
+            "      every visual question to the human; check with\n"
+            "      `python3 scripts/mac_eyes.py eyesight`.")
+    except Exception as e:                                     # noqa: BLE001
+        add("screenshots can render window content", False, WARN,
+            f"probe failed: {type(e).__name__}: {e}"[:160])
+
     # INFO only, deliberately. See the docstring - this is not a gate.
     rc, out = sh(["launchctl", "managername"])
     results.append({"check": "launchd domain", "ok": True, "severity": INFO,
