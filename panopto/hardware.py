@@ -375,7 +375,11 @@ def device_advisory(device: str, model_id: str, hw: dict | None = None) -> tuple
     older GPU without fast FP16.
     """
     hw = hw or detect_compute_hardware()
-    big_models = {"medium", "large-v3", "large-v2", "large"}
+    # Turbo is in here on MEASUREMENT, not on its name. On an Apple M4 it runs at
+    # 3.3x realtime against medium's 2.5x - a 1.28x gap - so warning about medium
+    # while silently recommending Turbo made this function contradict itself. See
+    # the measured table above _MODEL_REQUIREMENTS in panopto/models.py.
+    big_models = {"turbo", "medium", "large-v3", "large-v2", "large"}
 
     if device == "cuda" and hw.get("gpu_available"):
         vram = hw.get("gpu_vram_mb")

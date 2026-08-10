@@ -13,6 +13,8 @@ Contains:
 
 from __future__ import annotations
 
+import hashlib
+
 import os
 import urllib.parse
 from collections import defaultdict
@@ -320,7 +322,7 @@ def render_filetype_selector(all_files, prefix, file_key_fn):
 
 
 
-def show_course_ignored_files(course_name, course_id, course_data):
+def show_course_ignored_files(course_name, course_id, course_data, pair_sig=None):
     """Per-course ignored files dialog - Smart Select tag-button architecture.
 
     Uses the Zero-Width Space Hack for a custom dialog header with Base64 icon.
@@ -338,7 +340,16 @@ def show_course_ignored_files(course_name, course_id, course_data):
     def _dialog():
         sm = course_data['sync_manager']
         files = sm.get_ignored_files()
-        prefix = f"cign_{course_id}"
+        # PER-PAIR prefix, not per-course. Ignored files belong to ONE folder's
+        # manifest, and the same course can be synced into two folders - with a
+        # course-only prefix both dialogs shared every checkbox key, so ticking a
+        # file in one pair pre-ticked "the same" file in the other. Derived from
+        # the caller's pair key (course_id + normalised folder) and hashed so the
+        # value is short, stable across reruns, and safe in a CSS selector - the
+        # prefix is interpolated into `st-key-` selectors throughout this dialog.
+        _sig = pair_sig if pair_sig is not None else (course_id,)
+        _disc = hashlib.sha1(repr(_sig).encode("utf-8")).hexdigest()[:8]
+        prefix = f"cign_{course_id}_{_disc}"
 
         # Ignored Panopto recordings (the whole recording entity). Sized from the
         # manifest's on-disk outputs when present (this management dialog runs
@@ -421,6 +432,23 @@ def show_course_ignored_files(course_name, course_id, course_data):
             }}
             div[class*="st-key-{prefix}_filter_box"] div[data-testid="stVerticalBlock"] {{
                 gap: 0.1rem !important;
+            }}
+            /* COLLAPSED: the card must be exactly as tall as the strip that
+               toggles it. The header label bleeds out over the card's TOP
+               padding (negative margin) and recreates it as its own padding, so
+               that half is clickable - but the card's BOTTOM padding sits below
+               the label and is not, which left a dead band roughly a fifth of
+               the card's height under the only thing you can click. Reported
+               2026-08-11 as "+20% of extra unclickable space below the area
+               that's supposed to be clickable".
+               Driven off the checkbox's own state so no Python round-trip is
+               involved: `:has(... input:not(:checked))` is the collapsed card. */
+            div[class*="st-key-{prefix}_filter_box"]:has(div[class*="st-key-{prefix}_chevron"] input:not(:checked)) {{
+                padding-bottom: 0 !important;
+            }}
+            div[class*="st-key-{prefix}_filter_box"]:has(div[class*="st-key-{prefix}_chevron"] input:not(:checked)) div[class*="st-key-{prefix}_chevron"] label[data-baseweb="checkbox"] {{
+                margin-bottom: -{card_pad_y}px !important;
+                padding-bottom: {card_pad_y}px !important;
             }}
             /* -- Custom Chevron Toggle -- */
             /* The full width chain is load-bearing for the hit area below:
@@ -710,6 +738,16 @@ def show_course_ignored_files(course_name, course_id, course_data):
             st.checkbox("Smart Select", key=chevron_key)
 
             if st.session_state[chevron_key]:
+                if not all_exts_sorted and not pan_ignored:
+                    # Nothing left to select. Before this the expander opened onto
+                    # a bare divider and two dead bulk buttons, which reads as a
+                    # component that failed to load rather than as an empty set -
+                    # and it is reachable in one click, by restoring the last
+                    # ignored file with Smart Select already open.
+                    from ui.amber_notice import render_info_notice
+                    render_info_notice(
+                        "No ignored files to select from.",  # audit-ignore: literal
+                        key=f"{prefix}_smart_empty")
                 if all_exts_sorted:
                     st.html("<div style='font-size:0.72em;padding:0;color:rgba(255,255,255,0.45);font-weight:400;margin-top:-15px;margin-bottom:-5px;'>By filetype</div>")
 
@@ -839,6 +877,24 @@ def show_course_ignored_files(course_name, course_id, course_data):
         if st.session_state.get(f"{prefix}_success"):
             from ui.amber_notice import render_success_notice
             render_success_notice(st.session_state.pop(f"{prefix}_success"), margin="10px 0 10px 0")
+        elif not files and not pan_ignored:
+            # THE EMPTY STATE, and it must be an `elif`. The success notice is
+            # popped as it renders, so the very next interaction inside the dialog
+            # (any rerun - clicking anywhere that has a widget) leaves this screen
+            # with no list, no notice and nothing to explain itself. Reported
+            # 2026-08-11: restore the last ignored file and the dialog goes blank.
+            #
+            # It says what is true AND what to do next, because both actions are
+            # non-obvious from here: nothing more can be restored, so the only
+            # useful moves are to leave, or to re-ignore something on the next
+            # review.
+            from ui.amber_notice import render_info_notice
+            render_info_notice(
+                "Nothing is ignored for this course any more.",
+                detail="You can close this dialog. To ignore files again, use "
+                       "\u201cMove deselected files to Ignored\u201d on the next "
+                       "Sync Review.",
+                margin="10px 0 10px 0", key=f"{prefix}_all_restored")
 
         # ── 6. Dynamic button text ────────────────────────────────────
         if checked_count == 0:

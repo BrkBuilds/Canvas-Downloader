@@ -90,13 +90,34 @@ _PREFERENCE_ORDER = ("turbo", "large-v3", "medium", "small", "base", "tiny")
 
 # What a model needs to be a sensible recommendation, per device.
 #   gpu_vram_mb: free-ish VRAM needed for float16 inference, with headroom.
-#   cpu_cores:   cores below which the model is too slow to recommend. CPU
-#                inference is int8 and memory-light, so wall-clock time - not
-#                memory - is the real constraint here.
+#   cpu_cores:   cores below which the model is too slow to recommend, or
+#                _NEVER_ON_CPU for "too slow at any core count". CPU inference is
+#                int8 and memory-light, so wall-clock time - not memory - is the
+#                real constraint here.
+#
+# CORE COUNT IS NOT A PROXY FOR THROUGHPUT, and treating it as one is what put
+# Turbo on a 10-core Mac. Measured on an Apple M4 (10 cores, int8, beam_size=5,
+# vad_filter=True - the engine's own settings) over 180s of real Danish lecture
+# audio, as multiples of realtime:
+#
+#     tiny 25.5x | base 17.5x | small 6.2x | turbo 3.3x | medium 2.5x
+#
+# Turbo's speed comes from its DECODER (4 layers against large-v3's 32); its
+# encoder is large-v3's, unchanged, and on CPU the encoder dominates. "Turbo is
+# fast" is therefore a GPU fact that does not transfer - it lands between small
+# and medium, i.e. inside the very class device_advisory() warns is too slow to
+# use. Reported from a real course: 36 recordings that take 40-60 minutes on
+# tiny would have taken ~6.5 hours on the model this table recommended for them.
+#
+# So nothing above Small is ever recommended on a CPU. Small is the floor rather
+# than base/tiny because the tier below it costs real accuracy on non-English
+# lecture audio, which is what these transcripts are.
+_NEVER_ON_CPU = 999
+
 _MODEL_REQUIREMENTS = {
-    "turbo":    {"gpu_vram_mb": 4000, "cpu_cores": 8},
-    "large-v3": {"gpu_vram_mb": 6000, "cpu_cores": 999},  # never recommended on CPU
-    "medium":   {"gpu_vram_mb": 3000, "cpu_cores": 6},
+    "turbo":    {"gpu_vram_mb": 4000, "cpu_cores": _NEVER_ON_CPU},
+    "large-v3": {"gpu_vram_mb": 6000, "cpu_cores": _NEVER_ON_CPU},
+    "medium":   {"gpu_vram_mb": 3000, "cpu_cores": _NEVER_ON_CPU},
     "small":    {"gpu_vram_mb": 2000, "cpu_cores": 2},
     "base":     {"gpu_vram_mb": 1500, "cpu_cores": 1},
     "tiny":     {"gpu_vram_mb": 1000, "cpu_cores": 1},
@@ -167,8 +188,12 @@ def recommendation_reason(hw: dict | None = None) -> str:
         return f"{label} is recommended for {gpu}."
     cores = int(hw.get("cpu_cores") or 0)
     if cores:
+        # "A GPU would allow a larger model" is false on macOS, where the engine
+        # has no GPU backend at all (hardware.py's cpu_only_mac branch) - no GPU
+        # a Mac user could buy would change the answer.
+        upsell = "" if hw.get("is_mac") else " A GPU would allow a larger model."
         return (f"{label} is recommended for CPU transcription on "
-                f"{cores} cores. A GPU would allow a larger model.")
+                f"{cores} cores.{upsell}")
     return f"{label} is recommended for CPU transcription."
 
 # Essential filenames for a faster-whisper CT2 model (repos vary on vocabulary.*).

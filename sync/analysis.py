@@ -566,9 +566,22 @@ def run_analysis(sync_pairs, main_placeholder=None):
     # full step wizard (the card + its slim bar are the only chrome there).
     _today_minimal = st.session_state.get('today_sync_active', False)
 
-    # Step wizard
+    # Step wizard + heading. The heading is NOT decoration: every other phase of
+    # this flow has one at exactly this position - `sync/execution.py` renders
+    # "Syncing...", `sync/completion.py` "Sync Complete!", `sync_ui.py` "Panopto
+    # Recordings" - and analysis was the only one without, so the screen lost its
+    # title for the whole scan while the download flow (app.py) titled its
+    # identical phase "Analyzing...". Reported 2026-08-11 as "no heading and
+    # elements missing above the analysis card".
+    #
+    # Adding it also makes the element SHAPE match the sibling phases instead of
+    # diverging from them: `wizard, h2, ...` in every phase. That matters here
+    # because Streamlit reconciles by position and hands a block the CHILDREN of
+    # whatever occupied its index - a phase one element shorter than the next
+    # would have the run dashboard inherit them.
     if not _today_minimal:
         render_sync_wizard(st, 'analyze')
+        st.markdown('<h2 class="step-header">Analyzing...</h2>', unsafe_allow_html=True)
 
     # (The old sync_single_pair_idx single-pair filter was dead code - nothing
     # in the app ever set the key - and has been removed.)
