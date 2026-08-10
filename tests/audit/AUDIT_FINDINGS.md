@@ -9,61 +9,49 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings` on 2026-08-09.
+Last updated by run `20260810_151922_macos-15-v2.0.2` on 2026-08-10.
 
-**9 open** · 62 total · 23 fixed · 30 invalid
+**14 open** · 68 total · 24 fixed · 30 invalid
 
 ---
 
-### Cancelling mid-transcription leaves .txt.part/.srt.part in the course folder for ever
-<!-- fp:02cdd440035e -->
+### A corrupt or 0-byte .doc wedges Microsoft Word on macOS, and every later Word conversion in the run then silently fails
+<!-- fp:200c7fea9f04 -->
 
-**Status**: fixed
-**Severity**: medium
-**Category**: panopto
+**Status**: open
+**Severity**: high
+**Category**: conversion
 **Oracles**: O2,O3
-**First seen**: 2026-08-09 (20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings)
-**Last seen**: 2026-08-09 (20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings)
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Occurrences**: 1
-**Scenario**: pan_cpu_downgrade · 43660
+**Scenario**: mac_m1_word_wedge
 
 **Detail**:
 
-REPRODUCED. Phase 4's requirement is 'Cancel mid-transcription -> no orphaned worker process, no .part files'. Orphaned workers: PASS (verified twice). .part files: FAIL when the cancel lands while a worker is actively WRITING. Evidence (O3): 'Video med respons pa feedback...srt.part' (16536 B) and '.txt.part' (8416 B) remain on disk. Both are UNLOCKED (append-open succeeds), so they were removable. The recording's .mp3 (12851541 B) sits at the same base path, so _clean_part_files would have derived the correct base. O2: the log shows 'Transcribing [3/30] (device=cpu)' worker pid=31704 at 23:04:41 and the cancel at 23:07:07.633 - i.e. 2.5 min into that file - and contains NO .part cleanup line, success or failure. WHY IT MATTERS: panopto/runner.py's own comment states the engine deliberately ignores .part artifacts everywhere (never healed onto a manifest row, never auto-discovered, never counted as study material), so 'nothing would ever remove or even mention them again' - the leftovers are permanent clutter in the student's course folder. Note the first cancel (GPU run, between recordings) left ZERO .part files, so the trigger is specifically cancelling mid-write. CANDIDATE MECHANISM (not proven): core.cancellation logged 'cancel event set' at 23:07:07.633 and 'cancel event cleared' at 23:07:07.753 - app.py:909-910 resets the flag on any rerun where download_status has left _active_dl_statuses. That 120ms window is SHORTER than the 0.3s is_cancelled() poll in panopto/transcribe.py:435, so the graceful cancel path at transcribe.py:448 - which is what calls _clean_part_files - can miss the flag entirely, while the workers are killed by another route. NOT FIXED: audit ground rule 2 (report, never fix), and a product change mid-run would invalidate the 43-row sync matrix that was executing.
+REPRODUCED on real macOS with real Office; only this machine can produce it. CHAIN OF EVENTS, measured: (1) feed the macOS Word converter a hostile legacy .doc (2 KB of random bytes, and separately a 0-byte file). The delete gate behaves CORRECTLY - the source is kept, verified by md5 - and the log records '[AppleScript] Word failed (other)'. Run 1 also logged 'Microsoft Word got an error: AppleEvent timed out. (-1712)', consistent with Word raising a MODAL dialog that waits for a human (hypothesis - not directly observed, see below). (2) Word is then WEDGED: 'count of documents' answers 1, the document's name cannot be read, and 'close every document saving no' answers 'missing value' and changes nothing. (3) EVERY subsequent Word conversion fails with 'missing value doesn't understand the save as message. (-1708)' - INCLUDING a genuine 153 KB .doc from course 43660 that converted perfectly moments earlier in a clean process. Measured across two fresh processes: 4 of 4 good-file conversions failed, each reporting 'word docs before=1'. (4) The app's OWN recovery does not help: engine.applescript_bridge._force_close_canvas_docs_sync left the count at 1. (5) Killing the process DOES recover it: after 'pkill -x Microsoft Word', a good file CONVERTED and a second good file straight after also CONVERTED. WHY IT MATTERS: no data loss (the gate keeps every source), but for the rest of that run the user silently gets NO PDFs from any .doc/.rtf/.odt, with one generic 'Conversion failed' line per file. Reachable in normal use by a single corrupt legacy .doc in a course followed by others. WHY THE EXISTING MECHANISM MISSES IT: the codebase already models this exact class - _abort_applescript_phase exists to 'log a single actionable message instead of spamming dozens of generic errors' for failures that 'will identically doom every remaining file in the phase' - but FATAL_CATEGORIES is only ('permission','app_missing'), keyed on -1743 and -600/-10810. A wedged Word yields -1708, which _classify_stderr maps to 'other' = per-file, so the phase dutifully attempts and fails every remaining file. RECOMMENDED FIX (not applied): treat a run of consecutive identical AppleScript failures within one phase as fatal for that phase and emit one actionable message ('Microsoft Word is not responding to conversion requests - quit Word and run again'). A blind kill+relaunch is NOT safe and must not be added: in the wedged state the documents cannot be enumerated, so the app cannot certify that no USER document is open, and every other Office path in this codebase deliberately refuses to act without that certificate. THE MODAL IS CONFIRMED, by the operator's own eyes: 'word was jumping in the dock and when i clicked it it had some error dialog saying file "name" couldnt be opened or something and i clicked ok to all of them and quit word'. So the chain is: hostile .doc -> Word raises a MODAL file-open error and bounces in the Dock demanding attention -> AppleScript's 'open' never yields an active document -> every later conversion answers -1708 -> nothing in the app dismisses the alert, so the phase is dead until a human clicks OK or the process is killed. Note the converter DOES attempt 'set display alerts to false', but it is wrapped in its own try and evidently does not suppress a file-corruption alert raised during open. I could not observe this myself - screenshots were blind at the time and System Events refused with 'osascript is not allowed assistive access (-1728)' - which is a good argument for keeping a human in the loop on a GUI-automation phase.
 
-**Notes**:
+**Notes**: 
 
-FIXED 2026-08-09, after the matrix had completed and the audit was closed. The
-candidate mechanism above was WRONG and the real one is worse. It is not a race
-on the cancel flag: a UI cancel makes Streamlit STOP the script run, which it
-does by raising `RerunException`/`StopException` from the next `st.*` call -
-inside the `progress()` callback, i.e. inside the transcription loop. Both are
-`BaseException`, so nothing caught them and they propagated straight past the
-sweep, which was ordinary statements after the loop. The absence of every
-post-loop log line is the proof: the log ENDS at the cancellation.
+---
 
-Two fixes, both in the product:
-  1. `panopto/runner.py` - the sweep is now in a `finally`, which is what its own
-     comment ("covers every route out of the phase") always meant.
-  2. `panopto/transcribe.py` - `_clean_part_files` now deletes through
-     `make_long_path`. Every WRITE in that module already did; the delete did
-     not, and on a stock Windows install (LongPathsEnabled=0) a >260-char path
-     raises FileNotFoundError, which the retry loop reads as "already gone" - no
-     removal, no retry, no log. 259 paths in this course exceed 255 chars and the
-     two abandoned sidecars were 341. Latent on this dev box only because it has
-     LongPathsEnabled=1.
+### Packaged .app fails codesign --verify --strict: pync's vendored nested terminal-notifier.app is path-mangled by PyInstaller
+<!-- fp:b7bc37bfb6fc -->
 
-VERIFIED IN THE REAL APP by reproducing the exact condition: a run was driven to
-the mid-write state (2 .part files present on disk, worker on [15/28]) and then
-cancelled from the UI. Result: 0 .part files, no stray workers. `check
-invariants` on the same folder went from 2 HIGH to 1 (the remaining one is the
-known Compiled_External_Links.txt checker gap, filed separately).
+**Status**: open
+**Severity**: medium
+**Category**: config
+**Oracles**: O3,O2
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_m3_bundle
 
-`tests/test_transcribe_partial_cleanup.py`: 5 of 6 mutations caught, one per
-original defect. The three pre-existing structural tests there had passed against
-BOTH defects - they anchored on `_clean_part_files(` appearing within 1800
-characters of `progress("transcribe_done")` - and are now resolved through the
-AST, asserting the call sits inside a `Try.finalbody`. 
+**Detail**:
+
+PRODUCT/BUILD finding, first time the macOS bundle's signature has been verified. Built with 'pyinstaller --clean --noconfirm Canvas_Downloader_macOS.spec' (rc=0, 266 MB) and signed exactly as CLAUDE.md documents (codesign --force --deep -s - --entitlements entitlements.mac.plist). The signature then does NOT verify: 'codesign --verify --strict' rc=1, 'the main executable or Info.plist must be a regular file (no symlinks, etc.) In subcomponent: .../Contents/Frameworks/pync/vendor/terminal-notifier-2__dot__0__dot__0/terminal-notifier__dot__app/Contents/MacOS/terminal-notifier'. CAUSE: pync vendors a nested terminal-notifier.app and PyInstaller rewrites '.' to '__dot__' in those directory names, so 'terminal-notifier__dot__app' is no longer a valid bundle - its Info.plist/executable relationship is broken and strict verification of the WHOLE app fails. Both a correct 'terminal-notifier.app' and the mangled copy are present, under two mangled version directories. NOT OVERCLAIMED: 'spctl -a -vv' also says 'rejected', but that is expected for ANY ad-hoc signature (no Developer ID) and is not evidence of this defect. The app LAUNCHES and runs correctly despite it - verified by the operator's own screenshot: splash, login card, onboarding panel and institution picker all render correctly in WKWebView. CONSEQUENCE: harmless for today's ad-hoc distribution; NOTARIZATION would reject this bundle, so it blocks any future Developer-ID release, and it means '--force --deep' silently produces an unverifiable artifact. PROPOSED FIX (not applied - build-policy change, and the notification chain deserves care): exclude pync in scripts/build_excludes.py. It is fallback #3 of 4 in engine/notifications.py; CLAUDE.md documents it as unreliable on arm64 Sequoia; MAC_RUNBOOK says not to report it doing nothing; the PRIMARY UNUserNotificationCenter path is verified working by mac_smoke on this machine; the #4 osascript fallback was fixed 2026-08-10. Cost 180 KB. Stripping only the vendored .app is worse - it leaves pync importable but broken at runtime.
+
+**Notes**: 
 
 ---
 
@@ -130,6 +118,26 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 ---
 
+### A filename containing a line break can never be converted on macOS: the shared AppleScript escaper turns CR into a space, so the path stops resolving
+<!-- fp:ad96dfaae9ad -->
+
+**Status**: open
+**Severity**: low
+**Category**: conversion
+**Oracles**: O2,O3
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_m1_hostile_names
+
+**Detail**:
+
+MEASURED with a positive control per case and a FRESH Word each time, which is what makes it trustworthy - an earlier all-in-one-process run failed 8 of 8 because the first hostile name wedged Word (see mac_m1_word_wedge), so only the first case after a passing control can be believed. Isolated results: 'Lec\rture.doc' FAILED, 'Say "hi".doc' CONVERTED, a 250-char ASCII component FAILED - each preceded by a plain 'control.doc' that CONVERTED. THE CAUSE for the CR case is exact and visible in the escaper's own output: engine.applescript_bridge.applescript_string renders the path ending as 'Lec ture.doc' - CLAUDE.md's documented rule that 'a line break becomes a SPACE, never empty, because deleting it would silently join two words of a name shown to the user'. That rule is right for a MESSAGE string and wrong for a PATH: the emitted AppleScript is syntactically valid but now names a file that does not exist, so Word cannot open it. Round-trip check: literal.endswith(name) is False for CR and True for the quote and long-name cases, i.e. the quote path is passed through faithfully and the CR path is corrupted. WHY IT IS A DEFECT RATHER THAN A LIMITATION: MAC_RUNBOOK item 4 states of exactly these two names that 'Both must convert normally - _as_posix neutralises them'. It neutralises the SYNTAX hazard only. REACHABILITY: macOS permits every byte but / and NUL in a filename, and CLAUDE.md notes an extracted ARCHIVE member never passes through _sanitize_filename, so a zip can put one in a course folder. CONSEQUENCE is safe but silent: the conversion fails, the source is kept, and the user gets no PDF for that one file. POSSIBLE FIX (not applied): a path must not go through the message escaper - pass it as raw bytes/POSIX file via a mechanism that cannot rewrite it, or reject/rename such a source explicitly so the failure is stated rather than silent. SEPARATE, NOT ISOLATED: the 250-char ASCII component also failed although its path round-tripped identically (component 254 bytes, legal on macOS whose limit is 255 BYTES per component; full path 293 chars, so office_container_stage's >=240 staging applies). The cause was not established - it is Word's own limit or the staging - and is recorded as an open question rather than a diagnosed defect.
+
+**Notes**: 
+
+---
+
 ### CONFIRMED GOOD: both branches of resolve_shortcut_path verified live (free name vs Canvas collision)
 <!-- fp:773eebe9d42e -->
 
@@ -146,7 +154,8 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 CLAUDE.md documents that a Panopto lecture IS a Canvas ExternalTool module item, so _create_link has usually already written a .url at the same name; the Shortcut output must ADOPT a link we produced, else take the first FREE name, else step over the foreign one to '<title> (Panopto).url'. Both branches exercised on the real course. BRANCH A (names free): convert_urls had compiled and consumed all 41 Canvas .url files first, so all 36 shortcuts took the PLAIN name; 36/36 carried the [CanvasDownloader] Source=Panopto marker and survived the URL compiler in the SAME run - the marker is the only thing preventing the app from deleting its own selected output. BRANCH B (names taken): a later run recreated the 41 Canvas links with convert_urls OFF, then pan_out_url ON produced 36 shortcuts - ALL 36 landed with the '(Panopto)' suffix, 0 took a plain name, and the 41 Canvas links were left untouched (77 .url total = 41 plain + 36 produced). Also verified: with pan_out_url OFF, the Canvas link phase legitimately reclaims those paths (36 produced -> 0), which is correct - the user did not ask for shortcuts that run.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -166,7 +175,8 @@ CLAUDE.md documents that a Panopto lecture IS a Canvas ExternalTool module item,
 
 Cancelled during Phase 3 via cancel_panopto_btn (NOT cancel_download_btn - the Panopto phase has its own control; app.py:908 _active_dl_statuses includes 'panopto' so the click is not swallowed). Python pids before: ...35020, 35512 (workers). After: both gone; the only surviving pythons were the app (18944) and six unrelated processes started hours earlier. Leftover .part/.tmp files: 0. The 6 already-completed txt/srt pairs were correctly KEPT.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -185,6 +195,47 @@ Cancelled during Phase 3 via cancel_panopto_btn (NOT cancel_download_btn - the P
 **Detail**:
 
 RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that _is_vad_engine_error exists. Fault injected by replacing the run's cuda_libs JUNCTION with a real dir of 14 zero-value stub DLLs (the developer's real 1.8GB cuda_libs was verified intact at 14 files before and after, and the junction was restored). Settings still requested device=cuda, so the downgrade was genuinely exercised. Evidence chain from debug_log.txt: (1) 'Transcribe worker spawned: pid=30320 device=cuda'; (2) 'worker error: RuntimeError: Library cublas64_12.dll is not found or cannot be loaded' - exactly the injected fault; (3) failed FAST, 3.5s, no hang; (4) 'GPU transcription failed (...); falling back to CPU FOR THE REST OF THE RUN' - the fallback is run-scoped, so it does not re-attempt a broken GPU on all 30 remaining recordings; (5) 'Transcribing [1/30] (device=cpu)'; (6) two transcripts COMPLETED on CPU (srt 6->8). Measured cost: GPU 22.4/40.8/55.4s per recording vs CPU 104.7/129.8s (~3x). The downgrade does not merely log - it finishes the work.
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
+### M2 PASS: Panopto discovery, 36 collision-resolved .webloc shortcuts, kind=url rows, and Launch Services opens ours
+<!-- fp:f8d392f9cffb -->
+
+**Status**: open
+**Severity**: info
+**Category**: panopto
+**Oracles**: O3,O4
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_m2_panopto_url
+
+**Detail**:
+
+FIRST TIME the Panopto subsystem has ever run on macOS. All of it passed. (1) DISCOVERY via module-item LTI launches: 'Discovered 36 recording(s) ... by source {module: 36}', matching O5's ground truth for course 43660. The documented economy held: 'needs no media this run (Shortcut output only) - skipping the per-course session bootstrap', i.e. 0 runner handshakes. Closing line: 'found=36 downloaded=0 transcribed=0 shortcuts=36 skipped=0 failed=0 courses=1'. (2) THE CANVAS COLLISION CASE, which CLAUDE.md records as having shipped broken (36 recordings discovered, 34 identically-named .url files on disk, 0 shortcuts written): the M1 download had already written 41 Canvas ExternalTool/.webloc links via _create_link, so the precondition was real. Result on disk: 77 .webloc total = 41 Canvas-written (is_produced_shortcut False, untouched) + 36 ours, and ALL 36 of ours are named '<title> (Panopto).webloc' beside a still-present Canvas link. Ours carry source='Panopto' and point at the real Panopto viewer (cbs.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=...), not at the Canvas module item. (3) O4: 36 rows in panopto_manifest, ALL with kind='url' - the documented rule that a .webloc must be recorded as kind 'url' and never 'webloc'. (4) DOES macOS OPEN IT - the one question MAC_RUNBOOK reserves for a human, and which CLAUDE.md says reasoning cannot settle ('what that cannot prove is Finder itself'). Answered: A/B'd a URL-only plist against one carrying our extra CanvasDownloaderSource key, both opened through Launch Services, and Safari reported 'https://example.com/plain, https://example.com/ours' - so the marker key does NOT prevent the URL being read. Finder also renders both with the internet-location icon. NOTE ON A FALSE ALARM: a first attempt produced a blank Safari with an empty address bar, which looked like the shortcut being broken. Safari on this cloud image is flaky (it failed to launch at all with _LSOpenURLsWithCompletionHandler error -600 for Safari.app itself), and the operator confirmed their own double-clicks worked. An mdls probe was uninformative - kMDItemURL is null for OUR file AND for a Canvas one, so it distinguishes nothing.
+
+**Notes**: 
+
+---
+
+### M4 PASS on real HFS+: the one place _path_key's Unicode normalisation is not a no-op
+<!-- fp:2477d9d49c3c -->
+
+**Status**: open
+**Severity**: info
+**Category**: persistence
+**Oracles**: O3,O4
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_m4_hfs_nfd
+
+**Detail**:
+
+Verified on a REAL HFS+ volume created with hdiutil, which is the only way to reach this: APFS is normalisation-PRESERVING so a modern Mac hides the case entirely, and an external drive does not. Four rows, all passing: 'APFS is normalisation-PRESERVING - os.walk returned the NFC we wrote'; '_path_key agrees across NFC/NFD'; 'HFS+ hands back the DECOMPOSED name - as expected, this is the case APFS hides'; '_path_key maps both forms to ONE key'. This is the class CLAUDE.md records as reading like a random defect, because Danish 'aa' decomposes while 'oe' and 'ae' do not - so on an HFS+ external drive a tracked file with an a-ring would drop out of the tracked set and inflate the review screen's untracked count, while its siblings behaved. The single _path_key primitive (normcase(normpath(NFC(s)))) holds. Also green in the same suite: make_long_path is a no-op off Windows, >600-char paths, and the 255-BYTE component limit.
 
 **Notes**: 
 
@@ -232,7 +283,27 @@ Reproduced live, not synthetically. The office lane hit '[ERROR] [converters.exc
 
 ---
 
-### ~~'readonly:gk2 vejl_løsn_js.txt' was locally edited but no _NewVersion sibling was created~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### Notification path crashes a bare short-lived python process; NOT reproduced in the real app shape
+<!-- fp:ad41f04027c9 -->
+
+**Status**: open
+**Severity**: info
+**Category**: robustness
+**Oracles**: O1,O2
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_m5_notifications
+
+**Detail**:
+
+OBSERVATION with an explicit caveat, recorded so it is not lost and not overstated. Calling the REAL engine.notifications.play_completion_beep(mode='daily_sync', ...) from a bare python process repeatedly produced 'Python quit unexpectedly' (the macOS crash reporter) and a shell 'Killed: 9'; the operator confirmed 'python keeps crashing when you do that'. It is NOT consistently fatal - one invocation that slept 4s afterwards printed 'fired ok' and exited cleanly - so it is a race. WHY THIS IS PROBABLY NOT A PRODUCT DEFECT: my test posts a notification from a short-lived python with no Cocoa NSApplication run loop and then exits, which is not the app's shape. The real app shares the process with the PyWebView Cocoa NSApplication (start.py) and lives on, which is precisely why _show_macos_notification_native calls that 'the robust primary path'. The code already anticipates this exact mismatch: play_completion_beep's comment says 'post on the calling thread avoids run-loop issues - the daemon thread context can differ from what UNUserNotificationCenter/its delegate callbacks expect, and a daemon thread can be killed during process shutdown before the completion handler fully executes'. WHAT IS THEREFORE STILL UNPROVEN, and belongs in the gap list: whether a real sync completion in the PACKAGED app delivers a visible banner. mac_smoke reports 'UNUserNotifications delivered - a banner should be visible', and a UserNotificationCenter window (260x300) does appear on each call, but the banner itself outran every capture attempt (macOS banners last ~5s) and no screenshot of our banner text was obtained. A SEPARATE FALSE LEAD, recorded so the next audit does not chase it: a 'Terminal would like to access the microphone' TCC prompt was captured while investigating this and initially looked like the notification path requesting the microphone. It is not - re-running the identical code produced no such prompt, nothing in the notification chain (UNUserNotificationCenter -> NSUserNotification -> pync -> osascript) or in afplay touches audio input, and a UserNotificationCenter window was already present BEFORE the first notification call. It was almost certainly one of the pending permission prompts the operator approved minutes earlier.
+
+**Notes**: 
+
+---
+
+### ~~'readonly:gk2 vejl_løsn_js.txt' was locally edited but no _NewVersion sibling was created~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6a83c06e72be -->
 
 **Status**: invalid
@@ -253,7 +324,7 @@ The product's stated contract is that local edits are never overwritten and the 
 
 ---
 
-### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:bc9703c2e9f2 -->
 
 **Status**: fixed
@@ -320,7 +391,7 @@ THE OTHER DIRECTION, verified separately and at least as important: this resolve
 
 ---
 
-### ~~Sync post-processing crashes with NameError: _attempts is not defined~~~~~~~~~~~~~~~~
+### ~~Sync post-processing crashes with NameError: _attempts is not defined~~~~~~~~~~~~~~~~~~
 <!-- fp:5d735855a0d8 -->
 
 **Status**: fixed
@@ -341,7 +412,7 @@ sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initia
 
 ---
 
-### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:2e38f73c0857 -->
 
 **Status**: invalid
@@ -362,7 +433,7 @@ Renamed, row dropped, and another file shares its size and extension. The unique
 
 ---
 
-### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:1d964fc34314 -->
 
 **Status**: fixed
@@ -391,7 +462,7 @@ Options: require a name-similarity floor for tier (c) as heal Tier 3 already doe
 
 ---
 
-### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6fe18c5a9b2f -->
 
 **Status**: fixed
@@ -431,7 +502,7 @@ Guarded by tests/test_link_content_sig_parity.py, which runs BOTH directions and
 
 ---
 
-### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:91d640ef7d5a -->
 
 **Status**: invalid
@@ -452,7 +523,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:78c7871b2180 -->
 
 **Status**: invalid
@@ -473,7 +544,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~Download finished with 1 unexplained error(s)~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Download finished with 1 unexplained error(s)~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa2cae30e286 -->
 
 **Status**: fixed
@@ -494,7 +565,7 @@ Errors this course logged that are not teacher-locked files. Each names the item
 
 ---
 
-### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa247ec01d02 -->
 
 **Status**: fixed
@@ -521,7 +592,7 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 
 ---
 
-### ~~1 content file(s) on disk with no manifest row~~
+### ~~1 content file(s) on disk with no manifest row~~~~
 <!-- fp:371b678dbdf1 -->
 
 **Status**: invalid
@@ -531,7 +602,7 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
 **Last seen**: 2026-08-09 (20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings)
 **Occurrences**: 17
-**Scenario**:  · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+**Scenario**: · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
 
@@ -541,11 +612,12 @@ Each of these will be offered as a NEW file on every future sync unless the anal
 
 The audit's own exemption for this existed and never fired: it read `expect["converters"]` while `check download` is handed a FLAT config. The same shape mismatch was also reporting the 25 consumed `.url` rows as a broken manifest. Both now read the `sync_contract` the app stored in the folder, which is what the engine itself obeys.
 
-Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.
+Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.  
+> Not observed in the latest run.
 
 ---
 
-### ~~2 Canvas file(s) were downloaded more than once in one run~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 Canvas file(s) were downloaded more than once in one run~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:d05cc83d973a -->
 
 **Status**: fixed
@@ -566,7 +638,7 @@ Each of these ids went to the network twice. Two phases both claimed the file, s
 
 ---
 
-### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:09c8ffb50041 -->
 
 **Status**: invalid
@@ -589,7 +661,7 @@ Now derived from the folder's stored `sync_contract`. Re-checked on the same pri
 
 ---
 
-### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f5c9f9d3c10f -->
 
 **Status**: fixed
@@ -637,7 +709,7 @@ TWO WAYS TO IMPLEMENT, both needing a verifying run:
 
 ---
 
-### ~~2 partial-write artifact(s) left on disk~~
+### ~~2 partial-write artifact(s) left on disk~~~~
 <!-- fp:62da7c0a9988 -->
 
 **Status**: invalid
@@ -647,17 +719,18 @@ TWO WAYS TO IMPLEMENT, both needing a verifying run:
 **First seen**: 2026-07-28 (20260728_010431_phase2_real)
 **Last seen**: 2026-08-09 (20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings)
 **Occurrences**: 4
-**Scenario**:  · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+**Scenario**: · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
 
 A `.part` file after the run means an atomic write was abandoned without cleanup. The next analysis must ignore it, and the user sees a junk file in their course folder.
 
-**Notes**: AUDIT DEFECT, fixed. These are the seeder's own `partial_artifact` fixtures (`interrupted download.pdf.part`, `recording.part.mp4`) - created on purpose to prove the app ignores partials. Counting the fixture that proves correct behaviour as evidence of incorrect behaviour is exactly backwards. The seed plan now DECLARES what it deliberately broke (`seed.declarations`) and the invariants honour it.
+**Notes**: AUDIT DEFECT, fixed. These are the seeder's own `partial_artifact` fixtures (`interrupted download.pdf.part`, `recording.part.mp4`) - created on purpose to prove the app ignores partials. Counting the fixture that proves correct behaviour as evidence of incorrect behaviour is exactly backwards. The seed plan now DECLARES what it deliberately broke (`seed.declarations`) and the invariants honour it.  
+> Not observed in the latest run.
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:18cc3b9d802a -->
 
 **Status**: invalid
@@ -678,7 +751,7 @@ Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8224b9e3a4a1 -->
 
 **Status**: invalid
@@ -699,7 +772,7 @@ Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:
 
 ---
 
-### ~~Unexpected bridged_error in debug log: HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel stopped resp~~~~~~
+### ~~Unexpected bridged_error in debug log: HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel stopped resp~~~~~~~~
 <!-- fp:f4ec25425a4b -->
 
 **Status**: invalid
@@ -721,7 +794,7 @@ HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel st
 
 ---
 
-### ~~Unexpected bridged_error in debug log: OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s (Excel stop~~~~~~
+### ~~Unexpected bridged_error in debug log: OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s (Excel stop~~~~~~~~
 <!-- fp:7d8d6987eef9 -->
 
 **Status**: invalid
@@ -743,7 +816,7 @@ OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped respond~~~~~~
+### ~~Unexpected bridged_error in debug log: Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped respond~~~~~~~~
 <!-- fp:bacba60611c0 -->
 
 **Status**: invalid
@@ -765,7 +838,7 @@ Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopp
 
 ---
 
-### ~~Unexpected bridged_error in debug log: VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;~~~~~~~~~~~~
 <!-- fp:958f127d0717 -->
 
 **Status**: fixed
@@ -786,7 +859,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on HA.IT-reeksamen-2020-VL-Endelig1.xlsx. Killing PID 21420~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on HA.IT-reeksamen-2020-VL-Endelig1.xlsx. Killing PID 21420~~~~~~~~
 <!-- fp:f7950a0ff1d0 -->
 
 **Status**: invalid
@@ -808,7 +881,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on OmkostningerAfsætning - Ekstra - LØSNING.xlsx. Killing P~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on OmkostningerAfsætning - Ekstra - LØSNING.xlsx. Killing P~~~~~~~~
 <!-- fp:41de4d13af9a -->
 
 **Status**: invalid
@@ -830,7 +903,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on Productionanalysis - Eksempel.xlsx. Killing PID 17556.~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on Productionanalysis - Eksempel.xlsx. Killing PID 17556.~~~~~~~~
 <!-- fp:d5dff49dc678 -->
 
 **Status**: invalid
@@ -852,7 +925,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on ekstraopgave 1 - VL.xlsx. Killing PID 22472.~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on ekstraopgave 1 - VL.xlsx. Killing PID 22472.~~~~~~~~
 <!-- fp:fe53cd768483 -->
 
 **Status**: invalid
@@ -874,7 +947,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM] Excel init failed: (-2146959355, 'Server-udførelse mislykkedes', None, None)~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM] Excel init failed: (-2146959355, 'Server-udførelse mislykkedes', None, None)~~~~~~~~
 <!-- fp:74a494b938a5 -->
 
 **Status**: invalid
@@ -896,7 +969,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion failed twice~~~~~~
+### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion failed twice~~~~~~~~
 <!-- fp:23015c7d7ccf -->
 
 **Status**: invalid
@@ -918,7 +991,7 @@ ekstraopgave 1 - VL.xlsx  Conversion failed twice
 
 ---
 
-### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)~~~~~~
+### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)~~~~~~~~
 <!-- fp:b751e7a4c30f -->
 
 **Status**: invalid
@@ -940,7 +1013,7 @@ ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped respond
 
 ---
 
-### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:0995f8315ce5 -->
 
 **Status**: invalid
@@ -961,7 +1034,7 @@ g1 darts vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:ac0b7c1a10e5 -->
 
 **Status**: invalid
@@ -982,7 +1055,7 @@ gk2 vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8badba1fc12c -->
 
 **Status**: invalid
@@ -1026,7 +1099,7 @@ Reverted to the original single dimming rule and verified in the running app: po
 
 ---
 
-### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~~~~~~~~~~~~~~~~~~~~~
+### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:7e2221df01e0 -->
 
 **Status**: fixed
@@ -1047,7 +1120,7 @@ Both Page call sites pass isolate=False literally, so with isolation ON in flat 
 
 ---
 
-### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:815c4edf0cb8 -->
 
 **Status**: invalid
@@ -1072,7 +1145,7 @@ Not data loss - files are present and usable - but it defeats the AI-optimisatio
 
 ---
 
-### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:689a00875c36 -->
 
 **Status**: invalid
@@ -1095,7 +1168,7 @@ Fixed by routing both flows through one shared helper (converters.post_processin
 
 ---
 
-### ~~convert_code did not reach 54 file(s) unpacked from archives~~~~~~
+### ~~convert_code did not reach 54 file(s) unpacked from archives~~~~~~~~
 <!-- fp:5a22b016415d -->
 
 **Status**: invalid
@@ -1117,7 +1190,7 @@ convert_zip extracted these, but post-processing filters every converter through
 
 ---
 
-### ~~convert_excel enabled but 1 source file(s) survived conversion~~~~~~
+### ~~convert_excel enabled but 1 source file(s) survived conversion~~~~~~~~
 <!-- fp:449c42444584 -->
 
 **Status**: invalid
@@ -1139,7 +1212,7 @@ This converter is documented to replace its source. A surviving source at module
 
 ---
 
-### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~~~
+### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~~~~~
 <!-- fp:24e9563de29e -->
 
 **Status**: invalid
@@ -1161,7 +1234,58 @@ convert_zip extracted these, but post-processing filters every converter through
 
 ---
 
-### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Cancelling mid-transcription leaves .txt.part/.srt.part in the course folder for ever~~
+<!-- fp:02cdd440035e -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: panopto
+**Oracles**: O2,O3
+**First seen**: 2026-08-09 (20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings)
+**Last seen**: 2026-08-09 (20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings)
+**Occurrences**: 1
+**Scenario**: pan_cpu_downgrade · 43660
+
+**Detail**:
+
+REPRODUCED. Phase 4's requirement is 'Cancel mid-transcription -> no orphaned worker process, no .part files'. Orphaned workers: PASS (verified twice). .part files: FAIL when the cancel lands while a worker is actively WRITING. Evidence (O3): 'Video med respons pa feedback...srt.part' (16536 B) and '.txt.part' (8416 B) remain on disk. Both are UNLOCKED (append-open succeeds), so they were removable. The recording's .mp3 (12851541 B) sits at the same base path, so _clean_part_files would have derived the correct base. O2: the log shows 'Transcribing [3/30] (device=cpu)' worker pid=31704 at 23:04:41 and the cancel at 23:07:07.633 - i.e. 2.5 min into that file - and contains NO .part cleanup line, success or failure. WHY IT MATTERS: panopto/runner.py's own comment states the engine deliberately ignores .part artifacts everywhere (never healed onto a manifest row, never auto-discovered, never counted as study material), so 'nothing would ever remove or even mention them again' - the leftovers are permanent clutter in the student's course folder. Note the first cancel (GPU run, between recordings) left ZERO .part files, so the trigger is specifically cancelling mid-write. CANDIDATE MECHANISM (not proven): core.cancellation logged 'cancel event set' at 23:07:07.633 and 'cancel event cleared' at 23:07:07.753 - app.py:909-910 resets the flag on any rerun where download_status has left _active_dl_statuses. That 120ms window is SHORTER than the 0.3s is_cancelled() poll in panopto/transcribe.py:435, so the graceful cancel path at transcribe.py:448 - which is what calls _clean_part_files - can miss the flag entirely, while the workers are killed by another route. NOT FIXED: audit ground rule 2 (report, never fix), and a product change mid-run would invalidate the 43-row sync matrix that was executing.
+
+**Notes**: FIXED 2026-08-09, after the matrix had completed and the audit was closed. The
+candidate mechanism above was WRONG and the real one is worse. It is not a race
+on the cancel flag: a UI cancel makes Streamlit STOP the script run, which it
+does by raising `RerunException`/`StopException` from the next `st.*` call -
+inside the `progress()` callback, i.e. inside the transcription loop. Both are
+`BaseException`, so nothing caught them and they propagated straight past the
+sweep, which was ordinary statements after the loop. The absence of every
+post-loop log line is the proof: the log ENDS at the cancellation.
+
+Two fixes, both in the product:
+  1. `panopto/runner.py` - the sweep is now in a `finally`, which is what its own
+     comment ("covers every route out of the phase") always meant.
+  2. `panopto/transcribe.py` - `_clean_part_files` now deletes through
+     `make_long_path`. Every WRITE in that module already did; the delete did
+     not, and on a stock Windows install (LongPathsEnabled=0) a >260-char path
+     raises FileNotFoundError, which the retry loop reads as "already gone" - no
+     removal, no retry, no log. 259 paths in this course exceed 255 chars and the
+     two abandoned sidecars were 341. Latent on this dev box only because it has
+     LongPathsEnabled=1.
+
+VERIFIED IN THE REAL APP by reproducing the exact condition: a run was driven to
+the mid-write state (2 .part files present on disk, worker on [15/28]) and then
+cancelled from the UI. Result: 0 .part files, no stray workers. `check
+invariants` on the same folder went from 2 HIGH to 1 (the remaining one is the
+known Compiled_External_Links.txt checker gap, filed separately).
+
+`tests/test_transcribe_partial_cleanup.py`: 5 of 6 mutations caught, one per
+original defect. The three pre-existing structural tests there had passed against
+BOTH defects - they anchored on `_clean_part_files(` appearing within 1800
+characters of `progress("transcribe_done")` - and are now resolved through the
+AST, asserting the call sits inside a `Try.finalbody`.  
+> Not observed in the latest run.
+
+---
+
+### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:72054c302758 -->
 
 **Status**: invalid
@@ -1182,7 +1306,7 @@ original_size decides whether the next Canvas change is treated as a real update
 
 ---
 
-### ~~36 file(s) differ from their recorded md5~~
+### ~~36 file(s) differ from their recorded md5~~~~
 <!-- fp:8a7f0ead05f4 -->
 
 **Status**: invalid
@@ -1198,11 +1322,12 @@ original_size decides whether the next Canvas change is treated as a real update
 
 original_md5 is what classifies the next update as clean (overwrite) or modified (_NewVersion). A wrong baseline silently decides whether the user's edits survive.
 
-**Notes**: AUDIT DEFECT, fixed. These are the `edited_update` fixtures: bytes appended so the file no longer matches its recorded baseline, then left UNCHECKED on the review screen by design. The file therefore MUST still differ - that divergence is the user's edit, and preserving it is the product's data-safety guarantee. The audit was reporting that guarantee working as a persistence defect. Covered by the same `expected_md5_drift` declaration.
+**Notes**: AUDIT DEFECT, fixed. These are the `edited_update` fixtures: bytes appended so the file no longer matches its recorded baseline, then left UNCHECKED on the review screen by design. The file therefore MUST still differ - that divergence is the user's edit, and preserving it is the product's data-safety guarantee. The audit was reporting that guarantee working as a persistence defect. Covered by the same `expected_md5_drift` declaration.  
+> Not observed in the latest run.
 
 ---
 
-### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~~~~~~~~~~~~~~~~~~~~~
+### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:c52480b4f905 -->
 
 **Status**: fixed
@@ -1219,7 +1344,7 @@ original_md5 is what classifies the next update as clean (overwrite) or modified
 
 ---
 
-### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:4b3b4fd09677 -->
 
 **Status**: fixed
@@ -1246,7 +1371,7 @@ Fixed in sync/analysis.py: every category now writes one line per file through a
 
 ---
 
-### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:d433d4f13087 -->
 
 **Status**: fixed
@@ -1279,7 +1404,7 @@ Verified by cancelling three real runs: before, both .part files remained; after
 
 ---
 
-### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:98608167bec2 -->
 
 **Status**: fixed
@@ -1300,7 +1425,7 @@ Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': N
 
 ---
 
-### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:257805fd303c -->
 
 **Status**: fixed
@@ -1321,7 +1446,7 @@ ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funk
 
 ---
 
-### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:92e8dcc3c9f9 -->
 
 **Status**: fixed
@@ -1350,7 +1475,7 @@ Measured on course 43660: 10 quizzes saved via the quiz path all explain themsel
 
 ---
 
-### ~~Course Finished reports 2 error(s) but this course's log records 0~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Course Finished reports 2 error(s) but this course's log records 0~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:eee718626a2e -->
 
 **Status**: fixed
@@ -1371,7 +1496,7 @@ The engine's error counter is not reset per course, so a later course in a batch
 
 ---
 
-### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6b8c9476a66a -->
 
 **Status**: fixed
@@ -1413,7 +1538,7 @@ What was actually wrong was only the other half - the Panopto card rendering '36
 
 ---
 
-### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:eb27c313381a -->
 
 **Status**: fixed
@@ -1442,7 +1567,7 @@ FIXED: count only entries whose DownloadError.course_name matches the course. Gu
 
 ---
 
-### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:7eaa8671abd1 -->
 
 **Status**: fixed
@@ -1475,7 +1600,7 @@ Guarded by tests/test_newversion_notice.py, including a check that every _NewVer
 
 ---
 
-### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa5b7101bfd4 -->
 
 **Status**: fixed
@@ -1504,7 +1629,7 @@ Found while building the readonly_target fixture: it had been locking a CONVERSI
 
 ---
 
-### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f695845da958 -->
 
 **Status**: invalid
@@ -1526,7 +1651,7 @@ Consequence: a shared debug log cannot answer WHICH file the app put in those ca
 
 ---
 
-### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:70a043d21429 -->
 
 **Status**: fixed
@@ -1551,7 +1676,7 @@ Fixed with its own rule using rgba(245,158,11) = theme.WARNING, which is the col
 
 ---
 
-### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:aa56baa0771b -->
 
 **Status**: fixed
