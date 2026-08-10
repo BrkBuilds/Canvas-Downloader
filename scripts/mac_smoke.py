@@ -179,13 +179,45 @@ def check_shortcuts(tmp: Path):
     rec("shortcuts", "recognised as app-produced",
         PASS if is_produced_shortcut(p) else FAIL)
 
-    # `open -R` reveals rather than launching - proves the OS parses the file
-    # without opening a browser tab we would then have to close.
-    rc, out = sh(["open", "-R", str(p)], timeout=30)
-    rec("shortcuts", "macOS accepts the file (open -R)",
-        PASS if rc == 0 else FAIL,
-        out[:140] or "Finder revealed it; whether double-click OPENS it is a "
-                     "human check (MAC_RUNBOOK M2)")
+    # Ask Launch Services which app WOULD open it, and open nothing.
+    #
+    # This used `open -R`, on the reasoning that revealing is cheaper than
+    # launching because it avoids a browser tab we would then have to close.
+    # It trades one piece of UI for another: `-R` opens a FINDER WINDOW, one per
+    # run per shortcut, and a smoke script that is run repeatedly buries the
+    # operator's screen in them (reported 2026-08-10, with four stacked). An
+    # automated check must leave no windows of any kind.
+    #
+    # NSWorkspace resolves the handler from the file's extension and contents
+    # through the same Launch Services database `open` consults, so a non-nil
+    # answer is the same evidence - the OS recognises the file and knows what
+    # opens it - with no process launched and nothing displayed.
+    _handler, _how = None, ""
+    try:
+        from Foundation import NSURL
+        from AppKit import NSWorkspace
+        _ws = NSWorkspace.sharedWorkspace()
+        _url = NSURL.fileURLWithPath_(str(p))
+        # URLForApplicationToOpenURL_ is 10.10+; the older selector is kept as a
+        # fallback so a PyObjC that predates it still answers rather than failing.
+        if hasattr(_ws, "URLForApplicationToOpenURL_"):
+            _res = _ws.URLForApplicationToOpenURL_(_url)
+            _handler, _how = (_res.path() if _res else None), "NSWorkspace"
+        else:
+            _app = _ws.getInfoForFile_application_type_(str(p), None, None)
+            _handler, _how = (_app[1] if _app else None), "getInfoForFile"
+    except Exception as e:                                       # noqa: BLE001
+        _how = f"unavailable ({type(e).__name__})"
+
+    if _how.startswith("unavailable"):
+        # Never fall back to `open -R` - see above. Report honestly instead.
+        rec("shortcuts", "macOS resolves a handler for the file", SKIP,
+            f"PyObjC AppKit {_how}; whether double-click OPENS it is a human "
+            f"check (MAC_RUNBOOK M2)")
+    else:
+        rec("shortcuts", "macOS resolves a handler for the file",
+            PASS if _handler else FAIL,
+            f"{_handler or 'no handler'} (via {_how}, nothing launched)")
 
     # A Windows-written .url in the same folder must be ADOPTED, not duplicated.
     write_shortcut(tmp / "FromWindows.url", "https://p/2", source="panopto")
