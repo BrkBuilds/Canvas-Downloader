@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -57,17 +58,47 @@ def _pair(cid, folder, name="Makroøkonomi (XB E26 BINTO1035U)", **extra):
 
 # ── the identity a label hangs off ──────────────────────────────────────────
 
-def test_pair_key_normalises_folder_and_course_id():
-    """The link is (course_id, local_folder), and both sides arrive in more than
-    one form: the id has been through JSON (str vs int) and the folder came from
-    a picker, a manifest or a history record (separators, trailing slash, case).
-    Comparing either raw is what makes two consumers of one pair disagree.
+def test_pair_key_normalises_the_course_id_and_a_trailing_slash():
+    """The parts that hold on EVERY platform.
+
+    The link is (course_id, local_folder) and both sides arrive in more than one
+    form: the id has been through JSON (str vs int), and the folder came from a
+    picker, a manifest or a history record. Comparing either raw is what makes
+    two consumers of one pair disagree.
+
+    The trailing slash is not hypothetical on macOS: AppleScript's
+    "POSIX path of" appends one, so every folder chosen through the native picker
+    arrives slashed while a typed or manifest-read one does not (measured
+    2026-08-10 - the picker returned '/private/tmp/.../quoted "folder" name/').
+    """
+    canonical = pl.pair_key(46396, "/Courses/Makro")
+    assert pl.pair_key("46396", "/Courses/Makro") == canonical
+    assert pl.pair_key(46396, "/Courses/Makro/") == canonical
+    assert pl.pair_key(46396, "/Courses/Makro//") == canonical
+    # A DIFFERENT folder for the same course is a different pair - that is the
+    # rule the whole daily-sync off-list tally depends on.
+    assert pl.pair_key(46396, "/Courses/Other") != canonical
+
+
+@pytest.mark.skipif(os.name != "nt", reason="separator and case folding are "
+                                            "Windows path semantics")
+def test_pair_key_normalises_windows_separators_and_case():
+    """Windows-only, because neither half is true of a POSIX path.
+
+    A backslash is a legal FILENAME character on POSIX, so 'c:\\courses\\makro'
+    is one component there and genuinely is not the same folder; and
+    os.path.normcase is the identity function off Windows, so case is not folded
+    either. This test asserted both against a hard-coded C:\\ path and therefore
+    failed on macOS against code that was behaving correctly for its platform.
+    The case half IS an open product question on macOS - a case-only rename on a
+    case-INSENSITIVE volume is the same folder to the OS but a different link to
+    the app - and it is recorded as its own finding, because folding
+    unconditionally would mis-bind heals on a case-sensitive volume. It needs a
+    per-volume probe, not a .lower().
     """
     canonical = pl.pair_key(46396, r"C:\Courses\Makro")
     assert pl.pair_key("46396", "c:/courses/makro/") == canonical
     assert pl.pair_key(46396, r"C:\Courses\Makro\\") == canonical
-    # A DIFFERENT folder for the same course is a different pair - that is the
-    # rule the whole daily-sync off-list tally depends on.
     assert pl.pair_key(46396, r"C:\Courses\Other") != canonical
 
 

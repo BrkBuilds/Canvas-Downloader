@@ -294,6 +294,10 @@ def test_the_delete_is_long_path_safe():
             f"this function treats as success - so it is silently never removed")
 
 
+@pytest.mark.skipif(os.name != "nt", reason=(
+    "the \\\\?\\ prefix is a Windows concept and make_long_path is deliberately "
+    "a no-op elsewhere, so the emulated failure can never be satisfied off "
+    "Windows - the test would assert against its own premise"))
 def test_a_long_path_is_still_removed_when_the_bare_call_would_fail():
     """Emulates ``LongPathsEnabled = 0`` and proves the leftover still goes.
 

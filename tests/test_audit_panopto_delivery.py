@@ -168,10 +168,24 @@ def test_a_partial_output_is_medium_and_names_the_ignored_count():
 
 @pytest.mark.parametrize("key,ext", list(crosscheck.PANOPTO_OUTPUTS.items()))
 def test_every_output_kind_is_checked(key, ext):
+    """The check must exist for every configured output.
+
+    The token to look for is the KIND, not the extension with its dot removed.
+    Those are the same word for mp3/mp4/txt/srt and NOT for the shortcut, which
+    is kind ``url`` while its extension is ``.url`` on Windows and ``.webloc``
+    on macOS - so an ext-derived token passed on Windows by coincidence and
+    failed on macOS, looking for a kind the engine never records. The checker
+    itself resolves this correctly through ``kind_from_path`` and says why in a
+    comment; this test, which guards it, made the exact mistake that comment
+    warns about. Resolve it the same way rather than restating the mapping.
+    """
+    from panopto.shortcut import kind_from_path
+    token = kind_from_path("x" + ext) or ext.lstrip(".")
     out = crosscheck._panopto_delivery(
         _ev(expect={key: True}, kinds={}, disk_exts={}))
-    assert any(ext.lstrip(".") in t for t in _titles(out)), \
-        f"{key} produces no check at all"
+    titles = _titles(out)
+    assert any(token in t for t in titles), (
+        f"{key} produces no check at all (looked for {token!r} in {titles})")
 
 
 def test_several_requested_outputs_are_each_checked():
