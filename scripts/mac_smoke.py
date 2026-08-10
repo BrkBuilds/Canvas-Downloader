@@ -198,14 +198,14 @@ def check_shortcuts(tmp: Path):
         from AppKit import NSWorkspace
         _ws = NSWorkspace.sharedWorkspace()
         _url = NSURL.fileURLWithPath_(str(p))
-        # URLForApplicationToOpenURL_ is 10.10+; the older selector is kept as a
-        # fallback so a PyObjC that predates it still answers rather than failing.
-        if hasattr(_ws, "URLForApplicationToOpenURL_"):
-            _res = _ws.URLForApplicationToOpenURL_(_url)
-            _handler, _how = (_res.path() if _res else None), "NSWorkspace"
-        else:
-            _app = _ws.getInfoForFile_application_type_(str(p), None, None)
-            _handler, _how = (_app[1] if _app else None), "getInfoForFile"
+        # Called directly, with no hasattr guard: the selector is 10.10+, i.e.
+        # present on every macOS this app supports, and a guarded fallback here
+        # is exactly the "silently skipped check" this file bans (see
+        # tests/test_mac_audit_tooling.py). If it is ever missing, the except
+        # below reports SKIP with the reason instead of quietly checking
+        # something else.
+        _res = _ws.URLForApplicationToOpenURL_(_url)
+        _handler, _how = (_res.path() if _res else None), "NSWorkspace"
     except Exception as e:                                       # noqa: BLE001
         _how = f"unavailable ({type(e).__name__})"
 
