@@ -537,6 +537,19 @@ Traps this run paid for, worth knowing before you spend the same time:
   reported **136** conflict copies where there were **0**. A real
   `_handle_conflict` copy is a stem *ending* in ` (N)` **whose un-suffixed
   sibling also exists** — check both halves.
+- **There are THREE separate macOS permissions in play and they are easy to
+  conflate.** Granting one does not grant the others, and each fails differently:
+  | want to | needs | failure looks like |
+  |---|---|---|
+  | read process names / window lists | Accessibility | `-1728`, or an empty list |
+  | send keystrokes / clicks | Accessibility (input synthesis) | *"osascript is not allowed to send keystrokes"* |
+  | drive a NAMED app (Finder, Word) | **Automation**, per (source app → target app) pair | a **consent prompt that BLOCKS**, so the script simply hangs |
+  The third one cost a run: `tell application "Finder" to close every window`
+  hung for the full timeout on the FIRST case and a propagating
+  `TimeoutExpired` lost the whole run. macOS **refuses synthetic clicks on
+  consent prompts by design**, so a person has to answer it — use
+  `mac_eyes dialogs`, which screenshots whatever is waiting. Wrap every
+  `osascript` call so a hang degrades that one check instead of the run.
 
 ## The second install (macOS 26)
 
