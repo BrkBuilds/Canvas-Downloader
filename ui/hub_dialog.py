@@ -140,10 +140,23 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
     # fall back on, so there is nothing honest to pre-fill. A PAIR always has one
     # (the course's), so its Save must stay live from the first frame: greying it
     # while the box is empty would contradict the caption directly above it.
-    if not (is_pair and _suggested_name):
-        # Enable the Save button the instant a name is typed (no blur required).
-        live_enable_button("save_group_name_input", "save_group_create",
-                           reason=f"Give this {entity.lower()} a name first.")
+    #
+    # CALLED UNCONDITIONALLY, with the condition passed as `active=`. This used to
+    # be `if not (is_pair and _suggested_name): live_enable_button(...)`, and the
+    # skipped branch is what broke the button: the helper injects its greying CSS
+    # into the PARENT document keyed on the button key and never removes it, and
+    # its polarity treats a MISSING `data-cd-valid` as invalid - so once any
+    # render had gated `save_group_create` (this dialog is shared with Save as
+    # Group, which always gates), every later ungated render inherited a
+    # permanently greyed, `pointer-events: none` Save. Reported 2026-08-11:
+    # "I wrote the pair name but couldn't save."
+    #
+    # `active=False` now tears that gate down instead of leaving it standing, so
+    # whichever variant renders, the button ends up in the state THIS render
+    # intends. See live_enable_button's docstring for the full mechanism.
+    live_enable_button("save_group_name_input", "save_group_create",
+                       reason=f"Give this {entity.lower()} a name first.",
+                       active=not (is_pair and _suggested_name))
 
 
 

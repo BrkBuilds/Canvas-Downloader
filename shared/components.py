@@ -241,7 +241,7 @@ def resolve_courses_or_stop(fetch_courses_fn, *, retry_key: str = "courses_actio
 
 def live_enable_button(input_key: str, button_key: str, *,
                        require_change_from: str | None = None,
-                       reason: str = "") -> None:
+                       reason: str = "", active: bool = True) -> None:
     """Make a Save button look enabled/disabled live as the user types, while
     keeping it GENUINELY clickable server-side so a single click always works.
 
@@ -279,6 +279,34 @@ def live_enable_button(input_key: str, button_key: str, *,
                              fire a hover. Cannot be Streamlit's ``help=``: that
                              is fixed at render time and so could not disappear
                              once the field becomes valid.
+        active:              False = this render does NOT gate the button, and any
+                             gate a PREVIOUS render left behind must be torn down.
+                             **Call this helper unconditionally and pass the
+                             condition here** - never wrap the call in an ``if``.
+
+    WHY ``active`` EXISTS, measured in the packaged app 2026-08-11. The greying
+    CSS is injected into the PARENT document, keyed by button key
+    (``cd-live-css-<key>``), guarded by ``if (!doc.getElementById(STYLE_ID))`` -
+    so it is written once and **never removed for the life of the session**. Its
+    polarity is ``button:not([data-cd-valid="1"])``: the ABSENCE of the marker
+    means disabled, which is right while the bridge is running and catastrophic
+    when it is not, because only the bridge ever sets that attribute.
+
+    The Save Group / Save Pair dialogs share one button key
+    (``save_group_create``) and one input key, and the PAIR path deliberately
+    skips gating when the course supplies a suggested name (its Save must be live
+    from the first frame - empty means "use the course's own name"). So: open Save
+    as Group once, and the style is in the document; open Save as Pair afterwards,
+    no bridge runs, the attribute is never set, and the Save button is greyed with
+    ``pointer-events: none`` **permanently, no matter what the user types**.
+    Reported as "I wrote the pair name but couldn't save, the mouse shows the
+    disabled cursor". Deleting the saved group did not help, because the style was
+    already in the DOM.
+
+    Note the same trap exists WITHIN the pair dialog on its own: a course whose
+    name yields no suggestion gates the button and injects the style, and the next
+    course that does supply one then renders ungated into a document that still
+    greys it. Unique keys per dialog would not have been enough.
     """
     import json
     import streamlit.components.v1 as components
@@ -310,6 +338,7 @@ def live_enable_button(input_key: str, button_key: str, *,
     )
     css_js = json.dumps(disabled_css)
     reason_js = json.dumps(reason or "")
+    active_js = "true" if active else "false"
 
     components.html(
         f"""
@@ -324,6 +353,23 @@ def live_enable_button(input_key: str, button_key: str, *,
             var STYLE_ID = {json.dumps(style_id)};
             var CSS = {css_js};
             var REASON = {reason_js};
+            var ACTIVE = {active_js};
+
+            // NOT GATING THIS RENDER: tear down whatever a previous render
+            // left in the parent document and hand the button back. The style is
+            // keyed by button key and outlives the dialog that injected it, so
+            // without this an ungated render inherits the gate and the button can
+            // never be clicked. Also clears the marker + tooltip so nothing is
+            // left describing a state that no longer applies.
+            if (!ACTIVE){{
+                var old = doc.getElementById(STYLE_ID);
+                if (old && old.parentNode) old.parentNode.removeChild(old);
+                var b = doc.querySelector(BTN_SEL);
+                if (b) b.removeAttribute('data-cd-valid');
+                var w = doc.querySelector(WRAP_SEL);
+                if (w) w.removeAttribute('title');
+                return;
+            }}
 
             // Inject the "disabled look" CSS into the PARENT document once.
             if (!doc.getElementById(STYLE_ID)){{
