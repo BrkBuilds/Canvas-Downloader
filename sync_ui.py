@@ -2822,6 +2822,27 @@ _STATUSES_NOT_NEEDING_PAIRS = frozenset({
 })
 
 
+@st.fragment(run_every=0.25)
+def _advance_to_analysis_pass2():
+    """Flip the analysis shell from pass 1 to pass 2 WITHOUT ending pass 1 early.
+
+    Called at the very end of the pass-1 branch. Its first execution is INLINE
+    (a fragment renders in place during the script run that declares it), and it
+    deliberately does nothing then: the whole point is to let that run reach
+    FINISHED_SUCCESSFULLY so the frontend prunes the previous screen's trailing
+    nodes. Only a later timer tick advances, via an APP-scoped rerun.
+
+    `_sync_shell_painted` is reset by the caller on every fresh entry into pass
+    1, never only popped on the way out - a run cancelled mid-analysis would
+    otherwise leave it set, and the next analysis would advance on the inline
+    call, ending the run early again and silently restoring the bug.
+    """
+    if st.session_state.get('_sync_shell_painted'):
+        st.session_state['analysis_pass'] = 2
+        st.rerun(scope="app")
+    st.session_state['_sync_shell_painted'] = True
+
+
 def render_sync_step4( main_placeholder=None):
     """Render the entire sync Step 4: analysis → review → sync → done."""
     from styles import inject_css
@@ -2944,17 +2965,19 @@ def render_sync_step4( main_placeholder=None):
                 st.rerun()
 
             # ── Regular sync (full-page): two-pass paint dance, advanced
-            # DETERMINISTICALLY on the server - the exact mechanism the Today
-            # branch above proved out. Pass 1 draws the "Analyzing…" shell,
-            # sleeps briefly so Streamlit flushes the paint to the browser,
-            # then reruns straight into pass 2 where the heavy blocking
-            # analysis runs (the painted shell stays on screen meanwhile).
+            # DETERMINISTICALLY on the server. Pass 1 draws the "Analyzing…"
+            # shell and then ENDS NORMALLY, so the browser both flushes the
+            # paint and prunes the previous screen; a fragment timer reruns
+            # into pass 2, where the heavy blocking analysis runs (the painted
+            # shell stays on screen meanwhile). See the note on
+            # _advance_to_analysis_pass2 for why the rerun cannot happen here.
             # Replaces the old hidden-button + components.html auto-click
             # bridge, which could silently never fire (CSP, iframe sandbox,
             # cold first-open, screen-reader nav) and whose 5s server-side
             # watchdog only ticked if something ELSE happened to rerun the
             # script - a dead bridge otherwise stranded the user here.
-            import time as _time
+            # Reset before the shell renders: see _advance_to_analysis_pass2.
+            st.session_state['_sync_shell_painted'] = False
             from engine.estimation import stepwise_estimator as _stepwise
             from engine.progress_dashboard import (
                 DashboardPlaceholders as _DP, metric_count as _mcount,
@@ -2992,11 +3015,30 @@ def render_sync_step4( main_placeholder=None):
                     _meta(_shell_eta.eta_text()),
                 ],
             )
-            _time.sleep(0.35)
-            st.session_state['analysis_pass'] = 2
-            st.rerun()
+            # Advance to pass 2 from a FRAGMENT, never with `st.rerun()` here.
+            # This run has to end in FINISHED_SUCCESSFULLY, because that is the
+            # only status on which the frontend calls `clearStaleNodes` (read
+            # out of the 1.51 bundle: the setState is guarded on
+            # FINISHED_SUCCESSFULLY / FINISHED_FRAGMENT_RUN_SUCCESSFULLY, and
+            # `st.rerun()` reports FINISHED_EARLY_FOR_RERUN). Step 1's tail -
+            # the whole Sync History section, plus the 64px spacer below it -
+            # sits at indices this screen never reaches, so ending early left
+            # those nodes painted, and pass 2 then BLOCKS for the entire
+            # analysis: sync history rendered underneath the analysis dashboard
+            # for the whole scan, at full opacity (the app suppresses the stale
+            # fade for 2.5 s). It looked like part of the screen rather than a
+            # leftover, which is exactly why it reads as a rendering bug.
+            #
+            # A `run_every` fragment is the deterministic server-side timer the
+            # comment above wanted - the JS auto-click bridge it replaced could
+            # silently never fire, and a fragment cannot. Its FIRST call runs
+            # INLINE as part of this script run, so it must do nothing then and
+            # only advance on a later tick; otherwise it ends the run early
+            # again and changes nothing.
+            _advance_to_analysis_pass2()
         else:
             # Pass 2: The browser has successfully painted the clean UI.
+            st.session_state.pop('_sync_shell_painted', None)
             # Safe to lock the main thread with heavy synchronous work.
             _run_analysis(sync_pairs, main_placeholder)
             
