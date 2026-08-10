@@ -177,14 +177,14 @@ def test_the_url_compiler_consumes_canvas_links_and_spares_produced_ones(tmp_pat
     from converters.url import compile_urls_to_txt
 
     (tmp_path / "Module 1").mkdir()
-    canvas = tmp_path / "Reading list.url"
+    canvas = tmp_path / f"Reading list{EXT}"
     SH.write_shortcut(canvas, "https://example.com/reading")
-    produced = tmp_path / "Module 1" / "Lecture 3.url"
+    produced = tmp_path / "Module 1" / f"Lecture 3{EXT}"
     SH.write_shortcut(produced, VIEWER, source=SH.SOURCE_PANOPTO)
 
     out, to_delete = compile_urls_to_txt(tmp_path, "Test Course")
 
-    assert [p.name for p in to_delete] == ["Reading list.url"]
+    assert [p.name for p in to_delete] == [f"Reading list{EXT}"]
     body = out.read_text(encoding="utf-8")
     assert "https://example.com/reading" in body
     assert VIEWER not in body, "a lecture link was compiled into the AI text file"
@@ -199,6 +199,17 @@ def test_the_post_processing_trigger_ignores_produced_shortcuts():
     block = src.split("# URL Compilation", 1)[1].split("# Legacy Word", 1)[0]
     assert "is_produced_shortcut" in block, (
         "the explicit-files trigger no longer excludes produced shortcuts")
+
+
+#: The shortcut extension THIS host writes. Four tests below hard-coded ".url"
+#: and so could only pass on Windows - on macOS the runner writes ".webloc", the
+#: URL compiler globs ".webloc", and the collision the tests exist to pin is
+#: therefore between ".webloc" files. Measured 2026-08-10 by running this suite
+#: on macOS for the first time: 4 failures, all of them the fixture's spelling
+#: rather than the product. Using the native extension makes each test exercise
+#: the path its own platform takes, which is what the file already does
+#: deliberately in `test_a_windows_shortcut_is_adopted_on_macos`.
+EXT = SH.shortcut_extension()
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -471,14 +482,14 @@ def test_the_canvas_link_of_the_same_name_does_not_satisfy_the_output(tmp_path):
     "nothing to do" - measured on course 43660: 36 recordings, 34 identically
     named Canvas links, 0 shortcuts written, 0 manifest rows, and a completion
     screen that said nothing at all."""
-    canvas_link = tmp_path / "Lecture 3.url"
+    canvas_link = tmp_path / f"Lecture 3{EXT}"
     SH.write_shortcut(canvas_link, "https://canvas.edu/courses/9/modules/items/77")
 
     c = _classify(tmp_path, SHORTCUT_ONLY)
 
     assert c.state == "new", "a Canvas link was mistaken for the Shortcut output"
     assert c.download_kinds == ["url"]
-    assert Path(c.paths["url"]).name == "Lecture 3 (Panopto).url", (
+    assert Path(c.paths["url"]).name == f"Lecture 3 (Panopto){EXT}", (
         "the analyzer must expect the link at the same disambiguated name the "
         "runner writes it to")
 
@@ -569,14 +580,14 @@ def test_the_runner_writes_beside_a_canvas_link_of_the_same_name(
     exactly as it was (the Canvas file sync owns it and tracks its content
     signature - overwriting would put the two subsystems in a rewrite loop), and
     the lecture still gets its direct link."""
-    canvas_link = tmp_path / "Lecture 3.url"
+    canvas_link = tmp_path / f"Lecture 3{EXT}"
     SH.write_shortcut(canvas_link, "https://canvas.edu/courses/9/modules/items/77")
     canvas_before = canvas_link.read_bytes()
 
     summary, _events, recorded = _run(tmp_path, S.make_contract(
         url=True, mp4=False, mp3=False, txt=False, srt=False, layout="match"))
 
-    ours = tmp_path / "Lecture 3 (Panopto).url"
+    ours = tmp_path / f"Lecture 3 (Panopto){EXT}"
     assert summary["shortcuts"] == 1
     assert SH.read_shortcut(ours) == (VIEWER, SH.SOURCE_PANOPTO)
     assert canvas_link.read_bytes() == canvas_before, "the Canvas link was touched"
@@ -586,15 +597,15 @@ def test_the_runner_writes_beside_a_canvas_link_of_the_same_name(
 def test_a_second_run_adopts_the_disambiguated_link(tmp_path, no_engine, launches):
     """And does not add a third file. The resolver has to look PAST the foreign
     name to find our own, or every run would write the next name along."""
-    SH.write_shortcut(tmp_path / "Lecture 3.url", "https://canvas.edu/x")
+    SH.write_shortcut(tmp_path / f"Lecture 3{EXT}", "https://canvas.edu/x")
     contract = S.make_contract(url=True, mp4=False, mp3=False, txt=False,
                                srt=False, layout="match")
     _run(tmp_path, contract)
     summary2, _e, _r = _run(tmp_path, contract)
 
     assert summary2["shortcuts"] == 0 and summary2["skipped"] == 1
-    assert sorted(p.name for p in tmp_path.glob("*.url")) == [
-        "Lecture 3 (Panopto).url", "Lecture 3.url"]
+    assert sorted(p.name for p in tmp_path.glob(f"*{EXT}")) == [
+        f"Lecture 3 (Panopto){EXT}", f"Lecture 3{EXT}"]
 
 
 def test_wanting_media_still_authenticates(tmp_path, no_engine, launches):
