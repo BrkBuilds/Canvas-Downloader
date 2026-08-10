@@ -57,6 +57,55 @@ def test_first_contact_parses_and_does_the_four_things_that_matter():
         assert needle in text, f"first contact never covers: {why}"
 
 
+def test_first_contact_installs_what_a_BARE_mac_lacks():
+    """The first version assumed a developer machine and cost the user an hour.
+
+    A rented Mac has no Xcode tools, no Homebrew, no IDE and - the one that
+    actually bit - **no Microsoft Office**. Having an M365 *licence* is not
+    having Word installed, and the guide cheerfully said "open Word and sign
+    in" on a machine where Word did not exist.
+    """
+    text = FIRST_CONTACT.read_text(encoding="utf-8")
+    for needle, why in (
+        ("xcode-select", "Xcode Command Line Tools - git and compilers need them"),
+        ("Homebrew", "Homebrew, which every cask below depends on"),
+        ("visual-studio-code", "an IDE - explicitly asked for and originally omitted"),
+        ("--install-extension", "VS Code extensions"),
+        ("anthropic.claude-code", "the agent's own VS Code extension"),
+        ("remote-ssh", "Remote-SSH, which is how the IDE reaches the Mac"),
+        ("linkid=525133", "the Office suite download"),
+        ("installer -pkg", "actually installing Office, not just mentioning it"),
+        ("python@3.11", "the pinned Python the .app is built with"),
+    ):
+        assert needle in text, f"a bare Mac would still be missing: {why}"
+
+
+def test_first_contact_orders_brew_before_anything_that_needs_it():
+    """The original had `brew install --cask nomachine` guarded by
+    `command -v brew` and printed 'Homebrew not installed yet' - i.e. the cask
+    silently never ran, because brew came later in a DIFFERENT script."""
+    text = FIRST_CONTACT.read_text(encoding="utf-8")
+    brew_install = text.index("Homebrew")
+    for cask in ("visual-studio-code", "nomachine"):
+        assert text.index(cask) > brew_install, (
+            f"{cask} is installed before Homebrew exists - it will silently skip")
+
+
+def test_first_contact_keeps_sudo_alive():
+    """It runs 30-45 minutes unattended. A sudo timeout mid-way stalls it
+    forever at a prompt nobody is watching."""
+    text = FIRST_CONTACT.read_text(encoding="utf-8")
+    assert "sudo -v" in text and "sudo -n true" in text, \
+        "no sudo keepalive - the script will stall silently"
+
+
+def test_first_contact_says_office_still_needs_a_sign_in():
+    """Installing Office does not licence it, and a silent licence dialog makes
+    the entire converter phase read as broken."""
+    text = FIRST_CONTACT.read_text(encoding="utf-8")
+    assert "does NOT license" in text or "does NOT licence" in text
+
+
 def test_mac_eyes_parses_and_exposes_its_subcommands():
     ast.parse(EYES.read_text(encoding="utf-8"))
     r = subprocess.run([sys.executable, str(EYES), "--help"],

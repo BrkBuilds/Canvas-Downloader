@@ -115,6 +115,9 @@ def _resolve(tokens: list[str]):
 #: A shell line continued with a trailing backslash.
 _CONTINUATION = re.compile(r"\\\s*\n\s*")
 
+#: The `python -m tests.audit ` prefix, left on the tail of a `&&` chain.
+_MODULE_PREFIX = re.compile(r"^python\s+-m\s+tests\.audit\s+")
+
 
 def _documented_commands() -> list[tuple[Path, str]]:
     """Every documented invocation, with backslash continuations JOINED.
@@ -137,8 +140,18 @@ def _documented_commands() -> list[tuple[Path, str]]:
         text = _CONTINUATION.sub(" ", doc.read_text(encoding="utf-8"))
         for m in INVOCATION.finditer(text):
             line = m.group("rest").split("#")[0].strip()
-            if line and not line.startswith("-h"):
-                out.append((doc, line))
+            # `a && b` is ordinary shell and a doc may write it. The regex
+            # captures to end of line, so the second command's `python -m ...`
+            # would arrive as flags on the first and read as an unknown `-m`.
+            #
+            # Splitting and keeping only part [0] is NOT enough: `finditer`
+            # resumes at the end of the match, so the tail is never matched
+            # again and `browser open` went completely UNCHECKED. Yield every
+            # segment, stripping the module prefix the split leaves behind.
+            for seg in re.split(r"\s*(?:&&|\|\||;)\s*", line):
+                seg = _MODULE_PREFIX.sub("", seg.strip()).strip()
+                if seg and not seg.startswith("-h"):
+                    out.append((doc, seg))
     return out
 
 
@@ -146,6 +159,20 @@ def test_the_docs_actually_contain_commands():
     """A guard on the guard: a regex that stops matching passes silently."""
     cmds = _documented_commands()
     assert len(cmds) > 25, f"only found {len(cmds)} documented invocations"
+
+
+def test_both_halves_of_an_and_chain_are_checked():
+    """`finditer` resumes at the end of a match, so a naive extractor sees only
+    the FIRST command of `a && b` and the second is never validated at all.
+
+    This asserts the failure it was written for: `browser open` really is in
+    the extracted set, not merely absent-and-therefore-passing.
+    """
+    lines = {line for _doc, line in _documented_commands()}
+    assert "app start" in lines
+    assert "browser open" in lines, (
+        "the tail of an `&&` chain is being dropped - every command after the "
+        "first in a chained line would go unchecked")
 
 
 @pytest.mark.parametrize("doc,line", _documented_commands(),
