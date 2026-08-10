@@ -34,6 +34,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unicodedata
 from pathlib import Path
 
@@ -251,9 +252,67 @@ def check_office(with_office: bool):
 
     from engine.applescript_bridge import quit_idle_office_apps
     quit_idle_office_apps()
-    rc, out = sh(["pgrep", "-fl", "Microsoft (Word|Excel|PowerPoint)"], timeout=30)
+    # Match the EXECUTABLE PATH, not the app's display name.
+    #
+    # `pgrep -fl "Microsoft (Word|Excel|PowerPoint)"` searches the whole command
+    # line, so it matched the quit script's own `osascript`, whose AppleScript
+    # source contains `exists process "Microsoft PowerPoint"` as a literal
+    # string. Measured 2026-08-10: this check FAILED naming pid 4740, which was
+    # `quit_idle_office_apps`'s own helper, while `ps` confirmed not one real
+    # Office process was alive.
+    #
+    # That false positive is worse than a missing check, because a leaked Office
+    # process is a genuine OPEN finding on Windows (see RUNBOOK.md, the
+    # 5h54m EXCEL.EXE) - so a self-match here reads as confirmation of a real
+    # data-integrity bug and would be filed as one. Only a running Office app
+    # has its bundle's MacOS/ path in argv0, and no AppleScript that talks about
+    # Office does.
+    # ...and WAIT, because that call is asynchronous by design.
+    #
+    # `quit_idle_office_apps` does everything on a daemon thread and returns in
+    # 0.0s - it is called from a completion screen whose process lives on, so
+    # fire-and-forget is right there. This check pgrep'd immediately after it and
+    # so judged the state BEFORE any quit had been attempted: measured
+    # 2026-08-10, it reported a live `Microsoft Word` as leaked while the quit
+    # was still in flight, which after the matcher fix above reads as a
+    # perfectly credible product bug.
+    #
+    # The budget mirrors the app's own escalation ladder: quit pass, ~3s, retry
+    # pass, `_wait_for_exit` (12s), then a terminate for anything certified to
+    # hold no user document. 45s is comfortably past all of it, and the loop
+    # exits early on success so a healthy machine pays nothing.
+    def _office_pids():
+        """Office processes, matched on argv[0] so nothing else can look like one.
+
+        `pgrep -f` searches the WHOLE command line of every process, which means
+        any ancestor that merely mentions the pattern matches it. Measured
+        2026-08-10 while validating this very check: a probe typed at a shell
+        was reported as a live `Microsoft Word`, because the wrapper's argv was
+        `/bin/zsh -c <the command containing the path>`. It is not hypothetical
+        for a checker either - the previous version of this check matched
+        `quit_idle_office_apps`'s own osascript, whose SOURCE names the apps.
+
+        Only a real Office process has the bundle's MacOS/ path as the FIRST
+        token of its command, so anchoring there is exact and independent of how
+        the check was invoked.
+        """
+        found = []
+        for app in apps:
+            prefix = f"/Applications/{app}.app/Contents/MacOS/"
+            rc, out = sh(["pgrep", "-fl", prefix], timeout=30)
+            for line in out.splitlines():
+                pid, _, command = line.strip().partition(" ")
+                if command.startswith(prefix):
+                    found.append(line.strip())
+        return found
+
+    deadline = time.time() + 45.0
+    leaked = _office_pids()
+    while leaked and time.time() < deadline:
+        time.sleep(2.0)
+        leaked = _office_pids()
     rec("office", "no Office process left running",
-        PASS if not out.strip() else FAIL, out[:200])
+        PASS if not leaked else FAIL, "; ".join(leaked)[:200])
 
 
 # ──────────────────────────────────────────── 4. keychain, notifications
@@ -446,10 +505,34 @@ def check_bundle(bundle: Path):
 
 # ─────────────────────────────────────────────────────── 7. hygiene
 
+# The audit's OWN long-lived processes, which this check must never call strays.
+#
+# The sweep is `pgrep -fl -i canvas` - deliberately broad, because the point is
+# to catch something unexpected. But it reads the whole command line, and the
+# harness launches Chrome with `--user-data-dir=<run dir>` UNDER the repo, so
+# every audit browser matches on its own profile path. Measured 2026-08-10: 8
+# `Google Chrome for Testing` processes reported as strays while the audit was
+# using them.
+#
+# That is not a leak by any reading: `tests/audit/README.md` states the browser
+# is launched detached ON PURPOSE ("the browser outlives the CLI call"), because
+# a Playwright-launched browser dies with its Python process and would lose the
+# Streamlit session between steps. Same for the app under test, which is
+# supposed to be running while the audit runs.
+#
+# Excluding by PATH rather than by name: `ms-playwright` is the Playwright
+# browser cache and `_audit_runs` is the harness's own tree, so neither can
+# hide a real product process, which lives in `Canvas Downloader.app`,
+# `start.py` or `transcribe_worker`.
+_AUDIT_OWN = ("mac_smoke", "pgrep", "ms-playwright", "Google Chrome for Testing",
+              "_audit_runs")
+
+
 def check_processes():
     section("Process hygiene")
     rc, out = sh(["pgrep", "-fl", "-i", "canvas"], timeout=30)
-    lines = [l for l in out.splitlines() if "mac_smoke" not in l and "pgrep" not in l]
+    lines = [l for l in out.splitlines()
+             if not any(own in l for own in _AUDIT_OWN)]
     rec("processes", "no stray Canvas Downloader processes",
         PASS if not lines else FAIL, "; ".join(lines)[:200])
     rc, out = sh(["pgrep", "-fl", "ffmpeg"], timeout=30)
