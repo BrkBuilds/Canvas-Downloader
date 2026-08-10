@@ -249,11 +249,32 @@ def _recording_base(course_root: Path, out_dir: Path, safe_title: str,
     """
     if manifest:
         mani = manifest.get(video_id) or manifest.get(str(video_id)) or {}
-        # 'url' is in this list on purpose. A folder whose ONLY produced output
+        # 'url' is in this list on purpose - a folder whose ONLY produced output
         # is the shortcut still has a stem the manifest knows, and skipping the
-        # kind here would send a later mp3/transcript to a freshly de-duplicated
+        # kind would send a later mp3/transcript to a freshly de-duplicated
         # 'Title (1)' beside the link the user already has.
-        for kind in (SHORTCUT_KIND, "mp4", "mp3", "txt", "srt"):
+        #
+        # But it must be consulted LAST, because the shortcut is the one kind
+        # whose path is legitimately DISAMBIGUATED: in the match layout the
+        # Canvas file sync owns '<title>.url', so `resolve_shortcut_path` writes
+        # ours as '<title> (Panopto).url' - a name no media file ever takes.
+        # Asked first, that stem became the base for every other kind and the
+        # media diverged from itself.
+        #
+        # MEASURED on macOS 2026-08-10, a real download followed by a real sync
+        # of course 43660. The manifest held, for one video_id:
+        #     url -> 'Forelaesningsvideo (2) Uformelletraek... (Panopto).webloc'
+        #     mp3 -> 'Forelaesningsvideo (2) Uformelletraek....mp3'
+        # The sync took the url stem, so all 34 recordings it touched were
+        # re-downloaded to '<title> (Panopto).mp3' beside the mp3s already there:
+        # 70 mp3 files where the course has 36 lectures, ~400 MB duplicated, the
+        # originals orphaned. Precisely the divergence this docstring promises to
+        # prevent ("instead of diverging to a fresh Title (2)").
+        #
+        # Ordering media first fixes it and costs nothing: the shortcut is still
+        # reached whenever no media kind is recorded, which is the case its own
+        # justification describes.
+        for kind in ("mp4", "mp3", "txt", "srt", SHORTCUT_KIND):
             rel = mani.get(kind)
             if not rel:
                 continue
