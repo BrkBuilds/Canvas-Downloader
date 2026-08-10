@@ -294,3 +294,123 @@ def test_both_list_dialogs_have_a_height_floor():
     assert "min-height" in block
     # never applied to stDialog at large - small confirm dialogs are correct as-is
     assert 'div[data-testid="stDialog"] div[role="dialog"] > div:first-child {\n    min-height' not in css
+
+
+# ── 3. a JS-gated button must never render UNGATED (2026-08-11) ───────────────
+#
+# `live_enable_button` injects its greying CSS into the PARENT document, keyed by
+# button key (`cd-live-css-<key>`), behind `if (!doc.getElementById(...))` - so it
+# is written once and never removed for the life of the session. Its polarity is
+# `button:not([data-cd-valid="1"])`, i.e. a MISSING marker means disabled, and only
+# the bridge ever sets that marker.
+#
+# So any render that shows the button WITHOUT calling the helper inherits a
+# permanently greyed, pointer-events:none button. That is what happened to Save as
+# Pair: it shares `save_group_create` with Save as Group (which always gates) and
+# skipped gating whenever the course supplied a suggested name.
+
+def _live_enable_calls(tree: ast.AST):
+    """(call node, enclosing If nodes) for every live_enable_button call."""
+    out = []
+
+    def walk(node, ifs):
+        for child in ast.iter_child_nodes(node):
+            nxt = ifs + [child] if isinstance(child, ast.If) else ifs
+            if (isinstance(child, ast.Call)
+                    and getattr(child.func, "id", None) == "live_enable_button"):
+                out.append((child, ifs))
+            walk(child, nxt)
+
+    walk(tree, [])
+    return out
+
+
+def _button_keys_in(node: ast.AST) -> set[str]:
+    keys = set()
+    for n in ast.walk(node):
+        if (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                and n.func.attr == "button"):
+            for kw in n.keywords:
+                if kw.arg == "key" and isinstance(kw.value, ast.Constant):
+                    keys.add(kw.value.value)
+    return keys
+
+
+_GATE_FILES = ["ui/hub_dialog.py", "ui/presets.py", "ui/course_selector.py",
+               "sync_ui.py", "app.py", "shared/components.py"]
+
+
+def test_no_gated_button_can_render_without_its_gate():
+    """If the gate is conditional, the button it gates must be under the same condition.
+
+    The safe pattern (the hub's rename row) renders BOTH inside one ``if``, so the
+    key and the gate are always co-present. The broken pattern renders the button
+    unconditionally and the gate inside an ``if`` - which strands the gate.
+    """
+    problems = []
+    for rel in _GATE_FILES:
+        path = REPO / rel
+        if not path.exists():
+            continue
+        src = path.read_text(encoding="utf-8")
+        if "live_enable_button(" not in src:
+            continue
+        tree = ast.parse(src)
+        for call, enclosing_ifs in _live_enable_calls(tree):
+            if not enclosing_ifs:
+                continue                      # unconditional - nothing to prove
+            passes_active = any(kw.arg == "active" for kw in call.keywords)
+            if passes_active:
+                continue                      # gate state is a value, not a branch
+            if len(call.args) < 2 or not isinstance(call.args[1], ast.Constant):
+                continue
+            btn_key = call.args[1].value
+            # the button must be rendered inside the SAME condition
+            if btn_key not in _button_keys_in(enclosing_ifs[-1]):
+                problems.append(f"{rel}:{call.lineno} gates {btn_key!r} conditionally "
+                                f"while the button renders outside that branch")
+    assert not problems, (
+        "a stranded gate greys the button for the whole session:\n  "
+        + "\n  ".join(problems))
+
+
+def test_save_pair_gate_is_unconditional_and_passes_active():
+    from ui.hub_dialog import save_group_or_pair_inner
+    src = inspect.getsource(save_group_or_pair_inner)
+    tree = ast.parse(textwrap.dedent(src))
+    calls = _live_enable_calls(tree)
+    assert len(calls) == 1, "one gate call in this dialog"
+    call, enclosing = calls[0]
+    assert not enclosing, (
+        "the call must NOT sit in an `if` - the skipped branch is the bug; pass "
+        "the condition as active= instead"
+    )
+    assert any(kw.arg == "active" for kw in call.keywords)
+    assert "active=not (is_pair and _suggested_name)" in src.replace("\n", " ") \
+        or "active=not (is_pair and _suggested_name)" in src
+
+
+def test_inactive_gate_tears_the_previous_one_down():
+    """active=False must REMOVE the parent-document style, not merely skip adding it."""
+    from shared.components import live_enable_button
+    src = inspect.getsource(live_enable_button)
+    assert "if (!ACTIVE)" in src, "there must be a teardown branch"
+    teardown = src[src.index("if (!ACTIVE)"):]
+    teardown = teardown[:teardown.index("// Inject")]
+    assert "removeChild" in teardown, "the persisted <style> must be removed"
+    assert "removeAttribute('data-cd-valid')" in teardown
+    assert "removeAttribute('title')" in teardown, \
+        "a stale reason tooltip would describe a state that no longer applies"
+
+
+def test_gate_polarity_is_still_fail_closed_while_active():
+    """Unknown state must read as UNAVAILABLE while the bridge is running.
+
+    This is deliberate and must not be flipped to fix the bug above: the fix is to
+    tear the gate down when it does not apply, not to make an unmarked button look
+    clickable (which would let a click land on an empty name and silently do
+    nothing).
+    """
+    from shared.components import live_enable_button
+    src = inspect.getsource(live_enable_button)
+    assert 'button:not([data-cd-valid="1"])' in src
