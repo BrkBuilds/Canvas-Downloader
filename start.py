@@ -842,21 +842,29 @@ if __name__ == "__main__":
         _exit_reason = "crashed"
         raise
     finally:
-        # Close the health record FIRST, while the children are still alive and
-        # measurable - this marker is what the next launch reads to decide
-        # whether the app died or exited.
-        try:
-            from core.health_log import session_end
-            session_end(_exit_reason)
-        except Exception:
-            pass
-
-        # Reap the process tree BEFORE the hard exit below - see the function
-        # docstring for the Store hang this fixes. In the `finally` so a crash
-        # inside webview.start() cannot strand a WebView2/ffmpeg/transcription
-        # child either; on that path the exception still propagates normally
-        # (traceback + non-zero exit) instead of being swallowed by os._exit.
-        _terminate_child_processes()
+        # Through _shutdown, NOT a second direct call - that is what makes the
+        # idempotence claimed above actually true.
+        #
+        # This block used to call session_end() and _terminate_child_processes()
+        # itself, bypassing the _shutdown_done guard entirely, so the ordinary
+        # window-close route ran the whole shutdown TWICE: `events.closed` fires
+        # first, then `webview.start()` returns and the finally repeats it.
+        # Measured in the packaged 2.0.2 app on a real window close - two
+        # identical `SESSION END (clean)` lines for one SESSION START, one second
+        # apart (uptime=169s in both, peak_self 220.1 then 220.2 MB). Harmless
+        # for the clean_exit flag, which is idempotent, but it breaks the
+        # one-START-one-END shape the log is read for and reaps the process tree
+        # a second time for nothing.
+        #
+        # _shutdown keeps the ordering this block documented: the health record
+        # is closed FIRST, while the children are still alive and measurable -
+        # that marker is what the next launch reads to decide whether the app
+        # died or exited - and the tree is reaped BEFORE the hard exit below (see
+        # _terminate_child_processes' docstring for the Store hang that fixes).
+        # Being in the `finally` is what stops a crash inside webview.start()
+        # stranding a WebView2/ffmpeg/transcription child; on that path the
+        # exception still propagates normally rather than being swallowed.
+        _shutdown(_exit_reason)
 
     # Hard-exit instead of sys.exit: a sync/analysis worker thread that is
     # mid-API-call (non-daemon ThreadPoolExecutor thread) would otherwise

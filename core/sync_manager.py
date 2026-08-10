@@ -3,6 +3,7 @@ Sync Manager Module for Canvas LMS Batch File Downloader
 Handles synchronization between Canvas courses and local files.
 """
 
+import functools
 import os
 import json
 import hashlib
@@ -80,8 +81,59 @@ def _path_key(p) -> str:
     Both transforms are safe in the direction that matters: they can only make
     two spellings of ONE name compare equal, never two different names.
     """
-    return os.path.normcase(
-        os.path.normpath(unicodedata.normalize('NFC', str(p))))
+    s = os.path.normpath(unicodedata.normalize('NFC', str(p)))
+    s = os.path.normcase(s)
+    # normcase is the IDENTITY off Windows, and macOS's default volume is
+    # case-INSENSITIVE (probed 2026-08-10: both the home volume and /tmp), so the
+    # case half of the docstring above was a no-op on exactly the platform where
+    # `Notes.pdf` and `notes.pdf` really are one file. Fold it ourselves when -
+    # and only when - the volume says two spellings name the same thing.
+    #
+    # Deliberately conservative: a case-SENSITIVE volume (an ordinary external
+    # drive) genuinely holds both names as two files, and folding there would
+    # merge two manifest rows and mis-bind a heal. `_case_insensitive_volume`
+    # answers False on any doubt, which is today's behaviour exactly.
+    if os.name != 'nt' and _case_insensitive_volume(s):
+        s = s.lower()
+    return s
+
+
+@functools.lru_cache(maxsize=256)
+def _probe_case_insensitive(directory: str) -> bool:
+    """Does *directory* live on a case-insensitive volume? Read-only, cached.
+
+    Uses ``samefile`` against the case-flipped path rather than creating a probe
+    file: this runs inside the sync's hot comparison loops, and a write per
+    folder would be both slower and something that can fail on a read-only mount.
+    A path with no letters to flip is inconclusive (the flip is a no-op, so
+    ``samefile`` would trivially say yes) and answers False.
+    """
+    flipped = directory.swapcase()
+    if flipped == directory:
+        return False
+    try:
+        return os.path.samefile(directory, flipped)
+    except OSError:
+        return False        # flipped name absent => case-sensitive, or unreadable
+    except Exception:       # noqa: BLE001 - never let a probe break a sync
+        return False
+
+
+def _case_insensitive_volume(path: str) -> bool:
+    """As above, resolved from the nearest EXISTING ancestor of *path*.
+
+    ``_path_key`` is handed paths that may not exist - a manifest row for a file
+    that has been deleted, or a destination not yet written - so the probe has to
+    climb to something real before it can ask the filesystem anything.
+    """
+    try:
+        d = Path(path)
+        for cand in (d, *d.parents):
+            if cand.is_dir():
+                return _probe_case_insensitive(str(cand))
+    except Exception:       # noqa: BLE001
+        pass
+    return False
 
 
 # Auto-discovery tier (c) name floor.

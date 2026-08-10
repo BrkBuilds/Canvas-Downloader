@@ -176,6 +176,42 @@ def test_store_token_never_raises(auth):
     assert auth.store_token(USER, "tok") is False
 
 
+def test_the_reads_use_the_SHORT_budget_so_a_login_cannot_stall_longer(auth,
+                                                                      monkeypatch):
+    """The skip-if-identical read must not double a prompting keychain's wait.
+
+    macOS PROMPTS on some keychain accesses - a rebuilt app with a new ad-hoc
+    signature reading the previous build's item is the documented case, and it was
+    hit on the audit machine - and the prompt blocks until answered. The watchdog
+    is 90s on macOS, so a full-budget read plus a full-budget write would turn one
+    90-second worst case at login into two. The read is only an optimisation, so
+    it gets a short budget and the write keeps the long one.
+    """
+    seen: list[tuple[str, float]] = []
+    real_get, real_set = auth._safe_keyring_get, auth._safe_keyring_set
+
+    def spy_get(service, username, timeout=auth._KEYRING_TIMEOUT):
+        seen.append(("get", timeout))
+        return real_get(service, username, timeout=timeout)
+
+    def spy_set(service, username, password):
+        seen.append(("set", auth._KEYRING_TIMEOUT))
+        return real_set(service, username, password)
+
+    monkeypatch.setattr(auth, "_safe_keyring_get", spy_get)
+    monkeypatch.setattr(auth, "_safe_keyring_set", spy_set)
+    auth.store_token(USER, "tok")
+
+    gets = [t for kind, t in seen if kind == "get"]
+    assert gets, "store_token no longer reads at all - the skip is gone"
+    assert all(t <= auth._KEYRING_PROBE_TIMEOUT for t in gets), (
+        f"a read used the full watchdog ({gets}); on macOS that adds 90s to a "
+        f"login when the keychain prompts")
+    assert auth._KEYRING_PROBE_TIMEOUT < auth._KEYRING_TIMEOUT or \
+        auth._KEYRING_TIMEOUT <= 5.0, (
+        "the probe budget must be shorter than the write's, or it is not a probe")
+
+
 def test_store_token_survives_the_WRAPPER_itself_raising(auth, monkeypatch):
     """The failure store_token's own try/except exists for.
 
