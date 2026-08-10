@@ -93,8 +93,59 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
         return
 
     work = stage_root / ("cd_" + uuid.uuid4().hex[:10])
-    staged_src = work / src.name
-    staged_dst = work / dst.name
+    # Staged under a SHORT name, not src.name - the real name is only needed at
+    # the final destination, which this function moves the product to itself.
+    #
+    # Staging preserved src.name until 2026-08-10, which quietly made long
+    # filenames UNCONVERTIBLE on macOS. Measured against the real Word converter
+    # with a fresh Word and a passing positive control per case:
+    #
+    #     name 104 bytes -> CONVERTED
+    #     name 168 bytes -> FAILED   active document doesn't understand the
+    #                                "save as" message (-1708)
+    #     172 / 176 / 180 / 184 / 204 / 224 / 244 / 254 -> all FAILED
+    #
+    # The limit is on the TOTAL path Word is handed, not on the filename, and the
+    # discriminating pair is a SHORT name at two different staged depths - keeping
+    # the name fixed at 9 bytes and deepening the staged directory inside the
+    # container:
+    #
+    #     name 9B,  staged ~220  -> CONVERTED
+    #     name 11B, staged ~281  -> FAILED
+    #
+    # Same short name, opposite outcomes, so a component limit is ruled out.
+    # Every measurement lines up on one rule - staged total under ~255 works,
+    # above it fails - including the name sweep (staged 195 converts, staged 259
+    # does not) and the 763-byte real path with a 9-byte name, which converts
+    # because staging had already replaced the user's directory with a ~100-char
+    # staged one. macOS allows 1024 for a path and 255 per component, so this
+    # limit is Word's, and 255 is its classic one.
+    #
+    # So the app was spending 91 characters of a 255 budget on the container
+    # prefix and then preserving the filename, leaving an effective name budget of
+    # about 164 bytes. Filenames that long are ordinary in Canvas: a lecture title
+    # carrying the course code and week runs well past 100 characters. The failure
+    # was silent, per file, with only a generic conversion error.
+    #
+    # A TRAP for anyone re-measuring this: the unstaged path is NOT a usable
+    # control. With no container macOS demands the per-folder App Data grant that
+    # staging exists to avoid, so even a short-named control fails there, and an
+    # earlier pass drew the wrong conclusion from exactly that comparison. Vary
+    # the depth INSIDE the container instead.
+    #
+    # Verified after the change: a 240-byte name CONVERTS and the PDF lands under
+    # its real long name.
+    #
+    # The suffixes are kept because they are load-bearing - Office picks its
+    # importer from the source extension and its exporter from the destination's.
+    # Nothing reads the staged basename: the three callers pass these paths
+    # straight to osascript, run_applescript's success test is
+    # `staged_dst.exists()`, and the leftover-document sweeper matches on the
+    # CanvasDownloaderTmp marker in the DIRECTORY (_marker_in_value), not on the
+    # file name. Each conversion gets its own uuid work dir, so the fixed
+    # basenames cannot collide between concurrent conversions.
+    staged_src = work / ("src" + src.suffix)
+    staged_dst = work / ("out" + dst.suffix)
     try:
         work.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, staged_src)
