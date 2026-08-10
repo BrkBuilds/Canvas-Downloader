@@ -11,7 +11,11 @@ the exception path simply never called it.
 what makes this safe for a PARTIAL extraction: anything already written keeps
 the folder, and the folder stays.
 """
+import os
 import zipfile
+from pathlib import Path
+
+import pytest
 
 from converters.archive import extract_archive
 
@@ -35,13 +39,45 @@ def test_a_blocked_path_traversal_leaves_no_folder_behind(tmp_path):
 
 
 def test_an_absolute_member_path_is_blocked_and_cleans_up(tmp_path):
+    """An absolute member must be refused - using an absolute path for THIS OS.
+
+    This used a hard-coded ``C:/Windows/Temp/...``, which is only absolute on
+    Windows. On POSIX it is a perfectly legal RELATIVE name whose first
+    component happens to be ``C:``, so the guard correctly let it through and the
+    test failed on macOS against code that was behaving properly. Measured: it
+    extracts to ``<target>/C:/Windows/Temp/pwn.txt``, i.e. fully contained, and
+    nothing escapes - which is the right outcome, not a bypass.
+    """
     archive = tmp_path / "abs.zip"
+    member = ("C:/Windows/Temp/canvas_dl_pwn.txt" if os.name == "nt"
+              else "/tmp/canvas_dl_pwn.txt")
     with zipfile.ZipFile(archive, "w") as z:
-        z.writestr(zipfile.ZipInfo("C:/Windows/Temp/canvas_dl_pwn.txt"), "pwned")
+        z.writestr(zipfile.ZipInfo(member), "pwned")
 
     assert extract_archive(archive) is None
     assert not (tmp_path / "abs").exists()
     assert archive.exists()
+    assert not Path(member).exists(), "an absolute member escaped the target"
+
+
+def test_a_windows_absolute_member_is_CONTAINED_on_posix(tmp_path):
+    """The other half, so the platform difference is pinned rather than assumed.
+
+    ``C:/...`` cannot be blocked as absolute on POSIX because it is not; what
+    matters is that it stays inside the extraction folder. Asserting that keeps
+    the case under test on both platforms instead of deleting it from one.
+    """
+    if os.name == "nt":
+        pytest.skip("on Windows this path IS absolute - covered by the test above")
+    archive = tmp_path / "winabs.zip"
+    with zipfile.ZipFile(archive, "w") as z:
+        z.writestr(zipfile.ZipInfo("C:/Windows/Temp/canvas_dl_pwn.txt"), "pwned")
+
+    assert extract_archive(archive) is True
+    landed = sorted(p.relative_to(tmp_path).as_posix()
+                    for p in tmp_path.rglob("*") if p.is_file())
+    assert landed == ["winabs/C:/Windows/Temp/canvas_dl_pwn.txt"], landed
+    assert not Path("/Windows/Temp/canvas_dl_pwn.txt").exists()
 
 
 def test_a_corrupt_archive_leaves_no_folder_behind(tmp_path):

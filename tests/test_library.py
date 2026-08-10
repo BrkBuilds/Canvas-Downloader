@@ -2,6 +2,7 @@
 
 import importlib
 import json
+import os
 
 import pytest
 
@@ -30,9 +31,28 @@ def test_save_pair_is_idempotent_by_link(lib):
     assert len(lib.pairs()) == 1
 
 
-def test_save_pair_matches_link_across_path_spelling(lib):
+def test_save_pair_matches_link_across_id_type_and_trailing_slash(lib):
+    """The spellings that collapse on EVERY platform.
+
+    A folder picked through the macOS native picker arrives with a trailing
+    slash (AppleScript's "POSIX path of" appends one) while a typed or
+    manifest-read one does not, so this is the form that actually differs in
+    practice rather than a synthetic case.
+    """
+    a = lib.save_pair(123, "/School/Macro")
+    b = lib.save_pair("123", "/School/Macro/")
+    assert a == b
+    assert len(lib.pairs()) == 1
+
+
+@pytest.mark.skipif(os.name != "nt", reason="separator and case folding are "
+                                            "Windows path semantics")
+def test_save_pair_matches_link_across_windows_separators_and_case(lib):
+    """Windows-only: a backslash is a legal filename character on POSIX and
+    os.path.normcase is the identity there, so neither half of this holds off
+    Windows. It used a hard-coded C:\\ path and so failed on macOS against
+    correct code. The macOS case question is recorded as its own finding."""
     a = lib.save_pair(123, "C:/School/Macro")
-    # different separators / trailing slash / case -> same link
     b = lib.save_pair("123", "c:\\school\\macro\\")
     assert a == b
     assert len(lib.pairs()) == 1
