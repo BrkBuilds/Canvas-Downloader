@@ -115,15 +115,36 @@ def run(command: str, cwd: str | None = None, timeout: float = 900.0,
 
     # `exec > log` on the wrapper, not on the command, so anything the command
     # spawns in the background is captured too.
+    # A DETACHED run has to close its own window, because the caller has already
+    # returned by the time the command finishes (see the window-id note below -
+    # that close only covers the synchronous path). Left unhandled, every
+    # detached call leaks a window: 13 of them accumulated in one session, which
+    # is the same litter the operator objected to before, arriving by the other
+    # door.
+    #
+    # The script identifies its OWN window by its tty, which Terminal exposes as
+    # a property of a tab - self-contained, so nothing has to be passed in after
+    # `do script` returns. Backgrounded after a beat so the sentinel line is
+    # flushed and any poller has seen it, `saving no` so no save prompt can
+    # appear, and swallowed entirely: a failure to tidy up must never change the
+    # command's exit status.
+    _self_close = (
+        "( sleep 2; osascript -e 'tell application \"Terminal\" to close "
+        "(every window whose tty of selected tab is \"'\"$__tty\"'\") "
+        "saving no' >/dev/null 2>&1 ) &\n"
+    ) if (detach and not keep_window) else ""
+
     script.write_text(
         "#!/bin/bash\n"
+        "__tty=$(tty)\n"
         f"exec > {log} 2>&1\n"
         f"cd {cwd or REPO}\n"
         "[ -f .venv/bin/activate ] && source .venv/bin/activate\n"
         f"{command}\n"
         "__rc=$?\n"
         f"echo $__rc > {rcf}\n"
-        f'echo "{DONE} rc=$__rc"\n',
+        f'echo "{DONE} rc=$__rc"\n'
+        f"{_self_close}",
         encoding="utf-8")
     script.chmod(0o755)
 
