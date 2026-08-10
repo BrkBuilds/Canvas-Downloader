@@ -186,6 +186,22 @@ the mutation's.** Budget for a second pass.
 - **Never run two mutation scripts concurrently** (this repo has lost real code that way).
 - Wrap the pytest call in a **timeout** and count a timeout as CAUGHT — a mutation that
   removes a loop bound makes the suite hang, which is the correct verdict.
+- **A mutation pass writes broken code into the working tree, so anything that COMMITS
+  during it captures a mutant.** Measured 2026-08-10: a commit landed inside one
+  mutation's window and `panopto/shortcut.py` was committed with `kind_extensions`
+  returning only the native suffix — i.e. cross-platform shortcut adoption silently
+  broken in HEAD. The script's own `restore()` reported success and was telling the
+  truth; it had simply already been overtaken. Two consequences, both cheap:
+  - **Re-run the FULL suite after every mutation pass, not just the targeted file.**
+    That is what caught it: three `test_panopto_shortcut.py` failures in a file the
+    pass never named.
+  - **Do not let a test write into the repo either.** A guard-on-the-guard that dropped
+    a probe `.py` in the repo root for a few milliseconds was captured by the same
+    commit. Give the scanner a root parameter and point the test at `tmp_path`.
+- **A targeted mutation run is ~80x cheaper.** Re-running a whole 61-test file per
+  mutant cost ~75 s each (the app-graph import dominates); `pytest <file> -x -k <subset>`
+  cost **0.9 s** for the same verdicts. If a targeted run cannot catch a mutant, no
+  amount of unrelated tests would have.
 
 ### Termination tests must be able to FAIL, not hang
 

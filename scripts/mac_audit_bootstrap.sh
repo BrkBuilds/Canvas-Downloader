@@ -22,6 +22,9 @@ REPO_URL="https://github.com/birkls/Canvas_LMS_batch_file_downloader.git"
 REPO_DIR="${REPO_DIR:-$HOME/Canvas_Downloader}"
 SECRETS="${SECRETS:-$HOME/mac_audit_secrets.env}"
 PYVER="3.11"
+# BRANCH is only used when CLONING. For an existing checkout the script stays
+# on whatever branch is already there unless you set BRANCH explicitly.
+BRANCH_EXPLICIT="${BRANCH:-}"
 BRANCH="${BRANCH:-main}"
 
 STEP=0
@@ -95,13 +98,25 @@ ok "git $(git --version | awk '{print $3}') | tmux $(tmux -V | awk '{print $2}')
 # ───────────────────────────────────────────────────────────── 5. repo
 step "Repository"
 if [ -d "$REPO_DIR/.git" ]; then
-  info "pulling $BRANCH..."
-  git -C "$REPO_DIR" fetch --quiet origin "$BRANCH" && \
-  git -C "$REPO_DIR" checkout --quiet "$BRANCH" && \
-  git -C "$REPO_DIR" pull --quiet --ff-only origin "$BRANCH" || \
-    warn "Pull failed - working tree may be dirty. Continuing with what is on disk."
+  # NEVER move an existing checkout off its branch. The documented flow is
+  # `git clone -b <audit branch>` and THEN run this script, so defaulting
+  # BRANCH to "main" and checking it out would silently drag the machine back
+  # to main - auditing the wrong code, with nothing on screen saying so.
+  # An explicit BRANCH= still wins, for the deliberate case.
+  CURRENT=$(git -C "$REPO_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+  TARGET="${BRANCH_EXPLICIT:-$CURRENT}"
+  [ -n "$TARGET" ] || TARGET="$BRANCH"
+  info "updating existing checkout on '$TARGET' ..."
+  git -C "$REPO_DIR" fetch --quiet origin "$TARGET" || \
+    warn "fetch failed - continuing with what is on disk."
+  if [ "$TARGET" != "$CURRENT" ]; then
+    git -C "$REPO_DIR" checkout --quiet "$TARGET" || \
+      warn "checkout of '$TARGET' failed - staying on '$CURRENT'."
+  fi
+  git -C "$REPO_DIR" pull --quiet --ff-only origin "$TARGET" || \
+    warn "Pull failed (dirty tree or diverged). Continuing with what is on disk."
 else
-  info "cloning into $REPO_DIR ..."
+  info "cloning branch '$BRANCH' into $REPO_DIR ..."
   git clone --quiet --branch "$BRANCH" "$REPO_URL" "$REPO_DIR" || die "Clone failed."
 fi
 cd "$REPO_DIR" || die "Cannot cd to $REPO_DIR"
@@ -115,7 +130,7 @@ if [ ! -d .venv ]; then
 fi
 # shellcheck disable=SC1091
 source .venv/bin/activate
-PY=.venv/bin/python
+PY="$PWD/.venv/bin/python"      # absolute: uv --python and later cd's rely on it
 
 # uv resolves and installs this requirements set in well under a minute where
 # pip takes several. Fall back silently if uv is unavailable.
@@ -150,6 +165,16 @@ if ! $PY -c "import UserNotifications" >/dev/null 2>&1; then
 fi
 $PY -c "import UserNotifications" >/dev/null 2>&1 && ok "UserNotifications binding OK" \
   || warn "UserNotifications binding missing (deprecated notification path will be used)"
+
+# Quartz backs scripts/mac_eyes.py - the agent's ability to SEE the real
+# desktop over SSH (window list, per-window capture, "is a consent dialog
+# waiting?"). Same one-version rule as every other pyobjc-framework-*.
+if ! $PY -c "import Quartz" >/dev/null 2>&1; then
+  PYOBJC_VER=$($PY -c 'import objc; print(objc.__version__)' 2>/dev/null || echo "")
+  [ -n "$PYOBJC_VER" ] && $INSTALL "pyobjc-framework-Quartz==$PYOBJC_VER" >/dev/null 2>&1
+fi
+$PY -c "import Quartz" >/dev/null 2>&1 && ok "Quartz binding OK (mac_eyes can see windows)" \
+  || warn "Quartz missing - mac_eyes.py falls back to full-desktop shots only"
 
 # ────────────────────────────────────────────────── 7. Playwright browser
 step "Playwright Chromium"
@@ -211,9 +236,18 @@ EOF
     if security find-generic-password -s CanvasDownloader -a "$CANVAS_URL" -w >/dev/null 2>&1; then
       ok "Canvas token already in the login Keychain"
     else
-      security add-generic-password -U -s CanvasDownloader -a "$CANVAS_URL" \
-        -w "$CANVAS_TOKEN" -T /usr/bin/security -T "" 2>/dev/null \
-        && ok "Canvas token written to the login Keychain" \
+      # -A = any application may read it without a prompt.
+      #
+      # This matters more than it looks. An item created by /usr/bin/security
+      # gets an ACL naming only /usr/bin/security, so when Python's `keyring`
+      # reads it macOS puts up "…wants to access your login keychain" and waits
+      # for a password - on EVERY run. That is the difference between an
+      # unattended audit and one that stops dead the moment you look away.
+      # The trade is deliberate and scoped: this is a throwaway rented machine
+      # holding one Canvas token that you revoke afterwards.
+      security add-generic-password -U -A -s CanvasDownloader -a "$CANVAS_URL" \
+        -w "$CANVAS_TOKEN" 2>/dev/null \
+        && ok "Canvas token written to the login Keychain (no-prompt ACL)" \
         || warn "Could not write the Keychain item - log in once through the app UI instead."
     fi
   fi

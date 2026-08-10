@@ -62,7 +62,8 @@ def kind_extensions(kind: str) -> tuple[str, ...]:
     (and the reverse) instead of being re-produced under a second name.
     """
     if kind == SHORTCUT_KIND:
-        return (shortcut_extension(),)
+        native = shortcut_extension()
+        return (native, *sorted(s for s in SHORTCUT_SUFFIXES if s != native))
     return ("." + kind,)
 
 

@@ -676,7 +676,7 @@ _SKIP_DIRS = {"dist", "build", "tests", "_audit_runs", ".git", "__pycache__",
               "venv", ".venv", "scripts", "styles"}
 
 
-def _modules_with_darwin_branches() -> set:
+def _modules_with_darwin_branches(root: Path | None = None) -> set:
     """Every module that behaves differently on macOS, found by AST.
 
     A line scan for "darwin" NEAR "platform" was tried first and was wrong:
@@ -689,8 +689,9 @@ def _modules_with_darwin_branches() -> set:
     platform comparisons, so a literal is a reliable marker; comments and
     docstrings cannot produce one, because ast sees only real constants.
     """
+    root = root or REPO
     found = set()
-    for p in REPO.rglob("*.py"):
+    for p in root.rglob("*.py"):
         if any(s in p.parts for s in _SKIP_DIRS):
             continue
         try:
@@ -701,7 +702,7 @@ def _modules_with_darwin_branches() -> set:
             if isinstance(node, ast.Constant) and isinstance(node.value, str) \
                     and node.value.lower() == "darwin":
                 # A docstring is a Constant too - exclude the ones that ARE one.
-                found.add(p.relative_to(REPO).as_posix())
+                found.add(p.relative_to(root).as_posix())
                 break
     return found
 
@@ -722,14 +723,21 @@ def test_the_ledger_has_not_gone_stale():
 
 def test_the_detector_would_actually_find_a_new_branch(tmp_path):
     """Validate the guard in the direction that matters - a scanner that finds
-    nothing passes for ever."""
-    probe = REPO / "_macos_branch_probe_tmp.py"
-    probe.write_text("import sys\nif sys.platform == 'darwin':\n    pass\n",
-                     encoding="utf-8")
-    try:
-        assert "_macos_branch_probe_tmp.py" in _modules_with_darwin_branches()
-    finally:
-        probe.unlink()
+    nothing passes for ever.
+
+    The probe goes in tmp_path, NOT the repo. The first version wrote
+    ``_macos_branch_probe_tmp.py`` into the repo root for the few milliseconds
+    the assertion took - and a commit landed inside that window and captured
+    it. A test must never put a file where a concurrent `git add -A` can see
+    it, which is why `_modules_with_darwin_branches` takes a root at all.
+    """
+    (tmp_path / "probe.py").write_text(
+        "import sys\nif sys.platform == 'darwin':\n    pass\n", encoding="utf-8")
+    (tmp_path / "quiet.py").write_text("x = 1\n", encoding="utf-8")
+
+    found = _modules_with_darwin_branches(tmp_path)
+    assert "probe.py" in found, "the detector cannot see a new macOS branch"
+    assert "quiet.py" not in found, "the detector flags files that never branch"
 
 
 def test_the_bridge_never_shells_out_with_a_shell():
