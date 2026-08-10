@@ -68,6 +68,64 @@ def inline_linked_file_ids(html: str) -> set[int]:
     return out
 
 
+def _audit_token(url: str) -> tuple[str | None, str]:
+    """The AUDIT's own Canvas credential. Returns (token, where_it_came_from).
+
+    The OS keyring is tried first and is the right default: it is where the
+    product keeps the token, so using it keeps the audit honest about the
+    machine actually being signed in.
+
+    It is not, however, always reachable - and the failure is macOS-specific and
+    total. The Keychain is scoped to the launchd SECURITY session, so a harness
+    driven from an SSH tmux (`Background`) gets errSecInteractionNotAllowed
+    (-25308) for every operation, including creating a brand-new item of its
+    own. Measured 2026-08-10: the same shell wrote a 4.4 MB `screencapture` PNG
+    and got answers from System Events, so nothing else in the audit gave any
+    hint - O5 simply died with a keyring traceback before the first row ran.
+    See `scripts/mac_aqua.py`, and note the doctor now BLOCKs on it.
+
+    A second problem lands in the same place: an item written by
+    `/usr/bin/security` (which is how `scripts/mac_audit_bootstrap.sh` used to
+    seed it) carries an ACL naming only that binary, so python is asked to
+    authorise itself and authorising an ACL change needs the *login keychain's*
+    password - frequently unknown on a cloud image.
+
+    So the fallbacks exist to stop an environment problem masquerading as a
+    product finding. This is the audit's identity, not the application's:
+    O5's whole purpose is to enumerate Canvas from OUTSIDE the app, so where its
+    own credential comes from cannot weaken a finding. Nothing here changes what
+    the PRODUCT does with the Keychain, which phase M5 still tests directly.
+    """
+    import os
+
+    try:
+        import keyring
+        tok = keyring.get_password("CanvasDownloader", url)
+        if tok:
+            return tok, "keyring"
+    except Exception as e:                                  # noqa: BLE001
+        _kr_note = f"{type(e).__name__}: {e}"[:160]
+    else:
+        _kr_note = "keyring held no token for this url"
+
+    for var in ("CANVAS_DL_AUDIT_TOKEN", "CANVAS_TOKEN"):
+        if os.environ.get(var):
+            return os.environ[var], f"${var}"
+
+    # The place `tests/audit/MAC_AUDIT_GUIDE.md` already tells the operator to
+    # put it, so a Mac session needs no extra ceremony per command.
+    secrets = Path(os.path.expanduser("~/mac_audit_secrets.env"))
+    if secrets.is_file():
+        try:
+            for line in secrets.read_text(encoding="utf-8").splitlines():
+                k, _, v = line.partition("=")
+                if k.strip() in ("CANVAS_TOKEN", "CANVAS_DL_AUDIT_TOKEN") and v.strip():
+                    return v.strip().strip('"').strip("'"), str(secrets)
+        except OSError:
+            pass
+    return None, _kr_note
+
+
 def _client():
     """Canvas client built from the DEVELOPER's real credentials.
 
@@ -76,18 +134,19 @@ def _client():
     to exercise the same account against the same courses the user has.
     """
     import json as _json
-    import keyring
     from canvasapi import Canvas
 
     from ..paths import REPO_ROOT
     cfg_path = REPO_ROOT / "canvas_downloader_settings.json"
     cfg = _json.loads(cfg_path.read_text(encoding="utf-8"))
     url = cfg["api_url"]
-    token = keyring.get_password("CanvasDownloader", url)
+    token, source = _audit_token(url)
     if not token:
         raise SystemExit(
-            "No Canvas token in the keyring for "
-            f"{url}. Sign in once in the real app, then re-run.")
+            f"No Canvas token available for {url} ({source}). Sign in once in "
+            "the real app, or export CANVAS_DL_AUDIT_TOKEN. On macOS check "
+            "`python3 scripts/mac_aqua.py check` first - a Background launchd "
+            "session cannot read the Keychain at all.")
     return Canvas(url, token), url
 
 
