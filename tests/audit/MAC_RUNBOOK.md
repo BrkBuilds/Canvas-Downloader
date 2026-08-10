@@ -28,34 +28,55 @@ WKWebView and a real code signature.
 
 ---
 
-## THE TRAP THAT COSTS HOURS: the Aqua session
+## THE TRAP THAT COSTS HOURS: window-server access
 
-macOS gives an SSH login a **Background** launchd session with no window
-server. In it:
+The audit needs a process that can reach the **window server**. Without it:
 
-- `osascript` cannot drive Word/Excel/PowerPoint (Office conversions all fail),
+- `osascript` cannot drive Word/Excel/PowerPoint (every Office conversion fails),
 - Playwright cannot open a headed browser,
 - TCC prompts cannot appear (so grants can never be given),
-- `pywebview` cannot create a window (the packaged app won't start).
+- `pywebview` cannot create a window (the packaged app will not start).
 
-Each fails differently and none of them says "you are in the wrong session".
+Each fails differently and none of them says "you have no window server".
 
-```bash
-launchctl managername      # must print: Aqua
-```
-
-**The fix is one habit**: start tmux from a Terminal on the Mac's own desktop,
-then attach to it from SSH. The tmux *server* keeps the session it was born in
-and every pane inherits it.
+**Test the capability, never a proxy:**
 
 ```bash
-# on the desktop, once per boot:
-cd ~/Canvas_Downloader && tmux new -s audit
-# from SSH, any time after:
-tmux attach -t audit
+screencapture -x /tmp/probe.png && ls -la /tmp/probe.png
+osascript -e 'tell application "System Events" to return name of first process'
+open -a TextEdit && sleep 3 && osascript -e 'tell application "System Events" to return exists application process "TextEdit"'
 ```
 
-`scripts/mac_audit_doctor.py` checks this first and refuses to pass without it.
+A real PNG, a process name, and `true` mean you are fine.
+
+**Do NOT gate on `launchctl managername == "Aqua"`.** That was this file's
+original advice and it was wrong. Measured on a Scaleway Apple-silicon Mac
+(2026-08-10) it reports **`Background`** from SSH *and from Terminal.app on the
+desktop*, while all three probes above pass. `managername` names how the
+session was established - auto-login, NoMachine and a physical login all label
+differently - and says nothing about what a process can reach. Two hours were
+lost to that proxy, on a machine that was entirely healthy.
+
+**When the probes genuinely fail**, the cause on a cloud Mac is almost always
+that no console session exists:
+
+```bash
+stat -f%Su /dev/console        # must be your user, not root
+```
+
+`root` means the Mac is sitting at a login window with no framebuffer - screen
+sharing shows black and GUI automation is impossible. Scaleway's image sets
+`autoLoginUser` but never writes `/etc/kcpassword`, so auto-login never
+completes. Write it and reboot:
+
+```bash
+sudo python3 -c 'k=[0x7D,0x89,0x52,0x23,0xD2,0xBC,0xDE,0xC7];p=b"<password>";n=(12-len(p)%12)%12 or 12;b=p+bytes(n);open("/etc/kcpassword","wb").write(bytes(c^k[i%8] for i,c in enumerate(b)))'
+sudo chmod 600 /etc/kcpassword
+sudo reboot
+```
+
+`scripts/mac_audit_doctor.py` probes all of this directly and reports the
+launchd domain as INFO only.
 
 ---
 
