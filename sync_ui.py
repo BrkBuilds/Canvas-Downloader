@@ -1005,10 +1005,35 @@ def _sync_pairs_section(courses, course_names, course_options):
     with st.container(border=True, key="sync_list_outline"):
         if sync_pairs:
             editing_idx = st.session_state.get('editing_pair_idx')
+            editing_sig = st.session_state.get('editing_pair_sig')
+
+            # The pair being edited may no longer be on the list: the open form
+            # replaces its own row, but every OTHER row keeps a live Remove
+            # button. Close the form rather than let a stale INDEX bind it to
+            # whichever pair now sits at that position.
+            if editing_sig is not None:
+                _still_listed = any(
+                    pair_key(p.get('course_id'), p.get('local_folder')) == editing_sig
+                    for p in sync_pairs)
+                if not _still_listed:
+                    st.session_state['pending_sync_folder'] = None
+                    st.session_state.pop('editing_pair_idx', None)
+                    st.session_state.pop('editing_pair_sig', None)
+                    st.session_state.pop('sync_selected_course_id', None)
+                    editing_idx = editing_sig = None
 
             for idx, pair in enumerate(sync_pairs):
                 # --- If this pair is being edited, render the edit form inline ---
-                if editing_idx is not None and editing_idx == idx and st.session_state.get('pending_sync_folder') is not None:
+                # Matched on the LINK when we have one, so the form FOLLOWS its
+                # pair if the list shifts, instead of staying at an index that now
+                # holds someone else.
+                if editing_sig is not None:
+                    _is_editing_row = (
+                        pair_key(pair.get('course_id'), pair.get('local_folder'))
+                        == editing_sig)
+                else:
+                    _is_editing_row = editing_idx is not None and editing_idx == idx
+                if _is_editing_row and st.session_state.get('pending_sync_folder') is not None:
                     _render_pending_folder_ui(courses, course_names, course_options)
                     # Removed explicit spacer to match list gap via CSS margin-bottom on container
                     continue
@@ -1153,6 +1178,14 @@ def _sync_pairs_section(courses, course_names, course_options):
                                  key=f"edit_pair_{idx}", use_container_width=True):
                         st.session_state['pending_sync_folder'] = pair['local_folder']
                         st.session_state['editing_pair_idx'] = idx
+                        # WHICH pair, by link. `editing_pair_idx` is a POSITION,
+                        # and the list can move under an open form: every other
+                        # row keeps a live Remove button (and "remove all" exists
+                        # too), so removing a row above this one shifts this pair
+                        # down. See the save path in ui/sync_dialogs.py for what
+                        # that used to do.
+                        st.session_state['editing_pair_sig'] = pair_key(
+                            pair.get('course_id'), pair.get('local_folder'))
                         # Pre-populate selected course for editing
                         st.session_state['sync_selected_course_id'] = pair['course_id']
                         st.rerun(scope="app")
@@ -1244,6 +1277,11 @@ def _sync_pairs_section(courses, course_names, course_options):
                             st.session_state['pending_sync_folder'] = ""
                             st.session_state['sync_selected_course_id'] = None
                             st.session_state.pop('editing_pair_idx', None)
+                            # The sig goes with the index, ALWAYS. Leaving it set
+                            # here made "Add Course" open the EDIT form on the
+                            # previously-edited row, because the form is now
+                            # matched on the link rather than the position.
+                            st.session_state.pop('editing_pair_sig', None)
                             _clear_bulk_add_state()
                             st.rerun(scope="app")
 
@@ -1271,6 +1309,11 @@ def _sync_pairs_section(courses, course_names, course_options):
                             st.session_state['pending_sync_folder'] = ""
                             st.session_state['sync_selected_course_id'] = None
                             st.session_state.pop('editing_pair_idx', None)
+                            # The sig goes with the index, ALWAYS. Leaving it set
+                            # here made "Add Course" open the EDIT form on the
+                            # previously-edited row, because the form is now
+                            # matched on the link rather than the position.
+                            st.session_state.pop('editing_pair_sig', None)
                             _clear_bulk_add_state()
                             st.rerun(scope="app")
 

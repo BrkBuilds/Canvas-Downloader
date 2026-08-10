@@ -1101,6 +1101,31 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
     folder_name = Path(pending_folder).name if pending_folder else "Select Course Folder →"
     editing_idx = st.session_state.get('editing_pair_idx')
 
+    # WHICH pair is being edited, resolved by LINK and not by position.
+    #
+    # `editing_pair_idx` is an index into `st.session_state['sync_pairs']`, and
+    # the list can change while this form is open - the form replaces its own
+    # row, but every OTHER row keeps a live Remove button, and "remove all"
+    # exists. Indexing at save time therefore had two silent wrong outcomes:
+    #
+    #   [A,B,C]   edit C (idx 2), remove A -> len 2, so `0 <= 2 < 2` fails and
+    #             Save Changes APPENDED a duplicate pair instead of editing.
+    #   [A,B,C,D] edit C (idx 2), remove A -> idx 2 is now D, so Save Changes
+    #             repointed D at the folder/course chosen for C AND moved D's
+    #             user-given name onto that link (_retarget_saved_pair_lazy),
+    #             leaving C untouched.
+    #
+    # Same identity-by-position class as the ignored-files cache keyed on
+    # course_id. `pair_key` is the app's one answer to "which link is this?".
+    _edit_sig = st.session_state.get('editing_pair_sig')
+    _edit_pair = None
+    if _edit_sig is not None:
+        from core.pair_labels import pair_key as _pk
+        _edit_pair = next(
+            (p for p in st.session_state.get('sync_pairs', [])
+             if _pk(p.get('course_id'), p.get('local_folder')) == _edit_sig),
+            None)
+
     # Bulk add is only meaningful when creating pairs (never editing) and with a
     # folder actually loaded - the pending_folder guard stops a stale queue key
     # from dressing an empty add form as a bulk step.
@@ -1288,9 +1313,11 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
         if selected_course_name and pending_folder:
             # Determine if this is the original course selection
             is_same_as_original = False
-            if editing_idx is not None and 0 <= editing_idx < len(st.session_state.get('sync_pairs', [])):
-                 original_pair = st.session_state['sync_pairs'][editing_idx]
-                 if original_pair.get('course_id') == selected_course_id and original_pair.get('local_folder') == pending_folder:
+            # By link, like the save below - an index here would compare against
+            # whatever pair now sits at that position and suppress (or invent) the
+            # course/folder mismatch warning for the wrong pair.
+            if _edit_pair is not None:
+                 if _edit_pair.get('course_id') == selected_course_id and _edit_pair.get('local_folder') == pending_folder:
                      is_same_as_original = True
 
             folder_lower = folder_name.lower()
@@ -1314,9 +1341,13 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
             # Duplicate pair detection
             existing = st.session_state.get('sync_pairs', [])
             candidates = existing
-            if editing_idx is not None:
-                # Filter out the pairing being edited so we don't warn against itself
-                candidates = [p for i, p in enumerate(existing) if i != editing_idx]
+            if _edit_pair is not None:
+                # Exclude the pair being edited so it cannot be reported as a
+                # duplicate of ITSELF - by identity, not by index. Excluding a
+                # position meant that once the list shifted the wrong pair was
+                # excluded, which both hides a real duplicate and can block a
+                # legitimate save with "this pair is already on your sync list".
+                candidates = [p for p in existing if p is not _edit_pair]
 
             for cid, cname in course_names.items():
                 if cname == selected_course_name:
@@ -1378,6 +1409,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                 _clear_bulk_state()
                 st.session_state['pending_sync_folder'] = None
                 st.session_state.pop('editing_pair_idx', None)
+                st.session_state.pop('editing_pair_sig', None)
                 st.session_state.pop('_prev_course_search', None)
                 st.session_state.pop('sync_selected_course_id', None)  # Prevent stale pre-selection on re-open
                 st.session_state.pop('sync_auto_detected_course', None)
@@ -1399,11 +1431,10 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
             is_edit_mode = editing_idx is not None
 
             has_changes = True
-            if is_edit_mode and 0 <= editing_idx < len(st.session_state.get('sync_pairs', [])):
-                _orig = st.session_state['sync_pairs'][editing_idx]
+            if is_edit_mode and _edit_pair is not None:
                 has_changes = (
-                    _orig.get('course_id') != selected_course_id
-                    or _orig.get('local_folder') != pending_folder
+                    _edit_pair.get('course_id') != selected_course_id
+                    or _edit_pair.get('local_folder') != pending_folder
                 )
 
             if is_edit_mode:
@@ -1475,11 +1506,26 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                         'last_synced': None,
                     }
 
-                    # Check if we are updating or adding
-                    edit_idx = st.session_state.get('editing_pair_idx')
-                    if edit_idx is not None and 0 <= edit_idx < len(st.session_state['sync_pairs']):
+                    # Check if we are updating or adding. In EDIT mode the pair
+                    # is the one this form was opened on, found by link - never
+                    # "whatever is at that index now". If it is gone (removed from
+                    # another row while this form was open) we must NOT fall
+                    # through to the append branch: that silently created a
+                    # duplicate pair out of an edit.
+                    if is_edit_mode and _edit_pair is None:
+                        error_container.markdown(
+                            "<div style=\"padding: 8px 12px; margin-bottom: 10px; "
+                            "background-color: rgba(255, 75, 75, 0.15); color: #ff4b4b; "
+                            "border: 1px solid rgba(255, 75, 75, 0.2); border-radius: 4px; "
+                            "font-size: 0.9em; font-weight: 500;\">"
+                            "\u26a0\ufe0f This pair was removed from the sync list while you "
+                            "were editing it, so there is nothing to save. Cancel to go "
+                            "back, then add it again if you still want it.</div>",
+                            unsafe_allow_html=True)
+                        st.stop()
+                    if _edit_pair is not None:
                         # Update existing
-                        old_pair = st.session_state['sync_pairs'][edit_idx]
+                        old_pair = _edit_pair
                         old_sig = {'course_id': old_pair.get('course_id'), 'local_folder': old_pair.get('local_folder')}
                         if old_pair.get('course_id') == selected_course_id:
                             new_pair['last_synced'] = old_pair.get('last_synced')
@@ -1506,6 +1552,7 @@ def render_pending_folder_ui(courses, course_names, course_options, ):
                     else:
                         st.session_state['pending_sync_folder'] = None
                         st.session_state.pop('editing_pair_idx', None)
+                        st.session_state.pop('editing_pair_sig', None)
                     st.rerun(scope="app")
                 elif selected_course_id and selected_course_id not in course_names:
                     # Course exists in saved pair but was archived/removed from Canvas

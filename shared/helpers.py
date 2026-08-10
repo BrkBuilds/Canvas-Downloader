@@ -831,6 +831,37 @@ def format_available_space(avail_mb) -> str:
 
 # --- Folder Opener ---
 
+def picker_start_for_existing(path: str | None) -> str | None:
+    """Where a folder picker should OPEN when RE-choosing an already-set folder.
+
+    Returns the folder's PARENT, so the panel lists the current folder among its
+    siblings with everything else you might pick instead. Passing the folder
+    itself makes the panel open *inside* it, which is right for "choose a
+    destination" and wrong for "change this folder": you land in a directory
+    whose contents are all irrelevant (a course folder's own PDFs) and have to
+    navigate UP before you can choose anything, and re-pointing a pair at a
+    moved or renamed sibling is the common case. Reported on macOS and Windows.
+
+    Non-existent, empty or root paths fall through unchanged so the caller's own
+    fallback chain (session default -> ~/Downloads) still applies. ONE function
+    because this is a rule, and the two platforms' pickers must not disagree
+    about it - `choose folder default location` on macOS and IFileOpenDialog on
+    Windows both take the same directory from here.
+    """
+    if not path:
+        return path
+    try:
+        p = Path(path)
+        if not p.is_dir():
+            return path
+        parent = p.parent
+        if parent == p or not parent.is_dir():
+            return path            # a volume root has no useful parent
+        return str(parent)
+    except (OSError, ValueError):
+        return path
+
+
 def native_folder_picker(initial_dir: str | None = None) -> str | None:
     """Open native folder picker dialog safely across threads inside Streamlit.
     Builds the Tkinter root with correct attributes, destroys it on close,

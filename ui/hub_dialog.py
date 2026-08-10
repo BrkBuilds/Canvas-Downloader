@@ -167,7 +167,9 @@ div[data-testid="stDialog"]:has(div[class*="st-key-cancel_save_group"]) div[role
 def hub_select_folder():
     """Open native folder picker for the Hub dialog (isolated state)."""
     from shared.helpers import native_folder_picker
-    folder_path = native_folder_picker(initial_dir=st.session_state.get('hub_temp_folder') or None)
+    from shared.helpers import picker_start_for_existing
+    folder_path = native_folder_picker(initial_dir=picker_start_for_existing(
+        st.session_state.get('hub_temp_folder') or None))
     if folder_path:
         st.session_state['hub_temp_folder'] = folder_path
 
@@ -175,8 +177,9 @@ def hub_select_folder():
 def rescue_select_folder(pair_idx: int):
     """Open native folder picker for rescue mode (isolated per-pair state)."""
     from shared.helpers import native_folder_picker
+    from shared.helpers import picker_start_for_existing
     current = (st.session_state.get('rescue_paths') or {}).get(pair_idx) or None
-    folder_path = native_folder_picker(initial_dir=current)
+    folder_path = native_folder_picker(initial_dir=picker_start_for_existing(current))
     if folder_path:
         rescue_paths = st.session_state.get('rescue_paths', {})
         rescue_paths[pair_idx] = folder_path
@@ -268,7 +271,9 @@ def hub_pick_folder_cb():
     in the selected folder, pre-populating the course fields.
     """
     from shared.helpers import native_folder_picker
-    folder_path = native_folder_picker(initial_dir=st.session_state.get('hub_edit_temp_folder') or None)
+    from shared.helpers import picker_start_for_existing
+    folder_path = native_folder_picker(initial_dir=picker_start_for_existing(
+        st.session_state.get('hub_edit_temp_folder') or None))
     if folder_path:
         st.session_state['hub_edit_temp_folder'] = folder_path
         # --- Auto-detect course from manifest ---
