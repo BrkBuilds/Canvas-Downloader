@@ -79,6 +79,22 @@ div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details {
     border: 1px solid rgba(239, 68, 68, 0.4) !important;
 }
 
+/* The last filename sat flush against this card's bottom border - the same
+   -16px stMarkdownContainer margin documented in CLAUDE.md, presenting here as
+   a missing inset rather than as a collapsed card. This category's rows are
+   bare st.markdown divs (no columns, unlike every other category), so the LAST
+   row's container is 16px SHORTER than the text inside it: measured on the real
+   review page, container 15.6px against ~31.6px of content, which ate 16 of the
+   body's 17px padding and left 1px. Cancel it on the last element only - the
+   rows above keep the negative margin, which is what sets their inter-row
+   rhythm; cancelling it on all of them would space the list out by 16px a row.
+   Verified in the running app: 17px above the caption, 17px below the last
+   filename. */
+div[class*="st-key-cat_deleted_canvas"] div[data-testid="stExpander"] details
+    [data-testid="stElementContainer"]:last-child [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
+
 /* The 'Guy in the Corner' Ignored Files styling */
 div[class*="st-key-cat_ignored"] div[data-testid="stExpander"] details summary {
     background-color: rgba(18, 18, 22, 0.9) !important;
