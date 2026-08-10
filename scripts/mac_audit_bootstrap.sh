@@ -233,22 +233,45 @@ EOF
   fi
 
   if [ -n "${CANVAS_TOKEN:-}" ]; then
-    if security find-generic-password -s CanvasDownloader -a "$CANVAS_URL" -w >/dev/null 2>&1; then
-      ok "Canvas token already in the login Keychain"
+    # SEED IT WITH PYTHON KEYRING, NOT /usr/bin/security.
+    #
+    # This looks like a style choice and it is not. A keychain item carries an
+    # ACL naming the binaries allowed to read it WITHOUT authorisation, and that
+    # ACL is set by whoever creates the item. Created by `security`, the ACL
+    # names `/usr/bin/security` - so `security find-generic-password` reads it
+    # back silently and everything looks fine, while every actual CONSUMER
+    # (the app, and the harness's O5 client - both python) is asked to
+    # authorise itself. Authorising an ACL change requires the *login
+    # keychain's own password*, which on a cloud image is frequently the image's
+    # original password and nobody has it.
+    #
+    # Measured 2026-08-10 on a Scaleway Mac: `security` said the token was
+    # present, `mac_audit_doctor.py` therefore said READY, and python got
+    # -25308 headless / an unanswerable password prompt in Aqua. The audit lost
+    # an hour before the first row ran. `-A` did not help - it was set.
+    #
+    # Written by python, the item is readable by python with no prompt, which is
+    # what both consumers are. Highest fidelity of all is to log in once through
+    # the app UI and let the app create its own item; this is the unattended
+    # equivalent and is what makes the run reproducible.
+    if $PY -c "import keyring,sys; sys.exit(0 if keyring.get_password('CanvasDownloader', '$CANVAS_URL') else 1)" 2>/dev/null; then
+      ok "Canvas token already in the login Keychain (readable by python)"
     else
-      # -A = any application may read it without a prompt.
-      #
-      # This matters more than it looks. An item created by /usr/bin/security
-      # gets an ACL naming only /usr/bin/security, so when Python's `keyring`
-      # reads it macOS puts up "…wants to access your login keychain" and waits
-      # for a password - on EVERY run. That is the difference between an
-      # unattended audit and one that stops dead the moment you look away.
-      # The trade is deliberate and scoped: this is a throwaway rented machine
-      # holding one Canvas token that you revoke afterwards.
-      security add-generic-password -U -A -s CanvasDownloader -a "$CANVAS_URL" \
-        -w "$CANVAS_TOKEN" 2>/dev/null \
-        && ok "Canvas token written to the login Keychain (no-prompt ACL)" \
-        || warn "Could not write the Keychain item - log in once through the app UI instead."
+      # Remove any `security`-created item first: set_password on an existing
+      # item inherits the old ACL, so re-seeding over one changes nothing.
+      security delete-generic-password -s CanvasDownloader -a "$CANVAS_URL" >/dev/null 2>&1 || true
+      if CANVAS_TOKEN="$CANVAS_TOKEN" $PY -c "
+import keyring, os
+keyring.set_password('CanvasDownloader', '$CANVAS_URL', os.environ['CANVAS_TOKEN'])
+assert keyring.get_password('CanvasDownloader', '$CANVAS_URL'), 'read-back failed'
+" 2>/dev/null; then
+        ok "Canvas token written to the login Keychain via python (read-back verified)"
+      else
+        warn "Could not write the Keychain item. If this says -25308 you are in a"
+        warn "  Background launchd session: the Keychain is scoped to the security"
+        warn "  session, so start tmux from a Terminal inside the graphical session."
+        warn "  Check with: python3 scripts/mac_aqua.py check"
+      fi
     fi
   fi
 fi

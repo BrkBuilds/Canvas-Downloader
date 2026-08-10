@@ -78,6 +78,66 @@ sudo reboot
 `scripts/mac_audit_doctor.py` probes all of this directly and reports the
 launchd domain as INFO only.
 
+### THE OTHER HALF OF THE SAME TRAP: the Keychain *is* session-scoped
+
+Everything above is true **of the window server** and does not carry over to the
+**Keychain**, which is the one macOS service scoped to the launchd *security*
+session rather than to the framebuffer. Measured 2026-08-10, in ONE shell on a
+Scaleway Apple-silicon Mac:
+
+```
+screencapture                     -> a real 4.4 MB PNG
+System Events                     -> answers
+osascript / GUI automation        -> works
+keyring.set_password(a NEW item)  -> errSecInteractionNotAllowed (-25308)
+```
+
+So a tmux server started over SSH gives you a `Background` session that can
+drive the entire GUI and **cannot touch the Keychain at all** - not even to
+create an item of its own, where no ACL and no password are involved. The app
+under test is a child of that shell, so *every* Keychain observation becomes
+false: token save "fails", auto-login "does not restore", and the 90 s watchdog
+looks like it is being hit. **None of that is the product.**
+
+Two independent failures land on the same symptom, and both bit in one session:
+
+1. **The session** (above). Fix it at the root - start tmux from a Terminal
+   inside the graphical session, so every pane inherits Aqua. If you are already
+   mid-session, `scripts/mac_aqua.py` hands one command to Terminal.app (which
+   Launch Services starts in Aqua) and every child inherits it, including a
+   long-lived Streamlit:
+
+   ```bash
+   python3 scripts/mac_aqua.py check                       # session + Keychain, one line each
+   python3 scripts/mac_aqua.py run "python -m tests.audit app start"
+   ```
+
+   `tests/audit/harness/appctl.py` passes `start_new_session=True` on POSIX so
+   the app survives that Terminal window closing.
+
+2. **The item's ACL.** A keychain item records which binaries may read it
+   without authorisation, and that list is set by whoever *creates* it. Seeded
+   by `/usr/bin/security`, the ACL names `security` - which reads it back
+   silently, so the seeding looks successful - while every real consumer (the
+   app, and the harness's O5 client, both **python**) is asked to authorise
+   itself, and authorising an ACL change requires the **login keychain's own
+   password**. On a cloud image that is often the image's original password and
+   nobody has it. `-A` does not help; it was set.
+
+**The doctor said READY in exactly that state**, because `check_credentials`
+probed with `security` - a different client from every consumer, which is the
+same mistake `CLAUDE.md` records as verifying a copy instead of the real thing.
+It now (a) round-trips a **brand-new item of its own** to test the session as a
+capability, and (b) re-reads the token with **python**, both `BLOCK`, both
+bounded by a daemon-thread watchdog so a password prompt cannot hang the
+preflight. `mac_audit_bootstrap.sh` seeds via python keyring and verifies the
+read-back.
+
+Highest fidelity of all, and what a real user does: delete the item and **log in
+once through the app UI**, letting the app create its own. That is also the
+genuine M5 save test - verify the item's `cdat` is the moment you logged in, then
+that python reads it with no prompt.
+
 ---
 
 ## Preflight
