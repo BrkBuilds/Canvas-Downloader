@@ -22,6 +22,37 @@ _BAD_ROOTS_WIN = {
 }
 _BAD_ROOTS_NIX = {'/etc', '/usr', '/bin', '/sbin', '/var', '/sys', '/proc'}
 
+# macOS SYMLINKS three of those into /private, and `_validate_pair_folder`
+# resolves before it compares - so `/etc` arrived as `/private/etc`, matched
+# nothing, and was ACCEPTED as a sync folder. Measured 2026-08-10 on macOS 15:
+# `_validate_pair_folder('/etc')` -> True, likewise '/etc/nested' and '/var/log',
+# and `add_pair('/etc')` wrote the pairs file instead of rejecting it.
+#
+# The tests for this were right all along and had simply never run: they are
+# `skipif(sys.platform == "win32")`, so Windows skipped them and nobody had run
+# the suite on a Mac. Six of them fail on the platform they were written for.
+#
+# This matters because the folder usually comes from the native picker, and
+# Finder resolves symlinks - so `/private/etc` is the spelling a real user is
+# most likely to arrive with, not `/etc`.
+_BAD_ROOTS_MAC = {'/private/etc', '/private/var'}
+
+
+def _user_temp_root() -> str:
+    """The OS's own per-user temp area, in resolved lowercase form.
+
+    NOT a system root, and the distinction is real rather than a concession to
+    the test suite: on macOS `TMPDIR` is `/var/folders/<...>/T`, which resolves
+    under `/private/var` and would otherwise be swallowed by the `/var` entry
+    above. `/var/log` and `/private/etc` are the system; `/var/folders/<user>` is
+    the user's own scratch space.
+    """
+    import tempfile
+    try:
+        return str(Path(tempfile.gettempdir()).resolve()).lower()
+    except Exception:                                          # noqa: BLE001
+        return ''
+
 
 def _strip_label(pair: dict) -> dict:
     """Drop a course's user-chosen NAME before it enters the sync-pairs file.
@@ -70,13 +101,31 @@ def _with_saved_id(pair: dict) -> dict:
 
 
 def _validate_pair_folder(folder: str) -> bool:
-    """Return False if folder is an obviously dangerous system root."""
+    """Return False if folder is an obviously dangerous system root.
+
+    Checks the RAW spelling as well as the resolved one. Resolving alone is what
+    let `/etc` through on macOS (it becomes `/private/etc`), and checking only
+    the raw form would miss the spelling the native picker actually returns - so
+    a candidate is refused if EITHER form names a system root.
+    """
     try:
-        p_lower = str(Path(folder).resolve()).lower()
+        resolved = str(Path(folder).resolve()).lower()
+        raw = os.path.normpath(str(folder)).lower()
         sep = os.sep
-        for bad in _BAD_ROOTS_WIN | _BAD_ROOTS_NIX:
-            if p_lower == bad or p_lower.startswith(bad + sep) or p_lower.startswith(bad + '/'):
-                return False
+
+        # The user's own temp area sits under /private/var on macOS; it is not
+        # the system. Checked before the roots, since /var would otherwise claim
+        # it. See _user_temp_root.
+        tmp_root = _user_temp_root()
+        if tmp_root and (resolved == tmp_root or resolved.startswith(tmp_root + sep)
+                         or resolved.startswith(tmp_root + '/')):
+            return True
+
+        for bad in _BAD_ROOTS_WIN | _BAD_ROOTS_NIX | _BAD_ROOTS_MAC:
+            for candidate in (resolved, raw):
+                if (candidate == bad or candidate.startswith(bad + sep)
+                        or candidate.startswith(bad + '/')):
+                    return False
         return True
     except Exception:
         return False
