@@ -726,7 +726,7 @@ if __name__ == "__main__":
     # easy to trigger by accident over VNC. Text selection of page chrome is
     # instead disabled in CSS (styles/global.css), while inputs/textareas stay
     # fully selectable + editable so pasting the Canvas Access Token/URL still works.
-    webview.create_window(
+    _main_window = webview.create_window(
         'Canvas Downloader', html=_LOADING_HTML,
         maximized=True, min_size=(1024, 700),
         background_color='#0d1117'
@@ -790,6 +790,45 @@ if __name__ == "__main__":
     # produced a SECOND, duplicate Edit title in the menu bar whose actions were
     # no-ops (they did nothing on click and broke ⌘-shortcut routing). Relying on
     # the built-in menu gives one Edit menu that actually copies and pastes.
+    # macOS: the `finally` below NEVER RUNS on a normal quit.
+    #
+    # Cmd-Q / the Quit menu send a Quit Apple event, and Cocoa terminates the
+    # process from inside its own run loop without unwinding the Python stack -
+    # so `webview.start()` does not return and nothing after it happens.
+    # Measured on the packaged app 2026-08-10: launch, quit with
+    # `tell application "Canvas Downloader" to quit`, and the state file still
+    # said `clean_exit=False, exit_reason=None`. Three launches in one hour each
+    # logged "PREVIOUS SESSION DID NOT EXIT CLEANLY", one of them for a session
+    # that had been quit gracefully after 788s idle.
+    #
+    # That costs the two things this block exists for: the health record's clean
+    # marker - "the absence of that marker is the entire signal the health log
+    # carries", and macOS is the platform CLAUDE.md calls out as having no other
+    # crash-telemetry channel - and the child reap that is supposed to happen
+    # before the hard exit.
+    #
+    # pywebview's `closed` event fires from the Cocoa delegate, which is a path
+    # the Quit event DOES take. `_shutdown` is idempotent, so the ordinary
+    # window-close route (where `start()` does return and the finally also runs)
+    # closes the record exactly once.
+    _shutdown_done = threading.Event()
+
+    def _shutdown(reason: str) -> None:
+        if _shutdown_done.is_set():
+            return
+        _shutdown_done.set()
+        try:
+            from core.health_log import session_end
+            session_end(reason)
+        except Exception:
+            pass
+        _terminate_child_processes()
+
+    try:
+        _main_window.events.closed += lambda: _shutdown("clean")
+    except Exception as _e:                        # pragma: no cover - defensive
+        logger.debug(f"Could not hook the window close event: {_e}")
+
     _exit_reason = "clean"
     try:
         webview.start(_boot)
