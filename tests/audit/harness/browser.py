@@ -379,6 +379,18 @@ class Session:
             """(to) => { const m = document.querySelector('[data-testid="stMain"]');
                  if (m) m.scrollTop = to === 'top' ? 0 : m.scrollHeight; }""", to)
 
+    def press(self, key: str) -> dict:
+        """Send one key to the page, then settle.
+
+        Exists for Escape: a Streamlit dialog hides its native close button by
+        CSS, and while one is open its scrim intercepts every click - so a
+        forgotten dialog makes the NEXT `ui click` fail with a pointer-events
+        timeout naming an unrelated element (measured: the Settings dialog's
+        `st-key-stg_card_path` swallowing a click meant for a course checkbox).
+        """
+        self.page.keyboard.press(key)
+        return {"pressed": key, "settle": self.settle()}
+
     # -- extraction ----------------------------------------------------
 
     def extract(self, which: str = "screen") -> dict:

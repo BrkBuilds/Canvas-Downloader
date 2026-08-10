@@ -3712,8 +3712,8 @@ def render_fda_nudge(key_prefix: str, dismissed: bool | None = None) -> None:
                 f"<div class='fda-nudge-title'>How to silence 'Would like to access data from other apps' pop-up</div>"
                 f"<div class='fda-nudge-desc'>macOS asks a one-click "
                 f"<b>&ldquo;access data from other apps&rdquo;</b> permission every time "
-                f"you open the app. The app needs this permission to safely and cleanly convert Office files to your ai-ready formats. This permission is annoying and "
-                f"makes features like the 'Todays Files' mode require your input. To hide it for good, grant Canvas Downloader "
+                f"you open the app. The app needs this permission to safely and cleanly convert Office files to your AI-ready formats. This permission is annoying and "
+                f"makes features like <b>Today's files</b> require your input. To hide it for good, grant Canvas Downloader "
                 f"<b>Full Disk Access</b> once and it will never appear again:</div>"
                 f"<ol class='fda-nudge-steps'>{_FDA_STEPS_HTML}</ol>"  # audit-ignore: static module constant (shared step copy)
                 f"</div>",
@@ -3776,7 +3776,7 @@ def render_fda_settings_card() -> None:
 
     with st.container(border=True, key="stg_card_fda"):
         st.html(
-            f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;">{_shield}<span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Hands-off Office conversions</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Converting PowerPoint, Word and Excel files to PDF uses Microsoft Office on your Mac, and macOS 15 + 26 asks a one-click <b style="color:#b6d3ff;">&ldquo;access data from other apps&rdquo;</b> permission the every time you start the app, the moment office conversions start. But you don't need to manually click allow every time you use the app - granting Canvas Downloader <b style="color:#b6d3ff;">Full Disk Access</b> removes it permanently. This is an optional, but recommended action.</div><div style="display:flex;align-items:center;gap:7px;margin-top:7px;font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;border-radius:50%;background:{_dot};flex-shrink:0;"></span><span>{_status}</span></div>{_steps_html}</div>"""
+            f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;">{_shield}<span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Hands-off Office conversions</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Converting PowerPoint, Word and Excel files to PDF uses Microsoft Office on your Mac, and macOS 15 + 26 asks a one-click <b style="color:#b6d3ff;">&ldquo;access data from other apps&rdquo;</b> permission every time you start the app, the moment Office conversions start. But you don't need to manually click allow every time you use the app - granting Canvas Downloader <b style="color:#b6d3ff;">Full Disk Access</b> removes it permanently. This is an optional, but recommended action.</div><div style="display:flex;align-items:center;gap:7px;margin-top:7px;font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;border-radius:50%;background:{_dot};flex-shrink:0;"></span><span>{_status}</span></div>{_steps_html}</div>"""
         )
         if not _granted:
             # Key deliberately avoids the `_fda_open_btn` suffix: that CSS
