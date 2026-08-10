@@ -293,6 +293,86 @@ def check_tcc():
 
 # ───────────────────────────────────────────────── credentials + repo
 
+def _bounded(fn, *args, timeout=15.0):
+    """Run *fn* on a daemon thread; return ('ok'|'err'|'timeout', value).
+
+    A Keychain call can BLOCK on an interactive prompt - which is precisely
+    what `ui.auth._run_keyring_op` exists to defend against, and the reason it
+    uses a daemon thread rather than a pool (a pool's __exit__ joins and so
+    defeats its own watchdog). A preflight that can hang is worse than one that
+    lies, and for an UNATTENDED audit "it prompted" and "it is unusable" are the
+    same answer, so a timeout is a real verdict here, not an inconclusive one.
+    """
+    import queue as _q
+    import threading as _t
+    box: _q.Queue = _q.Queue(maxsize=1)
+
+    def _worker():
+        try:
+            box.put(("ok", fn(*args)))
+        except Exception as e:                                 # noqa: BLE001
+            box.put(("err", e))
+
+    _t.Thread(target=_worker, daemon=True, name="doctor-keychain").start()
+    try:
+        return box.get(timeout=timeout)
+    except _q.Empty:
+        return ("timeout", timeout)
+
+
+def check_keychain_session():
+    """Can THIS process use the login Keychain at all? Round-trip our own item.
+
+    This is the one macOS service scoped to the **security session** rather
+    than to the framebuffer, which is why `check_gui_session`'s "test the
+    capability, never a proxy" reasoning does not carry over to it. Measured on
+    a Scaleway Apple-silicon Mac 2026-08-10, in ONE shell:
+
+        screencapture                  -> a real 4.4 MB PNG
+        System Events                  -> answers
+        keyring.set_password(NEW item) -> errSecInteractionNotAllowed (-25308)
+
+    A tmux server started over SSH is a `Background` session that can drive the
+    entire GUI and cannot touch the Keychain. The app under test is a child of
+    that shell, so token save "fails", auto-login "does not restore" and the
+    90 s watchdog looks like it is being hit - none of it the product. The
+    doctor reported READY in exactly that state, which is what this check is
+    for.
+
+    A brand-new item of our own making needs no ACL authorisation and no
+    password, so a failure here is the session and nothing else.
+    """
+    try:
+        import keyring
+    except Exception as e:                                     # noqa: BLE001
+        add("Keychain usable from this session", False, BLOCK,
+            f"keyring import failed: {type(e).__name__}: {e}")
+        return
+    service, account = "CanvasDownloaderAuditProbe", "session-capability"
+
+    def _round_trip():
+        keyring.set_password(service, account, "probe")
+        got = keyring.get_password(service, account)
+        keyring.delete_password(service, account)
+        return got
+
+    kind, value = _bounded(_round_trip)
+    if kind == "ok":
+        ok = value == "probe"
+        detail = ("set/get/delete round trip ok" if ok
+                  else "round trip returned a different value")
+    elif kind == "timeout":
+        ok, detail = False, (f"blocked for {value:.0f}s - something is prompting; "
+                             "an unattended audit cannot answer it")
+    else:
+        ok, detail = False, f"{type(value).__name__}: {value}"[:200]
+    add("Keychain usable from this session", ok, BLOCK, detail,
+        "Start tmux from a Terminal INSIDE the graphical session so every pane\n"
+        "      inherits Aqua, or route the app through\n"
+        "      `python3 scripts/mac_aqua.py run '<cmd>'`. Check either with\n"
+        "      `python3 scripts/mac_aqua.py check`.")
+
+
 def check_credentials():
     """The token must already be in the login Keychain, or every run stops at
     the login wall - which is exactly what makes an unattended audit fail."""
@@ -313,8 +393,49 @@ def check_credentials():
                   "-a", url, "-w"], timeout=20)
     have = rc == 0 and out.strip() != ""
     add("Canvas token in the login Keychain", have, BLOCK, "present" if have else "absent",
-        f'security add-generic-password -U -A -s CanvasDownloader -a "{url}" '
-        f'-w "<TOKEN>"    (-A: no keychain prompt on every run)')
+        f'python3 -c "import keyring; keyring.set_password('
+        f"'CanvasDownloader', '{url}', '<TOKEN>')\"    (see the next check for "
+        f"why NOT /usr/bin/security)")
+
+    # Probe with the client the CONSUMERS use, not with the tool that wrote it.
+    #
+    # `security find-generic-password` above reads an item CREATED by
+    # /usr/bin/security silently, because the item's ACL names that binary. The
+    # app and the harness's O5 client are **python**, which is not on that ACL -
+    # so macOS asks to authorise it, and authorising an ACL change requires the
+    # *login keychain's own password*. On a cloud image that is frequently the
+    # image's original password and nobody has it, so the honest answer is
+    # "unreadable". Measured 2026-08-10: `security` said present, python got
+    # -25308 headless and a password prompt in Aqua, and the doctor said READY.
+    #
+    # Same class as CLAUDE.md's rule about verifying the real thing rather than
+    # a copy: a probe that uses a different client than every consumer is not a
+    # probe of anything.
+    if have:
+        try:
+            import keyring
+            kind, value = _bounded(keyring.get_password, "CanvasDownloader", url)
+            if kind == "ok":
+                py_ok = bool(value)
+                py_detail = ("readable by python" if value
+                             else "python read returned nothing")
+            elif kind == "timeout":
+                py_ok = False
+                py_detail = (f"blocked for {value:.0f}s - macOS is asking to "
+                             "authorise python against an item it did not create")
+            else:
+                py_ok, py_detail = False, f"{type(value).__name__}: {value}"[:200]
+        except Exception as e:                                 # noqa: BLE001
+            py_ok, py_detail = False, f"{type(e).__name__}: {e}"[:200]
+        add("...and readable by PYTHON (the app's own client)", py_ok, BLOCK, py_detail,
+            "An item written by /usr/bin/security is not readable by python\n"
+            "      without the login keychain password. Delete it and let the app\n"
+            "      create its own by logging in once through the UI (highest\n"
+            "      fidelity), or re-seed it with python keyring:\n"
+            "        security delete-generic-password -s CanvasDownloader "
+            f'-a "{url}"\n'
+            "        python3 -c \"import keyring; keyring.set_password("
+            f"'CanvasDownloader', '{url}', '<TOKEN>')\"")
 
     if have:
         token = out.strip()
@@ -366,6 +487,7 @@ def main():
     check_platform()
     if sys.platform == "darwin":
         check_gui_session()
+        check_keychain_session()
     check_python()
     check_app_modules()
     check_tooling()

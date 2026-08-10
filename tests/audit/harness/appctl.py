@@ -169,6 +169,21 @@ def start(rp: RunPaths, port: int | None = None, timeout: float = 120.0) -> dict
             cmd, cwd=str(REPO_ROOT), env=env, stdout=lf, stderr=lf,
             stdin=subprocess.DEVNULL,
             creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
+            # POSIX counterpart of the Windows flag above: put the app in its
+            # own session so it cannot be taken down by a SIGHUP aimed at the
+            # shell that launched it. The browser is already deliberately
+            # detached for the same reason ("the browser outlives the CLI
+            # call"); the app needs it for one macOS-specific reason.
+            #
+            # On macOS the Keychain is scoped to the launchd SECURITY session,
+            # so an app started from an SSH tmux (`Background`) cannot save or
+            # read a token however healthy the window server is - see
+            # `scripts/mac_aqua.py`. The fix is to start it inside Aqua, which
+            # in practice means through a Terminal window, and closing that
+            # window would otherwise SIGHUP the app. setsid keeps the launchd
+            # domain (that travels with the Mach bootstrap port, not the POSIX
+            # session) while making the app independent of the tab.
+            **({"start_new_session": True} if os.name == "posix" else {}),
         )
 
     deadline = time.time() + timeout
