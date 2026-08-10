@@ -428,12 +428,30 @@ that:
    (measured — the Scaleway password does not open it). Either set a known
    keychain password first, or accept that this stays unverified on rented
    hardware.
-3. **The folder picker's RETURN path** (a folder whose name contains a quote) and
-   **Reveal in Finder / Open Folder**. Both need **Accessibility** for the
-   session's responsible process — `System Events` refuses with `-1728` without
-   it. The picker's *open* half is verified. Same permission unlocks reading a
-   wedged app's window list, which is how the Word modal would have been observed
-   directly instead of by asking the operator.
+3. ~~**The folder picker's RETURN path**~~ **DONE 2026-08-10** — a quoted folder
+   name survives intact: target `/tmp/m5_picker/quoted "folder" name`, returned
+   `/private/tmp/m5_picker/quoted "folder" name/`. Two macOS-only details fell
+   out of it, both verified harmless: the return carries a **trailing slash**
+   (AppleScript's `POSIX path of`, so a *picked* folder differs in spelling from
+   a typed one — Windows and tkinter both return bare paths) and the resolved
+   `/private/tmp` form; `save_pair`, `pair_key` and `_path_key` all collapse
+   both, so one link cannot become two pairs.
+   - **The correction to make here: Accessibility is not simply absent.**
+     *Reading* works (a frontmost-process query answers), so the old `-1728`
+     note is wrong. **Synthesising input is a separate gate** and it is denied:
+     System Events answers *"osascript is not allowed to send keystrokes"*, with
+     `kTCCServiceAccessibility` for `com.apple.Terminal` at `auth_value 0`.
+     Cmd-Shift-G produced no sheet; type-ahead is what surfaced the real refusal.
+     The modal was therefore dismissed by the **operator**, which took seconds —
+     for a single modal, asking is cheaper than the permission dance.
+   - **Still needs the grant: Reveal in Finder / Open Folder**, and reading a
+     wedged app's window list.
+   - **A trap that cost a cycle: check eyesight in the SAME context you capture
+     from, not once per session.** The first screenshot of the open dialog showed
+     an EMPTY DESKTOP because it was taken from the SSH shell, which has no
+     Screen Recording — only `com.apple.Terminal` does. It silently omitted every
+     window, including the Terminals. Re-shooting through the bridge showed the
+     dialog immediately.
 4. ~~**The macOS-15 FDA nudge.**~~ **DONE 2026-08-10**, all four surfaces. The
    note here used to say it needs Terminal removed from Full Disk Access; that
    was **wrong twice over** and cost a cycle each time, so read this instead:
@@ -453,10 +471,20 @@ that:
    - Reaching the *card* needs one more step: the audit config ships
      `fda_nudge_dismissed: true`, so the slot renders the subtle re-spawn link.
      Click it.
-5. **The notification BANNER, visually.** `UNUserNotifications` reports delivered
-   and a `UserNotificationCenter` window appears on every call, but the banner
-   outran every capture attempt (~5 s life). Fire it and capture within ~1 s
-   through the bridge.
+5. ~~**The notification BANNER, visually.**~~ **CLOSED as unreachable from
+   source, 2026-08-10, and do not spend time on it again.** A source run has no
+   bundle identity, so macOS attributes the request to an app called **"Python"**
+   — confirmed by opening System Settings → Notifications, which showed exactly
+   that with *Allow notifications* off. So `granted=False` /
+   `authorizationStatus=0` here says nothing about the product. 36 captures at
+   0.25 s intervals of the banner corner were **byte-identical**: nothing is ever
+   displayed, and firing repeatedly gets the process **Killed: 9**. Notifications
+   are confirmed working in the frozen build (prior audit + operator). What the
+   attempt DID find is a real code defect —
+   `_show_macos_notification_un` returns True before the async completion handler
+   sees the error, so a rejected request is reported as success and all three
+   fallbacks are skipped; see its finding. Testing that properly needs the
+   packaged app with a real *Don't Allow*, not a source run.
 6. **A 250-char path component** fails to convert although the escaper passes the
    path through faithfully (round-trip identical). Measured, **not diagnosed** —
    it is either Word's own filename limit or `office_container_stage`. Isolate
