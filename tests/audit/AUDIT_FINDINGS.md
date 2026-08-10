@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260810_151922_macos-15-v2.0.2` on 2026-08-10.
 
-**38 open** · 92 total · 24 fixed · 30 invalid
+**39 open** · 93 total · 24 fixed · 30 invalid
 
 ---
 
@@ -24,7 +24,7 @@ Last updated by run `20260810_151922_macos-15-v2.0.2` on 2026-08-10.
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 10
+**Occurrences**: 11
 **Scenario**: mac_m1_word_wedge
 
 **Detail**:
@@ -44,7 +44,7 @@ REPRODUCED on real macOS with real Office; only this machine can produce it. CHA
 **Oracles**: O1 UI (lane apps on ?mode=auth) vs O3 disk (Keychain probe)
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 5
+**Occurrences**: 6
 
 **Detail**:
 
@@ -90,7 +90,7 @@ Verified live in the Aqua session against the real macOS Keychain (all three cas
 **Oracles**: O3,O4
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 9
+**Occurrences**: 10
 **Scenario**: mac_m4_system_roots
 
 **Detail**:
@@ -110,7 +110,7 @@ REAL PRODUCT DEFECT, found by running the unit suite on macOS for the first time
 **Oracles**: O3,O4
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 8
+**Occurrences**: 9
 **Scenario**: mac_m4_panopto_dupes
 
 **Detail**:
@@ -130,7 +130,7 @@ REAL PRODUCT DEFECT, found by driving the real app: a download of course 43660 w
 **Oracles**: O3,O4
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 7
+**Occurrences**: 8
 **Scenario**: mac_m4_case_rename
 
 **Detail**:
@@ -150,7 +150,7 @@ REAL PRODUCT DEFECT on macOS, in a primitive whose Unicode half I verified as wo
 **Oracles**: O3,O2
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 10
+**Occurrences**: 11
 **Scenario**: mac_m3_bundle
 
 **Detail**:
@@ -170,7 +170,7 @@ PRODUCT/BUILD finding, first time the macOS bundle's signature has been verified
 **Oracles**: O1 UI vs O3 disk (version.py + git tags)
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 7
 
 **Detail**:
 
@@ -189,7 +189,7 @@ The sidebar of the running app reads 'v2.0.1' (screenshot fda_06_today_card.png,
 **Oracles**: O3 disk (real Word converter,control per case) vs O2 log
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 
 **Detail**:
 
@@ -254,7 +254,7 @@ REFINES the earlier 'attribution uncertain' note by separating two phenomena I h
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 9
+**Occurrences**: 10
 **Scenario**: mac_m0_suite
 
 **Detail**:
@@ -295,7 +295,7 @@ Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 9
+**Occurrences**: 10
 **Scenario**: mac_m3_clean_exit
 
 **Detail**:
@@ -327,6 +327,43 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 ---
 
+### The first-run macOS notice said 'Click Allow / OK on each', but the Accessibility prompt it raises has NO Allow button - and denying it is harmless, which the copy never said
+<!-- fp:6ac20c9e6ed2 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: ui-truth
+**Oracles**: O1 UI (operator screenshot of the real app) vs the source
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 1
+
+**Detail**:
+
+Reported by the operator from the real packaged app, which they had never seen before and which is absent from the docs site: a dialog titled "Accessibility Access" saying "Canvas Downloader" would like to control this computer using accessibility features.
+
+WHERE IT COMES FROM, traced rather than guessed: engine/applescript_bridge._visibility_prefix emits
+
+    tell application "System Events"
+        try
+            set visible of (first process whose name is "Microsoft Word") to false
+        end try
+    end tell
+
+before every Office conversion. SETTING A PROPERTY ON A PROCESS is UI scripting, and UI scripting requires kTCCServiceAccessibility for the CALLING app - so the first Office conversion in the packaged app raises this prompt against "Canvas Downloader" itself. It is not an artifact of the audit session: an audit-driven prompt names Terminal or the shell binary, this one names the app.
+
+THE DEFECT is the copy, and it made the instruction impossible to follow. Both the download flow (app.py) and the sync flow (sync/execution.py) rendered a byte-identical first-run notice that said: "macOS will show a few one-time permission dialogs (control of Microsoft PowerPoint / Word / Excel, System Events, and folder access). Click Allow / OK on each." The Accessibility prompt has NO Allow button. Its only options are "Open System Settings" and "Deny", and Deny is the visually primary one - so a user following the instruction literally cannot, and the obvious remaining click is the refusal. Unlike Automation, Accessibility cannot be granted from the prompt at all; it needs a toggle in System Settings > Privacy & Security > Accessibility.
+
+DENYING IS HARMLESS, and that is the part the user had no way to know. The System Events call is wrapped in its own AppleScript `try`, so a denial degrades to "the Office app stays visible" - the dock-bounce and window-flashing that prefix exists to suppress - while the open / save as / close that actually converts the file is untouched. So the honest instruction is not "click Allow" but "this one is optional, and Deny costs you nothing but flickering windows".
+
+FIX: one shared constant, engine.applescript_bridge.TCC_FIRST_RUN_NOTICE, used by both flows - the copy had two identical copies and was wrong in both, which is the same drift the FDA step list is kept in one place to avoid. It now names the Accessibility prompt explicitly, says it has no Allow button, says it is optional, and says Deny is safe and changes nothing about your files. Lives beside the mechanism it describes rather than in a UI module, so a future change to _visibility_prefix is next to the sentence that explains it.
+
+STILL TO DO OUTSIDE THIS REPO: the docs site's macOS setup page does not mention this dialog at all. It should list the same three-way distinction - Automation prompts (Allow), folder access (OK), and Accessibility (optional, needs a System Settings toggle, safe to deny).
+
+**Notes**: 
+
+---
+
 ### A folder's Panopto formats can only be changed by running a Download, and that run silently narrows them - the sync side shows the contract but cannot edit it
 <!-- fp:2368f8526178 -->
 
@@ -336,7 +373,7 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 **Oracles**: O4 manifest (sync_metadata.panopto_contract) vs O1 UI
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 7
 
 **Detail**:
 
@@ -363,7 +400,7 @@ Recorded as an observation rather than a defect: every individual behaviour here
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 10
+**Occurrences**: 11
 **Scenario**: mac_m1_hostile_names
 
 **Detail**:
@@ -383,7 +420,7 @@ MEASURED with a positive control per case and a FRESH Word each time, which is w
 **Oracles**: O3 disk (POSIX rename semantics) vs O1 UI/O2 log (no error reported)
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 5
+**Occurrences**: 6
 
 **Detail**:
 
@@ -422,7 +459,7 @@ WHAT WAS FIXED is the audit's own expectation, which produced 6 spurious CRITICA
 **Oracles**: O3 disk (real case-sensitive and case-insensitive volumes)
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 
 **Detail**:
 
@@ -453,7 +490,7 @@ Guarded by tests/test_path_key_case_folding.py (7), which pin both directions, t
 **Oracles**: O2 log (health.log) vs O3 disk
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 
 **Detail**:
 
@@ -472,7 +509,7 @@ Found by exercising the clean-exit fix in the PACKAGED 2.0.2 app, which is the o
 **Oracles**: O2 log (async ordering) vs O1 UI (9s of identical frames)
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 
 **Detail**:
 
@@ -515,7 +552,7 @@ Also seen: the diagnostic process ended with "Killed: 9" after driving all three
 **Oracles**: O1 UI vs O1 UI (the app's own naming elsewhere)
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 7
 
 **Detail**:
 
@@ -534,7 +571,7 @@ Both FDA surfaces rendered for the first time in this audit (they need macOS 15+
 **Oracles**: O1 UI (real modal,operator click) vs O3 disk
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 
 **Detail**:
 
@@ -553,7 +590,7 @@ The last unproven half of the 2026-08-10 AppleScript escaping unification, and i
 **Oracles**: O3,O5
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 9
+**Occurrences**: 10
 **Scenario**: mac_m2_media
 
 **Detail**:
@@ -636,7 +673,7 @@ RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that 
 **Oracles**: O3,O4
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 10
+**Occurrences**: 11
 **Scenario**: mac_m2_panopto_url
 
 **Detail**:
@@ -656,7 +693,7 @@ FIRST TIME the Panopto subsystem has ever run on macOS. All of it passed. (1) DI
 **Oracles**: O3 disk (mp4 atoms + ffmpeg decode) vs O1 UI vs O4 manifest
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 7
 
 **Detail**:
 
@@ -685,7 +722,7 @@ Also confirmed in passing: a download re-run does NOT duplicate existing Canvas 
 **Oracles**: O1,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 9
+**Occurrences**: 10
 **Scenario**: mac_m2_hardware
 
 **Detail**:
@@ -705,7 +742,7 @@ Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requir
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 9
+**Occurrences**: 10
 **Scenario**: mac_m2_transcription
 
 **Detail**:
@@ -725,7 +762,7 @@ FIRST macOS run of the transcription subsystem, and of the .part cleanup fix tha
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 9
+**Occurrences**: 10
 **Scenario**: mac_m3_argv_drop
 
 **Detail**:
@@ -745,7 +782,7 @@ FIRST test of this from a real bundle. A macOS windowed .app rebuilds sys.argv f
 **Oracles**: O3,O4
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 10
+**Occurrences**: 11
 **Scenario**: mac_m4_hfs_nfd
 
 **Detail**:
@@ -765,7 +802,7 @@ Verified on a REAL HFS+ volume created with hdiutil, which is the only way to re
 **Oracles**: O3 disk (real functions driven per platform) vs the suite
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 
 **Detail**:
 
@@ -840,7 +877,7 @@ Reproduced live, not synthetically. The office lane hit '[ERROR] [converters.exc
 **Oracles**: O1 UI + O2 log + O3 disk,against the signed bundle
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 2
 
 **Detail**:
 
@@ -877,7 +914,7 @@ THE KEYCHAIN REMAINS THE ONE HONEST GAP on this hardware, and it is environmenta
 **Oracles**: O1,O2
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 10
+**Occurrences**: 11
 **Scenario**: mac_m5_notifications
 
 **Detail**:
@@ -897,7 +934,7 @@ OBSERVATION with an explicit caveat, recorded so it is not lost and not overstat
 **Oracles**: O1 UI (Finder's own selection) vs O3 disk
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 
 **Detail**:
 
@@ -926,7 +963,7 @@ So "tell application Finder to close every window" hung for the full timeout on 
 **Oracles**: O1 UI vs O3 disk (today_dashboard.json,TCC.db)
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 7
 
 **Detail**:
 
@@ -945,7 +982,7 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 **Oracles**: O5,O3
 **First seen**: 2026-07-28 (20260728_013336_phase2_newversion)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 40
+**Occurrences**: 46
 **Scenario**: s029 · Virksomhedens økonomiske styring (2) Regnskabsvæsen (LA F26 BINTO1057U)
 
 **Detail**:
@@ -962,7 +999,7 @@ So the earlier claim here that "the locked-target fallback is verified working e
 
 ---
 
-### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:bc9703c2e9f2 -->
 
 **Status**: fixed
@@ -1029,7 +1066,7 @@ THE OTHER DIRECTION, verified separately and at least as important: this resolve
 
 ---
 
-### ~~Sync post-processing crashes with NameError: _attempts is not defined~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync post-processing crashes with NameError: _attempts is not defined~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:5d735855a0d8 -->
 
 **Status**: fixed
@@ -1050,7 +1087,7 @@ sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initia
 
 ---
 
-### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:2e38f73c0857 -->
 
 **Status**: invalid
@@ -1071,7 +1108,7 @@ Renamed, row dropped, and another file shares its size and extension. The unique
 
 ---
 
-### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:1d964fc34314 -->
 
 **Status**: fixed
@@ -1100,7 +1137,7 @@ Options: require a name-similarity floor for tier (c) as heal Tier 3 already doe
 
 ---
 
-### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6fe18c5a9b2f -->
 
 **Status**: fixed
@@ -1140,7 +1177,7 @@ Guarded by tests/test_link_content_sig_parity.py, which runs BOTH directions and
 
 ---
 
-### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:91d640ef7d5a -->
 
 **Status**: invalid
@@ -1161,7 +1198,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:78c7871b2180 -->
 
 **Status**: invalid
@@ -1182,7 +1219,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~Download finished with 1 unexplained error(s)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Download finished with 1 unexplained error(s)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa2cae30e286 -->
 
 **Status**: fixed
@@ -1203,7 +1240,7 @@ Errors this course logged that are not teacher-locked files. Each names the item
 
 ---
 
-### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa247ec01d02 -->
 
 **Status**: fixed
@@ -1230,7 +1267,7 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 
 ---
 
-### ~~1 content file(s) on disk with no manifest row~~~~~~~~~~~~~~~~~~~~~~
+### ~~1 content file(s) on disk with no manifest row~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:371b678dbdf1 -->
 
 **Status**: invalid
@@ -1255,7 +1292,7 @@ Verified on a fresh, never-seeded download of 45899 with every converter on: 0 d
 
 ---
 
-### ~~2 Canvas file(s) were downloaded more than once in one run~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 Canvas file(s) were downloaded more than once in one run~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:d05cc83d973a -->
 
 **Status**: fixed
@@ -1276,7 +1313,7 @@ Each of these ids went to the network twice. Two phases both claimed the file, s
 
 ---
 
-### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:09c8ffb50041 -->
 
 **Status**: invalid
@@ -1299,7 +1336,7 @@ Now derived from the folder's stored `sync_contract`. Re-checked on the same pri
 
 ---
 
-### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f5c9f9d3c10f -->
 
 **Status**: fixed
@@ -1347,7 +1384,7 @@ TWO WAYS TO IMPLEMENT, both needing a verifying run:
 
 ---
 
-### ~~2 partial-write artifact(s) left on disk~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 partial-write artifact(s) left on disk~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:62da7c0a9988 -->
 
 **Status**: invalid
@@ -1368,7 +1405,7 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:18cc3b9d802a -->
 
 **Status**: invalid
@@ -1389,7 +1426,7 @@ Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8224b9e3a4a1 -->
 
 **Status**: invalid
@@ -1410,7 +1447,7 @@ Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:
 
 ---
 
-### ~~Unexpected bridged_error in debug log: HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel stopped resp~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel stopped resp~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f4ec25425a4b -->
 
 **Status**: invalid
@@ -1432,7 +1469,7 @@ HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel st
 
 ---
 
-### ~~Unexpected bridged_error in debug log: OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s (Excel stop~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s (Excel stop~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:7d8d6987eef9 -->
 
 **Status**: invalid
@@ -1454,7 +1491,7 @@ OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped respond~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped respond~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:bacba60611c0 -->
 
 **Status**: invalid
@@ -1476,7 +1513,7 @@ Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopp
 
 ---
 
-### ~~Unexpected bridged_error in debug log: VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:958f127d0717 -->
 
 **Status**: fixed
@@ -1497,7 +1534,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on HA.IT-reeksamen-2020-VL-Endelig1.xlsx. Killing PID 21420~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on HA.IT-reeksamen-2020-VL-Endelig1.xlsx. Killing PID 21420~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f7950a0ff1d0 -->
 
 **Status**: invalid
@@ -1519,7 +1556,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on OmkostningerAfsætning - Ekstra - LØSNING.xlsx. Killing P~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on OmkostningerAfsætning - Ekstra - LØSNING.xlsx. Killing P~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:41de4d13af9a -->
 
 **Status**: invalid
@@ -1541,7 +1578,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on Productionanalysis - Eksempel.xlsx. Killing PID 17556.~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on Productionanalysis - Eksempel.xlsx. Killing PID 17556.~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:d5dff49dc678 -->
 
 **Status**: invalid
@@ -1563,7 +1600,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on ekstraopgave 1 - VL.xlsx. Killing PID 22472.~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on ekstraopgave 1 - VL.xlsx. Killing PID 22472.~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fe53cd768483 -->
 
 **Status**: invalid
@@ -1585,7 +1622,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM] Excel init failed: (-2146959355, 'Server-udførelse mislykkedes', None, None)~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM] Excel init failed: (-2146959355, 'Server-udførelse mislykkedes', None, None)~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:74a494b938a5 -->
 
 **Status**: invalid
@@ -1607,7 +1644,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion failed twice~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion failed twice~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:23015c7d7ccf -->
 
 **Status**: invalid
@@ -1629,7 +1666,7 @@ ekstraopgave 1 - VL.xlsx  Conversion failed twice
 
 ---
 
-### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:b751e7a4c30f -->
 
 **Status**: invalid
@@ -1651,7 +1688,7 @@ ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped respond
 
 ---
 
-### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:0995f8315ce5 -->
 
 **Status**: invalid
@@ -1672,7 +1709,7 @@ g1 darts vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:ac0b7c1a10e5 -->
 
 **Status**: invalid
@@ -1693,7 +1730,7 @@ gk2 vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8badba1fc12c -->
 
 **Status**: invalid
@@ -1737,7 +1774,7 @@ Reverted to the original single dimming rule and verified in the running app: po
 
 ---
 
-### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:7e2221df01e0 -->
 
 **Status**: fixed
@@ -1758,7 +1795,7 @@ Both Page call sites pass isolate=False literally, so with isolation ON in flat 
 
 ---
 
-### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:815c4edf0cb8 -->
 
 **Status**: invalid
@@ -1783,7 +1820,7 @@ Not data loss - files are present and usable - but it defeats the AI-optimisatio
 
 ---
 
-### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:689a00875c36 -->
 
 **Status**: invalid
@@ -1806,7 +1843,7 @@ Fixed by routing both flows through one shared helper (converters.post_processin
 
 ---
 
-### ~~convert_code did not reach 54 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~convert_code did not reach 54 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:5a22b016415d -->
 
 **Status**: invalid
@@ -1828,7 +1865,7 @@ convert_zip extracted these, but post-processing filters every converter through
 
 ---
 
-### ~~convert_excel enabled but 1 source file(s) survived conversion~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~convert_excel enabled but 1 source file(s) survived conversion~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:449c42444584 -->
 
 **Status**: invalid
@@ -1850,7 +1887,7 @@ This converter is documented to replace its source. A surviving source at module
 
 ---
 
-### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:24e9563de29e -->
 
 **Status**: invalid
@@ -1872,7 +1909,7 @@ convert_zip extracted these, but post-processing filters every converter through
 
 ---
 
-### ~~Cancelling mid-transcription leaves .txt.part/.srt.part in the course folder for ever~~~~~~~~~~~~~~~~~~~~
+### ~~Cancelling mid-transcription leaves .txt.part/.srt.part in the course folder for ever~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:02cdd440035e -->
 
 **Status**: fixed
@@ -1923,7 +1960,7 @@ AST, asserting the call sits inside a `Try.finalbody`.
 
 ---
 
-### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:72054c302758 -->
 
 **Status**: invalid
@@ -1944,7 +1981,7 @@ original_size decides whether the next Canvas change is treated as a real update
 
 ---
 
-### ~~36 file(s) differ from their recorded md5~~~~~~~~~~~~~~~~~~~~~~
+### ~~36 file(s) differ from their recorded md5~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8a7f0ead05f4 -->
 
 **Status**: invalid
@@ -1965,7 +2002,7 @@ original_md5 is what classifies the next update as clean (overwrite) or modified
 
 ---
 
-### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:c52480b4f905 -->
 
 **Status**: fixed
@@ -1982,7 +2019,7 @@ original_md5 is what classifies the next update as clean (overwrite) or modified
 
 ---
 
-### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:4b3b4fd09677 -->
 
 **Status**: fixed
@@ -2009,7 +2046,7 @@ Fixed in sync/analysis.py: every category now writes one line per file through a
 
 ---
 
-### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:d433d4f13087 -->
 
 **Status**: fixed
@@ -2042,7 +2079,7 @@ Verified by cancelling three real runs: before, both .part files remained; after
 
 ---
 
-### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:98608167bec2 -->
 
 **Status**: fixed
@@ -2063,7 +2100,7 @@ Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': N
 
 ---
 
-### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:257805fd303c -->
 
 **Status**: fixed
@@ -2084,7 +2121,7 @@ ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funk
 
 ---
 
-### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:92e8dcc3c9f9 -->
 
 **Status**: fixed
@@ -2113,7 +2150,7 @@ Measured on course 43660: 10 quizzes saved via the quiz path all explain themsel
 
 ---
 
-### ~~Course Finished reports 2 error(s) but this course's log records 0~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Course Finished reports 2 error(s) but this course's log records 0~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:eee718626a2e -->
 
 **Status**: fixed
@@ -2134,7 +2171,7 @@ The engine's error counter is not reset per course, so a later course in a batch
 
 ---
 
-### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6b8c9476a66a -->
 
 **Status**: fixed
@@ -2176,7 +2213,7 @@ What was actually wrong was only the other half - the Panopto card rendering '36
 
 ---
 
-### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:eb27c313381a -->
 
 **Status**: fixed
@@ -2205,7 +2242,7 @@ FIXED: count only entries whose DownloadError.course_name matches the course. Gu
 
 ---
 
-### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:7eaa8671abd1 -->
 
 **Status**: fixed
@@ -2238,7 +2275,7 @@ Guarded by tests/test_newversion_notice.py, including a check that every _NewVer
 
 ---
 
-### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa5b7101bfd4 -->
 
 **Status**: fixed
@@ -2267,7 +2304,7 @@ Found while building the readonly_target fixture: it had been locking a CONVERSI
 
 ---
 
-### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f695845da958 -->
 
 **Status**: invalid
@@ -2289,7 +2326,7 @@ Consequence: a shared debug log cannot answer WHICH file the app put in those ca
 
 ---
 
-### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:70a043d21429 -->
 
 **Status**: fixed
@@ -2314,7 +2351,7 @@ Fixed with its own rule using rgba(245,158,11) = theme.WARNING, which is the col
 
 ---
 
-### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:aa56baa0771b -->
 
 **Status**: fixed

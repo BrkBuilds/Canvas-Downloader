@@ -460,11 +460,9 @@ def run_sync():
     # system dialogs are expected and one-time (mirrors the download flow).
     if st.session_state.get('_tcc_batch_active'):
         from ui.amber_notice import render_info_notice
+        from engine.applescript_bridge import TCC_FIRST_RUN_NOTICE
         render_info_notice(
-            "<b>First-time macOS setup:</b> macOS will show a few one-time permission "
-            "dialogs (control of Microsoft PowerPoint / Word / Excel, System Events, "
-            "and folder access). Click <b>Allow / OK</b> on each - Canvas Downloader uses them "
-            "only to convert Office files to PDF on your own Mac.",
+            TCC_FIRST_RUN_NOTICE,  # audit-ignore: TCC_FIRST_RUN_NOTICE is a static module constant
             icon="🔐",
             allow_html=True,
         )
