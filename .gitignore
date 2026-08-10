@@ -82,3 +82,16 @@ _audit_runs/*
 # demand and ~18 MB of PNGs - deliberately NOT under docs/, which is the
 # published website.
 ui-review/
+
+# Virtualenvs. NOT ignored until 2026-08-10, and it mattered: the macOS audit
+# machine builds .venv INSIDE the repo, so `git add -A` (which the audit agent
+# is instructed to run) saw ~10,000 files and would have committed the whole
+# interpreter, native wheels and all. Ignored here rather than in a local
+# exclude so every machine that clones this is protected.
+.venv/
+venv/
+env/
+ENV/
+
+# VS Code Remote-SSH server payload, if it ever lands inside the tree.
+.vscode-server/
