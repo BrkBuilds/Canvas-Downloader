@@ -285,12 +285,33 @@ def check_keychain():
     # ui.auth behind a `hasattr` guard; ui.auth does not re-export it, so the
     # guard was always False, `leaked` was always empty, and the check reported
     # PASS while inspecting nothing at all.
+    # The probe value is generated at RUNTIME, not written as a literal.
+    #
+    # It used to be the constant "SHOULD-NEVER-BE-WRITTEN", and on the first
+    # real macOS run the scan found that string inside *this file* - because
+    # `get_config_dir()` resolves to the repo when nothing overrides it, so
+    # rglob walked the source tree and matched the checker's own text. It
+    # reported a token leak that had not happened: same self-match class as
+    # `pgrep` finding its own grep. A runtime value cannot appear in source.
+    import uuid
     from shared.helpers import get_config_dir
+
+    marker = f"tokenprobe-{uuid.uuid4().hex}"
     cfg = Path(get_config_dir())
-    A._save_fallback_token(probe_user, "SHOULD-NEVER-BE-WRITTEN")
-    leaked = [q for q in cfg.glob(".token_fallback*")]
-    also = [q for q in cfg.rglob("*") if q.is_file()
-            and "SHOULD-NEVER-BE-WRITTEN" in q.read_text(errors="replace")]
+    A._save_fallback_token(probe_user, marker)
+
+    leaked = list(cfg.glob(".token_fallback*"))
+    also = []
+    for q in cfg.rglob("*"):
+        if not q.is_file() or ".git" in q.parts or "node_modules" in q.parts:
+            continue
+        try:
+            if q.stat().st_size > 4_000_000:
+                continue
+            if marker in q.read_text(errors="replace"):
+                also.append(q)
+        except OSError:
+            continue
     rec("keychain", "no token fallback file on macOS",
         PASS if not leaked and not also else FAIL,
         f"searched {cfg}: {leaked or also}")
