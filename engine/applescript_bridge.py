@@ -201,6 +201,37 @@ def _visibility_prefix(app_name: str) -> str:
         'end tell\n'
     )
 
+# The first-run permission copy, in ONE place because it had two byte-identical
+# copies (app.py and sync/execution.py) and it was WRONG in both.
+#
+# It said "Click Allow / OK on each". The Accessibility prompt raised by
+# `_visibility_prefix` above - "Canvas Downloader would like to control this
+# computer using accessibility features" - has NO Allow button: its only options
+# are **Open System Settings** and **Deny**, and Deny is the visually primary one.
+# So a user following the instruction literally cannot, and the obvious remaining
+# click is the refusal. Reported by the operator on real hardware 2026-08-10, who
+# had not seen it before and noted it is absent from the docs site too.
+#
+# Denying it is genuinely harmless and the copy now says so: the System Events
+# call is wrapped in its own AppleScript `try`, so a denial degrades to "the
+# Office app stays visible" - the window-flash and dock-bounce that prefix exists
+# to suppress - and the open/save-as/close that actually converts the file is
+# untouched. Telling the user which prompts matter is the difference between an
+# informed Deny and a user who thinks they have broken the app.
+#
+# NOTE Accessibility cannot be granted from the prompt at all, unlike Automation:
+# it needs a toggle in System Settings > Privacy & Security > Accessibility.
+TCC_FIRST_RUN_NOTICE = (
+    "<b>First-time macOS setup:</b> macOS will show a few one-time permission "
+    "dialogs (control of Microsoft Word / Excel / PowerPoint, System Events, and "
+    "folder access). Click <b>Allow / OK</b> on each - Canvas Downloader uses them "
+    "only to convert Office files to PDF on your own Mac. One of them, "
+    "<b>Accessibility Access</b>, has no Allow button and is <b>optional</b> - it "
+    "only stops the Office windows flashing while a file converts, so choosing "
+    "<b>Deny</b> there is safe and changes nothing about your files."
+)
+
+
 # ── Last-error reporting ────────────────────────────────────────────
 # Post-processing runs conversions sequentially, so a single module-level
 # slot is sufficient. Callers read this after run_applescript() returns
