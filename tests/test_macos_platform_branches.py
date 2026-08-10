@@ -511,9 +511,23 @@ def test_every_public_bridge_function_is_a_noop_off_macos():
 # ════════════════════════════════════════════════ 8. health_log platform view
 
 def test_macos_only_probes_stay_silent_off_macos():
+    """FORCE the platform rather than relying on the host being Windows.
+
+    This asserted the bare return values, so its name was only true by accident
+    of where it ran: on a real Mac `_macos_signals()` legitimately answers
+    `{'fda': True}` and the test failed. Found 2026-08-10 by running the suite on
+    the macOS audit machine - the whole point of this file is the macOS branches,
+    so it is the one suite most likely to be run there.
+
+    Worse than a red row, it meant the assertion proved nothing on Windows
+    either: it could not distinguish "the probes are correctly silent off macOS"
+    from "this host simply is not a Mac". `as_platform` makes the claim
+    host-independent, which is how the sibling test above already does it.
+    """
     import core.health_log as HL
-    assert HL._is_rosetta() is False
-    assert HL._macos_signals() == {}
+    with as_platform("win32"):
+        assert HL._is_rosetta() is False
+        assert HL._macos_signals() == {}
 
 
 def test_environment_reports_the_mac_version_not_the_darwin_kernel():
