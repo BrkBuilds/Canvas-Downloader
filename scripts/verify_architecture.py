@@ -795,6 +795,37 @@ def collect_provenance_safe_names(scope: ast.AST,
     return frozenset(safe - c.unsafe)
 
 
+_MARKER_TEXT: dict[Path, dict[int, str]] = {}
+
+
+def marker_lines(filepath: Path) -> dict[int, str]:
+    """1-indexed line number -> that line's text, for audit-ignore markers only.
+
+    Rule 4's span-based suppression has to read what a marker SAYS, not merely
+    that one exists (see the note at its call site). Memoised per file because
+    Rule 4 walks each lexical scope separately and would otherwise re-read.
+    """
+    if filepath not in _MARKER_TEXT:
+        try:
+            lines = filepath.read_text(encoding="utf-8").splitlines()
+        except Exception:                                        # noqa: BLE001
+            lines = []
+        _MARKER_TEXT[filepath] = {i + 1: ln for i, ln in enumerate(lines)
+                                  if "audit-ignore" in ln}
+    return _MARKER_TEXT[filepath]
+
+
+def _expr_identifiers(node: ast.AST) -> set[str]:
+    """Every name an interpolated expression mentions, for marker matching."""
+    out: set[str] = set()
+    for n in ast.walk(node):
+        if isinstance(n, ast.Name):
+            out.add(n.id)
+        elif isinstance(n, ast.Attribute):
+            out.add(n.attr)
+    return out
+
+
 def _is_markdown_with_unsafe_html(call: ast.Call) -> bool:
     """Return True if call has unsafe_allow_html=True keyword."""
     for kw in call.keywords:
@@ -859,6 +890,46 @@ def _check_markdown_calls(scope: ast.AST, safe_names: frozenset[str],
 
             lineno = getattr(fv, "lineno", node.lineno)
 
+            # A marker written beside the INTERPOLATION suppresses this
+            # violation, even though the violation is attributed earlier.
+            #
+            # Python 3.11 gives every FormattedValue inside a multi-line
+            # implicitly-concatenated f-string the position of the JoinedStr's
+            # START, not the physical line the `{...}` sits on (PEP 701 fixes
+            # this in 3.12+, so the two versions disagree about where the
+            # violation is). `build_suppressed_lines` only ever walks FORWARD
+            # from a marker, so a comment placed next to the interpolation - the
+            # only place an author would think to put it - can never be reached.
+            # Measured 2026-08-10: markers at hub_dialog 1066/1272/1591,
+            # progress_dashboard 343/384, panopto_page 919/955, sync_dialogs
+            # 1172 against violations reported at 1065/1271/1590, 339/383,
+            # 915/954, 1171 - every one of them BELOW its violation by 1 to 4
+            # lines. Rule 4 read as regressed from 0 to 9 while all nine
+            # justifications sat in the file, unreachable.
+            #
+            # Scoped two ways, so this stays a gate rather than a loophole:
+            #   1. the marker must sit inside the f-string's OWN line span, so
+            #      it cannot silence an unrelated violation elsewhere; and
+            #   2. it must NAME the thing it excuses. Without (2) one marker
+            #      would cover every interpolation in a multi-line f-string,
+            #      including one added later - which is precisely how an
+            #      unescaped Canvas value would slip in behind an old
+            #      justification. Seven of the eight markers in this repo
+            #      already name their variable ("folder_display is a local
+            #      path", "_row_gap returns one of two literals"), so this
+            #      formalises what the authors were doing anyway.
+            # Note the ORDINARY case above (`lineno in suppressed`) is left
+            # exactly as it was; only this new, looser path carries the
+            # naming requirement, so no existing suppression changes meaning.
+            _span = range(getattr(first_arg, "lineno", lineno),
+                          getattr(first_arg, "end_lineno", lineno) + 1)
+            _marks = marker_lines(filepath)
+            # fv.value, not `val` - that name is bound further down, and reading
+            # it here raised UnboundLocalError on the first run of this block.
+            _ids = _expr_identifiers(fv.value) or {"?"}
+            _in_span = any(ln in _marks and any(i in _marks[ln] for i in _ids)
+                           for ln in _span)
+
             # Check if it's a theme-like attribute but non-theme root - note it differently
             val = fv.value
             is_theme = (isinstance(val, ast.Attribute) and
@@ -878,7 +949,7 @@ def _check_markdown_calls(scope: ast.AST, safe_names: frozenset[str],
                 rule=4,
                 message=f"Unescaped variable in unsafe_allow_html: {{{expr_str}}}",
                 note=note,
-                suppressed=lineno in suppressed,
+                suppressed=lineno in suppressed or _in_span,
             ))
 
 # ---------------------------------------------------------------------------

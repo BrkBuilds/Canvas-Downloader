@@ -914,9 +914,8 @@ def _render_compute_hardware_status(hw: dict) -> None:
         st.markdown(
             "<div style='display:flex;flex-direction:column;gap:5px;'>"
             "<div style='font-size:0.95rem;color:#e2e8f0;font-weight:700;margin-bottom:2px;'>Detected Hardware</div>"
-            # gpu_row/cpu_row are app-built HTML; only external data (gpu/cpu name)
-            # is esc()'d inside _row(), so this is safe.
-            # audit-ignore
+            # audit-ignore: gpu_row/cpu_row are app-built HTML; the only external
+            # data in them (the GPU/CPU name) is esc()'d inside _row().
             f"{gpu_row}{cpu_row}</div>",
             unsafe_allow_html=True,
         )
@@ -952,7 +951,8 @@ def _render_compute_hardware_status(hw: dict) -> None:
                 )
             st.markdown(
                 "<div style='margin:10px 0 8px 0;border-top:1px solid rgba(255,255,255,0.1);'></div>"
-                # audit-ignore  (app-built copy; _ver is esc()'d above)
+                # audit-ignore: _blurb is app-built copy assembled just above,
+                # and the only interpolation in it (_ver) is esc()'d there.
                 f"<div style='font-size:0.8rem;color:#94a3b8;line-height:1.5;'>{_blurb}</div>",
                 unsafe_allow_html=True,
             )
