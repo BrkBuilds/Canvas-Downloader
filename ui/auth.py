@@ -287,6 +287,67 @@ def write_config_atomically(config: dict) -> bool:
         return False
 
 
+def store_token(username: str, token: str) -> bool:
+    """Persist *token*, and answer whether it is RETRIEVABLE afterwards.
+
+    Exists because ``keyring.set_password`` on macOS DELETES any existing item
+    before adding the new one, so a failed save destroys the credential that was
+    already there. Measured on macOS 15 (2026-08-10) against the real library: a
+    stored value of "probe-value-before", one ``set_password`` that raised
+    ``PasswordSetError (-25308)``, and the item read back as **None**. Combined
+    with ``_save_fallback_token`` being a deliberate no-op off Windows, the user
+    lost a working saved login and had to fetch a fresh Canvas token - while the
+    only trace was a ``logger.warning`` claiming it had been "Saved to
+    DPAPI-encrypted fallback storage", which on macOS is nothing at all.
+
+    Three things, in this order, because each one alone is insufficient:
+
+    1. **Skip a write that cannot change anything.** If the stored value already
+       equals *token* there is nothing to gain from re-writing it and a
+       credential to lose, and this is the common path - re-logging in with the
+       same token, and both legacy-migration sites.
+    2. Write, then fall back (Windows DPAPI; nothing on macOS by design).
+    3. **Verify by reading back**, so the return value describes the stored
+       state rather than the return code of one attempt. That is what makes it
+       safe for a caller to delete its own copy of the token on True.
+
+    Never raises: a persistence failure must not be able to abort a login.
+    """
+    try:
+        if _safe_keyring_get(KEYRING_SERVICE, username) == token:
+            return True
+    except Exception:                                              # noqa: BLE001
+        pass
+    ok = False
+    try:
+        ok = _safe_keyring_set(KEYRING_SERVICE, username, token)
+    except Exception as e:                                         # noqa: BLE001
+        logger.warning(f"Keyring save raised: {e}")
+    if not ok:
+        try:
+            _save_fallback_token(username, token)
+        except Exception as e:                                     # noqa: BLE001
+            logger.warning(f"Fallback token save failed: {e}")
+    try:
+        if _safe_keyring_get(KEYRING_SERVICE, username) == token:
+            return True
+    except Exception:                                              # noqa: BLE001
+        pass
+    try:
+        if _load_fallback_token(username) == token:
+            return True
+    except Exception:                                              # noqa: BLE001
+        pass
+    logger.warning(
+        "Could not persist the Canvas token for %s: the OS credential store "
+        "rejected the write and %s. The previously saved token may have been "
+        "cleared by the failed write, so the next launch will ask for a token.",
+        username,
+        "there is no disk fallback on this platform" if sys.platform != 'win32'
+        else "the encrypted fallback did not take either")
+    return False
+
+
 def _get_fallback_path() -> Path:
     from shared.helpers import get_config_dir
     from pathlib import Path
@@ -728,11 +789,15 @@ def restore_saved_session() -> None:
                             ).decode('utf-8')
                             try:
                                 keyring_user = st.session_state['api_url'] or 'default'
-                                kr_ok = _safe_keyring_set(KEYRING_SERVICE, keyring_user, loaded_token)
-                                if not kr_ok:
-                                    _save_fallback_token(keyring_user, loaded_token)
-                                config.pop('mac_api_token', None)
-                                write_config_atomically(config)
+                                # Only drop the JSON copy once the token is
+                                # PROVABLY retrievable elsewhere. This is the run
+                                # that moves a token out of the config file, so a
+                                # failed keyring write here used to lose the only
+                                # copy - and on macOS the failed write also
+                                # cleared whatever was already in the Keychain.
+                                if store_token(keyring_user, loaded_token):
+                                    config.pop('mac_api_token', None)
+                                    write_config_atomically(config)
                             except Exception:
                                 pass
                         except Exception:
@@ -743,11 +808,12 @@ def restore_saved_session() -> None:
                         loaded_token = config['api_token']
                         try:
                             keyring_user = st.session_state['api_url'] or 'default'
-                            kr_ok = _safe_keyring_set(KEYRING_SERVICE, keyring_user, loaded_token)
-                            if not kr_ok:
-                                _save_fallback_token(keyring_user, loaded_token)
-                            config.pop('api_token', None)
-                            write_config_atomically(config)
+                            # Same rule as the macOS migration above: the JSON
+                            # copy is the only one there is until the store
+                            # confirms it holds the token.
+                            if store_token(keyring_user, loaded_token):
+                                config.pop('api_token', None)
+                                write_config_atomically(config)
                         except Exception:
                             pass
 
@@ -2098,14 +2164,35 @@ def render_login_page(fetch_courses_fn):
                     try:
                         keyring_user = st.session_state['api_url'] or 'default'
                         token_to_save = st.session_state['api_token']
-                        kr_success = _safe_keyring_set(KEYRING_SERVICE, keyring_user, token_to_save)
+                        # store_token skips an identical write (so a re-login
+                        # cannot destroy a working credential - see its
+                        # docstring), tries the fallback, and then VERIFIES.
+                        kr_success = store_token(keyring_user, token_to_save)
                         if kr_success:
-                            # Keyring succeeded - remove any leftover fallback file entry
-                            _delete_fallback_token(keyring_user)
+                            # Stored in the keyring - remove any leftover
+                            # fallback file entry. Only safe because the return
+                            # value means "retrievable", not "the call returned".
+                            if _safe_keyring_get(KEYRING_SERVICE, keyring_user) == token_to_save:
+                                _delete_fallback_token(keyring_user)
                         else:
-                            # Keyring unavailable - persist via DPAPI-encrypted fallback (Windows only)
-                            _save_fallback_token(keyring_user, token_to_save)
-                            logger.warning("Keyring save failed or timed out. Saved to DPAPI-encrypted fallback storage.")
+                            # Nothing holds the token. The old advice was a
+                            # logger.warning claiming a DPAPI save, which off
+                            # Windows is nothing at all - so the user was logged
+                            # out on the next launch with no explanation.
+                            from ui.amber_notice import render_amber_notice
+                            render_amber_notice(
+                                "Your login could not be saved on this device",
+                                detail=("You are signed in now, but this Mac's keychain "
+                                        "refused to store your access token, so the app "
+                                        "will ask for it again next time you open it. "
+                                        "Keep your token somewhere you can find it. If your "
+                                        "keychain is locked, unlocking it and logging in "
+                                        "again is usually enough."
+                                        if sys.platform != 'win32' else
+                                        "You are signed in now, but Windows would not store "
+                                        "your access token, so the app may ask for it again "
+                                        "next time you open it."),
+                            )
 
                         # Ensure no legacy insecure fields remain in the config JSON
                         config_data.pop('mac_api_token', None)

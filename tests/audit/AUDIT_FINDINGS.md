@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260810_151922_macos-15-v2.0.2` on 2026-08-10.
 
-**28 open** · 82 total · 24 fixed · 30 invalid
+**30 open** · 84 total · 24 fixed · 30 invalid
 
 ---
 
@@ -24,12 +24,58 @@ Last updated by run `20260810_151922_macos-15-v2.0.2` on 2026-08-10.
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 5
+**Occurrences**: 6
 **Scenario**: mac_m1_word_wedge
 
 **Detail**:
 
 REPRODUCED on real macOS with real Office; only this machine can produce it. CHAIN OF EVENTS, measured: (1) feed the macOS Word converter a hostile legacy .doc (2 KB of random bytes, and separately a 0-byte file). The delete gate behaves CORRECTLY - the source is kept, verified by md5 - and the log records '[AppleScript] Word failed (other)'. Run 1 also logged 'Microsoft Word got an error: AppleEvent timed out. (-1712)', consistent with Word raising a MODAL dialog that waits for a human (hypothesis - not directly observed, see below). (2) Word is then WEDGED: 'count of documents' answers 1, the document's name cannot be read, and 'close every document saving no' answers 'missing value' and changes nothing. (3) EVERY subsequent Word conversion fails with 'missing value doesn't understand the save as message. (-1708)' - INCLUDING a genuine 153 KB .doc from course 43660 that converted perfectly moments earlier in a clean process. Measured across two fresh processes: 4 of 4 good-file conversions failed, each reporting 'word docs before=1'. (4) The app's OWN recovery does not help: engine.applescript_bridge._force_close_canvas_docs_sync left the count at 1. (5) Killing the process DOES recover it: after 'pkill -x Microsoft Word', a good file CONVERTED and a second good file straight after also CONVERTED. WHY IT MATTERS: no data loss (the gate keeps every source), but for the rest of that run the user silently gets NO PDFs from any .doc/.rtf/.odt, with one generic 'Conversion failed' line per file. Reachable in normal use by a single corrupt legacy .doc in a course followed by others. WHY THE EXISTING MECHANISM MISSES IT: the codebase already models this exact class - _abort_applescript_phase exists to 'log a single actionable message instead of spamming dozens of generic errors' for failures that 'will identically doom every remaining file in the phase' - but FATAL_CATEGORIES is only ('permission','app_missing'), keyed on -1743 and -600/-10810. A wedged Word yields -1708, which _classify_stderr maps to 'other' = per-file, so the phase dutifully attempts and fails every remaining file. RECOMMENDED FIX (not applied): treat a run of consecutive identical AppleScript failures within one phase as fatal for that phase and emit one actionable message ('Microsoft Word is not responding to conversion requests - quit Word and run again'). A blind kill+relaunch is NOT safe and must not be added: in the wedged state the documents cannot be enumerated, so the app cannot certify that no USER document is open, and every other Office path in this codebase deliberately refuses to act without that certificate. THE MODAL IS CONFIRMED, by the operator's own eyes: 'word was jumping in the dock and when i clicked it it had some error dialog saying file "name" couldnt be opened or something and i clicked ok to all of them and quit word'. So the chain is: hostile .doc -> Word raises a MODAL file-open error and bounces in the Dock demanding attention -> AppleScript's 'open' never yields an active document -> every later conversion answers -1708 -> nothing in the app dismisses the alert, so the phase is dead until a human clicks OK or the process is killed. Note the converter DOES attempt 'set display alerts to false', but it is wrapped in its own try and evidently does not suppress a file-corruption alert raised during open. I could not observe this myself - screenshots were blind at the time and System Events refused with 'osascript is not allowed assistive access (-1728)' - which is a good argument for keeping a human in the loop on a GUI-automation phase.
+
+**Notes**: 
+
+---
+
+### A failed Keychain save DESTROYS the token that was already saved, tells the user nothing, and logs a DPAPI fallback that does not exist on macOS - so the next launch is a login page
+<!-- fp:03713060d77a -->
+
+**Status**: open
+**Severity**: high
+**Category**: persistence
+**Oracles**: O1 UI (lane apps on ?mode=auth) vs O3 disk (Keychain probe)
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 1
+
+**Detail**:
+
+Found because every lane of the sync matrix failed identically ("btn_analyze_sync not clickable"), which turned out to be every lane app sitting on ?mode=auth. The Keychain held NO token at all - and it had held one earlier the same day, because an Aqua-launched app restored its session and rendered "Logged in as Birk".
+
+MEASURED against the real library, not reasoned about:
+
+    keyring.set_password(SVC, USER, "probe-value-before")   -> stored, reads back
+    keyring.set_password(SVC, USER, "probe-value-AFTER")    -> PasswordSetError (-25308)
+    keyring.get_password(SVC, USER)                          -> None
+
+The macOS backend DELETES any existing item before adding the new one, so a refused write leaves nothing behind. What destroyed the audit's token was me logging in through the real UI from a session whose Keychain is unwritable; the same shape reaches a real user whenever the login keychain is locked for writing, or when ui/auth.py's own 90-second keyring watchdog times out.
+
+Three things in ui/auth.py then combined so that the user was told nothing:
+1. _safe_keyring_set RETURNS False rather than raising, so the login flow's `except Exception` amber notice was unreachable for this failure - the only branch that ran was the else.
+2. _save_fallback_token returns immediately when sys.platform != 'win32'. That is deliberate and correct (the app must not write tokens to disk on macOS), but it means macOS has no second copy.
+3. The else branch's only output was logger.warning("Keyring save failed or timed out. Saved to DPAPI-encrypted fallback storage.") - which off Windows describes a save that did not happen.
+
+So: the previously saved credential is destroyed, nothing new is stored, no notice appears, and the next launch shows the login page. Recovering means going back into Canvas to mint a fresh access token.
+
+WORSE AT THE TWO LEGACY-MIGRATION SITES. Both of them (macOS base64-in-JSON, Windows plain-JSON) did: kr_ok = set(...); if not kr_ok: _save_fallback_token(...); config.pop('<token field>'); write_config_atomically(config) - popping the JSON copy and rewriting the file whatever the keyring returned. That is the one run where the JSON copy is the ONLY copy, which CLAUDE.md already flags in another context as "exactly when the file is most worth not corrupting".
+
+FIX: ui.auth.store_token(username, token) -> bool, now the only writer, with three properties in order because each alone is insufficient:
+  (a) SKIP a write that cannot change anything. If the stored value already equals the token there is nothing to gain and a credential to lose - and this is the common path (re-login with the same token, plus both migration sites). Verified live on the real Keychain: same token + refused write = 0 set_password attempts, value intact.
+  (b) write, then fall back (Windows DPAPI; nothing on macOS by design).
+  (c) VERIFY by reading back, so the return value describes the STORED STATE rather than the return code of one attempt. That is what makes it safe for a caller to delete its own copy - and it matters beyond this bug, because _safe_keyring_set also returns False on a watchdog TIMEOUT, where the native call may still be in flight.
+Both migrations now pop the JSON field only when it returns True, and the login flow renders an amber notice ("Your login could not be saved on this device") instead of logging a DPAPI save that did not happen. store_token never raises: a persistence failure must not be able to abort a login.
+
+WHAT THE FIX CANNOT DO, stated plainly: if the Keychain is unreadable as well as unwritable, store_token cannot detect an identical token and the write is attempted, so the old item is still destroyed. That is the context my SSH session was in. It is not worth defending - a machine whose Keychain answers nothing has no credential to preserve - but it is why the audit's own token vanished rather than being skipped.
+
+Verified live in the Aqua session against the real macOS Keychain (all three cases), covered by tests/test_token_store_preserves_credential.py (10 tests), and all 7 mutations of the real code are caught - including one per migration site and one for the amber notice. The 7th survived a first pass as an apparent equivalent mutant (the wrapper it guards swallows backend errors itself) and is genuinely reachable: _safe_keyring_set does `import keyring` OUTSIDE its own try, so a broken or build-excluded keyring package raises straight through it.
 
 **Notes**: 
 
@@ -44,7 +90,7 @@ REPRODUCED on real macOS with real Office; only this machine can produce it. CHA
 **Oracles**: O3,O4
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m4_system_roots
 
 **Detail**:
@@ -64,7 +110,7 @@ REAL PRODUCT DEFECT, found by running the unit suite on macOS for the first time
 **Oracles**: O3,O4
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 **Scenario**: mac_m4_panopto_dupes
 
 **Detail**:
@@ -84,7 +130,7 @@ REAL PRODUCT DEFECT, found by driving the real app: a download of course 43660 w
 **Oracles**: O3,O4
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: mac_m4_case_rename
 
 **Detail**:
@@ -104,7 +150,7 @@ REAL PRODUCT DEFECT on macOS, in a primitive whose Unicode half I verified as wo
 **Oracles**: O3,O2
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 5
+**Occurrences**: 6
 **Scenario**: mac_m3_bundle
 
 **Detail**:
@@ -124,7 +170,7 @@ PRODUCT/BUILD finding, first time the macOS bundle's signature has been verified
 **Oracles**: O1 UI vs O3 disk (version.py + git tags)
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 2
 
 **Detail**:
 
@@ -164,7 +210,7 @@ REFINES the earlier 'attribution uncertain' note by separating two phenomena I h
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m0_suite
 
 **Detail**:
@@ -205,7 +251,7 @@ Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m3_clean_exit
 
 **Detail**:
@@ -246,7 +292,7 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 **Oracles**: O4 manifest (sync_metadata.panopto_contract) vs O1 UI
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 2
 
 **Detail**:
 
@@ -273,12 +319,51 @@ Recorded as an observation rather than a defect: every individual behaviour here
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 5
+**Occurrences**: 6
 **Scenario**: mac_m1_hostile_names
 
 **Detail**:
 
 MEASURED with a positive control per case and a FRESH Word each time, which is what makes it trustworthy - an earlier all-in-one-process run failed 8 of 8 because the first hostile name wedged Word (see mac_m1_word_wedge), so only the first case after a passing control can be believed. Isolated results: 'Lec\rture.doc' FAILED, 'Say "hi".doc' CONVERTED, a 250-char ASCII component FAILED - each preceded by a plain 'control.doc' that CONVERTED. THE CAUSE for the CR case is exact and visible in the escaper's own output: engine.applescript_bridge.applescript_string renders the path ending as 'Lec ture.doc' - CLAUDE.md's documented rule that 'a line break becomes a SPACE, never empty, because deleting it would silently join two words of a name shown to the user'. That rule is right for a MESSAGE string and wrong for a PATH: the emitted AppleScript is syntactically valid but now names a file that does not exist, so Word cannot open it. Round-trip check: literal.endswith(name) is False for CR and True for the quote and long-name cases, i.e. the quote path is passed through faithfully and the CR path is corrupted. WHY IT IS A DEFECT RATHER THAN A LIMITATION: MAC_RUNBOOK item 4 states of exactly these two names that 'Both must convert normally - _as_posix neutralises them'. It neutralises the SYNTAX hazard only. REACHABILITY: macOS permits every byte but / and NUL in a filename, and CLAUDE.md notes an extracted ARCHIVE member never passes through _sanitize_filename, so a zip can put one in a course folder. CONSEQUENCE is safe but silent: the conversion fails, the source is kept, and the user gets no PDF for that one file. POSSIBLE FIX (not applied): a path must not go through the message escaper - pass it as raw bytes/POSIX file via a mechanism that cannot rewrite it, or reject/rename such a source explicitly so the failure is stated rather than silent. SEPARATE, NOT ISOLATED: the 250-char ASCII component also failed although its path round-tripped identically (component 254 bytes, legal on macOS whose limit is 255 BYTES per component; full path 293 chars, so office_container_stage's >=240 staging applies). The cause was not established - it is Word's own limit or the staging - and is recorded as an open question rather than a diagnosed defect.
+
+**Notes**: 
+
+---
+
+### The locked-target _NewVersion fallback is unreachable on macOS: os.replace succeeds onto a read-only file, so a read-only course file is silently updated (and the 6 criticals it produced were the fixture asserting Windows semantics)
+<!-- fp:8e7fc38cea3d -->
+
+**Status**: open
+**Severity**: low
+**Category**: delivery
+**Oracles**: O3 disk (POSIX rename semantics) vs O1 UI/O2 log (no error reported)
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 1
+
+**Detail**:
+
+The engine commits every downloaded file with an atomic rename, and its protection for a destination it cannot write is `except PermissionError` around that rename (sync/execution.py ~1081):
+
+    try:
+        os.replace(part_path, final_path)
+    except PermissionError:
+        # Target is locked (open in another app) ... deliver as _NewVersion
+
+MEASURED on macOS 15, 2026-08-10, on a mode-444 file:
+    open(target, 'wb')          -> PermissionError
+    os.replace(tmp, target)     -> SUCCEEDS, target replaced
+
+On POSIX a rename is authorised by write permission on the DIRECTORY, not by the target file's mode - so the exception never fires, and `_register_new_version(..., 'in_use')` is unreachable on macOS. Confirmed structurally as well: `_register_new_version` has exactly two call sites, `'edited'` (md5-based) and `'in_use'` (this one), and there is NO proactive writability test anywhere in the sync or download engines - no os.access, no W_OK, no S_IWUSR check in sync/execution.py, sync/analysis.py, core/canvas_logic.py or core/sync_manager.py.
+
+WHAT THIS DOES AND DOES NOT COST, stated carefully, because the severity turns on it:
+* It is NOT data loss, and the fixture calling it critical was wrong. The file being replaced in this scenario is a CLEAN update - its content still matches the manifest's recorded md5, so the user has authored nothing that is being discarded. The protection for a file the user has actually EDITED is the separate, md5-based `_NewVersion(reason='edited')` path, which is platform-independent and verified working on macOS by this same matrix.
+* What is lost is the INTENT of the read-only flag. A macOS user who marks a course file read-only - the ordinary way to say "do not touch this" - has it silently updated anyway, with no notice and nothing in the log.
+* The file-open-in-Word case that the code comment names does not behave as the comment implies either: on macOS an open document does not block a rename, so the file is replaced underneath the application. Word/Excel keeps the old inode, and a later save from that window writes the user's stale copy back over the fresh download. That is ordinary POSIX behaviour rather than a bug in this app, but the comment promises a fallback that cannot run.
+
+NOT FIXED, deliberately, and the reasoning is the asymmetry: making this work on macOS means adding a proactive writability probe (os.access(W_OK), or a mode check) before every download commit. That is a new decision point in the hottest path of the engine, on every file of every sync, whose only benefit is honouring a flag almost nobody sets - and whose failure mode (forking a file the user did NOT edit into a _NewVersion sibling) is worse than the current behaviour, because it litters the folder and re-offers the same file on every later sync. The Windows fallback is an ERROR-AVOIDANCE mechanism, not a data-protection one: it exists because there the rename genuinely fails and the downloaded bytes would otherwise be dropped. On macOS there is no error to avoid.
+
+WHAT WAS FIXED is the audit's own expectation, which produced 6 spurious CRITICAL findings on the first macOS sync matrix - expensive noise in a release gate, and the second time this fixture has misfired (a 2026-07-28 run recorded the same shape after it chmod'ed a conversion output instead of a download target). `readonly_target` now sets expect_after="" on POSIX with the measurement written into the comment, keeping expect_category="updated_clean" so the row still asserts what it can on this platform: that a read-only file is still classified as a clean update, and that the run reports neither a silent success nor a hard error. Re-ran the 3 affected rows (ro001/ro013/ro029) with the corrected fixture: all ok, 0 criticals, only the pre-existing informational long-path note.
 
 **Notes**: 
 
@@ -293,7 +378,7 @@ MEASURED with a positive control per case and a FRESH Word each time, which is w
 **Oracles**: O1 UI vs O1 UI (the app's own naming elsewhere)
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 2
 
 **Detail**:
 
@@ -312,7 +397,7 @@ Both FDA surfaces rendered for the first time in this audit (they need macOS 15+
 **Oracles**: O3,O5
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m2_media
 
 **Detail**:
@@ -395,7 +480,7 @@ RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that 
 **Oracles**: O3,O4
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 5
+**Occurrences**: 6
 **Scenario**: mac_m2_panopto_url
 
 **Detail**:
@@ -415,7 +500,7 @@ FIRST TIME the Panopto subsystem has ever run on macOS. All of it passed. (1) DI
 **Oracles**: O3 disk (mp4 atoms + ffmpeg decode) vs O1 UI vs O4 manifest
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 2
 
 **Detail**:
 
@@ -444,7 +529,7 @@ Also confirmed in passing: a download re-run does NOT duplicate existing Canvas 
 **Oracles**: O1,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m2_hardware
 
 **Detail**:
@@ -464,7 +549,7 @@ Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requir
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m2_transcription
 
 **Detail**:
@@ -484,7 +569,7 @@ FIRST macOS run of the transcription subsystem, and of the .part cleanup fix tha
 **Oracles**: O2,O3
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m3_argv_drop
 
 **Detail**:
@@ -504,7 +589,7 @@ FIRST test of this from a real bundle. A macOS windowed .app rebuilds sys.argv f
 **Oracles**: O3,O4
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 5
+**Occurrences**: 6
 **Scenario**: mac_m4_hfs_nfd
 
 **Detail**:
@@ -566,7 +651,7 @@ Reproduced live, not synthetically. The office lane hit '[ERROR] [converters.exc
 **Oracles**: O1,O2
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 5
+**Occurrences**: 6
 **Scenario**: mac_m5_notifications
 
 **Detail**:
@@ -586,7 +671,7 @@ OBSERVATION with an explicit caveat, recorded so it is not lost and not overstat
 **Oracles**: O1 UI vs O3 disk (today_dashboard.json,TCC.db)
 **First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
 **Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 2
 
 **Detail**:
 
@@ -596,7 +681,7 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 
 ---
 
-### ~~'readonly:gk2 vejl_løsn_js.txt' was locally edited but no _NewVersion sibling was created~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'readonly:Opgave reformulering - bilag.xlsx' was locally edited but no _NewVersion sibling was created~~
 <!-- fp:6a83c06e72be -->
 
 **Status**: invalid
@@ -604,20 +689,25 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 **Category**: delivery
 **Oracles**: O5,O3
 **First seen**: 2026-07-28 (20260728_013336_phase2_newversion)
-**Last seen**: 2026-07-28 (20260728_013336_phase2_newversion)
-**Occurrences**: 10
-**Scenario**: p2nv_pass2 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 16
+**Scenario**: s029 · Virksomhedens økonomiske styring (2) Regnskabsvæsen (LA F26 BINTO1057U)
 
 **Detail**:
 
 The product's stated contract is that local edits are never overwritten and the new copy lands alongside.
 
-**Notes**: AUDIT FIXTURE DEFECT, fixed. `readonly_target` had chmod'ed a CONVERSION OUTPUT (`x_js.txt`) rather than a download target. The engine writes the Canvas file first (`x.js`, writable) and the converter renames it afterwards, so the write path was never blocked - no PermissionError, no _NewVersion, and the fixture was silently exercising the converter's failure path instead of the locked-target fallback it was written for. The fixture now only picks rows whose local extension matches their Canvas filename. The locked-target fallback itself is verified working elsewhere (run 20260728_010431: two read-only PDFs, both forked correctly).  
-> Not observed in the latest run.
+**Notes**: AUDIT FIXTURE DEFECT — but TWICE, for two DIFFERENT reasons, so read both before judging a third occurrence.
+
+(1) 2026-07-28, Windows: `readonly_target` had chmod'ed a CONVERSION OUTPUT (`x_js.txt`) rather than a download target. The engine writes the Canvas file first (`x.js`, writable) and the converter renames it afterwards, so the write path was never blocked - no PermissionError, no _NewVersion, and the fixture was silently exercising the converter's failure path instead of the locked-target fallback it was written for. The fixture now only picks rows whose local extension matches their Canvas filename.
+
+(2) 2026-08-10, macOS 15, the 6 occurrences in `20260810_151922_macos-15-v2.0.2` (s001/s013/s029, `.xlsx`, converters OFF - so cause 1 does NOT apply): the fixture was asserting **Windows semantics**. Measured on a mode-444 file: `open(target,'wb')` raises PermissionError but **`os.replace(tmp, target)` SUCCEEDS** - on POSIX a rename is authorised by write permission on the DIRECTORY, not by the target's mode. The engine's fallback is `except PermissionError` around that rename (sync/execution.py ~1081), so `_register_new_version(..., 'in_use')` is unreachable on macOS and a read-only file is simply updated. NOT data loss: the file is a CLEAN update, and the EDITED-file fork is a separate md5-based path that works on every platform. `seed.readonly_target` now sets `expect_after=""` on POSIX; the 3 rows were re-run with the corrected fixture and reported 0 criticals.
+
+So the earlier claim here that "the locked-target fallback is verified working elsewhere" is true **on Windows only** - that run was Windows. Do not read it as cross-platform. Full reasoning, including why the product was deliberately NOT changed, is in the low-severity finding "The locked-target _NewVersion fallback is unreachable on macOS".
 
 ---
 
-### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:bc9703c2e9f2 -->
 
 **Status**: fixed
@@ -684,7 +774,7 @@ THE OTHER DIRECTION, verified separately and at least as important: this resolve
 
 ---
 
-### ~~Sync post-processing crashes with NameError: _attempts is not defined~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync post-processing crashes with NameError: _attempts is not defined~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:5d735855a0d8 -->
 
 **Status**: fixed
@@ -705,7 +795,7 @@ sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initia
 
 ---
 
-### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:2e38f73c0857 -->
 
 **Status**: invalid
@@ -726,7 +816,7 @@ Renamed, row dropped, and another file shares its size and extension. The unique
 
 ---
 
-### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:1d964fc34314 -->
 
 **Status**: fixed
@@ -755,7 +845,7 @@ Options: require a name-similarity floor for tier (c) as heal Tier 3 already doe
 
 ---
 
-### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6fe18c5a9b2f -->
 
 **Status**: fixed
@@ -795,7 +885,7 @@ Guarded by tests/test_link_content_sig_parity.py, which runs BOTH directions and
 
 ---
 
-### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:91d640ef7d5a -->
 
 **Status**: invalid
@@ -816,7 +906,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:78c7871b2180 -->
 
 **Status**: invalid
@@ -837,7 +927,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~Download finished with 1 unexplained error(s)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Download finished with 1 unexplained error(s)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa2cae30e286 -->
 
 **Status**: fixed
@@ -858,7 +948,7 @@ Errors this course logged that are not teacher-locked files. Each names the item
 
 ---
 
-### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa247ec01d02 -->
 
 **Status**: fixed
@@ -885,7 +975,7 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 
 ---
 
-### ~~1 content file(s) on disk with no manifest row~~~~~~~~~~~~
+### ~~1 content file(s) on disk with no manifest row~~~~~~~~~~~~~~
 <!-- fp:371b678dbdf1 -->
 
 **Status**: invalid
@@ -910,7 +1000,7 @@ Verified on a fresh, never-seeded download of 45899 with every converter on: 0 d
 
 ---
 
-### ~~2 Canvas file(s) were downloaded more than once in one run~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 Canvas file(s) were downloaded more than once in one run~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:d05cc83d973a -->
 
 **Status**: fixed
@@ -931,7 +1021,7 @@ Each of these ids went to the network twice. Two phases both claimed the file, s
 
 ---
 
-### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:09c8ffb50041 -->
 
 **Status**: invalid
@@ -954,7 +1044,7 @@ Now derived from the folder's stored `sync_contract`. Re-checked on the same pri
 
 ---
 
-### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f5c9f9d3c10f -->
 
 **Status**: fixed
@@ -1002,7 +1092,7 @@ TWO WAYS TO IMPLEMENT, both needing a verifying run:
 
 ---
 
-### ~~2 partial-write artifact(s) left on disk~~~~~~~~~~~~
+### ~~2 partial-write artifact(s) left on disk~~~~~~~~~~~~~~
 <!-- fp:62da7c0a9988 -->
 
 **Status**: invalid
@@ -1023,7 +1113,7 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:18cc3b9d802a -->
 
 **Status**: invalid
@@ -1044,7 +1134,7 @@ Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8224b9e3a4a1 -->
 
 **Status**: invalid
@@ -1065,7 +1155,7 @@ Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:
 
 ---
 
-### ~~Unexpected bridged_error in debug log: HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel stopped resp~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel stopped resp~~~~~~~~~~~~~~~~~~
 <!-- fp:f4ec25425a4b -->
 
 **Status**: invalid
@@ -1087,7 +1177,7 @@ HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel st
 
 ---
 
-### ~~Unexpected bridged_error in debug log: OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s (Excel stop~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s (Excel stop~~~~~~~~~~~~~~~~~~
 <!-- fp:7d8d6987eef9 -->
 
 **Status**: invalid
@@ -1109,7 +1199,7 @@ OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped respond~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped respond~~~~~~~~~~~~~~~~~~
 <!-- fp:bacba60611c0 -->
 
 **Status**: invalid
@@ -1131,7 +1221,7 @@ Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopp
 
 ---
 
-### ~~Unexpected bridged_error in debug log: VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:958f127d0717 -->
 
 **Status**: fixed
@@ -1152,7 +1242,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on HA.IT-reeksamen-2020-VL-Endelig1.xlsx. Killing PID 21420~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on HA.IT-reeksamen-2020-VL-Endelig1.xlsx. Killing PID 21420~~~~~~~~~~~~~~~~~~
 <!-- fp:f7950a0ff1d0 -->
 
 **Status**: invalid
@@ -1174,7 +1264,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on OmkostningerAfsætning - Ekstra - LØSNING.xlsx. Killing P~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on OmkostningerAfsætning - Ekstra - LØSNING.xlsx. Killing P~~~~~~~~~~~~~~~~~~
 <!-- fp:41de4d13af9a -->
 
 **Status**: invalid
@@ -1196,7 +1286,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on Productionanalysis - Eksempel.xlsx. Killing PID 17556.~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on Productionanalysis - Eksempel.xlsx. Killing PID 17556.~~~~~~~~~~~~~~~~~~
 <!-- fp:d5dff49dc678 -->
 
 **Status**: invalid
@@ -1218,7 +1308,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on ekstraopgave 1 - VL.xlsx. Killing PID 22472.~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on ekstraopgave 1 - VL.xlsx. Killing PID 22472.~~~~~~~~~~~~~~~~~~
 <!-- fp:fe53cd768483 -->
 
 **Status**: invalid
@@ -1240,7 +1330,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM] Excel init failed: (-2146959355, 'Server-udførelse mislykkedes', None, None)~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM] Excel init failed: (-2146959355, 'Server-udførelse mislykkedes', None, None)~~~~~~~~~~~~~~~~~~
 <!-- fp:74a494b938a5 -->
 
 **Status**: invalid
@@ -1262,7 +1352,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion failed twice~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion failed twice~~~~~~~~~~~~~~~~~~
 <!-- fp:23015c7d7ccf -->
 
 **Status**: invalid
@@ -1284,7 +1374,7 @@ ekstraopgave 1 - VL.xlsx  Conversion failed twice
 
 ---
 
-### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)~~~~~~~~~~~~~~~~~~
 <!-- fp:b751e7a4c30f -->
 
 **Status**: invalid
@@ -1306,7 +1396,7 @@ ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped respond
 
 ---
 
-### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:0995f8315ce5 -->
 
 **Status**: invalid
@@ -1327,7 +1417,7 @@ g1 darts vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:ac0b7c1a10e5 -->
 
 **Status**: invalid
@@ -1348,7 +1438,7 @@ gk2 vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:8badba1fc12c -->
 
 **Status**: invalid
@@ -1392,7 +1482,7 @@ Reverted to the original single dimming rule and verified in the running app: po
 
 ---
 
-### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:7e2221df01e0 -->
 
 **Status**: fixed
@@ -1413,7 +1503,7 @@ Both Page call sites pass isolate=False literally, so with isolation ON in flat 
 
 ---
 
-### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:815c4edf0cb8 -->
 
 **Status**: invalid
@@ -1438,7 +1528,7 @@ Not data loss - files are present and usable - but it defeats the AI-optimisatio
 
 ---
 
-### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:689a00875c36 -->
 
 **Status**: invalid
@@ -1461,7 +1551,7 @@ Fixed by routing both flows through one shared helper (converters.post_processin
 
 ---
 
-### ~~convert_code did not reach 54 file(s) unpacked from archives~~~~~~~~~~~~~~~~
+### ~~convert_code did not reach 54 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~
 <!-- fp:5a22b016415d -->
 
 **Status**: invalid
@@ -1483,7 +1573,7 @@ convert_zip extracted these, but post-processing filters every converter through
 
 ---
 
-### ~~convert_excel enabled but 1 source file(s) survived conversion~~~~~~~~~~~~~~~~
+### ~~convert_excel enabled but 1 source file(s) survived conversion~~~~~~~~~~~~~~~~~~
 <!-- fp:449c42444584 -->
 
 **Status**: invalid
@@ -1505,7 +1595,7 @@ This converter is documented to replace its source. A surviving source at module
 
 ---
 
-### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~~~~~~~~~~~~~
+### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~
 <!-- fp:24e9563de29e -->
 
 **Status**: invalid
@@ -1527,7 +1617,7 @@ convert_zip extracted these, but post-processing filters every converter through
 
 ---
 
-### ~~Cancelling mid-transcription leaves .txt.part/.srt.part in the course folder for ever~~~~~~~~~~
+### ~~Cancelling mid-transcription leaves .txt.part/.srt.part in the course folder for ever~~~~~~~~~~~~
 <!-- fp:02cdd440035e -->
 
 **Status**: fixed
@@ -1578,7 +1668,7 @@ AST, asserting the call sits inside a `Try.finalbody`.
 
 ---
 
-### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:72054c302758 -->
 
 **Status**: invalid
@@ -1599,7 +1689,7 @@ original_size decides whether the next Canvas change is treated as a real update
 
 ---
 
-### ~~36 file(s) differ from their recorded md5~~~~~~~~~~~~
+### ~~36 file(s) differ from their recorded md5~~~~~~~~~~~~~~
 <!-- fp:8a7f0ead05f4 -->
 
 **Status**: invalid
@@ -1620,7 +1710,7 @@ original_md5 is what classifies the next update as clean (overwrite) or modified
 
 ---
 
-### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:c52480b4f905 -->
 
 **Status**: fixed
@@ -1637,7 +1727,7 @@ original_md5 is what classifies the next update as clean (overwrite) or modified
 
 ---
 
-### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:4b3b4fd09677 -->
 
 **Status**: fixed
@@ -1664,7 +1754,7 @@ Fixed in sync/analysis.py: every category now writes one line per file through a
 
 ---
 
-### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:d433d4f13087 -->
 
 **Status**: fixed
@@ -1697,7 +1787,7 @@ Verified by cancelling three real runs: before, both .part files remained; after
 
 ---
 
-### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:98608167bec2 -->
 
 **Status**: fixed
@@ -1718,7 +1808,7 @@ Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': N
 
 ---
 
-### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:257805fd303c -->
 
 **Status**: fixed
@@ -1739,7 +1829,7 @@ ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funk
 
 ---
 
-### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:92e8dcc3c9f9 -->
 
 **Status**: fixed
@@ -1768,7 +1858,7 @@ Measured on course 43660: 10 quizzes saved via the quiz path all explain themsel
 
 ---
 
-### ~~Course Finished reports 2 error(s) but this course's log records 0~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Course Finished reports 2 error(s) but this course's log records 0~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:eee718626a2e -->
 
 **Status**: fixed
@@ -1789,7 +1879,7 @@ The engine's error counter is not reset per course, so a later course in a batch
 
 ---
 
-### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:6b8c9476a66a -->
 
 **Status**: fixed
@@ -1831,7 +1921,7 @@ What was actually wrong was only the other half - the Panopto card rendering '36
 
 ---
 
-### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:eb27c313381a -->
 
 **Status**: fixed
@@ -1860,7 +1950,7 @@ FIXED: count only entries whose DownloadError.course_name matches the course. Gu
 
 ---
 
-### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:7eaa8671abd1 -->
 
 **Status**: fixed
@@ -1893,7 +1983,7 @@ Guarded by tests/test_newversion_notice.py, including a check that every _NewVer
 
 ---
 
-### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:fa5b7101bfd4 -->
 
 **Status**: fixed
@@ -1922,7 +2012,7 @@ Found while building the readonly_target fixture: it had been locking a CONVERSI
 
 ---
 
-### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:f695845da958 -->
 
 **Status**: invalid
@@ -1944,7 +2034,7 @@ Consequence: a shared debug log cannot answer WHICH file the app put in those ca
 
 ---
 
-### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:70a043d21429 -->
 
 **Status**: fixed
@@ -1969,7 +2059,7 @@ Fixed with its own rule using rgba(245,158,11) = theme.WARNING, which is the col
 
 ---
 
-### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 <!-- fp:aa56baa0771b -->
 
 **Status**: fixed

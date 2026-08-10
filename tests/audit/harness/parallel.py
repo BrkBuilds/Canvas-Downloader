@@ -41,6 +41,7 @@ finishes once anything goes wrong.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -341,6 +342,43 @@ def prepare(parent: RunPaths, jobs: list[Job], lanes: int = 4,
             "total_jobs": sum(s["count"] for s in specs)}
 
 
+def _live_workers(plan: dict) -> list[dict]:
+    """Lane workers from a previous launch that are still running.
+
+    Identified by the lane's own run id appearing in a live `matrix worker`
+    command line - the run id is unique per lane, so this cannot collide with an
+    unrelated matrix on the same machine. Best-effort: if `ps` is unavailable the
+    answer is "none", because a launch that cannot check must still be possible.
+    """
+    try:
+        out = subprocess.run(["ps", "-Ao", "pid=,command="], capture_output=True,
+                             text=True, timeout=30).stdout or ""
+    except Exception:                                           # noqa: BLE001
+        return []
+    live: list[dict] = []
+    me = os.getpid()
+    for lane in plan.get("lanes", []):
+        rid = lane.get("run_id") or ""
+        if not rid:
+            continue
+        # The CONTIGUOUS argv form, not three tokens found anywhere on the line.
+        # A loose match reports the checking process itself: any script whose
+        # source merely mentions the run id, "matrix" and "worker" - including
+        # this guard's own test - satisfies the loose form and the launcher then
+        # refuses to start for no reason.
+        needle = f"--run {rid} matrix worker"
+        for line in out.splitlines():
+            line = line.strip()
+            if needle not in line:
+                continue
+            pid = line.split(None, 1)[0]
+            if pid.isdigit() and int(pid) != me:
+                live.append({"lane": lane.get("lane"), "pid": int(pid),
+                             "run_id": rid})
+            break
+    return live
+
+
 def launch(parent: RunPaths, *, wait: bool = True, poll: float = 20.0,
            startup_grace: float = 12.0) -> dict:
     """Spawn one worker process per lane and (optionally) wait for them all."""
@@ -348,6 +386,24 @@ def launch(parent: RunPaths, *, wait: bool = True, poll: float = 20.0,
     if not plan_path.is_file():
         raise SystemExit("No lane plan. Run: matrix parallel prepare ...")
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
+
+    # A SECOND launch over a live one is silently destructive, so refuse it.
+    # Measured 2026-08-10: launching twice (the first call printed nothing and
+    # looked like it had failed) started a second set of workers that could not
+    # bind the lane ports, exited, and ran their `finally` - which calls
+    # appctl.stop() and close_browser() on the SAME lane run dirs the first set
+    # was using. The live lanes lost their apps mid-job, _recover cycled them,
+    # and four completed rows failed for a reason that had nothing to do with
+    # the product. `--app-base` exists for a deliberate concurrent matrix; this
+    # is the accident it does not cover.
+    alive = _live_workers(plan)
+    if alive:
+        raise SystemExit(
+            "A matrix is already running for this run: "
+            + ", ".join(f"{a['lane']} (pid {a['pid']})" for a in alive)
+            + ".\nWatch it with `matrix lanes`, or kill those pids first. "
+              "To run a SECOND matrix on purpose, prepare it with "
+              "--app-base/--cdp-base so the two cannot share ports.")
 
     procs = []
     for lane in plan["lanes"]:

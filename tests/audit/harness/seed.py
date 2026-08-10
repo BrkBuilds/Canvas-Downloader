@@ -690,6 +690,21 @@ class Seeder:
         # PermissionError, no _NewVersion, and the fixture silently tests the
         # CONVERTER's failure path instead of the locked-target fallback it was
         # written for.
+        # THE _NewVersion FALLBACK IS WINDOWS-ONLY, and the expectation has to
+        # say so or this fixture reports a critical on every POSIX run.
+        # Measured on macOS 15, 2026-08-10: `open(target, 'wb')` on a mode-444
+        # file raises PermissionError, but `os.replace(tmp, target)` onto that
+        # same file SUCCEEDS - rename is governed by write permission on the
+        # DIRECTORY, not by the target's mode. The engine commits every download
+        # with `os.replace(part_path, final_path)` and its fallback is
+        # `except PermissionError` (sync/execution.py ~1081), so on POSIX the
+        # exception never fires, `_register_new_version(..., 'in_use')` is
+        # unreachable, and the file is simply updated. Nothing the user authored
+        # is lost - the EDITED-file fork is a separate md5-based path that works
+        # on every platform - so expecting a sibling here is asserting Windows
+        # semantics, not the product's contract. It produced 6 spurious
+        # criticals in the first macOS matrix.
+        _posix = os.name != "nt"
         rows = self._take(self._direct_targets(), n, min_size=1024)
         with self._con() as con:
             for r in rows:
@@ -699,13 +714,25 @@ class Seeder:
                 self.fixtures.append(Fixture(
                     label=f"readonly:{p.name}", kind="readonly_target",
                     path=r["local_path"], expect_category="updated_clean",
-                    expect_after="new_version", expect_path=r["local_path"],
+                    # "" asserts nothing about the after-state; the
+                    # expect_category check above still runs, so the row keeps
+                    # its real value on POSIX - the analyzer must still classify
+                    # a read-only file as a clean update, and the run must still
+                    # finish without an error.
+                    expect_after="" if _posix else "new_version",
+                    expect_path=r["local_path"],
                     match_name=p.name, canvas_file_id=r["canvas_file_id"],
-                    extra={"restore_mode": True},
-                    why="A clean update whose destination is read-only. The engine "
-                        "must fall back to a _NewVersion sibling instead of failing "
-                        "the file, and must report neither a silent success nor a "
-                        "hard error for the run."))
+                    extra={"restore_mode": True, "posix_no_fork": _posix},
+                    why=("A clean update whose destination is read-only. On POSIX "
+                         "the rename succeeds regardless of the file's mode, so the "
+                         "engine updates it in place; what is checked here is that "
+                         "it is still classified as a clean update and that the run "
+                         "reports neither a silent success nor a hard error."
+                         if _posix else
+                         "A clean update whose destination is read-only. The engine "
+                         "must fall back to a _NewVersion sibling instead of failing "
+                         "the file, and must report neither a silent success nor a "
+                         "hard error for the run.")))
 
     def unicode_rename(self, n: int = 1) -> None:
         """A rename into the character classes that break naive path handling.

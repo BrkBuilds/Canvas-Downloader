@@ -461,9 +461,31 @@ that:
    path through faithfully (round-trip identical). Measured, **not diagnosed** —
    it is either Word's own filename limit or `office_container_stage`. Isolate
    with one component just under and just over the limit.
-7. **The sync matrix** (43 rows) was not run; only a single hand-seeded sync of
-   44 fixtures across 21 kinds. The seeded run is what found the duplicate-media
-   defect, so the matrix is likely to be worth more here than on Windows.
+7. ~~**The sync matrix** (43 rows)~~ **DONE 2026-08-10**: 43/43 rows, 2 lanes,
+   **0 failed**, 100% 2-way and 3-way-interacting coverage. Four things to reuse:
+   - **Snapshot a MEDIUM course.** The already-downloaded Panopto course is 467
+     files / 3.8 GB and 43 lane copies of it is ~160 GB. Course 46386
+     (`Virksomhedens økonomiske styring (2)`) is 97 files / 92.5 MB across
+     pdf+xlsx+pptx — a rich sync world for ~4 GB of lane copies.
+   - **The matrix has NO converter axes**, so Office never runs and 2 lanes are
+     far lighter than the 4-lane Office matrix that OOM-killed a 16 GB machine.
+     Free+inactive fell 5.9 → 3.3 GB and recovered; it was never close.
+   - **Lane apps restore their session from the KEYCHAIN**, so the matrix must be
+     launched from the Aqua session (`mac_aqua.py run --detach`). With no token
+     there, every lane app sits on `?mode=auth` and **every row fails with
+     `btn_analyze_sync not clickable`** — which reads like a UI defect and is
+     really "not logged in". Check one lane's screen before believing anything
+     else. That symptom is what uncovered the failed-Keychain-save data loss.
+   - **Never launch twice.** The first `--detach` prints nothing, which looks like
+     failure; a second launch cannot bind the lane ports, exits, and runs its
+     `finally` — which calls `appctl.stop()` and `close_browser()` on the SAME
+     lane run dirs the live workers are using. Four rows failed for reasons that
+     had nothing to do with the product. `matrix launch` now refuses when workers
+     are already alive.
+   - **The 6 CRITICAL findings it produced are fixture artifacts, not defects** —
+     `readonly_target` was asserting Windows rename semantics. See the register
+     entry `fp:6a83c06e72be`, whose notes now cover both times this fixture has
+     misfired.
 
 Traps this run paid for, worth knowing before you spend the same time:
 
