@@ -117,6 +117,19 @@ def _migrate_config(cfg: dict) -> dict:
 # Windows: Credential Manager never prompts - keep the tight 5s watchdog.
 _KEYRING_TIMEOUT = 90.0 if sys.platform == 'darwin' else 5.0
 
+# Budget for a keychain read that is only an OPTIMISATION, never the operation
+# the user is waiting for.
+#
+# store_token reads before writing so it can skip a write that cannot change
+# anything - which is what stops a refused write destroying a good credential.
+# But macOS can PROMPT on a keychain access (a rebuilt app with a new ad-hoc
+# signature reading the previous build's item is the documented case, and it was
+# hit on this very machine), and the prompt blocks until answered. With the full
+# 90s watchdog on both, that turns one 90-second worst case at login into two.
+# The skip is worth having only if it is cheap: give up quickly and fall through
+# to the write, which keeps the full budget it always had.
+_KEYRING_PROBE_TIMEOUT = 5.0
+
 def _run_keyring_op(fn, *args, timeout: float = _KEYRING_TIMEOUT):
     """Run a keyring operation on a DAEMON thread with a hard timeout.
 
@@ -149,13 +162,19 @@ def _run_keyring_op(fn, *args, timeout: float = _KEYRING_TIMEOUT):
     return value
 
 
-def _safe_keyring_get(service: str, username: str) -> str | None:
-    """Read password from keyring with a daemon-thread watchdog (see _KEYRING_TIMEOUT)."""
+def _safe_keyring_get(service: str, username: str,
+                      timeout: float = _KEYRING_TIMEOUT) -> str | None:
+    """Read password from keyring with a daemon-thread watchdog (see _KEYRING_TIMEOUT).
+
+    *timeout* is overridable so a read that is only an OPTIMISATION can give up
+    quickly - see ``_KEYRING_PROBE_TIMEOUT`` and ``store_token``.
+    """
     import keyring
     try:
-        return _run_keyring_op(keyring.get_password, service, username)
+        return _run_keyring_op(keyring.get_password, service, username,
+                               timeout=timeout)
     except TimeoutError:
-        logger.warning(f"Keyring get_password timed out ({_KEYRING_TIMEOUT:.0f}s). Environment might be headless or restricted. Falling back.")
+        logger.warning(f"Keyring get_password timed out ({timeout:.0f}s). Environment might be headless or restricted. Falling back.")
         return None
     except Exception as e:
         logger.warning(f"Keyring get_password failed: {e}")
@@ -313,8 +332,13 @@ def store_token(username: str, token: str) -> bool:
 
     Never raises: a persistence failure must not be able to abort a login.
     """
+    # Both reads run on the SHORT budget: they are optimisation and confirmation,
+    # never the thing the user is waiting for. Only the write keeps the full
+    # watchdog it always had, so this cannot make a login slower than before -
+    # see _KEYRING_PROBE_TIMEOUT for the prompting-keychain case that forces it.
     try:
-        if _safe_keyring_get(KEYRING_SERVICE, username) == token:
+        if _safe_keyring_get(KEYRING_SERVICE, username,
+                             timeout=_KEYRING_PROBE_TIMEOUT) == token:
             return True
     except Exception:                                              # noqa: BLE001
         pass
@@ -329,7 +353,8 @@ def store_token(username: str, token: str) -> bool:
         except Exception as e:                                     # noqa: BLE001
             logger.warning(f"Fallback token save failed: {e}")
     try:
-        if _safe_keyring_get(KEYRING_SERVICE, username) == token:
+        if _safe_keyring_get(KEYRING_SERVICE, username,
+                             timeout=_KEYRING_PROBE_TIMEOUT) == token:
             return True
     except Exception:                                              # noqa: BLE001
         pass

@@ -260,6 +260,30 @@ _MACOS_ONLY = [
     # osascript branch on Darwin and returns on every path, so the tkinter
     # import below it is unreachable in a mac build.
     "tkinter", "_tkinter",
+    # pync BREAKS THE SIGNATURE, which is why it goes even though it is only
+    # 180 KB. It vendors a nested `terminal-notifier.app`, and PyInstaller
+    # rewrites `.` to `__dot__` in those directory names, so the bundle arrives
+    # as `terminal-notifier__dot__app` - no longer a valid app bundle, its
+    # Info.plist/executable relationship broken. `codesign --verify --strict`
+    # then fails for the WHOLE app:
+    #
+    #     the main executable or Info.plist must be a regular file
+    #     (no symlinks, etc.) In subcomponent: .../pync/vendor/
+    #     terminal-notifier-2__dot__0__dot__0/terminal-notifier__dot__app/...
+    #
+    # Measured on a real 266 MB build signed exactly as CLAUDE.md documents. The
+    # app still launches and runs, so this was harmless for ad-hoc distribution -
+    # but NOTARIZATION rejects it, so it blocks any Developer-ID release, and it
+    # means `--force --deep` silently produces an unverifiable artifact.
+    #
+    # Safe to drop: pync is fallback #3 of 4 in engine/notifications.py, its
+    # import there is already guarded (`except ImportError: _PyncNotifier = None`)
+    # so the chain simply continues to the osascript fallback, CLAUDE.md records
+    # the vendored binary as unreliable on arm64 Sequoia anyway, and the PRIMARY
+    # UNUserNotificationCenter path is verified working on this hardware.
+    # Stripping only the vendored .app would be WORSE - it leaves pync importable
+    # and broken at runtime.
+    "pync",
 ]
 
 

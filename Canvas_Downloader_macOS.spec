@@ -2,7 +2,6 @@
 from PyInstaller.utils.hooks import collect_all, copy_metadata
 import sys
 import os
-import glob as _glob
 import importlib.util as _ilu
 import imageio_ffmpeg
 
@@ -36,25 +35,31 @@ hiddenimports = []
 datas += copy_metadata('imageio')
 datas += copy_metadata('keyring')   # Fix 1: required for importlib.metadata entry_points backend discovery
 
-# Fix 6: include terminal-notifier binary so pync notifications are attributed to the app,
-#         not "Script Editor".  collect_all('pync') captures the Python wrapper but may not
-#         preserve the executable bit on the binary - we add it explicitly as a binary.
-_tn_bin = None
-try:
-    import pync as _pync_mod
-    _tn_search = _glob.glob(
-        os.path.join(os.path.dirname(_pync_mod.__file__), '**', 'terminal-notifier'),
-        recursive=True,
-    )
-    if _tn_search:
-        _tn_bin = _tn_search[0]
-except Exception:
-    pass
-if _tn_bin is None:
-    import shutil as _shutil
-    _tn_bin = _shutil.which('terminal-notifier')
-if _tn_bin and os.path.isfile(_tn_bin):
-    binaries += [(_tn_bin, os.path.join('pync', 'vendor', 'terminal-notifier.app', 'Contents', 'MacOS'))]
+# pync / terminal-notifier is DELIBERATELY NOT BUNDLED - it breaks the signature.
+#
+# There used to be a "Fix 6" here that shipped the vendored terminal-notifier
+# binary explicitly, so notifications would be attributed to the app rather than
+# to "Script Editor". The cost turned out to be the whole bundle's signature:
+# PyInstaller rewrites `.` to `__dot__` in those nested directory names, so the
+# app arrives holding `terminal-notifier__dot__app`, which is no longer a valid
+# bundle, and `codesign --verify --strict` fails for the ENTIRE app with "the main
+# executable or Info.plist must be a regular file". Ad-hoc distribution tolerated
+# it; NOTARIZATION does not, so it blocked any Developer-ID release - and the DMG
+# is built in CI, where an unverifiable artifact is the thing that fails last and
+# loudest.
+#
+# Removing the exclude from scripts/build_excludes.py is NOT sufficient on its
+# own and that is the trap: `excludes` stops a module being IMPORTED, while
+# collect_all also runs collect_data_files, which copies the package (and its
+# vendored .app) in as DATA regardless. Both this block and the 'pync' entry in
+# the collect_all list below had to go. Verified by searching the built bundle for
+# '*pync*' and '*__dot__*app'.
+#
+# Safe: engine/notifications.py guards the import (`except ImportError:
+# _PyncNotifier = None`) and simply falls through to its osascript path, which was
+# fixed 2026-08-10; the PRIMARY UNUserNotificationCenter path is verified working
+# on real hardware; and CLAUDE.md already records the vendored binary as
+# unreliable on arm64 Sequoia.
 
 # ── WebKit lookbehind patch (macOS) ──────────────────────────────────
 # pywebview renders inside WKWebView (system WebKit). JavaScriptCore on
@@ -99,7 +104,8 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 packages_to_collect = [
     'requests', 'aiohttp', 'charset_normalizer', 'idna', 'urllib3', 'certifi',
     'aiofiles', 'bs4', 'markdownify', 'moviepy', 'keyring', 'psutil',
-    'sqlite3', 'imageio', 'imageio_ffmpeg', 'pync', 'webview', 'pillow', 'openpyxl',
+    # 'pync' is deliberately absent - see the signature note above.
+    'sqlite3', 'imageio', 'imageio_ffmpeg', 'webview', 'pillow', 'openpyxl',
     # Modern macOS notifications via UNUserNotificationCenter. collect_all is a
     # no-op on a non-mac build host (wrapped in try/except below); on macOS it
     # pulls the PyObjC framework bindings. Falls back to NSUserNotification if absent.
