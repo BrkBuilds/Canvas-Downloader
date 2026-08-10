@@ -3,6 +3,8 @@ Shared UI components for Download and Sync completion screens.
 Extracted to ensure perfect visual parity between both modes.
 """
 import os
+import re
+
 import streamlit as st
 from pathlib import Path
 from shared.helpers import (
@@ -3390,13 +3392,24 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
                 "Won&#39;t run &mdash; Panopto is off in Settings.</div>"
             )
 
-    pan_html = f"""
-<div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>
-    <div style='width: 100%; font-size:0.8rem; color:#ffffff; font-weight:600; text-transform:uppercase; margin-bottom:2px;'>Panopto Recordings</div>
-    {pan_note}
-    <div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; width: 100%; {pan_dim}'>{pan_badges}</div>
-</div>
-"""
+    # ONE CONCATENATED LINE, and `pan_note` must never sit alone on a line of a
+    # triple-quoted block. It is empty whenever Panopto is switched ON - i.e. the
+    # normal case - and an empty interpolation alone on a line leaves a BLANK
+    # LINE in the markup. A blank line ENDS the HTML block for Markdown, which
+    # then reads the following indented line as a CODE BLOCK: the config viewer
+    # printed its own `<div style='display: flex; ...'>` as literal source under
+    # "PANOPTO RECORDINGS". Reported 2026-08-11. It fails only in the branch
+    # where the optional part is ABSENT, which is why it reads as safe.
+    # `scripts/verify_architecture.py` Rule 10 now fails the build on the shape.
+    pan_html = (
+        "<div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;'>"
+        "<div style='width: 100%; font-size:0.8rem; color:#ffffff; font-weight:600; "
+        "text-transform:uppercase; margin-bottom:2px;'>Panopto Recordings</div>"
+        f"{pan_note}"
+        f"<div style='display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; "
+        f"width: 100%; {pan_dim}'>{pan_badges}</div>"
+        "</div>"
+    )
 
     path_html = ""
     if show_path and settings.get('download_path'):
@@ -3415,7 +3428,24 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
 </div>
 """
 
-    return f"{grid_container}{path_html}"
+    # NEWLINE-FREE, and that is a correctness requirement rather than tidiness.
+    # This string is handed to st.markdown(unsafe_allow_html=True), where a BLANK
+    # line ends the HTML block and Markdown then renders any following line
+    # indented 4+ spaces as a CODE BLOCK - the config viewer printed its own
+    # `<div style='display: flex; ...'>` as literal source under "PANOPTO
+    # RECORDINGS" (reported 2026-08-11).
+    #
+    # Fixing the one guilty interpolation is NOT enough, and the attempt proved
+    # it: rebuilding `pan_html` as a single line simply moved the fault, because
+    # `grid_container` interpolates it at 4-space indent and the block above it
+    # still ended with a newline - so the blank line now preceded a 4-space
+    # indented line for the FIRST time, in BOTH Panopto branches. Normalising
+    # here removes the whole class for this function instead of one instance.
+    #
+    # Collapsing to a SPACE (not "") is deliberate: a newline between two tags is
+    # already whitespace to the browser, so this renders byte-identically to the
+    # old markup, whereas "" could delete a space that currently renders.
+    return re.sub(r"\s*\n\s*", " ", f"{grid_container}{path_html}")
 
 
 def render_transcription_setup_notice(wants_transcription: bool, *, key: str, context_note: str = "") -> bool:
@@ -3778,16 +3808,39 @@ def render_fda_settings_card() -> None:
         st.html(
             f"""<div style="padding:0 0 4px 0;"><div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;margin-top:-5px;">{_shield}<span style="font-size:1.1rem;font-weight:600;color:#e2e8f0;">Hands-off Office conversions</span></div><div style="font-size:0.78rem;color:#94a3b8;line-height:1.4;">Converting PowerPoint, Word and Excel files to PDF uses Microsoft Office on your Mac, and macOS 15 + 26 asks a one-click <b style="color:#b6d3ff;">&ldquo;access data from other apps&rdquo;</b> permission every time you start the app, the moment Office conversions start. But you don't need to manually click allow every time you use the app - granting Canvas Downloader <b style="color:#b6d3ff;">Full Disk Access</b> removes it permanently. This is an optional, but recommended action.</div><div style="display:flex;align-items:center;gap:7px;margin-top:7px;font-size:0.78rem;color:#cbd5e1;"><span style="width:8px;height:8px;border-radius:50%;background:{_dot};flex-shrink:0;"></span><span>{_status}</span></div>{_steps_html}</div>"""
         )
-        if not _granted:
-            # Key deliberately avoids the `_fda_open_btn` suffix: that CSS
-            # styles the nudge's compact pill, while this button must render
-            # like its full-width Settings siblings (e.g. "Configure
-            # transcription").
-            if st.button("Open Full Disk Access Settings", key="stg_fda_grant_btn",
-                         use_container_width=True):
-                from engine.applescript_bridge import open_full_disk_access_settings
-                open_full_disk_access_settings()
-                st.toast(_FDA_TOAST)
+        # A BUTTON IN BOTH STATES, and for two independent reasons.
+        #
+        # (a) Once access was granted this card rendered no action at all, so the
+        #     one screen that explains the permission became a dead end: nothing
+        #     here could review or revoke it, which makes a status card with
+        #     nothing to do. Reported 2026-08-11.
+        # (b) The keyed container `stg_card_fda` emitted TWO children when the
+        #     permission was missing and ONE when it was granted. Streamlit
+        #     reconciles by position and hands a block the CHILDREN of whatever
+        #     occupied its index, so a grant between runs could leave the granted
+        #     card holding the previous render's button. Emitting the same number
+        #     of children in both branches removes that by construction - the same
+        #     rule the sync-list row and the hub cards already follow.
+        #
+        # TWO KEYS on purpose. The not-granted call is byte-identical to what
+        # shipped (default styling, matching its full-width Settings siblings like
+        # "Configure transcription"), and the granted one gets its own key so
+        # global.css can mute it to monochrome: it is a review path, not the
+        # recommended action, and it must not compete with the state where the
+        # user still has something to fix. Both keys deliberately avoid the
+        # `_fda_open_btn` suffix, which styles the nudge's compact pill.
+        if _granted:
+            _clicked = st.button(
+                "Manage access", key="stg_fda_manage_btn", use_container_width=True,
+                help="Review or revoke Full Disk Access for Canvas Downloader in "
+                     "System Settings.")
+        else:
+            _clicked = st.button("Open Full Disk Access Settings",
+                                 key="stg_fda_grant_btn", use_container_width=True)
+        if _clicked:
+            from engine.applescript_bridge import open_full_disk_access_settings
+            open_full_disk_access_settings()
+            st.toast(_FDA_TOAST)
 
 
 def render_help_card(key_prefix: str, title: str, text_html: str, icon: str = "", mode: str = "auto"):

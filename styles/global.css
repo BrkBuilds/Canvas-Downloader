@@ -2836,3 +2836,42 @@ body:not([data-cd-has-sel="1"]) div[class*="st-key-btn_custom_download"],
 body:not([data-cd-has-sel="1"]) div[class*="st-key-btn_quick_download"] {
     cursor: not-allowed !important;
 }
+
+/* ── The granted "Manage access" button on the Settings FDA card ──────────────
+   Monochrome on purpose: with Full Disk Access already granted this is a review
+   path, not the recommended action, so it must read quieter than the
+   not-granted "Open Full Disk Access Settings" button it replaces (which keeps
+   Streamlit's default styling, matching its Settings siblings). Its own key
+   exists solely to give this rule something to hook, so the not-granted call
+   site could stay byte-identical. Tokens only - see shared/theme.py. */
+div[class*="st-key-stg_fda_manage_btn"] button {
+    background-color: transparent !important;
+    border: 1px solid #2d3248 !important;   /* BORDER_DEFAULT */
+    color: #94a3b8 !important;              /* TEXT_SLATE_400 */
+}
+div[class*="st-key-stg_fda_manage_btn"] button:hover {
+    border-color: #475569 !important;       /* TEXT_SLATE_600 */
+    color: #e2e8f0 !important;              /* TEXT_SLATE_200 */
+}
+
+/* ── A dialog must never collapse to a sliver ──────────────────────────────────
+   The Ignored Files dialog and the Saved Groups & Pairs hub are both built
+   around a LIST, and both are reachable in a state where that list is empty:
+   restore the last ignored file, or open the hub with nothing saved. With the
+   list gone the modal shrank to the height of its header - the hub became a
+   horizontal slit - which reads as a broken dialog rather than an empty one
+   (reported 2026-08-11).
+
+   Belt and braces with the empty-state notices those two screens now render:
+   the notice explains WHY it is empty, this floor guarantees the box keeps a
+   dialog's shape even for the frame before the notice lands, or in any future
+   empty state nobody has written copy for yet.
+
+   Scoped by a key each dialog always contains, never to stDialog at large -
+   the small confirm dialogs are correct at their natural height and must not
+   grow. The padded body is `> div:first-child` (see CLAUDE.md: padding lives
+   there, not on div[role="dialog"]). */
+div[data-testid="stDialog"]:has(div[class*="st-key-cign_"]) div[role="dialog"] > div:first-child,
+div[data-testid="stDialog"]:has(div[class*="st-key-hub_"]) div[role="dialog"] > div:first-child {
+    min-height: 300px !important;
+}

@@ -1073,7 +1073,124 @@ RULE_LABELS = {
     6: "CSS selector naming a testid Streamlit no longer renders",
     7: "Literal angle-bracket tag name inside a CSS comment",
     9: "Style-only st.html() emitted AFTER a dialog call site (fragment rewinds the event container)",
+    10: "Possibly-empty interpolation alone on a line of HTML that dedent cannot flatten (renders as a code block)",
 }
+
+
+
+# ---------------------------------------------------------------------------
+# Rule 10: an interpolation alone on a line of HTML, that can be EMPTY
+# ---------------------------------------------------------------------------
+
+_R10_HTML_HINT = re.compile(
+    r"<\s*(div|span|b|i|p|ol|ul|li|table|tr|td|svg|a|h[1-6]|section|small"
+    r"|strong|em|br|img|input|label)\b", re.I)
+_R10_INTERP_ONLY = re.compile(r"^[ \t]+\{([^{}\n]+)\}[ \t]*$")
+# script/style/pre/textarea are CommonMark "type 1" HTML blocks, which end at
+# their CLOSING TAG and are explicitly NOT terminated by a blank line. A blank
+# line inside a <style> block is therefore harmless, and three sites in this repo
+# rely on that. Only the type-6 element blocks (div, p, span, ...) are at risk.
+_R10_TYPE1 = re.compile(r"<\s*(style|script|pre|textarea)\b", re.I)
+
+
+def _r10_empty_names(fn: ast.AST) -> set[str]:
+    """Names assigned an empty string literal anywhere in *fn*.
+
+    This is the whole reason the rule can be precise instead of noisy: the
+    dangerous interpolations are the OPTIONAL ones, and in this codebase an
+    optional fragment is always written as ``x = ""`` followed by a conditional
+    ``x = "<div>...</div>"``. An interpolation of a constant, a call or an
+    ``esc(...)`` of real data cannot produce the blank line.
+    """
+    out: set[str] = set()
+    for n in ast.walk(fn):
+        if (isinstance(n, ast.Assign) and isinstance(n.value, ast.Constant)
+                and n.value.value == ""):
+            out |= {t.id for t in n.targets if isinstance(t, ast.Name)}
+        if (isinstance(n, ast.AnnAssign) and isinstance(n.value, ast.Constant)
+                and n.value.value == "" and isinstance(n.target, ast.Name)):
+            out.add(n.target.id)
+    return out
+
+
+def check_empty_interpolation_lines(tree: ast.AST, source: str, filepath: Path,
+                                    suppressed: set[int]) -> list[Violation]:
+    """Flag HTML whose optional fragment sits ALONE on a line, when dedent cannot save it.
+
+    THE FAILURE, measured in the running app 2026-08-11. The config viewer's
+    Panopto column printed its own ``<div style='display: flex; ...'>`` as
+    literal source under "PANOPTO RECORDINGS". Cause: ``{pan_note}`` sat alone on
+    a line and is empty whenever Panopto is switched ON (the normal case), so the
+    markup contained a BLANK LINE. A blank line ends a type-6 HTML block for
+    Markdown, and the next line - indented 4 spaces - is then an indented CODE
+    BLOCK. It only breaks in the branch where the optional part is ABSENT, which
+    is why it reads as safe and survives review.
+
+    WHY THE ``dedent`` TEST IS THE HEART OF THIS RULE, and why the obvious
+    version of it produces two false positives. ``st.markdown`` runs its body
+    through ``streamlit.string_util.clean_text``, which is
+    ``textwrap.dedent(str(text)).strip()``. ``dedent`` removes the COMMON leading
+    whitespace of every non-blank line - so an f-string whose lines are all
+    indented, like the completion card, is flattened to column 0 and its blank
+    line is followed by an UNindented line, which is perfectly safe. The Panopto
+    case differed in exactly one respect: the assembled grid contains lines at
+    column 0 (the interpolated column blocks each start there), so the common
+    prefix is 0, ``dedent`` removes NOTHING, and the 4-space line survives.
+
+    Hence all four conditions, each of which is load-bearing:
+      1. the f-string looks like element HTML (not a style/script block);
+      2. a line is nothing but one interpolation;
+      3. that interpolation is a name provably assignable to ``""``;
+      4. the f-string ALSO has a line at column 0, so dedent is a no-op.
+    """
+    violations: list[Violation] = []
+    seen: set[tuple] = set()
+    for fn in ast.walk(tree):
+        if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        empties = _r10_empty_names(fn)
+        if not empties:
+            continue
+        for node in ast.walk(fn):
+            if not isinstance(node, ast.JoinedStr):
+                continue
+            seg = ast.get_source_segment(source, node)
+            if not seg or not _R10_HTML_HINT.search(seg):
+                continue
+            if _R10_TYPE1.search(seg):
+                continue
+            lines = seg.splitlines()
+            body = [l for l in lines[1:] if l.strip()]
+            if not body:
+                continue
+            if not any(len(l) - len(l.lstrip(" ")) == 0 for l in body):
+                continue            # dedent will flatten it - harmless
+            for i, ln in enumerate(lines):
+                m = _R10_INTERP_ONLY.match(ln)
+                if not m:
+                    continue
+                name = m.group(1).strip()
+                if name not in empties:
+                    continue
+                nxt = lines[i + 1] if i + 1 < len(lines) else ""
+                if not (nxt.strip() and len(nxt) - len(nxt.lstrip(" ")) >= 4):
+                    continue
+                lineno = node.lineno + i
+                key = (filepath, lineno, name)
+                if key in seen:
+                    continue
+                seen.add(key)
+                violations.append(Violation(
+                    filepath=filepath, lineno=lineno, rule=10,
+                    message=(f"{{{name}}} is alone on a line of HTML and can be "
+                             f"empty, leaving a BLANK LINE; the next line is "
+                             f"indented 4+ and this f-string has a column-0 line "
+                             f"so dedent cannot flatten it - Markdown will render "
+                             f"that line as a code block. Build the markup as one "
+                             f"concatenated line."),
+                    suppressed=(lineno in suppressed),
+                ))
+    return violations
 
 
 # ---------------------------------------------------------------------------
@@ -1692,6 +1809,7 @@ def scan_file(filepath: Path) -> list[Violation]:
     violations.extend(check_dead_testids(source, filepath, suppressed))
     violations.extend(check_literal_tags_in_style_py(tree, filepath, suppressed))
     violations.extend(check_event_writes_after_dialog(tree, filepath, suppressed))
+    violations.extend(check_empty_interpolation_lines(tree, source, filepath, suppressed))
     if filepath.name != "theme.py":          # theme.py DEFINES the tokens
         violations.extend(check_near_duplicate_colours(source, filepath, suppressed))
 

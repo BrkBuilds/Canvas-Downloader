@@ -26,7 +26,8 @@ from shared.components import (
     SVG_FOLDER_YELLOW, SVG_CLOCK, SVG_SAVE_COLORFUL, SVG_COURSE_PILL,
 )
 from core.sync_manager import SyncManager, SavedGroupsManager
-from core.pair_labels import canvas_name_label_index, label_for, label_for_id, pair_display
+from core.pair_labels import (canvas_name_label_index, label_for, label_for_id,
+                              pair_display, pair_key)
 from shared.helpers import (
     esc,
     open_folder,
@@ -735,7 +736,7 @@ def _sync_pairs_section(courses, course_names, course_options):
     pairs_to_remove = []
     _deferred_save_pair = None   # Will hold pair data if inline Save is clicked
     _deferred_save_group = False # Will be True if "Save as Group" is clicked
-    _deferred_ignored = None     # Will hold (course_name, course_id, course_data) if "Ignored Files" is clicked
+    _deferred_ignored = None     # (course_name, course_id, course_data, pair_key) if "Ignored Files" is clicked
     # Set by ui.sync_dialogs.render_pending_folder_ui further down this run, and
     # read back into the return value below. Cleared HERE, before anything can
     # set it, so a flag left behind by a run that was cut short (an st.rerun
@@ -752,7 +753,16 @@ def _sync_pairs_section(courses, course_names, course_options):
         if not _sg.get('is_single_pair', False):
             continue
         for _sp in _sg.get('pairs', []):
-            _saved_pair_sigs.add((_sp.get('course_id'), _sp.get('local_folder', '')))
+            # pair_key, not a raw tuple. The two sides of this comparison come
+            # from different places: the hub's records have been through JSON
+            # (so a course id can arrive as "43660") while the sync list holds
+            # whatever the course selector gave it (43660), and the folder can
+            # differ by a trailing separator or case. A raw tuple therefore
+            # reports an already-saved pair as unsaved, leaving the inline floppy
+            # enabled and letting the user save a second copy of the same link.
+            # Same "one identity, written twice" class as the ignored-files cache.
+            _saved_pair_sigs.add(pair_key(_sp.get('course_id'),
+                                          _sp.get('local_folder', '')))
 
     # Pre-compute missing-folder state once; used by both per-pair save buttons and "Save as Group"
     _any_missing_folder = any(
@@ -923,12 +933,31 @@ def _sync_pairs_section(courses, course_names, course_options):
     # bulk_ignore_files write could be mid-flight on the sync background thread.
     # Worst case: cache rebuilds on the next rerun with stale data for one frame.
     # Acceptable - bulk_ignore writes are fast and idempotent.
+    # KEYED ON THE PAIR, NOT THE COURSE. Ignored files live in ONE folder's
+    # `.canvas_sync.db`, so the identity here is the LINK `(course_id, folder)` -
+    # the same tuple every dedupe, update, remove and label in this app keys on.
+    # This dict was keyed on `course_id` alone until 2026-08-11, which broke the
+    # moment a user had the same course synced into two folders (an ordinary
+    # thing: re-download a course somewhere tidier and add both to the list).
+    # Two failures, and the second is the dangerous one:
+    #
+    #   * the loop OVERWROTE the entry, so both cards read the last pair's data
+    #     and one folder's count was reported on the other. Measured on real
+    #     data: folder A held 0 ignored rows and folder B 23, and BOTH cards
+    #     showed "Ignored Files (23)".
+    #   * the entry carries the `sync_manager`, so opening the dialog from the
+    #     wrong card handed it the OTHER folder's manifest - a restore there
+    #     would have written to a folder the user was not looking at.
+    #
+    # The manifests themselves were always correct; only this lookup conflated
+    # them. `_path_key` folds case/Unicode the way the rest of the sync engine
+    # does, so two spellings of one folder cannot split into two entries.
     _cache_key = '_ignored_files_cache'
-    ignored_by_course = st.session_state.get(_cache_key)
+    ignored_by_pair = st.session_state.get(_cache_key)
 
-    if ignored_by_course is None:
+    if ignored_by_pair is None:
         # Cache miss - query SQLite once, store result for subsequent fragment reruns
-        ignored_by_course = {}
+        ignored_by_pair = {}
         if sync_pairs:
             for pair in sync_pairs:
                 local_folder = pair.get('local_folder')
@@ -938,13 +967,13 @@ def _sync_pairs_section(courses, course_names, course_options):
                     ignored = sm.get_ignored_files()
                     ignored_pan = sm.get_ignored_panopto()
                     if ignored or ignored_pan:
-                        ignored_by_course[course_id] = {
+                        ignored_by_pair[pair_key(pair.get('course_id'), pair.get('local_folder'))] = {
                             'pair': pair,
                             'files': ignored,
                             'panopto': ignored_pan,
                             'sync_manager': sm,
                         }
-        st.session_state[_cache_key] = ignored_by_course
+        st.session_state[_cache_key] = ignored_by_pair
 
     # --- Pre-compute which pair indices need transcription highlight ---
     # If the transcription engine/model isn't ready, highlight pairs whose
@@ -1029,7 +1058,8 @@ def _sync_pairs_section(courses, course_names, course_options):
                     folder_display = short_path(pair['local_folder'])
 
                     # Pre-compute save state for inline button
-                    _pair_sig = (pair.get('course_id'), pair.get('local_folder', ''))
+                    _pair_sig = pair_key(pair.get('course_id'),
+                                         pair.get('local_folder', ''))
                     _pair_already_saved = _pair_sig in _saved_pair_sigs
                     
                     if not folder_exists:
@@ -1128,20 +1158,25 @@ def _sync_pairs_section(courses, course_names, course_options):
                         st.rerun(scope="app")
 
                 with col_ignored:
-                    _ign_cd = ignored_by_course.get(pair['course_id'], {})
+                    _ign_cd = ignored_by_pair.get(pair_key(pair.get('course_id'), pair.get('local_folder')), {})
                     ignored_count = len(_ign_cd.get('files', [])) + len(_ign_cd.get('panopto', {}) or {})
                     ignored_help = "Nothing has been ignored for this course." if ignored_count == 0 else None
                     btn_text = f"Ignored Files\u2009:gray[({ignored_count})]" if ignored_count > 0 else "Ignored Files"
                     if st.button(btn_text, key=f"ignored_btn_{idx}",
                                  disabled=(ignored_count == 0), use_container_width=True, help=ignored_help):
-                        course_data = ignored_by_course.get(pair['course_id'])
+                        course_data = ignored_by_pair.get(pair_key(pair.get('course_id'), pair.get('local_folder')))
                         if course_data:
                             # Title the dialog the way the card that opened it is
                             # titled - the user clicked "Ignored Files" on a row
                             # called X and must land on a dialog about X.
+                            # The dialog's widget keys must be unique PER PAIR
+                            # too, or two pairs of one course share checkbox
+                            # state - so it is handed the pair key, not just the
+                            # course id.
                             _deferred_ignored = (
                                 pair_label or display_name,
-                                pair['course_id'], course_data)
+                                pair['course_id'], course_data,
+                                pair_key(pair.get('course_id'), pair.get('local_folder')))
 
                 with col_remove:
                     if st.button('Remove', 
@@ -2784,10 +2819,10 @@ def _render_sync_history():
 
 
 
-def _show_course_ignored_files(course_name, course_id, course_data):
+def _show_course_ignored_files(course_name, course_id, course_data, pair_sig=None):
     """Delegate to ui.sync_dialogs."""
     from ui.sync_dialogs import show_course_ignored_files
-    show_course_ignored_files(course_name, course_id, course_data)
+    show_course_ignored_files(course_name, course_id, course_data, pair_sig)
 
 
 
