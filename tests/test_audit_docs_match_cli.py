@@ -26,6 +26,11 @@ DOCS = (
     REPO / ".claude" / "skills" / "audit-live" / "SKILL.md",
     REPO / "tests" / "audit" / "README.md",
     REPO / "tests" / "audit" / "RUNBOOK.md",
+    # The macOS set. Added 2026-08-10: these are followed on a RENTED machine,
+    # where a command that argparse refuses costs money as well as time.
+    REPO / "tests" / "audit" / "MAC_RUNBOOK.md",
+    REPO / "tests" / "audit" / "MAC_AUDIT_PROMPT.md",
+    REPO / "tests" / "audit" / "MAC_AUDIT_GUIDE.md",
 )
 
 # `python -m tests.audit [--run X] <verb> [<sub>] [--flags...]`, to end of line.
@@ -107,12 +112,30 @@ def _resolve(tokens: list[str]):
     return chain, flags
 
 
+#: A shell line continued with a trailing backslash.
+_CONTINUATION = re.compile(r"\\\s*\n\s*")
+
+
 def _documented_commands() -> list[tuple[Path, str]]:
+    """Every documented invocation, with backslash continuations JOINED.
+
+    The join is load-bearing for the required-positional and required-flag
+    checks below: `INVOCATION` stops at the newline, so a perfectly correct
+
+        python -m tests.audit check download "<folder>" --course-id <id> \\
+            --expect @cfg.json
+
+    was being read as its first line only and reported as omitting `--expect`.
+    The original flag check never noticed, because it only ever asked whether
+    the flags PRESENT were real - truncation can only hide flags, never invent
+    a bad one. Two checks that need the WHOLE command changed that.
+    """
     out = []
     for doc in DOCS:
         if not doc.is_file():
             continue
-        for m in INVOCATION.finditer(doc.read_text(encoding="utf-8")):
+        text = _CONTINUATION.sub(" ", doc.read_text(encoding="utf-8"))
+        for m in INVOCATION.finditer(text):
             line = m.group("rest").split("#")[0].strip()
             if line and not line.startswith("-h"):
                 out.append((doc, line))
@@ -139,6 +162,140 @@ def test_every_documented_command_exists(doc, line):
     assert not unknown, (
         f"{Path(doc).name}: `{line}`\n  unknown flag(s) {unknown}; "
         f"this subcommand accepts {sorted(known)}")
+
+
+def _required_positionals(parser) -> list[str]:
+    """Positional args the parser will refuse to run without.
+
+    Subparser actions are excluded - those ARE the subcommands, and a doc line
+    is allowed to stop at a verb (e.g. `python -m tests.audit finding list`
+    versus the bare `finding`, which the caller never writes on its own).
+    """
+    import argparse
+    out = []
+    for a in parser._actions:
+        if isinstance(a, argparse._SubParsersAction) or a.option_strings:
+            continue
+        if a.nargs in ("?", "*") or getattr(a, "default", None) is not None:
+            continue
+        out.append(a.dest)
+    return out
+
+
+@pytest.mark.parametrize("doc,line", _documented_commands(),
+                         ids=lambda v: v if isinstance(v, str) else Path(v).name)
+def test_every_documented_command_supplies_its_required_positionals(doc, line):
+    """A required POSITIONAL is as copy-pasteable-wrong as an unknown flag.
+
+    This check did not exist, and that is exactly how three docs came to show
+
+        python -m tests.audit finding add --scenario <id> --category <cat> ...
+
+    which argparse rejects outright: `title` is positional and required. The
+    flag check above passes it happily, because every flag in it is real. A
+    reader following it loses the time it takes to discover argparse's error -
+    on a rented machine, during the one session that had to go right.
+    """
+    tokens = [t for t in line.split() if t not in ("...", "|")]
+    chain, _flags_seen = _resolve(tokens)
+    leaf = chain[-1]
+    needed = _required_positionals(leaf)
+    if not needed:
+        return
+
+    # Count the tokens that could be serving as positionals: everything that is
+    # not a flag, not a flag's value, and not one of the subcommand words we
+    # descended through. Quoted strings survive .split() as several tokens, so
+    # this counts generously - the point is to catch ZERO, not to count exactly.
+    import argparse
+    consumed, i, given = set(), 0, 0
+    parser = cli_parser()
+    while i < len(tokens):
+        tok = tokens[i]
+        if tok.startswith("-"):
+            i += 2 if tok == "--run" or "=" not in tok else 1
+            continue
+        subs = [a for a in parser._actions
+                if isinstance(a, argparse._SubParsersAction)]
+        if subs and tok in subs[0].choices:
+            parser = subs[0].choices[tok]
+        else:
+            given += 1
+        i += 1
+
+    assert given >= len(needed), (
+        f"{Path(doc).name}: `{line}`\n"
+        f"  needs {len(needed)} positional argument(s) {needed} but shows {given}.\n"
+        f"  argparse will refuse this command as written.")
+
+
+def cli_parser():
+    from tests.audit import cli
+    return cli.build_parser()
+
+
+@pytest.mark.parametrize("doc,line", _documented_commands(),
+                         ids=lambda v: v if isinstance(v, str) else Path(v).name)
+def test_every_documented_command_supplies_its_required_flags(doc, line):
+    """The other half of the same class.
+
+    `check download` needs BOTH a positional `folder` and a required
+    `--expect`; the skill showed neither. A required flag is exactly as
+    copy-paste-wrong as a required positional, and the original flag check only
+    ever asked whether the flags PRESENT were real - never whether the ones
+    absent were mandatory.
+    """
+    tokens = [t for t in line.split() if t not in ("...", "|")]
+    chain, flags = _resolve(tokens)
+    seen = {f.split("=")[0] for f in flags}
+    missing = []
+    for a in chain[-1]._actions:
+        if a.option_strings and getattr(a, "required", False):
+            if not any(o in seen for o in a.option_strings):
+                missing.append(a.option_strings[-1])
+    assert not missing, (
+        f"{Path(doc).name}: `{line}`\n"
+        f"  omits required flag(s) {missing}; argparse will refuse it.")
+
+
+def test_the_required_flag_check_would_actually_fail_on_a_bad_line():
+    """Guard on the guard, in the direction that matters."""
+    chain, flags = _resolve("check download somefolder --course-id 1".split())
+    required = [a.option_strings[-1] for a in chain[-1]._actions
+                if a.option_strings and getattr(a, "required", False)]
+    assert "--expect" in required, (
+        f"expected --expect to be required on `check download`, got {required}")
+    assert "--expect" not in {f.split("=")[0] for f in flags}
+
+
+def test_the_positional_check_would_actually_fail_on_a_bad_line():
+    """Validate the guard in the direction that matters.
+
+    A checker that can never fire is worse than no checker - `README.md` ground
+    rule 7. This asserts the real failure mode it was written for.
+    """
+    import argparse
+    bad = "finding add --scenario x --category y --severity high"
+    tokens = bad.split()
+    chain, _ = _resolve(tokens)
+    needed = _required_positionals(chain[-1])
+    assert needed == ["title"], f"expected a required `title`, got {needed}"
+
+    parser = cli_parser()
+    i, given = 0, 0
+    while i < len(tokens):
+        tok = tokens[i]
+        if tok.startswith("-"):
+            i += 2
+            continue
+        subs = [a for a in parser._actions
+                if isinstance(a, argparse._SubParsersAction)]
+        if subs and tok in subs[0].choices:
+            parser = subs[0].choices[tok]
+        else:
+            given += 1
+        i += 1
+    assert given == 0, "the counter should see no positional in the bad line"
 
 
 def test_the_skill_points_at_the_runbook_and_readme():

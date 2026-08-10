@@ -108,7 +108,7 @@ one direction only is routinely a check that can never fire.
 ## Recording
 
 ```bash
-python -m tests.audit finding add --scenario <id> --category <cat> --severity <sev> --evidence <path>
+python -m tests.audit finding add "<one-line title>" --severity <sev> --category <cat> --oracles O1,O4 --scenario <id> --evidence <path>
 python -m tests.audit finding list
 python -m tests.audit finding classes --defects-only
 python -m tests.audit report build
@@ -121,8 +121,8 @@ Course `43667` finishes in seconds (one ExternalUrl) - use it to prove the
 pipeline is wired before spending time on the big courses.
 
 ```bash
-python -m tests.audit flow download --courses 43667
-python -m tests.audit check download --course-id 43667
+python -m tests.audit flow download smoke --courses 43667
+python -m tests.audit check download "<run>/downloads/<course folder>" --course-id 43667 --expect @<config>.json
 ```
 
 ## Teardown

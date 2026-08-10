@@ -1371,7 +1371,7 @@ of the fix passed every modules-mode check while flat still fetched twice.
 
 ```bash
 python -m tests.audit snapshot restore c45899_base
-python -m tests.audit seed apply --kinds edited_update
+python -m tests.audit seed apply "<run>/downloads/<course folder>" --kinds edited_update
 python -m tests.audit flow sync fixv --select updated_modified
 ```
 
