@@ -74,9 +74,23 @@ def _select_sync_folder_lazy():
         return
     if editing or len(folders) == 1:
         folder_path = folders[0]
+        _prev = st.session_state.get('pending_sync_folder') or ''
         st.session_state['pending_sync_folder'] = folder_path
-        # --- Auto-detect course from manifest ---
-        _auto_detect_course_from_manifest(folder_path)
+        # --- Auto-detect course from manifest, only if the folder CHANGED ---
+        # Confirming the picker without navigating anywhere is a no-op, and it
+        # must look like one. This used to run unconditionally, so Edit -> Change
+        # Folder -> Choose announced "course auto-detected from this folder" for a
+        # folder the user had not changed - a claim about an action that did not
+        # happen, on the one screen where the user is being careful about which
+        # course a folder is bound to.
+        #
+        # Compared through the app's one folder normaliser, so a trailing
+        # separator or a case difference is not mistaken for a change. In ADD mode
+        # `_prev` is empty, so the first pick always counts as a change - which is
+        # exactly when auto-detect is worth having.
+        from shared.helpers import norm_folder_key as _nfk
+        if _nfk(folder_path) != _nfk(_prev):
+            _auto_detect_course_from_manifest(folder_path)
         return
     # Multiple folders → hand off to the bulk processor on the next render.
     st.session_state['_bulk_folders_raw'] = folders
@@ -446,10 +460,7 @@ def show_course_ignored_files(course_name, course_id, course_data, pair_sig=None
             div[class*="st-key-{prefix}_filter_box"]:has(div[class*="st-key-{prefix}_chevron"] input:not(:checked)) {{
                 padding-bottom: 0 !important;
             }}
-            div[class*="st-key-{prefix}_filter_box"]:has(div[class*="st-key-{prefix}_chevron"] input:not(:checked)) div[class*="st-key-{prefix}_chevron"] label[data-baseweb="checkbox"] {{
-                margin-bottom: -{card_pad_y}px !important;
-                padding-bottom: {card_pad_y}px !important;
-            }}
+
             /* -- Custom Chevron Toggle -- */
             /* The full width chain is load-bearing for the hit area below:
                1.51 gives a checkbox's element-container a CONTENT-based
@@ -795,8 +806,26 @@ def show_course_ignored_files(course_name, course_id, course_data, pair_sig=None
                         st.button("Deselect All", key=f"{prefix}_btn_da", use_container_width=True, on_click=_deselect_all)
 
         # ── 4. File list with extension + size tags ───────────────────
-        if all_file_tuples or pan_ignored:
-            with st.container(height=filelist_height, border=True, key=f"{prefix}_filelist"):
+        # THE CONTENT AREA IS ALWAYS RENDERED, empty or not. It carries an explicit
+        # height, so keeping it is what stops the dialog collapsing to a sliver
+        # when the last ignored file is restored - and the empty state then sits
+        # where the list was, which is the only place it makes sense.
+        #
+        # An earlier attempt put `min-height` on `div[role="dialog"] > div:first-child`
+        # instead. That is NOT the padded body: measured in Chrome, the dialog has
+        # three children and the first is a chrome wrapper, so the rule inflated it
+        # into a 300px empty band ABOVE the title. Do not put a height on the
+        # dialog itself - put it on the region that holds content.
+        with st.container(height=filelist_height, border=True, key=f"{prefix}_filelist"):
+            if not (all_file_tuples or pan_ignored):
+                from ui.amber_notice import render_info_notice
+                render_info_notice(
+                    "Nothing is ignored for this course any more.",
+                    detail="You can close this dialog. To ignore files again, use "
+                           "\u201cMove deselected files to Ignored\u201d on the next "
+                           "Sync Review.",
+                    margin="4px 0 0 0", key=f"{prefix}_all_restored")
+            if all_file_tuples or pan_ignored:
                 # Render normal files
                 if all_file_tuples:
                     for key, f in all_file_tuples:
@@ -877,24 +906,7 @@ def show_course_ignored_files(course_name, course_id, course_data, pair_sig=None
         if st.session_state.get(f"{prefix}_success"):
             from ui.amber_notice import render_success_notice
             render_success_notice(st.session_state.pop(f"{prefix}_success"), margin="10px 0 10px 0")
-        elif not files and not pan_ignored:
-            # THE EMPTY STATE, and it must be an `elif`. The success notice is
-            # popped as it renders, so the very next interaction inside the dialog
-            # (any rerun - clicking anywhere that has a widget) leaves this screen
-            # with no list, no notice and nothing to explain itself. Reported
-            # 2026-08-11: restore the last ignored file and the dialog goes blank.
-            #
-            # It says what is true AND what to do next, because both actions are
-            # non-obvious from here: nothing more can be restored, so the only
-            # useful moves are to leave, or to re-ignore something on the next
-            # review.
-            from ui.amber_notice import render_info_notice
-            render_info_notice(
-                "Nothing is ignored for this course any more.",
-                detail="You can close this dialog. To ignore files again, use "
-                       "\u201cMove deselected files to Ignored\u201d on the next "
-                       "Sync Review.",
-                margin="10px 0 10px 0", key=f"{prefix}_all_restored")
+
 
         # ── 6. Dynamic button text ────────────────────────────────────
         if checked_count == 0:
