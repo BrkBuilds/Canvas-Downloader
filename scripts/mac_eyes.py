@@ -18,16 +18,17 @@ previous macOS audit.
 Shots land in `_audit_runs/_screens/` with a timestamped name and the path is
 printed, so an agent can Read it immediately.
 
-**CHECK `eyesight` BEFORE BELIEVING ANY SCREENSHOT.** The premise above holds
-only when the framebuffer `screencapture` reads is the one being displayed, and
-a remote-desktop display driver can break that: measured on a Scaleway Mac over
-NoMachine, the window server listed 12 windows and every capture came back as
-the bare desktop, with `screencapture -l <winid>` refusing outright. The user
-was looking straight at those windows. A blank capture is then indistinguishable
-from a blank app - which is exactly the WKWebView failure phase M3 hunts, so it
-manufactures a CRITICAL out of a healthy build. On a BLIND machine, hand every
-visual question to the human instead; that is not a failure of the audit, it is
-the one honest reading of the evidence.
+**CHECK `eyesight` BEFORE BELIEVING ANY SCREENSHOT.** The premise above needs a
+**Screen Recording** grant, and without one macOS does not fail the capture - it
+silently omits every other application's window and returns a picture of the
+desktop. Worse, TCC attributes the capture to the SESSION's responsible process,
+which for an SSH/tmux shell is `sshd`/the CLI binary and not Terminal.app.
+Measured minutes apart on one Scaleway Mac: BLIND from the tmux shell,
+capturable through `scripts/mac_aqua.py run ...` (children of Terminal.app).
+
+A blank capture is indistinguishable from a blank app - exactly the WKWebView
+failure phase M3 hunts - so it manufactures a CRITICAL out of a healthy build.
+When BLIND, take shots through the bridge, or hand the question to the human.
 
 WHAT IT CANNOT DO, and why that is not a gap you can engineer away: macOS
 refuses synthetic clicks on TCC consent prompts by design (that is the whole
@@ -72,31 +73,41 @@ def require_darwin():
 # ─────────────────────────────────────────────────── can we see at all?
 
 def eyesight() -> dict:
-    """Does `screencapture` actually render WINDOW CONTENT on this machine?
+    """Does `screencapture` actually render WINDOW CONTENT for THIS process?
 
     THE ASSUMPTION THIS FILE IS BUILT ON CAN BE FALSE, and it fails silently in
-    the worst possible direction. Measured on a Scaleway Mac driven over
-    NoMachine, 2026-08-10:
+    the worst possible direction. Measured 2026-08-10 on a Scaleway Mac:
 
-        mac_eyes windows          -> 12 windows, incl. `Canvas Downloader` 1920x970
-        screencapture -x full     -> 4.4 MB PNG of the bare DESKTOP, no windows
+        mac_eyes windows          -> 12-31 windows, incl. `Canvas Downloader` 1920x970
+        screencapture -x full     -> a 4.4 MB PNG of the bare DESKTOP, no windows
         screencapture -l <winid>  -> "could not create image from window"
 
-    One display, the window server agreeing the windows are on screen, the user
-    looking straight at them in their remote viewer - and every capture blank.
-    A remote-desktop display driver can intercept window composition, so the
-    framebuffer `screencapture` reads holds only the wallpaper and the menu bar.
+    THE CAUSE IS **Screen Recording TCC**, NOT the display. Without that grant
+    macOS does not fail the capture - it silently omits every other
+    application's window and hands back a picture of the desktop, and only the
+    window-targeted form errors. One display, the window server agreeing the
+    windows are on screen, the operator looking straight at them.
 
-    Why this is dangerous rather than merely annoying: `MAC_AUDIT_PROMPT.md` and
-    `MAC_RUNBOOK.md` both tell the agent it HAS eyes and must not ask the user
-    to describe the screen. Following that on such a machine, the packaged app's
-    WKWebView check - the highest-value item in phase M3, whose whole failure
-    mode is "the UI is blank" - reads as a confirmed CRITICAL when the app is in
-    fact rendering perfectly. A blank screenshot is indistinguishable from a
-    blank app unless something asks this question first.
+    AND IT IS PER-RESPONSIBLE-PROCESS, which is what makes it confusing on a
+    remote box: TCC attributes the capture to the session's responsible process,
+    which for an SSH/tmux shell is `sshd`/the CLI binary and NOT Terminal.app.
+    Measured minutes apart, same machine, same user, same display: BLIND from the
+    tmux shell, `window content is capturable` through
+    `scripts/mac_aqua.py run ...`, whose commands are children of Terminal.app.
+    So granting Terminal.app does nothing for the SSH shell, and the remedy is to
+    take screenshots through the bridge (or grant the real responsible process).
 
-    So: ask it explicitly, and treat a blind capture as a reason to ask a human
-    rather than as evidence about the product.
+    A first pass at this docstring blamed the remote-desktop display driver. That
+    was wrong, and the correction only arrived because the same probe was run in
+    both contexts - worth repeating before believing any environment conclusion.
+
+    Why it matters rather than merely annoying: `MAC_AUDIT_PROMPT.md` and
+    `MAC_RUNBOOK.md` both tell the agent it HAS eyes and must not ask the user to
+    describe the screen. Obeying that while blind, the packaged app's WKWebView
+    check - phase M3's highest-value item, whose whole failure mode is "the UI is
+    blank" - reads as a confirmed CRITICAL when the app renders perfectly. A
+    blank screenshot is indistinguishable from a blank app unless something asks
+    this question first.
     """
     require_darwin()
     ws = [w for w in _windows()
@@ -116,10 +127,12 @@ def eyesight() -> dict:
             "target": f"{target['owner']} {target['w']}x{target['h']}",
             "window_capture": "ok" if got else (err[:120] or "empty file"),
             "verdict": ("window content is capturable" if got else
-                        "BLIND - the window server reports windows that "
-                        "screencapture cannot render (remote-desktop display "
-                        "driver). Screenshots show only the desktop; ask the "
-                        "user for anything visual.")}
+                        "BLIND - this process has no Screen Recording grant, so "
+                        "captures silently omit every other app's window. TCC "
+                        "attributes it to the SESSION's responsible process, "
+                        "which for an SSH/tmux shell is not Terminal.app. Retry "
+                        "through `python3 scripts/mac_aqua.py run ...`, or grant "
+                        "Screen Recording to the responsible process.")}
 
 
 # ───────────────────────────────────────────────────────────── capture

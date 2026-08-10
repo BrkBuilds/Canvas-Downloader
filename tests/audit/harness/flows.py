@@ -430,6 +430,38 @@ class DownloadFlow(Flow):
                          verified=verified, drift=drift,
                          ok=not failed and not drift)
 
+    def _accept_panopto_notice(self) -> dict:
+        """Dismiss the Panopto acceptable-use notice if it is on screen.
+
+        `shared.legal.require_panopto_notice` gates the Panopto pass behind a
+        one-time acknowledgement recorded as `panopto_notice_ack_version` in the
+        settings file. The audit isolates `CANVAS_DL_CONFIG_DIR`, so the ack is
+        absent on every run and the dialog appears whenever a row selects any
+        Panopto output - exactly like the first-run Automation batch that
+        MAC_RUNBOOK tells you not to report. It is the harness's job to answer
+        it, not the product's job to skip it.
+
+        It went unnoticed until a FRESH machine, and the reason is worth
+        recording: a developer's real settings file already carries the ack, and
+        `paths.app_env` seeds the isolated config from it, so every previous
+        Panopto row inherited an acknowledgement it never had to give. On this
+        rented Mac the settings file was written by
+        `scripts/mac_audit_bootstrap.sh` and has no ack - so the row simply
+        stopped, with the dialog waiting and the flow burning its whole timeout.
+        Measured 2026-08-10: 15 minutes on a 1-line debug log, and the download
+        began the instant `pan_notice_accept` was clicked.
+
+        Answering it is also the honest configuration: the row asked for Panopto
+        outputs, so "I understand" is what a user who wanted them would press.
+        Clicking `pan_notice_skip` would silently turn the feature off and the
+        row would then be judged against a config it never ran.
+        """
+        probe = self.s.probe_key("pan_notice_accept")
+        if not probe.get("found"):
+            return {"shown": False}
+        r = self.s.click("pan_notice_accept")
+        return {"shown": True, "accepted": bool(r.get("clicked"))}
+
     def confirm_and_run(self, name: str, timeout: float = 5400.0,
                         capture_phases: bool = True) -> dict:
         """Start the download and follow it to a terminal screen.
@@ -439,6 +471,7 @@ class DownloadFlow(Flow):
         even though the screen only exists for a few seconds.
         """
         shots = []
+        notice = self._accept_panopto_notice()
         r = self.s.click("action_dl_confirm", settle=False)
         if not r.get("clicked"):
             raise FlowError(f"Confirm and Download not clickable: {r}")
@@ -464,6 +497,7 @@ class DownloadFlow(Flow):
         shots.append(self.s.capture(f"{name}_complete",
                                     ("screen", "wizard", "completion")))
         return self._log("confirm_and_run", name=name, terminal=done,
+                         panopto_notice=notice,
                          captures=[s["name"] for s in shots], ok=done.get("done", False))
 
     def run(self, name: str, course_ids: list[int], config: dict) -> dict:
