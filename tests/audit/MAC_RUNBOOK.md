@@ -485,10 +485,28 @@ that:
    sees the error, so a rejected request is reported as success and all three
    fallbacks are skipped; see its finding. Testing that properly needs the
    packaged app with a real *Don't Allow*, not a source run.
-6. **A 250-char path component** fails to convert although the escaper passes the
-   path through faithfully (round-trip identical). Measured, **not diagnosed** —
-   it is either Word's own filename limit or `office_container_stage`. Isolate
-   with one component just under and just over the limit.
+6. ~~**A 250-char path component** fails to convert~~ **DIAGNOSED AND FIXED
+   2026-08-10**, and it was worse than this note said: **any** filename past
+   about **164 bytes** could not be converted at all. The limit is Word's
+   ~255-character **TOTAL path**, and `office_container_stage` was spending 91 of
+   that budget on the container prefix while preserving `src.name` — i.e. it
+   shortened the directory, which was never the problem, and kept the name, which
+   was. Now stages as `src.<ext>` / `out.<ext>`; a 240-byte name converts and the
+   PDF lands under its real name. Three things to reuse:
+   - **Every case needs a FRESH Word and its own positive control**, or it
+     measures the previous case's wedge. Both earlier logs show the shape: control
+     converts, case 1 times out (-1712), cases 2-8 all report `missing value
+     doesn't understand the "save as" message`.
+   - **The unstaged path is NOT a usable control.** Without the container macOS
+     demands the per-folder App Data grant that staging exists to avoid, so even a
+     short-named control fails there — and an intermediate draft of this analysis
+     concluded "component, not total path" from exactly that unsound comparison.
+     **Vary the depth INSIDE the container** instead: a 9-byte name at staged ~220
+     converts while an 11-byte name at staged ~281 fails, which is what rules a
+     component limit out.
+   - `active document doesn't understand …` (Word opened it) and `missing value
+     doesn't understand …` (Word did not) are **different** signals. The second is
+     the wedge.
 7. ~~**The sync matrix** (43 rows)~~ **DONE 2026-08-10**: 43/43 rows, 2 lanes,
    **0 failed**, 100% 2-way and 3-way-interacting coverage. Four things to reuse:
    - **Snapshot a MEDIUM course.** The already-downloaded Panopto course is 467
