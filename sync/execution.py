@@ -43,6 +43,7 @@ from core.cancellation import cancel_sync, is_sync_cancelled
 from core.sync_manager import (
     SyncFileInfo, SyncHistoryManager, CanvasFileInfo,
     secondary_id_type, SECONDARY_ID_OFFSETS,
+    _path_key,
 )
 from shared.helpers import (
     esc,
@@ -952,11 +953,15 @@ def run_sync():
                 def _claim_target(p):
                     """Reserve a final path for one dispatch; suffix on collision."""
                     cand = p
-                    key = os.path.normcase(str(cand))
+                    # _path_key, not normcase - on a case-insensitive volume
+                    # "Notes.pdf" and "notes.pdf" ARE one file, so two Canvas
+                    # files whose sanitized names differ only in case would each
+                    # claim a "free" path and then write over each other.
+                    key = _path_key(cand)
                     counter = 1
                     while key in _dispatched_targets:
                         cand = cand.parent / f"{cand.stem} ({counter}){cand.suffix}"
-                        key = os.path.normcase(str(cand))
+                        key = _path_key(cand)
                         counter += 1
                     _dispatched_targets.add(key)
                     return cand
@@ -1502,9 +1507,22 @@ def run_sync():
                                     # user's folder - remove the superseded (pristine)
                                     # old copy so exactly one current version remains.
                                     # Modified updates never delete (preserve edits).
+                                    # _path_key, NOT normcase: normcase is the
+                                    # IDENTITY off Windows, so on macOS (whose
+                                    # default volume is case-INSENSITIVE) a
+                                    # case-only Canvas rename - "week 1
+                                    # assignment" -> "Week 1 Assignment", an
+                                    # ordinary edit - made these two strings
+                                    # differ while naming ONE file. The guard
+                                    # then read "safe to remove the superseded
+                                    # copy" and unlinked the file the regenerate
+                                    # had just written, leaving the user with
+                                    # NOTHING and a manifest row pointing at a
+                                    # path that no longer exists. Reproduced
+                                    # 2026-08-10; see _path_key's docstring.
                                     if (is_update_clean and _sec_old_path is not None
                                             and _sec_old_path.exists()
-                                            and os.path.normcase(str(_sec_old_path)) != os.path.normcase(str(sec_filepath))):
+                                            and _path_key(_sec_old_path) != _path_key(sec_filepath)):
                                         try:
                                             _sec_old_path.unlink()
                                             if _debug_file:
