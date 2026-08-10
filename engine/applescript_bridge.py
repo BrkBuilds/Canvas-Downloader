@@ -177,58 +177,78 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
         shutil.rmtree(work, ignore_errors=True)
 
 
-def _visibility_prefix(app_name: str) -> str:
-    """AppleScript snippet that hides the Office app before the conversion runs.
+# NO per-file "hide the Office app" step, and that is a MEASURED decision, not an
+# omission - macOS 15, real hardware, 2026-08-10.
+#
+# Until today this module prepended `set visible of (first process whose name is
+# "Microsoft Word") to false` via System Events to every conversion script, to
+# stop Word's start-screen gallery / a document window flashing past. It was
+# removed because it was wrong three ways:
+#
+# 1. It demanded **Accessibility** ("Canvas Downloader would like to control this
+#    computer using accessibility features") - the worst prompt macOS has for a
+#    student's first run: it has NO Allow button (only "Open System Settings" and
+#    a visually primary "Deny"), it cannot be granted from the dialog at all, and
+#    it is the scariest-sounding one, on an app that ships unsigned. Onboarding
+#    friction is what kills adoption here. Every other prompt the app raises is
+#    Automation or the folder powerbox, both answerable in place with Allow / OK.
+#
+# 2. It hid the USER'S OWN Office session. Hiding a *process* hides all of its
+#    windows. Measured: a Word window the user had opened themselves, with their
+#    own document on screen, went visible=true -> false the instant a conversion
+#    started - their document vanished mid-work.
+#
+# 3. It bought NOTHING. Measured on the real converter, cold Word, two
+#    conversions back to back, sampling `visible of process` every 0.25s:
+#
+#        with the System Events hide   ->  visible 2/11 samples (0.13s..0.84s)
+#        with `open -g -j` instead     ->  visible 1/12 - 2/11
+#        with NEITHER                  ->  visible 0/7, twice, repeatable
+#
+#    Doing nothing is the QUIETEST of the three. An Apple event to a
+#    not-running app (`tell application "Microsoft Word" to open ...`) launches it
+#    without activating it, so it comes up already hidden - the trace goes
+#    straight `absent -> false`. An explicit `open -g -j -a` is what introduces a
+#    brief visible blip, during its own launch.
+#
+# `prime_office_automation` still launches the apps with `open -g -j` and that is
+# right: its job is to batch the one-time Automation prompts up front, so it has
+# to launch them, and `-j` keeps that launch hidden. Its blip happens once per
+# run, at a moment the user is being shown a permission notice anyway.
+#
+# What is UNAVOIDABLE is the dock ICON appearing while Office runs - the app
+# genuinely is running. It does not bounce, because nothing activates it
+# (measured: frontmost stayed Finder throughout every conversion above).
+#
+# If window-flashing is ever reported again, re-measure with the trace above
+# before adding anything back; do not reach for System Events.
 
-    Hiding the process (rather than just not activating it) is what stops the
-    relentless dock-bounce + window-flashing the user sees on macOS: a hidden
-    app stays hidden when a document is opened via automation, as long as we
-    never ``activate`` it. Wrapped in ``try`` so a missing process or a denied
-    System Events Automation grant degrades to "app stays visible" instead of
-    failing the conversion. Returns ``""`` off macOS / for unknown apps.
-    """
-    if sys.platform != 'darwin':
-        return ""
-    mapping = _APP_DOC_MAP.get(app_name)
-    if not mapping:
-        return ""
-    ms_name = mapping[0]
-    return (
-        'tell application "System Events"\n'
-        '    try\n'
-        f'        set visible of (first process whose name is "{ms_name}") to false\n'
-        '    end try\n'
-        'end tell\n'
-    )
 
 # The first-run permission copy, in ONE place because it had two byte-identical
 # copies (app.py and sync/execution.py) and it was WRONG in both.
 #
-# It said "Click Allow / OK on each". The Accessibility prompt raised by
-# `_visibility_prefix` above - "Canvas Downloader would like to control this
-# computer using accessibility features" - has NO Allow button: its only options
-# are **Open System Settings** and **Deny**, and Deny is the visually primary one.
-# So a user following the instruction literally cannot, and the obvious remaining
-# click is the refusal. Reported by the operator on real hardware 2026-08-10, who
-# had not seen it before and noted it is absent from the docs site too.
+# HISTORY, because the copy and the mechanism have to be changed together. It
+# said "Click Allow / OK on each" while the app also raised an **Accessibility**
+# prompt ("Canvas Downloader would like to control this computer using
+# accessibility features"), which has NO Allow button - its only options are
+# **Open System Settings** and **Deny**, with Deny visually primary. So the one
+# instruction the app gave was impossible to follow on that dialog, and the
+# obvious remaining click was the refusal.
 #
-# Denying it is genuinely harmless and the copy now says so: the System Events
-# call is wrapped in its own AppleScript `try`, so a denial degrades to "the
-# Office app stays visible" - the window-flash and dock-bounce that prefix exists
-# to suppress - and the open/save-as/close that actually converts the file is
-# untouched. Telling the user which prompts matter is the difference between an
-# informed Deny and a user who thinks they have broken the app.
-#
-# NOTE Accessibility cannot be granted from the prompt at all, unlike Automation:
-# it needs a toggle in System Settings > Privacy & Security > Accessibility.
+# That prompt is now GONE: the System Events call that caused it was deleted
+# outright (see the measured note above the constant), so the app no longer asks
+# for Accessibility at all. Both remaining prompt families CAN be answered from the dialog, which is
+# why "Allow / OK" is now true of every prompt the app raises:
+#   * Automation, once per Office app + once for System Events - Allow;
+#   * the macOS 15 "access data from other apps" folder prompt - OK.
+# If a future change reintroduces an Accessibility prompt, this sentence stops
+# being true - which is the whole reason the copy lives beside the mechanism.
 TCC_FIRST_RUN_NOTICE = (
     "<b>First-time macOS setup:</b> macOS will show a few one-time permission "
     "dialogs (control of Microsoft Word / Excel / PowerPoint, System Events, and "
-    "folder access). Click <b>Allow / OK</b> on each - Canvas Downloader uses them "
-    "only to convert Office files to PDF on your own Mac. One of them, "
-    "<b>Accessibility Access</b>, has no Allow button and is <b>optional</b> - it "
-    "only stops the Office windows flashing while a file converts, so choosing "
-    "<b>Deny</b> there is safe and changes nothing about your files."
+    "folder access). Click <b>Allow</b> or <b>OK</b> on each - Canvas Downloader "
+    "uses them only to convert Office files to PDF on your own Mac. Nothing is "
+    "sent anywhere, and you are only asked once."
 )
 
 
@@ -471,9 +491,6 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
         except Exception:
             pass
         return False
-    # Hide the Office app first so opening the document doesn't flash a window /
-    # bounce the dock (macOS only; no-op elsewhere). Best-effort, self-trying.
-    script = _visibility_prefix(app_name) + script
     try:
         result = subprocess.run(
             ['osascript', '-e', script],
@@ -1581,9 +1598,8 @@ def _warmup_apps(apps: list, write_macro_pref: bool,
     The shared engine behind both the per-run scoped priming and the one-time
     first-run permission batch. For each app (skipped when not installed at the
     default path): hidden launch (``open -g -j``), a harmless ``count windows``
-    Apple event (this is what triggers the per-app Automation TCC prompt), a
-    System Events hide (triggers the one-time System Events prompt), and the
-    Excel link-dialog suppression. Optionally pre-creates our container staging
+    Apple event (this is what triggers the per-app Automation TCC prompt), and
+    the Excel link-dialog suppression. Optionally pre-creates our container staging
     dir (``touch_containers``) so macOS 15's "access data from other apps"
     prompt also fires HERE, at the batched moment, instead of at the first
     conversion.
@@ -1650,17 +1666,10 @@ def _warmup_apps(apps: list, write_macro_pref: bool,
             answered = True
         except Exception:
             pass
-        try:
-            # Hide it now AND trigger the one-time System Events Automation
-            # prompt, so the per-file hide in run_applescript is silent later.
-            subprocess.run(
-                ['osascript', '-e',
-                 f'tell application "System Events" to set visible of '
-                 f'(first process whose name is "{app}") to false'],
-                capture_output=True, timeout=60,
-            )
-        except Exception:
-            pass
+        # NOTE deliberately NO System Events hide here. `open -g -j` above has
+        # already launched the app hidden, and the hide demanded Accessibility
+        # while also hiding any Word/Excel/PowerPoint window the USER had open
+        # themselves - see the measured note above TCC_FIRST_RUN_NOTICE.
         if app == "Microsoft Excel":
             # Best-effort suppression of the "this workbook contains links to
             # external sources" dialog. Done HERE, in its own isolated

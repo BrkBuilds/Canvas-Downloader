@@ -1629,7 +1629,7 @@ class SyncManager:
         for _own_fid, _own_entry in files_section.items():
             _own_lp = _own_entry.get('local_path', '') or ''
             if _own_lp:
-                _path_owner_map.setdefault(os.path.normcase(_own_lp), set()).add(_own_fid)
+                _path_owner_map.setdefault(_path_key(_own_lp), set()).add(_own_fid)
         _superseded_candel_ids: list = []
 
         for file_id, entry in files_section.items():
@@ -1680,7 +1680,12 @@ class SyncManager:
                     #    that was already re-downloaded - listing it as
                     #    "Deleted on Canvas" forever is pure noise (the bytes
                     #    on disk ARE current, under the new id). Prune the row.
-                    _lp_norm = os.path.normcase(entry.get('local_path', '') or '')
+                    # NB the emptiness test below must be made on the RAW
+                    # value: _path_key runs normpath, and normpath('') is '.',
+                    # which is truthy - so keying first would turn "no recorded
+                    # path" into a lookup for the current directory.
+                    _lp_raw = entry.get('local_path', '') or ''
+                    _lp_norm = _path_key(_lp_raw) if _lp_raw else ''
                     if _lp_norm:
                         _owners = _path_owner_map.get(_lp_norm, set()) - {file_id}
                         if any(_o in seen_ids for _o in _owners):
@@ -2572,12 +2577,16 @@ class SyncManager:
         """Mark a converted file as locally edited: do not overwrite it."""
         if not hasattr(self, '_protected_outputs'):
             self._protected_outputs = set()
-        self._protected_outputs.add(
-            os.path.normcase(str(Path(path).resolve())))
+        # _path_key, not normcase: Path.resolve() does NOT canonicalise case on
+        # macOS, so an analyzer that marked "Notes.md" and a converter that asks
+        # about "notes.md" would miss each other on a case-insensitive volume -
+        # and a missed mark means the student's EDITED conversion output is
+        # overwritten, which is the one thing this set exists to prevent.
+        self._protected_outputs.add(_path_key(Path(path).resolve()))
 
     def is_conversion_target_protected(self, path) -> bool:
         try:
-            return os.path.normcase(str(Path(path).resolve())) in \
+            return _path_key(Path(path).resolve()) in \
                 getattr(self, '_protected_outputs', set())
         except OSError:
             return False
