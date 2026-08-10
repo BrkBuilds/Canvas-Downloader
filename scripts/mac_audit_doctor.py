@@ -90,21 +90,66 @@ def check_platform():
 # ─────────────────────────────────────────────── the GUI (Aqua) session
 
 def check_gui_session():
-    """The single most expensive thing to get wrong."""
-    rc, out = sh(["launchctl", "managername"])
-    aqua = out.strip() == "Aqua"
-    add("GUI (Aqua) session", aqua, BLOCK, out.strip() or "unknown",
-        "You are in a Background/StandardIO session (typical for plain SSH).\n"
-        "      osascript cannot drive Office, headed Chrome cannot open, and\n"
-        "      TCC prompts cannot appear.\n"
-        "      FIX: connect to the desktop once, open Terminal.app there, run\n"
-        "        tmux new -s audit\n"
-        "      then from SSH: tmux attach -t audit")
+    """Can this process actually reach the window server? Test it, don't infer.
+
+    This check originally gated on ``launchctl managername == "Aqua"`` and that
+    was WRONG - measured on a Scaleway Apple-silicon Mac 2026-08-10, where it
+    reports **Background** from SSH *and from Terminal.app on the desktop*,
+    while `screencapture` writes a 4.4 MB PNG, System Events answers, and
+    TextEdit launches and is drivable. `managername` names the launchd DOMAIN,
+    which depends on how the session was established (auto-login, NoMachine,
+    a physical login all differ) - it is not a statement about window-server
+    access, which is the thing we actually need.
+
+    Gating on the proxy cost two hours and would have stopped the audit on a
+    machine that was completely fine. So: probe the three capabilities the
+    audit genuinely requires, and report the domain as INFO only.
+    """
+    import tempfile
+
+    shot = os.path.join(tempfile.gettempdir(), "_cd_gui_probe.png")
+    try:
+        os.remove(shot)
+    except OSError:
+        pass
+    rc, out = sh(["screencapture", "-x", shot], timeout=60)
+    size = os.path.getsize(shot) if os.path.exists(shot) else 0
+    add("window server reachable (screencapture)", size > 10_000, BLOCK,
+        f"{size} bytes" + (f" - {out[:80]}" if out else ""),
+        "No window server: nobody is logged in at the console, or the machine\n"
+        "      is headless with no session. On a cloud Mac the usual cause is\n"
+        "      auto-login not completing - check /etc/kcpassword exists and\n"
+        "      `stat -f%Su /dev/console` returns your user, not root.")
+    try:
+        os.remove(shot)
+    except OSError:
+        pass
+
+    rc, out = sh(["osascript", "-e",
+                  'tell application "System Events" to return name of first process'],
+                 timeout=60)
+    add("AppleScript automation answers", rc == 0 and bool(out.strip()), BLOCK,
+        out[:80] or "no answer",
+        "osascript cannot reach the GUI, so no Office conversion can run.")
+
+    rc, out = sh(["osascript", "-e",
+                  'tell application "System Events" to return count of processes'],
+                 timeout=60)
+    add("GUI apps are enumerable", rc == 0, WARN, out[:80])
 
     rc, console_user = sh(["stat", "-f%Su", "/dev/console"])
     add("someone is logged in at the console", console_user.strip() not in ("", "root"),
-        WARN, console_user.strip(),
-        "Log in on the desktop; a locked/logged-out Mac has no window server.")
+        BLOCK, console_user.strip(),
+        "A headless Mac with no console session has no framebuffer at all -\n"
+        "      screen sharing shows black and GUI automation is impossible.\n"
+        "      Enable auto-login: write /etc/kcpassword and reboot.")
+
+    # INFO only, deliberately. See the docstring - this is not a gate.
+    rc, out = sh(["launchctl", "managername"])
+    results.append({"check": "launchd domain", "ok": True, "severity": INFO,
+                    "detail": (out.strip() or "unknown") +
+                              "  (informational - NOT a gate; see check_gui_session)",
+                    "fix": ""})
 
 
 # ───────────────────────────────────────────────────────── python + deps

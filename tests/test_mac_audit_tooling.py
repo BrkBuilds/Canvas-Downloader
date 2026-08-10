@@ -140,8 +140,10 @@ def test_the_doctor_runs_and_emits_parseable_json():
     assert "ready" in payload and "results" in payload
     assert len(payload["results"]) >= 10, payload
     names = {c["check"] for c in payload["results"]}
-    # The check that exists because getting it wrong costs hours.
-    assert any("Aqua" in n or "GUI" in n for n in names) or sys.platform != "darwin"
+    # The window-server probes exist because getting this wrong costs hours -
+    # in BOTH directions. The original check gated on `managername == "Aqua"`
+    # and blocked a machine where every capability worked.
+    assert any("window server" in n or "AppleScript" in n for n in names)         or sys.platform != "darwin"
 
 
 def test_the_doctor_output_survives_a_legacy_console():
@@ -163,7 +165,8 @@ def test_the_doctor_checks_the_things_that_block_an_audit():
     """A preflight that omits the expensive failures is decoration."""
     src = DOCTOR.read_text(encoding="utf-8")
     for needle, why in (
-        ("launchctl", "the Aqua session check - the costliest thing to get wrong"),
+        ("screencapture", "window-server access, probed rather than inferred"),
+        ("System Events", "AppleScript automation actually answering"),
         ("proc_translated", "Rosetta detection"),
         ("CanvasDownloader", "the Keychain token lookup"),
         ("playwright", "the browser the audit drives the app through"),

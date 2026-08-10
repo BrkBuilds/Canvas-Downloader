@@ -54,16 +54,28 @@ but say so explicitly and attach the screenshot.
 
 ```bash
 source .venv/bin/activate
-launchctl managername                      # MUST print: Aqua
 python scripts/mac_audit_doctor.py         # MUST print: READY
 python scripts/mac_smoke.py --with-hfs     # ~2 min; every non-visual macOS check
 ```
 
-If `managername` is not `Aqua` you are in an SSH/background session with no
-window server: osascript cannot drive Office, no headed browser can open, and
-TCC prompts cannot appear. Stop and tell the user to start tmux from the
-desktop. Do not try to work around it — every result you produce would be
-worthless in a way that looks like product bugs.
+**What must be true is window-server ACCESS**, not any particular launchd
+domain. The doctor tests it directly: `screencapture` writes a real file,
+System Events answers, GUI apps launch and are drivable. If those pass, you can
+drive Office, open a headed browser and receive TCC prompts.
+
+**Do NOT gate on `launchctl managername == "Aqua"`.** That was the original
+check and it is WRONG. Measured on a Scaleway Apple-silicon Mac 2026-08-10: it
+reports `Background` from SSH *and from Terminal.app on the desktop*, while
+`screencapture` wrote a 4.4 MB PNG, System Events answered, and TextEdit
+launched and was drivable. `managername` names how the session was established
+(auto-login, NoMachine and a physical login all differ) - it says nothing about
+what the process can reach. Gating on that proxy cost two hours and would have
+stopped an audit on a machine that was entirely healthy.
+
+If the doctor's window-server checks genuinely fail, the usual cause on a cloud
+Mac is auto-login not completing: `stat -f%Su /dev/console` returns `root`
+rather than the user, so there is no console session and hence no framebuffer.
+Say so and stop - results from that state look like product bugs.
 
 Then bring the harness up and prove it works before spending Mac time:
 

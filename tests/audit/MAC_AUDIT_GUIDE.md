@@ -165,13 +165,13 @@ which the setup script installed — same thing, in the sidebar.)
 ```bash
 cd ~/Canvas_Downloader && source .venv/bin/activate
 
-launchctl managername                    # MUST print: Aqua
 python scripts/mac_audit_doctor.py       # until it prints READY
 python scripts/mac_smoke.py --with-hfs   # ~2 min
 ```
 
-If `managername` is not `Aqua`, you are not inside the desktop-born tmux.
-`tmux attach -t audit` and try again. Nothing else is worth doing until it is.
+The doctor probes window-server access directly (screencapture, System Events,
+launching a GUI app). Do **not** gate on `launchctl managername == "Aqua"` -
+it reports `Background` on a Scaleway Mac even when everything works.
 
 Then prove the harness works before trusting any result from it:
 
@@ -281,7 +281,7 @@ Then **revoke the Canvas token**, destroy the instance, merge the branch.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Office conversions all fail / no window opens / no TCC prompt ever appears | Background session | `launchctl managername` — if not `Aqua`, `tmux attach -t audit` |
+| Office conversions all fail / no window opens / no TCC prompt ever appears | No console session, so no window server | `stat -f%Su /dev/console` — if `root`, auto-login never completed: write `/etc/kcpassword` and reboot |
 | Setup script stops at Xcode Command Line Tools | Headless install unavailable on this OS build | Accept the installer window, wait, re-run the script |
 | Word opens but every conversion fails | Office installed but never signed in | Open Word, sign in with M365 |
 | macOS asks for the login keychain password every run | Keychain item made without `-A` | `security add-generic-password -U -A -s CanvasDownloader -a "<url>" -w "<token>"` |
@@ -307,7 +307,6 @@ git clone -b macos-audit-v2.0.2 https://github.com/birkls/Canvas_LMS_batch_file_
 cd ~/Canvas_Downloader && ./scripts/mac_audit_bootstrap.sh
 
 source .venv/bin/activate
-launchctl managername                      # Aqua
 python scripts/mac_audit_doctor.py         # READY
 python scripts/mac_smoke.py --with-hfs
 
