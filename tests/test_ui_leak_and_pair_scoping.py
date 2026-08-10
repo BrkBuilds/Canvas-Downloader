@@ -278,23 +278,25 @@ def test_sync_analysis_phase_has_a_heading_like_its_siblings():
 
 
 def test_ignored_dialog_explains_both_empty_states():
-    src = inspect.getsource(__import__("ui.sync_dialogs", fromlist=["x"]).show_course_ignored_files)
+    src = inspect.getsource(
+        __import__("ui.sync_dialogs", fromlist=["x"]).show_course_ignored_files)
     assert "No ignored files to select from." in src, "Smart Select with nothing to select"
     assert "Nothing is ignored for this course any more." in src, "the emptied list"
-    # the empty state must be an elif on the success notice: that notice is
-    # popped as it renders, so the next rerun would otherwise show nothing at all
-    assert re.search(r"render_success_notice\(.*\n\s*elif not files and not pan_ignored:",
-                     src), "empty state must take over from the popped success notice"
 
 
-def test_both_list_dialogs_have_a_height_floor():
-    css = (REPO / "styles" / "global.css").read_text(encoding="utf-8")
-    block = css[css.index("A dialog must never collapse to a sliver"):]
-    assert 'st-key-cign_' in block and 'st-key-hub_' in block
-    assert "min-height" in block
-    # never applied to stDialog at large - small confirm dialogs are correct as-is
-    assert 'div[data-testid="stDialog"] div[role="dialog"] > div:first-child {\n    min-height' not in css
+def test_both_list_dialogs_keep_their_shape_when_empty():
+    """The height lives on each dialog's CONTENT region, never on the dialog.
 
+    Ignored Files keeps its sized `_filelist` container even when empty; the hub
+    renders its empty state inside a container of the same height as its populated
+    card list, from ONE constant so the two cannot drift.
+    """
+    hub = (REPO / "ui" / "hub_dialog.py").read_text(encoding="utf-8")
+    assert "HUB_LIST_HEIGHT = 580" in hub
+    assert 'key="hub_empty_area"' in hub
+    assert "st.container(height=580" not in hub, \
+        "the populated list must read the same constant as the empty state"
+    assert hub.count("st.container(height=HUB_LIST_HEIGHT") >= 2
 
 # ── 3. a JS-gated button must never render UNGATED (2026-08-11) ───────────────
 #
@@ -566,3 +568,59 @@ def test_duplicate_check_excludes_self_by_identity_not_index():
     src = _code_lines(_sync_dialog_src())
     assert "if i != editing_idx" not in src
     assert "candidates = [p for p in existing if p is not _edit_pair]" in src
+
+
+# ── 5. regressions from my own first attempt, caught by looking in a browser ───
+#
+# Both were shipped without visual verification and both were wrong. Measured in
+# Chrome afterwards:
+#   * min-height on `div[role="dialog"] > div:first-child` -> that is NOT the
+#     padded body. The dialog has three children and the first is a chrome
+#     wrapper, so the rule inflated it into a 300px empty band ABOVE the title
+#     (title top=62 -> top=290).
+#   * removing the Smart Select card's bottom padding AND pulling its label up by
+#     the same amount double-counted: card 39px vs label 49px, so the hover strip
+#     hung 11px BELOW the card it lives in.
+
+def test_dialog_height_is_never_put_on_the_dialogs_own_wrapper():
+    css = (REPO / "styles" / "global.css").read_text(encoding="utf-8")
+    for m in re.finditer(r'div\[role="dialog"\] > div:first-child[^{]*\{([^}]*)\}', css):
+        assert "min-height" not in m.group(1), (
+            "that element is a chrome wrapper, not the body - a height there "
+            "becomes an empty band above the title"
+        )
+
+
+def test_ignored_dialog_always_renders_its_content_area():
+    src = inspect.getsource(
+        __import__("ui.sync_dialogs", fromlist=["x"]).show_course_ignored_files)
+    assert not re.search(
+        r"if all_file_tuples or pan_ignored:\s*\n\s*with st\.container\(height=filelist_height",
+        src), "the sized content area must render when empty too, or the dialog collapses"
+    m = re.search(r'with st\.container\(height=filelist_height, border=True, '
+                  r'key=f"\{prefix\}_filelist"\):', src)
+    assert m, "the content area moved - re-anchor this test"
+    after = src[m.end():m.end() + 1200]
+    assert "if not (all_file_tuples or pan_ignored):" in after
+    assert "Nothing is ignored for this course any more." in after, \
+        "the empty state belongs INSIDE the content area, where the list was"
+
+
+def test_smart_select_label_is_not_pulled_past_its_own_card():
+    src = (REPO / "ui" / "sync_dialogs.py").read_text(encoding="utf-8")
+    i = src.index("COLLAPSED: the card must be exactly as tall")
+    block = src[i:i + 1800]
+    assert "padding-bottom: 0 !important;" in block, "the dead band IS the card's padding"
+    assert "margin-bottom: -{card_pad_y}px" not in block, (
+        "the label's own padding already recreates the inset; pulling it up as "
+        "well makes the hover strip overhang the card"
+    )
+
+
+def test_folder_autodetect_only_fires_when_the_folder_actually_changed():
+    src = (REPO / "ui" / "sync_dialogs.py").read_text(encoding="utf-8")
+    assert re.search(r"if _nfk\(folder_path\) != _nfk\(_prev\):\s*\n\s*"
+                     r"_auto_detect_course_from_manifest\(folder_path\)", src), (
+        "confirming the picker without navigating changes nothing and must look "
+        "like it - it announced an auto-detected course for an unchanged folder")
+    assert "norm_folder_key as _nfk" in src, "compare through the one folder normaliser"

@@ -45,6 +45,11 @@ def _add_pairs_batch_lazy(pairs_list):
 # Save Group / Pair Dialog (Dual-Wrapper Pattern)
 # ===================================================================
 
+# The hub's card-list height. ONE constant: the empty state renders a container
+# of the same height, so an empty hub is the same shape as a populated one.
+HUB_LIST_HEIGHT = 580
+
+
 def save_group_or_pair_inner(sync_pairs: list[dict], is_pair: bool = False, pair_data: dict = None):
     """Shared inner logic for the Save Group/Pair dialog."""
     st.markdown("""
@@ -618,7 +623,15 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         groups = list(reversed(mgr.load_groups()))
         if not groups:
             from ui.amber_notice import render_info_notice
-            render_info_notice(f"No saved groups or pairs yet. Use the \"{SVG_SAVE_COLORFUL_SMALL} Save List as Group\" button or the inline {SVG_SAVE_COLORFUL_SMALL} button to create one.", allow_html=True)
+            # Rendered inside a container the same height as the populated card
+            # list below, so an empty hub keeps a dialog's shape instead of
+            # collapsing to a horizontal sliver. The height goes on the CONTENT
+            # region, never on the dialog: measured in Chrome, a min-height on
+            # `div[role="dialog"] > div:first-child` inflates a chrome wrapper into
+            # an empty band ABOVE the title.
+            with st.container(height=HUB_LIST_HEIGHT, border=False,
+                              key="hub_empty_area"):
+                render_info_notice(f"No saved groups or pairs yet. Use the \"{SVG_SAVE_COLORFUL_SMALL} Save List as Group\" button or the inline {SVG_SAVE_COLORFUL_SMALL} button to create one.", allow_html=True)
             if st.button("Close", type="secondary", use_container_width=True, key="hub_close_empty"):
                 hub_cleanup()
                 try:
@@ -1011,7 +1024,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
         st.markdown("")
 
         # --- Pair cards (Wrapped in a scrollable container matching Layer 1) ---
-        with st.container(height=580, border=False):
+        with st.container(height=HUB_LIST_HEIGHT, border=False):
             pairs = group.get('pairs', [])
             editing_idx = st.session_state.get('hub_editing_pair_idx')
             is_adding = st.session_state.get('hub_is_adding_new_pair', False)
