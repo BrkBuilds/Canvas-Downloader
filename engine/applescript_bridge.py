@@ -167,10 +167,55 @@ _last_error: tuple[str, str] | None = None
 # Categories that doom every remaining file in a conversion phase.
 FATAL_CATEGORIES = ('permission', 'app_missing')
 
+# A failure that REPEATS is systemic even when its category is per-file.
+#
+# Measured on real macOS 2026-08-10: feeding the Word converter a corrupt or
+# 0-byte .doc makes Word raise a MODAL "file could not be opened" alert (seen
+# bouncing in the Dock by the operator). AppleScript's `open` then never yields
+# an active document, so EVERY later file in the phase answers
+#
+#     Microsoft Word got an error: missing value doesn't understand
+#     the "save as" message. (-1708)
+#
+# including a genuine .doc that converted seconds earlier. Nothing in the app
+# recovers it - `_force_close_canvas_docs_sync` left the phantom document in
+# place and only killing the process helped - so the run silently produced no
+# PDFs at all and emitted one generic error per file.
+#
+# `_classify_stderr` maps -1708 to 'other', i.e. per-file, which is right for
+# ONE odd document and wrong once it happens to everything. So the signal is not
+# the category but the REPETITION: three identical failures in a row means the
+# app is wedged, not that three documents are bad. `_abort_applescript_phase`
+# already exists for exactly this ("failures that will identically doom every
+# remaining file in the phase") and simply had no way to be told.
+#
+# Deliberately NOT a kill-and-retry: in the wedged state the documents cannot be
+# enumerated, so the app cannot certify that no USER document is open, and every
+# other Office path here refuses to terminate without that certificate. Aborting
+# with one actionable message is the honest option, and the next run recovers.
+SYSTEMIC_REPEAT_THRESHOLD = 3
+
+# (app|category) of the last failure, and how many times it has repeated.
+_repeat_key: str | None = None
+_repeat_count: int = 0
+
 
 def get_last_error() -> tuple[str, str] | None:
     """Return (category, detail) for the most recent failed run_applescript()."""
     return _last_error
+
+
+def systemic_failure() -> tuple[str, int] | None:
+    """(app_name, count) when the SAME failure has repeated enough to be systemic.
+
+    ``None`` while failures are still plausibly per-file. Any success resets the
+    run, so a phase with scattered bad documents never trips this - it takes
+    ``SYSTEMIC_REPEAT_THRESHOLD`` identical failures with nothing working in
+    between.
+    """
+    if _repeat_key and _repeat_count >= SYSTEMIC_REPEAT_THRESHOLD:
+        return _repeat_key.split("|", 1)[0], _repeat_count
+    return None
 
 
 def _classify_stderr(err_msg: str) -> str:
@@ -327,8 +372,17 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
         user's Mac they leave no trace at all - and macOS Office automation is
         the least-tested path this app has, with no crash-telemetry channel.
         """
-        global _last_error
+        global _last_error, _repeat_key, _repeat_count
         _last_error = (category, detail)
+        # Count identical (app, category) failures in a row - see
+        # SYSTEMIC_REPEAT_THRESHOLD. Keyed on the CATEGORY, not the message,
+        # because the message carries the filename and would therefore never
+        # repeat; the wedge shows up as the same category over and over.
+        key = f"{app_name}|{category}"
+        if key == _repeat_key:
+            _repeat_count += 1
+        else:
+            _repeat_key, _repeat_count = key, 1
         try:
             from core.health_log import note_failure
             note_failure(f"osascript_{category}")
@@ -359,6 +413,12 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
             logger.error(f"[AppleScript] {app_name} failed ({category}): {err_msg}")
             return _fail(category, detail)
         if dst.exists():
+            # A success proves the app is not wedged, so the repeat run ends
+            # here. Without this reset, a phase with scattered bad documents
+            # would eventually accumulate to the threshold and abort a run that
+            # was converting everything else perfectly well.
+            global _repeat_key, _repeat_count
+            _repeat_key, _repeat_count = None, 0
             return True
         return _fail('other', f"Microsoft {app_name} reported success but no output file was created.")
 

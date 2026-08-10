@@ -579,7 +579,28 @@ def _applescript_last_error() -> tuple[str, str | None]:
         return '', None
     category, detail = last
     short = detail if len(detail) <= 160 else detail[:157] + '…'
-    return f" - {short}", (detail if category in FATAL_CATEGORIES else None)
+    fatal = detail if category in FATAL_CATEGORIES else None
+
+    # A per-file category that has REPEATED is systemic - the app is wedged and
+    # every remaining file will fail identically. See SYSTEMIC_REPEAT_THRESHOLD
+    # in engine.applescript_bridge for the measurement (a corrupt .doc leaves
+    # Word on a modal alert, after which -1708 answers everything, including
+    # files that converted seconds earlier).
+    if fatal is None:
+        try:
+            from engine.applescript_bridge import systemic_failure
+            repeat = systemic_failure()
+        except ImportError:
+            repeat = None
+        if repeat:
+            app, count = repeat
+            fatal = (
+                f"Microsoft {app} failed on {count} files in a row with the same "
+                f"error ({short.strip(' -')}). It is most likely waiting on a "
+                f"dialog and will not convert anything else this run. Quit "
+                f"Microsoft {app} and run again to convert the rest."
+            )
+    return f" - {short}", fatal
 
 
 def _abort_applescript_phase(ui: UIBridge, fatal_msg: str, remaining: int, phase_label: str) -> None:
