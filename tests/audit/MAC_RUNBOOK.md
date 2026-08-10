@@ -176,9 +176,33 @@ phases below otherwise ask you to do by hand:
 | Bundle: Info.plist, signature, **apple-events entitlement**, worker binary, **WebKit lookbehind patch**, boot splash, no tornado opener (`--bundle`) | M3 |
 | No stray Canvas/ffmpeg processes; no duplicate GUI launches | M3 |
 
-What it leaves out is anything needing eyes — **and you have eyes.**
-`screencapture` runs from a plain shell, so `scripts/mac_eyes.py` reads the
-real window server:
+What it leaves out is anything needing eyes — **and you may or may not have
+eyes. Check first:**
+
+```bash
+python3 scripts/mac_eyes.py eyesight     # BLIND, or window content capturable?
+```
+
+`screencapture` reading the framebuffer is only the same thing as seeing the
+screen when nothing sits between them. **A remote-desktop display driver
+breaks that.** Measured on a Scaleway Mac driven over NoMachine, 2026-08-10:
+one display, the window server listing **12 windows** including the packaged
+app's own 1920x970, the operator looking straight at them — and every
+`screencapture` returning the bare desktop, with `screencapture -l <winid>`
+refusing with *"could not create image from window"*.
+
+**That failure points the wrong way.** A blank capture is indistinguishable
+from a blank app, and "the UI is blank in WKWebView" is precisely the failure
+phase M3 exists to catch — so an agent trusting the screenshot files a
+CRITICAL against a build that is rendering perfectly. This nearly happened:
+the packaged app's login screen captured as an empty desktop and was only
+cleared by the operator sending a screenshot from their own viewer.
+
+On a BLIND machine, hand every visual question to the human and say so in the
+finding. That is not the audit failing; it is the only honest reading of the
+evidence. `mac_audit_doctor.py` reports it as a WARN.
+
+With eyesight confirmed, `scripts/mac_eyes.py` reads the real window server:
 
 ```bash
 python scripts/mac_eyes.py shot --window "Canvas Downloader"

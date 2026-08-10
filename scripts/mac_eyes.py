@@ -7,6 +7,7 @@ That is what turns "the user must watch and describe what happened" into
 something the agent settles for itself, which was the entire time sink of the
 previous macOS audit.
 
+    python3 scripts/mac_eyes.py eyesight             # RUN THIS FIRST - can we see?
     python3 scripts/mac_eyes.py shot                 # whole desktop
     python3 scripts/mac_eyes.py shot --window "Canvas Downloader"
     python3 scripts/mac_eyes.py watch --seconds 20   # a burst, for transients
@@ -16,6 +17,17 @@ previous macOS audit.
 
 Shots land in `_audit_runs/_screens/` with a timestamped name and the path is
 printed, so an agent can Read it immediately.
+
+**CHECK `eyesight` BEFORE BELIEVING ANY SCREENSHOT.** The premise above holds
+only when the framebuffer `screencapture` reads is the one being displayed, and
+a remote-desktop display driver can break that: measured on a Scaleway Mac over
+NoMachine, the window server listed 12 windows and every capture came back as
+the bare desktop, with `screencapture -l <winid>` refusing outright. The user
+was looking straight at those windows. A blank capture is then indistinguishable
+from a blank app - which is exactly the WKWebView failure phase M3 hunts, so it
+manufactures a CRITICAL out of a healthy build. On a BLIND machine, hand every
+visual question to the human instead; that is not a failure of the audit, it is
+the one honest reading of the evidence.
 
 WHAT IT CANNOT DO, and why that is not a gap you can engineer away: macOS
 refuses synthetic clicks on TCC consent prompts by design (that is the whole
@@ -55,6 +67,59 @@ def require_darwin():
     if sys.platform != "darwin":
         print("mac_eyes.py only works on macOS.", file=sys.stderr)
         raise SystemExit(2)
+
+
+# ─────────────────────────────────────────────────── can we see at all?
+
+def eyesight() -> dict:
+    """Does `screencapture` actually render WINDOW CONTENT on this machine?
+
+    THE ASSUMPTION THIS FILE IS BUILT ON CAN BE FALSE, and it fails silently in
+    the worst possible direction. Measured on a Scaleway Mac driven over
+    NoMachine, 2026-08-10:
+
+        mac_eyes windows          -> 12 windows, incl. `Canvas Downloader` 1920x970
+        screencapture -x full     -> 4.4 MB PNG of the bare DESKTOP, no windows
+        screencapture -l <winid>  -> "could not create image from window"
+
+    One display, the window server agreeing the windows are on screen, the user
+    looking straight at them in their remote viewer - and every capture blank.
+    A remote-desktop display driver can intercept window composition, so the
+    framebuffer `screencapture` reads holds only the wallpaper and the menu bar.
+
+    Why this is dangerous rather than merely annoying: `MAC_AUDIT_PROMPT.md` and
+    `MAC_RUNBOOK.md` both tell the agent it HAS eyes and must not ask the user
+    to describe the screen. Following that on such a machine, the packaged app's
+    WKWebView check - the highest-value item in phase M3, whose whole failure
+    mode is "the UI is blank" - reads as a confirmed CRITICAL when the app is in
+    fact rendering perfectly. A blank screenshot is indistinguishable from a
+    blank app unless something asks this question first.
+
+    So: ask it explicitly, and treat a blind capture as a reason to ask a human
+    rather than as evidence about the product.
+    """
+    require_darwin()
+    ws = [w for w in _windows()
+          if w["w"] > 200 and w["h"] > 150 and w["owner"] not in ("Dock", "")]
+    if not ws:
+        return {"ok": True, "verdict": "no windows to test with",
+                "windows": 0, "window_capture": None}
+    target = max(ws, key=lambda w: w["w"] * w["h"])
+    out = _stamp("eyesight")
+    rc, err = sh(["screencapture", "-x", "-o", "-l", str(target["id"]), str(out)])
+    got = out.exists() and out.stat().st_size > 10_000
+    try:
+        out.unlink()
+    except OSError:
+        pass
+    return {"ok": bool(got), "windows": len(ws),
+            "target": f"{target['owner']} {target['w']}x{target['h']}",
+            "window_capture": "ok" if got else (err[:120] or "empty file"),
+            "verdict": ("window content is capturable" if got else
+                        "BLIND - the window server reports windows that "
+                        "screencapture cannot render (remote-desktop display "
+                        "driver). Screenshots show only the desktop; ask the "
+                        "user for anything visual.")}
 
 
 # ───────────────────────────────────────────────────────────── capture
@@ -122,6 +187,37 @@ def windows():
         print(f"  {w['w']:>5}x{w['h']:<5}  {w['owner']:<28} {w['title'][:60]}")
 
 
+# A window macOS keeps alive from login that is registered on-screen and never
+# drawn. Measured 2026-08-10: `universalAccessAuthWarn` (pid 812, started at the
+# 14:12:39 LOGIN, i.e. before the audit began) held a window at (729,224)
+# 461x177 with kCGWindowIsOnscreen True and alpha 1.0, unchanged in every sample
+# across 40+ minutes - including while the operator was looking at a completely
+# different screen and had already answered every real prompt.
+#
+# NOTE ON THE EVIDENCE, because the obvious argument is not available here: the
+# first version of this comment said "and every screenshot showed an empty
+# desktop", which proves nothing on a machine where `eyesight()` reports BLIND -
+# no window renders in a capture there, real or phantom. What carries the
+# conclusion is the DURATION and the process's login start time: a consent
+# prompt is transient and is created when something asks for consent, not at
+# login, and no prompt survives 40 minutes of being ignored.
+#
+# It made `dialogs` claim a human was needed when nothing was, twice - which is
+# the one failure this command must not have, because its whole job is deciding
+# when to interrupt somebody. Crying wolf here trains the reader to ignore it,
+# and then the real TCC prompt goes unanswered.
+#
+# Scoped as narrowly as the evidence allows: this owner, and only with an EMPTY
+# title. A real accessibility prompt carries text, and no other owner in the
+# `interesting` list is affected - so this cannot mask a genuine consent prompt.
+_PHANTOM_ALERTS = ("universalaccessauthwarn",)
+
+
+def _is_phantom_alert(w: dict) -> bool:
+    return (not (w.get("title") or "").strip()
+            and w.get("owner", "").lower() in _PHANTOM_ALERTS)
+
+
 def dialogs():
     """What, if anything, is waiting for a human.
 
@@ -133,7 +229,8 @@ def dialogs():
     interesting = ("UserNotificationCenter", "SecurityAgent", "coreautha",
                    "universalaccessAuthWarn", "tccd", "loginwindow")
     found = [w for w in _windows()
-             if any(k.lower() in w["owner"].lower() for k in interesting)]
+             if any(k.lower() in w["owner"].lower() for k in interesting)
+             and not _is_phantom_alert(w)]
     if found:
         print("SOMETHING IS WAITING FOR A HUMAN:")
         for w in found:
@@ -208,6 +305,7 @@ def main():
     w.add_argument("--tag", default="watch")
 
     sub.add_parser("windows", help="list on-screen windows")
+    sub.add_parser("eyesight", help="can screencapture render window content at all?")
     sub.add_parser("dialogs", help="is anything waiting for a human?")
     sub.add_parser("dock", help="Dock tiles, flagging any whose target is gone")
 
@@ -218,6 +316,12 @@ def main():
         watch(a.seconds, a.every, a.tag)
     elif a.cmd == "windows":
         windows()
+    elif a.cmd == "eyesight":
+        r = eyesight()
+        for k in ("windows", "target", "window_capture", "verdict"):
+            if r.get(k) is not None:
+                print(f"  {k:<15} {r[k]}")
+        return 0 if r["ok"] else 1
     elif a.cmd == "dialogs":
         dialogs()
     elif a.cmd == "dock":
