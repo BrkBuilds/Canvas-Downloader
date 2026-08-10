@@ -183,24 +183,38 @@ eyes. Check first:**
 python3 scripts/mac_eyes.py eyesight     # BLIND, or window content capturable?
 ```
 
-`screencapture` reading the framebuffer is only the same thing as seeing the
-screen when nothing sits between them. **A remote-desktop display driver
-breaks that.** Measured on a Scaleway Mac driven over NoMachine, 2026-08-10:
-one display, the window server listing **12 windows** including the packaged
-app's own 1920x970, the operator looking straight at them — and every
-`screencapture` returning the bare desktop, with `screencapture -l <winid>`
-refusing with *"could not create image from window"*.
+Taking a screenshot needs a **Screen Recording** grant, and without one macOS
+**does not fail the capture** — it silently omits every other application's
+window and hands back a picture of the desktop. Only the window-targeted form
+(`screencapture -l <winid>`) errors, with *"could not create image from
+window"*. Measured on a Scaleway Mac 2026-08-10: one display, the window server
+listing **12–31 windows** including the packaged app's own 1920x970, the
+operator looking straight at them, and every capture blank.
 
-**That failure points the wrong way.** A blank capture is indistinguishable
-from a blank app, and "the UI is blank in WKWebView" is precisely the failure
-phase M3 exists to catch — so an agent trusting the screenshot files a
-CRITICAL against a build that is rendering perfectly. This nearly happened:
-the packaged app's login screen captured as an empty desktop and was only
-cleared by the operator sending a screenshot from their own viewer.
+**And the grant is per-RESPONSIBLE-process, which is what makes it confusing on
+a remote box.** TCC attributes the capture to the session's responsible
+process — for an SSH/tmux shell that is `sshd` or the CLI binary, *not*
+Terminal.app. Measured minutes apart, same machine, same user, same display:
 
-On a BLIND machine, hand every visual question to the human and say so in the
-finding. That is not the audit failing; it is the only honest reading of the
-evidence. `mac_audit_doctor.py` reports it as a WARN.
+| context | verdict |
+|---|---|
+| the SSH tmux shell | **BLIND** |
+| `scripts/mac_aqua.py run ...` (children of Terminal.app) | window content is capturable |
+
+So granting Terminal.app does nothing for the SSH shell. **Take visual shots
+through the bridge**, or grant Screen Recording to the real responsible process.
+
+**The failure points the wrong way.** A blank capture is indistinguishable from
+a blank app, and "the UI is blank in WKWebView" is precisely the failure phase
+M3 exists to catch — so an agent trusting the screenshot files a CRITICAL
+against a build rendering perfectly. This nearly happened: the packaged app's
+login screen captured as an empty desktop and was only cleared by the operator
+sending a screenshot from their own viewer.
+
+A first diagnosis blamed NoMachine's display driver and was **wrong**. The
+correction came from running the same probe in both contexts — do that before
+believing any conclusion about the environment. `mac_audit_doctor.py` reports it
+as a WARN.
 
 With eyesight confirmed, `scripts/mac_eyes.py` reads the real window server:
 
