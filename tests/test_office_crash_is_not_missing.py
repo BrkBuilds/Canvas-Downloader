@@ -34,6 +34,11 @@ sys.path.insert(0, str(REPO))
 
 import engine.applescript_bridge as AB  # noqa: E402
 
+#: The SHIPPED pause, captured at import - before the autouse fixture below
+#: monkeypatches it to 0 to keep these tests instant. Reading it through `AB`
+#: inside a test reads the zero and asserts nothing.
+SHIPPED_RELAUNCH_PAUSE_S = AB._CRASH_RELAUNCH_PAUSE_S
+
 
 # --------------------------------------------------------------------------
 # classification
@@ -68,10 +73,18 @@ def test_a_genuinely_absent_app_is_still_app_missing(msg):
     assert AB._classify_stderr(msg) == "app_missing"
 
 
-def test_the_curly_apostrophe_alone_is_enough():
-    """Without the -600 code at all - a future Office could reword this."""
+@pytest.mark.parametrize("apostrophe", ["’", "'"])
+def test_the_wording_alone_is_enough_in_either_apostrophe(apostrophe):
+    """WITHOUT the -600 code, because a future Office build could reword it.
+
+    Both spellings need their own case with no error number in it. The first
+    version of this file only had the curly one plus a straight-apostrophe
+    message that ALSO carried -600 - so deleting the straight-apostrophe clause
+    survived the mutation pass, classified by the number the test happened to
+    include.
+    """
     assert AB._classify_stderr(
-        "Microsoft PowerPoint got an error: Application isn’t running.") \
+        f"Microsoft PowerPoint got an error: Application isn{apostrophe}t running.") \
         == "app_crashed"
 
 
@@ -173,6 +186,37 @@ def test_a_missing_app_is_not_retried():
     assert ok is False
     assert calls == 1
     assert AB.get_last_error()[0] == "app_missing"
+
+
+def test_the_retry_is_classified_on_its_OWN_error():
+    """A relaunched app can fail for a completely different reason.
+
+    If the retry hits an Automation denial, reporting the original
+    ``app_crashed`` would be wrong twice over: the message would blame a crash,
+    and - because ``app_crashed`` is deliberately not fatal - the phase would
+    grind through every remaining file re-triggering a denial that will never
+    resolve itself, instead of stopping with the one actionable sentence about
+    System Settings.
+    """
+    ok, calls = _run([CRASH, _Result(1, "not authorized to send apple events (-1743)")],
+                     dst_exists_after=99)
+    assert ok is False
+    assert calls == 2
+    category, detail = AB.get_last_error()
+    assert category == "permission", f"the retry's own error was ignored ({category})"
+    assert "Automation" in detail
+
+
+def test_the_relaunch_pause_is_real_but_small():
+    """It exists so macOS can reap the dead process (and Microsoft Error
+    Reporting can take its turn) before we ask for a new one - an immediate
+    retry tends to inherit the same corpse. Pinned in BOTH directions: zero
+    makes the retry pointless, and a large value would be paid per crashed
+    file. The tests above run with it monkeypatched to 0 for speed, so without
+    this assertion nothing would notice it becoming 0 for real - which is why
+    it reads the value captured at IMPORT, not through `AB`.
+    """
+    assert 0 < SHIPPED_RELAUNCH_PAUSE_S <= 10
 
 
 def test_a_permission_denial_is_not_retried():
