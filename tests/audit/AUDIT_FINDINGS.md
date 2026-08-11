@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260811_macos-15-v2.0.2__offline-hardening` on 2026-08-11.
 
-**40 open** · 100 total · 30 fixed · 30 invalid
+**36 open** · 100 total · 34 fixed · 30 invalid
 
 ---
 
@@ -111,7 +111,7 @@ mutation-verified and the full suite re-run after each pass.
 ### A corrupt or 0-byte .doc wedges Microsoft Word on macOS, and every later Word conversion in the run then silently fails
 <!-- fp:200c7fea9f04 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: conversion
 **Oracles**: O2,O3
@@ -124,14 +124,14 @@ mutation-verified and the full suite re-run after each pass.
 
 REPRODUCED on real macOS with real Office; only this machine can produce it. CHAIN OF EVENTS, measured: (1) feed the macOS Word converter a hostile legacy .doc (2 KB of random bytes, and separately a 0-byte file). The delete gate behaves CORRECTLY - the source is kept, verified by md5 - and the log records '[AppleScript] Word failed (other)'. Run 1 also logged 'Microsoft Word got an error: AppleEvent timed out. (-1712)', consistent with Word raising a MODAL dialog that waits for a human (hypothesis - not directly observed, see below). (2) Word is then WEDGED: 'count of documents' answers 1, the document's name cannot be read, and 'close every document saving no' answers 'missing value' and changes nothing. (3) EVERY subsequent Word conversion fails with 'missing value doesn't understand the save as message. (-1708)' - INCLUDING a genuine 153 KB .doc from course 43660 that converted perfectly moments earlier in a clean process. Measured across two fresh processes: 4 of 4 good-file conversions failed, each reporting 'word docs before=1'. (4) The app's OWN recovery does not help: engine.applescript_bridge._force_close_canvas_docs_sync left the count at 1. (5) Killing the process DOES recover it: after 'pkill -x Microsoft Word', a good file CONVERTED and a second good file straight after also CONVERTED. WHY IT MATTERS: no data loss (the gate keeps every source), but for the rest of that run the user silently gets NO PDFs from any .doc/.rtf/.odt, with one generic 'Conversion failed' line per file. Reachable in normal use by a single corrupt legacy .doc in a course followed by others. WHY THE EXISTING MECHANISM MISSES IT: the codebase already models this exact class - _abort_applescript_phase exists to 'log a single actionable message instead of spamming dozens of generic errors' for failures that 'will identically doom every remaining file in the phase' - but FATAL_CATEGORIES is only ('permission','app_missing'), keyed on -1743 and -600/-10810. A wedged Word yields -1708, which _classify_stderr maps to 'other' = per-file, so the phase dutifully attempts and fails every remaining file. RECOMMENDED FIX (not applied): treat a run of consecutive identical AppleScript failures within one phase as fatal for that phase and emit one actionable message ('Microsoft Word is not responding to conversion requests - quit Word and run again'). A blind kill+relaunch is NOT safe and must not be added: in the wedged state the documents cannot be enumerated, so the app cannot certify that no USER document is open, and every other Office path in this codebase deliberately refuses to act without that certificate. THE MODAL IS CONFIRMED, by the operator's own eyes: 'word was jumping in the dock and when i clicked it it had some error dialog saying file "name" couldnt be opened or something and i clicked ok to all of them and quit word'. So the chain is: hostile .doc -> Word raises a MODAL file-open error and bounces in the Dock demanding attention -> AppleScript's 'open' never yields an active document -> every later conversion answers -1708 -> nothing in the app dismisses the alert, so the phase is dead until a human clicks OK or the process is killed. Note the converter DOES attempt 'set display alerts to false', but it is wrapped in its own try and evidently does not suppress a file-corruption alert raised during open. I could not observe this myself - screenshots were blind at the time and System Events refused with 'osascript is not allowed assistive access (-1728)' - which is a good argument for keeping a human in the loop on a GUI-automation phase.
 
-**Notes**: 
+**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: engine/applescript_bridge carries SYSTEMIC_REPEAT_THRESHOLD + systemic_failure(), so a repeated -1708 now aborts the phase once with an actionable message instead of dooming every remaining file; tests/test_office_wedge_abort.py 9 passed. The Detail above still reads 'RECOMMENDED FIX (not applied)' - that sentence is historical, the fix landed after it was written. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.
 
 ---
 
 ### A failed Keychain save DESTROYS the token that was already saved, tells the user nothing, and logs a DPAPI fallback that does not exist on macOS - so the next launch is a login page
 <!-- fp:03713060d77a -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: persistence
 **Oracles**: O1 UI (lane apps on ?mode=auth) vs O3 disk (Keychain probe)
@@ -170,14 +170,14 @@ WHAT THE FIX CANNOT DO, stated plainly: if the Keychain is unreadable as well as
 
 Verified live in the Aqua session against the real macOS Keychain (all three cases), covered by tests/test_token_store_preserves_credential.py (10 tests), and all 7 mutations of the real code are caught - including one per migration site and one for the amber notice. The 7th survived a first pass as an apparent equivalent mutant (the wrapper it guards swallows backend errors itself) and is genuinely reachable: _safe_keyring_set does `import keyring` OUTSIDE its own try, so a broken or build-excluded keyring package raises straight through it.
 
-**Notes**: 
+**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: ui/auth.store_token is the single writer (skip-if-unchanged, write, fall back, verify by read-back); tests/test_token_store_preserves_credential.py 11 passed. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.
 
 ---
 
 ### SAFETY GUARD BYPASSED ON macOS: /etc and /var were accepted as sync folders because the check resolves symlinks before comparing
 <!-- fp:d6ba79f3db46 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: persistence
 **Oracles**: O3,O4
@@ -190,14 +190,14 @@ Verified live in the Aqua session against the real macOS Keychain (all three cas
 
 REAL PRODUCT DEFECT, found by running the unit suite on macOS for the first time. sync/persistence._validate_pair_folder refuses 'obviously dangerous system roots' and is the gate on add_pair/add_pairs_batch. It calls Path(folder).resolve() and THEN compares against a blocklist written in plain spelling - but macOS symlinks /etc, /var and /tmp into /private, so '/etc' arrives as '/private/etc', matches nothing, and is ACCEPTED. Measured on macOS 15.6.1: _validate_pair_folder('/etc') -> True, '/etc/nested' -> True, '/var/log' -> True, and add_pair('/etc') WROTE the pairs file instead of rejecting it and showing the 'system folders cannot be used' toast. WHY IT SURVIVED: the tests for this were correct all along and had never run anywhere. They carry skipif(sys.platform == 'win32') with reason 'POSIX system roots', so Windows skipped them, and nobody had ever run the suite on a Mac - six of them fail on the very platform they were written for. This is the platform-asymmetric class CLAUDE.md documents (the Office delete-gate fixed on Windows and left broken on macOS for a full round). WHY IT MATTERS: a sync pair is a folder the engine writes course files into, creates a hidden .canvas_sync.db in, and sweeps .part files out of. The folder normally comes from the native picker, and FINDER RESOLVES SYMLINKS - so '/private/etc' is the spelling a real user is most likely to arrive with, which the raw-only alternative would also have missed. FIXED: the check now refuses a candidate if EITHER the raw or the resolved form names a system root, and _BAD_ROOTS_MAC adds the /private spellings. An explicit exemption keeps the OS's own per-user temp area usable ('/var/folders/<user>/T', which resolves under /private/var and would otherwise be swallowed by the /var entry) - that distinction is real, not a concession to the fixtures: /var/log is the system, /var/folders/<user> is the user's scratch space. Verified on this Mac: /etc, /etc/nested, /private/etc, /var/log, /private/var/log and /usr/local all rejected; /Users/m1/Courses and both the temp root and a mkdtemp under it accepted; all 53 tests in tests/test_sync_persistence.py pass where 6 failed. KNOWN RESIDUAL, deliberately not changed: '/System', '/Library' and '/Applications' are not in the blocklist and are still accepted. Adding new roots is a design decision rather than a bug fix, and SIP makes /System unwritable in practice.
 
-**Notes**: 
+**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: sync/persistence carries _BAD_ROOTS_MAC and checks the raw AND resolved form, so the /private spellings are refused; tests/test_sync_persistence.py 53 passed, 5 skipped - the six that used to fail on this very platform now pass. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.
 
 ---
 
 ### A download then a sync duplicated every lecture's audio: 70 mp3 files for 36 lectures, because the shortcut's disambiguated path defined the stem for all media
 <!-- fp:5a4befe8de50 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: placement
 **Oracles**: O3,O4
@@ -210,7 +210,7 @@ REAL PRODUCT DEFECT, found by running the unit suite on macOS for the first time
 
 REAL PRODUCT DEFECT, found by driving the real app: a download of course 43660 with mp3+txt+srt, then a real sync of the same folder. NOT macOS-specific - the same collision happens on Windows with .url, and CLAUDE.md already records it there ('34 identically-named .url files'). MEASURED: 70 .mp3 files in a course with 36 lectures - 36 without a suffix and 34 with ' (Panopto)', the same lectures twice, about 400 MB duplicated and the originals orphaned. Proof by pair: 'Forelaesningsvideo (1) organisationsprojekt - klargoering af data.mp3' beside 'Forelaesningsvideo (1) organisationsprojekt - klargoering af data (Panopto).mp3'. O4 shows the cause exactly - for one video_id the manifest held url -> '<title> (Panopto).webloc' and mp3 -> '<title>.mp3'. MECHANISM: panopto.runner._recording_base is manifest-first and its kind list was (SHORTCUT_KIND, 'mp4', 'mp3', 'txt', 'srt') - shortcut FIRST, returning on the first hit. The shortcut is the ONE kind whose path is legitimately disambiguated, because in the match layout the Canvas file sync owns '<title>.url' and resolve_shortcut_path therefore writes ours as '<title> (Panopto).url'. Asked first, that stem became the base for every other kind, so the sync re-downloaded all 34 recordings it touched to '<title> (Panopto).mp3' beside the mp3s already on disk. This is precisely the divergence the function's own docstring promises to prevent ('instead of diverging to a fresh Title (2)'), and it is invisible in a download-only or sync-only run - it needs a download followed by a sync of the same folder, which is the normal lifecycle. FIXED: media kinds are consulted first, shortcut last. That costs nothing - the shortcut is still reached whenever no media kind is recorded, which is the only case its inclusion was ever justified by ('a folder whose ONLY produced output is the shortcut still has a stem the manifest knows'). tests/test_panopto_stem_from_manifest.py, 9 tests, both directions (the media stem wins when both exist; the shortcut stem is still used when it is alone; an undisambiguated shortcut agrees either way; the no-manifest fallback is unchanged) plus an AST check that the shortcut kind is last. Both mutations caught: restoring the old order fails 6, dropping the shortcut kind fails the alone-case. SIDE OBSERVATION, correct behaviour: those 34 recordings were offered for sync at all because their mp3 existed with no transcript (I had cancelled transcription after 2), which is RUNBOOK's 'a recording with mp3 present but srt missing must appear as new / missing outputs, not as up to date'.
 
-**Notes**: 
+**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: panopto/runner._recording_base consults media kinds before SHORTCUT_KIND; tests/test_panopto_stem_from_manifest.py 9 passed. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.
 
 ---
 
