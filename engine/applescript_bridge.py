@@ -70,6 +70,100 @@ def _office_container_tmp(app_name: str) -> Path | None:
         return None
 
 
+#: How long to wait for another PROCESS to finish its conversion before going
+#: ahead anyway. Generous, because one conversion is seconds; bounded, because
+#: a run must never hang on a lock - proceeding is what the app did before this
+#: existed, so the timeout degrades to the old behaviour rather than to a stall.
+_OFFICE_LOCK_TIMEOUT_S = 120.0
+
+
+@contextmanager
+def _office_app_lock(app_name: str):
+    """Serialise Office automation ACROSS PROCESSES.
+
+    macOS gives a user session exactly ONE Microsoft PowerPoint / Word / Excel.
+    Two Canvas Downloader instances therefore drive the same application, and
+    since a conversion is `open` -> `save active` -> `close`, one instance's
+    `open` lands between the other's `open` and its `save`.
+
+    MEASURED 2026-08-11, two conversion batches started at the same moment:
+
+        batch A   8 files ->  0 converted, 8 failed
+        batch B   8 files ->  0 converted, 8 failed
+        errors    "Connection is invalid. (-609)",
+                  "reported success but no output file was created"
+        artefact  `B8 (1).pdf` - two conversions racing for one destination
+        result    PowerPoint CRASHED into Microsoft Error Reporting
+
+    That is the operator's original bug report, reproduced on demand, and it is
+    the leading explanation for the 2026-08-11 matrix crash (two audit lanes =
+    two instances). `start.py`'s single-instance guard normally prevents a
+    second instance, but it **fails OPEN by design** in three ways (mutex
+    creation failure, the CANVAS_DL_ALLOW_MULTI escape hatch, any exception on
+    the flock path), so it cannot be the only defence for something that ends
+    in a crashed Office app and a folder of half-converted lectures.
+
+    The lock is held for ONE conversion, not a whole phase: `open`/`save`/
+    `close` is the indivisible unit, and a phase-wide lock would block a second
+    instance for the length of an entire course.
+
+    `flock` is the right primitive precisely because the kernel releases it
+    when the holder dies - a crashed instance cannot leave a stale lock that
+    wedges every future run. Per APP, not global, so Word in one instance never
+    waits on PowerPoint in another.
+
+    Degrades to a no-op off macOS, without `fcntl`, or if the lock file cannot
+    be made: this makes a bad case better and must never make the normal case
+    fail.
+    """
+    if sys.platform != 'darwin':
+        yield
+        return
+    try:
+        import fcntl
+        import tempfile
+        # The per-user temp dir, NOT the config dir: two instances can be
+        # pointed at different config dirs (the audit harness does exactly
+        # that) while still sharing the one Office the user session has.
+        path = Path(tempfile.gettempdir()) / f"canvas_dl_office_{app_name.lower()}.lock"
+        # BINARY: this file is never read or written, only flocked - it exists
+        # solely to own a descriptor. Opening it in text mode would raise the
+        # encoding question (Rule 2) about bytes that never exist.
+        fh = open(path, 'ab')
+    except Exception as e:
+        logger.debug(f"[AppleScript] Office lock unavailable ({e}); proceeding")
+        yield
+        return
+    held = False
+    try:
+        deadline = time.time() + _OFFICE_LOCK_TIMEOUT_S
+        waited = 0.0
+        while True:
+            try:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                held = True
+                break
+            except OSError:
+                if time.time() >= deadline:
+                    logger.warning(
+                        f"[AppleScript] another process has been driving "
+                        f"{app_name} for {_OFFICE_LOCK_TIMEOUT_S:.0f}s; going "
+                        f"ahead without the lock")
+                    break
+                time.sleep(0.25)
+                waited += 0.25
+        if held and waited:
+            logger.debug(f"[AppleScript] waited {waited:.1f}s for {app_name}")
+        yield
+    finally:
+        try:
+            if held:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+            fh.close()
+        except Exception:
+            pass
+
+
 def _product_is_real(staged_dst: Path) -> bool:
     """Is the file Office just wrote worth promoting to the user's folder?
 
@@ -213,8 +307,25 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
     # CanvasDownloaderTmp marker in the DIRECTORY (_marker_in_value), not on the
     # file name. Each conversion gets its own uuid work dir, so the fixed
     # basenames cannot collide between concurrent conversions.
-    staged_src = work / ("src" + src.suffix)
-    staged_dst = work / ("out" + dst.suffix)
+    # The basename carries the uuid's first 6 hex too, and that is LOAD-BEARING
+    # rather than decorative. `our_document_test` identifies our document by
+    # NAME, and a constant `src.<ext>` is the same name in every conversion - so
+    # two conversions running at once (two app instances against the ONE
+    # PowerPoint macOS gives a user session) both answer "yes, that's mine" for
+    # each other's document, and the guard silently protects nothing.
+    #
+    # Measured 2026-08-11 by running two conversion batches concurrently:
+    # 8 + 8 files, 0 converted, `Connection is invalid. (-609)`, a stray
+    # `B8 (1).pdf` where two conversions raced for one destination, and
+    # PowerPoint crashed into Microsoft Error Reporting - the operator's
+    # original report, reproduced on demand. `guard_trips` was 0 throughout.
+    #
+    # 15 characters total, so the ~255-byte staged-path budget below is
+    # untouched (and `tests/test_office_staging_short_names.py` still asserts
+    # <= 16).
+    _tok = work.name[-6:]
+    staged_src = work / (f"src_{_tok}" + src.suffix)
+    staged_dst = work / (f"out_{_tok}" + dst.suffix)
     try:
         work.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, staged_src)
@@ -627,6 +738,20 @@ def _try_close_document_after_timeout(app_name: str, posix_src: str) -> None:
 
 
 def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
+    """Convert *src* to *dst* by driving *app_name*, one process at a time.
+
+    A thin wrapper so the cross-process serialisation cannot be forgotten: the
+    lock has to cover the WHOLE of `open` -> `save active` -> `close` (and the
+    crash retry inside it), and this is the one entry point all three
+    converters share. See `_office_app_lock` for the measured reproduction -
+    two batches at once produced 0 conversions out of 16 and crashed
+    PowerPoint into Microsoft Error Reporting.
+    """
+    with _office_app_lock(app_name):
+        return _run_applescript_locked(src, dst, app_name, script)
+
+
+def _run_applescript_locked(src: Path, dst: Path, app_name: str, script: str) -> bool:
     """Execute an AppleScript via ``osascript`` to convert a file.
 
     This is the single source of truth for all AppleScript-based
