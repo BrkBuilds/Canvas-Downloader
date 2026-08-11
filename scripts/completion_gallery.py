@@ -60,7 +60,10 @@ from shared.helpers import (  # noqa: E402
     split_delivery_errors,
 )
 from styles import inject_css  # noqa: E402
-from sync.completion import build_newversion_notice  # noqa: E402
+from sync.completion import (  # noqa: E402
+    QUICK_SYNC_SKIP_DETAIL, build_newversion_notice,
+    build_quick_sync_skip_notice,
+)
 from ui.amber_notice import render_amber_notice, render_info_notice  # noqa: E402
 
 
@@ -460,31 +463,16 @@ def sync_screen(*, synced, courses, total_bytes, errors=(),
             retry_failed=retry_failed,
         )
 
-        if qs_skipped:
-            parts = []
-            if qs_skipped.get('edited'):
-                n = qs_skipped['edited']
-                parts.append(f"{n} {'file' if n == 1 else 'files'} you edited locally")
-            if qs_skipped.get('local_del'):
-                n = qs_skipped['local_del']
-                parts.append(f"{n} {'file' if n == 1 else 'files'} deleted locally")
-            if qs_skipped.get('panopto_local_del'):
-                n = qs_skipped['panopto_local_del']
-                parts.append(f"{n} Panopto recording{'s' if n != 1 else ''} deleted locally")
-            if qs_skipped.get('canvas_del'):
-                n = qs_skipped['canvas_del']
-                parts.append(f"{n} {'file' if n == 1 else 'files'} deleted on Canvas")
-            if qs_skipped.get('filtered'):
-                n = qs_skipped['filtered']
-                parts.append(f"{n} {'file' if n == 1 else 'files'} outside this "
-                             f"course's file-type filter")
-            render_amber_notice(
-                f"Quick Sync skipped {' and '.join(parts)}.",
-                icon="⚠️",
-                detail="To download them, run a normal 'Analyze, Review & Sync' "
-                       "and select them manually.",
-                margin="0",  # the card's flex gap (16px) is the ONE rhythm; a margin here adds to it
-            )
+        # The SENTENCE comes from the app, not from a copy of it. This file had
+        # its own, and that is how the `filtered` clause survived here for a
+        # while after the app dropped it - the review instrument describing a
+        # screen that no longer existed. INFO rather than amber, and
+        # `canvas_del` counted but never listed: read
+        # `build_quick_sync_skip_notice` for why.
+        _qs_message = build_quick_sync_skip_notice(qs_skipped)
+        if _qs_message:
+            render_info_notice(_qs_message, detail=QUICK_SYNC_SKIP_DETAIL,
+                               margin="0")  # the card's flex gap (16px) is the ONE rhythm
 
         render_pp_warning(pp_failures)
 
@@ -775,8 +763,9 @@ SCENARIOS: dict[str, tuple[str, str, callable]] = {
     ),
     "s-notices": (
         "Sync · Success + the four sync-only notices",
-        "Quick-Sync skips (amber), ignored files (info), _NewVersion (info), "
-        "structural errors (amber). Checks amber-vs-info ordering and gaps.",
+        "Quick-Sync skips (info), ignored files (info), _NewVersion (info), "
+        "structural errors (amber). Checks amber-vs-info ordering and gaps. "
+        "The canvas_del and filtered tallies are passed and must NOT appear.",
         lambda: sync_screen(
             synced=12, courses=2, total_bytes=int(184 * MB), quick=True,
             qs_skipped={"edited": 2, "local_del": 1, "canvas_del": 3,
@@ -784,6 +773,15 @@ SCENARIOS: dict[str, tuple[str, str, callable]] = {
             ignored=True, structural=2,
             newversion=[{"name": "My notes_NewVersion.docx"},
                         {"name": "Budget_NewVersion.xlsx"}]),
+    ),
+    "s-qs-canvas-del-only": (
+        "Sync · Quick Sync whose only skip was deleted on Canvas",
+        "Must render NO Quick-Sync panel at all. A file deleted on Canvas is "
+        "not actionable from this screen, so it is counted and never listed - "
+        "and this is the branch where that leaves nothing to say.",
+        lambda: sync_screen(
+            synced=9, courses=1, total_bytes=int(41 * MB), quick=True,
+            qs_skipped={"canvas_del": 3}),
     ),
     "s-newversion-one": (
         "Sync · Success + one protected file",

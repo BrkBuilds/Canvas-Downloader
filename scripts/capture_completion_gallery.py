@@ -53,7 +53,7 @@ ELEMENTS: list[tuple[str, str, str]] = [
     ("skip-size",       "Panel: size-skipped files",        "Left alone"),
     ("skip-archive",    "Panel: unpacked archives",         "Left alone"),
     ("pp-warn",         "Notice: conversion failures",      "Notices"),
-    ("qs-warn",         "Notice: Quick Sync skipped",       "Notices"),
+    ("qs-info",         "Notice: Quick Sync skipped",       "Notices"),
     ("structural-warn", "Notice: modules not fetched",      "Notices"),
     ("office-warn",     "Notice: Office force-closed",      "Notices"),
     ("ignored-info",    "Notice: ignored files",            "Notices"),
@@ -113,7 +113,7 @@ DETECT_JS = """() => {
     add('skip-archive', panels.some(d => (d.textContent||'').includes('left unpacked')));
 
     add('pp-warn', T.includes('could not be converted'));
-    add('qs-warn', T.includes('Quick Sync skipped'));
+    add('qs-info', T.includes('Quick Sync skipped'));
     add('structural-warn', T.includes('could not be fetched from Canvas'));
     add('office-warn', T.includes('force-closed during conversion'));
     add('ignored-info', T.includes('because you ignored them'));
