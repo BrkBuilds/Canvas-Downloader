@@ -1880,14 +1880,28 @@ def _permission_record_path() -> Path:
 
 
 def _load_permission_record() -> dict:
-    """Apps whose Automation prompt has been answered (Allow OR Deny) before."""
-    import json
-    try:
-        with open(_permission_record_path(), 'r', encoding='utf-8') as fh:
-            data = json.load(fh)
-        return data if isinstance(data, dict) else {}
-    except Exception:
-        return {}
+    """Apps whose Automation prompt has been answered (Allow OR Deny) before.
+
+    Total by design - every caller wants "which apps can I skip?", and the safe
+    answer to a failed read is "none of them", i.e. re-batch. A read-modify-WRITE
+    must use :func:`_load_permission_record_for_update` instead; see there.
+    """
+    rec, _ = _load_permission_record_for_update()
+    return rec
+
+
+def _load_permission_record_for_update() -> tuple:
+    """``(record, may_write)`` - the same cause split every store in this app uses.
+
+    Degrading a failed read to ``{}`` and writing it back is the defect this
+    repo has fixed in seven other stores. Here the stake is small (the record
+    only decides whether the one-time Office permission batch re-runs, and macOS
+    will not re-prompt an already-answered pair), but the shape is identical:
+    a transient read would drop the OTHER apps' answers and silently re-launch
+    Word, Excel and PowerPoint on a later run.
+    """
+    from shared.helpers import read_json_for_update
+    return read_json_for_update(_permission_record_path())
 
 
 def _record_permission_answered(ms_name: str) -> None:
@@ -1900,7 +1914,9 @@ def _record_permission_answered(ms_name: str) -> None:
     import json
     import os
     try:
-        rec = _load_permission_record()
+        rec, may_write = _load_permission_record_for_update()
+        if not may_write:
+            return
         rec[ms_name] = True
         path = _permission_record_path()
         tmp = path.with_name(path.name + '.tmp')

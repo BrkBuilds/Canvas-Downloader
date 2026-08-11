@@ -2888,12 +2888,20 @@ class SyncHistoryManager:
         self._lock = threading.Lock()
     
     def load_history(self) -> list[dict]:
-        """Load sync history from disk. Always returns a list, never raises.
+        """Load sync history for DISPLAY. Always returns a list, never raises.
 
         Guards against a corrupt/hand-edited file: bad JSON, invalid encoding
         (UnicodeDecodeError - a ValueError that the old narrow except missed),
         or a non-list top-level value all degrade to an empty history rather
-        than propagating up and breaking the whole Sync page / add_entry().
+        than propagating up and breaking the whole Sync page.
+
+        **This is the read for the two DISPLAY surfaces only** (the Sync page's
+        history section and the Today page's lens). A read-modify-WRITE must go
+        through :meth:`_load_for_update` instead - degrading a failed read to
+        ``[]`` and then writing is what destroyed the whole record; see there.
+        The failure is logged rather than swallowed, because rendering ``[]``
+        tells the user "you have no sync history", which is the same confusion
+        this repo already fixed once in ``_render_sync_history``.
         """
         if not self.history_path.exists():
             return []
@@ -2901,8 +2909,35 @@ class SyncHistoryManager:
             with open(self.history_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             return data if isinstance(data, list) else []
-        except Exception:
+        except Exception as e:
+            logger.warning(
+                f"Could not read sync history at {self.history_path} ({e}); "
+                "showing it as empty for this render.")
             return []
+
+    def _load_for_update(self) -> tuple[list[dict], bool]:
+        """``(history, may_write)`` for a read-modify-write of the history file.
+
+        THE reason this is not :meth:`load_history`: that one degrades every
+        failure to ``[]``, and both mutators did ``history = load_history()``
+        -> append/amend -> write. So a single TRANSIENT read failure - an
+        antivirus lock, the config dir on a share that is briefly offline, a
+        permissions blip - replaced the user's entire record with the one entry
+        being added. Measured against this class: 50 seeded runs became 1.
+
+        Same split-by-CAUSE decision as every other store in this app, and it
+        reuses that ONE implementation (``shared.helpers.read_json_for_update``,
+        asked for a ``list``) rather than restating it here - a shared decision
+        with two implementations is a fix that lands on half the app.
+
+        Damaged content is quarantined and the write proceeds, so the user gets
+        a working history file back; a transient ``OSError`` returns
+        ``may_write=False`` and the caller writes NOTHING, because there is
+        nothing wrong with the file and one unrecorded run is recoverable where
+        a wiped record is not.
+        """
+        from shared.helpers import read_json_for_update
+        return read_json_for_update(self.history_path, expect=list)
     
     def add_entry(self, entry: dict):
         """Add a sync history entry and save.
@@ -2914,7 +2949,12 @@ class SyncHistoryManager:
             entry: Dict with keys like 'timestamp', 'courses', 'files_synced', 'errors', 'categories'
         """
         with self._lock:
-            history = self.load_history()
+            history, may_write = self._load_for_update()
+            if not may_write:
+                logger.warning(
+                    "Sync history could not be read; not recording this run "
+                    "rather than overwriting the existing record.")
+                return
             history.append(entry)
             # L-13: Use user-configured retention; default 50.
             try:
@@ -2959,7 +2999,15 @@ class SyncHistoryManager:
         Best-effort, atomic write; never raises.
         """
         with self._lock:
-            history = self.load_history()
+            history, may_write = self._load_for_update()
+            if not may_write:
+                # Returning False here would send the caller into add_entry(),
+                # which is the very write that must not happen on a transient
+                # read failure. True = "consider it handled, change nothing".
+                logger.warning(
+                    "Sync history could not be read; leaving the existing "
+                    "record untouched instead of amending or re-creating it.")
+                return True
             if not history:
                 return False
             target = None
