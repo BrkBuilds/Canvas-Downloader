@@ -1571,9 +1571,33 @@ def _categories_match(ev: Evidence, plan: dict, ui_review: dict | None) -> list[
                 _claims[stripped] |= {
                     n for n in _real
                     if n != stripped and _DEDUP_SUFFIX.sub("", n).strip() == stripped}
+        # A NAME THE PLAN ITSELF CARRIES IS NOT A DEDUP ARTEFACT. `_DEDUP_SUFFIX`
+        # cannot tell the engine's "-1" from a trailing "-1" that Canvas put
+        # there, and Canvas does: course 43660 holds THREE distinct files whose
+        # `filename` is all `CBS_SolbjergPlads_ImageHeader.jpg`, which Canvas
+        # itself disambiguates as display names `...ImageHeader.jpg`,
+        # `...ImageHeader-1.jpg` and `...ImageHeader-1-1.jpg`. The seeder
+        # orphans two of them, so the plan has one fixture named `X` and one
+        # named `X-1`.
+        #
+        # Measured on macOS 26.6, 2026-08-11: the screen's row for `X-1` was
+        # aliased onto `X`, so the `X` fixture matched the OTHER fixture's row
+        # and the run reported "placed as new by O1 but absent from O2" - a
+        # disagreement between two oracles that had in fact agreed. Both showed
+        # exactly one of the pair, which is what the app really did.
+        #
+        # If `X-1` is literally some fixture's own `match_name` then the screen
+        # row belongs to THAT fixture, and lending it to a differently-named one
+        # is mis-attribution, not tolerance. The legitimate case is untouched:
+        # there, no fixture is called `X-1` - only the engine's output is.
+        _exact_plan_names = {
+            _stem(_fx.get("match_name") or Path(_fx.get("path", "")).name)
+            for _fx in plan.get("fixtures", [])}
         for k in list(ui_cat):
             stripped = _DEDUP_SUFFIX.sub("", k).strip()
-            if stripped and stripped != k and len(_claims.get(stripped, ())) <= 1:
+            if not stripped or stripped == k or k in _exact_plan_names:
+                continue
+            if len(_claims.get(stripped, ())) <= 1:
                 ui_cat.setdefault(stripped, ui_cat[k])
 
     # An extraction that saw the screen but produced nothing is a broken probe,
@@ -1636,14 +1660,64 @@ def _categories_match(ev: Evidence, plan: dict, ui_review: dict | None) -> list[
                 evidence={"fixture": fx, "observed": observed, "via": oracle},
                 scenario=ev.scenario, course=ev.course))
         elif not observed and want != "uptodate":
-            out.append(ev._d("O5", oracle,
-                title=f"'{fx.get('label', name)}' expected as {want} but no oracle "
-                      f"placed it in any category",
-                severity="high", category="classification",
-                detail=fx.get("why", ""), synthetic=True,
-                evidence={"fixture": fx, "analysis": ev.log.get("analysis"),
-                          "via": oracle},
-                scenario=ev.scenario, course=ev.course))
+            # "NO ORACLE PLACED IT" WAS A CLAIM THIS BRANCH HAD NOT CHECKED,
+            # and it cost a session. It fires whenever the CHOSEN oracle is
+            # silent, so it said "no oracle" while never asking the other one -
+            # and the wording points the reader at a blind spot in the harness
+            # rather than at the app. Measured on macOS 26.6, 2026-08-11: the
+            # two `renamed_ambiguous` fixtures are identical in shape, the app
+            # offered ONE of them per sync, and both O1 and O2 agreed about
+            # that - so the honest finding was "not offered this run", and the
+            # previous session was sent looking for an oracle-selection bug
+            # that did not exist.
+            #
+            # Three different situations, three different answers.
+            other = got_ui if oracle == "O2" else got_log
+            other_oracle = "O1" if oracle == "O2" else "O2"
+            # How many rows the chosen oracle has for the category we WANT. If
+            # it has none at all it cannot speak to this fixture, whatever the
+            # category table says.
+            _log_key = next((k for k, v in _LOG_CAT.items() if v == want), None)
+            blind = (oracle == "O2"
+                     and not (rows.get(_log_key) if _log_key else None))
+            if other:
+                # The other oracle DID place it. That is a disagreement between
+                # two oracles, which is the one thing this suite exists to
+                # report - and it is not the same defect as "never offered".
+                out.append(ev._d(other_oracle, oracle,
+                    title=f"'{fx.get('label', name)}' placed as {other} by "
+                          f"{other_oracle} but absent from {oracle}",
+                    severity="high", category="ui-truth",
+                    detail=fx.get("why", "") + " The two oracles disagree about "
+                           "whether this file was offered at all, so neither "
+                           "can be trusted for it until that is resolved.",
+                    synthetic=True,
+                    evidence={"fixture": fx, "observed": other,
+                              "via": other_oracle, "silent": oracle},
+                    scenario=ev.scenario, course=ev.course))
+            elif blind:
+                out.append(observation(
+                    title=f"'{fx.get('label', name)}' expected as {want}, and no "
+                          f"oracle can see that category this run",
+                    detail=f"The debug log wrote no per-file rows for {want} at "
+                           "all, and the review screen was unavailable, so "
+                           "absence is not evidence. Not asserted.",
+                    evidence={"fixture": fx, "analysis": ev.log.get("analysis")},
+                    scenario=ev.scenario, course=ev.course))
+            else:
+                out.append(ev._d("O5", oracle,
+                    title=f"'{fx.get('label', name)}' was not offered as {want} "
+                          f"in this run",
+                    severity="high", category="classification",
+                    detail=fx.get("why", "") + f" {oracle} listed other files "
+                           f"under {want} and this was not among them, so it was "
+                           "genuinely not offered rather than merely unseen.",
+                    synthetic=True,
+                    evidence={"fixture": fx, "analysis": ev.log.get("analysis"),
+                              "via": oracle,
+                              "peers_in_category": (rows.get(_log_key) or [])[:20]
+                              if _log_key else []},
+                    scenario=ev.scenario, course=ev.course))
         elif observed and want == "uptodate":
             out.append(ev._d(oracle, "O5",
                 title=f"'{fx.get('label', name)}' should have been recognised as up to "
