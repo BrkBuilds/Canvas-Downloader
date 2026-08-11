@@ -223,8 +223,8 @@ cat <<EOF
        to the security session, so a tmux born over SSH drives the whole GUI
        and still cannot create an item of its own - and then every Keychain
        observation in the audit is false rather than the product. Gate on
-       `python3 scripts/mac_aqua.py check` saying "keychain usable: True",
-       never on `launchctl managername`, which reports Background even here.
+       "python3 scripts/mac_aqua.py check" saying "keychain usable: True",
+       never on "launchctl managername", which reports Background even here.
 
   THEN LEAVE VNC. From your Windows PC:
 
