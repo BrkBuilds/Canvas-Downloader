@@ -110,7 +110,14 @@ def _read_notes(block: str) -> str:
 def _fields_to_entry(fp, fields, title_m, block) -> dict:
     return {
         "fp": fp,
-        "title": (title_m.group(1).strip() if title_m else "").lstrip("~ ").strip(),
+        # STRIP BOTH ENDS. `render` wraps a CLOSED entry's title in ~~strikethrough~~
+        # and this read it back with the tildes still on it, so every re-render
+        # added another pair to the right-hand side: 53 entries had already grown
+        # to `### ~~title~~~~` by 2026-08-11, and it compounds for ever. `lstrip`
+        # hid half of it, which is why it looked like it was handled.
+        # Fingerprints are unaffected - they key off the fp comment, and
+        # `fingerprint()` only ever runs on a fresh finding's title.
+        "title": (title_m.group(1).strip() if title_m else "").strip("~ ").strip(),
         "status": (fields.get("status") or "open").lower(),
         "severity": fields.get("severity", "medium"),
         "category": fields.get("category", "observation"),

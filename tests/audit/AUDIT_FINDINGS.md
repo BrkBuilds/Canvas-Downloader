@@ -9,9 +9,9 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260810_151922_macos-15-v2.0.2` on 2026-08-10.
+Last updated by run `20260810_151922_macos-15-v2.0.2` on 2026-08-11.
 
-**39 open** · 93 total · 24 fixed · 30 invalid
+**40 open** · 97 total · 27 fixed · 30 invalid
 
 ---
 
@@ -562,6 +562,26 @@ Both FDA surfaces rendered for the first time in this audit (they need macOS 15+
 
 ---
 
+### Deleting a multi-GB Whisper model is one unconfirmed click, while the CUDA libraries on the same page use a deliberate schedule-plus-undo flow
+<!-- fp:68f6f6b634d2 -->
+
+**Status**: open
+**Severity**: low
+**Category**: ux
+**Oracles**: offline
+**First seen**: 2026-08-11 (20260811_offline_untouched_corners)
+**Last seen**: 2026-08-11 (20260811_offline_untouched_corners)
+**Occurrences**: 1
+**Scenario**: offline_class_sweep
+
+**Detail**:
+
+ui/panopto_page.py's trash icon calls pmodels.delete_model(mid) immediately - no confirmation, no undo - for a model up to ~3 GB. The CUDA removal directly below it has a carefully-built two-stage flow whose own comment explains why a same-shaped second button reads as a confirm. No data loss (the model is re-downloadable), but bandwidth and time on a metered or slow connection, from an unlabelled icon button. NOT FIXED: a confirm state changes the row's element SHAPE, which is the container-inheritance hazard this codebase documents at length, so it needs its own before/after browser pass rather than a hurried one. Recommended shape: mirror the CUDA schedule + undo idiom.
+
+**Notes**: Left open deliberately - see the Detail for why, and CLAUDE.md 'Known, deliberately NOT changed'.
+
+---
+
 ### M5 PASS: a quoted folder name survives the native picker's round trip, and the macOS-only trailing slash it returns is normalised by all three path keys
 <!-- fp:624f77bfea70 -->
 
@@ -973,6 +993,26 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 
 ---
 
+### ~~One transient read of sync_library.json at LAUNCH re-imported the legacy stores over it, destroying every saved pair, name, group and daily-sync membership since the first migration~~
+<!-- fp:8c6cf4ccabb5 -->
+
+**Status**: fixed
+**Severity**: critical
+**Category**: data-loss
+**Oracles**: offline
+**First seen**: 2026-08-11 (20260811_offline_untouched_corners)
+**Last seen**: 2026-08-11 (20260811_offline_untouched_corners)
+**Occurrences**: 1
+**Scenario**: offline_class_sweep
+
+**Detail**:
+
+core/library_migrate.py was never reached by the 'unreadable is not empty' sweep that hardened core/library.py, preset_manager, ui/auth.py, today_store and atomic_update_sync_pairs - and it is the worst member of that family to miss: it runs on EVERY launch (app.py) and sits UPSTREAM of the hardened store, so it destroys the library before load_library's guards can run. The legacy stores are never deleted (only copied to *.bak), so a re-run always has something to import and importing REBUILDS the library from its state at first migration. `needs_migration` answered 'yes, migrate' for any library file it could not read, and `_read_json` swallowed OSError alongside JSONDecodeError. REPRODUCED against the real functions: one OSError on that read - antivirus lock, config dir on an offline share, permissions blip - and a pair the user had renamed reverted to its original name while a second saved pair DISAPPEARED. Two more in the same read: UnicodeDecodeError (a SIBLING of JSONDecodeError, both ValueError) escaped both entry points, breaking the 'never raises' docstring contract (one settings file re-saved in a Danish ANSI codepage is enough); and an unreadable LEGACY file was treated as empty, which writes a library missing every pair it held, after which needs_migration answers False for ever. FIXED: three outcomes, not two. Transient -> refuse, touch nothing. Damaged -> quarantine the bytes, then rebuild. Legacy unreadable -> abort and retry next launch. tests/test_library_migration_hardening.py (13).
+
+**Notes**: Fixed in this pass; see CLAUDE.md 'The pre-release audit of the UNTOUCHED corners'.
+
+---
+
 ### ~~'readonly:Opgave reformulering - bilag.xlsx' was locally edited but no _NewVersion sibling was created~~
 <!-- fp:6a83c06e72be -->
 
@@ -999,7 +1039,7 @@ So the earlier claim here that "the locked-target fallback is verified working e
 
 ---
 
-### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Local edits to a CONVERTED file are overwritten - _NewVersion protects the download, but post-processing regenerates the output on top of your work~~
 <!-- fp:bc9703c2e9f2 -->
 
 **Status**: fixed
@@ -1066,7 +1106,7 @@ THE OTHER DIRECTION, verified separately and at least as important: this resolve
 
 ---
 
-### ~~Sync post-processing crashes with NameError: _attempts is not defined~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync post-processing crashes with NameError: _attempts is not defined~~
 <!-- fp:5d735855a0d8 -->
 
 **Status**: fixed
@@ -1087,7 +1127,7 @@ sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initia
 
 ---
 
-### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~
 <!-- fp:2e38f73c0857 -->
 
 **Status**: invalid
@@ -1108,7 +1148,7 @@ Renamed, row dropped, and another file shares its size and extension. The unique
 
 ---
 
-### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Adoption tier (c) binds a same-size, same-extension file of UNRELATED content~~
 <!-- fp:1d964fc34314 -->
 
 **Status**: fixed
@@ -1137,7 +1177,7 @@ Options: require a name-similarity floor for tier (c) as heal Tier 3 already doe
 
 ---
 
-### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Every Panopto shortcut is offered as a 'clean update' on every analysis, for ever~~
 <!-- fp:6fe18c5a9b2f -->
 
 **Status**: fixed
@@ -1177,7 +1217,7 @@ Guarded by tests/test_link_content_sig_parity.py, which runs BOTH directions and
 
 ---
 
-### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~
 <!-- fp:91d640ef7d5a -->
 
 **Status**: invalid
@@ -1198,7 +1238,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'deleted-locally:minefeltVEJL_js.txt' should have been left alone but was written to Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt~~
 <!-- fp:78c7871b2180 -->
 
 **Status**: invalid
@@ -1219,7 +1259,7 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 ---
 
-### ~~Download finished with 1 unexplained error(s)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Download finished with 1 unexplained error(s)~~
 <!-- fp:fa2cae30e286 -->
 
 **Status**: fixed
@@ -1240,7 +1280,7 @@ Errors this course logged that are not teacher-locked files. Each names the item
 
 ---
 
-### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A discussion Canvas lists but will not serve individually is never downloaded, and is reported as an error~~
 <!-- fp:fa247ec01d02 -->
 
 **Status**: fixed
@@ -1267,7 +1307,7 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 
 ---
 
-### ~~1 content file(s) on disk with no manifest row~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~1 content file(s) on disk with no manifest row~~
 <!-- fp:371b678dbdf1 -->
 
 **Status**: invalid
@@ -1292,7 +1332,7 @@ Verified on a fresh, never-seeded download of 45899 with every converter on: 0 d
 
 ---
 
-### ~~2 Canvas file(s) were downloaded more than once in one run~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 Canvas file(s) were downloaded more than once in one run~~
 <!-- fp:d05cc83d973a -->
 
 **Status**: fixed
@@ -1313,7 +1353,7 @@ Each of these ids went to the network twice. Two phases both claimed the file, s
 
 ---
 
-### ~~4 manifest row(s) point at files that do not exist~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~4 manifest row(s) point at files that do not exist~~
 <!-- fp:09c8ffb50041 -->
 
 **Status**: invalid
@@ -1336,7 +1376,7 @@ Now derived from the folder's stored `sync_contract`. Re-checked on the same pri
 
 ---
 
-### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~
 <!-- fp:f5c9f9d3c10f -->
 
 **Status**: fixed
@@ -1384,7 +1424,7 @@ TWO WAYS TO IMPLEMENT, both needing a verifying run:
 
 ---
 
-### ~~2 partial-write artifact(s) left on disk~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 partial-write artifact(s) left on disk~~
 <!-- fp:62da7c0a9988 -->
 
 **Status**: invalid
@@ -1405,7 +1445,7 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~
 <!-- fp:18cc3b9d802a -->
 
 **Status**: invalid
@@ -1426,7 +1466,7 @@ Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 AI\\AN~~
 <!-- fp:8224b9e3a4a1 -->
 
 **Status**: invalid
@@ -1447,7 +1487,7 @@ Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:
 
 ---
 
-### ~~Unexpected bridged_error in debug log: HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel stopped resp~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel stopped resp~~
 <!-- fp:f4ec25425a4b -->
 
 **Status**: invalid
@@ -1469,7 +1509,7 @@ HA.IT-reeksamen-2020-VL-Endelig1.xlsx  Conversion timed out after 180s (Excel st
 
 ---
 
-### ~~Unexpected bridged_error in debug log: OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s (Excel stop~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s (Excel stop~~
 <!-- fp:7d8d6987eef9 -->
 
 **Status**: invalid
@@ -1491,7 +1531,7 @@ OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s
 
 ---
 
-### ~~Unexpected bridged_error in debug log: Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped respond~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped respond~~
 <!-- fp:bacba60611c0 -->
 
 **Status**: invalid
@@ -1513,7 +1553,7 @@ Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopp
 
 ---
 
-### ~~Unexpected bridged_error in debug log: VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådighed.&#x27;~~
 <!-- fp:958f127d0717 -->
 
 **Status**: fixed
@@ -1534,7 +1574,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on HA.IT-reeksamen-2020-VL-Endelig1.xlsx. Killing PID 21420~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on HA.IT-reeksamen-2020-VL-Endelig1.xlsx. Killing PID 21420~~
 <!-- fp:f7950a0ff1d0 -->
 
 **Status**: invalid
@@ -1556,7 +1596,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on OmkostningerAfsætning - Ekstra - LØSNING.xlsx. Killing P~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on OmkostningerAfsætning - Ekstra - LØSNING.xlsx. Killing P~~
 <!-- fp:41de4d13af9a -->
 
 **Status**: invalid
@@ -1578,7 +1618,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on Productionanalysis - Eksempel.xlsx. Killing PID 17556.~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on Productionanalysis - Eksempel.xlsx. Killing PID 17556.~~
 <!-- fp:d5dff49dc678 -->
 
 **Status**: invalid
@@ -1600,7 +1640,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on ekstraopgave 1 - VL.xlsx. Killing PID 22472.~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM Timeout] Excel hung >180s on ekstraopgave 1 - VL.xlsx. Killing PID 22472.~~
 <!-- fp:fe53cd768483 -->
 
 **Status**: invalid
@@ -1622,7 +1662,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [COM] Excel init failed: (-2146959355, 'Server-udførelse mislykkedes', None, None)~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: [COM] Excel init failed: (-2146959355, 'Server-udførelse mislykkedes', None, None)~~
 <!-- fp:74a494b938a5 -->
 
 **Status**: invalid
@@ -1644,7 +1684,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion failed twice~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion failed twice~~
 <!-- fp:23015c7d7ccf -->
 
 **Status**: invalid
@@ -1666,7 +1706,7 @@ ekstraopgave 1 - VL.xlsx  Conversion failed twice
 
 ---
 
-### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)~~
 <!-- fp:b751e7a4c30f -->
 
 **Status**: invalid
@@ -1688,7 +1728,7 @@ ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped respond
 
 ---
 
-### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: g1 darts vejl_løsn.js  Conversion failed~~
 <!-- fp:0995f8315ce5 -->
 
 **Status**: invalid
@@ -1709,7 +1749,7 @@ g1 darts vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_error in debug log: gk2 vejl_løsn.js  Conversion failed~~
 <!-- fp:ac0b7c1a10e5 -->
 
 **Status**: invalid
@@ -1730,7 +1770,7 @@ gk2 vejl_løsn.js  Conversion failed
 
 ---
 
-### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~'Quick Sync now' was physically unclickable whenever auto-sync was OFF - the default state~~
 <!-- fp:8badba1fc12c -->
 
 **Status**: invalid
@@ -1774,7 +1814,7 @@ Reverted to the original single dimming rule and verified in the running app: po
 
 ---
 
-### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Canvas Pages ignore the 'isolate secondary content' setting; every other entity type honours it~~
 <!-- fp:7e2221df01e0 -->
 
 **Status**: fixed
@@ -1795,7 +1835,7 @@ Both Page call sites pass isolate=False literally, so with isolation ON in flat 
 
 ---
 
-### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~
 <!-- fp:815c4edf0cb8 -->
 
 **Status**: invalid
@@ -1820,7 +1860,7 @@ Not data loss - files are present and usable - but it defeats the AI-optimisatio
 
 ---
 
-### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync mode had the same archive-conversion gap as download, via a different mechanism~~
 <!-- fp:689a00875c36 -->
 
 **Status**: invalid
@@ -1843,7 +1883,7 @@ Fixed by routing both flows through one shared helper (converters.post_processin
 
 ---
 
-### ~~convert_code did not reach 54 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~convert_code did not reach 54 file(s) unpacked from archives~~
 <!-- fp:5a22b016415d -->
 
 **Status**: invalid
@@ -1865,7 +1905,7 @@ convert_zip extracted these, but post-processing filters every converter through
 
 ---
 
-### ~~convert_excel enabled but 1 source file(s) survived conversion~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~convert_excel enabled but 1 source file(s) survived conversion~~
 <!-- fp:449c42444584 -->
 
 **Status**: invalid
@@ -1887,7 +1927,7 @@ This converter is documented to replace its source. A surviving source at module
 
 ---
 
-### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~convert_pptx did not reach 7 file(s) unpacked from archives~~
 <!-- fp:24e9563de29e -->
 
 **Status**: invalid
@@ -1909,7 +1949,27 @@ convert_zip extracted these, but post-processing filters every converter through
 
 ---
 
-### ~~Cancelling mid-transcription leaves .txt.part/.srt.part in the course folder for ever~~~~~~~~~~~~~~~~~~~~~~
+### ~~Two live progress-bar renderers and only one was hardened: shared/helpers.render_progress_bar raised ValueError, OverflowError and TypeError from inside the sync run loop~~
+<!-- fp:f67ccc56e717 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: crash
+**Oracles**: offline
+**First seen**: 2026-08-11 (20260811_offline_untouched_corners)
+**Last seen**: 2026-08-11 (20260811_offline_untouched_corners)
+**Occurrences**: 1
+**Scenario**: offline_class_sweep
+
+**Detail**:
+
+engine/progress_dashboard._pct exists because the value goes into `width: N%`, where -3 and nan are INVALID CSS - the browser drops the declaration and a block div renders as a FULL bar, so 'less than nothing happened' looks like 'finished'. That hardening reached build_progress_bar_html and not shared/helpers.render_progress_bar, the OTHER live renderer (three call sites in sync/execution.py's run loop, where the values arrive from counters owned by several subsystems). Measured before the fix: NaN -> ValueError, inf -> OverflowError, None -> TypeError. FIXED by routing through the same _pct/_num - one clamp, imported not copied. NOTE the two renderers still differ in signature and visuals; unifying them is a visual change to the sync run screen and needs its own before/after.
+
+**Notes**: Fixed in this pass; see CLAUDE.md 'The pre-release audit of the UNTOUCHED corners'.
+
+---
+
+### ~~Cancelling mid-transcription leaves .txt.part/.srt.part in the course folder for ever~~
 <!-- fp:02cdd440035e -->
 
 **Status**: fixed
@@ -1960,7 +2020,7 @@ AST, asserting the call sits inside a `Try.finalbody`.
 
 ---
 
-### ~~2 manifest row(s) record the wrong size~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~2 manifest row(s) record the wrong size~~
 <!-- fp:72054c302758 -->
 
 **Status**: invalid
@@ -1981,7 +2041,7 @@ original_size decides whether the next Canvas change is treated as a real update
 
 ---
 
-### ~~36 file(s) differ from their recorded md5~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~36 file(s) differ from their recorded md5~~
 <!-- fp:8a7f0ead05f4 -->
 
 **Status**: invalid
@@ -2002,7 +2062,7 @@ original_md5 is what classifies the next update as clean (overwrite) or modified
 
 ---
 
-### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Canvas Content isolation requested but 35 entity file(s) sit at the folder root~~
 <!-- fp:c52480b4f905 -->
 
 **Status**: fixed
@@ -2019,7 +2079,7 @@ original_md5 is what classifies the next update as clean (overwrite) or modified
 
 ---
 
-### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Analysis log omitted the Ignored category and printed URL-encoded filenames~~
 <!-- fp:4b3b4fd09677 -->
 
 **Status**: fixed
@@ -2046,7 +2106,7 @@ Fixed in sync/analysis.py: every category now writes one line per file through a
 
 ---
 
-### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Cancelling a transcription leaves .part sidecars in the course folder, invisibly and for ever~~
 <!-- fp:d433d4f13087 -->
 
 **Status**: fixed
@@ -2079,7 +2139,7 @@ Verified by cancelling three real runs: before, both .part files remained; after
 
 ---
 
-### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected bridged_warning in debug log: Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': Not Found~~
 <!-- fp:98608167bec2 -->
 
 **Status**: fixed
@@ -2100,7 +2160,7 @@ Discussion dispatch failed for 'Spørgsmål til pensum i organisationskultur': N
 
 ---
 
-### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Unexpected suspicious in debug log: ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funktion (LA E2~~
 <!-- fp:257805fd303c -->
 
 **Status**: fixed
@@ -2121,7 +2181,7 @@ ERROR [Discussion Dispatch Error] Indføring i organisationers opbygning og funk
 
 ---
 
-### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~An online quiz reached through a module Assignment item is saved a second time, saying '(No content provided)'~~
 <!-- fp:92e8dcc3c9f9 -->
 
 **Status**: fixed
@@ -2150,7 +2210,7 @@ Measured on course 43660: 10 quizzes saved via the quiz path all explain themsel
 
 ---
 
-### ~~Course Finished reports 2 error(s) but this course's log records 0~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Course Finished reports 2 error(s) but this course's log records 0~~
 <!-- fp:eee718626a2e -->
 
 **Status**: fixed
@@ -2171,7 +2231,7 @@ The engine's error counter is not reset per course, so a later course in a batch
 
 ---
 
-### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Recordings skipped by the size cap are unexplained, while files skipped by the same cap are explained on the same screen~~
 <!-- fp:6b8c9476a66a -->
 
 **Status**: fixed
@@ -2213,7 +2273,27 @@ What was actually wrong was only the other half - the Panopto card rendering '36
 
 ---
 
-### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~The Confirm Sync dialog could not warn about a FULL disk, and drew a 1% bar for a volume it could not read~~
+<!-- fp:23705bee71d5 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: ui-truth
+**Oracles**: offline
+**First seen**: 2026-08-11 (20260811_offline_untouched_corners)
+**Last seen**: 2026-08-11 (20260811_offline_untouched_corners)
+**Occurrences**: 1
+**Scenario**: offline_class_sweep
+
+**Detail**:
+
+The bar gated its ratio on `avail_bytes > 0`, so a genuinely full volume fell to the same 1% floor as an empty one and the '>70% of remaining space' notice could not fire. Measured on the dialog's own expression: 0.4 MB free warned, 0 B free did not - the one case the warning exists for was the only one it could not reach. Separately, an UNREADABLE volume drew a 1% bar while the code's own comment claimed the maths 'suppresses the bar instead of drawing a false one'. FIXED: shared/helpers.disk_fill_percent has three outcomes - None (never measured: draw nothing, warn nothing), 100.0 (no room), else the linear ratio with the 1% floor. Extracted rather than left inline so a test calls the decision instead of re-implementing it. ui/sync_review.py blocks a full volume upstream (it demands 1 GB), so the full-disk half is belt-and-braces; the unmeasured half is not. Verified in the browser in all four states.
+
+**Notes**: Fixed in this pass; see CLAUDE.md 'The pre-release audit of the UNTOUCHED corners'.
+
+---
+
+### ~~The per-course 'Course Finished' line reports the whole batch's error count, not the course's~~
 <!-- fp:eb27c313381a -->
 
 **Status**: fixed
@@ -2242,7 +2322,7 @@ FIXED: count only entries whose DownloadError.course_name matches the course. Gu
 
 ---
 
-### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A read-only destination leaves the previous copy on disk, untracked and unexplained~~
 <!-- fp:7eaa8671abd1 -->
 
 **Status**: fixed
@@ -2275,7 +2355,7 @@ Guarded by tests/test_newversion_notice.py, including a check that every _NewVer
 
 ---
 
-### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~A locked DOWNLOAD target falls back gracefully; a locked CONVERSION target fails hard~~
 <!-- fp:fa5b7101bfd4 -->
 
 **Status**: fixed
@@ -2304,7 +2384,7 @@ Found while building the readonly_target fixture: it had been locking a CONVERSI
 
 ---
 
-### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Debug log records per-file rows for only 2 of the 7 sync categories~~
 <!-- fp:f695845da958 -->
 
 **Status**: invalid
@@ -2326,7 +2406,7 @@ Consequence: a shared debug log cannot answer WHICH file the app put in those ca
 
 ---
 
-### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Sync review: 'Updates Available — You've Edited These' rendered untinted while its five siblings matched their icons~~
 <!-- fp:70a043d21429 -->
 
 **Status**: fixed
@@ -2351,7 +2431,7 @@ Fixed with its own rule using rgba(245,158,11) = theme.WARNING, which is the col
 
 ---
 
-### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+### ~~Today says 'You're all caught up' while a daily course is broken and its 15 arrivals are hidden~~
 <!-- fp:aa56baa0771b -->
 
 **Status**: fixed
