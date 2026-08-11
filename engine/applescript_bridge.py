@@ -915,6 +915,25 @@ def _marker_in_value(value) -> bool:
     return False
 
 
+def _any_office_running() -> bool:
+    """Is any Office app alive right now?
+
+    `pgrep -x`, not an Apple event: asking the app would LAUNCH it, which is
+    the opposite of what a "has everything shut down?" check wants. True on
+    doubt - if we cannot tell, the purge is skipped, and a skipped purge costs
+    some clutter in Recents while a purge that races a live app costs a
+    half-rewritten shared registry.
+    """
+    for bundle in ("Microsoft PowerPoint", "Microsoft Word", "Microsoft Excel"):
+        try:
+            if subprocess.run(["pgrep", "-x", bundle],
+                              capture_output=True, timeout=5).returncode == 0:
+                return True
+        except Exception:       # noqa: BLE001
+            return True
+    return False
+
+
 def _purge_recents_sqlite() -> None:
     """Delete our staged-temp files from Office's Recent-files registry DB.
 
@@ -924,10 +943,30 @@ def _purge_recents_sqlite() -> None:
     stopped working). Each recent file is one ``node_id`` in
     ``HKEY_CURRENT_USER_values`` with a ``name='path'`` row holding the path.
 
-    We find only the nodes whose path contains ``CanvasDownloaderTmp`` and delete
-    exactly those nodes' rows. The marker is unique to our container staging, so a
-    user's genuine recent documents can never match. Schema-introspected and fully
-    best-effort: any deviation just no-ops, never corrupts the DB.
+    THE IDENTITY IS THE NODE'S **NAME**, not a ``path`` value. Measured on
+    macOS 26.6: 636 of our entries, every one of them a row in
+    ``HKEY_CURRENT_USER`` whose ``name`` is the full ``file://`` URL - while the
+    whole database contained just 36 rows named ``path``. The first version of
+    this function selected ``HKEY_CURRENT_USER_values WHERE name='path'`` and
+    deleted only value rows, so it removed **495 value rows and 0 nodes**: the
+    Recents list is driven by the nodes, so every entry stayed on screen, now
+    stripped of its values. A half-mutation of Office's shared registry is
+    worse than not running at all.
+
+    THREE GATES, and each is doing separate work:
+
+    * the node's name carries ``CanvasDownloaderTmp``, a directory name we own;
+    * the node is a LEAF - our entries have no children, and refusing anything
+      with children means this can never amputate a subtree;
+    * an ancestor is an ``MruUserData`` key - so even a marker appearing
+      somewhere unexpected cannot take a row outside the Recents subtree.
+
+    It also declines while an Office app is RUNNING: a live app holds its
+    Recents list in memory and rewrites this DB when it exits, resurrecting
+    whatever was deleted. `quit_idle_office_apps` already orders the two, but
+    the guard belongs here so the function is safe to call on its own.
+
+    Best-effort throughout: any schema deviation no-ops rather than guessing.
     """
     import sqlite3
     group = Path.home() / "Library" / "Group Containers" / "UBF8T346G9.Office"
@@ -941,6 +980,11 @@ def _purge_recents_sqlite() -> None:
     if nested.is_dir():
         db_paths.extend(p for p in nested.glob("MicrosoftRegistrationDB*.reg") if p.is_file())
 
+    if _any_office_running():
+        logger.debug("[AppleScript] Recents purge skipped - an Office app is "
+                     "running and would rewrite the registry on exit")
+        return
+
     for db in db_paths:
         try:
             con = sqlite3.connect(str(db), timeout=2.0)
@@ -948,23 +992,50 @@ def _purge_recents_sqlite() -> None:
                 cur = con.cursor()
                 cur.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' "
-                    "AND name='HKEY_CURRENT_USER_values'"
+                    "AND name IN ('HKEY_CURRENT_USER','HKEY_CURRENT_USER_values')"
                 )
-                if cur.fetchone() is None:
+                if len({r[0] for r in cur.fetchall()}) != 2:
                     continue
-                cur.execute(
-                    "SELECT node_id, value FROM HKEY_CURRENT_USER_values WHERE name='path'"
-                )
-                victims = {node_id for node_id, value in cur.fetchall()
-                           if _marker_in_value(value)}
+
+                rows = cur.execute(
+                    "SELECT node_id, parent_id, name FROM HKEY_CURRENT_USER"
+                ).fetchall()
+                by_id = {nid: (pid, name) for nid, pid, name in rows}
+                has_child = {pid for _nid, pid, _n in rows}
+
+                def _under_mru(node_id) -> bool:
+                    """Walk to the root; an MruUserData ancestor is required."""
+                    seen = set()
+                    cur_id = node_id
+                    while cur_id in by_id and cur_id not in seen:
+                        seen.add(cur_id)
+                        parent, name = by_id[cur_id]
+                        if name and 'MruUserData' in str(name):
+                            return True
+                        cur_id = parent
+                    return False
+
+                victims = {
+                    nid for nid, _pid, name in rows
+                    if _marker_in_value(name)
+                    and nid not in has_child
+                    and _under_mru(nid)
+                }
+                skipped = sum(1 for nid, _p, name in rows
+                              if _marker_in_value(name) and nid not in victims)
                 if not victims:
                     continue
+                ids = [(nid,) for nid in victims]
                 cur.executemany(
-                    "DELETE FROM HKEY_CURRENT_USER_values WHERE node_id=?",
-                    [(nid,) for nid in victims],
-                )
+                    "DELETE FROM HKEY_CURRENT_USER_values WHERE node_id=?", ids)
+                cur.executemany(
+                    "DELETE FROM HKEY_CURRENT_USER WHERE node_id=?", ids)
                 con.commit()
-                logger.debug(f"[AppleScript] purged {len(victims)} Canvas temp entries from Office Recents")
+                logger.info(
+                    f"[AppleScript] purged {len(victims)} Canvas temp entries "
+                    f"from Office Recents"
+                    + (f" ({skipped} marked row(s) left alone - not a childless "
+                       f"MruUserData leaf)" if skipped else ""))
             finally:
                 con.close()
         except Exception as e:
