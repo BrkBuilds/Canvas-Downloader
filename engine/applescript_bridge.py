@@ -915,23 +915,40 @@ def _marker_in_value(value) -> bool:
     return False
 
 
-def _any_office_running() -> bool:
-    """Is any Office app alive right now?
+#: The registry segment naming each app's Recents subtree, measured on the real
+#: database: Software/Microsoft/Office/15.0/Common/MruUserData/UnsignedUser/
+#: <App>/Local/Documents. Keyed by the short name, valued by the process name.
+_OFFICE_PROCESSES = {
+    "PowerPoint": "Microsoft PowerPoint",
+    "Word": "Microsoft Word",
+    "Excel": "Microsoft Excel",
+}
 
-    `pgrep -x`, not an Apple event: asking the app would LAUNCH it, which is
-    the opposite of what a "has everything shut down?" check wants. True on
-    doubt - if we cannot tell, the purge is skipped, and a skipped purge costs
-    some clutter in Recents while a purge that races a live app costs a
-    half-rewritten shared registry.
+
+def _running_office_apps() -> set:
+    """Which Office apps are alive right now, by their registry short name.
+
+    `pgrep -x`, not an Apple event: asking an app would LAUNCH it, which is the
+    opposite of what a "has this shut down?" check wants.
+
+    EVERYTHING on doubt. A skipped purge costs some clutter in Recents; a purge
+    that races a live app costs a half-rewritten shared registry, because a
+    live app holds its list in memory and rewrites the DB when it exits.
     """
-    for bundle in ("Microsoft PowerPoint", "Microsoft Word", "Microsoft Excel"):
+    running = set()
+    for short, bundle in _OFFICE_PROCESSES.items():
         try:
             if subprocess.run(["pgrep", "-x", bundle],
                               capture_output=True, timeout=5).returncode == 0:
-                return True
+                running.add(short)
         except Exception:       # noqa: BLE001
-            return True
-    return False
+            return set(_OFFICE_PROCESSES)
+    return running
+
+
+def _any_office_running() -> bool:
+    """True if any Office app is alive. See `_running_office_apps`."""
+    return bool(_running_office_apps())
 
 
 def _purge_recents_sqlite() -> None:
@@ -980,8 +997,9 @@ def _purge_recents_sqlite() -> None:
     if nested.is_dir():
         db_paths.extend(p for p in nested.glob("MicrosoftRegistrationDB*.reg") if p.is_file())
 
-    if _any_office_running():
-        logger.debug("[AppleScript] Recents purge skipped - an Office app is "
+    running = _running_office_apps()
+    if len(running) == len(_OFFICE_PROCESSES):
+        logger.debug("[AppleScript] Recents purge skipped - every Office app is "
                      "running and would rewrite the registry on exit")
         return
 
@@ -1003,24 +1021,46 @@ def _purge_recents_sqlite() -> None:
                 by_id = {nid: (pid, name) for nid, pid, name in rows}
                 has_child = {pid for _nid, pid, _n in rows}
 
-                def _under_mru(node_id) -> bool:
-                    """Walk to the root; an MruUserData ancestor is required."""
+                def _ancestry(node_id):
+                    """(under_mru, owning app or None), walking to the root.
+
+                    The app matters because Recents is separable PER APP -
+                    measured on the real database, our 636 entries split
+                    PowerPoint 487 / Excel 135 / Word 14, each under
+                    ``MruUserData/UnsignedUser/<App>/Local/Documents``. That is
+                    what lets a run clean up after itself while the user is
+                    still editing in one of the three.
+                    """
+                    under, app = False, None
                     seen = set()
                     cur_id = node_id
                     while cur_id in by_id and cur_id not in seen:
                         seen.add(cur_id)
                         parent, name = by_id[cur_id]
-                        if name and 'MruUserData' in str(name):
-                            return True
+                        text = str(name) if name else ''
+                        if 'MruUserData' in text:
+                            under = True
+                        elif text in _OFFICE_PROCESSES:
+                            app = text
                         cur_id = parent
-                    return False
+                    return under, app
 
-                victims = {
-                    nid for nid, _pid, name in rows
-                    if _marker_in_value(name)
-                    and nid not in has_child
-                    and _under_mru(nid)
-                }
+                victims = set()
+                for nid, _pid, name in rows:
+                    if not (_marker_in_value(name) and nid not in has_child):
+                        continue
+                    under, app = _ancestry(nid)
+                    if not under:
+                        continue
+                    # An entry belonging to a RUNNING app is left alone: it
+                    # would be resurrected from that app's in-memory list when
+                    # it exits. An entry we cannot attribute to an app is only
+                    # safe to take when nothing is running at all.
+                    if app in running:
+                        continue
+                    if app is None and running:
+                        continue
+                    victims.add(nid)
                 skipped = sum(1 for nid, _p, name in rows
                               if _marker_in_value(name) and nid not in victims)
                 if not victims:
