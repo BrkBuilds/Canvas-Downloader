@@ -255,10 +255,18 @@ def main(mutants=None, test=None) -> int:
             survivors.append(f"{label} [anchor missing - the test proves nothing]")
             continue
         p.write_text(src.replace(old, new, 1), encoding="utf-8")
-        r = subprocess.run([sys.executable, "-m", "pytest", *test.split(), "-x", "-q"],
-                           cwd=REPO, capture_output=True, text=True, env=env)
+        # BOUNDED: a mutant can make the code loop forever, and an unbounded
+        # run turns "caught" into a hung pass. A timeout counts as caught -
+        # the mutant demonstrably broke termination.
+        try:
+            r = subprocess.run([sys.executable, "-m", "pytest", *test.split(), "-x", "-q"],
+                               cwd=REPO, capture_output=True, text=True, env=env,
+                               timeout=180)
+            rc = r.returncode
+        except subprocess.TimeoutExpired:
+            rc = -9
         _restore()
-        caught = r.returncode != 0
+        caught = rc != 0
         print(f"  {'caught ' if caught else 'SURVIVED'}  {label}")
         if not caught:
             survivors.append(label)
