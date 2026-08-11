@@ -329,6 +329,7 @@ def test_a_failing_ismount_is_treated_as_doubt():
     the recoverable direction - a case-only rename goes unrecognised rather
     than two distinct files being merged."""
     orig_listdir, orig_ismount = SM.os.listdir, SM.os.path.ismount
+    orig_samefile = SM.os.path.samefile
     SM._probe_case_insensitive.cache_clear()
     try:
         SM.os.listdir = lambda d: []
@@ -336,7 +337,15 @@ def test_a_failing_ismount_is_treated_as_doubt():
         def boom(_d):
             raise OSError("device not configured")
         SM.os.path.ismount = boom
-        assert SM._probe_case_insensitive("/Volumes/Gone") is False
+        # The parent volume WOULD resolve the flipped name. Without this the
+        # fall-through reaches a `samefile` that raises and returns False by
+        # another route - so swapping the handler's `return False` for `pass`
+        # survived the mutation pass, and the test proved nothing.
+        SM.os.path.samefile = lambda a, b: True
+        assert SM._probe_case_insensitive("/Volumes/Gone") is False, (
+            "a failing ismount fell through to the parent-volume flip instead "
+            "of answering doubt")
     finally:
         SM.os.listdir, SM.os.path.ismount = orig_listdir, orig_ismount
+        SM.os.path.samefile = orig_samefile
         SM._probe_case_insensitive.cache_clear()
