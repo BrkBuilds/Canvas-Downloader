@@ -24,7 +24,7 @@ Last updated by run `20260811_155557_macos-26-v2.0.2` on 2026-08-12.
 **Oracles**: O5,O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 **Scenario**: it5b · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -44,7 +44,7 @@ Renamed, row dropped, and another file shares its size and extension. The unique
 **Oracles**: O2,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: mac_office_active_document
 
 **Detail**:
@@ -133,7 +133,7 @@ application.
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -153,7 +153,7 @@ application.
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -173,7 +173,7 @@ application.
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -193,7 +193,7 @@ application.
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 6
 **Scenario**: m030_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -213,7 +213,7 @@ application.
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m030_c46396 · IT-projektledelse (LA F26 BINTO1059U)
 
 **Detail**:
@@ -233,7 +233,7 @@ application.
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -253,7 +253,7 @@ application.
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m030_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -273,7 +273,7 @@ Forandring i organisationer_video1_upload_2025.pptx  Conversion failed - 710:716
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
@@ -293,7 +293,7 @@ Forelæsning 22 - Cloud &amp; Security 101.pptx  Conversion failed - 710:716: ex
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m030_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
@@ -313,7 +313,7 @@ Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx  Conversion failed - 710:716: e
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -333,7 +333,7 @@ Microsoft PowerPoint is not installed or could not be launched.  skipping remain
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m030_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -353,7 +353,7 @@ Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716:
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -373,7 +373,7 @@ Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716:
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 12
+**Occurrences**: 18
 **Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
@@ -393,7 +393,7 @@ Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716:
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -520,7 +520,7 @@ Guarded by tests/test_office_staging_short_names.py (5 tests), which force the s
 **Oracles**: O1,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -540,7 +540,7 @@ This converter is documented to replace its source. A surviving source at module
 **Oracles**: O5,O4
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 9
 **Scenario**: m031 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -665,7 +665,7 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -685,7 +685,7 @@ PDF conversion failed for 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 9
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -705,7 +705,7 @@ PDF conversion failed for 2024_Lektion uge 46_1 Organisationer i et foranderligt
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m030_c46396 · IT-projektledelse (LA F26 BINTO1059U)
 
 **Detail**:
@@ -725,7 +725,7 @@ PDF conversion failed for 2025 7.lektion 31.marts .pptx: 710:716: execution erro
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -745,7 +745,7 @@ PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og ove
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m030_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -765,7 +765,7 @@ PDF conversion failed for Forandring i organisationer_video1_upload_2025.pptx: 7
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
@@ -785,7 +785,7 @@ PDF conversion failed for Forelæsning 22 - Cloud & Security 101.pptx: 710:716: 
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m030_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
@@ -805,7 +805,7 @@ PDF conversion failed for Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx: 710:
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m030_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -825,7 +825,7 @@ PDF conversion failed for Slides (2) Motivationsfaktorer forelæsning 2.pptx: 71
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
@@ -845,7 +845,7 @@ PDF conversion failed for Øvelsesslides_mål og strategi_XA-1.pptx: Microsoft P
 **Oracles**: O1,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 7
 **Scenario**: mac_checker_dialogs
 
 **Detail**:
@@ -877,7 +877,7 @@ VALIDATED IN BOTH DIRECTIONS against the live machine and in tests: the real 84-
 **Oracles**: O1,O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: mac_office_window_flash
 
 **Detail**:
@@ -1006,7 +1006,7 @@ STILL TO DO OUTSIDE THIS REPO: the docs site's macOS setup page does not mention
 **Oracles**: O5,O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 **Scenario**: it5 · 43660
 
 **Detail**:
@@ -1386,7 +1386,7 @@ The last unproven half of the 2026-08-10 AppleScript escaping unification, and i
 **Oracles**: O2,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 7
 **Scenario**: mac_m1_office
 
 **Detail**:
@@ -1509,7 +1509,7 @@ RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that 
 **Oracles**: O4,O5
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 7
 **Scenario**: mac_m2_shortcut
 
 **Detail**:
@@ -1566,7 +1566,7 @@ FIRST TIME the Panopto subsystem has ever run on macOS. All of it passed. (1) DI
 **Oracles**: O3,O4
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 7
 **Scenario**: mac_m2_url_compiler
 
 **Detail**:
@@ -1643,7 +1643,7 @@ Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requir
 **Oracles**: O3,O4
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 5
+**Occurrences**: 6
 **Scenario**: mac_m2_mp3
 
 **Detail**:
@@ -1676,7 +1676,7 @@ This run also re-exercised the download-side Panopto notice fix (56fa5f6) with t
 **Oracles**: O2,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 6
+**Occurrences**: 7
 **Scenario**: mac_m2_transcribe
 
 **Detail**:
@@ -2299,7 +2299,7 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 **Oracles**: O3,O4
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 27
+**Occurrences**: 31
 **Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
@@ -2999,7 +2999,7 @@ Fixed by routing both flows through one shared helper (converters.post_processin
 **Oracles**: O1,O3
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 19
+**Occurrences**: 23
 **Scenario**: m051_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
@@ -3042,7 +3042,7 @@ This converter is documented to replace its source. A surviving source at module
 **Oracles**: O1,O3
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 9
+**Occurrences**: 11
 **Scenario**: m001_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
@@ -3582,7 +3582,7 @@ Consequence: a shared debug log cannot answer WHICH file the app put in those ca
 **Oracles**: O1,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 5
+**Occurrences**: 6
 **Scenario**: mac_m3_white_flash
 
 **Detail**:
