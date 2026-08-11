@@ -511,12 +511,23 @@ def progress(rp: RunPaths) -> dict:
     # failed for the rest of the run, while `done` climbs past the number of
     # rows there are. The append-only history is deliberate (it shows what was
     # retried); collapsing it belongs here, at the point of reporting.
+    #
+    # ...and scoped to the rows THIS matrix asked for. Lane directories are
+    # reused between matrices and this file is append-only, so an unscoped
+    # count reports the previous matrix's work as this one's: on 2026-08-11 it
+    # said the download matrix was `23/37 done` while the real figure was
+    # `2/37`, because 21 rows of the finished SYNC matrix were still in the
+    # file. A progress number that is silently wrong is worse than none - it
+    # was used to decide the run was nearly over.
+    mine = _lane_row_ids(rp)
     latest: dict[str, dict] = {}
     for r in data.get("rows", []):
-        if r.get("id"):
-            latest[r["id"]] = r
+        rid = r.get("id")
+        if rid and (mine is None or rid in mine):
+            latest[rid] = r
     rows = list(latest.values())
     return {"done": len(rows),
+            "total": len(mine) if mine else None,
             "failed": sum(1 for r in rows if not r.get("ok")),
             "retried": sum(1 for r in rows if r.get("id") in
                            {x.get("id") for x in data.get("rows", [])
@@ -553,6 +564,29 @@ def _mark_current(rp: RunPaths, job_id: str) -> None:
                  encoding="utf-8")
 
 
+def _lane_row_ids(rp: RunPaths) -> set[str] | None:
+    """The ids THIS matrix asked for, or None when the spec is unreadable.
+
+    LANE DIRECTORIES ARE REUSED BETWEEN MATRICES, and the progress file is
+    append-only, so it accumulates rows from every matrix that has ever run in
+    this lane. Anything counting it has to be scoped to the current spec or it
+    reports - and resumes - against someone else's work.
+
+    None means "no spec to scope by", and every caller then falls back to the
+    unscoped behaviour rather than reporting zero: a missing spec must not make
+    a finished lane look untouched.
+    """
+    p = rp.root / "lane_spec.json"
+    if not p.is_file():
+        return None
+    try:
+        spec = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    ids = {j.get("id") for j in spec.get("jobs", []) if isinstance(j, dict)}
+    return {i for i in ids if i} or None
+
+
 def _completed(rp: RunPaths) -> set[str]:
     p = _progress_path(rp)
     if not p.is_file():
@@ -564,7 +598,14 @@ def _completed(rp: RunPaths) -> set[str]:
     # Only successful rows are skipped on resume. A row that failed is exactly
     # the one worth trying again, and a row abandoned mid-flight (the process
     # was killed) never got a record at all.
-    return {r["id"] for r in data.get("rows", []) if r.get("ok")}
+    done = {r["id"] for r in data.get("rows", []) if r.get("ok")}
+    # ...and only rows THIS matrix asked for. Without the scope, a previous
+    # matrix that happened to use the same row id would make this lane skip
+    # real work and report it as already done. The 2026-08-11 macOS run only
+    # escaped that because the sync matrix used `s0xx` ids and the download
+    # matrix `m0xx` - luck, not design.
+    mine = _lane_row_ids(rp)
+    return {i for i in done if i in mine} if mine else done
 
 
 # --------------------------------------------------------------------------
