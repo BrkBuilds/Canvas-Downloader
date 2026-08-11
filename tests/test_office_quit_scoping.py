@@ -166,8 +166,16 @@ def test_an_undescribable_document_is_OURS_only_when_we_launched_the_app():
                                 undescribable_is_ours=True)
     strict = AB._idle_quit_script("Microsoft Word", "documents",
                                   undescribable_is_ours=False)
-    assert "set pristine to true" in ours.split("else")[-1]
-    assert "set pristine to false" in strict
+    # The parameter must actually DECIDE something. Asserting on the strings
+    # `set pristine to true/false` is not enough - `set pristine to false` is
+    # also the loop's initialiser, so a version that ignores the parameter
+    # entirely satisfied it, and that mutant survived the first pass.
+    assert ours != strict, (
+        "undescribable_is_ours changes nothing - the policy has gone back to "
+        "being an accident of the property defaults")
+    assert "undescribable_is_ours" in __import__("inspect").getsource(
+        AB._idle_quit_script).split('"""')[-1], (
+        "the parameter is documented but never used in the script body")
     for script in (ours, strict):
         assert "pathKnown" in script and "savedKnown" in script, (
             "the script cannot express 'we could not tell' - which is the "
