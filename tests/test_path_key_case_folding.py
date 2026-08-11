@@ -58,6 +58,15 @@ def test_case_only_spellings_stay_DISTINCT_on_a_case_sensitive_volume(
         tmp_path, monkeypatch):
     """THE guard. Merging these would mis-bind a heal on an external drive."""
     monkeypatch.setattr(SM, "_case_insensitive_volume", lambda p: False)
+    if os.name == "nt":
+        # Not merely untestable here - FALSE BY DESIGN. `normcase` folds case
+        # unconditionally on Windows, and `_path_key`'s own gate is written
+        # `os.name != 'nt' and _case_insensitive_volume(...)`, so the patched
+        # verdict is short-circuited before it is ever read. Windows models no
+        # case-sensitive volume, so the property this guards does not exist
+        # here; asserting it fails against CORRECT code.
+        pytest.skip("normcase folds unconditionally on Windows; the gate is "
+                    "os.name-guarded, so there is no case-sensitive case to test")
     assert SM._path_key(tmp_path / "Notes.pdf") != SM._path_key(tmp_path / "notes.pdf")
 
 
