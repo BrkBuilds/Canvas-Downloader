@@ -173,7 +173,7 @@ phases below otherwise ask you to do by hand:
 | Which link of the notification chain wins; the osascript fallback compiling | M5 |
 | Bundled ffmpeg on arm64; `ctranslate2` importing in a clean process | M2 |
 | Hardware probe: `is_mac`, no CUDA claimed, CPU recommended | M2 |
-| Bundle: Info.plist, signature, **apple-events entitlement**, worker binary, **WebKit lookbehind patch**, boot splash, no tornado opener (`--bundle`) | M3 |
+| Bundle: Info.plist, signature, **apple-events entitlement**, worker binary, **WebKit lookbehind patch**, boot splash, no tornado opener (`--bundle "dist/Canvas Downloader.app"`) | M3 |
 | No stray Canvas/ffmpeg processes; no duplicate GUI launches | M3 |
 
 What it leaves out is anything needing eyes — **and you may or may not have
@@ -311,6 +311,10 @@ WKWebView.** Everything CSS/JS is therefore *unverified* until you run the
 bundle. Nearly every macOS bug in `CLAUDE.md` is packaging-only.
 
 ```bash
+pip install pyinstaller      # NOT in requirements.txt and NOT installed by
+                             # mac_audit_bootstrap.sh - measured 2026-08-11,
+                             # where M3 began with "pyinstaller: command not
+                             # found". ~40 s; do it before you need it.
 pyinstaller --clean Canvas_Downloader_macOS.spec
 codesign --force --deep -s - --entitlements entitlements.mac.plist "dist/Canvas Downloader.app"
 open "dist/Canvas Downloader.app"
@@ -388,7 +392,7 @@ Same as `RUNBOOK.md`:
 ```bash
 python -m tests.audit finding add "<one-line title>" \
     --severity <sev> --category <cat> --oracles O1,O4 \
-    --detail "..." --evidence <path> --scenario mac_<id>
+    --detail "$(cat detail.txt)" --evidence '{"json": "only"}' --scenario mac_<id>
 python -m tests.audit report build
 ```
 
@@ -423,11 +427,25 @@ that:
    bundle ships **no ffprobe**, so verify with `ffmpeg -i` plus an atom walker;
    and the recordings are 20–140 MB, not ~100 MB average, so the full set is
    **2.0 GB and finishes before you can cancel it** — budget for all of them.
-2. **Keychain on a REBUILD.** Blocked, not skipped: the one-time prompt asks for
-   the **login keychain's own password**, which is unknown on a cloud image
-   (measured — the Scaleway password does not open it). Either set a known
-   keychain password first, or accept that this stays unverified on rented
-   hardware.
+2. ~~**Keychain on a REBUILD.**~~ **DONE 2026-08-11 on macOS 26.6**, and the
+   reason it was blocked is WRONG on this image. This entry used to say the
+   one-time prompt asks for the login keychain's own password, "which is unknown
+   on a cloud image (measured — the Scaleway password does not open it)". On the
+   Tahoe install **the Scaleway password DOES open the login keychain** (operator
+   confirmed, twice). Try it before assuming this is unreachable.
+   - The prompt fires for a genuinely different reason than "a rebuild", and the
+     stronger version is worth knowing: the **.app is a different binary from
+     `python`**, so it hits the ACL of an item the harness's python keyring
+     created and macOS asks *"Canvas Downloader wants to use your confidential
+     information stored in 'CanvasDownloader' in your keychain"*. You do not need
+     to build twice to see it — build once and launch the bundle.
+   - Answered Allow, then Always Allow on a second prompt: the app **restored the
+     session** and came up logged in. The 90 s watchdog did not abandon it while
+     the prompt was open.
+   - Note the bundle's config dir is `~/Library/Application Support/
+     CanvasDownloader`, not the repo root, so a fresh bundle shows the LOGIN page
+     until you seed `canvas_downloader_settings.json` there. That is not a
+     Keychain failure — check it before chasing one.
 3. ~~**The folder picker's RETURN path**~~ **DONE 2026-08-10** — a quoted folder
    name survives intact: target `/tmp/m5_picker/quoted "folder" name`, returned
    `/private/tmp/m5_picker/quoted "folder" name/`. Two macOS-only details fell
@@ -468,6 +486,17 @@ that:
      cost is the Keychain (Aqua-scoped), so `restore_saved_session` lands on the
      login page — paste URL + token into the real form, which takes seconds and
      incidentally proves a keyring failure cannot block a login.
+   - **THAT SSH RECIPE DOES NOT WORK ON macOS 26** (2026-08-11): on this Tahoe
+     install `sshd-keygen-wrapper` **has** Full Disk Access, so the SSH shell is
+     granted and the nudge never renders. Do not re-derive this.
+     **Use whichever shell the agent is already in and MEASURE it** rather than
+     assuming any particular one is denied — TCC attributes a grant to the
+     *responsible process*, and an agent running under a VS Code extension host
+     is its own responsible process, not Visual Studio Code. Here that shell
+     reported `has_full_disk_access() == False` while holding Screen Recording
+     and Automation, which is the whole state the recipe needs, with no SSH and
+     no Keychain cost — so the app can be driven normally. One line settles it:
+     `python -c "from engine.applescript_bridge import has_full_disk_access as f; print(f())"`.
    - Reaching the *card* needs one more step: the audit config ships
      `fda_nudge_dismissed: true`, so the slot renders the subtle re-spawn link.
      Click it.
@@ -568,6 +597,47 @@ Traps this run paid for, worth knowing before you spend the same time:
   consent prompts by design**, so a person has to answer it — use
   `mac_eyes dialogs`, which screenshots whatever is waiting. Wrap every
   `osascript` call so a hang degrades that one check instead of the run.
+
+## What the macOS 26 (Tahoe 26.6) run settled — 2026-08-11
+
+Run `20260811_155557_macos-26-v2.0.2`. Read this before repeating any of it.
+
+- **`is_macos_15_plus()` is TRUE on 26.6** (it compares the major), so every
+  macOS-15 gate — the FDA nudge, the App Data story — is live on Tahoe.
+- **M1 Office**: all three converters correct on real legacy binaries; the delete
+  gate was OBSERVED firing (an empty .pptx made PowerPoint write a 0-byte PDF,
+  which `pdf_looks_real` refused, keeping the original); a corrupt .doc kept the
+  original byte-identical after a bounded 120 s -1712; CR / quote / backslash /
+  240-byte / Danish+emoji filenames all convert and land under their true names;
+  `quit_idle_office_apps` took 3 apps to 0, so the open Windows EXCEL.EXE leak
+  does **not** reproduce here; no stale Dock document tile.
+- **M2 Panopto**: 36 recordings discovered from module launches with **zero**
+  media handshakes (Shortcut-only run); all 36 `.webloc` valid 2-key plists that
+  Finder/Launch Services really opens; the Canvas ExternalTool collision resolved
+  to `<title> (Panopto).webloc` beside the Canvas link, 36 + 41 = 77 on disk;
+  `converters/url.py` consumed the 41 Canvas links and spared all 36 of ours;
+  transcription runs on the Apple-silicon CPU out of process, and a mid-run
+  cancel left **no `.part` and no worker**.
+- **M3 bundle**: renders correctly in WKWebView (login + course list at parity
+  with Chrome); the transcription worker is routed by env, confirmed by its own
+  `routed_via=env` log line; one process, no `duplicate_launches.log`; exactly
+  one SESSION END per START, so the macOS-15 double-close is fixed.
+  - **One white frame at ~2 s on the FIRST launch of a freshly built and signed
+    bundle**, not reproducible on any later launch (28 frames at 0.25 s were all
+    dark, peak luminance 31.4, splash rendering as designed). Recorded rather
+    than characterised — if you are on a fresh machine, sample the very first
+    launch before anything else, because that is the only chance to see it.
+- **M4**: a real product defect, fixed — `_probe_case_insensitive` flipped the
+  DIRECTORY, whose name lives on its PARENT volume, so at a mount point it
+  probed `/Volumes` (case-insensitive) and answered True about a case-SENSITIVE
+  drive. See commit 91c7c58.
+- **Checker**: `mac_eyes dialogs` cried wolf on Tahoe's phantom alert, which
+  carries the title "Screen Recording" where macOS 15's was untitled (13c70c7);
+  and the harness answered the Panopto notice BEFORE the click that raises it,
+  which stalls any Panopto row on a fresh config dir (56fa5f6).
+- **Still not covered**: the mp3/mp4 media download path, the folder-picker
+  modal, Reveal in Finder / Open Folder, and a real notification DENIAL in the
+  bundle (finding fp:3833d3d15043 stays open for that reason).
 
 ## The second install (macOS 26)
 

@@ -141,7 +141,8 @@ python -m tests.audit flow download smoke --courses 43667
 ```bash
 python -m tests.audit finding add "<one-line title>" \
     --severity <critical|high|medium|low|info> --category <cat> \
-    --oracles O1,O4 --detail "..." --evidence <path> --scenario mac_<id>
+    --oracles O1,O4 --detail "$(cat detail.txt)" \
+    --evidence '{"json": "only"}' --scenario mac_<id>
 python -m tests.audit finding list
 python -m tests.audit report build
 ```
