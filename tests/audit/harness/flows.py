@@ -253,6 +253,81 @@ class Flow:
 # download
 # ==========================================================================
 
+    def _accept_panopto_notice(self, wait_s: float = 0.0,
+                               until: str | None = "download_running_or_done",
+                               stop_key: str | None = None) -> dict:
+        """Dismiss the Panopto acceptable-use notice if it is on screen.
+
+        `shared.legal.require_panopto_notice` gates the Panopto pass behind a
+        one-time acknowledgement recorded as `panopto_notice_ack_version` in the
+        settings file. The audit isolates `CANVAS_DL_CONFIG_DIR`, so the ack is
+        absent on every run and the dialog appears whenever a row selects any
+        Panopto output - exactly like the first-run Automation batch that
+        MAC_RUNBOOK tells you not to report. It is the harness's job to answer
+        it, not the product's job to skip it.
+
+        It went unnoticed until a FRESH machine, and the reason is worth
+        recording: a developer's real settings file already carries the ack, and
+        `paths.app_env` seeds the isolated config from it, so every previous
+        Panopto row inherited an acknowledgement it never had to give. On this
+        rented Mac the settings file was written by
+        `scripts/mac_audit_bootstrap.sh` and has no ack - so the row simply
+        stopped, with the dialog waiting and the flow burning its whole timeout.
+        Measured 2026-08-10: 15 minutes on a 1-line debug log, and the download
+        began the instant `pan_notice_accept` was clicked.
+
+        Answering it is also the honest configuration: the row asked for Panopto
+        outputs, so "I understand" is what a user who wanted them would press.
+        Clicking `pan_notice_skip` would silently turn the feature off and the
+        row would then be judged against a config it never ran.
+
+        WAIT_S EXISTS BECAUSE THE NOTICE IS RAISED **BY** THE CONFIRM CLICK, and
+        the first version of this fix probed for it BEFORE that click - so on a
+        genuinely fresh config dir it could never see the thing it was written to
+        answer. Measured on macOS 26.6, 2026-08-11, with the dialog open on
+        screen: the wizard still reports step `configure`, and BOTH conditions
+        `confirm_and_run` then waits on (`download_running_or_done`, then
+        `download_terminal`) evaluate false - so the row burns 900s and then
+        5400s and reports a phase that never started. All four
+        `require_panopto_notice` call sites (download settings, quick download,
+        sync page, sync review) are ACTION handlers; none renders at page-render
+        time, so there is no arrangement in which the pre-click probe fires.
+
+        The pre-click probe is kept, because a dialog left open by a previous row
+        is a real state, and answering it is free.
+
+        *until* names the condition meaning "this action got under way without a
+        notice", and *stop_key* a widget whose presence means the same thing, so
+        a row that never raises one pays a poll rather than the whole budget.
+        They differ per flow - a download starts downloading, a sync review opens
+        the Confirm Sync dialog - which is why they are parameters.
+
+        The budget is SHORT on purpose. `require_panopto_notice` sets its flag
+        synchronously in the click handler, so the dialog is on screen by the
+        next rerun or it is never coming; anything longer only slows every row
+        that will never see it.
+        """
+        deadline = time.time() + max(0.0, wait_s)
+        while True:
+            if self.s.probe_key("pan_notice_accept").get("found"):
+                r = self.s.click("pan_notice_accept")
+                return {"shown": True, "accepted": bool(r.get("clicked"))}
+            if time.time() >= deadline:
+                return {"shown": False}
+            # A row that never raises the notice must not pay the whole budget:
+            # the moment the run is visibly under way (or already finished, for
+            # a course that delivers in under a second - see checker defect 28),
+            # there is nothing left to wait for.
+            if stop_key and self.s.probe_key(stop_key).get("found"):
+                return {"shown": False, "moved_on": stop_key}
+            if until:
+                started = self.s.wait_for(conditions.get(until), timeout=0.1,
+                                          poll=0.1, label="notice_wait_shortcut")
+                if started.get("done"):
+                    return {"shown": False, "run_started_first": True}
+            time.sleep(1.0)
+
+
 class DownloadFlow(Flow):
 
     def _await_gate_open(self, timeout: float = 20.0) -> bool:
@@ -430,38 +505,6 @@ class DownloadFlow(Flow):
                          verified=verified, drift=drift,
                          ok=not failed and not drift)
 
-    def _accept_panopto_notice(self) -> dict:
-        """Dismiss the Panopto acceptable-use notice if it is on screen.
-
-        `shared.legal.require_panopto_notice` gates the Panopto pass behind a
-        one-time acknowledgement recorded as `panopto_notice_ack_version` in the
-        settings file. The audit isolates `CANVAS_DL_CONFIG_DIR`, so the ack is
-        absent on every run and the dialog appears whenever a row selects any
-        Panopto output - exactly like the first-run Automation batch that
-        MAC_RUNBOOK tells you not to report. It is the harness's job to answer
-        it, not the product's job to skip it.
-
-        It went unnoticed until a FRESH machine, and the reason is worth
-        recording: a developer's real settings file already carries the ack, and
-        `paths.app_env` seeds the isolated config from it, so every previous
-        Panopto row inherited an acknowledgement it never had to give. On this
-        rented Mac the settings file was written by
-        `scripts/mac_audit_bootstrap.sh` and has no ack - so the row simply
-        stopped, with the dialog waiting and the flow burning its whole timeout.
-        Measured 2026-08-10: 15 minutes on a 1-line debug log, and the download
-        began the instant `pan_notice_accept` was clicked.
-
-        Answering it is also the honest configuration: the row asked for Panopto
-        outputs, so "I understand" is what a user who wanted them would press.
-        Clicking `pan_notice_skip` would silently turn the feature off and the
-        row would then be judged against a config it never ran.
-        """
-        probe = self.s.probe_key("pan_notice_accept")
-        if not probe.get("found"):
-            return {"shown": False}
-        r = self.s.click("pan_notice_accept")
-        return {"shown": True, "accepted": bool(r.get("clicked"))}
-
     def confirm_and_run(self, name: str, timeout: float = 5400.0,
                         capture_phases: bool = True) -> dict:
         """Start the download and follow it to a terminal screen.
@@ -471,10 +514,15 @@ class DownloadFlow(Flow):
         even though the screen only exists for a few seconds.
         """
         shots = []
+        # Answered twice, for two different states: one already open (left by a
+        # previous row), and - the case that matters - the one THIS click
+        # raises. See `_accept_panopto_notice`.
         notice = self._accept_panopto_notice()
         r = self.s.click("action_dl_confirm", settle=False)
         if not r.get("clicked"):
             raise FlowError(f"Confirm and Download not clickable: {r}")
+        if not notice.get("shown"):
+            notice = self._accept_panopto_notice(wait_s=15.0)
 
         if capture_phases:
             time.sleep(3.0)
@@ -577,6 +625,12 @@ class SyncFlow(Flow):
         r = self.s.click(key, settle=False)
         if not r.get("clicked"):
             raise FlowError(f"{key} not clickable: {r}")
+        # `sync_ui.py` raises the Panopto acceptable-use notice from THIS
+        # handler when any pair's stored contract wants recordings, so it can
+        # only be answered after the click. Without this the row sits on the
+        # dialog and every later wait reports a phase that never started - see
+        # `_accept_panopto_notice`.
+        notice = self._accept_panopto_notice(wait_s=15.0, until="sync_analyzing")
         time.sleep(2.5)
         self.s.capture(f"{name}_analyzing", ("screen", "wizard", "dashboard"))
         got = self.s.wait_for(conditions.get("sync_past_analysis"), timeout=timeout,
@@ -588,6 +642,7 @@ class SyncFlow(Flow):
                              ("screen", "wizard", "review") if active == "review"
                              else ("screen", "wizard", "dashboard"))
         return self._log("analyze", quick=quick, landed_on=active, wait=got,
+                         panopto_notice=notice,
                          capture=cap["name"], ok=got.get("done", False))
 
     def review_snapshot(self, name: str) -> dict:
@@ -695,6 +750,11 @@ class SyncFlow(Flow):
         r = self.s.click("btn_sync_selected", settle=False)
         if not r.get("clicked"):
             raise FlowError(f"Review screen's sync action not clickable: {r}")
+        # `ui/sync_review.py` raises the notice from this handler too, and it
+        # sits IN FRONT OF the Confirm Sync dialog below - so an unanswered one
+        # reads as "the confirmation dialog never opened".
+        notice = self._accept_panopto_notice(wait_s=15.0, until=None,
+                                             stop_key="page_nav_start_sync")
         time.sleep(1.8)
 
         dialog = self.s.wait_for(conditions.get("dialog_open"), timeout=45,
