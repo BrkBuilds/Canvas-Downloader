@@ -157,6 +157,12 @@ def test_it_declines_while_an_office_app_is_running(registry, monkeypatch):
                         lambda: set(AB._OFFICE_PROCESSES))
     AB._purge_recents_sqlite()
     assert {10, 11} <= _nodes(registry), "purged while Office was running"
+    # NOTE, so nobody re-chases it: deleting the early `if len(running) ==
+    # len(_OFFICE_PROCESSES): return` is an EQUIVALENT mutant and survives the
+    # mutation pass legitimately. With every app running, each victim is
+    # already refused by the per-app gates (`app in running`, or `app is None
+    # and running`), so the set comes out empty either way - the early return
+    # only avoids reading the tables.
 
 
 def test_the_running_check_does_not_LAUNCH_office(monkeypatch):
