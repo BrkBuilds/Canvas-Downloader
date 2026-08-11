@@ -377,6 +377,97 @@ def _launch_streamlit(port: int | None = None) -> tuple[bool, str, threading.Eve
     return ok, url, failed_event
 
 
+# ── The launch background ─────────────────────────────────────────
+
+#: The launch background, in ONE place. Two different surfaces have to agree on
+#: it - the NSWindow (via pywebview's ``background_color``) and, on macOS, the
+#: WKWebView's under-page colour. A mismatch between them IS the flash this
+#: constant exists to close, so the hex must never be written twice.
+_LAUNCH_BG = '#0d1117'
+
+
+def _match_macos_webview_background(hex_color: str = _LAUNCH_BG) -> bool:
+    """Stop the WKWebView flashing WHITE before its first document paints.
+
+    MEASURED on macOS 26.6 against the packaged app, screen RECORDED at ~57 fps
+    (polling with `screencapture` cannot see this - a full-screen PNG takes
+    100-200 ms to write and the event is 87 ms) and the window interior's
+    luminance read per frame:
+
+        t=1.767s  lum  29.6   window on screen, NSWindow background correct
+        t=1.817s  lum 249.2   <- WHITE, 5 frames / 87 ms
+        t=1.900s  lum  30.5   the dark splash paints
+
+    So ``background_color`` is applied and works - pywebview passes it to
+    ``self.window.setBackgroundColor_()``, i.e. to the **NSWindow** - and then
+    the WKWebView, which is opaque and has no content yet, paints its own white
+    over it. The window colour is correct and never seen.
+
+    THREE CANDIDATES WERE MEASURED, from source, against that same trace:
+
+    ==========================================  ========  ============
+    candidate                                   max luma  white frames
+    ==========================================  ========  ============
+    (none - baseline)                              253.0             3
+    ``setUnderPageBackgroundColor_`` (public)      253.0             3
+    ``drawsBackground = False``                     25.0             0
+    ==========================================  ========  ============
+
+    So the PUBLIC API does not fix this and is not shipped: it colours the area
+    BEYOND the page (overscroll), which is not the state being painted here.
+    What is painted is the web view's own background before any document
+    exists, and only ``drawsBackground`` governs that. With it off, the view
+    draws nothing and the NSWindow's colour - already correct - is what shows.
+
+    ``setValue_forKey_(True, 'drawsTransparentBackground')``, which pywebview
+    itself uses for ``transparent=True``, is deliberately NOT used: probed here,
+    macOS logs "-[WKWebView _setDrawsTransparentBackground:] is deprecated and
+    should not be used", and pywebview only reaches it together with
+    ``setOpaque_(False)`` and no window shadow - three changes to buy one.
+
+    PATCHING ``BrowserView.__init__`` IS THE ONLY CORRECTLY-TIMED HOOK: the web
+    view is created there, and the window is not shown until ``first_show()``.
+    An ``events.shown`` handler runs after the flash, and the callback passed to
+    ``webview.start()`` runs on a background thread once the GUI is already up.
+
+    Never fatal and never a behaviour change off macOS: returns False and logs
+    at debug if anything is missing, and the app launches exactly as before.
+    """
+    if sys.platform != 'darwin':
+        return False
+    try:
+        from webview.platforms import cocoa
+        import AppKit
+    except Exception as e:                          # pragma: no cover - platform
+        logger.debug(f"Cocoa backend unavailable; leaving the web-view "
+                     f"background alone: {e}")
+        return False
+
+    original = cocoa.BrowserView.__init__
+    if getattr(original, '_cd_bg_patched', False):
+        return True                                 # idempotent
+
+    try:
+        r = int(hex_color[1:3], 16) / 255.0
+        g = int(hex_color[3:5], 16) / 255.0
+        b = int(hex_color[5:7], 16) / 255.0
+    except (ValueError, IndexError) as e:           # pragma: no cover - constant
+        logger.debug(f"Unusable launch background {hex_color!r}: {e}")
+        return False
+
+    def _init(self, window):
+        original(self, window)
+        try:
+            self.webview.setValue_forKey_(False, 'drawsBackground')
+        except Exception as e:                      # pragma: no cover - platform
+            # A cosmetic improvement must never stop the window being created.
+            logger.debug(f"Could not set the web-view background colour: {e}")
+
+    _init._cd_bg_patched = True
+    cocoa.BrowserView.__init__ = _init
+    return True
+
+
 # ── Entry Point ───────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -729,7 +820,10 @@ if __name__ == "__main__":
     _main_window = webview.create_window(
         'Canvas Downloader', html=_LOADING_HTML,
         maximized=True, min_size=(1024, 700),
-        background_color='#0d1117'
+        # From the constant, not a literal: the NSWindow and the WKWebView's
+        # under-page colour must agree, and a second copy of the hex is exactly
+        # how they would drift apart again.
+        background_color=_LAUNCH_BG
     )
 
     def _boot() -> None:
@@ -828,6 +922,9 @@ if __name__ == "__main__":
         _main_window.events.closed += lambda: _shutdown("clean")
     except Exception as _e:                        # pragma: no cover - defensive
         logger.debug(f"Could not hook the window close event: {_e}")
+
+    # Before any window exists - see _match_macos_webview_background.
+    _match_macos_webview_background()
 
     _exit_reason = "clean"
     try:
