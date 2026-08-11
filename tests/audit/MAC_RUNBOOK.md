@@ -598,6 +598,10 @@ Traps this run paid for, worth knowing before you spend the same time:
   `mac_eyes dialogs`, which screenshots whatever is waiting. Wrap every
   `osascript` call so a hang degrades that one check instead of the run.
 
+> **The macOS 26 run is UNFINISHED.** What remains, with the state and the
+> recipes needed to resume it, is in **`MAC_AUDIT_CONTINUE.md`** beside this
+> file. Read that before starting a fresh macOS session.
+
 ## What the macOS 26 (Tahoe 26.6) run settled — 2026-08-11
 
 Run `20260811_155557_macos-26-v2.0.2`. Read this before repeating any of it.
