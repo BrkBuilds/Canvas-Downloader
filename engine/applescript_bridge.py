@@ -252,6 +252,60 @@ TCC_FIRST_RUN_NOTICE = (
 )
 
 
+# ── "Is the frontmost document OURS?" ───────────────────────────────
+# The AppleScript error number the converters raise when it is not. Outside
+# Apple's reserved ranges, and distinctive enough to grep for in a debug log.
+OFFICE_WRONG_DOC_ERRNO = -30001
+
+
+def our_document_test(app_name: str, staged_name: str) -> str:
+    """An AppleScript BOOLEAN: is the app's frontmost document the one we staged?
+
+    All three converters used to bind the document they were about to export
+    with a bare ``active presentation`` / ``active document`` / ``active
+    workbook`` - the FRONTMOST one, which is not necessarily ours. Two ways
+    that loses a user's work, and the second is silent:
+
+    * the ``on error`` handler did ``close active <doc> saving no``, so a
+      conversion that failed while the user had a document open **discarded
+      their unsaved edits**. Not hypothetical - the 2026-08-11 matrix logged
+      eleven PowerPoint failures (``Parameter error. (-50)``) in one course;
+    * on the success path a slow ``open``, or an app in crash-recovery with a
+      recovered deck frontmost, means we export THEIR document into our PDF
+      and then close it. The PDF has the wrong content and nothing says so.
+
+    The fix binds by name. ``office_container_stage`` stages every conversion
+    as ``src.<ext>`` in a per-conversion uuid dir, so we own that name.
+
+    WHY A NAME COMPARISON AND NOT A REFERENCE, measured 2026-08-11 on macOS
+    26.6 against the real applications (scripts/probe_office_document_binding.py):
+
+        form                                     Word      Excel     PowerPoint
+        set d to (open POSIX file ...)           -2753     -2753     -2753
+        first <klass> whose name is "src.x"      ok        NOT FOUND ok
+        <klass> "src.x"                          -         -         HUNG
+        repeat over <klass>s comparing name      error     -50       no result
+        repeat over <klass>s comparing full name error     HUNG      HUNG
+        name of active <klass>                   src.docx  src.xlsx  src.pptx
+
+    Only the last row works in all three, and it is the only one that never
+    ENUMERATES - which matters, because two of the enumerating forms wedged the
+    app hard enough that Microsoft Error Reporting offered to restart it, and a
+    restart-by-MER is what puts an Office window on the user's screen for the
+    rest of the batch. So the safest guard is also the cheapest one.
+
+    It fails SAFE in the direction that matters. If the frontmost document is
+    not ours we do nothing to it: the worst case becomes a document of ours
+    left open (recoverable - the run's teardown force-closes marker-matched
+    documents), never a user document closed without saving.
+    """
+    mapping = _APP_DOC_MAP.get(app_name)
+    if not mapping:
+        raise KeyError(f"unknown Office app_name {app_name!r}")
+    _ms_name, doc_term = mapping
+    return f'((name of {doc_term}) is "{applescript_string(staged_name)}")'
+
+
 # ── Last-error reporting ────────────────────────────────────────────
 # Post-processing runs conversions sequentially, so a single module-level
 # slot is sufficient. Callers read this after run_applescript() returns
