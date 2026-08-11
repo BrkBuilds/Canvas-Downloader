@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260811_155557_macos-26-v2.0.2` on 2026-08-11.
 
-**41 open** · 105 total · 34 fixed · 30 invalid
+**43 open** · 107 total · 34 fixed · 30 invalid
 
 ---
 
@@ -236,7 +236,7 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 **Oracles**: O1,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 3
 **Scenario**: mac_checker_dialogs
 
 **Detail**:
@@ -482,6 +482,41 @@ Also seen: the diagnostic process ended with "Killed: 9" after driving all three
 
 ---
 
+### Packaged app shows a full-screen white frame before the dark splash on a cold launch
+<!-- fp:66b3e213c23d -->
+
+**Status**: open
+**Severity**: low
+**Category**: ui-truth
+**Oracles**: O1,O3
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 2
+**Scenario**: mac_m3_white_flash
+
+**Detail**:
+
+PRODUCT DEFECT (cosmetic, first-paint): the packaged .app shows ONE full-screen PURE WHITE frame at launch, immediately before the dark boot splash. CLAUDE.md's startup contract is "the window is NEVER empty" and the splash exists precisely so nothing jarring is shown before the UI - a full-screen white flash on a dark app is the thing it is meant to prevent, and it is the user's first impression of the product.
+
+REPRODUCED DELIBERATELY on macOS 26.6 after a clean rebuild + re-sign (a fresh signature is what makes the launch cold): 40 frames at 0.15 s across the launch, measuring the mean luminance of the window interior.
+
+    m3cold_00..04   lum 31.1   desktop
+    m3cold_05       lum 255.0  rgb(255,255,255)   <-- the app's own window, PURE WHITE
+    m3cold_06..10   lum 18.5   the dark splash (logo, "Connecting...", spinner)
+    m3cold_11..39   lum 36.8   the app
+
+Screenshot _audit_runs/_screens/m3cold_05.png shows the app's own titled window ("Canvas Downloader", full size, its traffic lights) rendered entirely white. It is ONE sample wide, so the flash is <= 150 ms, at about 0.75 s after launch.
+
+THREE INDEPENDENT CONFIRMATIONS, which is why this is filed rather than left as an artifact: the frame capture, the luminance series, and THE OPERATOR SEEING IT UNPROMPTED - "i saw the white flash as you opened the app. it came right before the actual launch loading screen came in". It did NOT reproduce on warm launches (28 frames, all dark, peak 31.4), which is why the first pass of this audit could only record it as observed-once.
+
+MECHANISM, as far as I took it. start.py ALREADY passes background_color='#0d1117' to webview.create_window, so the obvious fix is in place and does not prevent this. pywebview's Cocoa backend applies that colour with self.window.setBackgroundColor_(...) - i.e. to the NSWindow - while the WKWebView layered on top of it paints its OWN opaque white until the first content paint. The white being seen is the web view, not the window.
+
+NOT FIXED, deliberately. The plausible repair is to stop the WKWebView drawing its own background (the backend already does something of this shape in its `transparent` branch, via setValue_forKey_('drawsTransparentBackground')). That changes how EVERY screen composites, in a WKWebView this project cannot exercise from the audit harness, on the last run before release - and this repo's own rule is that a visual change needs a before/after pass on the real screens. Shipping a speculative rendering change to remove a 150 ms flash is the wrong trade; the measurement and the mechanism are recorded so the fix can be made and verified deliberately.
+
+**Notes**: 
+
+---
+
 ### Three user-visible copy defects in the two macOS Full Disk Access surfaces - never caught because the gate has never opened on a dev machine
 <!-- fp:5c546d9a8ecf -->
 
@@ -552,7 +587,7 @@ The last unproven half of the 2026-08-10 AppleScript escaping unification, and i
 **Oracles**: O2,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 3
 **Scenario**: mac_m1_office
 
 **Detail**:
@@ -675,7 +710,7 @@ RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that 
 **Oracles**: O4,O5
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 3
 **Scenario**: mac_m2_shortcut
 
 **Detail**:
@@ -732,7 +767,7 @@ FIRST TIME the Panopto subsystem has ever run on macOS. All of it passed. (1) DI
 **Oracles**: O3,O4
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 3
 **Scenario**: mac_m2_url_compiler
 
 **Detail**:
@@ -800,6 +835,39 @@ Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requir
 
 ---
 
+### M2 PASS: mp3 for all 36 recordings on arm64 - 0 decode failures, duration matches the mp4 run exactly
+<!-- fp:3375fec96632 -->
+
+**Status**: open
+**Severity**: info
+**Category**: panopto
+**Oracles**: O3,O4
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 2
+**Scenario**: mac_m2_mp3
+
+**Detail**:
+
+M2 mp3 media path - PASS, and this closes the last item MAC_RUNBOOK listed as never having run on macOS. macOS 26.6 Tahoe / M4-S arm64, course 43660, contract {output_mp3: true} only.
+
+O2: "Panopto batch done: found=36 downloaded=36 transcribed=0 shortcuts=0 skipped=0 failed=0 courses=1".
+O3: 36 .mp3 on disk, 472 MB, and ZERO leftover .part files - the atomic pattern's own receipt.
+O4: panopto_manifest holds 36 rows of kind 'mp3' (beside the 36 'url' rows from the earlier Shortcut run, correctly kept as separate kinds for the same recordings).
+
+DECODED EVERY ONE with the bundled arm64 ffmpeg (ffmpeg-macos-aarch64-v7.1), classifying stderr per RUNBOOK's "Do NOT report: ffmpeg -f null" rule rather than counting lines:
+  decode failures : 0/36
+  missing audio   : 0/36 (every file reports an Audio: stream)
+  zero-length     : 0/36
+
+THE STRONGEST EVIDENCE IS THE DURATION, because it is an independent cross-check rather than a self-consistent one: total 8.21 h, mean 13.7 min, min 6.9, max 26.5. MAC_RUNBOOK records the macOS 15 mp4 run of the SAME 36 recordings as "36 files, 8.21 h total, mean 13.7 min". The audio extraction therefore preserved the full length of every lecture to the same total as the video run - which is exactly what a truncated or partially-muxed extraction would fail, and what a decode pass alone cannot see.
+
+This run also re-exercised the download-side Panopto notice fix (56fa5f6) with the acknowledgement deliberately REMOVED from the isolated config, i.e. the dialog genuinely had to be raised and answered for the run to proceed at all. It completed, so the fix works against a live dialog and not only in the reproduction.
+
+**Notes**: 
+
+---
+
 ### M2 PASS: transcription on Apple Silicon CPU, and cancel leaves no .part and no worker
 <!-- fp:e64f6d5d56e4 -->
 
@@ -809,7 +877,7 @@ Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requir
 **Oracles**: O2,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 3
 **Scenario**: mac_m2_transcribe
 
 **Detail**:
@@ -1222,7 +1290,7 @@ sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initia
 
 ---
 
-### ~~'renamed-ambiguous:zz flertydig 1.pdf' expected as new but no oracle placed it in any category~~
+### ~~'renamed-ambiguous:zz flertydig 1.jpg' expected as new but no oracle placed it in any category~~
 <!-- fp:2e38f73c0857 -->
 
 **Status**: invalid
@@ -1230,16 +1298,15 @@ sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initia
 **Category**: classification
 **Oracles**: O5,O2
 **First seen**: 2026-07-28 (20260728_010431_phase2_real)
-**Last seen**: 2026-07-28 (20260728_010431_phase2_real)
-**Occurrences**: 18
-**Scenario**: p2r_defaults · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 20
+**Scenario**: mac_p2_fix4 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
 
 Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.
 
-**Notes**: AUDIT MATCHER DEFECT, fixed. The app placed all 11 New rows correctly; the matcher did not know three of the app's own naming conventions, so it could not find them on the screen. A fixture records the name a file has ON DISK; the review screen shows the name it has ON CANVAS, and between them sit: a converter rename (`x.js` -> `x_js.txt`), a secondary-entity prefix (`Quiz <title>.md` shown as `<title>` + an HTML chip), and an attachment inside an entity (`Assignment <entity> - <file>.pdf` shown as just `<file>`, sometimes with a `-1` dedup suffix). `crosscheck._name_candidates` now derives every legitimate form. Re-checked on the same folder: 6 of these became 0.  
-> Not observed in the latest run.
+**Notes**: AUDIT MATCHER DEFECT, fixed. The app placed all 11 New rows correctly; the matcher did not know three of the app's own naming conventions, so it could not find them on the screen. A fixture records the name a file has ON DISK; the review screen shows the name it has ON CANVAS, and between them sit: a converter rename (`x.js` -> `x_js.txt`), a secondary-entity prefix (`Quiz <title>.md` shown as `<title>` + an HTML chip), and an attachment inside an entity (`Assignment <entity> - <file>.pdf` shown as just `<file>`, sometimes with a `-1` dedup suffix). `crosscheck._name_candidates` now derives every legitimate form. Re-checked on the same folder: 6 of these became 0.
 
 ---
 
@@ -1423,31 +1490,6 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 
 ---
 
-### ~~1 content file(s) on disk with no manifest row~~
-<!-- fp:371b678dbdf1 -->
-
-**Status**: invalid
-**Severity**: high
-**Category**: persistence
-**Oracles**: O3,O4
-**First seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Last seen**: 2026-08-09 (20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings)
-**Occurrences**: 17
-**Scenario**: · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-Each of these will be offered as a NEW file on every future sync unless the analyzer's adoption tiers reclaim it. This is the 'wrongfully shows up as new' failure.
-
-**Notes**: The file was `Compiled_External_Links.txt` — the single aggregate output `convert_urls` writes for the whole course after consuming every `.url`. It is a conversion product, so it has no manifest row BY DESIGN, exactly like the 21,630 archive-extracted files beside it. || SECOND CAUSE, 2026-07-29 - this entry now covers TWO different defects and the `invalid` above applies only to the first. On m025_c46396 the two files were 'Grupper til Klyngevejledning 1-1.pdf' and 'Grupper til Klyngevejledning 2.pdf': the orphaned second copies of the duplicate-download bug (fetch counts name file ids 1784620/1807289, the exact pair CLAUDE.md records for it), not a conversion product. That cause is FIXED - see the duplicate-download entry - and the evidence here is product-stale from a pre-fix run. HAZARD worth remembering: the register fingerprint is (category + digit-normalised title), so 'N content files on disk with no manifest row' is ONE entry no matter which files or which cause. A status set for one cause silences the other. Before trusting an `invalid`, check that the CURRENT evidence matches the cause the note describes.
-
-The audit's own exemption for this existed and never fired: it read `expect["converters"]` while `check download` is handed a FLAT config. The same shape mismatch was also reporting the 25 consumed `.url` rows as a broken manifest. Both now read the `sync_contract` the app stored in the folder, which is what the engine itself obeys.
-
-Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.  
-> Not observed in the latest run.
-
----
-
 ### ~~2 Canvas file(s) were downloaded more than once in one run~~
 <!-- fp:d05cc83d973a -->
 
@@ -1466,6 +1508,30 @@ Each of these ids went to the network twice. Two phases both claimed the file, s
 
 **Notes**: DUPLICATE of "A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice", fixed 2026-07-28 by running Canvas Content before all THREE Files-tab sweeps. This is the mechanical check added the same day, so it fires on pre-fix rows by construction. Verified fixed on 5 targeted post-fix runs (modules+inline, modules+isolate, flat+inline, each twice; a repeat run made ZERO HTTP requests). product-stale evidence from a pre-fix run.  
 > Not observed in the latest run.
+
+---
+
+### ~~2 content file(s) on disk with no manifest row~~
+<!-- fp:371b678dbdf1 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: persistence
+**Oracles**: O3,O4
+**First seen**: 2026-07-27 (20260727_165705_bootstrap)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 19
+**Scenario**: mac_p2_fix4 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Each of these will be offered as a NEW file on every future sync unless the analyzer's adoption tiers reclaim it. This is the 'wrongfully shows up as new' failure.
+
+**Notes**: The file was `Compiled_External_Links.txt` — the single aggregate output `convert_urls` writes for the whole course after consuming every `.url`. It is a conversion product, so it has no manifest row BY DESIGN, exactly like the 21,630 archive-extracted files beside it. || SECOND CAUSE, 2026-07-29 - this entry now covers TWO different defects and the `invalid` above applies only to the first. On m025_c46396 the two files were 'Grupper til Klyngevejledning 1-1.pdf' and 'Grupper til Klyngevejledning 2.pdf': the orphaned second copies of the duplicate-download bug (fetch counts name file ids 1784620/1807289, the exact pair CLAUDE.md records for it), not a conversion product. That cause is FIXED - see the duplicate-download entry - and the evidence here is product-stale from a pre-fix run. HAZARD worth remembering: the register fingerprint is (category + digit-normalised title), so 'N content files on disk with no manifest row' is ONE entry no matter which files or which cause. A status set for one cause silences the other. Before trusting an `invalid`, check that the CURRENT evidence matches the cause the note describes.
+
+The audit's own exemption for this existed and never fired: it read `expect["converters"]` while `check download` is handed a FLAT config. The same shape mismatch was also reporting the 25 consumed `.url` rows as a broken manifest. Both now read the `sync_contract` the app stored in the folder, which is what the engine itself obeys.
+
+Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.
 
 ---
 
