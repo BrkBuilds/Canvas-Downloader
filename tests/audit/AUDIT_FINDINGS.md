@@ -611,21 +611,35 @@ Also seen: the diagnostic process ended with "Killed: 9" after driving all three
 > the macOS 15 audit. See MAC_RUNBOOK item 5, "STOP TESTING NOTIFICATIONS BY
 > FIRING THEM". An unanswered question is cheaper than a prompt storm.
 >
-> THE FIX SHIPS REGARDLESS, and needs no revert either way: it only ADDS
-> attempts where there were none, so if it turns out macOS suppresses every path
-> for a denied app, it is inert and harmless and the DOCSTRING is what should
-> change. To settle it later, on any Mac with Focus confirmed OFF: full-screen
-> `screencapture`, `osascript -e 'display notification "x" with title "y"'`,
-> capture again after ~1.2s, diff with PIL `ImageChops.difference().getbbox()`,
-> and require the TEXT to be legible in the crop - a menu-bar clock tick also
-> changes pixels up there.
+> **THE POLICY CHANGED 2026-08-11 (588bead), AND IT DISSOLVES THIS QUESTION.**
+> Product owner's call: `UNErrorCodeNotificationsNotAllowed` means the user
+> went into System Settings and turned Canvas Downloader's notifications OFF,
+> and we will NOT route around that. The only fallback that could still show a
+> banner is `osascript`, which posts under **Script Editor's** identity - so it
+> would both circumvent an explicit permission decision and show a banner
+> attributed to an app the user never ran ("Script Editor: Sync done - 12 new
+> files").
+>
+> So the open question - "can any fallback display while denied?" - no longer
+> needs an answer: we never try. Any OTHER error still falls back, which is what
+> this entry's original complaint was actually about.
+>
+> The user is not left without a signal, and that is what makes it safe:
+> `play_completion_beep` starts `_play_macos_sound` on its own thread BEFORE the
+> notification path, and the chime is governed by the app's own Settings toggle
+> rather than by macOS notification permission. A test pins that ordering,
+> because the policy depends on it.
+>
+> STATUS: the code defect is fixed and the design question is decided. What was
+> never established - and no longer matters - is whether a denied app can reach
+> the user by any means. Recorded above for the record, not as a gap.
 
 ---
 
 ### Packaged app shows a full-screen white frame before the dark splash on a cold launch
 <!-- fp:66b3e213c23d -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: low
 **Category**: ui-truth
 **Oracles**: O1,O3
@@ -654,6 +668,56 @@ MECHANISM, as far as I took it. start.py ALREADY passes background_color='#0d111
 NOT FIXED, deliberately. The plausible repair is to stop the WKWebView drawing its own background (the backend already does something of this shape in its `transparent` branch, via setValue_forKey_('drawsTransparentBackground')). That changes how EVERY screen composites, in a WKWebView this project cannot exercise from the audit harness, on the last run before release - and this repo's own rule is that a visual change needs a before/after pass on the real screens. Shipping a speculative rendering change to remove a 150 ms flash is the wrong trade; the measurement and the mechanism are recorded so the fix can be made and verified deliberately.
 
 **Notes**: 
+
+> **FIXED 2026-08-11 (255080d), macOS 26.6, measured before and after on the
+> PACKAGED bundle.**
+>
+> ROOT CAUSE, and it was not what the finding assumed. `background_color`
+> works: pywebview applies it to the NSWindow, and the recording shows that
+> colour on screen, dark and correct, for ~50 ms BEFORE the flash. The WKWebView
+> is opaque, has no document yet, and paints its own white over it.
+>
+>     t=1.767s  lum  29.6   window on screen, NSWindow background correct
+>     t=1.817s  lum 249.2   <- WHITE, 5 frames / 87 ms
+>     t=1.900s  lum  30.5   the dark splash paints
+>
+> THE INSTRUMENT MATTERS: polling with `screencapture` CANNOT see this. A
+> full-screen PNG takes 100-200 ms to write, so the effective rate is 5-8 fps
+> against an 87 ms event - the first attempt sampled at 0.12 s and "found" a
+> peak that was simply the DESKTOP before the window appeared.
+> `scripts/measure_launch_flash.py` records with `screencapture -v` instead
+> (~57 fps) and reads the luminance of the WINDOW INTERIOR per frame.
+>
+> THREE CANDIDATES, MEASURED FROM SOURCE (a rebuild+resign is ~10 min, which is
+> the difference between testing three fixes and testing one):
+>
+>     (none - baseline)                          max luma 253.0, 3 white frames
+>     setUnderPageBackgroundColor_ (public API)  max luma 253.0, 3 white frames
+>     drawsBackground = False                    max luma  25.0, 0 white frames
+>
+> The PUBLIC API does not fix it and is deliberately NOT shipped: it colours the
+> area BEYOND the page (overscroll), not the view's own background before a
+> document exists. `drawsTransparentBackground` - what pywebview itself uses for
+> `transparent=True` - is also rejected: macOS logs it as deprecated, and
+> pywebview only reaches it together with `setOpaque_(False)` and no window
+> shadow, three changes to buy one.
+>
+> PACKAGED BUNDLE, FINAL: **0 frames above 100 luma** (was 5 at 249.2),
+> positive control passed (the app demonstrably appeared), settled luminance
+> delta **-0.01** - i.e. no rendering regression. Also checked on a real screen
+> rather than inferred: the running app's course list, sidebar, sticky action
+> bar and dark chrome are unchanged.
+>
+> TWO GUARDS CAME OUT OF MY OWN MISTAKES HERE, both worth keeping:
+> the measurement script now REFUSES a trace where the screen never changed (an
+> `after` run scored a perfect 1.00 because a broken edit had made the launcher
+> unreachable - "no app" and "no flash" look identical without a positive
+> control); and `tests/test_launch_background.py` asserts on every platform that
+> nothing at module level overlaps the `if __name__` block and that
+> `webview.start()` is still REACHED. That broken edit was a column-0 `def`
+> written into the middle of the entry block, which silently made the whole
+> launcher the body of a function nobody calls - `ast.parse` passed and grep
+> still found the call.
 
 ---
 
