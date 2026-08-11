@@ -197,6 +197,34 @@ VOL_MUTANTS = [
 ]
 
 
+# --- the Office Recents purge ---------------------------------------------
+PURGE_TEST = "tests/test_office_recents_purge.py"
+PURGE_MUTANTS = [
+    ("back to deleting only value rows", AB,
+     '                cur.executemany(\n                    "DELETE FROM HKEY_CURRENT_USER WHERE node_id=?", ids)',
+     ''),
+    ("marker gate removed", AB,
+     "                    if _marker_in_value(name)\n                    and nid not in has_child",
+     "                    if True\n                    and nid not in has_child"),
+    ("leaf gate removed", AB,
+     "and nid not in has_child\n                    and _under_mru(nid)",
+     "and _under_mru(nid)"),
+    ("MruUserData gate removed", AB,
+     "                    and _under_mru(nid)\n                }", "                }"),
+    ("runs while Office is running", AB,
+     "    if _any_office_running():\n        logger.debug(", "    if False:\n        logger.debug("),
+    ("running check launches Office instead", AB,
+     'if subprocess.run(["pgrep", "-x", bundle],',
+     'if subprocess.run(["osascript", "-e", f\'tell application "{bundle}" to count documents\'],'),
+    ("running check is False on doubt", AB,
+     "        except Exception:       # noqa: BLE001\n            return True\n    return False",
+     "        except Exception:       # noqa: BLE001\n            return False\n    return False"),
+    ("cycle guard removed from the ancestor walk", AB,
+     "        while cur_id in by_id and cur_id not in seen:",
+     "        while cur_id in by_id:"),
+]
+
+
 def _clean() -> bool:
     r = subprocess.run(["git", "status", "--porcelain"] + TARGETS + [TEST],
                        cwd=REPO, capture_output=True, text=True)
@@ -246,4 +274,5 @@ if __name__ == "__main__":
                      else main(GATE_MUTANTS, GATE_TEST) if which == "gate"
                      else main(CONC_MUTANTS, CONC_TEST) if which == "conc"
                      else main(VOL_MUTANTS, VOL_TEST) if which == "vol"
+                     else main(PURGE_MUTANTS, PURGE_TEST) if which == "purge"
                      else main())
