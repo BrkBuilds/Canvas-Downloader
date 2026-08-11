@@ -974,6 +974,39 @@ def real_canvas_file_id(file_obj) -> int | None:
     return None
 
 
+# Module items that are not FILES: a Canvas Page exports to .html, an
+# ExternalUrl/ExternalTool to a .webloc (macOS) / .url (Windows) shortcut.
+LINK_LIKE_MODULE_ITEM_TYPES = ('Page', 'ExternalUrl', 'ExternalTool')
+
+
+def module_item_in_scope(item_type: str, file_filter: str) -> bool:
+    """Would a download with *file_filter* produce anything for this module item?
+
+    ONE definition, because it was written in four places and the fourth
+    disagreed. The download engine skips Pages and links outright under the
+    "Slides & PDFs" filter (`file_filter == 'study'`) - three `if file_filter ==
+    'study': continue` sites in `download_course_async` - while
+    `get_course_files_metadata`, which feeds the sync ANALYZER, enumerated them
+    unconditionally.
+
+    The consequence was permanent, not cosmetic. Measured on a real folder
+    (course 43660, flat + study): the manifest holds 0 rows for .html/.webloc
+    because the download never produced them, so the analyzer reported
+    **76 new files on every sync, for ever** - 35 Pages plus every module link -
+    and accepting them would have quietly turned the folder into a shape the user
+    never configured. The user's own words: "seventy six files have not been added
+    to the course since I downloaded it right before".
+
+    Out of scope is NOT the same as ignored: `is_ignored` means the user decided
+    to skip something, and these were never offered to them. They are simply
+    outside what this folder is for, so they are dropped before the diff rather
+    than listed anywhere.
+    """
+    if item_type in LINK_LIKE_MODULE_ITEM_TYPES:
+        return file_filter != 'study'
+    return True
+
+
 class CanvasManager:
     def __init__(self, api_key, api_url):
         self.api_key = api_key
@@ -1179,7 +1212,8 @@ class CanvasManager:
         return courses
 
     def get_course_files_metadata(self, course, progress_callback=None, secondary_content_settings=None,
-                                  is_scanning_phase=False, timings=None, download_mode=None):
+                                  is_scanning_phase=False, timings=None, download_mode=None,
+                                  file_filter='all'):
         """
         Fetch metadata for all files in a course using a robust Hybrid strategy.
         
@@ -1490,7 +1524,12 @@ class CanvasManager:
                     # Defer the per-file get_file() HTTP call; resolved in
                     # parallel after the module walk (first-linking module wins).
                     pending_file_fetches.setdefault(item.content_id, clean_module_name)
-                elif item.type in ['Page', 'ExternalUrl', 'ExternalTool']:
+                elif item.type in LINK_LIKE_MODULE_ITEM_TYPES:
+                    # Out of scope for this folder's filter -> not a candidate at
+                    # all. Enumerating them here is what made the analyzer report
+                    # them as new for ever; see module_item_in_scope.
+                    if not module_item_in_scope(item.type, file_filter):
+                        continue
                     try:
                         # M-1 parity: Pages and links are MODULE ITEMS, written
                         # by the download engine into the module folder with the
@@ -2878,7 +2917,7 @@ class CanvasManager:
                                         tasks.append(task)
                                     
                                     elif item.type == 'Page':
-                                        if file_filter == 'study': continue
+                                        if not module_item_in_scope(item.type, file_filter): continue
                                         if not hasattr(item, 'page_url') or not item.page_url:
                                             # Error
                                             err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing Page URL", "Page has no URL")
@@ -2917,7 +2956,7 @@ class CanvasManager:
                                             downloaded_files_info.append((info, filepath))
                                     
                                     elif item.type == 'ExternalUrl':
-                                        if file_filter == 'study': continue
+                                        if not module_item_in_scope(item.type, file_filter): continue
                                         if not hasattr(item, 'external_url') or not item.external_url:
                                              # Error
                                              err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing External URL", "Link has no URL")
@@ -2938,7 +2977,7 @@ class CanvasManager:
                                             downloaded_files_info.append((info, filepath))
                                     
                                     elif item.type == 'ExternalTool':
-                                        if file_filter == 'study': continue
+                                        if not module_item_in_scope(item.type, file_filter): continue
                                         url = getattr(item, 'html_url', None) or getattr(item, 'external_url', None)
                                         if not url:
                                              err = DownloadError(course.name, getattr(item, 'title', 'unknown'), "Missing Tool URL", "External Tool missing launch URL")
@@ -3995,7 +4034,7 @@ class CanvasManager:
                                 ))
                                 module_tasks.append(task)
                             elif item.type == 'Page':
-                                if file_filter == 'study': continue
+                                if not module_item_in_scope(item.type, file_filter): continue
                                 if not hasattr(item, 'page_url') or not item.page_url: continue
                                 page_obj = course.get_page(item.page_url)
                                 page_id = getattr(page_obj, 'page_id', getattr(page_obj, 'id', 0))
@@ -4018,8 +4057,8 @@ class CanvasManager:
                                         content_type="text/html"
                                     )
                                     downloaded.append((info, filepath))
-                            elif item.type in ['ExternalUrl', 'ExternalTool']:
-                                if file_filter == 'study': continue
+                            elif item.type in LINK_LIKE_MODULE_ITEM_TYPES:
+                                if not module_item_in_scope(item.type, file_filter): continue
                                 url = getattr(item, 'external_url', None)
                                 if item.type == 'ExternalTool':
                                      url = getattr(item, 'html_url', None) or url
