@@ -805,6 +805,49 @@ def check_disk_space(path: str, required_bytes: int = 0, min_free_gb: float = 1.
 DISK_SPACE_UNKNOWN = -1
 
 
+def disk_fill_percent(total_bytes, avail_mb):
+    """How much of the remaining space this run would take, or ``None``.
+
+    THREE outcomes, because the caller has three things to say and the inline
+    arithmetic this replaces could only say two:
+
+    * ``None``  - the volume was never measured (``check_disk_space``'s -1
+      sentinel). Nothing may be drawn or warned about. The dialog's own comment
+      claimed its maths "suppresses the bar instead of drawing a false one", and
+      it did not: the 1% floor applied whenever ``total_bytes > 0``, so an
+      offline share rendered a 1% bar, which reads as plenty of room.
+    * ``100.0`` - measured, and there is no room at all. The old expression gated
+      the ratio on ``avail_bytes > 0``, so a genuinely FULL volume fell to the 1%
+      floor and the "your disk is getting full" notice - which fires above 70% -
+      could not fire. Measured: 0.4 MB free warned, 0 B free did not. The one
+      case the warning exists for was the only one it could not reach.
+    * otherwise  - the linear ratio, with a 1% floor so a small run is still visible.
+
+    ``ui/sync_review.py`` blocks a full volume before the dialog is ever reached
+    (``check_disk_space`` demands 1 GB), so the 100.0 case is belt-and-braces; the
+    ``None`` case is not - an unreadable volume passes that gate by design.
+
+    Extracted rather than left inline for the reason ``format_available_space``'s
+    own history records: a test that re-implements the dialog's expression tests
+    the copy, and four mutants survived on exactly that.
+    """
+    try:
+        avail = float(avail_mb)
+        total = float(total_bytes)
+    except (TypeError, ValueError):
+        return None
+    if avail != avail or total != total:        # NaN
+        return None
+    if avail < 0:                              # the "could not determine" sentinel
+        return None
+    if total <= 0:
+        return 0.0
+    avail_bytes = avail * 1024 * 1024
+    if avail_bytes <= 0:
+        return 100.0
+    return min(100.0, max(1.0, total / avail_bytes * 100))
+
+
 def format_available_space(avail_mb) -> str:
     """Human-readable free space, or ``"Unknown"`` for the sentinel above.
 
@@ -1619,6 +1662,19 @@ def render_progress_bar(container, current: int, total: int,
         custom_text: Optional override for the status text (e.g. for complete mode)
     """
     from shared import theme
+    # ONE clamp, imported rather than copied. `engine.progress_dashboard._pct` is
+    # this app's rule for "a drawable percent" and carries the reasoning: the value
+    # goes straight into `width: N%`, where -3 and nan are INVALID CSS, so the
+    # browser drops the declaration and a block div falls back to the full track -
+    # "less than nothing happened" renders identically to "finished". That
+    # hardening reached `build_progress_bar_html` and not this function, which is
+    # the OTHER live progress-bar renderer (sync/execution.py's three call sites).
+    # Measured here before the fix: NaN raised ValueError, inf raised
+    # OverflowError and None raised TypeError - from inside the sync run loop,
+    # where the values arrive from counters owned by several subsystems.
+    # Function-scoped: progress_dashboard imports `shared.theme`, so a
+    # module-level import here would risk closing a cycle.
+    from engine.progress_dashboard import _num, _pct
 
     if mode == 'complete':
         progress_pct = 100
@@ -1633,17 +1689,13 @@ def render_progress_bar(container, current: int, total: int,
         display_text = custom_text if custom_text else 'Sync failed for all files.'
         bar_color = theme.ERROR_ALT
     elif mode == 'mb':
-        if mb_total <= 0:
-            progress_pct = 0
-        else:
-            progress_pct = min(100, int((mb_current / mb_total) * 100))
-        display_text = f'Downloading: {mb_current:.1f} / {mb_total:.1f} MB'
+        _mb_cur, _mb_tot = _num(mb_current), _num(mb_total)
+        progress_pct = _pct(_mb_cur / _mb_tot * 100) if _mb_tot > 0 else 0
+        display_text = f'Downloading: {_mb_cur:.1f} / {_mb_tot:.1f} MB'
         bar_color = theme.ACCENT_BLUE
     else:  # files
-        if total <= 0:
-            progress_pct = 0
-        else:
-            progress_pct = min(100, int((current / total) * 100))
+        _cur, _tot = _num(current), _num(total)
+        progress_pct = _pct(_cur / _tot * 100) if _tot > 0 else 0
         display_text = custom_text if custom_text else f'{progress_pct}%'
         bar_color = theme.ACCENT_BLUE
     

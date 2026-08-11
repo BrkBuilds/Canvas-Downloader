@@ -20,6 +20,7 @@ from shared import theme
 from core.sync_manager import SyncManager
 from core.pair_labels import pair_display_name
 from shared.helpers import (
+    disk_fill_percent,
     format_available_space,
     format_file_size,
     esc,
@@ -188,18 +189,13 @@ def show_sync_confirmation_inner(sync_selections, count, size, folders, avail_mb
     # avail_bytes stays 0 for the unknown case so the ratio maths below (all of
     # it gated on > 0) suppresses the bar instead of drawing a false one.
     avail_text = format_available_space(avail_mb)
-    avail_bytes = avail_mb * 1024 * 1024 if avail_text != "Unknown" else 0
-    
-    # VISUAL PROGRESS CALCULATION
-    # User feedback: if < 1% show 1%, else show linearly.
-    real_ratio = total_bytes / avail_bytes if avail_bytes > 0 else 0
-    real_pct = real_ratio * 100
-    
-    # Apply 1% floor for visibility, but keep it linear otherwise
-    if total_bytes > 0:
-        fill_percent = min(100, max(1, real_pct))
-    else:
-        fill_percent = 0
+    # ONE decision, in shared/helpers, with three outcomes: None (never measured),
+    # 100 (measured, no room), or the linear ratio. The arithmetic that used to sit
+    # here could not express the first two - it drew a 1% bar for an unreadable
+    # volume, and a FULL one fell to the same 1% floor so the >70% notice below
+    # could not fire (measured: 0.4 MB free warned, 0 B free did not).
+    _fill = disk_fill_percent(total_bytes, avail_mb)
+    fill_percent = 0 if _fill is None else _fill
     
     # Conditional Destination Row
     if len(folder_set) > 1:
