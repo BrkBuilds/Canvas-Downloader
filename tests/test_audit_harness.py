@@ -435,3 +435,79 @@ def test_the_notice_wait_can_exit_early_so_ordinary_rows_pay_nothing():
     body = _func_body(_flows_src(), "_accept_panopto_notice")
     assert "stop_key" in body and "until" in body
     assert "run_started_first" in body or "moved_on" in body
+
+
+# ---------------------------------------------------------------------------
+# Name-based matching in the sync checker (macOS run, 2026-08-11)
+# ---------------------------------------------------------------------------
+#
+# One seeded sync on course 43660 produced TEN highs. The app was correct in
+# every case examined; eight were the checker matching files BY NAME. Identity
+# lives in the path, never in the name - the same lesson RUNBOOK records for
+# `Page X (1).html`.
+
+def _cc():
+    import importlib
+    return importlib.import_module("tests.audit.harness.crosscheck")
+
+
+def test_os_metadata_is_not_a_content_file():
+    """A `.DS_Store` is written into any folder a user opens in Finder. Counting
+    it as an untracked CONTENT file reported the operating system as an
+    application defect - at high, claiming it "will be offered as a NEW file on
+    every future sync", which is untrue of a file the analyzer never enumerates.
+    It would have fired for every macOS user."""
+    f = _cc()._is_os_metadata
+    for junk in (".DS_Store", "sub/.DS_Store", "._Lecture.pdf", "Thumbs.db",
+                 "desktop.ini", "notes/.localized"):
+        assert f(junk) is True, junk
+    for real in ("Lecture.pdf", "Real._file.pdf", "notes/Uge 13 pensum.html"):
+        assert f(real) is False, real
+
+
+def test_the_secondary_prefix_rule_is_case_insensitive():
+    """`_stem` runs through os.path.normcase, WHICH IS THE IDENTITY OFF WINDOWS.
+    The prefixes are lowercase, so on Windows the stem arrives lowercased and
+    matches, while on macOS it keeps its capital and every secondary-entity rule
+    silently fails - the whole half of the matcher was dead on this platform.
+
+    Measured: `Page Uge 13 pensum.html` was placed correctly under New (the
+    review screen shows the ENTITY TITLE, "Uge 13 pensum") and was reported as
+    "no oracle placed it in any category"."""
+    cands = _cc()._name_candidates("Page Uge 13 pensum.html")
+    assert "Uge 13 pensum" in cands, (
+        f"the 'page ' prefix must strip regardless of case; got {sorted(cands)}")
+    # and the original case is preserved, because that is what the screen shows
+    assert "uge 13 pensum" not in cands
+
+
+def test_a_dedup_alias_two_real_names_claim_is_not_evidence():
+    """`_DEDUP_SUFFIX` eats ANY trailing number, and these course files are
+    `Klyngevejledning 1_grp 10 / 14 / 25`. All three collapse to one alias, so a
+    healed file - which is UP TO DATE and therefore appears in no category at
+    all - matched the IGNORED row of an unrelated sibling and was reported at
+    high as "classified as ignored".
+
+    The alias is only evidence when ONE real name claims it."""
+    cc = _cc()
+    strip = lambda s: cc._DEDUP_SUFFIX.sub("", s).strip()  # noqa: E731
+    assert strip("Klyngevejledning 1_grp 10") == "Klyngevejledning 1_grp"
+    assert strip("Klyngevejledning 1_grp 14") == "Klyngevejledning 1_grp"
+    # the engine's own dedup suffix must still resolve - that is what the alias
+    # is FOR, and over-suppressing it was the first version of this fix
+    assert strip("CBS_SolbjergPlads_ImageHeader-1") == "CBS_SolbjergPlads_ImageHeader"
+
+
+def test_ambiguous_basenames_are_reported_not_asserted():
+    """Two fixtures legitimately shared a basename in different folders
+    (`Øvelser i uge 16` edited_update, `uge 18` clean_update). The app handled
+    both correctly - the edited copy came through byte-identical with the fresh
+    copy forked to _NewVersion - and the checker produced FOUR highs, one of
+    which reads exactly like data loss."""
+    src = (REPO / "tests" / "audit" / "harness" / "crosscheck.py").read_text(
+        encoding="utf-8")
+    assert "is ambiguous by name - classification not asserted" in src
+    # and the _NewVersion outcome check must look at the fixture's OWN path
+    assert "fork_rel" in src, (
+        "the _NewVersion check must resolve the fork at the fixture's relative "
+        "path; a flat basename set sees a fork created for a different file")
