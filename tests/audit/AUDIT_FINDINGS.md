@@ -9,9 +9,102 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260810_151922_macos-15-v2.0.2` on 2026-08-11.
+Last updated by run `20260811_macos-15-v2.0.2__offline-hardening` on 2026-08-11.
 
-**40 open** · 97 total · 27 fixed · 30 invalid
+**40 open** · 100 total · 30 fixed · 30 invalid
+
+---
+
+### One transient read destroyed the ENTIRE sync history - the unreadable-is-not-empty sweep never reached this store
+<!-- fp:e3b5253e0e54 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: persistence
+**Oracles**: O3 disk (register file before/after a forced read failure)
+**First seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Last seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Occurrences**: 1
+
+**Detail**:
+
+REAL PRODUCT DEFECT, found offline by sweeping the "unreadable is not empty" class across every remaining persistent store, and REPRODUCED against the real class: 50 seeded history entries became 1.
+
+core.sync_manager.SyncHistoryManager.load_history() degraded EVERY failure to [] - by design for the two DISPLAY surfaces - and BOTH mutators then did `history = load_history()` -> append/amend -> atomic write. So a single TRANSIENT read failure (an antivirus lock, the config dir on a share that is briefly offline, a permissions blip, errno 35/13/5) replaced the user's whole record with the one entry being added.
+
+This class has been fixed SIX times in this repo (core.library, core.library_migrate, core.preset_manager, core.today_store, ui.auth, atomic_update_sync_pairs). The sweep never reached canvas_sync_history.json. That is the playbook's own thesis restated: the productive question is not "what could be wrong" but "which module did the last fix for this class NOT reach".
+
+amend_last_entry was the same bug in disguise. It answered False on an empty history and its own docstring says the caller then "creates one" - so a transient failure funnelled straight into the add_entry that does the damage. It now answers True ("handled, change nothing"); a GENUINELY empty history still answers False, because that answer is what makes the caller create the entry, and a test pins both directions.
+
+WHAT IS LOST: canvas_sync_history.json is the complete record of every sync in both modes. It backs the Sync page's history, the Today page's lens (which is a filter over this same record, never a second one), and shared.components._course_id_from_sync_pairs, which matches error rows against the stored course_names.
+
+FIX: split by CAUSE, reusing the ONE existing implementation rather than restating it - shared.helpers.read_json_for_update, generalised with an `expect` type (defaulting to dict, so all pre-existing callers are unchanged) and asked for a list here. Damaged content (malformed JSON, or bytes that are not UTF-8 - UnicodeDecodeError is a SIBLING of JSONDecodeError, both ValueError) is quarantined and the write PROCEEDS, so the user gets a working file back. A transient OSError returns may_write=False and the caller writes NOTHING. The two display readers stay total and now LOG rather than swallow, because rendering [] tells the user "you have no sync history" - the same confusion already fixed once in _render_sync_history.
+
+SWEPT the last store holding the same shape: engine.applescript_bridge's macOS Office permission record, where a transient read dropped the other apps' answered Automation prompts and would silently re-launch Word, Excel and PowerPoint on a later run.
+
+Covered by tests/test_sync_history_hardening.py (26). ALL 11 mutations of the real code are caught, including deleting either guard, making either condition unreachable, flipping amend's answer back to False, reverting to the display reader, and asking the primitive for the dict default. Full suite green after the pass (3487).
+
+**Notes**: Found and fixed in the pre-launch offline hardening pass on the
+macOS audit machine. Reproduced against the real function, fixed, tested,
+mutation-verified and the full suite re-run after each pass.
+
+---
+
+### The LTI-stream verdict was written TWICE and both copies dropped .m4v, so a streamed video was reported as a hard failure
+<!-- fp:924e500e49c7 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: delivery
+**Oracles**: O2 log / O5 UI classification (split_delivery_errors)
+**First seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Last seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Occurrences**: 1
+
+**Detail**:
+
+REAL PRODUCT DEFECT, found by scanning for near-miss literal collections (sets that overlap heavily but are not identical - the shape a divergent primitive makes as it drifts).
+
+When Canvas serves a file with NO download URL, each engine decides from the extension whether this is a plugin-streamed video - a permanent fact about the course, which no retry, setting or wait can change - or a genuine failure. That verdict selects LTI_STREAM_REASON / LTI_STREAM_ERROR_TYPE, which the completion screen classifies to decide what to colour as an error.
+
+The MESSAGE and the ERROR TYPE were unified into shared.helpers long ago. The PREDICATE that chooses them was left behind as two copies - core.canvas_logic (download, line 4544) and sync.execution (sync, line 1007) - and BOTH omitted '.m4v', while the size-mismatch tolerance in the very same download engine (flexible_extensions) lists '.m4v' as media. So one engine disagreed with ITSELF, and an .m4v stream was reported as a hard failure in both flows: an otherwise-clean run rendering as "Completed with Errors", the colour that is supposed to mean "look at this".
+
+Same shape as make_long_path's second copy in core.sync_manager (the fix reached none of the 26 manifest call sites) and the three AppleScript escapers: a rule written more than once is a rule some caller is following an old version of.
+
+FIX: shared.helpers.is_lti_stream_ext + LTI_STREAM_EXTENSIONS, placed beside the two constants they select, and both engines ask it. The neighbouring size-mismatch list is deliberately NOT merged and a test pins that: it holds the same members today but answers a different question ("may a short read be tolerated?" vs "is this a stream?"), and this repo has the standing .pdf-in-file_in_scope example of what merging two same-looking lists costs.
+
+Covered by tests/test_lti_stream_classification.py (29); all 8 mutations caught. TWO of my own tests were weak and the pass found both: one fed LTI_STREAM_REASON straight to the downstream classifier and so passed WITH the bug present (the defect is upstream, in producing that message at all), and one grepped for the token "flexible_extensions", which a mutation aliasing the shared set to that very name satisfied. Both rewritten to assert the binding and the producer branch via AST.
+
+**Notes**: Found and fixed in the pre-launch offline hardening pass on the
+macOS audit machine. Reproduced against the real function, fixed, tested,
+mutation-verified and the full suite re-run after each pass.
+
+---
+
+### The Windows PE version resource shipped one release behind, so file properties reported the previous version
+<!-- fp:83f38c06929c -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: release
+**Oracles**: O3 disk (version_info.py vs version.py)
+**First seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Last seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Occurrences**: 1
+
+**Detail**:
+
+version_info.py is GENERATED by scripts/build_windows.py, but it is also CHECKED IN, and Canvas_Downloader.spec consumes it directly (version='version_info.py'). CLAUDE.md documents the Windows build as a bare `pyinstaller Canvas_Downloader.spec`, which does NOT regenerate it - so a release built the documented way stamps whatever version was last committed.
+
+MEASURED: version_info.py declared 2, 0, 1, 0 / "2.0.1" while version.py said 2.0.2. Explorer's file properties, and anything else reading the PE resource, would have reported the previous release for the whole of v2.0.2. It does not affect the in-app update banner, which reads version.__version__ - which is precisely why nothing caught it.
+
+Related to the already-registered release gate ("version.py still says 2.0.1"), but a DIFFERENT file: that one was fixed in version.py and the generated PE resource was not regenerated with it.
+
+FIX: regenerated with the real generator, plus two tests - one fails when the PE resource and version.py disagree, and one fails if the spec stops consuming the file (without which the first would be measuring nothing). Verified the test actually FAILS against the stale value rather than only passing against the fixed one.
+
+**Notes**: Found and fixed in the pre-launch offline hardening pass on the
+macOS audit machine. Reproduced against the real function, fixed, tested,
+mutation-verified and the full suite re-run after each pass.
 
 ---
 
