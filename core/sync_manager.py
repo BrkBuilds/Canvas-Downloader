@@ -107,7 +107,45 @@ def _probe_case_insensitive(directory: str) -> bool:
     folder would be both slower and something that can fail on a read-only mount.
     A path with no letters to flip is inconclusive (the flip is a no-op, so
     ``samefile`` would trivially say yes) and answers False.
+
+    THE FLIP MUST BE APPLIED TO A CHILD, NOT TO THE DIRECTORY ITSELF. A
+    directory's own NAME lives on its PARENT volume, and at a mount point those
+    are two different filesystems: flipping ``/Volumes/Drive`` tests ``/Volumes``,
+    which is on the case-INSENSITIVE root volume, so the flip resolves and the
+    probe answers True about a volume that is case-SENSITIVE. Measured on macOS
+    26.6 against a real case-sensitive APFS image (``hdiutil``, ``A.txt`` and
+    ``a.txt`` coexisting on it): probing the mount point returned True, and
+    ``samefile('/Volumes/CSens2', '/volumes/csens2')`` is itself True. A child
+    entry genuinely lives on the mounted volume, so flipping one asks the right
+    filesystem.
+
+    That mattered because it fails in the DANGEROUS direction: a True here makes
+    ``_path_key`` lower-case the path, so on a case-sensitive volume two files
+    that really are distinct collapse to one key - merging manifest rows and
+    mis-binding a heal, which is precisely what this gate was added to prevent.
+    It is only reachable when the nearest existing ancestor IS the mount point,
+    i.e. a course folder placed at the root of a case-sensitive drive; one level
+    deeper the old probe was already correct.
     """
+    try:
+        entries = os.listdir(directory)
+    except OSError:
+        entries = []
+    for entry in entries:
+        flipped_entry = entry.swapcase()
+        if flipped_entry == entry:
+            continue            # nothing to flip - no evidence either way
+        try:
+            return os.path.samefile(os.path.join(directory, entry),
+                                    os.path.join(directory, flipped_entry))
+        except OSError:
+            return False        # flipped name absent => case-sensitive
+        except Exception:       # noqa: BLE001 - never let a probe break a sync
+            return False
+
+    # No usable child (empty, unreadable, or every name caseless). Fall back to
+    # the directory's own name, which is right everywhere except at a mount
+    # point - and answers False on doubt, which is the safe direction.
     flipped = directory.swapcase()
     if flipped == directory:
         return False
@@ -125,10 +163,31 @@ def _case_insensitive_volume(path: str) -> bool:
     ``_path_key`` is handed paths that may not exist - a manifest row for a file
     that has been deleted, or a destination not yet written - so the probe has to
     climb to something real before it can ask the filesystem anything.
+
+    TWO ANCESTORS ARE REFUSED, both because they answer about the wrong volume:
+
+    * a RELATIVE path, which names no particular volume at all - it would be
+      resolved against the current directory, which is not where the course
+      folder is;
+    * the filesystem ROOT, which is reached only when nothing below it exists.
+      An unplugged external drive gives exactly that shape
+      (``/Volumes/Drive/Course/file.pdf`` with the drive absent), and answering
+      "case-insensitive" from ``/`` would fold keys for a volume that may well
+      be case-sensitive when it comes back.
+
+    Both were previously refused by ACCIDENT rather than by decision: the old
+    whole-path flip was a no-op on ``/`` and ``.`` (no letters), so it returned
+    False. Child-probing makes those paths answerable, which is why the refusal
+    now has to be written down. False on doubt, as before.
     """
     try:
         d = Path(path)
+        if not d.is_absolute():
+            return False
+        root = Path(d.anchor)
         for cand in (d, *d.parents):
+            if cand == root:
+                return False
             if cand.is_dir():
                 return _probe_case_insensitive(str(cand))
     except Exception:       # noqa: BLE001

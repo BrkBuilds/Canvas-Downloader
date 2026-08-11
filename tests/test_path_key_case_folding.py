@@ -83,8 +83,20 @@ def test_the_probe_answers_FALSE_when_the_flip_is_a_NO_OP():
     directory under /private/var/... still flips, and there the probe genuinely
     IS answering about the volume, correctly. This is the narrow case where it
     cannot answer at all.
+
+    "/" WAS ASSERTED HERE AND IS NOT ANY MORE, deliberately (2026-08-11). It only
+    answered False because the old whole-path flip had no letters to flip - an
+    accident of the implementation, not a decision. The probe now flips a CHILD
+    entry (see the mount-point test below), which compares two DIFFERENT strings,
+    so the trivially-true hazard this test is named for cannot arise there at all
+    - and "/" then answers True, which on macOS is simply the correct answer for
+    the root volume. Nothing in the product asks it: `_case_insensitive_volume`
+    refuses a root ancestor outright, because reaching "/" means nothing below it
+    existed (an unplugged drive), and that is covered by its own test.
+
+    "/12345" still exercises exactly the stated hazard: it cannot be listed, so
+    the fallback runs, and the fallback flip is a no-op.
     """
-    assert SM._probe_case_insensitive("/") is False
     assert SM._probe_case_insensitive("/12345") is False
 
 
@@ -111,3 +123,102 @@ def test_the_real_default_macos_volume_is_detected_as_insensitive(tmp_path):
     """Not a tautology: it is what makes the fix reach anyone. If a future macOS
     ships a case-sensitive default this fails, which is the right signal."""
     assert SM._probe_case_insensitive(str(tmp_path)) is True
+
+
+# ---------------------------------------------------------------------------
+# A directory's own NAME lives on its PARENT volume
+# ---------------------------------------------------------------------------
+
+def test_the_probe_flips_a_CHILD_not_the_directory_itself():
+    """Measured on macOS 26.6, 2026-08-11, against a real case-sensitive APFS
+    image made with hdiutil (A.txt and a.txt coexisting on it, so the volume is
+    genuinely case-sensitive):
+
+        _case_insensitive_volume('/Volumes/CSens2/Notes.pdf')  ->  True   WRONG
+
+    The cause is that the probe flipped the whole directory path, and a mount
+    point's own name lives in /Volumes - which is on the case-INSENSITIVE root
+    volume - so `samefile('/Volumes/CSens2', '/volumes/csens2')` is itself True
+    and the probe answered about the wrong filesystem.
+
+    It fails in the DANGEROUS direction: a True makes _path_key lower-case the
+    path, so on a case-sensitive volume two genuinely distinct files collapse to
+    one key, merging manifest rows and mis-binding a heal - exactly what this
+    gate exists to prevent. Reachable when the course folder IS the mount point,
+    i.e. sitting at the root of a case-sensitive external drive.
+
+    A CHILD entry genuinely lives on the mounted volume, so flipping one asks
+    the right filesystem. This test pins the mechanism without needing a real
+    volume: the directory NAME is one that would flip-resolve, while the child
+    would not."""
+    seen = {}
+
+    def fake_listdir(d):
+        seen["listed"] = d
+        return ["Report.pdf"]
+
+    def fake_samefile(a, b):
+        # The volume is case-SENSITIVE: only an exact match is the same file.
+        return a == b
+
+    orig_listdir, orig_samefile = SM.os.listdir, SM.os.path.samefile
+    SM._probe_case_insensitive.cache_clear()
+    try:
+        SM.os.listdir = fake_listdir
+        SM.os.path.samefile = fake_samefile
+        assert SM._probe_case_insensitive("/Volumes/Drive") is False, (
+            "the probe must ask about a CHILD, which lives on the mounted "
+            "volume, not about the directory's own name")
+        assert seen.get("listed") == "/Volumes/Drive", (
+            "it never listed the directory, so it cannot have probed a child")
+    finally:
+        SM.os.listdir, SM.os.path.samefile = orig_listdir, orig_samefile
+        SM._probe_case_insensitive.cache_clear()
+
+
+def test_the_probe_still_says_yes_on_a_case_insensitive_volume_via_a_child():
+    """The other direction: the fold must keep working where it is correct, or
+    a case-only rename starts reading as an orphan again."""
+    orig_listdir, orig_samefile = SM.os.listdir, SM.os.path.samefile
+    SM._probe_case_insensitive.cache_clear()
+    try:
+        SM.os.listdir = lambda d: ["Report.pdf"]
+        SM.os.path.samefile = lambda a, b: a.lower() == b.lower()
+        assert SM._probe_case_insensitive("/Volumes/Drive") is True
+    finally:
+        SM.os.listdir, SM.os.path.samefile = orig_listdir, orig_samefile
+        SM._probe_case_insensitive.cache_clear()
+
+
+def test_a_caseless_or_empty_directory_falls_back_and_stays_safe():
+    """No child with letters means no evidence from a child. Falling back to the
+    old whole-path flip is right (it is correct everywhere but a mount point),
+    and an unreadable directory must answer False rather than raise."""
+    orig_listdir, orig_samefile = SM.os.listdir, SM.os.path.samefile
+    SM._probe_case_insensitive.cache_clear()
+    try:
+        SM.os.listdir = lambda d: ["12345", "67890"]     # nothing to flip
+        SM.os.path.samefile = lambda a, b: a.lower() == b.lower()
+        assert SM._probe_case_insensitive("/Volumes/Drive") is True  # via fallback
+        SM._probe_case_insensitive.cache_clear()
+        def boom(d):
+            raise OSError("unreadable")
+        SM.os.listdir = boom
+        SM.os.path.samefile = lambda a, b: (_ for _ in ()).throw(OSError())
+        assert SM._probe_case_insensitive("/Volumes/Drive") is False
+    finally:
+        SM.os.listdir, SM.os.path.samefile = orig_listdir, orig_samefile
+        SM._probe_case_insensitive.cache_clear()
+
+
+def test_a_root_or_relative_ancestor_is_refused():
+    """Both answer about the WRONG volume, and both used to be refused only by
+    accident (the old flip was a no-op on "/" and ".").
+
+    The root case is the one with teeth: an unplugged external drive gives
+    /Volumes/Drive/Course/file.pdf with nothing below / existing, and answering
+    "case-insensitive" from the boot volume would fold keys for a volume that
+    may be case-SENSITIVE when it comes back."""
+    assert SM._case_insensitive_volume("/12345/not/here") is False
+    assert SM._case_insensitive_volume("relative/thing") is False
+    assert SM._case_insensitive_volume("") is False
