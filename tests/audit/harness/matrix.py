@@ -708,9 +708,40 @@ def course_stats(snapshot: dict) -> dict:
 # 43660 (36 recordings). The video stream is fetched in full whichever output
 # is asked for - mp3 is a transcode of it, mp4 a `-c copy` remux - so the two
 # differ on DISK, not on bandwidth. Transcription is priced in the same unit
-# from its measured wall time (19.1 s/recording on CUDA + tiny, 65.0 s on CPU)
-# against the ~3.4 MB/s this link sustains.
-REC_COST_MB = {"stream": 14.0, "mp4_disk": 105.0, "transcribe": 65.0}
+# from its measured wall time against the ~3.4 MB/s this link sustains.
+_LINK_MB_PER_S = 3.4
+
+# Transcription wall time PER RECORDING, and it is not one number: 19.1 s on
+# CUDA + tiny, 65.0 s on CPU. The constant used to encode only the CUDA case
+# (19.1 x 3.4 = 64.9, which reads like a coincidence and is not one), so the
+# scheduler under-priced transcription by 3.4x on any CPU-only box - and
+# **always** on macOS, where CUDA does not exist at all. That is how the
+# 2026-08-11 macOS matrix put a ~39-minute transcription row in a lane it had
+# costed as a rounding error.
+_TRANSCRIBE_S_PER_REC = {"cuda": 19.1, "cpu": 65.0}
+
+
+def _transcribe_seconds_per_recording() -> float:
+    """PROBE the machine rather than pick one of the two constants.
+
+    Both numbers are real measurements of the same operation on different
+    hardware; hard-coding either is wrong somewhere. `panopto.hardware` already
+    owns the "is there a usable GPU here" question for the app itself, so the
+    scheduler asks it rather than restating the test.
+    """
+    try:
+        from panopto.hardware import detect_compute_hardware
+        ok = bool(detect_compute_hardware().get("gpu_available"))
+    except Exception:
+        ok = False                      # no probe -> assume the slower machine
+    return _TRANSCRIBE_S_PER_REC["cuda" if ok else "cpu"]
+
+
+REC_COST_MB = {
+    "stream": 14.0,
+    "mp4_disk": 105.0,
+    "transcribe": round(_transcribe_seconds_per_recording() * _LINK_MB_PER_S, 1),
+}
 
 
 def estimate_cost(row: dict, stats: dict) -> float:

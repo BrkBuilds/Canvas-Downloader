@@ -1330,12 +1330,32 @@ def _conversions(ev: Evidence) -> list[Finding]:
             continue
 
         if spec["removes_source"] and leftovers:
-            # Split by WHERE the survivor is. A file left at module level means
-            # the converter ran and failed on it. A file left inside an
-            # extracted archive means the converter never saw it, because
-            # explicit_files scopes conversion to what the DOWNLOADER wrote and
-            # extraction output is not in that set. Same symptom, different bug,
-            # and reporting one number for both hides the second.
+            # Split by WHERE the survivor is, because only ONE of the two is a
+            # defect.
+            #
+            # A survivor INSIDE an extracted archive is WORKING AS DESIGNED and
+            # must never be filed. A zip is unpacked and its contents are then
+            # left exactly as they are; nothing inside an archive is converted,
+            # in either flow. That was settled on 2026-07-29, by reversing the
+            # opposite behaviour, on measurement: one real lecture zip from
+            # course 45899 (a JavaScript project with node_modules) extracted
+            # 21,824 files, 11,818 of which a converter would rewrite, 9,730 of
+            # those onto paths past Windows' 260-character limit - and the
+            # Office half could not have worked at any depth, because COM
+            # rejects a long path AND rejects the long-path prefix. Beyond the
+            # arithmetic, a source-consuming converter DELETES the original, so
+            # a student's own .js inside their own project would stop being a
+            # .js. `converters/post_processing.run_all_conversions` says all of
+            # this at its head, and `tests/test_archive_conversion_scope.py`
+            # guards the reversed rule.
+            #
+            # This checker went on asserting the PRE-reversal rule and re-filed
+            # it six times in the 2026-08-11 macOS matrix, against a register
+            # entry that already reads "invalid ... must not be re-filed". A
+            # check that contradicts a decided, measured, tested design is a
+            # defect in the check - so the archive half is now an OBSERVATION,
+            # recorded because a reader still wants to know the files are
+            # there, and carrying the reason so nobody re-promotes it.
             roots = _infer_extracted_roots(ev) if convs.get("convert_zip") else set()
             in_archive = [f for f in leftovers
                           if any(_key(f).startswith(_key(r) + "/") for r in roots)]
@@ -1353,15 +1373,18 @@ def _conversions(ev: Evidence) -> list[Finding]:
                     evidence={"files": top_level[:12]},
                     scenario=ev.scenario, course=ev.course))
             if in_archive:
-                out.append(ev._d("O1", "O3",
-                    title=f"{key} did not reach {len(in_archive)} file(s) unpacked "
-                          f"from archives",
-                    severity="medium", category="conversion",
-                    detail="convert_zip extracted these, but post-processing filters "
-                           "every converter through explicit_files - the list of paths "
-                           "the DOWNLOADER wrote - and extraction output is never added "
-                           "to it. So enabling both toggles applies only the first to "
-                           "archive contents.",
+                out.append(observation(
+                    title=f"{len(in_archive)} unconverted {key} source(s) inside "
+                          f"extracted archives (by design)",
+                    detail="NOT A DEFECT. A zip is unpacked and its contents are "
+                           "left exactly as they are - nothing inside an archive is "
+                           "converted, in either flow (decided 2026-07-29 by "
+                           "reversing the opposite behaviour). One real lecture zip "
+                           "measured 21,824 extracted files, 11,818 convertible, "
+                           "9,730 past Windows' 260-char limit; and a "
+                           "source-consuming converter would DELETE a student's own "
+                           "project files. See run_all_conversions' head note and "
+                           "tests/test_archive_conversion_scope.py.",
                     evidence={"files": in_archive[:12], "roots": sorted(roots)[:8]},
                     scenario=ev.scenario, course=ev.course))
 
