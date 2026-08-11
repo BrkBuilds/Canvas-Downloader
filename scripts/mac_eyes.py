@@ -185,6 +185,7 @@ def _windows() -> list[dict]:
                                         kCGNullWindowID) or []:
         b = w.get("kCGWindowBounds") or {}
         out.append({"id": w.get("kCGWindowNumber"),
+                    "pid": int(w.get("kCGWindowOwnerPID") or 0),
                     "owner": w.get("kCGWindowOwnerName") or "",
                     "title": w.get("kCGWindowName") or "",
                     "w": int(b.get("Width", 0)), "h": int(b.get("Height", 0))})
@@ -223,12 +224,64 @@ def windows():
 # Scoped as narrowly as the evidence allows: this owner, and only with an EMPTY
 # title. A real accessibility prompt carries text, and no other owner in the
 # `interesting` list is affected - so this cannot mask a genuine consent prompt.
+#
+# THE EMPTY-TITLE HALF IS NOT ENOUGH ON macOS 26 (measured 2026-08-11, Tahoe
+# 26.6). The same phantom appears there holding the title "Screen Recording",
+# 461x181 at the same coordinates class - so the title test missed it and
+# `dialogs` claimed a human was needed, twice, with nothing on screen. That is
+# the one failure this command must not have.
+#
+# The evidence macOS 15 could not supply is what settles it: eyesight is HEALTHY
+# here, so a capture renders other applications' windows correctly, and the
+# capture taken while `dialogs` was alarming shows NO such dialog anywhere on
+# the desktop. Combined with the duration argument the original comment makes -
+# the owning process had been alive 1h22m, and a consent prompt is created when
+# something asks for consent, not at login - the window is a phantom.
+#
+# So the discriminator is AGE, which is exactly what the original reasoning
+# rests on and was simply not available to the code. A genuine prompt is YOUNG
+# (it was created by the request you just made); this thing persists for hours.
+# Title is kept as an independent sufficient condition so the macOS 15 shape
+# still suppresses immediately.
+#
+# Deliberately generous: 10 minutes is far longer than any prompt an agent
+# following this runbook leaves unanswered (it checks `dialogs` as soon as
+# something blocks), and far shorter than the 40+ minute persistence measured
+# for the phantom on both OS versions. Erring long keeps the DANGEROUS
+# direction - missing a real prompt - behind a wide margin.
 _PHANTOM_ALERTS = ("universalaccessauthwarn",)
+_PHANTOM_MIN_AGE_S = 600
+
+
+def _process_age_seconds(pid: int) -> float | None:
+    """Seconds since *pid* started, or None when it cannot be determined."""
+    if not pid:
+        return None
+    try:
+        out = subprocess.run(["ps", "-o", "etime=", "-p", str(pid)],
+                             capture_output=True, text=True, timeout=10).stdout.strip()
+    except Exception:
+        return None
+    if not out:
+        return None
+    # etime is [[dd-]hh:]mm:ss
+    days, _, rest = out.partition("-")
+    if not rest:
+        days, rest = "0", days
+    parts = [int(x) for x in rest.split(":")]
+    while len(parts) < 3:
+        parts.insert(0, 0)
+    h, m, s = parts[-3:]
+    return int(days) * 86400 + h * 3600 + m * 60 + s
 
 
 def _is_phantom_alert(w: dict) -> bool:
-    return (not (w.get("title") or "").strip()
-            and w.get("owner", "").lower() in _PHANTOM_ALERTS)
+    if w.get("owner", "").lower() not in _PHANTOM_ALERTS:
+        return False
+    if not (w.get("title") or "").strip():
+        return True                      # the macOS 15 shape
+    age = _process_age_seconds(w.get("pid") or 0)
+    return age is not None and age >= _PHANTOM_MIN_AGE_S
 
 
 def dialogs():
@@ -241,9 +294,19 @@ def dialogs():
     require_darwin()
     interesting = ("UserNotificationCenter", "SecurityAgent", "coreautha",
                    "universalaccessAuthWarn", "tccd", "loginwindow")
-    found = [w for w in _windows()
-             if any(k.lower() in w["owner"].lower() for k in interesting)
-             and not _is_phantom_alert(w)]
+    candidates = [w for w in _windows()
+                  if any(k.lower() in w["owner"].lower() for k in interesting)]
+    found = [w for w in candidates if not _is_phantom_alert(w)]
+    # A suppressed window is REPORTED, quietly, never dropped in silence. The
+    # suppression is a judgement about one known phantom; if it is ever wrong,
+    # this line is the only thing that would let a reader notice.
+    for w in candidates:
+        if w in found:
+            continue
+        age = _process_age_seconds(w.get("pid") or 0)
+        age_s = f"{age/60:.0f}m" if age is not None else "unknown age"
+        print(f"(ignoring known phantom: {w['owner']} "
+              f"{w['title'] or '<untitled>'!r}, alive {age_s})")
     if found:
         print("SOMETHING IS WAITING FOR A HUMAN:")
         for w in found:
