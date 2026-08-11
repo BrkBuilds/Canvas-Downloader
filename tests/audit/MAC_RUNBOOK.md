@@ -528,6 +528,36 @@ that:
    sees the error, so a rejected request is reported as success and all three
    fallbacks are skipped; see its finding. Testing that properly needs the
    packaged app with a real *Don't Allow*, not a source run.
+   - **STOP TESTING NOTIFICATIONS BY FIRING THEM. Operator instruction,
+     2026-08-11, and it explains a pattern across two audits.** Every attempt to
+     drive this path costs the OPERATOR, not the agent: a source run calls
+     `request_macos_notification_permission()` at `app.py:57`, which raises the
+     **"Python" Notifications** authorization prompt; the notification path
+     **crashes a short-lived python process** (already recorded above as
+     "Killed: 9"); the agent then retries; and each retry re-launches something
+     that trips the **Keychain** prompt as well. In the macOS 15 session the
+     operator had to answer that loop repeatedly — and had no password for the
+     keychain dialog, so the runs were dead anyway. *"I think you need to
+     actually rethink your strategy in testing this."*
+   - **The rethink: READ THE SYSTEM'S RECORD, do not produce banners.** And when
+     the record is unreadable, say so and stop — an unanswered question is
+     cheaper than a prompt storm on a machine the operator is sitting at.
+   - **What that costs is that this may be unanswerable here, and 2026-08-11
+     showed exactly that.** With a genuinely clear screen (`mac_eyes dialogs`
+     reported nothing waiting), one `osascript display notification` produced
+     **no banner**: the full-screen before/after diff changed only a 7x151px
+     text cursor at the bottom-left, nowhere near the banner corner. That is a
+     clean measurement of "nothing displayed" — but NOT of *why*, and both ways
+     of finding out are closed. Focus/Do Not Disturb state lives in
+     `~/Library/DoNotDisturb/DB/ModeConfigurations.json`, which is TCC-protected
+     (`Operation not permitted`) and reading it harder means another prompt; and
+     **`log show` returns ZERO lines for any predicate in this context**, so the
+     unified log cannot corroborate it either. Verify that control before
+     trusting a log-based approach: `log show --last 60s | wc -l`.
+   - **A "no banner" result needs a POSITIVE CONTROL and there isn't a free
+     one.** Without something that definitely SHOULD display, "nothing appeared"
+     and "Focus is on" are indistinguishable. Do not report the first when you
+     have only measured the second.
 6. ~~**A 250-char path component** fails to convert~~ **DIAGNOSED AND FIXED
    2026-08-10**, and it was worse than this note said: **any** filename past
    about **164 bytes** could not be converted at all. The limit is Word's

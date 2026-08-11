@@ -591,12 +591,34 @@ Also seen: the diagnostic process ended with "Killed: 9" after driving all three
 > on them. So the frames differ for a reason that is not the banner, and no
 > conclusion may be drawn from them.
 >
-> TO FINISH IT, and it needs no packaged app and no login - only a clear screen:
-> take a full-screen capture, run
-> `osascript -e 'display notification "x" with title "Canvas Downloader"'`,
-> capture again after ~1.2s, and diff. A changed bbox in the top-right corner
-> that CONTAINS THE TEXT is the answer. Check `mac_eyes.py dialogs` FIRST -
-> a consent prompt in that corner makes the measurement meaningless.
+> MEASURED AFTER THE SCREEN CLEARED, and the answer is STILL NOT ESTABLISHED -
+> which is a result about the METHOD, not about the product. With `mac_eyes.py
+> dialogs` reporting nothing waiting, one `osascript display notification`
+> produced **no banner**: a full-screen before/after diff changed only a 7x151px
+> text cursor at the bottom-left, nowhere near the banner corner. Clean
+> measurement of "nothing displayed"; no measurement at all of WHY, and both
+> routes to the why are closed on this machine. Focus/Do-Not-Disturb state
+> (`~/Library/DoNotDisturb/DB/ModeConfigurations.json`) is TCC-protected, and
+> `log show` returns **zero lines for any predicate** in this context, so the
+> unified log cannot corroborate it. Without a POSITIVE CONTROL - something that
+> definitely should display - "nothing appeared" and "Focus is on" are
+> indistinguishable, and reporting the first would be a guess.
+>
+> DELIBERATELY NOT PURSUED FURTHER, on the operator's instruction and for a good
+> reason: every remaining probe costs THEM. A source run raises the "Python"
+> notification prompt, this path crashes a short-lived python process, and each
+> retry re-trips the Keychain dialog - a loop they sat through repeatedly during
+> the macOS 15 audit. See MAC_RUNBOOK item 5, "STOP TESTING NOTIFICATIONS BY
+> FIRING THEM". An unanswered question is cheaper than a prompt storm.
+>
+> THE FIX SHIPS REGARDLESS, and needs no revert either way: it only ADDS
+> attempts where there were none, so if it turns out macOS suppresses every path
+> for a denied app, it is inert and harmless and the DOCSTRING is what should
+> change. To settle it later, on any Mac with Focus confirmed OFF: full-screen
+> `screencapture`, `osascript -e 'display notification "x" with title "y"'`,
+> capture again after ~1.2s, diff with PIL `ImageChops.difference().getbbox()`,
+> and require the TEXT to be legible in the crop - a menu-bar clock tick also
+> changes pixels up there.
 
 ---
 
