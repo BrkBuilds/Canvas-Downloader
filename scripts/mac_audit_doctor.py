@@ -411,56 +411,71 @@ def check_credentials():
 
     if not url:
         return
-    rc, out = sh(["security", "find-generic-password", "-s", "CanvasDownloader",
-                  "-a", url, "-w"], timeout=20)
-    have = rc == 0 and out.strip() != ""
-    add("Canvas token in the login Keychain", have, BLOCK, "present" if have else "absent",
-        f'python3 -c "import keyring; keyring.set_password('
-        f"'CanvasDownloader', '{url}', '<TOKEN>')\"    (see the next check for "
-        f"why NOT /usr/bin/security)")
 
-    # Probe with the client the CONSUMERS use, not with the tool that wrote it.
+    # WHICH CLIENT ASKS IS THE WHOLE QUESTION - and this gate used to ask the
+    # wrong one, so it fired precisely when the token was stored RIGHT.
     #
-    # `security find-generic-password` above reads an item CREATED by
-    # /usr/bin/security silently, because the item's ACL names that binary. The
-    # app and the harness's O5 client are **python**, which is not on that ACL -
-    # so macOS asks to authorise it, and authorising an ACL change requires the
-    # *login keychain's own password*. On a cloud image that is frequently the
-    # image's original password and nobody has it, so the honest answer is
-    # "unreadable". Measured 2026-08-10: `security` said present, python got
-    # -25308 headless and a password prompt in Aqua, and the doctor said READY.
+    # A keychain item's ACL names whoever CREATED it. `mac_audit_bootstrap.sh`
+    # seeds through python keyring deliberately, because python is what every
+    # consumer is - the app, and the harness's O5 client. The ACL therefore
+    # names python and NOT /usr/bin/security, so asking `security ... -w` for
+    # the SECRET raises the "enter the login keychain password" panel, which on
+    # a cloud image nobody can answer (measured: the Scaleway password does not
+    # open the login keychain). The call fails, and the gate said `absent`.
     #
-    # Same class as CLAUDE.md's rule about verifying the real thing rather than
-    # a copy: a probe that uses a different client than every consumer is not a
-    # probe of anything.
-    if have:
-        try:
-            import keyring
-            kind, value = _bounded(keyring.get_password, "CanvasDownloader", url)
-            if kind == "ok":
-                py_ok = bool(value)
-                py_detail = ("readable by python" if value
-                             else "python read returned nothing")
-            elif kind == "timeout":
-                py_ok = False
-                py_detail = (f"blocked for {value:.0f}s - macOS is asking to "
-                             "authorise python against an item it did not create")
-            else:
-                py_ok, py_detail = False, f"{type(value).__name__}: {value}"[:200]
-        except Exception as e:                                 # noqa: BLE001
-            py_ok, py_detail = False, f"{type(e).__name__}: {e}"[:200]
-        add("...and readable by PYTHON (the app's own client)", py_ok, BLOCK, py_detail,
-            "An item written by /usr/bin/security is not readable by python\n"
-            "      without the login keychain password. Delete it and let the app\n"
-            "      create its own by logging in once through the UI (highest\n"
-            "      fidelity), or re-seed it with python keyring:\n"
-            "        security delete-generic-password -s CanvasDownloader "
-            f'-a "{url}"\n'
-            "        python3 -c \"import keyring; keyring.set_password("
-            f"'CanvasDownloader', '{url}', '<TOKEN>')\"")
+    # Measured on macOS 26.6, 2026-08-11, in ONE shell: python read the token as
+    # 70 characters with no prompt at all, `security -w` raised the panel, and
+    # this gate reported absent. Worse, `have` being False SKIPPED both the
+    # python probe and the Canvas API check below - one wrong client silently
+    # disabled the two checks that worked. The operator had hit the same panel
+    # on the macOS 15 run and lost time to it there too.
+    #
+    # So python is the gate, and it supplies the token everything below uses.
+    # `security` keeps a METADATA-only role (see just below), which needs no
+    # authorisation and is what separates "no item at all" from "an item python
+    # cannot read" - the ACL trap the old comment here described correctly while
+    # the gate above it did the opposite.
+    token, detail = "", ""
+    try:
+        import keyring
+        kind, value = _bounded(keyring.get_password, "CanvasDownloader", url)
+        if kind == "ok":
+            token = (value or "").strip()
+            detail = (f"present, read by python ({len(token)} chars)" if token
+                      else "python read returned nothing")
+        elif kind == "timeout":
+            detail = (f"blocked for {value:.0f}s - macOS is asking to authorise "
+                      "python against an item it did not create")
+        else:
+            detail = f"{type(value).__name__}: {value}"[:200]
+    except Exception as e:                                     # noqa: BLE001
+        detail = f"keyring unavailable: {type(e).__name__}: {e}"[:200]
+
+    have = bool(token)
+    add("Canvas token in the login Keychain", have, BLOCK, detail or "absent",
+        "Seed it with the client every consumer uses - python, NEVER\n"
+        "      /usr/bin/security, whose ACL would then lock python out:\n"
+        "        .venv/bin/python -c \"import keyring; keyring.set_password("
+        f"'CanvasDownloader', '{url}', '<TOKEN>')\"\n"
+        "      Highest fidelity: delete the item and log in once through the\n"
+        "      app's own UI, letting it create its own.")
+
+    # Metadata only - no `-w`, so no authorisation and no panel. This answers
+    # "does the ITEM exist", whatever can read it. Disagreeing with the gate
+    # above is itself the diagnosis: item present, python locked out.
+    rc, _ = sh(["security", "find-generic-password", "-s", "CanvasDownloader",
+                "-a", url], timeout=20)
+    add("keychain item exists (metadata, any client)", rc == 0, WARN,
+        "found" if rc == 0 else "not found",
+        "No item at all - re-run scripts/mac_audit_bootstrap.sh.")
+
+    # The old "...and readable by PYTHON" check lived here, as a SECOND gate
+    # behind the `security` one. It was right about the rule and unreachable in
+    # practice: it only ran `if have`, and `have` came from the client that
+    # cannot read a python-written item. Folding it into the gate above is what
+    # makes the rule actually enforced rather than merely stated.
 
     if have:
-        token = out.strip()
         rc2, out2 = sh(["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}",
                         "-H", f"Authorization: Bearer {token}",
                         f"{url.rstrip('/')}/api/v1/users/self"], timeout=30)
