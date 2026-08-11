@@ -341,6 +341,12 @@ def _get_un_center():
 # the system sound would double it up.
 _UN_PRESENT_OPTS = (1 << 4) | (1 << 3)  # Banner | List = 24
 
+#: How long to wait for `addNotificationRequest`'s completion handler before
+#: assuming the banner was posted. A rejection is decided against an
+#: authorization status macOS already holds, so it returns immediately; this is
+#: the ceiling on being WRONG about a slow accept, not the expected cost.
+_UN_DELIVERY_TIMEOUT_S = 2.0
+
 
 def _ensure_un_delegate(center) -> None:
     """Install a UNUserNotificationCenterDelegate so banners appear even when the
@@ -547,12 +553,47 @@ def _show_macos_notification_un(title: str, body: str) -> bool:
             _uuid.uuid4().hex, content, None
         )
 
+        # THE DELIVERY RESULT ARRIVES ASYNCHRONOUSLY, and this function used to
+        # `return True` the instant the request was handed over - before the
+        # completion handler had run. The handler only LOGGED, so a request
+        # macOS REJECTED was reported to the dispatcher as success and all
+        # three fallbacks below were skipped: no banner, anywhere, ever. The
+        # log ordering proved the race rather than inferring it - "UN
+        # notification posted" printed BEFORE "UN addNotificationRequest
+        # error", from one call (macOS 15 audit, 2026-08-10).
+        #
+        # That broke this function's own documented promise, quoted above:
+        # "Returns False on ANY failure so the caller falls back ... keeping us
+        # strictly no worse than before".
+        #
+        # WE FALL BACK ONLY ON AN EXPLICIT REJECTION. A timeout keeps the old
+        # answer (True), deliberately: if the request is merely slow and we
+        # guessed failure, the UN banner could still land AND a fallback banner
+        # beside it - two notifications for one event, which is a worse defect
+        # than the one being fixed. So the only new behaviour is "macOS told us
+        # it failed, so try the next path", which is strictly an improvement.
+        _done = threading.Event()
+        _err: list = []
+
         def _add_cb(error):
             if error:
+                _err.append(error)
                 logger.info(f"UN addNotificationRequest error: {error}")
             else:
                 logger.info("UN addNotificationRequest accepted (no error)")
+            _done.set()
         center.addNotificationRequest_withCompletionHandler_(req, _add_cb)
+        # Generous: a rejection is decided against an authorization status the
+        # system already knows, so it comes back immediately. This runs at the
+        # END of a download or sync, where a few hundred ms is invisible.
+        if not _done.wait(_UN_DELIVERY_TIMEOUT_S):
+            logger.info("UN addNotificationRequest did not report within "
+                        f"{_UN_DELIVERY_TIMEOUT_S}s - assuming posted")
+            return True
+        if _err:
+            logger.info("UN path REJECTED by macOS - falling through to the "
+                        "next notification mechanism")
+            return False
         logger.info("UN notification posted via UNUserNotificationCenter")
         return True
     except Exception as e:
