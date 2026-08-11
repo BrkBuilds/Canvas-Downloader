@@ -233,6 +233,30 @@ PURGE_MUTANTS = [
 ]
 
 
+# --- quit scoping: only what we launched ----------------------------------
+QUIT_TEST = "tests/test_office_quit_scoping.py"
+QUIT_MUTANTS = [
+    ('preexisting gate removed from the quit loop', AB,
+     '            if short and office_was_preexisting(short):',
+     '            if False:'),
+    ("preexisting probe defaults to NOT the user's on failure", AB,
+     "    except Exception:       # noqa: BLE001\n        running = True      # on doubt, treat it as the user's and never quit it",
+     '    except Exception:       # noqa: BLE001\n        running = False'),
+    ('observation re-taken on every conversion', AB,
+     '    if app_name in _office_preexisting:\n        return',
+     '    if False:\n        return'),
+    ('observation moved outside the lock', AB,
+     '        _note_office_preexisting(app_name)\n        return _run_applescript_locked(',
+     '        return _run_applescript_locked('),
+    ('undescribable document back to pristine unconditionally', AB,
+     '                    if pathKnown and savedKnown then\n                        if (not hasPath) and isSaved then set pristine to true\n                    else\n                        set pristine to {str(undescribable_is_ours).lower()}\n                    end if',
+     '                    if (not hasPath) and isSaved then set pristine to true'),
+    ('HFS path fallback back to slash-only', AB,
+     'if fn is not "" then set hasPath to true',
+     'if fn contains "/" then set hasPath to true'),
+]
+
+
 def _clean() -> bool:
     r = subprocess.run(["git", "status", "--porcelain"] + TARGETS + [TEST],
                        cwd=REPO, capture_output=True, text=True)
@@ -291,4 +315,5 @@ if __name__ == "__main__":
                      else main(CONC_MUTANTS, CONC_TEST) if which == "conc"
                      else main(VOL_MUTANTS, VOL_TEST) if which == "vol"
                      else main(PURGE_MUTANTS, PURGE_TEST) if which == "purge"
+                     else main(QUIT_MUTANTS, QUIT_TEST) if which == "quit"
                      else main())
