@@ -56,6 +56,7 @@ from shared.helpers import (
     make_long_path,
     LOCKED_FILE_REASON,
     LTI_STREAM_REASON,
+    is_lti_stream_ext,
 )
 from styles import inject_css
 from engine.estimation import transfer_estimator
@@ -1003,9 +1004,7 @@ def run_sync():
 
                         if not download_url:
                             # Check for LTI/Media streams
-                            ext_lower = filepath.suffix.lower()
-                            media_exts = ['.mp4', '.mov', '.avi', '.mkv', '.mp3']
-                            if ext_lower in media_exts:
+                            if is_lti_stream_ext(filepath.suffix):
                                 # The exact wording is a CONSTANT: the completion
                                 # screen classifies these strings to decide what
                                 # is a failure and what Canvas simply declined,

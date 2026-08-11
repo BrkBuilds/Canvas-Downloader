@@ -4540,9 +4540,8 @@ class CanvasManager:
             if not url:
 
                 # Check for LTI/Media streams
-                ext_lower = filepath.suffix.lower()
-                media_exts = ['.mp4', '.mov', '.avi', '.mkv', '.mp3']
-                if ext_lower in media_exts:
+                from shared.helpers import is_lti_stream_ext
+                if is_lti_stream_ext(filepath.suffix):
                     err = DownloadError(course_name, filename, "LTI/Media Stream", "This video is streamed via a Canvas plugin (e.g., Panopto/Studio) and cannot be directly downloaded.", context={'file_dict': safe_file_dict, 'filepath': str(filepath), 'file_filter': file_filter})
                 elif getattr(file_obj, 'locked_for_user', False):
                     # Teacher-locked file (module-linked but locked in Files):

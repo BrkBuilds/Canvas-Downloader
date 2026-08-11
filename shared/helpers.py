@@ -2002,6 +2002,41 @@ LTI_STREAM_REASON = "LTI/Media Stream (Cannot directly download)"
 LOCKED_FILE_ERROR_TYPE = "Locked File"
 LTI_STREAM_ERROR_TYPE = "LTI/Media Stream"
 
+#: Extensions that mark a URL-less Canvas file as a STREAM rather than a failure.
+#:
+#: When Canvas serves a file with no download URL, the two engines decide from
+#: the extension whether this is "a video the plugin streams" (a permanent fact
+#: about the course - no retry, setting or wait can ever fetch it) or a genuine
+#: failure. That verdict feeds ``LTI_STREAM_REASON`` / ``LTI_STREAM_ERROR_TYPE``
+#: above, which the completion screen classifies to decide what to colour as an
+#: error - so getting it wrong reports the app as broken for something Canvas
+#: simply declined to hand over.
+#:
+#: It lives HERE, beside the two constants it selects, because it was written
+#: TWICE - ``core.canvas_logic`` (download) and ``sync.execution`` (sync) - and
+#: the copies had already drifted: both omitted ``.m4v`` while the size-mismatch
+#: tolerance in ``core.canvas_logic`` lists it as media, so an ``.m4v`` stream
+#: was counted as a hard failure in both engines. The message and the error type
+#: were unified into this module long ago; the predicate that chooses them was
+#: left behind, which is the same "a rule written more than once" shape that
+#: ``make_long_path`` and the three AppleScript escapers already cost this repo.
+LTI_STREAM_EXTENSIONS = frozenset({
+    '.mp4', '.mov', '.avi', '.mkv', '.mp3', '.m4v',
+})
+
+
+def is_lti_stream_ext(name_or_ext: str) -> bool:
+    """True when a URL-less Canvas file of this name is a streamed medium.
+
+    Accepts a full filename or a bare extension. Case-insensitive, because
+    Canvas serves ``.MP4`` as readily as ``.mp4``.
+    """
+    if not name_or_ext:
+        return False
+    s = str(name_or_ext).lower()
+    dot = s.rfind('.')
+    return (s if dot < 0 else s[dot:]) in LTI_STREAM_EXTENSIONS
+
 # A Panopto recording whose session Panopto reports as gone (deleted or moved).
 # It is the SAME kind of outcome as the two above - a permanent fact about the
 # course, not a failure of the run: no retry, setting or wait brings it back.
