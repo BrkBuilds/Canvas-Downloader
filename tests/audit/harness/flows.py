@@ -702,7 +702,8 @@ class SyncFlow(Flow):
                          touched=len(touched), failed=failed,
                          ok=bool(touched) and not failed)
 
-    def wait_terminal(self, name: str, timeout: float = 5400.0) -> dict:
+    def wait_terminal(self, name: str, timeout: float = 5400.0,
+                      step: str = "wait_terminal", **extra) -> dict:
         """Follow a sync that is already running to its terminal screen.
 
         Quick Sync has NO review screen and NO confirmation dialog - that is
@@ -711,14 +712,125 @@ class SyncFlow(Flow):
         looked for ``btn_sync_selected`` and failed with "no host for key",
         which reads like the review screen lost its button rather than like a
         mode that never had one.
+
+        :meth:`confirm` ends here too, so "the sync finished" has ONE
+        definition whichever route reached it - the checker reads `terminal`,
+        and two waits for one question is how the two modes come to disagree.
+        *step* names the trace entry so the route is still legible in evidence.
         """
         done = self.s.wait_for(conditions.get("sync_terminal"), timeout=timeout,
                                poll=5.0, label="sync_terminal")
         self.s.settle(quiet_ms=800, timeout=180)
         cap = self.s.capture(f"{name}_complete",
                              ("screen", "wizard", "completion"))
-        return self._log("wait_terminal", terminal=done, capture=cap["name"],
-                         ok=done.get("done", False))
+        return self._log(step, terminal=done, capture=cap["name"],
+                         ok=done.get("done", False), **extra)
+
+    #: What `shared/components.py` titles the nothing-to-do card, in both its
+    #: Quick and full forms. Matched as a substring so the two share one probe.
+    _UP_TO_DATE_TITLE = "done - everything up to date"
+
+    def _why_already_complete(self) -> str:
+        """Distinguish "there was nothing to do" from "it finished already".
+
+        Both land on the completion screen, and only the screen itself can
+        tell them apart: the nothing-to-do case renders the up-to-date CARD
+        (`shared/components.py`), a real run renders "Sync Success" plus its
+        file counts. Falls back to the neutral phrasing rather than guessing -
+        an unreadable screen must not be reported as a measured outcome.
+        """
+        try:
+            text = (self.s.extract("screen").get("text") or "")
+        except Exception:
+            return "reached the completion screen (screen not readable)"
+        if self._UP_TO_DATE_TITLE in text:
+            return "already up to date"
+        return "the run finished during the analysis wait"
+
+    def after_analysis(self, name: str, landed: str, *, quick: bool = False,
+                       confirm: bool = True, tick: "list[str] | tuple" = (),
+                       timeout: float = 5400.0) -> dict:
+        """Do whatever the screen the analysis LANDED on calls for.
+
+        THE SINGLE ROW RUNNER AND THE MATRIX RUNNER BOTH NEED THIS DECISION,
+        and they had two copies of it - which is how they came to disagree.
+        `parallel.py` handled Quick Sync, an already-up-to-date folder and an
+        analysis that never finished; `cli.py` called :meth:`confirm`
+        unconditionally, so every `flow sync --quick` died on `no host for key
+        btn_sync_selected` (measured on macOS 26.6, 2026-08-11) and an
+        up-to-date folder failed the same way. The single-row path is the one
+        an operator reaches for when a matrix row looks wrong, so it was broken
+        in exactly the situation it exists to investigate.
+
+        Branch on the screen the run REACHED, never on the flag that was asked
+        for: `--quick` says what was requested, `landed` says what happened.
+
+        Returns the `review` / `select` / `confirm` slots the callers store, so
+        the evidence shape is identical for both.
+        """
+        out: dict = {}
+        on_review = landed == "review"
+
+        if on_review:
+            # Capture the screen's OWN defaults first, then tick, then capture
+            # again - the outcome checks need what was actually selected, and
+            # the first capture is the evidence for what the app proposed.
+            out["review"] = self.review_snapshot(f"{name}_review")
+            if tick:
+                out["select"] = [self.select_category(c) for c in tick]
+                out["review"] = self.review_snapshot(f"{name}_review")
+
+        if landed == "complete":
+            # Reaching the completion screen straight out of the analysis wait
+            # means there is nothing left to click - but NOT, on its own, that
+            # there was nothing to do. Quick Sync runs select -> analyze ->
+            # sync -> complete with no stop in between, and `analyze`'s
+            # `settle()` waits up to 180s for the DOM to go quiet, so a short
+            # sync FINISHES inside it: measured 2026-08-11, the wizard read
+            # `sync` at 2/14 files and `complete` a moment later.
+            #
+            # The old label said "already up to date" for both, so a run that
+            # downloaded 14 files was recorded as one that downloaded none.
+            # Nothing reads this field - it is evidence for a human - which is
+            # exactly why it has to be true. Ask the screen rather than infer.
+            out["confirm"] = {"ok": True, "landed_on": landed,
+                              "skipped": self._why_already_complete(),
+                              "capture": self.capture_screen(f"{name}_complete")}
+        elif landed in ("", "select", "analyze"):
+            # The wait returned without the run having got anywhere. Do not go
+            # hunting for a button: say so, with the screen as evidence.
+            out["confirm"] = {"ok": False, "reason": "analysis never completed",
+                              "landed_on": landed,
+                              "capture": self.capture_screen(
+                                  f"{name}_stuck_in_analysis")}
+        elif not confirm:
+            # `--no-confirm` means "stop at the review screen without syncing".
+            # Off the review screen the run has already committed, and
+            # abandoning it would leave the next row analysing a folder still
+            # moving under it - so it is followed, and the flag is reported as
+            # ignored rather than silently disobeyed.
+            if on_review:
+                out["confirm"] = {"ok": True, "skipped": "--no-confirm",
+                                  "capture": self.capture_screen(f"{name}_review_only")}
+            else:
+                out["confirm"] = self.wait_terminal(name, timeout=timeout)
+                out["no_confirm_ignored"] = (
+                    "the run had already started - there was no review screen "
+                    "to stop at")
+        elif on_review:
+            # Even on the review screen the action can be legitimately
+            # unavailable - every row a fixture produced may sit in a category
+            # that is unticked by design. Ask the DOM rather than assume.
+            if self.has_syncable_selection():
+                out["confirm"] = self.confirm(name, timeout=timeout)
+            else:
+                out["confirm"] = {"ok": True, "skipped": "nothing selected",
+                                  "capture": self.capture_screen(
+                                      f"{name}_nothing_selected")}
+        else:
+            # `sync` - Quick Sync is already downloading. Nothing to click.
+            out["confirm"] = self.wait_terminal(name, timeout=timeout)
+        return out
 
     def has_syncable_selection(self) -> bool:
         """Is the review screen's primary action actually available?
@@ -765,12 +877,12 @@ class SyncFlow(Flow):
             if not start.get("clicked"):
                 raise FlowError(f"Confirm Sync dialog open but 'Yes, Start Sync' "
                                 f"not clickable: {start}")
-        done = self.s.wait_for(conditions.get("sync_terminal"), timeout=timeout,
-                               poll=5.0, label="sync_terminal")
-        self.s.settle(quiet_ms=800, timeout=180)
-        cap = self.s.capture(f"{name}_complete", ("screen", "wizard", "completion"))
-        return self._log("confirm_sync", terminal=done, capture=cap["name"],
-                         ok=done.get("done", False))
+        # The notice result is recorded under the SAME key `analyze` uses. It
+        # was not recorded here at all, so a run that answered the notice on the
+        # review screen left no trace of having done so - and "did the sync path
+        # raise it?" is exactly what this step exists to answer.
+        return self.wait_terminal(name, timeout=timeout, step="confirm_sync",
+                                  panopto_notice=notice, dialog=dialog)
 
 
 # ==========================================================================

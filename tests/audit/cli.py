@@ -528,17 +528,17 @@ def _flow(rp, args) -> int:
                 res = {"name": args.name, "open": f.open()}
                 res["analyze"] = f.analyze(args.name, quick=args.quick,
                                            timeout=args.timeout)
-                if res["analyze"].get("landed_on") == "review":
-                    res["review"] = f.review_snapshot(f"{args.name}_review")
-                    # Ticking happens AFTER the first capture so the evidence
-                    # records the screen's own defaults, then again after so the
-                    # outcome checks see what was actually selected.
-                    sel = [x.strip() for x in args.select.split(",") if x.strip()]
-                    if sel:
-                        res["select"] = [f.select_category(c2) for c2 in sel]
-                        res["review"] = f.review_snapshot(f"{args.name}_review")
-                if not args.no_confirm:
-                    res["confirm"] = f.confirm(args.name, timeout=args.timeout)
+                # ONE post-analysis decision, shared with the matrix runner -
+                # see SyncFlow.after_analysis. This branch used to call
+                # `f.confirm` unconditionally, and `confirm` is a REVIEW-SCREEN
+                # action, so every `flow sync --quick` died on `no host for key
+                # btn_sync_selected` and so did any run against an
+                # already-up-to-date folder.
+                res.update(f.after_analysis(
+                    args.name, res["analyze"].get("landed_on", ""),
+                    quick=args.quick, confirm=not args.no_confirm,
+                    tick=[x.strip() for x in args.select.split(",") if x.strip()],
+                    timeout=args.timeout))
                 res["trace"] = f.trace
             elif c == "today":
                 f = flows.TodayFlow(s, rp)
