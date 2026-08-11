@@ -437,6 +437,218 @@ def test_the_notice_wait_can_exit_early_so_ordinary_rows_pay_nothing():
     assert "run_started_first" in body or "moved_on" in body
 
 
+def test_the_sync_confirm_step_RECORDS_whether_the_notice_was_raised():
+    """`SyncFlow.confirm` answered the notice and then dropped the answer.
+
+    Measured 2026-08-11: a completed review sync's trace carried
+    `panopto_notice` under `analyze` and nothing at all under `confirm_sync`,
+    so "did the review path raise it?" - the one question this step exists to
+    answer - was unanswerable from the evidence. It must go into the trace
+    under the SAME key `analyze` uses, or a checker reading one and not the
+    other silently sees half the runs.
+    """
+    body = _func_body(_flows_src(), "confirm")
+    assert "panopto_notice=" in body, (
+        "SyncFlow.confirm must log the notice result as `panopto_notice=`, the "
+        "same key SyncFlow.analyze uses")
+
+
+# ---------------------------------------------------------------------------
+# Quick Sync has no review screen, so it has no `confirm` to click
+# ---------------------------------------------------------------------------
+#
+# `flow sync --quick` could never complete: the CLI called `SyncFlow.confirm`
+# unconditionally, and `confirm` is a REVIEW-SCREEN action (it clicks
+# `btn_sync_selected`, then the Confirm Sync dialog). Quick Sync skips review by
+# design and, because `sync_past_analysis` counts `sync` as an arrival, is
+# already RUNNING by the time `analyze` returns.
+#
+# Measured on macOS 26.6, 2026-08-11: `flow sync p3quick --quick` died with
+# `no host for key btn_sync_selected` - which reads as a missing button on the
+# app rather than as the wrong action for the mode, and would have been filed
+# against the product by anyone who did not read the flow.
+
+def _cli_sync_branch() -> str:
+    src = (REPO / "tests" / "audit" / "cli.py").read_text(encoding="utf-8")
+    i = src.index('elif c == "sync":')
+    j = src.index('elif c == "today":', i)
+    return src[i:j]
+
+
+def _enclosing_if_tests(src: str, want_attr: str) -> "list[list[str]]":
+    """For every `<x>.<want_attr>(...)` call in *src*, the `if` tests above it.
+
+    A parent map rather than a hand-rolled walk: the first version of this
+    helper recursed and lost a level, so it reported a call as unguarded when
+    the guard was right there - a test that fails against correct code is
+    worse than no test.
+    """
+    import ast
+    tree = ast.parse(src)
+    parent = {}
+    for node in ast.walk(tree):
+        for child in ast.iter_child_nodes(node):
+            parent[child] = node
+
+    out = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and node.func.attr == want_attr):
+            continue
+        tests, cur = [], node
+        while cur in parent:
+            up = parent[cur]
+            # Only a statement in the BODY (or orelse) of an `if` is guarded by
+            # it; the test expression itself is not.
+            if isinstance(up, ast.If):
+                if any(cur is s for s in up.body):
+                    tests.append(ast.unparse(up.test))
+                elif any(cur is s for s in up.orelse):
+                    tests.append("not (" + ast.unparse(up.test) + ")")
+            cur = up
+        out.append(tests)
+    return out
+
+
+def test_the_helper_that_reads_guards_can_actually_see_one():
+    """Positive control. Without it, a helper that finds no guards anywhere
+    would make every assertion below vacuous.
+
+    Compared as a SET: `ast.walk` is breadth-first, so it reaches the shallow
+    `else` arm before the nested one and source order is not what comes back.
+    """
+    src = ("def f():\n"
+           "    if landed == 'review':\n"
+           "        if ok:\n"
+           "            res = flow.confirm('x')\n"
+           "    else:\n"
+           "        res = flow.confirm('y')\n")
+    stacks = {tuple(t) for t in _enclosing_if_tests(src, "confirm")}
+    assert stacks == {("ok", "landed == 'review'"),
+                      ("not (landed == 'review')",)}
+
+
+def test_quick_sync_does_not_click_the_review_screens_confirm():
+    """`confirm` must be reachable only when the run landed on the review
+    screen - it clicks `btn_sync_selected`, which no other screen has."""
+    stacks = _enclosing_if_tests(_func_body(_flows_src(), "after_analysis"),
+                                 "confirm")
+    assert stacks, "after_analysis must still confirm a review-screen run"
+    for tests in stacks:
+        assert any("review" in t for t in tests), (
+            "self.confirm() must be guarded by the analysis having landed on "
+            f"the review screen; guards seen: {tests}")
+
+
+def test_neither_runner_calls_confirm_behind_the_shared_decision():
+    """A caller that reaches past `after_analysis` is a second copy of the rule
+    in the making - which is how these two came to disagree in the first place."""
+    par = (REPO / "tests" / "audit" / "harness" / "parallel.py").read_text(encoding="utf-8")
+    sources = {
+        # cli.py's branch is a fragment, so it needs a wrapper to parse.
+        "cli.py": "if True:\n" + "\n".join(
+            "    " + ln for ln in _cli_sync_branch().splitlines()[1:]),
+        "parallel.py": _func_body(par, "_execute_sync"),
+    }
+    for who, src in sources.items():
+        assert not _enclosing_if_tests(src, "confirm"), (
+            f"{who} must route through SyncFlow.after_analysis, not call "
+            f"confirm itself")
+        assert "wait_terminal(" not in src, (
+            f"{who} must not reach past after_analysis to wait itself")
+
+
+def test_a_quick_sync_is_still_followed_to_its_completion_screen():
+    """Abandoning a running sync would leave the next row analysing a folder
+    that is still moving under it, so the non-review path must wait."""
+    branch = _cli_sync_branch()
+    assert "after_analysis" in branch, (
+        "the CLI must route through SyncFlow.after_analysis, which follows an "
+        "already-started Quick Sync to its terminal screen")
+
+
+def test_ONE_post_analysis_decision_serves_both_runners():
+    """The single-row runner and the matrix runner had two copies of it, and
+    only one knew about Quick Sync - so the path an operator reaches for when
+    a matrix row looks wrong was broken in exactly that situation."""
+    assert "after_analysis" in _cli_sync_branch()
+    par = (REPO / "tests" / "audit" / "harness" / "parallel.py").read_text(encoding="utf-8")
+    assert "after_analysis" in par, (
+        "parallel.py must use the same post-analysis decision as cli.py")
+
+
+def test_landing_on_complete_is_not_reported_as_up_to_date_without_looking():
+    """A Quick Sync that FINISHED is not a Quick Sync that had nothing to do.
+
+    Both land on the completion screen. `analyze`'s settle() waits up to 180s
+    for the DOM to go quiet, so a short sync finishes inside it - measured
+    2026-08-11: the wizard read `sync` at 2/14 files and `complete` a moment
+    later, and the run that downloaded 14 files was recorded as
+    "already up to date".
+    """
+    import ast
+    body = _func_body(_flows_src(), "after_analysis")
+    tree = ast.parse(body)
+    arm = next(n for n in ast.walk(tree)
+               if isinstance(n, ast.If) and 'landed == "complete"'
+               in ast.unparse(n.test).replace("'", '"'))
+    # unparse, so a COMMENT quoting the old label cannot trip this - the same
+    # reason verify_architecture.py blanks comments before scanning.
+    code = "\n".join(ast.unparse(s) for s in arm.body)
+    assert "_why_already_complete" in code, (
+        "the complete-arm must ASK the screen which case it is, not hard-code "
+        "a label")
+    assert "already up to date" not in code, (
+        "the literal must live in the prober that checks it, not in the arm "
+        "that cannot know")
+
+
+def test_the_up_to_date_probe_matches_the_card_the_app_actually_renders():
+    """Both titles, one substring - and if the app renames the card this fails
+    here rather than silently mislabelling every run."""
+    import tests.audit.harness.flows as F
+    probe = F.SyncFlow._UP_TO_DATE_TITLE
+    components = (REPO / "shared" / "components.py").read_text(encoding="utf-8")
+    for title in ("Quick Sync done - everything up to date",
+                  "Sync done - everything up to date"):
+        assert f"'{title}'" in components, f"app no longer renders {title!r}"
+        assert probe in title, f"{probe!r} does not match {title!r}"
+
+
+def test_an_unreadable_screen_is_not_reported_as_a_measured_outcome():
+    import ast
+    body = _func_body(_flows_src(), "_why_already_complete")
+    handlers = [h for h in ast.walk(ast.parse(body))
+                if isinstance(h, ast.ExceptHandler)]
+    assert handlers, "the screen read must be guarded - it drives a browser"
+    for h in handlers:
+        code = "\n".join(ast.unparse(s) for s in h.body)
+        assert "already up to date" not in code, (
+            "a failed read must not fall back to claiming the folder was in sync")
+
+
+def test_confirm_and_quick_share_ONE_definition_of_finished():
+    """Two waits for one question is how the two modes come to disagree about
+    what 'finished' means - and the checker reads this field."""
+    import ast
+    src = _flows_src()
+    assert "wait_terminal" in _func_body(src, "confirm"), (
+        "SyncFlow.confirm must reuse wait_terminal rather than keeping its own "
+        "copy of the sync_terminal wait")
+    assert 'conditions.get("sync_terminal")' in _func_body(src, "wait_terminal")
+    tree = ast.parse(src)
+    others = []
+    for cls in [n for n in tree.body if isinstance(n, ast.ClassDef)]:
+        for fn in cls.body:
+            if (isinstance(fn, ast.FunctionDef)
+                    and fn.name != "wait_terminal"
+                    and 'conditions.get("sync_terminal")' in
+                    (ast.get_source_segment(src, fn) or "")):
+                others.append(f"{cls.name}.{fn.name}")
+    assert not others, f"sync_terminal is waited on outside wait_terminal: {others}"
+
+
 # ---------------------------------------------------------------------------
 # Name-based matching in the sync checker (macOS run, 2026-08-11)
 # ---------------------------------------------------------------------------

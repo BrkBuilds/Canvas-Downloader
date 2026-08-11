@@ -855,54 +855,15 @@ def _execute_sync(rp: RunPaths, job: Job) -> dict:
         f = flows.SyncFlow(s, rp)
         res = {"name": job.name, "open": f.open()}
         res["analyze"] = f.analyze(job.name, quick=job.quick)
-        landed = res["analyze"].get("landed_on")
-        # A sync with nothing to do does not stop at Review at all - it runs
-        # straight to "Sync done - everything up to date. Checked N files in
-        # this course - your folder already matches Canvas." That is the right
-        # behaviour and a terminal screen, so there is nothing to confirm.
-        # Treating it as a review screen produced "no host for key
-        # btn_sync_selected", which reads like the app lost its own button.
-        already_done = landed == "complete"
-        on_review = landed == "review"
-        if on_review:
-            # Capture the screen's OWN defaults first, then tick, then capture
-            # again - the outcome checks need what was actually selected, and
-            # the first capture is the evidence for what the app proposed.
-            res["review"] = f.review_snapshot(f"{job.name}_review")
-            cats = _categories_to_tick(job.seed_kinds)
-            if cats:
-                res["select"] = [f.select_category(c) for c in cats]
-                res["review"] = f.review_snapshot(f"{job.name}_review")
-
-        if already_done:
-            res["confirm"] = {"ok": True, "skipped": "already up to date",
-                              "landed_on": landed,
-                              "capture": f.capture_screen(
-                                  f"{job.name}_up_to_date")}
-        elif job.confirm and on_review:
-            # Even on the review screen the action can be legitimately
-            # unavailable - every row a fixture produced may sit in a category
-            # that is unticked by design. Ask the DOM rather than assume.
-            if f.has_syncable_selection():
-                res["confirm"] = f.confirm(job.name)
-            else:
-                res["confirm"] = {"ok": True, "skipped": "nothing selected",
-                                  "capture": f.capture_screen(
-                                      f"{job.name}_nothing_selected")}
-        elif landed in ("", "select", "analyze"):
-            # The wait returned without the run having got anywhere. Do not go
-            # hunting for a button: say so, with the screen as evidence.
-            res["confirm"] = {"ok": False, "reason": "analysis never completed",
-                              "landed_on": landed,
-                              "capture": f.capture_screen(
-                                  f"{job.name}_stuck_in_analysis")}
-        elif job.quick:
-            # Quick Sync has no review screen and no confirmation dialog by
-            # design - it is already downloading by the time analyze returns.
-            # There is nothing to click; follow it to its terminal screen.
-            res["confirm"] = f.wait_terminal(job.name)
-        elif job.confirm:
-            res["confirm"] = f.confirm(job.name)
+        # The post-analysis decision lives on SyncFlow, because `cli.py` needs
+        # exactly the same one and the two copies had already drifted: this one
+        # knew about Quick Sync and an already-up-to-date folder, and the
+        # single-row runner - the thing an operator reaches for when a matrix
+        # row looks wrong - knew about neither.
+        res.update(f.after_analysis(
+            job.name, res["analyze"].get("landed_on", ""),
+            quick=job.quick, confirm=job.confirm,
+            tick=_categories_to_tick(job.seed_kinds)))
         res["trace"] = f.trace
     flows.save_trace(rp, job.name, res)
 
