@@ -2377,13 +2377,24 @@ def folder_scope_limited_courses(mode: str) -> list[tuple[str, int]]:
             from core.sync_manager import SyncManager
             from core.pair_labels import pair_display_name, pair_key
 
-            # Counts by pair, from this run's analysis if there was one.
+            # Counts AND managers by pair, from this run's analysis if there was
+            # one. Reusing the analysis's own SyncManager matters on the REVIEW
+            # screen: that screen reruns on every checkbox click and every
+            # keystroke in its search box, and constructing one per pair costs a
+            # measured 3.3 ms of blocking SQLite for 5 pairs - on a render path
+            # this repo has already gone to some trouble to keep clear (see
+            # core/course_cache.py). It is also the more correct read: the same
+            # contract object the analysis itself used.
             counts: dict = {}
+            managers: dict = {}
             for res in (st.session_state.get('sync_analysis_results') or []):
                 try:
                     _p = res.get('pair') or {}
-                    counts[pair_key(_p.get('course_id'), _p.get('local_folder'))] = int(
+                    _k = pair_key(_p.get('course_id'), _p.get('local_folder'))
+                    counts[_k] = int(
                         getattr(res.get('result'), 'out_of_scope_files', 0) or 0)
+                    if res.get('sync_manager') is not None:
+                        managers[_k] = res['sync_manager']
                 except Exception:
                     continue
 
@@ -2392,17 +2403,20 @@ def folder_scope_limited_courses(mode: str) -> list[tuple[str, int]]:
                 if not folder or not Path(folder).exists():
                     continue
                 try:
-                    sm = SyncManager(folder, pair.get('course_id'),
-                                     pair.get('course_name', ''))
+                    _pk = pair_key(pair.get('course_id'), folder)
+                    sm = managers.get(_pk)
+                    if sm is None:
+                        # The completion screen may outlive the analysis results,
+                        # and the download screen never had any - so the stateless
+                        # read stays as the fallback.
+                        sm = SyncManager(folder, pair.get('course_id'),
+                                         pair.get('course_name', ''))
                     raw = sm._load_metadata('sync_contract')
                     if not raw:
                         continue
                     if (_json.loads(raw) or {}).get('file_filter', 'all') != 'study':
                         continue
-                    out.append((
-                        pair_display_name(pair),
-                        counts.get(pair_key(pair.get('course_id'), folder), 0),
-                    ))
+                    out.append((pair_display_name(pair), counts.get(_pk, 0)))
                 except Exception:
                     continue
         else:

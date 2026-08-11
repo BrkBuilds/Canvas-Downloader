@@ -2672,7 +2672,16 @@ class SyncManager:
                 _raw = self._load_metadata('sync_contract')
                 if _raw:
                     scope_filter = (json.loads(_raw) or {}).get('file_filter', 'all') or 'all'
-            except (json.JSONDecodeError, TypeError, ValueError, sqlite3.Error) as e:
+            except Exception as e:
+                # Deliberately BROAD, and it is the fail-open direction: the only
+                # thing this read decides is whether to HIDE rows, so any failure
+                # must list everything rather than risk hiding a decision the user
+                # really made. Narrowing it to the expected tuple would let an
+                # unexpected error escape to the outer handler, which returns the
+                # partially-built list - i.e. an unreadable contract would empty
+                # the Ignored Files dialog. That failure mode did not exist before
+                # this read was added, so leaving the door open would have been a
+                # regression introduced by a hardening change.
                 logger.warning("Could not read this folder's file filter, "
                                "listing every ignored row: %s", e)
             from core.canvas_logic import file_in_scope  # cycle: see analyze_course
