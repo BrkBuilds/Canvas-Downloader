@@ -748,6 +748,10 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
     PowerPoint into Microsoft Error Reporting.
     """
     with _office_app_lock(app_name):
+        # Under the lock, so the observation cannot race the other instance's
+        # launch: "was it already running?" is only meaningful before we
+        # ourselves cause it to run.
+        _note_office_preexisting(app_name)
         return _run_applescript_locked(src, dst, app_name, script)
 
 
@@ -913,6 +917,46 @@ def _marker_in_value(value) -> bool:
             except Exception:
                 continue
     return False
+
+
+#: Which Office apps were ALREADY RUNNING when this process first drove them.
+#:
+#: THIS IS THE QUIT DECISION, and it replaces asking the documents. A document
+#: check cannot answer it: measured 2026-08-12, every app is left holding one
+#: document whose name, path and `saved` are ALL unreadable once a conversion
+#: phase has run, and `_force_close_canvas_docs_sync` cannot close it either
+#: because it identifies documents by those same properties. Neither default
+#: works - treating an unreadable document as pristine QUIT WORD AND DISCARDED
+#: THE USER'S UNSAVED ESSAY, and treating it as a blocker left all three apps
+#: in the dock after every single run.
+#:
+#: "Was it running before we touched it?" is answerable, cheap, and exactly the
+#: rule the product owner chose. If the user already had Word open, it is
+#: theirs and we never quit it; if we launched it, every document in it is ours.
+_office_preexisting: dict = {}
+
+
+def _note_office_preexisting(app_name: str) -> None:
+    """Record, ONCE per app per process, whether the user already had it open."""
+    if app_name in _office_preexisting:
+        return
+    bundle = _APP_DOC_MAP.get(app_name, (None,))[0]
+    if not bundle:
+        return
+    try:
+        running = subprocess.run(["pgrep", "-x", bundle],
+                                 capture_output=True, timeout=5).returncode == 0
+    except Exception:       # noqa: BLE001
+        running = True      # on doubt, treat it as the user's and never quit it
+    _office_preexisting[app_name] = running
+    if running:
+        logger.info(f"[OfficeQuit] {app_name} was already running before this "
+                    f"run - it will be left alone at the end")
+
+
+def office_was_preexisting(app_name: str) -> bool:
+    """True when the user already had *app_name* open before we used it."""
+    return bool(_office_preexisting.get(app_name, False))
 
 
 #: The registry segment naming each app's Recents subtree, measured on the real
@@ -1115,10 +1159,100 @@ def _purge_securebookmarks() -> None:
             logger.debug(f"[AppleScript] securebookmarks purge skipped for {cid}: {e}")
 
 
+#: A quitting Office app writes its Recents list to the shared registry as it
+#: goes, and that write lands slightly AFTER the process stops answering
+#: `pgrep`. Purging on the strength of "the process is gone" therefore deletes
+#: rows the dying app then writes back.
+#:
+#: MEASURED 2026-08-12, all three apps, nine conversions, cold start: the app's
+#: own teardown left **9 of 9 entries** in Recents, and a manual purge moments
+#: later removed all 9. `_wait_for_exit` was already waiting for the processes;
+#: what it could not wait for was the write.
+#:
+#: So: settle on the registry going QUIET (its mtime stops moving), then purge,
+#: then VERIFY - and go round again if anything reappeared. Verification is the
+#: natural guard here because resurrection is the exact failure mode, and it
+#: makes the fix independent of however long that final write happens to take
+#: on a given machine.
+_RECENTS_QUIET_S = 1.0
+_RECENTS_MAX_SETTLE_S = 15.0
+_RECENTS_ROUNDS = 3
+
+
+def _registry_paths() -> list:
+    group = Path.home() / "Library" / "Group Containers" / "UBF8T346G9.Office"
+    out = []
+    asi = group / "MicrosoftRegistrationDB.reg"
+    if asi.is_file():
+        out.append(asi)
+    nested = group / "MicrosoftRegistrationDB"
+    if nested.is_dir():
+        out.extend(p for p in nested.glob("MicrosoftRegistrationDB*.reg") if p.is_file())
+    return out
+
+
+def _count_canvas_recents() -> int:
+    """How many of OUR entries are in Office's Recents right now (-1 unknown)."""
+    import sqlite3
+    total = 0
+    seen_any = False
+    for db in _registry_paths():
+        try:
+            con = sqlite3.connect(f"file:{db}?mode=ro", uri=True, timeout=2.0)
+            try:
+                total += sum(
+                    1 for (name,) in con.execute("SELECT name FROM HKEY_CURRENT_USER")
+                    if _marker_in_value(name))
+                seen_any = True
+            finally:
+                con.close()
+        except Exception:       # noqa: BLE001
+            continue
+    return total if seen_any else -1
+
+
+def _wait_for_registry_quiet() -> None:
+    """Block until the registry stops being written, or the cap expires."""
+    paths = _registry_paths()
+    if not paths:
+        return
+    deadline = time.time() + _RECENTS_MAX_SETTLE_S
+    last = None
+    quiet_since = None
+    while time.time() < deadline:
+        try:
+            stamp = tuple((p.stat().st_mtime_ns, p.stat().st_size) for p in paths)
+        except OSError:
+            return
+        now = time.time()
+        if stamp != last:
+            last, quiet_since = stamp, now
+        elif quiet_since is not None and now - quiet_since >= _RECENTS_QUIET_S:
+            return
+        time.sleep(0.2)
+
+
 def _purge_canvas_recents() -> None:
-    """Remove all traces of our container-staged temp files from Office Recents."""
-    _purge_recents_sqlite()
-    _purge_securebookmarks()
+    """Remove all traces of our container-staged temp files from Office Recents.
+
+    Settles, purges, then verifies - see `_RECENTS_QUIET_S` for the measurement
+    that made the verify necessary.
+    """
+    for attempt in range(_RECENTS_ROUNDS):
+        _wait_for_registry_quiet()
+        _purge_recents_sqlite()
+        _purge_securebookmarks()
+        left = _count_canvas_recents()
+        if left <= 0:
+            return
+        # Anything left is either a running app's (correctly refused, and no
+        # number of rounds will change that) or a row written back as an app
+        # died. One more round settles the second case.
+        if _running_office_apps():
+            return
+        if attempt == _RECENTS_ROUNDS - 1:
+            logger.debug(f"[AppleScript] {left} Canvas temp entr(ies) still in "
+                         f"Office Recents after {_RECENTS_ROUNDS} rounds")
 
 
 # ── Dock "Suggested and Recent Apps" housekeeping ────────────────────
@@ -1615,7 +1749,8 @@ def _force_close_canvas_docs_async(only_app: str | None = None) -> None:
     ).start()
 
 
-def _idle_quit_script(app: str, collection: str) -> str:
+def _idle_quit_script(app: str, collection: str,
+                      undescribable_is_ours: bool = True) -> str:
     """AppleScript that quits *app* unless a REAL user document is open.
 
     Returns a human-readable status string (captured on stdout and logged) so a
@@ -1629,11 +1764,48 @@ def _idle_quit_script(app: str, collection: str) -> str:
     hidden launch) do NOT block: the old ``count is 0`` condition let a single
     pristine blank keep Excel in the dock forever. Quitting with only pristine
     blanks open shows no save prompt (nothing is modified), so the quit cannot
-    hang on a hidden dialog. Every property read is try-wrapped (dictionary
-    differences across Office versions default to "blocker" via the outer try,
-    never to a wrong quit... property reads that fail leave hasPath=false/
-    isSaved=true only within their inner trys, while a failure of the whole
-    document loop aborts with an error status and no quit).
+    hang on a hidden dialog.
+
+    **A DOCUMENT WHOSE PROPERTIES CANNOT BE READ IS DECIDED BY
+    ``undescribable_is_ours``, NOT by the property defaults**, and getting that
+    wrong destroyed a user's work. "Pristine" is *(no path) AND (saved)*, so
+    leaving `hasPath=false` / `isSaved=true` on a failed read - which this
+    function used to do, while its own docstring claimed it defaulted to
+    "blocker ... never to a wrong quit" - is precisely the combination that says
+    PRISTINE, and the quit goes out `saving no`.
+
+    The caller passes True only for an app IT LAUNCHED, where every open
+    document is ours by construction. An app the user already had open never
+    reaches this script at all - `quit_idle_office_apps` refuses it on
+    `office_was_preexisting`, which is the gate that actually carries the
+    safety, because after a conversion phase the documents cannot be described
+    and no property test can tell whose they are.
+
+    MEASURED 2026-08-12, the ordinary "the user is editing while a sync
+    converts" case. A real .doc, open and modified:
+
+        before a conversion phase   path=[Macintosh HD:...:MY WORD WORK.doc]  saved=false
+                                    -> "kept running (1 of 1 doc(s) look user-owned)"
+        after a conversion phase    name / path / full name / saved ALL FAIL
+                                    -> "quit sent (1 open doc(s), none user-owned)"
+                                    -> THE USER'S DOCUMENT WAS CLOSED
+
+    Word's scripting layer stops being able to describe its own documents once
+    our conversion phase has opened and closed files - not stale references
+    either: the reads fail even inside a single `tell` block. So readability
+    cannot be relied on, only defaulted safely. Excel and PowerPoint stayed
+    readable and behaved correctly throughout, which is exactly why this needed
+    all three apps to surface.
+
+    The cost of the safe default is an Office app left in the dock; the cost of
+    the unsafe one is a student's unsaved essay. `pathKnown`/`savedKnown` make
+    "we could not tell" expressible, which the old boolean pair could not say.
+
+    Second defect fixed at the same time: the ``full name`` fallback tested
+    ``contains "/"``, but Word returns an HFS **colon** path
+    (``Macintosh HD:Users:...``), so that test could never fire for Word - it
+    now accepts any non-empty name. Both defaults leaned the same way, toward
+    calling a real document pristine.
 
     Structured as three PHASE-TAGGED stages so the returned status pinpoints
     exactly where a failure happened (Excel's gallery-state ``-1700: Can't
@@ -1689,21 +1861,30 @@ def _idle_quit_script(app: str, collection: str) -> str:
                 set pristine to false
                 try
                     set hasPath to false
+                    set pathKnown to false
                     try
                         tell application "{app}" to set p to (path of d as text)
+                        set pathKnown to true
                         if p is not "" then set hasPath to true
                     end try
                     if not hasPath then
                         try
                             tell application "{app}" to set fn to (full name of d as text)
-                            if fn contains "/" then set hasPath to true
+                            set pathKnown to true
+                            if fn is not "" then set hasPath to true
                         end try
                     end if
                     set isSaved to true
+                    set savedKnown to false
                     try
                         tell application "{app}" to set isSaved to (saved of d)
+                        set savedKnown to true
                     end try
-                    if (not hasPath) and isSaved then set pristine to true
+                    if pathKnown and savedKnown then
+                        if (not hasPath) and isSaved then set pristine to true
+                    else
+                        set pristine to {str(undescribable_is_ours).lower()}
+                    end if
                 end try
                 if not pristine then set blockers to blockers + 1
             end repeat
@@ -1798,6 +1979,16 @@ def quit_idle_office_apps() -> None:
         still_running = []
         statuses: dict = {}
         for app, collection in targets:
+            # THE FIRST GATE, and the one that carries the safety: an app the
+            # user already had open is never quit, whatever its documents say.
+            # See `_office_preexisting` - the document check cannot answer this
+            # question, because after a conversion phase the documents are
+            # unreadable.
+            short = next((k for k, v in _APP_DOC_MAP.items() if v[0] == app), None)
+            if short and office_was_preexisting(short):
+                statuses[app] = "left alone (the user already had it open)"
+                logger.info(f"[OfficeQuit] pass {pass_no}: {app} -> {statuses[app]}")
+                continue
             try:
                 r = subprocess.run(
                     ['osascript', '-e', _idle_quit_script(app, collection)],
