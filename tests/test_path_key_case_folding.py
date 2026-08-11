@@ -260,3 +260,83 @@ def test_a_caseless_child_is_SKIPPED_not_a_reason_to_stop_looking():
     finally:
         SM.os.listdir, SM.os.path.samefile = orig_listdir, orig_samefile
         SM._probe_case_insensitive.cache_clear()
+
+
+def test_an_EMPTY_mount_point_answers_False_not_True():
+    """The child-flip's one blind spot: a directory with nothing to flip.
+
+    MEASURED on macOS 26.6 against a real case-sensitive APFS image
+    (`hdiutil create -fs "Case-sensitive APFS"`), probed while the volume was
+    still EMPTY: the no-child fallback flipped `/Volumes/CDCaseSens`, resolved
+    it against `/Volumes` - which is on the case-INSENSITIVE root volume - and
+    returned True for a case-SENSITIVE drive.
+
+    That is the merging direction: `_path_key` would then lower-case the path,
+    so `Notes.pdf` and `notes.pdf` - two genuinely distinct files on such a
+    volume - collapse to one manifest row. And `_probe_case_insensitive` is
+    lru_cached, so the wrong answer is frozen for the session even after the
+    first files land.
+
+    Reachable because `_case_insensitive_volume` climbs to the nearest EXISTING
+    ancestor: a course folder that does not exist yet on a freshly-formatted
+    external drive resolves to the drive's root. Verified after the fix on both
+    image types - sensitive answers False at every stage and keeps the two
+    names apart; insensitive answers True once the folder holds a file and
+    folds them.
+    """
+    orig_listdir, orig_samefile = SM.os.listdir, SM.os.path.samefile
+    orig_ismount = SM.os.path.ismount
+    SM._probe_case_insensitive.cache_clear()
+    try:
+        SM.os.listdir = lambda d: []                  # the empty volume
+        SM.os.path.ismount = lambda d: True           # ...which is a mount point
+        # The parent volume WOULD resolve the flipped name - that is the trap.
+        SM.os.path.samefile = lambda a, b: True
+        assert SM._probe_case_insensitive("/Volumes/CDCaseSens") is False, (
+            "an empty mount point answered case-INSENSITIVE from its parent "
+            "volume - this merges two distinct files into one manifest row")
+    finally:
+        SM.os.listdir, SM.os.path.samefile = orig_listdir, orig_samefile
+        SM.os.path.ismount = orig_ismount
+        SM._probe_case_insensitive.cache_clear()
+
+
+def test_an_empty_ORDINARY_directory_still_uses_the_name_fallback():
+    """The guard must be about mount points, not about emptiness.
+
+    One level below a mount point the directory's own name lives on the SAME
+    volume, so flipping it is sound - and that is the common case (an empty
+    course folder inside a normal download directory). Refusing there would
+    stop recognising case-only renames on every ordinary empty folder.
+    """
+    orig_listdir, orig_samefile = SM.os.listdir, SM.os.path.samefile
+    orig_ismount = SM.os.path.ismount
+    SM._probe_case_insensitive.cache_clear()
+    try:
+        SM.os.listdir = lambda d: []
+        SM.os.path.ismount = lambda d: False
+        SM.os.path.samefile = lambda a, b: True       # a case-insensitive volume
+        assert SM._probe_case_insensitive("/Users/me/Downloads/Course") is True
+    finally:
+        SM.os.listdir, SM.os.path.samefile = orig_listdir, orig_samefile
+        SM.os.path.ismount = orig_ismount
+        SM._probe_case_insensitive.cache_clear()
+
+
+def test_a_failing_ismount_is_treated_as_doubt():
+    """`os.path.ismount` stats the path and its parent; on an unplugged drive
+    or a permission-denied mount that can raise. Doubt answers False, which is
+    the recoverable direction - a case-only rename goes unrecognised rather
+    than two distinct files being merged."""
+    orig_listdir, orig_ismount = SM.os.listdir, SM.os.path.ismount
+    SM._probe_case_insensitive.cache_clear()
+    try:
+        SM.os.listdir = lambda d: []
+
+        def boom(_d):
+            raise OSError("device not configured")
+        SM.os.path.ismount = boom
+        assert SM._probe_case_insensitive("/Volumes/Gone") is False
+    finally:
+        SM.os.listdir, SM.os.path.ismount = orig_listdir, orig_ismount
+        SM._probe_case_insensitive.cache_clear()
