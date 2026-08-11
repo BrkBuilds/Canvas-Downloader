@@ -1032,10 +1032,27 @@ def file_in_scope(disk_name, file_filter: str) -> bool:
     `filename` here, so a course could be counted one way and downloaded another.
     A path is accepted as well as a bare name - `analyze_course` holds the
     computed destination, which is the most authoritative form of all.
+
+    **The name is URL-unquoted first, because `_sanitize_filename` does that too**
+    and the two must reach the same verdict. Canvas serves URL-encoded filenames
+    routinely (see the `'Klyngevejledning+-+Upload.pptx'` note in
+    sync/execution.py), and the engine asks this question about the SANITIZED name
+    while the analyzer and the estimators ask it about the raw one. Measured:
+    `Lecture%2Epdf` sanitizes to `Lecture.pdf`, so the engine downloads it while an
+    un-unquoted check saw no extension at all and dropped it - the silent-missing-
+    file direction, which is worse than the bug this predicate exists to fix.
+    Unquoting here rather than at the six call sites is what makes them agree by
+    construction. None of the sanitizer's other steps can change a short extension
+    (its length truncation only cuts one longer than 10 characters).
     """
     if file_filter != 'study':
         return True
-    return PurePath(str(disk_name)).suffix.lower() in STUDY_FILE_EXTENSIONS
+    name = str(disk_name)
+    try:
+        name = urllib.parse.unquote_plus(name)
+    except Exception:
+        pass
+    return PurePath(name).suffix.lower() in STUDY_FILE_EXTENSIONS
 
 
 class CanvasManager:

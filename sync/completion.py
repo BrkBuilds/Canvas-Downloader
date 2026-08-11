@@ -294,9 +294,19 @@ def show_sync_complete():
 
         # Post-processing failure warning
         render_pp_warning(st.session_state.get('pp_failure_count', 0))
-        render_archives_skipped_notice()
-        render_panopto_disabled_notice(mode='sync')
-        render_folder_scope_notice(mode='sync')
+        # THE "LEFT ALONE" PANELS ARE EMITTED ONCE, ABOVE, WITH THE OTHER
+        # EXPANDERS - not here. They were called in BOTH blocks, at the same level
+        # inside this one `with fresh_container(...)`, with no branch and no return
+        # between them, so both ran every time: driving the real
+        # `show_sync_complete` on 2026-08-11 produced **4** `.skip-panel`s for 2
+        # facts (the archive panel and the scope panel, each twice).
+        #
+        # It shipped unseen for two reasons worth remembering. Both conditions are
+        # uncommon, so most screens had nothing to double - and
+        # scripts/completion_gallery.py, the review instrument for these screens,
+        # mirrors app.py's single block and was therefore MORE correct than the app.
+        # The download screen never had it, which is what "Same rule, same order,
+        # on app.py's screen" above always meant.
 
         # L-12: Warn user when Office watchdog did a broad /IM kill (may have
         # closed other open Office documents the user had open independently).
