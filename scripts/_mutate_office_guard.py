@@ -201,24 +201,41 @@ VOL_MUTANTS = [
 PURGE_TEST = "tests/test_office_recents_purge.py"
 PURGE_MUTANTS = [
     ("back to deleting only value rows", AB,
-     '                cur.executemany(\n                    "DELETE FROM HKEY_CURRENT_USER WHERE node_id=?", ids)',
+     '                cur.executemany(
+                    "DELETE FROM HKEY_CURRENT_USER WHERE node_id=?", ids)',
      ''),
     ("marker gate removed", AB,
-     "                    if _marker_in_value(name)\n                    and nid not in has_child",
-     "                    if True\n                    and nid not in has_child"),
+     "                    if not (_marker_in_value(name) and nid not in has_child):",
+     "                    if not (True and nid not in has_child):"),
     ("leaf gate removed", AB,
-     "and nid not in has_child\n                    and _under_mru(nid)",
-     "and _under_mru(nid)"),
+     "                    if not (_marker_in_value(name) and nid not in has_child):",
+     "                    if not (_marker_in_value(name)):"),
     ("MruUserData gate removed", AB,
-     "                    and _under_mru(nid)\n                }", "                }"),
-    ("runs while Office is running", AB,
-     "    if _any_office_running():\n        logger.debug(", "    if False:\n        logger.debug("),
+     "                    if not under:
+                        continue",
+     "                    if False:
+                        continue"),
+    ("purges a RUNNING app's entries", AB,
+     "                    if app in running:
+                        continue",
+     "                    if False:
+                        continue"),
+    ("takes unattributable entries while an app runs", AB,
+     "                    if app is None and running:
+                        continue",
+     "                    if False:
+                        continue"),
+    ("runs even when every app is running", AB,
+     "    if len(running) == len(_OFFICE_PROCESSES):",
+     "    if False:"),
     ("running check launches Office instead", AB,
      'if subprocess.run(["pgrep", "-x", bundle],',
      'if subprocess.run(["osascript", "-e", f\'tell application "{bundle}" to count documents\'],'),
-    ("running check is False on doubt", AB,
-     "        except Exception:       # noqa: BLE001\n            return True\n    return False",
-     "        except Exception:       # noqa: BLE001\n            return False\n    return False"),
+    ("running check reports NOTHING on doubt", AB,
+     "        except Exception:       # noqa: BLE001
+            return set(_OFFICE_PROCESSES)",
+     "        except Exception:       # noqa: BLE001
+            return set()"),
     ("cycle guard removed from the ancestor walk", AB,
      "        while cur_id in by_id and cur_id not in seen:",
      "        while cur_id in by_id:"),
