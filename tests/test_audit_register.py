@@ -196,3 +196,45 @@ def test_an_empty_oracles_dash_does_not_become_literal_text(regpath):
     reg.update([_finding(oracles=[])], "run1", regpath)
     reg.update([_finding(oracles=[])], "run2", regpath)
     assert reg.parse(regpath)[next(iter(reg.parse(regpath)))]["oracles"] == ""
+
+
+def test_a_closed_titles_strikethrough_does_not_COMPOUND(tmp_path):
+    """`render` wraps a closed title in ~~…~~ and `parse` used to read it back
+    WITH the tildes, so every re-render added another pair to the right-hand
+    side. 53 entries had already grown to `### ~~title~~~~` by 2026-08-11, and it
+    compounds without limit - `lstrip("~ ")` hid the left half, which is exactly
+    why it looked handled.
+
+    Fingerprints are unaffected (they key off the fp comment), so this is
+    cosmetic - but a register nobody can read is a register nobody reads.
+    """
+    from tests.audit.harness import register as R
+
+    path = tmp_path / "AUDIT_FINDINGS.md"
+    entry = {
+        "fp": "abcdef123456", "title": "A defect with a plain title",
+        "status": "fixed", "severity": "high", "category": "data-loss",
+        "oracles": "O1", "first_seen": "2026-01-01 (r1)",
+        "last_seen": "2026-01-01 (r1)", "occurrences": 1,
+        "detail": "d", "notes": "n", "scenario": "s", "course": "",
+    }
+    entries = {entry["fp"]: entry}
+    for _ in range(4):                      # four re-renders, as a real run does
+        R.render(entries, path, "r1", seen_this_run={entry["fp"]})
+        entries = R.parse(path)
+
+    title_line = next(l for l in path.read_text(encoding="utf-8").splitlines()
+                      if l.startswith("### "))
+    assert title_line == "### ~~A defect with a plain title~~", title_line
+    assert entries[entry["fp"]]["title"] == "A defect with a plain title"
+
+
+def test_an_open_title_is_never_struck_through(tmp_path):
+    from tests.audit.harness import register as R
+    path = tmp_path / "AUDIT_FINDINGS.md"
+    e = {"fp": "0123456789ab", "title": "Still open", "status": "open",
+         "severity": "low", "category": "ux", "oracles": "", "first_seen": "x",
+         "last_seen": "x", "occurrences": 1, "detail": "", "notes": "",
+         "scenario": "", "course": ""}
+    R.render({e["fp"]: e}, path, "r1", seen_this_run={e["fp"]})
+    assert "### Still open" in path.read_text(encoding="utf-8")
