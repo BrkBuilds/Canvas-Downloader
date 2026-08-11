@@ -189,3 +189,39 @@ def test_the_full_name_fallback_accepts_an_HFS_path():
     script = AB._idle_quit_script("Microsoft Word", "documents")
     assert 'fn contains "/"' not in script
     assert 'fn is not ""' in script
+
+
+def test_the_observation_is_taken_BEFORE_priming_launches_the_apps():
+    """The earliest point the app touches Office, and it has to be.
+
+    `prime_office_automation` launches all three with `open -g -j` at run
+    start. If "was it already running?" is first asked during a conversion,
+    every app is running BY OUR OWN HAND, the gate calls them all the user's,
+    and nothing is ever quit.
+
+    Measured in the real app on 2026-08-12 with all three killed beforehand:
+    "PowerPoint was already running before this run", all three left in the
+    dock, and 70 of our entries left in Recents. The harness never saw it,
+    because it drives the converters directly and never primes - which is the
+    whole reason the operator asked for a real-app run.
+    """
+    import ast
+    import inspect
+    fn = ast.parse(inspect.getsource(AB.prime_office_automation)).body[0]
+    src = "\n".join(ast.unparse(n) for n in fn.body
+                    if not (isinstance(n, ast.Expr)
+                            and isinstance(n.value, ast.Constant)))
+    i_note = src.find("_note_office_preexisting")
+    i_launch = src.find("_primed_apps.add")
+    assert i_note != -1, (
+        "priming never records who was already open - the quit gate will call "
+        "every app the user's, because priming started them")
+    assert i_launch == -1 or i_note < i_launch, (
+        "the apps are marked for launch before the observation is taken")
+
+
+def test_the_two_app_name_tables_agree():
+    """`_APP_TRIPLES` (priming) and `_APP_DOC_MAP` (the quit gate) name the
+    same apps in the same words. If they drift, priming records a key the gate
+    never reads and the gate silently stops protecting that app."""
+    assert {t[2] for t in AB._APP_TRIPLES} == set(AB._APP_DOC_MAP)
