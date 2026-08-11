@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import logging
 import platform
+import re
 import threading
 import sys
 import os
@@ -345,7 +346,62 @@ _UN_PRESENT_OPTS = (1 << 4) | (1 << 3)  # Banner | List = 24
 #: assuming the banner was posted. A rejection is decided against an
 #: authorization status macOS already holds, so it returns immediately; this is
 #: the ceiling on being WRONG about a slow accept, not the expected cost.
-_UN_DELIVERY_TIMEOUT_S = 2.0
+#:
+#: `play_completion_beep` posts on the CALLING thread on purpose (see its own
+#: comment - a daemon thread can be killed during shutdown before the completion
+#: handler runs), so this wait is on the Streamlit script runner. That is
+#: acceptable only because it is a ceiling: it is paid at the very end of a run,
+#: and only when macOS never answers at all.
+_UN_DELIVERY_TIMEOUT_S = 1.0
+
+#: ``UNErrorCodeNotificationsNotAllowed``. Verified against the framework itself
+#: on macOS 26.6 rather than from memory; the literal is kept as the definition
+#: because the module may not be importable on every path that needs to READ an
+#: error, and the value is stable API.
+_UN_NOT_ALLOWED = 1
+_UN_ERROR_DOMAIN = "UNErrorDomain"
+
+#: The "notifications are off for this app" explanation is worth exactly one log
+#: line per session. It fires once per completed download/sync otherwise, which
+#: buries the run's real errors - the same reasoning as `_pan_hook_errs` in
+#: sync_ui.py.
+_un_denial_logged = False
+
+
+def _un_error_is_denial(error) -> bool:
+    """True when macOS refused because the USER turned our notifications off.
+
+    Distinguishing this from a genuine delivery failure is the whole point: a
+    denial must NOT fall through to `osascript`, which would post under Script
+    Editor's identity and route around an explicit permission decision, while a
+    real failure must.
+
+    Reads the NSError properly (`domain` + `code`) and falls back to parsing the
+    string form, because that is what has actually been observed in the wild -
+    the macOS 15 audit captured the line ``UN addNotificationRequest error:
+    UNErrorDomain Code=1``, and a PyObjC callback does not always hand back a
+    live NSError.
+
+    UNREADABLE MEANS "NOT A DENIAL", which is the direction that cannot suppress
+    a notification the user still wants: it costs at most one extra fallback
+    attempt, whereas guessing "denied" would silently stop trying.
+    """
+    try:
+        code = error.code()
+        domain = str(error.domain() or "")
+        return int(code) == _UN_NOT_ALLOWED and domain == _UN_ERROR_DOMAIN
+    except Exception:
+        pass
+    try:
+        # The string form, e.g. 'UNErrorDomain Code=1' or the fuller
+        # 'Error Domain=UNErrorDomain Code=1 "Notifications are not allowed..."'
+        text = str(error)
+        return bool(re.search(
+            rf"{_UN_ERROR_DOMAIN}\s+Code=(?:\s*){_UN_NOT_ALLOWED}\b", text)
+            or re.search(
+            rf"Domain={_UN_ERROR_DOMAIN}\s+Code={_UN_NOT_ALLOWED}\b", text))
+    except Exception:
+        return False
 
 
 def _ensure_un_delegate(center) -> None:
@@ -520,10 +576,22 @@ def _show_macos_notification_un(title: str, body: str) -> bool:
 
     Preferred over the deprecated ``NSUserNotification``. Requires (a) the .app to
     carry a bundle identifier - set in the PyInstaller spec - and (b) pyobjc-
-    framework-UserNotifications to be importable/bundled. Returns False on ANY
-    failure so the caller falls back to NSUserNotification, keeping us strictly no
-    worse than before even if the framework is missing or a future macOS changes
-    the API. Attributed to Canvas Downloader.app and uses its own permission.
+    framework-UserNotifications to be importable/bundled. Attributed to
+    Canvas Downloader.app and uses its own permission.
+
+    RETURNS "THE QUESTION IS SETTLED", NOT "A BANNER WAS SHOWN". True means the
+    caller must stop; False means try the next mechanism. Three ways to settle:
+
+    * macOS accepted the request - a banner is on its way;
+    * macOS never answered within ``_UN_DELIVERY_TIMEOUT_S`` - assume posted,
+      because guessing failure risks a second banner beside the first;
+    * macOS refused with ``UNErrorCodeNotificationsNotAllowed`` - the USER
+      turned this app's notifications off, and we will not route around that
+      (see ``_un_error_is_denial``).
+
+    Any OTHER failure - the framework missing, no bundle id, no center, a
+    malformed request, an exception - returns False so the caller falls back,
+    which is what the older "False on ANY failure" contract was reaching for.
 
     Foreground banners are handled by the presentation delegate installed in
     ``_ensure_un_delegate`` (which returns Banner|List from willPresentNotification);
@@ -566,12 +634,10 @@ def _show_macos_notification_un(title: str, body: str) -> bool:
         # "Returns False on ANY failure so the caller falls back ... keeping us
         # strictly no worse than before".
         #
-        # WE FALL BACK ONLY ON AN EXPLICIT REJECTION. A timeout keeps the old
-        # answer (True), deliberately: if the request is merely slow and we
-        # guessed failure, the UN banner could still land AND a fallback banner
-        # beside it - two notifications for one event, which is a worse defect
-        # than the one being fixed. So the only new behaviour is "macOS told us
-        # it failed, so try the next path", which is strictly an improvement.
+        # A TIMEOUT KEEPS THE OLD ANSWER (True), deliberately: if the request is
+        # merely slow and we guessed failure, the UN banner could still land AND
+        # a fallback banner beside it - two notifications for one event, which
+        # is a worse defect than the one being fixed.
         _done = threading.Event()
         _err: list = []
 
@@ -583,19 +649,56 @@ def _show_macos_notification_un(title: str, body: str) -> bool:
                 logger.info("UN addNotificationRequest accepted (no error)")
             _done.set()
         center.addNotificationRequest_withCompletionHandler_(req, _add_cb)
-        # Generous: a rejection is decided against an authorization status the
-        # system already knows, so it comes back immediately. This runs at the
-        # END of a download or sync, where a few hundred ms is invisible.
+        # The wait is a CEILING, not a cost: the handler is called back on an
+        # internal queue as soon as macOS has decided, and a rejection is
+        # decided against an authorization status it already holds. See the
+        # note at `_UN_DELIVERY_TIMEOUT_S` for why blocking the caller briefly
+        # here is acceptable even though `play_completion_beep` posts on the
+        # script-runner thread.
         if not _done.wait(_UN_DELIVERY_TIMEOUT_S):
             logger.info("UN addNotificationRequest did not report within "
                         f"{_UN_DELIVERY_TIMEOUT_S}s - assuming posted")
             return True
-        if _err:
-            logger.info("UN path REJECTED by macOS - falling through to the "
-                        "next notification mechanism")
-            return False
-        logger.info("UN notification posted via UNUserNotificationCenter")
-        return True
+        if not _err:
+            logger.info("UN notification posted via UNUserNotificationCenter")
+            return True
+
+        # THE USER'S OWN DECISION IS NOT A DELIVERY FAILURE, and this is the
+        # distinction the first version of this fix (fd05d18) got wrong: it fell
+        # back on ANY error, denial included.
+        #
+        # `UNErrorCodeNotificationsNotAllowed` means someone went into System
+        # Settings -> Notifications and turned Canvas Downloader OFF. The only
+        # fallback that could still put a banner on screen in that state is
+        # `osascript display notification`, which posts under **Script Editor's**
+        # identity - so it would (a) route around an explicit permission
+        # decision, and (b) show the user a banner attributed to an app they did
+        # not run, reading "Script Editor: Sync done - 12 new files". Both are
+        # worse than saying nothing. Product owner's call, 2026-08-11: respect
+        # the denial.
+        #
+        # The user is not left with no signal - `play_completion_beep` starts
+        # `_play_macos_sound` on its own thread BEFORE calling us, and that is
+        # governed by the app's own Settings toggle rather than by macOS
+        # notification permission. So a denied user still gets the chime.
+        #
+        # Returning True here means "the question is settled", not "a banner was
+        # shown" - see this function's docstring.
+        if _un_error_is_denial(_err[0]):
+            global _un_denial_logged
+            if not _un_denial_logged:
+                _un_denial_logged = True
+                logger.info(
+                    "Notifications are turned OFF for Canvas Downloader in "
+                    "System Settings, so none will be shown. Not falling back: "
+                    "the remaining mechanisms would post under another app's "
+                    "identity and route around that choice. The completion "
+                    "sound is unaffected. (Logged once per session.)")
+            return True
+
+        logger.info("UN path failed for a reason that is NOT a user denial - "
+                    "falling through to the next notification mechanism")
+        return False
     except Exception as e:
         logger.info(f"UNUserNotificationCenter delivery failed: {e}")
         return False
