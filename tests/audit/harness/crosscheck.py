@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import os
 import re
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from .findings import Finding, disagreement, observation
 
@@ -345,6 +345,7 @@ def invariants(ev: Evidence) -> list[Finding]:
             untracked = [u for u in rec["untracked_on_disk"]
                          if not u["new_version"] and _key(u["rel"]) not in exempt
                          and _key(u["rel"]) not in forked
+                         and not _is_os_metadata(u["rel"])
                          and not (sidecars and
                                   u["rel"].lower().endswith(sidecars))]
 
@@ -1481,12 +1482,38 @@ def _categories_match(ev: Evidence, plan: dict, ui_review: dict | None) -> list[
     out: list[Finding] = []
     rows = ev.log.get("analysis_rows", {}) or {}
     log_cat: dict[str, str] = {}
+    # A BASENAME IS NOT AN IDENTITY, and `_norm` reduces every key to one - so
+    # two files with the same name in different folders share a slot and the
+    # last row parsed wins. Measured on macOS 2026-08-11, course 43660: the
+    # seeder legitimately picked "Svarark - Gode råd til projektet.docx" TWICE,
+    # `Øvelser i uge 16` as edited_update and `Øvelser i uge 18` as
+    # clean_update. The app handled both correctly - the edited copy came
+    # through byte-identical with the fresh Canvas copy forked to _NewVersion,
+    # and the clean one was overwritten in place - and this function still
+    # produced FOUR highs, including "was shown as an unmodified update but the
+    # sync forked it to _NewVersion", which reads exactly like data loss.
+    #
+    # The same lesson RUNBOOK already records for `Page X (1).html`: identity
+    # lives in the id or the path, never in the name. Where a collision exists
+    # this cannot attribute a row to a fixture at all, so it must not claim a
+    # mismatch - the function's own rule two branches down is "silence beats a
+    # guess". An observation is emitted instead so the gap is visible rather
+    # than silently skipped.
+    log_seen: dict[str, set] = {}
     for raw, names in rows.items():
         cat = _LOG_CAT.get(raw)
         if not cat:
             continue
         for n in names:
             log_cat[_norm(n)] = cat
+            log_seen.setdefault(_norm(n), set()).add(cat)
+    ambiguous = {n for n, cats in log_seen.items() if len(cats) > 1}
+    _plan_names: dict[str, int] = {}
+    for _fx in plan.get("fixtures", []):
+        if _fx.get("expect_category"):
+            _k = _norm(_fx.get("match_name") or Path(_fx.get("path", "")).name)
+            _plan_names[_k] = _plan_names.get(_k, 0) + 1
+    ambiguous |= {n for n, c in _plan_names.items() if c > 1}
 
     # The review screen renders a filename as STEM plus a separate uppercase
     # <del>EXT</del> chip, so its innerText never contains "name.ext" and a
@@ -1507,9 +1534,46 @@ def _categories_match(ev: Evidence, plan: dict, ui_review: dict | None) -> list[
         # with setdefault and only after every exact stem is registered, so a
         # real filename that simply ends in a number ("Debug - shop - 1") always
         # wins its own key and can never be displaced by a stripped neighbour.
+        #
+        # THAT GUARD ONLY PROTECTS A FILE THAT HAS A ROW OF ITS OWN, and the
+        # interesting fixtures have none: a healed file (moved_deep,
+        # renamed_row_intact) is UP TO DATE and therefore appears in no category
+        # at all, so the stripped alias is the only thing left to match it -
+        # and `_DEDUP_SUFFIX` is `[ _-]\(?\d{1,3}\)?$`, which eats ANY trailing
+        # number. Course files here are `Klyngevejledning 1_grp 10`, `... 14`,
+        # `... 25`; all three collapse to `Klyngevejledning 1_grp`.
+        #
+        # Measured on macOS 2026-08-11: the app healed grp-14 and grp-25
+        # correctly (its own log shows tier (c) adopting them, and the analysis
+        # summary reports no ignored count at all), and both were reported at
+        # HIGH as "classified as ignored" because the screen's IGNORED row for
+        # grp-10 stripped onto the same alias. RUNBOOK already records this
+        # family as a false-positive machine - these Canvas names genuinely end
+        # in numbers.
+        #
+        # So an alias is registered only when it is UNAMBIGUOUS: if two real
+        # names - on the screen or in the plan - strip to the same thing, the
+        # alias is evidence of nothing. Dropping it leaves an up-to-date fixture
+        # matching nothing, which is exactly the correct answer for it.
+        _real = {k for k in ui_cat}
+        for _fx in plan.get("fixtures", []):
+            _real.add(_stem(_fx.get("match_name") or Path(_fx.get("path", "")).name))
+        # Count only names the strip actually CHANGES. A name already in its
+        # stripped form ("CBS_SolbjergPlads_ImageHeader" beside the engine's
+        # "CBS_SolbjergPlads_ImageHeader-1") is the very case the alias exists
+        # to serve, so counting it as a rival claim would suppress every real
+        # dedup match - which the first version of this guard did.
+        _claims: dict[str, set] = {}
         for k in list(ui_cat):
             stripped = _DEDUP_SUFFIX.sub("", k).strip()
             if stripped and stripped != k:
+                _claims.setdefault(stripped, set())
+                _claims[stripped] |= {
+                    n for n in _real
+                    if n != stripped and _DEDUP_SUFFIX.sub("", n).strip() == stripped}
+        for k in list(ui_cat):
+            stripped = _DEDUP_SUFFIX.sub("", k).strip()
+            if stripped and stripped != k and len(_claims.get(stripped, ())) <= 1:
                 ui_cat.setdefault(stripped, ui_cat[k])
 
     # An extraction that saw the screen but produced nothing is a broken probe,
@@ -1536,6 +1600,17 @@ def _categories_match(ev: Evidence, plan: dict, ui_review: dict | None) -> list[
         if not want:
             continue
         name = _norm(fx.get("match_name") or Path(fx.get("path", "")).name)
+        if name in ambiguous:
+            out.append(ev._d("O2", "O5",
+                title=f"'{name}' is ambiguous by name - classification not asserted",
+                severity="info", category="observation",
+                detail="Two or more files in this course share this basename, so a "
+                       "row cannot be attributed to one fixture by name and this "
+                       "check cannot decide whether it landed correctly. Asserting "
+                       "anyway fabricates a mismatch. Verify by relative path.",
+                evidence={"fixture": fx.get("path"), "expect_category": want},
+                scenario=ev.scenario, course=ev.course, synthetic=True))
+            continue
         cands = _name_candidates(name)
         got_log = next((log_cat[c] for c in cands if c in log_cat), None)
         got_ui = next((ui_cat[c] for c in cands if c in ui_cat), None)
@@ -1759,9 +1834,19 @@ def _sync_outcome(ev: Evidence, plan: dict, after: dict,
             # OVERWRITTEN IN PLACE. A _NewVersion sibling is the response to a
             # local edit, so producing one here contradicts the category the
             # screen showed and leaves the user a duplicate they never caused.
+            # Look for the fork AT THIS FIXTURE'S OWN PATH, not by basename.
+            # `names` is a flat set of basenames, so a _NewVersion legitimately
+            # created for an EDITED file elsewhere in the course was read as
+            # this file's fork. Measured on macOS 2026-08-11: the seeder placed
+            # `Svarark - Gode råd til projektet.docx` in BOTH `Øvelser i uge 16`
+            # (edited_update, correctly forked) and `Øvelser i uge 18`
+            # (clean_update, correctly overwritten in place) - and uge 18 was
+            # reported for a fork that belonged to uge 16, at high, with wording
+            # that reads like data loss.
             p = Path(rel)
             fork = f"{p.stem}_NewVersion{p.suffix}"
-            if fork in names:
+            fork_rel = str(p.parent / fork) if str(p.parent) not in ("", ".") else fork
+            if _key(fork_rel) in have:
                 out.append(ev._d("O1", "O3",
                     title=f"'{fx.get('label')}' was shown as an unmodified update "
                           f"but the sync forked it to _NewVersion",
@@ -1801,6 +1886,29 @@ def _sync_outcome(ev: Evidence, plan: dict, after: dict,
 
 # --------------------------------------------------------------------------
 
+_OS_METADATA_NAMES = {".ds_store", ".localized", "thumbs.db", "desktop.ini"}
+
+
+def _is_os_metadata(rel: str) -> bool:
+    """Filesystem bookkeeping the OS writes into any folder a user opens.
+
+    NOT content, and never tracked by the manifest - so counting it as an
+    untracked content file reports the operating system as an application
+    defect. Measured on macOS 2026-08-11: a single `.DS_Store` (18 KB, written
+    the moment the course folder was opened in Finder) produced a HIGH
+    "content file(s) on disk with no manifest row", whose stated consequence is
+    "each of these will be offered as a NEW file on every future sync" - which
+    is untrue of a file the analyzer never enumerates.
+
+    This fires for every macOS user who has ever looked at their course folder,
+    so it would have been permanent noise on this platform. `._*` is AppleDouble
+    metadata, which appears when a Mac writes to a non-native filesystem - the
+    same HFS+/exFAT external drive the NFD tests already care about.
+    """
+    name = PurePosixPath(str(rel).replace("\\", "/")).name.lower()
+    return name in _OS_METADATA_NAMES or name.startswith("._")
+
+
 _DEDUP_SUFFIX = re.compile(r"[ _-]\(?\d{1,3}\)?$")
 
 
@@ -1837,10 +1945,22 @@ def _name_candidates(name: str) -> set[str]:
                 out.add(_stem(stem[: -len(suffix)]))
 
     # 2. secondary-entity prefix
+    #
+    # MATCHED CASE-INSENSITIVELY, because `_stem` runs through `os.path.normcase`
+    # and THAT IS THE IDENTITY OFF WINDOWS. The prefixes below are lowercase, so
+    # on Windows a stem arrives lowercased and matches, while on macOS/Linux it
+    # keeps its capital ("Page Uge 13 pensum") and every one of these rules
+    # silently fails - i.e. the whole secondary-entity half of this matcher was
+    # dead on macOS. Measured 2026-08-11: the app placed `Page Uge 10 pensum.html`
+    # and `Page Uge 13 pensum.html` correctly under New (the review screen shows
+    # "Uge 10 pensum" / "Uge 13 pensum" there, since the screen shows the ENTITY
+    # TITLE), and both were reported at HIGH as "no oracle placed it in any
+    # category". Same platform-asymmetry class as `_path_key`'s normcase half.
+    _low = stem.lower()
     for pre in ("announcement ", "assignment ", "quiz ", "discussion ",
                 "page ", "syllabus", "submission ", "rubric "):
-        if stem.startswith(pre):
-            rest = stem[len(pre):].strip()
+        if _low.startswith(pre):
+            rest = stem[len(pre):].strip()      # keep the ORIGINAL case
             if rest:
                 out.add(rest)
                 # 3. attachment inside that entity: "<entity> - <filename>"
