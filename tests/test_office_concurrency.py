@@ -117,9 +117,21 @@ def test_the_guard_distinguishes_two_staged_documents(container, tmp_path):
 
 def test_run_applescript_takes_the_lock():
     """It has to wrap the WHOLE of open/save/close - including the crash retry
-    - so it lives on the one entry point every converter shares."""
+    - so it lives on the one entry point every converter shares.
+
+    Asserted through the AST, not a substring: the function's DOCSTRING names
+    `_office_app_lock`, so a grep over its source passes even when the `with`
+    statement has been deleted. That mutant survived the first version of this
+    test - the same "scan code, not prose" trap this repo already documents.
+    """
+    import ast
     import inspect
-    assert "_office_app_lock" in inspect.getsource(AB.run_applescript)
+    fn = ast.parse(inspect.getsource(AB.run_applescript)).body[0]
+    withs = [n for n in ast.walk(fn) if isinstance(n, ast.With)]
+    assert any("_office_app_lock" in ast.unparse(item.context_expr)
+               for w in withs for item in w.items), (
+        "run_applescript does not hold the Office lock - two instances will "
+        "interleave open/save/close against the one PowerPoint macOS gives us")
 
 
 def _hold(app: str, seconds: float, started, done):
@@ -172,7 +184,25 @@ def test_a_different_app_does_not_wait():
 
 
 def test_the_lock_is_a_no_op_off_macos(monkeypatch):
-    """A macOS-only hazard must not add a failure mode on Windows."""
+    """A macOS-only hazard must not add a failure mode on Windows.
+
+    The platform check must be the FIRST thing the function does, before it
+    reaches for `fcntl` or creates a lock file. Asserted structurally, because
+    a timing assertion cannot see this: these tests run ON macOS, where
+    deleting the gate changes nothing observable - the flock simply succeeds
+    immediately and the run still finishes in microseconds. That mutant
+    survived the first version of this test.
+    """
+    import ast
+    import inspect
+    fn = ast.parse(inspect.getsource(AB._office_app_lock)).body[0]
+    body = [n for n in fn.body
+            if not (isinstance(n, ast.Expr) and isinstance(n.value, ast.Constant))]
+    first = body[0]
+    assert isinstance(first, ast.If) and "darwin" in ast.unparse(first.test), (
+        "the platform gate must come first, before any fcntl import or lock "
+        f"file, got: {ast.unparse(first)[:80]}")
+
     monkeypatch.setattr(AB.sys, "platform", "win32", raising=False)
     t0 = time.time()
     with AB._office_app_lock("PowerPoint"):
@@ -207,7 +237,15 @@ def test_a_dead_holder_cannot_wedge_every_future_run():
 
 def test_the_lock_survives_an_exception_in_the_body():
     """A conversion that raises must not keep the lock - the next file, and
-    every other instance, would wait out the full timeout."""
+    every other instance, would wait out the full timeout.
+
+    NOTE, so nobody re-chases it: deleting the explicit ``LOCK_UN`` is an
+    EQUIVALENT mutant and survives the mutation pass legitimately. The same
+    ``finally`` closes the descriptor, and POSIX releases a flock when its last
+    descriptor closes - so the unlock is belt-and-braces, not the mechanism.
+    It is kept because it states the intent at the point of the guarantee, and
+    because it still holds if the close ever moves.
+    """
     with pytest.raises(RuntimeError):
         with AB._office_app_lock("Word"):
             raise RuntimeError("boom")
