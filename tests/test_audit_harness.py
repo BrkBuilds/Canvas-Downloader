@@ -360,3 +360,78 @@ def test_finding_rejects_unknown_severity_and_category():
         Finding(title="x", severity="catastrophic")
     with pytest.raises(ValueError):
         Finding(title="x", category="vibes")
+
+
+# ---------------------------------------------------------------------------
+# The Panopto acceptable-use notice is raised BY the primary action's click
+# ---------------------------------------------------------------------------
+#
+# `shared.legal.require_panopto_notice` is called from four places - the
+# download settings' Confirm handler, Quick Download's, the sync page's Analyze
+# handler and the sync review's - and every one of them is an ACTION callback.
+# None renders at page-render time. So a driver that probes for the dialog
+# BEFORE clicking the action can never see it: on a fresh CANVAS_DL_CONFIG_DIR
+# (which every audit run has) the row clicks Confirm, the dialog opens, and each
+# later wait reports a phase that never started.
+#
+# Measured on macOS 26.6 2026-08-11 with the dialog on screen: the wizard still
+# read step `configure`, and both `download_running_or_done` and
+# `download_terminal` evaluated false - i.e. 900s + 5400s of dead wait for a row
+# that had simply not been answered.
+#
+# These guard the ORDERING, not the mere presence of a call, because the first
+# version of this fix had the call and was still blind.
+
+def _flows_src() -> str:
+    return (REPO / "tests" / "audit" / "harness" / "flows.py").read_text(encoding="utf-8")
+
+
+def _func_body(src: str, name: str) -> str:
+    import ast
+    tree = ast.parse(src)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            return ast.get_source_segment(src, node) or ""
+    raise AssertionError(f"{name} not found in flows.py")
+
+
+def test_download_answers_the_panopto_notice_AFTER_the_confirm_click():
+    body = _func_body(_flows_src(), "confirm_and_run")
+    click = body.index('click("action_dl_confirm"')
+    waits = [i for i in range(len(body))
+             if body.startswith("_accept_panopto_notice(wait_s=", i)]
+    assert waits, ("confirm_and_run must answer the notice with a WAIT after the "
+                   "click that raises it; a bare pre-click probe cannot see it")
+    assert any(i > click for i in waits), (
+        "the waiting _accept_panopto_notice call must come AFTER "
+        "click('action_dl_confirm') - the click is what raises the dialog")
+
+
+def test_the_notice_helper_is_available_to_the_sync_flow_too():
+    """sync_ui.py and ui/sync_review.py raise the same notice from their own
+    action handlers, so a Panopto-carrying sync row stalls identically. The
+    helper therefore belongs on the base Flow, not on DownloadFlow."""
+    import ast
+    src = _flows_src()
+    tree = ast.parse(src)
+    owner = {}
+    for cls in [n for n in tree.body if isinstance(n, ast.ClassDef)]:
+        for fn in cls.body:
+            if isinstance(fn, ast.FunctionDef):
+                owner[fn.name] = cls.name
+    assert owner.get("_accept_panopto_notice") == "Flow", (
+        "_accept_panopto_notice must live on the base Flow so SyncFlow inherits "
+        f"it; found on {owner.get('_accept_panopto_notice')!r}")
+    for fn in ("analyze", "confirm"):
+        assert "_accept_panopto_notice(wait_s=" in _func_body(src, fn), (
+            f"SyncFlow.{fn} clicks an action that can raise the Panopto notice "
+            f"and must answer it")
+
+
+def test_the_notice_wait_can_exit_early_so_ordinary_rows_pay_nothing():
+    """A budget with no early exit taxes every row that will never see the
+    dialog. The helper must be able to stop as soon as the action is visibly
+    under way - by condition or by a widget that means 'we moved on'."""
+    body = _func_body(_flows_src(), "_accept_panopto_notice")
+    assert "stop_key" in body and "until" in body
+    assert "run_started_first" in body or "moved_on" in body
