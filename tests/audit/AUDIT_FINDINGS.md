@@ -11,7 +11,27 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260811_155557_macos-26-v2.0.2` on 2026-08-11.
 
-**43 open** · 107 total · 34 fixed · 30 invalid
+**45 open** · 109 total · 34 fixed · 30 invalid
+
+---
+
+### 'renamed-ambiguous:zz flertydig 1.jpg' was not offered as new in this run
+<!-- fp:650084e0245d -->
+
+**Status**: open
+**Severity**: high
+**Category**: classification
+**Oracles**: O5,O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: it5b · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back. O2 listed other files under new and this was not among them, so it was genuinely not offered rather than merely unseen.
+
+**Notes**: 
 
 ---
 
@@ -236,7 +256,7 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 **Oracles**: O1,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 **Scenario**: mac_checker_dialogs
 
 **Detail**:
@@ -294,6 +314,67 @@ STILL TO DO OUTSIDE THIS REPO: the docs site's macOS setup page does not mention
 
 **Notes**:   
 > Not observed in the latest run.
+
+---
+
+### Two orphaned Canvas files of identical size are re-offered one per sync, not both
+<!-- fp:5c1dc682e36c -->
+
+**Status**: open
+**Severity**: low
+**Category**: classification
+**Oracles**: O5,O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: it5 · 43660
+
+**Detail**:
+
+Course 43660 holds THREE distinct Canvas files whose `filename` is all
+`CBS_SolbjergPlads_ImageHeader.jpg` (ids 1559837 / 1560082 / 1560087, all
+2032529 bytes, all Files-tab only). Canvas disambiguates them by display_name:
+`...ImageHeader-1.jpg`, `...ImageHeader.jpg`, `...ImageHeader-1-1.jpg`.
+
+The seeder orphans two of them (renames the local file, drops the manifest row),
+leaving a state in which two same-size, same-extension Canvas files have no row.
+
+MEASURED, two consecutive syncs of the same folder with no reseed:
+  run 1  O2 debug log: "Analysis complete: 10 new ...", [NEW] list contains
+         `CBS_SolbjergPlads_ImageHeader-1.jpg` and NOT `...ImageHeader.jpg`.
+         O1 review screen: one row, `CBS_SolbjergPlads_ImageHeader-1`.
+         O4 after: row for 1559837 present and downloaded; NO row for 1560082.
+  run 2  O2: "Analysis complete: 1 new"; [NEW] = `...ImageHeader.jpg`.
+         O1: one row, `CBS_SolbjergPlads_ImageHeader`.
+
+So the app re-offers ONE of the two orphans per sync rather than both at once.
+
+WHY THIS IS NOT A BLOCKER: nothing is lost and nothing is silently bound. The
+user's renamed copies (`zz flertydig 0/1.jpg`) are untouched on disk, no
+manifest row was created for the file that was not offered, and the next sync
+offers it. The review screen never claimed otherwise - it showed exactly what
+the run would do. The auto-discovery uniqueness guard behaved correctly
+throughout: tier (c) refuses when more than one same-size, same-extension orphan
+exists, which is the documented and desired refusal.
+
+WHAT IS NOT ESTABLISHED: the mechanism. `analyze_course` dedups by canvas id and
+seeds `claimed_paths` only from TRACKED rows, so on inspection both ids should
+have been offered in run 1. I did not find the line that defers the second one,
+and did not spend further budget on it - the outcome is self-healing and the
+release is imminent.
+
+ORACLE PAIR: O5 (Canvas lists three live files, two with no manifest row) vs
+O1+O2 (one offered). O1 and O2 AGREE with each other, which is what rules out
+the harness as the cause.
+
+NOTE FOR THE NEXT PASS: tests/audit/MAC_AUDIT_CONTINUE.md recorded this as a
+checker oracle-SELECTION defect with the app "CORRECT". That diagnosis confused
+the two fixtures - fixture 0 (`...ImageHeader-1.jpg`) was found in the log,
+fixture 1 (`...ImageHeader.jpg`) genuinely was not. The checker's misleading
+"no oracle placed it in any category" wording is what produced the wrong
+conclusion; it has been fixed (479cd29).
+
+**Notes**: 
 
 ---
 
@@ -478,7 +559,44 @@ WHAT A LATER SESSION SHOULD DO: launch dist/Canvas Downloader.app, complete one 
 Also seen: the diagnostic process ended with "Killed: 9" after driving all three paths in one short-lived process, matching the already-recorded finding that the notification path crashes a bare short-lived python process and is not reproducible in the real app shape.
 
 **Notes**:   
-> Not observed in the latest run.
+> Not observed in the latest run (a source run has no bundle identity, so it
+> cannot reach the state).
+>
+> **2026-08-11, macOS 26.6 Tahoe - THE CODE DEFECT IS FIXED (fd05d18); THE
+> PRODUCT QUESTION IS STILL OPEN.** Read both halves before closing this.
+>
+> FIXED: `_show_macos_notification_un` now waits for the completion handler
+> (`_UN_DELIVERY_TIMEOUT_S`, 2s) and returns False when macOS reports an error,
+> so the three fallbacks are reached. It falls back ONLY on an explicit
+> rejection - a timeout keeps the old answer (True) deliberately, because
+> guessing failure on a slow accept could land the UN banner AND a fallback
+> banner beside it, which is a worse defect than the one being fixed. Covered by
+> tests/test_macos_notification_fallback.py (8); all 4 mutations caught,
+> including the two that would reintroduce the race or the double banner.
+>
+> STILL OPEN, and it is the question this entry's own "WHAT A LATER SESSION
+> SHOULD DO" paragraph asks: **can ANY fallback display a banner while Canvas
+> Downloader's own UN authorization is denied?** If macOS suppresses every path
+> for a denied app, the fix is inert (harmless, but the docstring is what should
+> change). If `osascript display notification` still shows one - it runs under
+> osascript's identity, not the app's - the fix is what makes it reachable.
+>
+> ATTEMPTED AND NOT COMPLETED THIS RUN. The operator set Canvas Downloader ->
+> Allow notifications OFF, and an `osascript display notification` probe was
+> fired with a full-screen before/after diff. The diff was CONTAMINATED: two TCC
+> consent dialogs (a Downloads-folder prompt raised by my own probe, and a
+> Keychain password prompt raised by the freshly re-signed bundle reading the
+> previous build's item) were occupying the top-right region where a banner
+> appears, and both block until a human answers. macOS refuses synthetic clicks
+> on them. So the frames differ for a reason that is not the banner, and no
+> conclusion may be drawn from them.
+>
+> TO FINISH IT, and it needs no packaged app and no login - only a clear screen:
+> take a full-screen capture, run
+> `osascript -e 'display notification "x" with title "Canvas Downloader"'`,
+> capture again after ~1.2s, and diff. A changed bbox in the top-right corner
+> that CONTAINS THE TEXT is the answer. Check `mac_eyes.py dialogs` FIRST -
+> a consent prompt in that corner makes the measurement meaningless.
 
 ---
 
@@ -491,7 +609,7 @@ Also seen: the diagnostic process ended with "Killed: 9" after driving all three
 **Oracles**: O1,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: mac_m3_white_flash
 
 **Detail**:
@@ -587,7 +705,7 @@ The last unproven half of the 2026-08-10 AppleScript escaping unification, and i
 **Oracles**: O2,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 **Scenario**: mac_m1_office
 
 **Detail**:
@@ -710,7 +828,7 @@ RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that 
 **Oracles**: O4,O5
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 **Scenario**: mac_m2_shortcut
 
 **Detail**:
@@ -767,7 +885,7 @@ FIRST TIME the Panopto subsystem has ever run on macOS. All of it passed. (1) DI
 **Oracles**: O3,O4
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 **Scenario**: mac_m2_url_compiler
 
 **Detail**:
@@ -844,7 +962,7 @@ Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requir
 **Oracles**: O3,O4
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 2
+**Occurrences**: 3
 **Scenario**: mac_m2_mp3
 
 **Detail**:
@@ -877,7 +995,7 @@ This run also re-exercised the download-side Panopto notice fix (56fa5f6) with t
 **Oracles**: O2,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 **Scenario**: mac_m2_transcribe
 
 **Detail**:
@@ -1306,7 +1424,8 @@ sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initia
 
 Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.
 
-**Notes**: AUDIT MATCHER DEFECT, fixed. The app placed all 11 New rows correctly; the matcher did not know three of the app's own naming conventions, so it could not find them on the screen. A fixture records the name a file has ON DISK; the review screen shows the name it has ON CANVAS, and between them sit: a converter rename (`x.js` -> `x_js.txt`), a secondary-entity prefix (`Quiz <title>.md` shown as `<title>` + an HTML chip), and an attachment inside an entity (`Assignment <entity> - <file>.pdf` shown as just `<file>`, sometimes with a `-1` dedup suffix). `crosscheck._name_candidates` now derives every legitimate form. Re-checked on the same folder: 6 of these became 0.
+**Notes**: AUDIT MATCHER DEFECT, fixed. The app placed all 11 New rows correctly; the matcher did not know three of the app's own naming conventions, so it could not find them on the screen. A fixture records the name a file has ON DISK; the review screen shows the name it has ON CANVAS, and between them sit: a converter rename (`x.js` -> `x_js.txt`), a secondary-entity prefix (`Quiz <title>.md` shown as `<title>` + an HTML chip), and an attachment inside an entity (`Assignment <entity> - <file>.pdf` shown as just `<file>`, sometimes with a `-1` dedup suffix). `crosscheck._name_candidates` now derives every legitimate form. Re-checked on the same folder: 6 of these became 0.  
+> Not observed in the latest run.
 
 ---
 
@@ -1531,7 +1650,8 @@ Each of these will be offered as a NEW file on every future sync unless the anal
 
 The audit's own exemption for this existed and never fired: it read `expect["converters"]` while `check download` is handed a FLAT config. The same shape mismatch was also reporting the 25 consumed `.url` rows as a broken manifest. Both now read the `sync_contract` the app stored in the folder, which is what the engine itself obeys.
 
-Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.
+Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.  
+> Not observed in the latest run.
 
 ---
 
