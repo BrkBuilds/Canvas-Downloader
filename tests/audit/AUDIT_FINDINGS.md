@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260811_155557_macos-26-v2.0.2` on 2026-08-11.
 
-**45 open** · 109 total · 34 fixed · 30 invalid
+**71 open** · 136 total · 35 fixed · 30 invalid
 
 ---
 
@@ -24,12 +24,381 @@ Last updated by run `20260811_155557_macos-26-v2.0.2` on 2026-08-11.
 **Oracles**: O5,O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 2
 **Scenario**: it5b · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
 
 Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back. O2 listed other files under new and this was not among them, so it was genuinely not offered rather than merely unseen.
+
+**Notes**: 
+
+---
+
+### All three Office converters can close the USER'S document without saving
+<!-- fp:352362c84bf8 -->
+
+**Status**: open
+**Severity**: high
+**Category**: conversion
+**Oracles**: O2,O3
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_office_active_document
+
+**Detail**:
+
+FOUND while investigating the operator-reported PowerPoint window flash, macOS
+26.6, 2026-08-11. All THREE Office converters share the shape, and the error
+handler is the dangerous half.
+
+    converters/pdf.py     (PowerPoint)   converters/word.py     converters/excel.py
+    open POSIX file "<ours>"
+    set theDoc to active presentation    active document        active workbook
+    save theDoc ... as PDF
+    close theDoc saving no
+    on error
+      close active presentation saving no
+                                         close active document saving no
+                                         close active workbook saving no
+
+TWO DEFECTS, BOTH FROM TRUSTING "active":
+
+1. THE ERROR HANDLER CLOSES A DOCUMENT IT NEVER OPENED, DISCARDING CHANGES.
+   If `open` fails - and it does; this very run logged
+   `[AppleScript] PowerPoint failed (other): 710:716: execution error:
+   Microsoft PowerPoint got an error: Parameter error. (-50)` plus ten more
+   conversion failures across rows m029/m030/m032 - control jumps straight to
+   `on error`, where `active presentation` is whatever the USER had in front of
+   them. `saving no` then discards their unsaved edits.
+
+2. ON THE SUCCESS PATH IT CAN EXPORT THE WRONG DOCUMENT. `active` is read
+   immediately after `open`; if the open has not won the race, or the app is in
+   a crash-recovery state with a recovered presentation frontmost, `theDoc` is
+   someone else's document - which is then saved as OUR pdf (wrong content,
+   silently) and closed with `saving no`.
+
+REACHABILITY IS ORDINARY, not exotic: a student with Word or PowerPoint open
+while a sync converts a folder of legacy files. The codebase already recognises
+this exact risk from the other direction - converters/pdf.py's Windows branch
+kills "only that PID (targeted, never a broad /IM that would close the user's
+own open presentations)". The AppleScript branch then reaches the same outcome
+through `active`.
+
+THE FIX IS AVAILABLE AND CHEAP, because our document has a KNOWN UNIQUE NAME.
+`engine/applescript_bridge.office_container_stage` stages every conversion as
+`src.<ext>` inside a per-conversion uuid work dir, and its own comment records
+that "nothing reads the staged basename". Something can now:
+
+    set theDoc to missing value
+    try
+        open POSIX file "<staged src>"
+        set theDoc to (first presentation whose name is "src.pptx")
+        ...
+    on error
+        try
+            if theDoc is not missing value then close theDoc saving no
+        end try
+        error errMsg number errNum
+    end try
+
+so the handler can only ever close a document THIS conversion opened, and the
+success path can only ever export that same document. `missing value` is the
+load-bearing part: it is what makes "we never got a document" distinguishable
+from "we have one", which `active` cannot express.
+
+NOT YET IMPLEMENTED - the matrix was still running Office conversions when this
+was written, and a fix to the converters must be measured with the real
+converters against a REAL second document open, not reasoned about. The
+measurement has to include the failing case (feed a corrupt file with a user
+document open and assert the user's document survives), because that is the
+branch that loses data and the one no existing test covers.
+
+ORACLE PAIR: O2 (the run's debug log - the -50 parameter error and ten
+conversion failures) vs O3 (what is on disk / what would be closed). Severity
+HIGH on consequence: silent loss of a user's unsaved work in another
+application.
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx  Conversion failed - 710
+<!-- fp:3f6131f0f3a2 -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx  Conversion failed twice
+<!-- fp:ddf8db2a5ddb -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx  Conversion failed twice
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Uploa
+<!-- fp:68ede2da0e43 -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: 2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_uploa
+<!-- fp:b6b66eb33701 -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 2
+**Scenario**: m030_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: 2025 7.lektion 31.marts .pptx  Conversion failed - 710:716: execution error: Microsoft Pow
+<!-- fp:1f62689d78bf -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m030_c46396 · IT-projektledelse (LA F26 BINTO1059U)
+
+**Detail**:
+
+2025 7.lektion 31.marts .pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx 
+<!-- fp:1dc7bf542396 -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Forandring i organisationer_video1_upload_2025.pptx  Conversion failed - 710:716: executio
+<!-- fp:23234eb36bd0 -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m030_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Forandring i organisationer_video1_upload_2025.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Forelæsning 22 - Cloud &amp; Security 101.pptx  Conversion failed - 710:716: execution err
+<!-- fp:21fe1446d2b5 -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+Forelæsning 22 - Cloud &amp; Security 101.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx  Conversion failed - 710:716: execution er
+<!-- fp:5177e5643619 -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m030_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Microsoft PowerPoint is not installed or could not be launched.  skipping remaining 57 Pow
+<!-- fp:e864ab10ed83 -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Microsoft PowerPoint is not installed or could not be launched.  skipping remaining 57 PowerPoint file(s)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716: execution 
+<!-- fp:4887012ff14c -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m030_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (app_missing): 710:716: execution error: Microsoft PowerPo
+<!-- fp:e05c7d6a0ca4 -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+[AppleScript] PowerPoint failed (app_missing): 710:716: execution error: Microsoft PowerPoint got an error: Application isn’t running. (-600)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 710:716: execution error: Microsoft PowerPoint go
+<!-- fp:51a25192e4d2 -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 6
+**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+[AppleScript] PowerPoint failed (other): 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Øvelsesslides_mål og strategi_XA-1.pptx  Conversion failed - Microsoft PowerPoint is not i
+<!-- fp:7bf0f1751dca -->
+
+**Status**: open
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Øvelsesslides_mål og strategi_XA-1.pptx  Conversion failed - Microsoft PowerPoint is not installed or could not be launched.
 
 **Notes**: 
 
@@ -142,6 +511,46 @@ Guarded by tests/test_office_staging_short_names.py (5 tests), which force the s
 
 ---
 
+### convert_pptx enabled but 2 source file(s) survived conversion
+<!-- fp:73bd0e4c557b -->
+
+**Status**: open
+**Severity**: medium
+**Category**: conversion
+**Oracles**: O1,O3
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+This converter is documented to replace its source. A surviving source at module level means the conversion ran and failed for that file - check whether the failure was reported to the user or only swallowed.
+
+**Notes**: 
+
+---
+
+### 2 over-cap file(s) were skipped without an ignored row
+<!-- fp:5b1db04502d0 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: persistence
+**Oracles**: O5,O4
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 3
+**Scenario**: m031 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Nothing records that these were deliberately skipped, so the next sync lists them as new again and the Sync Hub cannot offer them for restore.
+
+**Notes**: 
+
+---
+
 ### A COM-spawned EXCEL.EXE outlived 4+ rows (2h08m) while the app correctly killed every instance it tracked
 <!-- fp:6759ff4ce798 -->
 
@@ -247,6 +656,186 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 ---
 
+### Unexpected bridged_warning in debug log: PDF conversion failed for 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.ppt
+<!-- fp:2141f8bfb693 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for 2024_Lektion uge 46_1 Organisationer i et foranderligt perspekti
+<!-- fp:3cca535595db -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 3
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for 2025 7.lektion 31.marts .pptx: 710:716: execution error: Microso
+<!-- fp:2f6dd44da632 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m030_c46396 · IT-projektledelse (LA F26 BINTO1059U)
+
+**Detail**:
+
+PDF conversion failed for 2025 7.lektion 31.marts .pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over 
+<!-- fp:721e4990f066 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for Forandring i organisationer_video1_upload_2025.pptx: 710:716: ex
+<!-- fp:8e9ab25f1ea4 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m030_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for Forandring i organisationer_video1_upload_2025.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for Forelæsning 22 - Cloud & Security 101.pptx: 710:716: execution e
+<!-- fp:eb62775757c5 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+PDF conversion failed for Forelæsning 22 - Cloud & Security 101.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx: 710:716: execut
+<!-- fp:23340d4cc103 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m030_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+PDF conversion failed for Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for Slides (2) Motivationsfaktorer forelæsning 2.pptx: 710:716: exec
+<!-- fp:5a8a4afe9135 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m030_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for Slides (2) Motivationsfaktorer forelæsning 2.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for Øvelsesslides_mål og strategi_XA-1.pptx: Microsoft PowerPoint is
+<!-- fp:48aebaa68260 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for Øvelsesslides_mål og strategi_XA-1.pptx: Microsoft PowerPoint is not installed or could not be launched.
+
+**Notes**: 
+
+---
+
 ### mac_eyes dialogs cried wolf: Tahoe's phantom alert carries a title, macOS 15's did not
 <!-- fp:1006b5789ca8 -->
 
@@ -256,7 +845,7 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 **Oracles**: O1,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_checker_dialogs
 
 **Detail**:
@@ -274,6 +863,97 @@ Severity is about consequence: this is the one failure this command must not hav
 FIX: discriminate on AGE, which is exactly what the original comment's reasoning rested on and was simply not available to the code (_windows() dropped kCGWindowOwnerPID). A genuine prompt is YOUNG; the phantom persists for hours. _PHANTOM_MIN_AGE_S = 600, deliberately generous - far longer than any prompt an agent following this runbook leaves unanswered, far shorter than the 40+ min persistence measured on both OS versions - so the DANGEROUS direction (missing a real prompt) keeps a wide margin. Empty title is kept as an independent sufficient condition so the macOS 15 shape still suppresses. Unknown age fails OPEN. A suppressed window is now PRINTED, not dropped in silence, since the suppression is a judgement about one known window and that line is the only way a reader could ever notice it being wrong.
 
 VALIDATED IN BOTH DIRECTIONS against the live machine and in tests: the real 84-minute phantom is suppressed (and reported as ignored); a YOUNG window with the SAME owner and SAME title still alarms; the untitled macOS 15 shape still suppresses; a different owner is never masked; unknown age alarms. tests/test_mac_audit_tooling.py gains 3 tests; all 6 mutations of the real code are caught (revert to empty-title-only, fail-closed on unknown age, flipped comparison, suppress-every-owner, drop the pid, rename the report line). Full file suite 42 passed / 1 skipped.
+
+**Notes**: 
+
+---
+
+### After a PowerPoint crash-restart, every Office conversion shows a full-screen window
+<!-- fp:774fb9eb861b -->
+
+**Status**: open
+**Severity**: medium
+**Category**: ui-truth
+**Oracles**: O1,O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_office_window_flash
+
+**Detail**:
+
+OPERATOR-OBSERVED, macOS 26.6, during the download matrix, 2026-08-11. Twice.
+
+WHAT HAPPENED: PowerPoint crashed mid-conversion. "Microsoft Error Reporting"
+appeared - "There was a problem with Microsoft PowerPoint... will attempt to
+recover your work" - with a checkbox "Recover work and restart Microsoft
+PowerPoint" TICKED BY DEFAULT and an OK button. Clicking OK restarted
+PowerPoint VISIBLE, and from that point every single .pptx conversion opened a
+FULL-SCREEN PowerPoint window, held it while converting, closed it, and opened
+the next - for the rest of the batch. It stopped when conversions ended.
+
+WHY IT IS SILENT NORMALLY, AND WHY THIS BREAKS IT. engine/applescript_bridge.py
+carries a long measured note ("NO per-file 'hide the Office app' step, and that
+is a MEASURED decision") concluding that doing NOTHING is the quietest option,
+on this evidence:
+
+    with the System Events hide   ->  visible 2/11 samples
+    with `open -g -j` instead     ->  visible 1/12 - 2/11
+    with NEITHER                  ->  visible 0/7, twice, repeatable
+
+That measurement is correct AND INCOMPLETE. It was taken on a COLD app - the
+trace is described as going "absent -> false", i.e. the app was NOT RUNNING and
+an Apple event launched it without activating it. It says nothing about an app
+that is ALREADY RUNNING AND VISIBLE, which is exactly the state MER leaves
+behind. In normal operation `prime_office_automation` launches the three apps
+with `open -g -j` (hidden), so opening a document keeps them hidden - that is
+why this is invisible until something restarts one of them visibly.
+
+The note itself invites this report: "If window-flashing is ever reported again,
+re-measure with the trace above before adding anything back; do not reach for
+System Events."
+
+CONSEQUENCE: a user converting a folder of slide decks after any PowerPoint
+crash gets their screen taken over, once per file, for the whole batch. On a
+large course that is dozens of full-screen flashes. No data is affected - the
+matrix recorded 0 failed rows across the same period - so this is severity
+MEDIUM: it is a UX defect, not a correctness one.
+
+THE FIX THAT FITS THE THREE DOCUMENTED CONSTRAINTS (no Accessibility, do not
+hide the USER'S windows, do not regress the cold case) is to hide OUR OWN
+DOCUMENT'S WINDOW rather than the process. Verified available from the
+scripting dictionaries, read directly out of the app bundles rather than
+assumed - all three apps expose the Standard Suite `window` class with BOTH a
+`visible` and a `document` property:
+
+    Word        application.visible: no   window.visible: yes  window.document: yes
+    Excel       application.visible: no   window.visible: yes  window.document: yes
+    PowerPoint  application.visible: no   window.visible: yes  window.document: yes
+
+(PowerPoint's own `document window` class has NO `visible` - only the standard
+`window` does. That distinction is what makes this worth writing down.)
+
+Per-window hiding uses the app's OWN dictionary, so it needs Automation - which
+the app already has and which is answerable in place - and never Accessibility.
+It cannot touch a document the user opened themselves.
+
+NOT YET IMPLEMENTED OR MEASURED. It must be measured with Office free, and the
+matrix was using Office when this was written. The measurement has to reproduce
+the REPORTED state, not the cold one: launch PowerPoint VISIBLY first, then run
+the real converter and sample `visible of window` / screen-record. A cold-app
+control would pass with the bug still present, which is precisely how the
+original measurement came to be incomplete.
+
+SEPARATE, UNDIAGNOSED: why PowerPoint crashed at all. Twice, during repeated
+open/save-as-PDF/close cycles, with two lanes and the app under memory
+pressure. Course 43660 contains a macro-enabled `.pptm`. Not investigated - the
+conversions themselves all succeeded and the app's own per-file AppleScript
+timeout (`_timeout_for`) bounds a wedged call, so the unattended daily sync
+cannot hang on it.
+
+ORACLE PAIR: O1 (the operator's screen - MER dialog screenshotted, then a
+full-screen PowerPoint window per file) vs O2 (the run's own logs, which record
+the conversions completing normally and say nothing about a window).
 
 **Notes**: 
 
@@ -326,7 +1006,7 @@ STILL TO DO OUTSIDE THIS REPO: the docs site's macOS setup page does not mention
 **Oracles**: O5,O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 1
+**Occurrences**: 2
 **Scenario**: it5 · 43660
 
 **Detail**:
@@ -558,8 +1238,7 @@ WHAT A LATER SESSION SHOULD DO: launch dist/Canvas Downloader.app, complete one 
 
 Also seen: the diagnostic process ended with "Killed: 9" after driving all three paths in one short-lived process, matching the already-recorded finding that the notification path crashes a bare short-lived python process and is not reproducible in the real app shape.
 
-**Notes**:   
-> Not observed in the latest run (a source run has no bundle identity, so it
+**Notes**: > Not observed in the latest run (a source run has no bundle identity, so it
 > cannot reach the state).
 >
 > **2026-08-11, macOS 26.6 Tahoe - THE CODE DEFECT IS FIXED (fd05d18); THE
@@ -632,92 +1311,8 @@ Also seen: the diagnostic process ended with "Killed: 9" after driving all three
 >
 > STATUS: the code defect is fixed and the design question is decided. What was
 > never established - and no longer matters - is whether a denied app can reach
-> the user by any means. Recorded above for the record, not as a gap.
-
----
-
-### Packaged app shows a full-screen white frame before the dark splash on a cold launch
-<!-- fp:66b3e213c23d -->
-
-**Status**: fixed
-**Severity**: low
-**Category**: ui-truth
-**Oracles**: O1,O3
-**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
-**Scenario**: mac_m3_white_flash
-
-**Detail**:
-
-PRODUCT DEFECT (cosmetic, first-paint): the packaged .app shows ONE full-screen PURE WHITE frame at launch, immediately before the dark boot splash. CLAUDE.md's startup contract is "the window is NEVER empty" and the splash exists precisely so nothing jarring is shown before the UI - a full-screen white flash on a dark app is the thing it is meant to prevent, and it is the user's first impression of the product.
-
-REPRODUCED DELIBERATELY on macOS 26.6 after a clean rebuild + re-sign (a fresh signature is what makes the launch cold): 40 frames at 0.15 s across the launch, measuring the mean luminance of the window interior.
-
-    m3cold_00..04   lum 31.1   desktop
-    m3cold_05       lum 255.0  rgb(255,255,255)   <-- the app's own window, PURE WHITE
-    m3cold_06..10   lum 18.5   the dark splash (logo, "Connecting...", spinner)
-    m3cold_11..39   lum 36.8   the app
-
-Screenshot _audit_runs/_screens/m3cold_05.png shows the app's own titled window ("Canvas Downloader", full size, its traffic lights) rendered entirely white. It is ONE sample wide, so the flash is <= 150 ms, at about 0.75 s after launch.
-
-THREE INDEPENDENT CONFIRMATIONS, which is why this is filed rather than left as an artifact: the frame capture, the luminance series, and THE OPERATOR SEEING IT UNPROMPTED - "i saw the white flash as you opened the app. it came right before the actual launch loading screen came in". It did NOT reproduce on warm launches (28 frames, all dark, peak 31.4), which is why the first pass of this audit could only record it as observed-once.
-
-MECHANISM, as far as I took it. start.py ALREADY passes background_color='#0d1117' to webview.create_window, so the obvious fix is in place and does not prevent this. pywebview's Cocoa backend applies that colour with self.window.setBackgroundColor_(...) - i.e. to the NSWindow - while the WKWebView layered on top of it paints its OWN opaque white until the first content paint. The white being seen is the web view, not the window.
-
-NOT FIXED, deliberately. The plausible repair is to stop the WKWebView drawing its own background (the backend already does something of this shape in its `transparent` branch, via setValue_forKey_('drawsTransparentBackground')). That changes how EVERY screen composites, in a WKWebView this project cannot exercise from the audit harness, on the last run before release - and this repo's own rule is that a visual change needs a before/after pass on the real screens. Shipping a speculative rendering change to remove a 150 ms flash is the wrong trade; the measurement and the mechanism are recorded so the fix can be made and verified deliberately.
-
-**Notes**: 
-
-> **FIXED 2026-08-11 (255080d), macOS 26.6, measured before and after on the
-> PACKAGED bundle.**
->
-> ROOT CAUSE, and it was not what the finding assumed. `background_color`
-> works: pywebview applies it to the NSWindow, and the recording shows that
-> colour on screen, dark and correct, for ~50 ms BEFORE the flash. The WKWebView
-> is opaque, has no document yet, and paints its own white over it.
->
->     t=1.767s  lum  29.6   window on screen, NSWindow background correct
->     t=1.817s  lum 249.2   <- WHITE, 5 frames / 87 ms
->     t=1.900s  lum  30.5   the dark splash paints
->
-> THE INSTRUMENT MATTERS: polling with `screencapture` CANNOT see this. A
-> full-screen PNG takes 100-200 ms to write, so the effective rate is 5-8 fps
-> against an 87 ms event - the first attempt sampled at 0.12 s and "found" a
-> peak that was simply the DESKTOP before the window appeared.
-> `scripts/measure_launch_flash.py` records with `screencapture -v` instead
-> (~57 fps) and reads the luminance of the WINDOW INTERIOR per frame.
->
-> THREE CANDIDATES, MEASURED FROM SOURCE (a rebuild+resign is ~10 min, which is
-> the difference between testing three fixes and testing one):
->
->     (none - baseline)                          max luma 253.0, 3 white frames
->     setUnderPageBackgroundColor_ (public API)  max luma 253.0, 3 white frames
->     drawsBackground = False                    max luma  25.0, 0 white frames
->
-> The PUBLIC API does not fix it and is deliberately NOT shipped: it colours the
-> area BEYOND the page (overscroll), not the view's own background before a
-> document exists. `drawsTransparentBackground` - what pywebview itself uses for
-> `transparent=True` - is also rejected: macOS logs it as deprecated, and
-> pywebview only reaches it together with `setOpaque_(False)` and no window
-> shadow, three changes to buy one.
->
-> PACKAGED BUNDLE, FINAL: **0 frames above 100 luma** (was 5 at 249.2),
-> positive control passed (the app demonstrably appeared), settled luminance
-> delta **-0.01** - i.e. no rendering regression. Also checked on a real screen
-> rather than inferred: the running app's course list, sidebar, sticky action
-> bar and dark chrome are unchanged.
->
-> TWO GUARDS CAME OUT OF MY OWN MISTAKES HERE, both worth keeping:
-> the measurement script now REFUSES a trace where the screen never changed (an
-> `after` run scored a perfect 1.00 because a broken edit had made the launcher
-> unreachable - "no app" and "no flash" look identical without a positive
-> control); and `tests/test_launch_background.py` asserts on every platform that
-> nothing at module level overlaps the `if __name__` block and that
-> `webview.start()` is still REACHED. That broken edit was a column-0 `def`
-> written into the middle of the entry block, which silently made the whole
-> launcher the body of a function nobody calls - `ast.parse` passed and grep
-> still found the call.
+> the user by any means. Recorded above for the record, not as a gap.  
+> Not observed in the latest run.
 
 ---
 
@@ -791,7 +1386,7 @@ The last unproven half of the 2026-08-10 AppleScript escaping unification, and i
 **Oracles**: O2,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m1_office
 
 **Detail**:
@@ -914,7 +1509,7 @@ RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that 
 **Oracles**: O4,O5
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m2_shortcut
 
 **Detail**:
@@ -971,7 +1566,7 @@ FIRST TIME the Panopto subsystem has ever run on macOS. All of it passed. (1) DI
 **Oracles**: O3,O4
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m2_url_compiler
 
 **Detail**:
@@ -1048,7 +1643,7 @@ Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requir
 **Oracles**: O3,O4
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
+**Occurrences**: 4
 **Scenario**: mac_m2_mp3
 
 **Detail**:
@@ -1081,7 +1676,7 @@ This run also re-exercised the download-side Panopto notice fix (56fa5f6) with t
 **Oracles**: O2,O3
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
 **Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 4
+**Occurrences**: 5
 **Scenario**: mac_m2_transcribe
 
 **Detail**:
@@ -1695,6 +2290,30 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 
 ---
 
+### ~~1 content file(s) on disk with no manifest row~~
+<!-- fp:371b678dbdf1 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: persistence
+**Oracles**: O3,O4
+**First seen**: 2026-07-27 (20260727_165705_bootstrap)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 23
+**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+Each of these will be offered as a NEW file on every future sync unless the analyzer's adoption tiers reclaim it. This is the 'wrongfully shows up as new' failure.
+
+**Notes**: The file was `Compiled_External_Links.txt` — the single aggregate output `convert_urls` writes for the whole course after consuming every `.url`. It is a conversion product, so it has no manifest row BY DESIGN, exactly like the 21,630 archive-extracted files beside it. || SECOND CAUSE, 2026-07-29 - this entry now covers TWO different defects and the `invalid` above applies only to the first. On m025_c46396 the two files were 'Grupper til Klyngevejledning 1-1.pdf' and 'Grupper til Klyngevejledning 2.pdf': the orphaned second copies of the duplicate-download bug (fetch counts name file ids 1784620/1807289, the exact pair CLAUDE.md records for it), not a conversion product. That cause is FIXED - see the duplicate-download entry - and the evidence here is product-stale from a pre-fix run. HAZARD worth remembering: the register fingerprint is (category + digit-normalised title), so 'N content files on disk with no manifest row' is ONE entry no matter which files or which cause. A status set for one cause silences the other. Before trusting an `invalid`, check that the CURRENT evidence matches the cause the note describes.
+
+The audit's own exemption for this existed and never fired: it read `expect["converters"]` while `check download` is handed a FLAT config. The same shape mismatch was also reporting the 25 consumed `.url` rows as a broken manifest. Both now read the `sync_contract` the app stored in the folder, which is what the engine itself obeys.
+
+Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.
+
+---
+
 ### ~~2 Canvas file(s) were downloaded more than once in one run~~
 <!-- fp:d05cc83d973a -->
 
@@ -1712,31 +2331,6 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 Each of these ids went to the network twice. Two phases both claimed the file, so two copies are on disk and only one can hold the manifest row - the other is an untracked orphan. Canvas Content must run before every Files-tab sweep; see _defer_to_canvas_content.
 
 **Notes**: DUPLICATE of "A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice", fixed 2026-07-28 by running Canvas Content before all THREE Files-tab sweeps. This is the mechanical check added the same day, so it fires on pre-fix rows by construction. Verified fixed on 5 targeted post-fix runs (modules+inline, modules+isolate, flat+inline, each twice; a repeat run made ZERO HTTP requests). product-stale evidence from a pre-fix run.  
-> Not observed in the latest run.
-
----
-
-### ~~2 content file(s) on disk with no manifest row~~
-<!-- fp:371b678dbdf1 -->
-
-**Status**: invalid
-**Severity**: high
-**Category**: persistence
-**Oracles**: O3,O4
-**First seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 19
-**Scenario**: mac_p2_fix4 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-Each of these will be offered as a NEW file on every future sync unless the analyzer's adoption tiers reclaim it. This is the 'wrongfully shows up as new' failure.
-
-**Notes**: The file was `Compiled_External_Links.txt` — the single aggregate output `convert_urls` writes for the whole course after consuming every `.url`. It is a conversion product, so it has no manifest row BY DESIGN, exactly like the 21,630 archive-extracted files beside it. || SECOND CAUSE, 2026-07-29 - this entry now covers TWO different defects and the `invalid` above applies only to the first. On m025_c46396 the two files were 'Grupper til Klyngevejledning 1-1.pdf' and 'Grupper til Klyngevejledning 2.pdf': the orphaned second copies of the duplicate-download bug (fetch counts name file ids 1784620/1807289, the exact pair CLAUDE.md records for it), not a conversion product. That cause is FIXED - see the duplicate-download entry - and the evidence here is product-stale from a pre-fix run. HAZARD worth remembering: the register fingerprint is (category + digit-normalised title), so 'N content files on disk with no manifest row' is ONE entry no matter which files or which cause. A status set for one cause silences the other. Before trusting an `invalid`, check that the CURRENT evidence matches the cause the note describes.
-
-The audit's own exemption for this existed and never fired: it read `expect["converters"]` while `check download` is handed a FLAT config. The same shape mismatch was also reporting the 25 consumed `.url` rows as a broken manifest. Both now read the `sync_contract` the app stored in the folder, which is what the engine itself obeys.
-
-Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.  
 > Not observed in the latest run.
 
 ---
@@ -2404,17 +2998,16 @@ Fixed by routing both flows through one shared helper (converters.post_processin
 **Category**: conversion
 **Oracles**: O1,O3
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
-**Occurrences**: 11
-**Scenario**: m040 · m040
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 15
+**Scenario**: m051_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
 
 convert_zip extracted these, but post-processing filters every converter through explicit_files - the list of paths the DOWNLOADER wrote - and extraction output is never added to it. So enabling both toggles applies only the first to archive contents.
 
 **Notes**: Fixed 2026-07-27: `run_archive_extraction` now returns its extraction roots and `_glob_files` accepts anything under them, so unpacked files get the same treatment as any other teacher-uploaded file. Guarded by `tests/test_archive_conversion_scope.py`.  
-> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.  
-> Not observed in the latest run.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
 
 ---
 
@@ -2448,17 +3041,16 @@ This converter is documented to replace its source. A surviving source at module
 **Category**: conversion
 **Oracles**: O1,O3
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Last seen**: 2026-08-08 (20260808_170617_minimal-dl-sync-2026-08)
-**Occurrences**: 5
-**Scenario**: m032_c45899 · m032_c45899
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 7
+**Scenario**: m001_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
 
 convert_zip extracted these, but post-processing filters every converter through explicit_files - the list of paths the DOWNLOADER wrote - and extraction output is never added to it. So enabling both toggles applies only the first to archive contents.
 
 **Notes**: Fixed 2026-07-27: `run_archive_extraction` now returns its extraction roots and `_glob_files` accepts anything under them, so unpacked files get the same treatment as any other teacher-uploaded file. Guarded by `tests/test_archive_conversion_scope.py`.  
-> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.  
-> Not observed in the latest run.
+> Not observed in the latest run. || REVERSED 2026-07-29, deliberately - this is now WORKING AS DESIGNED and must not be re-filed. A zip is unpacked and its contents are then left exactly as they are; nothing inside an archive is converted, in either flow. The original finding was right about the symptom and wrong about the cure. Measured on one real lecture zip from course 45899 (a JavaScript project with node_modules): 21,824 files extracted, 11,818 a converter would rewrite, 9,730 of those on paths past Windows' 260-char limit - because member names come verbatim from the zip and converting one makes it LONGER (x.d.ts -> x.d_ts.txt). The Office half could never have worked at any depth: PowerPoint COM rejects a long path AND rejects the long-path prefix (both measured directly). Beyond the arithmetic: an archive is an opaque payload the teacher uploaded, and a source-consuming converter DELETES the original, so a student's .js inside their own project would stop being a .js. The Card 3 toggle now says so in its tooltip. Guarded by tests/test_archive_conversion_scope.py, which asserts the reversed rule and explains why.
 
 ---
 
@@ -2978,6 +3570,89 @@ Consequence: a shared debug log cannot answer WHICH file the app put in those ca
 
 **Notes**: AUDIT ERROR, not a product defect. The grep used tag names that do not exist (UPDATE-MODIFIED/DELETED-CANVAS/DELETED-LOCAL); the real tags are UPDATE-EDIT/CANVAS-DEL/LOCAL-DEL, and five categories were already logged. Superseded by the 'omitted the Ignored category and printed URL-encoded filenames' entry, which is the accurate version and is fixed. ---  
 > Not observed in the latest run.
+
+---
+
+### ~~Packaged app shows a full-screen white frame before the dark splash on a cold launch~~
+<!-- fp:66b3e213c23d -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: ui-truth
+**Oracles**: O1,O3
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 4
+**Scenario**: mac_m3_white_flash
+
+**Detail**:
+
+PRODUCT DEFECT (cosmetic, first-paint): the packaged .app shows ONE full-screen PURE WHITE frame at launch, immediately before the dark boot splash. CLAUDE.md's startup contract is "the window is NEVER empty" and the splash exists precisely so nothing jarring is shown before the UI - a full-screen white flash on a dark app is the thing it is meant to prevent, and it is the user's first impression of the product.
+
+REPRODUCED DELIBERATELY on macOS 26.6 after a clean rebuild + re-sign (a fresh signature is what makes the launch cold): 40 frames at 0.15 s across the launch, measuring the mean luminance of the window interior.
+
+    m3cold_00..04   lum 31.1   desktop
+    m3cold_05       lum 255.0  rgb(255,255,255)   <-- the app's own window, PURE WHITE
+    m3cold_06..10   lum 18.5   the dark splash (logo, "Connecting...", spinner)
+    m3cold_11..39   lum 36.8   the app
+
+Screenshot _audit_runs/_screens/m3cold_05.png shows the app's own titled window ("Canvas Downloader", full size, its traffic lights) rendered entirely white. It is ONE sample wide, so the flash is <= 150 ms, at about 0.75 s after launch.
+
+THREE INDEPENDENT CONFIRMATIONS, which is why this is filed rather than left as an artifact: the frame capture, the luminance series, and THE OPERATOR SEEING IT UNPROMPTED - "i saw the white flash as you opened the app. it came right before the actual launch loading screen came in". It did NOT reproduce on warm launches (28 frames, all dark, peak 31.4), which is why the first pass of this audit could only record it as observed-once.
+
+MECHANISM, as far as I took it. start.py ALREADY passes background_color='#0d1117' to webview.create_window, so the obvious fix is in place and does not prevent this. pywebview's Cocoa backend applies that colour with self.window.setBackgroundColor_(...) - i.e. to the NSWindow - while the WKWebView layered on top of it paints its OWN opaque white until the first content paint. The white being seen is the web view, not the window.
+
+NOT FIXED, deliberately. The plausible repair is to stop the WKWebView drawing its own background (the backend already does something of this shape in its `transparent` branch, via setValue_forKey_('drawsTransparentBackground')). That changes how EVERY screen composites, in a WKWebView this project cannot exercise from the audit harness, on the last run before release - and this repo's own rule is that a visual change needs a before/after pass on the real screens. Shipping a speculative rendering change to remove a 150 ms flash is the wrong trade; the measurement and the mechanism are recorded so the fix can be made and verified deliberately.
+
+**Notes**: > **FIXED 2026-08-11 (255080d), macOS 26.6, measured before and after on the
+> PACKAGED bundle.**
+>
+> ROOT CAUSE, and it was not what the finding assumed. `background_color`
+> works: pywebview applies it to the NSWindow, and the recording shows that
+> colour on screen, dark and correct, for ~50 ms BEFORE the flash. The WKWebView
+> is opaque, has no document yet, and paints its own white over it.
+>
+>     t=1.767s  lum  29.6   window on screen, NSWindow background correct
+>     t=1.817s  lum 249.2   <- WHITE, 5 frames / 87 ms
+>     t=1.900s  lum  30.5   the dark splash paints
+>
+> THE INSTRUMENT MATTERS: polling with `screencapture` CANNOT see this. A
+> full-screen PNG takes 100-200 ms to write, so the effective rate is 5-8 fps
+> against an 87 ms event - the first attempt sampled at 0.12 s and "found" a
+> peak that was simply the DESKTOP before the window appeared.
+> `scripts/measure_launch_flash.py` records with `screencapture -v` instead
+> (~57 fps) and reads the luminance of the WINDOW INTERIOR per frame.
+>
+> THREE CANDIDATES, MEASURED FROM SOURCE (a rebuild+resign is ~10 min, which is
+> the difference between testing three fixes and testing one):
+>
+>     (none - baseline)                          max luma 253.0, 3 white frames
+>     setUnderPageBackgroundColor_ (public API)  max luma 253.0, 3 white frames
+>     drawsBackground = False                    max luma  25.0, 0 white frames
+>
+> The PUBLIC API does not fix it and is deliberately NOT shipped: it colours the
+> area BEYOND the page (overscroll), not the view's own background before a
+> document exists. `drawsTransparentBackground` - what pywebview itself uses for
+> `transparent=True` - is also rejected: macOS logs it as deprecated, and
+> pywebview only reaches it together with `setOpaque_(False)` and no window
+> shadow, three changes to buy one.
+>
+> PACKAGED BUNDLE, FINAL: **0 frames above 100 luma** (was 5 at 249.2),
+> positive control passed (the app demonstrably appeared), settled luminance
+> delta **-0.01** - i.e. no rendering regression. Also checked on a real screen
+> rather than inferred: the running app's course list, sidebar, sticky action
+> bar and dark chrome are unchanged.
+>
+> TWO GUARDS CAME OUT OF MY OWN MISTAKES HERE, both worth keeping:
+> the measurement script now REFUSES a trace where the screen never changed (an
+> `after` run scored a perfect 1.00 because a broken edit had made the launcher
+> unreachable - "no app" and "no flash" look identical without a positive
+> control); and `tests/test_launch_background.py` asserts on every platform that
+> nothing at module level overlaps the `if __name__` block and that
+> `webview.start()` is still REACHED. That broken edit was a column-0 `def`
+> written into the middle of the entry block, which silently made the whole
+> launcher the body of a function nobody calls - `ast.parse` passed and grep
+> still found the call.
 
 ---
 
