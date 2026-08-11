@@ -2374,6 +2374,19 @@ def prime_office_automation(contract: dict) -> None:
     # a run that only converts PowerPoint never opens Word or Excel. Apps are
     # marked immediately (main thread) so a concurrent call can't double-launch
     # the same app.
+    # WHO WAS ALREADY OPEN, recorded BEFORE we launch anything.
+    #
+    # This is the earliest point the app touches Office, and it has to be here:
+    # priming launches all three with `open -g -j`, so by the time the first
+    # conversion asks, every app is running - launched by US - and the quit
+    # gate would call them all the user's and never quit anything. Measured
+    # exactly that in the real app on 2026-08-12, with all three killed
+    # beforehand: "PowerPoint was already running before this run" and all
+    # three left in the dock. The harness never saw it, because it drives the
+    # converters directly and never primes.
+    for _key, _ms, _short in _APP_TRIPLES:
+        _note_office_preexisting(_short)
+
     to_launch = []
     for key, ms, _short in _APP_TRIPLES:
         if contract.get(key, False) and ms not in _primed_apps:
