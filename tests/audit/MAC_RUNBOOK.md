@@ -635,9 +635,26 @@ Run `20260811_155557_macos-26-v2.0.2`. Read this before repeating any of it.
   carries the title "Screen Recording" where macOS 15's was untitled (13c70c7);
   and the harness answered the Panopto notice BEFORE the click that raises it,
   which stalls any Panopto row on a fresh config dir (56fa5f6).
-- **Still not covered**: the mp3/mp4 media download path, the folder-picker
-  modal, Reveal in Finder / Open Folder, and a real notification DENIAL in the
-  bundle (finding fp:3833d3d15043 stays open for that reason).
+- **Second pass, same day**: the mp3 media path is DONE - all 36 recordings,
+  0 decode failures, 0 leftover `.part`, and total duration **8.21 h / mean
+  13.7 min, matching the macOS 15 mp4 run of the same recordings exactly**,
+  which is the check a decode pass cannot make. The Keychain write / re-store /
+  update / delete cycle is DONE through `store_token`. **Reveal in Finder needs
+  no Automation grant** - `reveal_in_folder` uses `open -R`, a Launch Services
+  call, not AppleScript; if you see a consent prompt there it is your own
+  cleanup script, not the product.
+- **A full seeded Phase 2 sync ran on macOS** (44 fixtures, 21 kinds). The app
+  was correct in every case examined - the edited copy came through
+  byte-identical with the fresh one forked to `_NewVersion` - and produced TEN
+  highs, EIGHT of which were the checker matching files BY NAME. Fixed in
+  aade2c0; one of them (`_name_candidates`' lowercase prefix list vs `normcase`
+  being the identity off Windows) had made the whole secondary-entity half of
+  that matcher dead on macOS.
+- **Still not covered**: the folder-picker MODAL (blocks on a human; the return
+  path was proven on macOS 15), and a real notification DENIAL in the bundle -
+  finding fp:3833d3d15043 stays open, though M3 settled the half that was
+  previously impossible by showing the bundle registers under its own identity
+  rather than as "Python".
 
 ## The second install (macOS 26)
 
