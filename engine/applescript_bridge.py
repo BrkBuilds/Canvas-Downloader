@@ -70,6 +70,74 @@ def _office_container_tmp(app_name: str) -> Path | None:
         return None
 
 
+def _product_is_real(staged_dst: Path) -> bool:
+    """Is the file Office just wrote worth promoting to the user's folder?
+
+    The SAME gate the source-deleting converters already apply after the fact
+    (`converters.verify`), asked one step earlier so a reject never reaches the
+    destination at all. Asking it in both places is deliberate and not
+    redundant: this one decides what the user's folder gains, the converter's
+    decides whether the ORIGINAL may be deleted.
+
+    Imported inside the function on purpose. This module is reachable from
+    `shared.helpers` and `engine.notifications`, both of which it reaches back
+    into, so a module-level app import turns all three into a cycle - and
+    `tests/test_applescript_string_escaping.py` checks the import LEVEL, not
+    merely its presence.
+
+    Never raises: `converters.verify` reports an unreadable file as not-real,
+    and if the import itself fails we answer True, which is the pre-existing
+    behaviour - a cosmetic guard must not be able to swallow a good PDF.
+    """
+    try:
+        from converters.verify import file_has_content, pdf_looks_real
+    except Exception:
+        return True
+    if staged_dst.suffix.lower() == '.pdf':
+        ok, why = pdf_looks_real(staged_dst)
+    else:
+        ok, why = file_has_content(staged_dst, what=f"{staged_dst.suffix} file")
+    if not ok:
+        logger.debug(f"[AppleScript] declining the produced {staged_dst.name}: {why}")
+    return ok
+
+
+def _direct_passthrough(src: Path, dst: Path, app_name: str):
+    """The no-container path: Office writes straight to the real destination.
+
+    Nothing can be gated *before* the write here, so the most this can do is
+    refuse to LEAVE a reject behind. The two cases are deliberately different:
+
+    * the destination did NOT exist before - a reject is pure litter, tracked
+      by nothing and re-offered as a new file on every future sync, so it is
+      removed;
+    * the destination DID exist - Office has already overwritten whatever was
+      there and we cannot get it back. Deleting the reject would add a MISSING
+      file to a damaged one, and a manifest row may point at that path, so it
+      is kept and reported instead.
+
+    Reachable on macOS whenever the Office container is unavailable. It is also
+    the shape non-macOS takes, though no converter reaches it there - Windows
+    goes through `office_safe_path` and COM.
+    """
+    existed = dst.exists()
+    yield src, dst
+    try:
+        if dst.exists() and not _product_is_real(dst):
+            if existed:
+                logger.warning(
+                    f"[AppleScript] {app_name} overwrote {dst.name} with an "
+                    f"unusable file while converting {src.name}; it is kept "
+                    f"because deleting it would break anything pointing at it")
+            else:
+                dst.unlink()
+                logger.warning(
+                    f"[AppleScript] {app_name} left an unusable {dst.suffix} for "
+                    f"{src.name}; removed it rather than leaving an untracked file")
+    except OSError as e:
+        logger.debug(f"[AppleScript] could not tidy up {dst}: {e}")
+
+
 @contextmanager
 def office_container_stage(src: Path, dst: Path, app_name: str):
     """macOS: stage *src*/*dst* inside the Office app's sandbox container.
@@ -90,7 +158,7 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
 
     stage_root = _office_container_tmp(app_name)
     if stage_root is None:
-        yield src, dst
+        yield from _direct_passthrough(src, dst, app_name)
         return
 
     work = stage_root / ("cd_" + uuid.uuid4().hex[:10])
@@ -153,13 +221,31 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
     except Exception as e:
         logger.debug(f"[AppleScript] container staging unavailable ({e}); using direct path")
         shutil.rmtree(work, ignore_errors=True)
-        yield src, dst
+        yield from _direct_passthrough(src, dst, app_name)
         return
 
+    dst_existed = dst.exists()
     try:
         yield staged_src, staged_dst
-        # Success path: relocate the produced PDF back to its real destination.
-        if staged_dst.exists():
+        # Relocate the produced PDF back to its real destination - but ONLY if
+        # it is a real one. This used to promote anything that EXISTED, with a
+        # comment calling it the "success path", and it is not: a conversion
+        # that errors part-way still leaves whatever Office had written.
+        #
+        # Measured on the 2026-08-11 download matrix (course 43660): an
+        # 870-byte "PDF" sitting beside the .pptx it failed to convert, tracked
+        # by nothing - it is offered as a NEW file on every future sync, for
+        # ever. And the worse half is two lines up: `dst.unlink()` runs first,
+        # so a failed re-conversion DESTROYED the good PDF a previous run had
+        # produced and replaced it with the stub.
+        #
+        # The gate is the same `converters.verify` pair every source-deleting
+        # converter already uses. It lives HERE, at the promotion, rather than
+        # in the three converters, because this is the boundary all of them
+        # cross - the counting rule from `pdf_looks_real` (two delete sites
+        # needed two gates) is what makes a per-converter version the wrong
+        # shape. A fourth converter gets it for free.
+        if staged_dst.exists() and _product_is_real(staged_dst):
             try:
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 if dst.exists():
@@ -174,7 +260,17 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
                         f"[AppleScript] converted file produced in container but could "
                         f"not be moved back to {dst}: {e}"
                     )
+        elif staged_dst.exists():
+            logger.warning(
+                f"[AppleScript] {app_name} left an unusable {staged_dst.suffix} "
+                f"for {src.name}; discarding it rather than writing it to "
+                f"{dst.name}"
+                + (" (the existing file there is left untouched)" if dst_existed else "")
+            )
     finally:
+        # The staging dir goes whatever happened, so a product we declined is
+        # discarded with it - "a declined conversion leaves NOTHING behind",
+        # the same rule `converters/archive.py:_decline` states for extraction.
         shutil.rmtree(work, ignore_errors=True)
 
 
