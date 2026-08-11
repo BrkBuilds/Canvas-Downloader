@@ -115,6 +115,38 @@ CRASH_MUTANTS = [
 ]
 
 
+# --- D5: a declined product must leave nothing behind ---------------------
+GATE_TEST = "tests/test_office_product_gate.py tests/test_office_staging_short_names.py"
+GATE_MUTANTS = [
+    ("promote anything that exists (the original bug)", AB,
+     "if staged_dst.exists() and _product_is_real(staged_dst):",
+     "if staged_dst.exists():"),
+    ("gate always says yes", AB,
+     "    if staged_dst.suffix.lower() == '.pdf':",
+     "    return True\n    if staged_dst.suffix.lower() == '.pdf':"),
+    ("pdf gate downgraded to mere existence", AB,
+     "        ok, why = pdf_looks_real(staged_dst)",
+     "        ok, why = file_has_content(staged_dst)"),
+    ("non-pdf products no longer checked", AB,
+     "        ok, why = file_has_content(staged_dst, what=f\"{staged_dst.suffix} file\")",
+     "        ok, why = True, ''"),
+    ("import failure now rejects instead of promoting", AB,
+     "    except Exception:\n        return True\n    if staged_dst.suffix",
+     "    except Exception:\n        return False\n    if staged_dst.suffix"),
+    ("direct path: reject left behind", AB,
+     "                dst.unlink()\n                logger.warning(\n                    f\"[AppleScript] {app_name} left an unusable {dst.suffix} for \"",
+     "                logger.warning(\n                    f\"[AppleScript] {app_name} left an unusable {dst.suffix} for \""),
+    ("direct path: deletes a file it overwrote", AB,
+     "            if existed:\n                logger.warning(", "            if False:\n                logger.warning("),
+    ("direct path: no gate at all", AB,
+     "        if dst.exists() and not _product_is_real(dst):",
+     "        if False:"),
+    ("staging litter kept on decline", AB,
+     "the same rule `converters/archive.py:_decline` states for extraction.\n        shutil.rmtree(work, ignore_errors=True)",
+     "the same rule `converters/archive.py:_decline` states for extraction.\n        pass"),
+]
+
+
 def _clean() -> bool:
     r = subprocess.run(["git", "status", "--porcelain"] + TARGETS + [TEST],
                        cwd=REPO, capture_output=True, text=True)
@@ -145,7 +177,7 @@ def main(mutants=None, test=None) -> int:
             survivors.append(f"{label} [anchor missing - the test proves nothing]")
             continue
         p.write_text(src.replace(old, new, 1), encoding="utf-8")
-        r = subprocess.run([sys.executable, "-m", "pytest", test, "-x", "-q"],
+        r = subprocess.run([sys.executable, "-m", "pytest", *test.split(), "-x", "-q"],
                            cwd=REPO, capture_output=True, text=True, env=env)
         _restore()
         caught = r.returncode != 0
@@ -160,4 +192,6 @@ def main(mutants=None, test=None) -> int:
 
 if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "guard"
-    raise SystemExit(main(CRASH_MUTANTS, CRASH_TEST) if which == "crash" else main())
+    raise SystemExit(main(CRASH_MUTANTS, CRASH_TEST) if which == "crash"
+                     else main(GATE_MUTANTS, GATE_TEST) if which == "gate"
+                     else main())
