@@ -446,14 +446,28 @@ that:
      CanvasDownloader`, not the repo root, so a fresh bundle shows the LOGIN page
      until you seed `canvas_downloader_settings.json` there. That is not a
      Keychain failure — check it before chasing one.
-3. ~~**The folder picker's RETURN path**~~ **DONE 2026-08-10** — a quoted folder
-   name survives intact: target `/tmp/m5_picker/quoted "folder" name`, returned
-   `/private/tmp/m5_picker/quoted "folder" name/`. Two macOS-only details fell
-   out of it, both verified harmless: the return carries a **trailing slash**
-   (AppleScript's `POSIX path of`, so a *picked* folder differs in spelling from
-   a typed one — Windows and tkinter both return bare paths) and the resolved
-   `/private/tmp` form; `save_pair`, `pair_key` and `_path_key` all collapse
-   both, so one link cannot become two pairs.
+3. ~~**The folder picker's RETURN path**~~ **DONE 2026-08-10**, and ~~**the MODAL
+   itself**~~ **DONE 2026-08-11 on Tahoe** (operator clicked Choose; macOS
+   refuses synthetic clicks here). Probe: `Kurt's "Økonomi" mappe — æøå`, i.e.
+   every character class that has ever broken an AppleScript string literal or a
+   path key, driven through the REAL `native_folder_picker`. All of it holds —
+   the name comes back whole (the `"` is the one that matters: unescaped, it
+   terminates the literal), and **the panel opens at the PARENT**, which is what
+   `picker_start_for_existing` is for.
+   - The return carries a **trailing slash** (AppleScript's `POSIX path of`, so
+     a *picked* folder differs in spelling from a typed one — Windows and
+     tkinter both return bare paths). `save_pair`, `pair_key` and `_path_key`
+     all collapse it, so one link cannot become two pairs.
+   - **CORRECTED 2026-08-11: `_path_key` does NOT collapse the `/private` form**
+     — this line used to claim it did. Measured on Tahoe:
+     `_path_key("/tmp/x") != _path_key("/private/tmp/x")`. It has never
+     mattered and needs no fix: `/tmp` is a **symlink** to `/private/tmp`, which
+     is why a probe *there* sees the resolved form at all, and course folders do
+     not live in `/tmp` — `~/Downloads` is not a symlink, so the picker returns
+     the same spelling the app stores and both sides of every later comparison
+     agree. **Do not "fix" this by resolving symlinks inside `_path_key`**: it is
+     the key three comparison sites share, and making it hit the filesystem
+     would give it a failure mode (and a cost) it does not have today.
    - **The correction to make here: Accessibility is not simply absent.**
      *Reading* works (a frontmost-process query answers), so the old `-1728`
      note is wrong. **Synthesising input is a separate gate** and it is denied:
