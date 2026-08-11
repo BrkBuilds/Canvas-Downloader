@@ -342,12 +342,28 @@ def test_the_course_resolver_never_raises(config_dir, monkeypatch):
     assert C.panopto_disabled_courses("download") == []
 
 
-def test_both_completion_screens_render_the_notice():
-    """A census. Download mode and BOTH sync completion paths."""
+def test_both_completion_screens_render_the_notice_exactly_once():
+    """A census. One per screen - and it used to be TWO in sync mode.
+
+    CORRECTED 2026-08-11. This test asserted a count of 2 on the premise that
+    "sync/completion.py has two terminal paths and both need the notice". There is
+    only one: `show_sync_complete` renders the completion card once, and both
+    blocks sat at the SAME level inside its single `with fresh_container(...)`,
+    with no branch and no return between them - so both ran, every time. Three
+    proofs: the AST shows a flat statement sequence; driving the real
+    `show_sync_complete` produced **4** `.skip-panel`s for 2 facts; and app.py, the
+    sibling screen whose comment says the order is "the same on both completion
+    screens", has always had one of each.
+
+    It shipped unseen because `pp_archives_skipped` and "Panopto is off" are both
+    uncommon - most screens had nothing to double - and because
+    scripts/completion_gallery.py, the review instrument for these screens,
+    mirrors app.py's single block and was therefore MORE correct than the app.
+    """
     assert "render_panopto_disabled_notice(mode='download')" in _strip_comments(_src("app.py"))
     sync = _strip_comments(_src("sync/completion.py"))
-    assert sync.count("render_panopto_disabled_notice(mode='sync')") == 2, (
-        "sync/completion.py has two terminal paths and both need the notice"
+    assert sync.count("render_panopto_disabled_notice(mode='sync')") == 1, (
+        "one screen, one panel - see the docstring for why 2 was wrong"
     )
 
 

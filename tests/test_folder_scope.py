@@ -578,12 +578,12 @@ def test_every_screen_that_states_this_fact_calls_the_renderer():
     gallery's sync call site while hitting its download one - which is the same
     N-1-of-N miss that put the rule in six places and got one wrong."""
     sites = {
-        (REPO / "sync" / "completion.py"): 2,      # sync complete + Today-minimal
+        (REPO / "sync" / "completion.py"): 1,      # sync complete
         (REPO / "app.py"): 1,                      # download complete
-        (REPO / "scripts" / "completion_gallery.py"): 2,   # the mirror of both
+        (REPO / "scripts" / "completion_gallery.py"): 2,   # one per screen shell
     }
     for path, expected in sites.items():
-        src = path.read_text(encoding="utf-8")
+        src = _code_only(path.read_text(encoding="utf-8"))
         got = len(re.findall(r"render_folder_scope_notice\(mode=", src))
         assert got == expected, f"{path.relative_to(REPO)}: {got} call sites, expected {expected}"
     review = (REPO / "ui" / "sync_review.py").read_text(encoding="utf-8")
@@ -607,3 +607,153 @@ def test_the_review_notice_does_not_reach_for_completion_css():
     body = _code_only(_ast.get_source_segment(src, fn) or '')
     assert 'completion.css' not in body
     assert 'render_info_notice' in body
+
+
+# ── the two gaps the mutation pass found ────────────────────────────────────
+
+def test_an_all_files_folder_is_never_named_by_the_notice(tmp_path, monkeypatch):
+    """M16: deleting the contract check made the notice fire for EVERY folder.
+
+    Worse than noise - it would tell a user with a complete copy of their course
+    that it is not one. The silence test above only covered an empty session, so
+    this drives the resolver against two REAL folders, one of each kind.
+    """
+    import shared.components as C
+    from core.sync_manager import SyncManager
+
+    pairs = []
+    for name, ff in (("Study course", 'study'), ("Full course", 'all')):
+        d = tmp_path / name
+        d.mkdir()
+        sm = SyncManager(d, course_id=hash(name) % 90000, course_name=name)
+        sm._save_metadata('sync_contract', json.dumps({'file_filter': ff}))
+        pairs.append({'course_id': hash(name) % 90000, 'course_name': name,
+                      'local_folder': str(d)})
+
+    monkeypatch.setattr(C.st, 'session_state', {'sync_pairs': pairs}, raising=False)
+    named = [n for n, _ in C.folder_scope_limited_courses('sync')]
+    assert named == ["Study course"], \
+        "only a folder whose stored contract says 'study' may be named"
+
+
+def test_a_folder_with_no_contract_is_never_named(tmp_path, monkeypatch):
+    """A pre-contract folder has made no such choice, so there is nothing to say."""
+    import shared.components as C
+    from core.sync_manager import SyncManager
+    d = tmp_path / "Legacy"
+    d.mkdir()
+    SyncManager(d, course_id=77001, course_name="Legacy")
+    monkeypatch.setattr(C.st, 'session_state', {'sync_pairs': [
+        {'course_id': 77001, 'course_name': "Legacy", 'local_folder': str(d)}]},
+        raising=False)
+    assert C.folder_scope_limited_courses('sync') == []
+
+
+class _FakeFile:
+    """A Canvas file whose display_name carries no extension - the real shape that
+    makes `filename` and `preferred_disk_name` disagree."""
+    def __init__(self, fid, filename, display_name, size=1024):
+        self.id = fid
+        self.filename = filename
+        self.display_name = display_name
+        self.size = size
+
+
+def test_the_scope_question_is_asked_of_the_ON_DISK_name():
+    """M22. Canvas exposes two names per file and the engine writes
+    `preferred_disk_name`, which APPENDS the real extension when the curated
+    display name lacks it - so a file shown as "Lecture 1" and stored as
+    "Lecture 1.pdf" lands on disk as a PDF and is IN scope.
+
+    Reading the raw `filename` is not the bug (that one agrees here); reading
+    `display_name` alone is, and the estimators plus app.py's scan each had their
+    own answer. Driven through the real methods, so it cannot pass on shape alone.
+    """
+    from core.canvas_logic import CanvasManager, file_in_scope
+    from core.sync_manager import preferred_disk_name
+
+    f = _FakeFile(1, "Lecture 1.pdf", "Lecture 1")
+    assert preferred_disk_name(f) == "Lecture 1.pdf"
+    assert file_in_scope(preferred_disk_name(f), 'study') is True
+    assert file_in_scope(f.display_name, 'study') is False, \
+        "the display name alone is what used to drop this file"
+
+    class _Course:
+        id = 1
+        def get_files(self):
+            return [f, _FakeFile(2, "Notes.docx", "Notes")]
+        def get_modules(self):
+            raise RuntimeError("flat mode only")
+
+    cm = CanvasManager.__new__(CanvasManager)
+    assert cm.count_course_items(_Course(), mode='flat', file_filter='study') == 1
+    assert cm.get_course_total_size_mb(_Course(), mode='flat',
+                                      file_filter='study') == 1024 / (1024 * 1024)
+
+
+def test_the_download_scan_uses_the_same_name_as_the_engine():
+    """app.py's scan builds the progress denominator, which the ETA divides by.
+
+    An AST check because that code is inline in a 200-line branch: it must ask
+    `file_in_scope(preferred_disk_name(f), ...)`, never `f.filename`.
+    """
+    import ast as _ast
+    tree = _ast.parse((REPO / "app.py").read_text(encoding="utf-8"))
+    calls = [n for n in _ast.walk(tree)
+             if isinstance(n, _ast.Call) and isinstance(n.func, _ast.Name)
+             and n.func.id == 'file_in_scope']
+    assert calls, "app.py's scan must go through the shared predicate"
+    for c in calls:
+        first = c.args[0]
+        assert isinstance(first, _ast.Call) and getattr(first.func, 'id', '') == \
+            'preferred_disk_name', \
+            "the scan must ask about the ON-DISK name, like the engine does"
+
+
+def test_the_left_alone_panels_are_emitted_ONCE_per_screen():
+    """The duplication this change found, generalised to the whole family.
+
+    `sync/completion.py` called `render_archives_skipped_notice` and
+    `render_panopto_disabled_notice` in BOTH of its notice blocks,
+    unconditionally, in the same run - measured on the real `show_sync_complete`:
+    **4** `.skip-panel`s for 2 facts. It shipped because both conditions are
+    uncommon (so most screens had nothing to double) and because the gallery,
+    the review instrument for these screens, mirrors app.py's single block and
+    was therefore more correct than the app.
+    """
+    for rel in ("sync/completion.py", "app.py"):
+        src = _code_only((REPO / rel).read_text(encoding="utf-8"))
+        for fn in ("render_archives_skipped_notice",
+                   "render_panopto_disabled_notice",
+                   "render_folder_scope_notice"):
+            got = len(re.findall(rf"{fn}\(", src))
+            assert got == 1, f"{rel}: {fn} called {got}x - it renders once per screen"
+
+
+def test_the_predicate_agrees_with_the_sanitizer_on_every_shape():
+    """The engine asks about the SANITIZED name; the analyzer and both estimators
+    ask about the raw one. `_sanitize_filename` URL-unquotes, so the two diverged
+    on an encoded dot: `Lecture%2Epdf` sanitizes to `Lecture.pdf` and downloads,
+    while an un-unquoted check saw no extension and dropped it - a file that
+    silently never arrives, which is worse than the bug the predicate fixes.
+
+    Driven through the REAL sanitizer, in both directions, so it cannot pass by
+    agreeing with a copy of it.
+    """
+    from core.canvas_logic import CanvasManager, file_in_scope
+    cm = CanvasManager.__new__(CanvasManager)
+    for raw in ("Lecture%2Epdf", "Notes%2Edocx", "Klyngevejledning+-+Upload.pptx",
+                "C++ notes.pdf", "Week%201.pdf", "Data%2Exlsx", "x.PPTX",
+                "no-extension", "a.pdf", "b.docx", "tricky%2Ename%2Epptx"):
+        for ff in ('study', 'all'):
+            assert file_in_scope(cm._sanitize_filename(raw), ff) \
+                == file_in_scope(raw, ff), \
+                f"engine and analyzer disagree about {raw!r} under {ff!r}"
+
+
+def test_an_encoded_extension_is_in_scope():
+    """The specific measured case, pinned on its own so a mutation that removes
+    the unquote is caught by a named failure rather than by a parity sweep."""
+    from core.canvas_logic import file_in_scope
+    assert file_in_scope("Lecture%2Epdf", 'study') is True
+    assert file_in_scope("Notes%2Edocx", 'study') is False
