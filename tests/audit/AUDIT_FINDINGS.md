@@ -9,208 +9,9 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260811_macos-15-v2.0.2__offline-hardening` on 2026-08-11.
+Last updated by run `20260811_155557_macos-26-v2.0.2` on 2026-08-11.
 
-**36 open** · 100 total · 34 fixed · 30 invalid
-
----
-
-### One transient read destroyed the ENTIRE sync history - the unreadable-is-not-empty sweep never reached this store
-<!-- fp:e3b5253e0e54 -->
-
-**Status**: fixed
-**Severity**: high
-**Category**: persistence
-**Oracles**: O3 disk (register file before/after a forced read failure)
-**First seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
-**Last seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
-**Occurrences**: 1
-
-**Detail**:
-
-REAL PRODUCT DEFECT, found offline by sweeping the "unreadable is not empty" class across every remaining persistent store, and REPRODUCED against the real class: 50 seeded history entries became 1.
-
-core.sync_manager.SyncHistoryManager.load_history() degraded EVERY failure to [] - by design for the two DISPLAY surfaces - and BOTH mutators then did `history = load_history()` -> append/amend -> atomic write. So a single TRANSIENT read failure (an antivirus lock, the config dir on a share that is briefly offline, a permissions blip, errno 35/13/5) replaced the user's whole record with the one entry being added.
-
-This class has been fixed SIX times in this repo (core.library, core.library_migrate, core.preset_manager, core.today_store, ui.auth, atomic_update_sync_pairs). The sweep never reached canvas_sync_history.json. That is the playbook's own thesis restated: the productive question is not "what could be wrong" but "which module did the last fix for this class NOT reach".
-
-amend_last_entry was the same bug in disguise. It answered False on an empty history and its own docstring says the caller then "creates one" - so a transient failure funnelled straight into the add_entry that does the damage. It now answers True ("handled, change nothing"); a GENUINELY empty history still answers False, because that answer is what makes the caller create the entry, and a test pins both directions.
-
-WHAT IS LOST: canvas_sync_history.json is the complete record of every sync in both modes. It backs the Sync page's history, the Today page's lens (which is a filter over this same record, never a second one), and shared.components._course_id_from_sync_pairs, which matches error rows against the stored course_names.
-
-FIX: split by CAUSE, reusing the ONE existing implementation rather than restating it - shared.helpers.read_json_for_update, generalised with an `expect` type (defaulting to dict, so all pre-existing callers are unchanged) and asked for a list here. Damaged content (malformed JSON, or bytes that are not UTF-8 - UnicodeDecodeError is a SIBLING of JSONDecodeError, both ValueError) is quarantined and the write PROCEEDS, so the user gets a working file back. A transient OSError returns may_write=False and the caller writes NOTHING. The two display readers stay total and now LOG rather than swallow, because rendering [] tells the user "you have no sync history" - the same confusion already fixed once in _render_sync_history.
-
-SWEPT the last store holding the same shape: engine.applescript_bridge's macOS Office permission record, where a transient read dropped the other apps' answered Automation prompts and would silently re-launch Word, Excel and PowerPoint on a later run.
-
-Covered by tests/test_sync_history_hardening.py (26). ALL 11 mutations of the real code are caught, including deleting either guard, making either condition unreachable, flipping amend's answer back to False, reverting to the display reader, and asking the primitive for the dict default. Full suite green after the pass (3487).
-
-**Notes**: Found and fixed in the pre-launch offline hardening pass on the
-macOS audit machine. Reproduced against the real function, fixed, tested,
-mutation-verified and the full suite re-run after each pass.
-
----
-
-### The LTI-stream verdict was written TWICE and both copies dropped .m4v, so a streamed video was reported as a hard failure
-<!-- fp:924e500e49c7 -->
-
-**Status**: fixed
-**Severity**: medium
-**Category**: delivery
-**Oracles**: O2 log / O5 UI classification (split_delivery_errors)
-**First seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
-**Last seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
-**Occurrences**: 1
-
-**Detail**:
-
-REAL PRODUCT DEFECT, found by scanning for near-miss literal collections (sets that overlap heavily but are not identical - the shape a divergent primitive makes as it drifts).
-
-When Canvas serves a file with NO download URL, each engine decides from the extension whether this is a plugin-streamed video - a permanent fact about the course, which no retry, setting or wait can change - or a genuine failure. That verdict selects LTI_STREAM_REASON / LTI_STREAM_ERROR_TYPE, which the completion screen classifies to decide what to colour as an error.
-
-The MESSAGE and the ERROR TYPE were unified into shared.helpers long ago. The PREDICATE that chooses them was left behind as two copies - core.canvas_logic (download, line 4544) and sync.execution (sync, line 1007) - and BOTH omitted '.m4v', while the size-mismatch tolerance in the very same download engine (flexible_extensions) lists '.m4v' as media. So one engine disagreed with ITSELF, and an .m4v stream was reported as a hard failure in both flows: an otherwise-clean run rendering as "Completed with Errors", the colour that is supposed to mean "look at this".
-
-Same shape as make_long_path's second copy in core.sync_manager (the fix reached none of the 26 manifest call sites) and the three AppleScript escapers: a rule written more than once is a rule some caller is following an old version of.
-
-FIX: shared.helpers.is_lti_stream_ext + LTI_STREAM_EXTENSIONS, placed beside the two constants they select, and both engines ask it. The neighbouring size-mismatch list is deliberately NOT merged and a test pins that: it holds the same members today but answers a different question ("may a short read be tolerated?" vs "is this a stream?"), and this repo has the standing .pdf-in-file_in_scope example of what merging two same-looking lists costs.
-
-Covered by tests/test_lti_stream_classification.py (29); all 8 mutations caught. TWO of my own tests were weak and the pass found both: one fed LTI_STREAM_REASON straight to the downstream classifier and so passed WITH the bug present (the defect is upstream, in producing that message at all), and one grepped for the token "flexible_extensions", which a mutation aliasing the shared set to that very name satisfied. Both rewritten to assert the binding and the producer branch via AST.
-
-**Notes**: Found and fixed in the pre-launch offline hardening pass on the
-macOS audit machine. Reproduced against the real function, fixed, tested,
-mutation-verified and the full suite re-run after each pass.
-
----
-
-### The Windows PE version resource shipped one release behind, so file properties reported the previous version
-<!-- fp:83f38c06929c -->
-
-**Status**: fixed
-**Severity**: low
-**Category**: release
-**Oracles**: O3 disk (version_info.py vs version.py)
-**First seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
-**Last seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
-**Occurrences**: 1
-
-**Detail**:
-
-version_info.py is GENERATED by scripts/build_windows.py, but it is also CHECKED IN, and Canvas_Downloader.spec consumes it directly (version='version_info.py'). CLAUDE.md documents the Windows build as a bare `pyinstaller Canvas_Downloader.spec`, which does NOT regenerate it - so a release built the documented way stamps whatever version was last committed.
-
-MEASURED: version_info.py declared 2, 0, 1, 0 / "2.0.1" while version.py said 2.0.2. Explorer's file properties, and anything else reading the PE resource, would have reported the previous release for the whole of v2.0.2. It does not affect the in-app update banner, which reads version.__version__ - which is precisely why nothing caught it.
-
-Related to the already-registered release gate ("version.py still says 2.0.1"), but a DIFFERENT file: that one was fixed in version.py and the generated PE resource was not regenerated with it.
-
-FIX: regenerated with the real generator, plus two tests - one fails when the PE resource and version.py disagree, and one fails if the spec stops consuming the file (without which the first would be measuring nothing). Verified the test actually FAILS against the stale value rather than only passing against the fixed one.
-
-**Notes**: Found and fixed in the pre-launch offline hardening pass on the
-macOS audit machine. Reproduced against the real function, fixed, tested,
-mutation-verified and the full suite re-run after each pass.
-
----
-
-### A corrupt or 0-byte .doc wedges Microsoft Word on macOS, and every later Word conversion in the run then silently fails
-<!-- fp:200c7fea9f04 -->
-
-**Status**: fixed
-**Severity**: high
-**Category**: conversion
-**Oracles**: O2,O3
-**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 11
-**Scenario**: mac_m1_word_wedge
-
-**Detail**:
-
-REPRODUCED on real macOS with real Office; only this machine can produce it. CHAIN OF EVENTS, measured: (1) feed the macOS Word converter a hostile legacy .doc (2 KB of random bytes, and separately a 0-byte file). The delete gate behaves CORRECTLY - the source is kept, verified by md5 - and the log records '[AppleScript] Word failed (other)'. Run 1 also logged 'Microsoft Word got an error: AppleEvent timed out. (-1712)', consistent with Word raising a MODAL dialog that waits for a human (hypothesis - not directly observed, see below). (2) Word is then WEDGED: 'count of documents' answers 1, the document's name cannot be read, and 'close every document saving no' answers 'missing value' and changes nothing. (3) EVERY subsequent Word conversion fails with 'missing value doesn't understand the save as message. (-1708)' - INCLUDING a genuine 153 KB .doc from course 43660 that converted perfectly moments earlier in a clean process. Measured across two fresh processes: 4 of 4 good-file conversions failed, each reporting 'word docs before=1'. (4) The app's OWN recovery does not help: engine.applescript_bridge._force_close_canvas_docs_sync left the count at 1. (5) Killing the process DOES recover it: after 'pkill -x Microsoft Word', a good file CONVERTED and a second good file straight after also CONVERTED. WHY IT MATTERS: no data loss (the gate keeps every source), but for the rest of that run the user silently gets NO PDFs from any .doc/.rtf/.odt, with one generic 'Conversion failed' line per file. Reachable in normal use by a single corrupt legacy .doc in a course followed by others. WHY THE EXISTING MECHANISM MISSES IT: the codebase already models this exact class - _abort_applescript_phase exists to 'log a single actionable message instead of spamming dozens of generic errors' for failures that 'will identically doom every remaining file in the phase' - but FATAL_CATEGORIES is only ('permission','app_missing'), keyed on -1743 and -600/-10810. A wedged Word yields -1708, which _classify_stderr maps to 'other' = per-file, so the phase dutifully attempts and fails every remaining file. RECOMMENDED FIX (not applied): treat a run of consecutive identical AppleScript failures within one phase as fatal for that phase and emit one actionable message ('Microsoft Word is not responding to conversion requests - quit Word and run again'). A blind kill+relaunch is NOT safe and must not be added: in the wedged state the documents cannot be enumerated, so the app cannot certify that no USER document is open, and every other Office path in this codebase deliberately refuses to act without that certificate. THE MODAL IS CONFIRMED, by the operator's own eyes: 'word was jumping in the dock and when i clicked it it had some error dialog saying file "name" couldnt be opened or something and i clicked ok to all of them and quit word'. So the chain is: hostile .doc -> Word raises a MODAL file-open error and bounces in the Dock demanding attention -> AppleScript's 'open' never yields an active document -> every later conversion answers -1708 -> nothing in the app dismisses the alert, so the phase is dead until a human clicks OK or the process is killed. Note the converter DOES attempt 'set display alerts to false', but it is wrapped in its own try and evidently does not suppress a file-corruption alert raised during open. I could not observe this myself - screenshots were blind at the time and System Events refused with 'osascript is not allowed assistive access (-1728)' - which is a good argument for keeping a human in the loop on a GUI-automation phase.
-
-**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: engine/applescript_bridge carries SYSTEMIC_REPEAT_THRESHOLD + systemic_failure(), so a repeated -1708 now aborts the phase once with an actionable message instead of dooming every remaining file; tests/test_office_wedge_abort.py 9 passed. The Detail above still reads 'RECOMMENDED FIX (not applied)' - that sentence is historical, the fix landed after it was written. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.
-
----
-
-### A failed Keychain save DESTROYS the token that was already saved, tells the user nothing, and logs a DPAPI fallback that does not exist on macOS - so the next launch is a login page
-<!-- fp:03713060d77a -->
-
-**Status**: fixed
-**Severity**: high
-**Category**: persistence
-**Oracles**: O1 UI (lane apps on ?mode=auth) vs O3 disk (Keychain probe)
-**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 6
-
-**Detail**:
-
-Found because every lane of the sync matrix failed identically ("btn_analyze_sync not clickable"), which turned out to be every lane app sitting on ?mode=auth. The Keychain held NO token at all - and it had held one earlier the same day, because an Aqua-launched app restored its session and rendered "Logged in as Birk".
-
-MEASURED against the real library, not reasoned about:
-
-    keyring.set_password(SVC, USER, "probe-value-before")   -> stored, reads back
-    keyring.set_password(SVC, USER, "probe-value-AFTER")    -> PasswordSetError (-25308)
-    keyring.get_password(SVC, USER)                          -> None
-
-The macOS backend DELETES any existing item before adding the new one, so a refused write leaves nothing behind. What destroyed the audit's token was me logging in through the real UI from a session whose Keychain is unwritable; the same shape reaches a real user whenever the login keychain is locked for writing, or when ui/auth.py's own 90-second keyring watchdog times out.
-
-Three things in ui/auth.py then combined so that the user was told nothing:
-1. _safe_keyring_set RETURNS False rather than raising, so the login flow's `except Exception` amber notice was unreachable for this failure - the only branch that ran was the else.
-2. _save_fallback_token returns immediately when sys.platform != 'win32'. That is deliberate and correct (the app must not write tokens to disk on macOS), but it means macOS has no second copy.
-3. The else branch's only output was logger.warning("Keyring save failed or timed out. Saved to DPAPI-encrypted fallback storage.") - which off Windows describes a save that did not happen.
-
-So: the previously saved credential is destroyed, nothing new is stored, no notice appears, and the next launch shows the login page. Recovering means going back into Canvas to mint a fresh access token.
-
-WORSE AT THE TWO LEGACY-MIGRATION SITES. Both of them (macOS base64-in-JSON, Windows plain-JSON) did: kr_ok = set(...); if not kr_ok: _save_fallback_token(...); config.pop('<token field>'); write_config_atomically(config) - popping the JSON copy and rewriting the file whatever the keyring returned. That is the one run where the JSON copy is the ONLY copy, which CLAUDE.md already flags in another context as "exactly when the file is most worth not corrupting".
-
-FIX: ui.auth.store_token(username, token) -> bool, now the only writer, with three properties in order because each alone is insufficient:
-  (a) SKIP a write that cannot change anything. If the stored value already equals the token there is nothing to gain and a credential to lose - and this is the common path (re-login with the same token, plus both migration sites). Verified live on the real Keychain: same token + refused write = 0 set_password attempts, value intact.
-  (b) write, then fall back (Windows DPAPI; nothing on macOS by design).
-  (c) VERIFY by reading back, so the return value describes the STORED STATE rather than the return code of one attempt. That is what makes it safe for a caller to delete its own copy - and it matters beyond this bug, because _safe_keyring_set also returns False on a watchdog TIMEOUT, where the native call may still be in flight.
-Both migrations now pop the JSON field only when it returns True, and the login flow renders an amber notice ("Your login could not be saved on this device") instead of logging a DPAPI save that did not happen. store_token never raises: a persistence failure must not be able to abort a login.
-
-WHAT THE FIX CANNOT DO, stated plainly: if the Keychain is unreadable as well as unwritable, store_token cannot detect an identical token and the write is attempted, so the old item is still destroyed. That is the context my SSH session was in. It is not worth defending - a machine whose Keychain answers nothing has no credential to preserve - but it is why the audit's own token vanished rather than being skipped.
-
-Verified live in the Aqua session against the real macOS Keychain (all three cases), covered by tests/test_token_store_preserves_credential.py (10 tests), and all 7 mutations of the real code are caught - including one per migration site and one for the amber notice. The 7th survived a first pass as an apparent equivalent mutant (the wrapper it guards swallows backend errors itself) and is genuinely reachable: _safe_keyring_set does `import keyring` OUTSIDE its own try, so a broken or build-excluded keyring package raises straight through it.
-
-**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: ui/auth.store_token is the single writer (skip-if-unchanged, write, fall back, verify by read-back); tests/test_token_store_preserves_credential.py 11 passed. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.
-
----
-
-### SAFETY GUARD BYPASSED ON macOS: /etc and /var were accepted as sync folders because the check resolves symlinks before comparing
-<!-- fp:d6ba79f3db46 -->
-
-**Status**: fixed
-**Severity**: high
-**Category**: persistence
-**Oracles**: O3,O4
-**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 10
-**Scenario**: mac_m4_system_roots
-
-**Detail**:
-
-REAL PRODUCT DEFECT, found by running the unit suite on macOS for the first time. sync/persistence._validate_pair_folder refuses 'obviously dangerous system roots' and is the gate on add_pair/add_pairs_batch. It calls Path(folder).resolve() and THEN compares against a blocklist written in plain spelling - but macOS symlinks /etc, /var and /tmp into /private, so '/etc' arrives as '/private/etc', matches nothing, and is ACCEPTED. Measured on macOS 15.6.1: _validate_pair_folder('/etc') -> True, '/etc/nested' -> True, '/var/log' -> True, and add_pair('/etc') WROTE the pairs file instead of rejecting it and showing the 'system folders cannot be used' toast. WHY IT SURVIVED: the tests for this were correct all along and had never run anywhere. They carry skipif(sys.platform == 'win32') with reason 'POSIX system roots', so Windows skipped them, and nobody had ever run the suite on a Mac - six of them fail on the very platform they were written for. This is the platform-asymmetric class CLAUDE.md documents (the Office delete-gate fixed on Windows and left broken on macOS for a full round). WHY IT MATTERS: a sync pair is a folder the engine writes course files into, creates a hidden .canvas_sync.db in, and sweeps .part files out of. The folder normally comes from the native picker, and FINDER RESOLVES SYMLINKS - so '/private/etc' is the spelling a real user is most likely to arrive with, which the raw-only alternative would also have missed. FIXED: the check now refuses a candidate if EITHER the raw or the resolved form names a system root, and _BAD_ROOTS_MAC adds the /private spellings. An explicit exemption keeps the OS's own per-user temp area usable ('/var/folders/<user>/T', which resolves under /private/var and would otherwise be swallowed by the /var entry) - that distinction is real, not a concession to the fixtures: /var/log is the system, /var/folders/<user> is the user's scratch space. Verified on this Mac: /etc, /etc/nested, /private/etc, /var/log, /private/var/log and /usr/local all rejected; /Users/m1/Courses and both the temp root and a mkdtemp under it accepted; all 53 tests in tests/test_sync_persistence.py pass where 6 failed. KNOWN RESIDUAL, deliberately not changed: '/System', '/Library' and '/Applications' are not in the blocklist and are still accepted. Adding new roots is a design decision rather than a bug fix, and SIP makes /System unwritable in practice.
-
-**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: sync/persistence carries _BAD_ROOTS_MAC and checks the raw AND resolved form, so the /private spellings are refused; tests/test_sync_persistence.py 53 passed, 5 skipped - the six that used to fail on this very platform now pass. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.
-
----
-
-### A download then a sync duplicated every lecture's audio: 70 mp3 files for 36 lectures, because the shortcut's disambiguated path defined the stem for all media
-<!-- fp:5a4befe8de50 -->
-
-**Status**: fixed
-**Severity**: high
-**Category**: placement
-**Oracles**: O3,O4
-**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
-**Occurrences**: 9
-**Scenario**: mac_m4_panopto_dupes
-
-**Detail**:
-
-REAL PRODUCT DEFECT, found by driving the real app: a download of course 43660 with mp3+txt+srt, then a real sync of the same folder. NOT macOS-specific - the same collision happens on Windows with .url, and CLAUDE.md already records it there ('34 identically-named .url files'). MEASURED: 70 .mp3 files in a course with 36 lectures - 36 without a suffix and 34 with ' (Panopto)', the same lectures twice, about 400 MB duplicated and the originals orphaned. Proof by pair: 'Forelaesningsvideo (1) organisationsprojekt - klargoering af data.mp3' beside 'Forelaesningsvideo (1) organisationsprojekt - klargoering af data (Panopto).mp3'. O4 shows the cause exactly - for one video_id the manifest held url -> '<title> (Panopto).webloc' and mp3 -> '<title>.mp3'. MECHANISM: panopto.runner._recording_base is manifest-first and its kind list was (SHORTCUT_KIND, 'mp4', 'mp3', 'txt', 'srt') - shortcut FIRST, returning on the first hit. The shortcut is the ONE kind whose path is legitimately disambiguated, because in the match layout the Canvas file sync owns '<title>.url' and resolve_shortcut_path therefore writes ours as '<title> (Panopto).url'. Asked first, that stem became the base for every other kind, so the sync re-downloaded all 34 recordings it touched to '<title> (Panopto).mp3' beside the mp3s already on disk. This is precisely the divergence the function's own docstring promises to prevent ('instead of diverging to a fresh Title (2)'), and it is invisible in a download-only or sync-only run - it needs a download followed by a sync of the same folder, which is the normal lifecycle. FIXED: media kinds are consulted first, shortcut last. That costs nothing - the shortcut is still reached whenever no media kind is recorded, which is the only case its inclusion was ever justified by ('a folder whose ONLY produced output is the shortcut still has a stem the manifest knows'). tests/test_panopto_stem_from_manifest.py, 9 tests, both directions (the media stem wins when both exist; the shortcut stem is still used when it is alone; an undisambiguated shortcut agrees either way; the no-manifest fallback is unchanged) plus an AST check that the shortcut kind is last. Both mutations caught: restoring the old order fails 6, dropping the shortcut kind fails the alone-case. SIDE OBSERVATION, correct behaviour: those 34 recordings were offered for sync at all because their mp3 existed with no transcript (I had cancelled transcription after 2), which is RUNBOOK's 'a recording with mp3 present but srt missing must appear as new / missing outputs, not as up to date'.
-
-**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: panopto/runner._recording_base consults media kinds before SHORTCUT_KIND; tests/test_panopto_stem_from_manifest.py 9 passed. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.
+**41 open** · 105 total · 34 fixed · 30 invalid
 
 ---
 
@@ -230,7 +31,8 @@ REAL PRODUCT DEFECT, found by driving the real app: a download of course 43660 w
 
 REAL PRODUCT DEFECT on macOS, in a primitive whose Unicode half I verified as working. CLAUDE.md justifies core.sync_manager._path_key = normcase(normpath(NFC(s))) with: 'Case - a case-only rename (Notes.pdf -> notes.pdf) is legal and invisible on Windows/macOS, but the raw strings stop matching. Measured: the tracked file drops out of the tracked set, so it is offered to the healer as an orphan AND inflates the untracked files count the review screen shows.' That fix works on Windows only: os.path.normcase LOWERCASES on Windows and is IDENTITY on POSIX. MEASURED here: os.path.normcase('AbC') -> 'AbC'; _path_key('Notes.pdf') == _path_key('notes.pdf') -> False; _path_key('Tema 1/Slides.PDF') == _path_key('tema 1/slides.pdf') -> False - while the boot volume IS case-insensitive (wrote CaseProbe.txt, and (dir/'caseprobe.txt').exists() -> True, i.e. both names are the SAME FILE). So on macOS the documented symptom is still live: a case-only rename makes the manifest row dangle, offers the file as 'deleted locally' (a re-download of a file that is already there under a different spelling), and inflates the untracked count whose stated purpose is to match what the user sees in the folder. No data loss - the app never deletes on a Canvas-side diff. Two Windows-written tests fail here for the same underlying reason and are the trail that led to it: test_library.py::test_save_pair_matches_link_across_path_spelling and test_pair_labels.py::test_pair_key_normalises_folder_and_course_id, both asserting that 'C:\Courses\Makro' and 'c:/courses/makro' resolve to one key. NOT FIXED, deliberately, and this is the important part: the obvious fix - always .lower() in _path_key - is NOT safe. _path_key drives heal_manifest's local-to-local matching, the untracked count and analyze_course, and on a case-SENSITIVE volume (a case-sensitive APFS or HFS+ format, or an ext4 external drive - and course folders do live on external drives, which is why the NFD case matters at all) 'Notes.pdf' and 'notes.pdf' are two different files. Folding them would let a heal bind a manifest row to the WRONG file, which is data-integrity territory and strictly worse than today's over-reporting. The correct fix is to fold case only when the containing volume is case-insensitive, which needs a per-volume probe (pathconf/_PC_CASE_SENSITIVE or a write-probe, cached per mount) rather than a global lower(), and that is a change I am not willing to make blind at the end of a release. RECOMMENDED: add the volume probe, cache it per mount point, and pin both directions - a case-only rename adopted on the case-insensitive boot volume, and two genuinely distinct names kept apart on a case-sensitive one. REAL-FOLDER CONFIRMATION, measured on the synced 43660 folder: took a tracked row ('Tema 4 .../Maurer_Introduction to Change.pdf'), renamed the file to 'maurer_introduction to change.pdf' (two-step, since a case-only rename needs it on a case-insensitive volume), and asked the manifest. The file's REAL spelling is NOT in the tracked set (_path_key miss), while the row's stored path STILL OPENS because the volume is case-insensitive. So the precise macOS symptom is not a dangling row and not a 'deleted locally' offer - it is DOUBLE COUNTING: the same file is tracked under the old spelling and simultaneously counted as UNTRACKED under its real one, inflating the very count whose stated purpose is to match what the user sees in the folder. Milder than the Windows description in CLAUDE.md, and still wrong. The file was restored to its original spelling afterwards.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -250,7 +52,8 @@ REAL PRODUCT DEFECT on macOS, in a primitive whose Unicode half I verified as wo
 
 PRODUCT/BUILD finding, first time the macOS bundle's signature has been verified. Built with 'pyinstaller --clean --noconfirm Canvas_Downloader_macOS.spec' (rc=0, 266 MB) and signed exactly as CLAUDE.md documents (codesign --force --deep -s - --entitlements entitlements.mac.plist). The signature then does NOT verify: 'codesign --verify --strict' rc=1, 'the main executable or Info.plist must be a regular file (no symlinks, etc.) In subcomponent: .../Contents/Frameworks/pync/vendor/terminal-notifier-2__dot__0__dot__0/terminal-notifier__dot__app/Contents/MacOS/terminal-notifier'. CAUSE: pync vendors a nested terminal-notifier.app and PyInstaller rewrites '.' to '__dot__' in those directory names, so 'terminal-notifier__dot__app' is no longer a valid bundle - its Info.plist/executable relationship is broken and strict verification of the WHOLE app fails. Both a correct 'terminal-notifier.app' and the mangled copy are present, under two mangled version directories. NOT OVERCLAIMED: 'spctl -a -vv' also says 'rejected', but that is expected for ANY ad-hoc signature (no Developer ID) and is not evidence of this defect. The app LAUNCHES and runs correctly despite it - verified by the operator's own screenshot: splash, login card, onboarding panel and institution picker all render correctly in WKWebView. CONSEQUENCE: harmless for today's ad-hoc distribution; NOTARIZATION would reject this bundle, so it blocks any future Developer-ID release, and it means '--force --deep' silently produces an unverifiable artifact. PROPOSED FIX (not applied - build-policy change, and the notification chain deserves care): exclude pync in scripts/build_excludes.py. It is fallback #3 of 4 in engine/notifications.py; CLAUDE.md documents it as unreliable on arm64 Sequoia; MAC_RUNBOOK says not to report it doing nothing; the PRIMARY UNUserNotificationCenter path is verified working by mac_smoke on this machine; the #4 osascript fallback was fixed 2026-08-10. Cost 180 KB. Stripping only the vendored .app is worse - it leaves pync importable but broken at runtime.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -269,7 +72,8 @@ PRODUCT/BUILD finding, first time the macOS bundle's signature has been verified
 
 The sidebar of the running app reads 'v2.0.1' (screenshot fda_06_today_card.png, bottom left) while this audit is the final gate before v2.0.2 (tests/audit/MAC_AUDIT_PROMPT.md line 10) and v2.0.1 is ALREADY a shipped git tag. version.py has not been bumped. Four consequences, all measured or read off the source rather than supposed: (1) ui/auth.py:3915 prints the wrong version in the sidebar - observed. (2) ui/update_banner.py:97 computes update_available = _is_newer(github_tag, __version__); driven against the real function, _is_newer('2.0.2','2.0.1') returns True, so once the release is tagged v2.0.2 on GitHub EVERY user of that build sees the update notice permanently, pointing at the build they are running, on every launch. It cannot self-clear. (3) core/health_log.py:162 and core/canvas_debug.py:293 stamp diagnostics with 2.0.1, so every support report from the new release is mis-attributed to the old one - which matters most for the defects this very audit fixed. (4) CLAUDE.md records version.py as read by CI and both build specs, so the installer and bundle metadata would be stamped 2.0.1 too. Fix is one line, but it has to happen before the tag, and nothing in the build or the test suite currently asserts that version.py leads the newest tag.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -313,7 +117,8 @@ A TRAP worth not repeating: the unstaged path is not a usable control for any of
 
 Guarded by tests/test_office_staging_short_names.py (5 tests), which force the staging branch on whatever the host platform is - off macOS the container lookup returns None and staging degrades to a pass-through, so an unpatched test would assert nothing while appearing to cover the fix.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -354,7 +159,8 @@ REFINES the earlier 'attribution uncertain' note by separating two phenomena I h
 
 CROSS-PLATFORM, not macOS-specific - surfaced because the full unit suite was run here for the first time and tests/test_architecture_audit.py::test_repository_passes_its_own_audit fails. CLAUDE.md states Rule 4 is 'a real gate again (0 unsuppressed violations)'; it now reports 12, which this session reduced to 9. WHAT I FIXED (provably correct, 3 of the 12): ui/auth.py escapes with 'from html import escape as _he', and _SAFE_CALL_NAMES whitelists escaper ALIASES by name ('escape', 'html_escape', '_html_escape') but not '_he' - so three already-escaped interpolations read as unescaped. Added '_he'. The list's own comment records this having happened before with another private alias, so name-whitelisting has this cost by design; a named alias is still better than a suppression comment, which would also hide a genuine miss on the same line. WHAT I DID NOT FIX, and why: of the remaining 9, SIX carry a deliberate '# audit-ignore: <var> is a local filesystem path' comment that sits EXACTLY ONE LINE BELOW the reported violation - ui/sync_dialogs.py ignore at 1172 vs violation at 1171, ui/hub_dialog.py 1066 vs 1065 and 1272 vs 1271. The rule is documented as 'on or above a flagged line', so an ignore below suppresses nothing. The consistent off-by-one points at line attribution for a multi-line implicit f-string concatenation (the flagged expression is on one fragment, the author's comment on the next), which means a naive fix - moving the comments - could break on a different Python version, since PEP 701 changed f-string tokenisation in 3.12 and this machine runs 3.11. That needs verifying on both versions, which is off-machine work, so it is recorded rather than guessed at. RISK ASSESSMENT of the 9: none is Canvas-controlled data. Six are local folder names/paths (self-inflicted at worst - a user would have to name a folder with markup), and the other three are app-controlled (a CSS spacing value from _row_gap(), a metric label, and pre-built HTML rows in ui/panopto_page.py). So the gate is broken but the exposure is low. RECOMMENDED: decide whether the suppression window should include the line below for multi-line f-strings, or move the six comments and pin the behaviour with a test that runs on 3.11 and 3.12.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -395,7 +201,8 @@ Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full
 
 REAL PRODUCT DEFECT, reachable only from a packaged Mac app. start.py wraps webview.start() in try/finally and calls core.health_log.session_end(reason) from the finally, with a comment stating 'this marker is what the next launch reads to decide whether the app died or exited' and that its absence 'is the entire signal the health log carries'. On macOS the finally never runs: a Quit Apple event (what Cmd-Q and the Quit menu send) terminates the process from inside Cocoa's run loop without unwinding the Python stack. MEASURED, controlled, on the ad-hoc-signed bundle built here: launch -> pid 12966, state file reads clean_exit=False while running (correct, _save_state writes that on every sample); quit via 'tell application "Canvas Downloader" to quit'; process confirmed gone; state file STILL reads clean_exit=False with exit_reason=None. Three consecutive launches earlier the same hour each logged 'PREVIOUS SESSION DID NOT EXIT CLEANLY', including pid=6737 which had been quit gracefully after 788s of idle uptime. CONSEQUENCES: (1) the health log's central signal is permanently wrong on macOS - a genuine crash is indistinguishable from a normal Tuesday, on the platform CLAUDE.md itself calls out as having 'no crash-telemetry channel' and 'the least-tested path this app has'. (2) core.health_log._reap_recorded_orphans is armed on EVERY launch rather than after a real crash. The liveness guard added 2026-08-07 stops it destroying a live session's children, so this is not dangerous today - but it means that guard is now load-bearing in normal use rather than an edge case. (3) _terminate_child_processes() sits in the SAME finally, so on a normal quit it does not run either; no orphans were observed in practice, but the reaping that is supposed to happen before the hard exit is being skipped. FIXED (commit ad13d00): start.py now hooks pywebview's `closed` event, which fires from the Cocoa delegate - a path the Quit event does reach - and routes it through an idempotent `_shutdown` guarded by a threading.Event, so the ordinary window-close route (where start() DOES return and the finally also runs) still closes the record exactly once. VERIFIED on a rebuilt, re-signed bundle: after a normal quit the state file reads clean_exit=True and the log carries 'SESSION END (clean) uptime=14s'; the NEXT launch's SESSION START is followed by NO post-mortem line, where every earlier launch had one. The app still exits promptly and leaves nothing behind - two processes visible 6s after the quit were teardown lag and were gone shortly after. tests/test_startup.py, test_health_log.py and test_orphan_reaper_liveness.py all pass (60).
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -417,6 +224,38 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 **Notes**:   
 > Not observed in the latest run.
+
+---
+
+### mac_eyes dialogs cried wolf: Tahoe's phantom alert carries a title, macOS 15's did not
+<!-- fp:1006b5789ca8 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O1,O3
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_checker_dialogs
+
+**Detail**:
+
+CHECKER DEFECT (fixed, 13c70c7). scripts/mac_eyes.py `dialogs` reported "SOMETHING IS WAITING FOR A HUMAN: universalAccessAuthWarn: Screen Recording" while nothing was on screen, twice during M1 setup.
+
+The suppression _is_phantom_alert was scoped to this owner AND an EMPTY title, on macOS 15 evidence where the phantom was untitled. On macOS 26.6 Tahoe the same phantom carries the title "Screen Recording" (window 461x181, id 299, owner pid 10605), so the title test missed it entirely.
+
+MEASURED, and note the second proof was structurally unavailable on macOS 15:
+ (a) the owning process started 14:53:33 and was alive 1h24m (5042 s) at the time of the alarm, unchanged across samples. A consent prompt is created when something asks for consent, not at login, and no prompt survives that.
+ (b) eyesight is HEALTHY on this machine (screencapture renders other applications' windows correctly - VS Code and Chrome both visible in _audit_runs/_screens/160346_dialog.png), and that capture shows NO dialog anywhere on the desktop. On macOS 15 every capture was blank, so a screenshot proved nothing and the original comment says so explicitly.
+
+Severity is about consequence: this is the one failure this command must not have, because its whole job is deciding when to interrupt a human. A false alarm trains the reader to ignore it and the next real TCC prompt then goes unanswered - which on this project means an Office conversion hanging to -1712 with the user away.
+
+FIX: discriminate on AGE, which is exactly what the original comment's reasoning rested on and was simply not available to the code (_windows() dropped kCGWindowOwnerPID). A genuine prompt is YOUNG; the phantom persists for hours. _PHANTOM_MIN_AGE_S = 600, deliberately generous - far longer than any prompt an agent following this runbook leaves unanswered, far shorter than the 40+ min persistence measured on both OS versions - so the DANGEROUS direction (missing a real prompt) keeps a wide margin. Empty title is kept as an independent sufficient condition so the macOS 15 shape still suppresses. Unknown age fails OPEN. A suppressed window is now PRINTED, not dropped in silence, since the suppression is a judgement about one known window and that line is the only way a reader could ever notice it being wrong.
+
+VALIDATED IN BOTH DIRECTIONS against the live machine and in tests: the real 84-minute phantom is suppressed (and reported as ignored); a YOUNG window with the SAME owner and SAME title still alarms; the untitled macOS 15 shape still suppresses; a different owner is never masked; unknown age alarms. tests/test_mac_audit_tooling.py gains 3 tests; all 6 mutations of the real code are caught (revert to empty-title-only, fail-closed on unknown age, flipped comparison, suppress-every-owner, drop the pid, rename the report line). Full file suite 42 passed / 1 skipped.
+
+**Notes**: 
 
 ---
 
@@ -453,7 +292,8 @@ FIX: one shared constant, engine.applescript_bridge.TCC_FIRST_RUN_NOTICE, used b
 
 STILL TO DO OUTSIDE THIS REPO: the docs site's macOS setup page does not mention this dialog at all. It should list the same three-way distinction - Automation prompts (Allow), folder access (OK), and Accessibility (optional, needs a System Settings toggle, safe to deny).
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -480,7 +320,8 @@ That overwrite is the documented design and it is what makes the download run th
 
 Recorded as an observation rather than a defect: every individual behaviour here is deliberate and documented in CLAUDE.md, including the specific warning that a Panopto gate placed inside the runner would let a download write an all-off contract over every folder it touched. The gap is that the contract is presented as visible state with no editor, and the one thing that rewrites it does so without saying so.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -500,7 +341,8 @@ Recorded as an observation rather than a defect: every individual behaviour here
 
 MEASURED with a positive control per case and a FRESH Word each time, which is what makes it trustworthy - an earlier all-in-one-process run failed 8 of 8 because the first hostile name wedged Word (see mac_m1_word_wedge), so only the first case after a passing control can be believed. Isolated results: 'Lec\rture.doc' FAILED, 'Say "hi".doc' CONVERTED, a 250-char ASCII component FAILED - each preceded by a plain 'control.doc' that CONVERTED. THE CAUSE for the CR case is exact and visible in the escaper's own output: engine.applescript_bridge.applescript_string renders the path ending as 'Lec ture.doc' - CLAUDE.md's documented rule that 'a line break becomes a SPACE, never empty, because deleting it would silently join two words of a name shown to the user'. That rule is right for a MESSAGE string and wrong for a PATH: the emitted AppleScript is syntactically valid but now names a file that does not exist, so Word cannot open it. Round-trip check: literal.endswith(name) is False for CR and True for the quote and long-name cases, i.e. the quote path is passed through faithfully and the CR path is corrupted. WHY IT IS A DEFECT RATHER THAN A LIMITATION: MAC_RUNBOOK item 4 states of exactly these two names that 'Both must convert normally - _as_posix neutralises them'. It neutralises the SYNTAX hazard only. REACHABILITY: macOS permits every byte but / and NUL in a filename, and CLAUDE.md notes an extracted ARCHIVE member never passes through _sanitize_filename, so a zip can put one in a course folder. CONSEQUENCE is safe but silent: the conversion fails, the source is kept, and the user gets no PDF for that one file. POSSIBLE FIX (not applied): a path must not go through the message escaper - pass it as raw bytes/POSIX file via a mechanism that cannot rewrite it, or reject/rename such a source explicitly so the failure is stated rather than silent. SEPARATE, NOT ISOLATED: the 250-char ASCII component also failed although its path round-tripped identically (component 254 bytes, legal on macOS whose limit is 255 BYTES per component; full path 293 chars, so office_container_stage's >=240 staging applies). The cause was not established - it is Word's own limit or the staging - and is recorded as an open question rather than a diagnosed defect.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -539,7 +381,8 @@ NOT FIXED, deliberately, and the reasoning is the asymmetry: making this work on
 
 WHAT WAS FIXED is the audit's own expectation, which produced 6 spurious CRITICAL findings on the first macOS sync matrix - expensive noise in a release gate, and the second time this fixture has misfired (a 2026-07-28 run recorded the same shape after it chmod'ed a conversion output instead of a download target). `readonly_target` now sets expect_after="" on POSIX with the measurement written into the comment, keeping expect_category="updated_clean" so the row still asserts what it can on this platform: that a read-only file is still classified as a clean update, and that the run reports neither a silent success nor a hard error. Re-ran the 3 affected rows (ro001/ro013/ro029) with the corrected fixture: all ok, 0 criticals, only the pre-existing informational long-path note.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -570,7 +413,8 @@ BOTH DIRECTIONS VERIFIED ON REAL VOLUMES, not simulated:
 
 Guarded by tests/test_path_key_case_folding.py (7), which pin both directions, that the probe never raises on a missing or odd path (it runs inside the analysis loop, where an exception would take out the whole course), that NFC and normpath were not displaced by the fold, and - not a tautology - that the real default macOS volume is still detected as insensitive, so the fix keeps reaching people.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -589,7 +433,8 @@ Guarded by tests/test_path_key_case_folding.py (7), which pin both directions, t
 
 Found by exercising the clean-exit fix in the PACKAGED 2.0.2 app, which is the only place it runs - start.py is not reached from source. Closing the window produced TWO identical lines for one SESSION START, one second apart: 'SESSION END (clean) uptime=169s peak_self=220.1MB' then the same with 220.2MB. CAUSE: the shutdown was written as an idempotent _shutdown() guarded by a threading.Event, and the comment above it stated that the ordinary window-close route therefore closes the record exactly once - but the finally block called session_end() and _terminate_child_processes() DIRECTLY, bypassing the guard. So on a window close the whole shutdown ran twice: events.closed fires, then webview.start() returns and the finally repeats it. Harmless for the clean_exit flag, which is idempotent, but it breaks the one-START-one-END shape the log is read for, and reaps the process tree a second time for nothing. Fixed by routing the finally through _shutdown(_exit_reason), which preserves the ordering the block documented - health record closed FIRST while the children are still alive and measurable, tree reaped before the hard exit. ALSO CONFIRMED by the same run: the clean-exit fix itself WORKS in the bundle (the record closes as clean on a window close, where a Quit Apple event used to leave it looking like a crash), and the bundle reports app=2.0.2, so the version bump reached the artifact.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -632,7 +477,8 @@ WHAT A LATER SESSION SHOULD DO: launch dist/Canvas Downloader.app, complete one 
 
 Also seen: the diagnostic process ended with "Killed: 9" after driving all three paths in one short-lived process, matching the already-recorded finding that the notification path crashes a bare short-lived python process and is not reproducible in the real app shape.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -651,7 +497,8 @@ Also seen: the diagnostic process ended with "Killed: 9" after driving all three
 
 Both FDA surfaces rendered for the first time in this audit (they need macOS 15+ AND Full Disk Access absent, which no dev machine satisfies), and all three defects are in the copy a user reads at the moment they are being asked for a system permission. (1) shared/components.py:3779, Settings dialog card: 'asks a one-click "access data from other apps" permission THE every time you start the app' - a stray word. (2) shared/components.py:3716, Today nudge card: "makes features like the 'Todays Files' mode require your input" - the feature is called 'Today's files' in the sidebar, the page title and the query param; the nudge invented a third spelling and dropped the apostrophe. (3) shared/components.py:3715: 'your ai-ready formats' against 'Optimized for AI.' on the login page (ui/auth.py:1867). Fixed in this commit: the stray word removed, 'Today's files' bolded to match the sidebar label the step list already points at, 'AI-ready' capitalised, and 'office conversions' -> 'Office conversions' in the same sentence as (1). No behaviour change - these are string literals inside f-strings whose render path is verified by the same screenshots.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -671,7 +518,8 @@ Both FDA surfaces rendered for the first time in this audit (they need macOS 15+
 
 ui/panopto_page.py's trash icon calls pmodels.delete_model(mid) immediately - no confirmation, no undo - for a model up to ~3 GB. The CUDA removal directly below it has a carefully-built two-stage flow whose own comment explains why a same-shaped second button reads as a confirm. No data loss (the model is re-downloadable), but bandwidth and time on a metered or slow connection, from an unlabelled icon button. NOT FIXED: a confirm state changes the row's element SHAPE, which is the container-inheritance hazard this codebase documents at length, so it needs its own before/after browser pass rather than a hurried one. Recommended shape: mirror the CUDA schedule + undo idiom.
 
-**Notes**: Left open deliberately - see the Detail for why, and CLAUDE.md 'Known, deliberately NOT changed'.
+**Notes**: Left open deliberately - see the Detail for why, and CLAUDE.md 'Known, deliberately NOT changed'.  
+> Not observed in the latest run.
 
 ---
 
@@ -689,6 +537,46 @@ ui/panopto_page.py's trash icon calls pmodels.delete_model(mid) immediately - no
 **Detail**:
 
 The last unproven half of the 2026-08-10 AppleScript escaping unification, and it needed one human click: sending keystrokes is refused on this box (System Events: 'osascript is not allowed to send keystrokes'), so the modal was opened by the real shared.helpers.native_folder_picker and dismissed by the operator. MEASURED: target /tmp/m5_picker/quoted "folder" name, returned /private/tmp/m5_picker/quoted "folder" name/ - the double quote survived intact, the returned path resolves to the folder chosen, and it exists on disk as returned. So both directions of the escaping rule now hold on a Mac: the INPUT (a default location containing a quote produced a working dialog, listing both fixtures correctly) and the OUTPUT. TWO INCIDENTAL FINDINGS, both benign, both worth knowing because they are macOS-only: (1) the returned path carries a TRAILING SLASH, because the macOS branch returns result.stdout.strip() and AppleScript's 'POSIX path of' appends one for a directory - Windows' shell picker and the tkinter fallback both return bare paths, so macOS is the only platform where a picked folder differs in spelling from a typed one. Verified harmless against the real functions: core.library.save_pair returns the SAME pair id for the bare and slashed forms, core.pair_labels.pair_key gives the same key, and core.sync_manager._path_key normalises both to the same string - so picking a folder twice cannot produce two pairs for one link. (2) it returns the /private/tmp resolved form rather than /tmp, because macOS symlinks /tmp into /private - the same symlink resolution that let /etc through the sync-folder safety guard earlier in this audit, here doing no harm because the comparison sites resolve too.
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
+### M1 PASS: all three macOS Office converters correct on Tahoe; delete gate observed firing
+<!-- fp:1f13ed39a7b5 -->
+
+**Status**: open
+**Severity**: info
+**Category**: conversion
+**Oracles**: O2,O3
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_m1_office
+
+**Detail**:
+
+M1 PASS on macOS 26.6 Tahoe / arm64, Office 16.111.3. Every case ran the REAL converter class with a FRESH Office instance and its own positive control, per MAC_RUNBOOK.
+
+1. HAPPY PATH, all three converters, genuine binary sources:
+   - WordToPDF on a genuine legacy .doc (textutil-produced, "Composite Document File V2"): 8121-byte PDF, %PDF magic verified, source deleted.
+   - ExcelToPDF on a genuine legacy .xls (written by Excel itself, "Microsoft Macintosh Excel"): 9888-byte PDF, source deleted.
+   - PowerPointToPDF on a .pptx containing a real slide: 8858-byte PDF, source deleted.
+
+2. THE DELETE GATE FIRED NATURALLY, which is the strongest evidence here. A .pptx containing ZERO slides made PowerPoint report success to AppleScript while writing a 0-BYTE PDF. pdf_looks_real refused it ("the PDF written was empty (0 bytes)"), convert() returned None, and THE ORIGINAL WAS KEPT. This is exactly the failure the macOS gate was added for in the round where run_applescript's dst.exists() success test was found too weak - and it is now demonstrated firing on real hardware rather than argued from source.
+
+3. DELIBERATE FAILURE, with a positive control immediately before it (control converted, so Word was healthy): a .doc whose body is random bytes behind OLE magic. Word never opened it, osascript returned -1712 after a bounded 120.2s, convert() returned None, no PDF was written, and THE ORIGINAL SURVIVED BYTE-IDENTICAL (md5 compared before/after). The failure was logged as "[AppleScript] Word failed (other)". Word wedged afterwards, as MAC_RUNBOOK documents, which is why every case relaunches.
+
+4. HOSTILE FILENAMES - all six converted and the PDF landed under its TRUE name: control, carriage return ("Lec\rture.doc"), double quote ('Say "hi".doc'), backslash, Danish+emoji, and a 240-BYTE name. The 240-byte case is the regression check on the 2026-08-10 office_container_stage fix (staging as src.<ext> instead of src.name); it still holds on Tahoe, where before that fix anything past ~164 bytes could not convert at all.
+
+5. NO PROCESS LEAK. Launched all three, ran quit_idle_office_apps: "quit sent (1 open doc(s), none user-owned)" for each, and pgrep went 3 -> 0 after a 14s settle. The open Windows finding (a COM-spawned EXCEL.EXE outliving the run by 5h54m) does NOT reproduce on macOS - a different spawn model, and the AppleScript quit path reclaims all three.
+
+6. NO STALE DOCK TILE. Dock recent-apps held only application entries (Terminal, VS Code, Excel); a full JSON scan of the Dock export mentions none of the converted or deleted file paths.
+
+7. The first-run permission batch launched all three apps HIDDEN and did not steal focus (visible=false for every Microsoft process, frontmost stayed Chrome), recording all three as answered in 15s. That confirms the 2026-08-10 removal of the System Events "set visible to false" - and with it the Accessibility prompt - is still the quietest behaviour on Tahoe.
+
+NOT COVERED: revoking Automation for Word mid-run to exercise _abort_applescript_phase. It needs a human toggling System Settings; the classification it depends on (-1743 -> 'permission') and the SYSTEMIC_REPEAT_THRESHOLD logic are unit-tested, so this was deprioritised rather than skipped silently.
 
 **Notes**: 
 
@@ -710,7 +598,8 @@ The last unproven half of the 2026-08-10 AppleScript escaping unification, and i
 
 Verified with RUNBOOK.md's own classification rule rather than by counting stderr lines (a non-empty ffmpeg stderr is muxer noise, not decode failure). Bundled binary: imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1, i.e. the arm64 build the app ships. Results over all 36 recordings of course 43660: 0 decode failures (rc=0 throughout), 0 lines matching the real-error set (Invalid data / corrupt / error while decoding / moov atom not found / Invalid NAL), 0 files missing an audio stream, 0 suspiciously short files, 0 leftover .part or .part.mp3. TOTAL DURATION 8.20 h across 36 files, mean 13.7 min - which matches the figure RUNBOOK.md recorded on Windows ('36 files, 8.21 h total, mean 13.7 min') to within a rounding step, so the arm64 ffmpeg produced equivalent content rather than merely producing something. Note 0 muxer-noise lines here, against the 1-532 per file the runbook records for mp4: the duplicate-DTS complaint is an mp4-muxer artifact and does not arise for mp3, so the 'do not report' trap is specific to the video output. STILL UNTESTED and listed as a gap: the mp4 output, whose specific checks are both streams present and '+faststart' honoured (moov before mdat) - 36 recordings of video is ~3.8 GB and was not run.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -777,6 +666,42 @@ RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that 
 
 ---
 
+### M2 PASS: Panopto Shortcut output on macOS - 36 .webloc, Canvas collision resolved, Finder opens them
+<!-- fp:07aab6792186 -->
+
+**Status**: open
+**Severity**: info
+**Category**: panopto
+**Oracles**: O4,O5
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_m2_shortcut
+
+**Detail**:
+
+M2 PASS (Shortcut output) on macOS 26.6 Tahoe, course 43660, run 20260811_155557. Contract read back from the folder's own .canvas_sync.db (O4): {"output_url": true, "output_mp4": false, "output_mp3": false, "output_txt": false, "output_srt": false, "layout": "match"}.
+
+DISCOVERY. O2: "Discovered 36 recording(s) ... by source {'module': 36}"; O5's snapshot of 43660 counts exactly 36 ExternalTool module items. Batch closed "found=36 downloaded=0 transcribed=0 shortcuts=36 skipped=0 failed=0".
+
+THE ECONOMY HOLDS. O2: "needs no media this run (Shortcut output only) - skipping the per-course session bootstrap." So the 36 links cost ZERO Panopto handshakes, which is the whole design of the Shortcut output. The LTI folder-enumeration fallback chain ran and correctly reported 0 sessions for the course folder (401 on api/v1, then GetSessions 0, then GetFolders HTTP 500 "not in role (FolderEnumerate)") and discovery still returned all 36 from the module launches - i.e. the documented fallback behaved as designed, and the INFO line containing "failed" is checker defect 29, not a defect.
+
+THE CANVAS COLLISION CASE IS THE HEADLINE, and it is right. A Panopto lecture that is ALSO a Canvas ExternalTool module item already has a .webloc written by _create_link. All 36 Panopto shortcuts landed as "<title> (Panopto).webloc" BESIDE the Canvas-produced "<title>.webloc" - measured, both present, none overwritten. Disk holds 77 .webloc total = 36 ours + 41 Canvas.
+
+MARKERS AND FORMAT (O3). Every one of the 77 parsed as a valid plist, 0 malformed. The 36 app-produced carry exactly two keys, ['CanvasDownloaderSource', 'URL'], read_shortcut returns source "Panopto", and all 36 URLs are real https://cbs.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=<uuid>. The 41 Canvas-produced ones are correctly NOT marked, which is what keeps converters/url.py from deleting ours.
+
+O4. panopto_manifest holds 36 rows, ALL kind='url' - never 'webloc'. That is the documented identity rule (kind is 'url' on both platforms; only the file EXTENSION differs) and getting it wrong would make every row read as missing for ever.
+
+FOUR-ORACLE RECONCILIATION: 254 files on disk - 36 Panopto .webloc - 1 .canvas_sync.db = 217 = sync_manifest rows = the "Downloaded: 217 items" the UI reported. Nothing unaccounted for.
+
+THE ONE QUESTION ONLY THIS MACHINE COULD ANSWER - DOES FINDER OPEN IT? Yes. Evidence is the SIXTH, INFORMAL ORACLE (my own eyes via screencapture), stated explicitly as MAC_RUNBOOK requires: `open <file>` was accepted by Launch Services, Safari became the frontmost process, and the screenshot _audit_runs/_screens/163602_desktop.png shows Safari having followed the Panopto viewer URL to CBS's real SSO page (login.microsoftonline.com, CBS branding). Landing on SSO rather than the player is CORRECT - Safari carries no Panopto session, and the Shortcut output is documented as a pointer that dies with your Canvas/Panopto access.
+
+The 2 errors in this run are both ERROR [Locked File] on teacher-locked .pptx files, which RUNBOOK classifies as the benign all-locked case, not a delivery failure.
+
+**Notes**: 
+
+---
+
 ### M2 PASS: Panopto discovery, 36 collision-resolved .webloc shortcuts, kind=url rows, and Launch Services opens ours
 <!-- fp:f8d392f9cffb -->
 
@@ -792,6 +717,33 @@ RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that 
 **Detail**:
 
 FIRST TIME the Panopto subsystem has ever run on macOS. All of it passed. (1) DISCOVERY via module-item LTI launches: 'Discovered 36 recording(s) ... by source {module: 36}', matching O5's ground truth for course 43660. The documented economy held: 'needs no media this run (Shortcut output only) - skipping the per-course session bootstrap', i.e. 0 runner handshakes. Closing line: 'found=36 downloaded=0 transcribed=0 shortcuts=36 skipped=0 failed=0 courses=1'. (2) THE CANVAS COLLISION CASE, which CLAUDE.md records as having shipped broken (36 recordings discovered, 34 identically-named .url files on disk, 0 shortcuts written): the M1 download had already written 41 Canvas ExternalTool/.webloc links via _create_link, so the precondition was real. Result on disk: 77 .webloc total = 41 Canvas-written (is_produced_shortcut False, untouched) + 36 ours, and ALL 36 of ours are named '<title> (Panopto).webloc' beside a still-present Canvas link. Ours carry source='Panopto' and point at the real Panopto viewer (cbs.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=...), not at the Canvas module item. (3) O4: 36 rows in panopto_manifest, ALL with kind='url' - the documented rule that a .webloc must be recorded as kind 'url' and never 'webloc'. (4) DOES macOS OPEN IT - the one question MAC_RUNBOOK reserves for a human, and which CLAUDE.md says reasoning cannot settle ('what that cannot prove is Finder itself'). Answered: A/B'd a URL-only plist against one carrying our extra CanvasDownloaderSource key, both opened through Launch Services, and Safari reported 'https://example.com/plain, https://example.com/ours' - so the marker key does NOT prevent the URL being read. Finder also renders both with the internet-location icon. NOTE ON A FALSE ALARM: a first attempt produced a blank Safari with an empty address bar, which looked like the shortcut being broken. Safari on this cloud image is flaky (it failed to launch at all with _LSOpenURLsWithCompletionHandler error -600 for Safari.app itself), and the operator confirmed their own double-clicks worked. An mdls probe was uninformative - kMDItemURL is null for OUR file AND for a Canvas one, so it distinguishes nothing.
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
+### M2 PASS: URL compiler consumes the 41 Canvas .webloc and spares all 36 Panopto ones
+<!-- fp:af4007a3c476 -->
+
+**Status**: open
+**Severity**: info
+**Category**: panopto
+**Oracles**: O3,O4
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_m2_url_compiler
+
+**Detail**:
+
+The URL compiler's compile-widely / delete-narrowly split, verified on macOS with REAL data rather than a fixture. This is the destructive interaction: converters/url.py compiles every shortcut in a course folder and the caller then DELETES what it reports, so a marker that failed to round-trip would destroy the user's selected Panopto output on every run and the next sync would put it back - for ever.
+
+Driven against a full copy of the real 43660 folder (77 .webloc: 36 app-produced Panopto + 41 Canvas ExternalTool/ExternalUrl links), calling the REAL compile_urls_to_txt and then the REAL delete loop from converters/post_processing.py:921-923 (the compiler only REPORTS; the caller unlinks, so the returned list is what decides deletion - checking the compiler's own side effects would have measured the wrong boundary).
+
+RESULT: consumed 41, all Canvas. 0 app-produced shortcuts in the consumed list. After the caller's delete loop: 36 .webloc remain, all 36 app-produced, all still readable with source "Panopto", and Compiled_External_Links.txt written with 41 URLs and ZERO panopto.eu URLs in it - i.e. ours were neither deleted nor compiled.
+
+This is the macOS half of the rule that shipped for the .url side on Windows; mac_smoke proves it on a synthetic pair, this proves it on a real course folder where the two kinds are interleaved across module subfolders.
 
 **Notes**: 
 
@@ -822,7 +774,8 @@ STEM FIX VERIFIED LIVE, on the exact video id that produced the 70-mp3 duplicati
 
 Also confirmed in passing: a download re-run does NOT duplicate existing Canvas files. A first pass counting names containing "(N)" reported 136 conflict copies, which was a FALSE POSITIVE - these Canvas lecture titles literally contain "(1)"/"(2)" ("Forelaesningsvideo (2): ..."). Counting only files whose stem ENDS in " (N)" and whose un-suffixed sibling also exists gives 0. The skip-if-size-matches path in _download_file_async is doing its job; 36 of 177 files were skipped in the first 25 seconds and the MB denominator correctly excluded them (0.0 / 849.4 MB).
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -841,6 +794,45 @@ Also confirmed in passing: a download re-run does NOT duplicate existing Canvas 
 **Detail**:
 
 Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requires that 'there is no CUDA, so the CPU path is the only path; panopto/hardware.py must report that calmly rather than raising'. Verified on screen in the Transcription Configuration dialog: 'Detected Hardware - GPU: Apple Silicon - no GPU mode (the engine runs on the CPU)' and 'CPU: 10-core CPU - Apple M4', with Compute Device defaulting to CPU and GPU offered but not selected. The guidance line adapts to the hardware too ('Large v3 Turbo is recommended for CPU transcription on 10 cores. A GPU would allow a larger model.'). No exception, no empty state, no claim of CUDA. mac_smoke independently confirms the same four facts from the probe API (is_mac, no CUDA claimed, CPU recommended, ctranslate2 4.8.1 imports in a clean process). The Tiny model (75 MB) downloaded through the dialog and shows as Active with a delete control, which is MAC_RUNBOOK item 6's 'Manage installed models' state.
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
+### M2 PASS: transcription on Apple Silicon CPU, and cancel leaves no .part and no worker
+<!-- fp:e64f6d5d56e4 -->
+
+**Status**: open
+**Severity**: info
+**Category**: panopto
+**Oracles**: O2,O3
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: mac_m2_transcribe
+
+**Detail**:
+
+M2 PASS (transcription) on Apple Silicon, macOS 26.6 Tahoe, M4-S arm64. This is the item MAC_RUNBOOK calls "the riskiest single item here" and it had never run on macOS.
+
+HARDWARE PROBE. panopto/hardware.py reports arm_mac=True, claims NO CUDA, and recommends the CPU path calmly rather than raising: "The transcription engine has no GPU backend on macOS - it runs on Apple Silicon's CPU cores". ctranslate2 4.8.1 imports in a clean process.
+
+MODEL DOWNLOAD, through the app's own path. models.start_download('tiny') -> status done, 4/4 files, is_installed True, 74.58 MB on disk in the config dir.
+
+AUDIO. Generated real speech with macOS `say` and transcoded with the BUNDLED arm64 ffmpeg (imageio_ffmpeg ffmpeg-macos-aarch64-v7.1): a 7.8s clip and a 1m51s clip, both mp3 22050 Hz mono. That incidentally exercises the bundled ffmpeg's encode path on arm64.
+
+HAPPY PATH, out of process. transcribe_in_subprocess ran the real worker: 1.3s for the 7.8s clip, 3 progress events ending (100, 'en'), language detected 'en'. Both sidecars written and CORRECT - Lecture 1.txt (130 B) reads "Welcome to lecture one on organizational structure. Today we examine how formal hierarchies shape decision-making in modern firms.", and Lecture 1.srt (197 B) carries well-formed cues ("00:00:00,000 --> 00:00:05,280"). No .part left. The subprocess route is what matters here: this project carries an OpenMP clash that SEGFAULTS rather than erroring when ctranslate2 is co-loaded with streamlit/numpy, which is why panopto/transcribe_worker.py exists at all.
+
+CANCEL MID-TRANSCRIPTION - the 2026-08-09 fix, verified on the platform it was found on. Cancelled the 1m51s clip at 6.2s / 25% through the real is_cancelled callback. Measured:
+  - both sidecars genuinely existed mid-run: ['Lecture 2 long.srt.part', 'Lecture 2 long.txt.part'] - so the sweep had something real to clean, which is what the first version of this test could not show;
+  - PanoptoCancelled propagated;
+  - ZERO .part files afterwards;
+  - no partial .txt/.srt left behind - the folder holds only the .mp3;
+  - no transcribe_worker process alive (pgrep empty), i.e. the worker was reaped.
+That is the `finally`-scoped _clean_part_files behaving correctly. The original defect was that a UI cancel arrives as a BaseException (Streamlit's RerunException/StopException) raised inside the progress callback, so a sweep written as ordinary statements after the loop was skipped and left 341-character sidecars in a student's folder for ever.
+
+NOT COVERED THIS RUN: the mp3 and mp4 MEDIA download paths. mp4 was verified end to end on macOS 15 (all 36 recordings, both streams, moov before mdat); mp3 remains unproven on macOS. This run configured Shortcut output only, so no media was fetched - see the M2 shortcut finding for why that was the right first pass (it costs zero Panopto handshakes).
 
 **Notes**: 
 
@@ -862,7 +854,8 @@ Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requir
 
 FIRST macOS run of the transcription subsystem, and of the .part cleanup fix that was written for a Windows-observed defect. (1) MODEL: Tiny (75 MB) downloaded through the real Transcription Configuration dialog, landing in panopto_models/tiny/model.bin (90 MB on disk) and shown as Active. (2) MEDIA: all 36 recordings' mp3 produced through the BUNDLED ffmpeg on arm64 in about two minutes; sizes 17.8-24.3 MB. (3) WORKER: 'Transcribe worker spawned: pid=10891 device=cpu frozen=False' - so it runs OUT OF PROCESS as designed (panopto/transcribe_worker.py exists because of an OpenMP clash that segfaults rather than erroring), on the CPU, with no CUDA claimed. Two recordings completed: 'OK in 86.8s: txt, srt' and 'OK in 140.7s: txt, srt' on a 10-core M4. Outputs are genuine, not stubs: srt 25,847 and 33,171 bytes with real timecoded Danish ('Velkommen til enddel af forlaesning om ...' - tiny-model accuracy, as expected), txt 17,519 and 25,158 bytes, each beside its mp3 as a complete triplet. (4) THE CANCEL, which is the point: cancelled 5 seconds into worker pid=11065 while it was actively WRITING - two sidecars ('...organisationsstruktur 2025 37.srt.part' and '.txt.part') were confirmed present on disk at the moment of the click, which is precisely the mid-write condition that produced the original leak. AFTER: zero .part files anywhere in the tree, and no transcribe_worker/faster_whisper process left. So the sweep-in-a-finally fix (panopto/runner.py) and the make_long_path delete (panopto/transcribe.py) both hold on real macOS. NOTE: the log carries no explicit cleanup line, so O3 (the absent files) is the only oracle for the sweep here - the same asymmetry the original finding relied on in the other direction, where the ABSENCE of post-loop lines was the proof it had not run.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -882,7 +875,8 @@ FIRST macOS run of the transcription subsystem, and of the .part cleanup fix tha
 
 FIRST test of this from a real bundle. A macOS windowed .app rebuilds sys.argv from Apple events and silently drops a custom flag, which made a child launched with --panopto-transcribe-worker boot the FULL GUI instead: 'a second app window opened for every transcription and the parent blocked until the user closed it'. The fix routes primarily via the CANVAS_DL_TRANSCRIBE_WORKER env var, keeps the flag as a backup, and records the winner in _CANVAS_DL_WORKER_ROUTE. Driven against dist/Canvas Downloader.app built and ad-hoc signed on this machine, feeding a job on stdin: (a) the bundle SHIPS the console worker binary _worker_command prefers (Canvas_Downloader_Worker, arm64) alongside Canvas_Downloader; (b) with ONLY the env var - no flag at all - both binaries answered 'worker start: frozen=True routed_via=env device=cpu want_txt=True want_srt=True' and exited in 0.1-0.2s, so the argv-drop defence itself works; (c) with ONLY the flag, both answered 'routed_via=argv', so the backup signal works too; (d) with NEITHER, both sat until my 20s timeout, i.e. they booted the app rather than a worker - the correct negative control, and the thing that proves (b) and (c) measured routing rather than a binary that always enters worker mode. (e) The count of 'Canvas Downloader' GUI processes stayed at 0 across all six launches, which is the phantom-second-Dock-app symptom absent. The 'KeyError: mp3' each worker returned is my probe's deliberately incomplete job payload, and is itself evidence: worker mode was entered and answered on stdout with a JSON error event instead of ignoring stdin.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -902,7 +896,8 @@ FIRST test of this from a real bundle. A macOS windowed .app rebuilds sys.argv f
 
 Verified on a REAL HFS+ volume created with hdiutil, which is the only way to reach this: APFS is normalisation-PRESERVING so a modern Mac hides the case entirely, and an external drive does not. Four rows, all passing: 'APFS is normalisation-PRESERVING - os.walk returned the NFC we wrote'; '_path_key agrees across NFC/NFD'; 'HFS+ hands back the DECOMPOSED name - as expected, this is the case APFS hides'; '_path_key maps both forms to ONE key'. This is the class CLAUDE.md records as reading like a random defect, because Danish 'aa' decomposes while 'oe' and 'ae' do not - so on an HFS+ external drive a tracked file with an a-ring would drop out of the tracked set and inflate the review screen's untracked count, while its siblings behaved. The single _path_key primitive (normcase(normpath(NFC(s)))) holds. Also green in the same suite: make_long_path is a no-op off Windows, >600-char paths, and the 255-BYTE component limit.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -935,7 +930,8 @@ The six, with what each actually proved:
 
 THE CASE QUESTION IS STILL OPEN and is deliberately not closed by this work. On a case-INSENSITIVE macOS volume (the default) a case-only rename is the same folder to the OS and a different link to the app, so _path_key's case half being a no-op is a real defect there. It is not fixable with a .lower(): an external case-SENSITIVE volume is an ordinary place to keep a course folder, and folding there would mis-bind heals. It needs a per-volume probe. Its own finding covers it.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -1014,7 +1010,8 @@ WHAT THE RUN ALSO SHOWED, and it is a correction to my own reasoning: post-proce
 
 THE KEYCHAIN REMAINS THE ONE HONEST GAP on this hardware, and it is environmental. A rebuilt app carries a NEW ad-hoc signature, so macOS treats it as a different application reading the previous build's keychain item and demands the LOGIN KEYCHAIN PASSWORD - unknown on a rented cloud image, and there was no option to set one at provisioning. The prompt therefore cannot be satisfied, it repeats once per access, and the operator denied it. Consequences seen and understood rather than mis-attributed: the token is not persisted, so the next launch shows the login page. On a normal machine the user clicks Always Allow once per new version. Not reproducible here; the operator confirms earlier versions remembered the login on real use.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -1034,7 +1031,8 @@ THE KEYCHAIN REMAINS THE ONE HONEST GAP on this hardware, and it is environmenta
 
 OBSERVATION with an explicit caveat, recorded so it is not lost and not overstated. Calling the REAL engine.notifications.play_completion_beep(mode='daily_sync', ...) from a bare python process repeatedly produced 'Python quit unexpectedly' (the macOS crash reporter) and a shell 'Killed: 9'; the operator confirmed 'python keeps crashing when you do that'. It is NOT consistently fatal - one invocation that slept 4s afterwards printed 'fired ok' and exited cleanly - so it is a race. WHY THIS IS PROBABLY NOT A PRODUCT DEFECT: my test posts a notification from a short-lived python with no Cocoa NSApplication run loop and then exits, which is not the app's shape. The real app shares the process with the PyWebView Cocoa NSApplication (start.py) and lives on, which is precisely why _show_macos_notification_native calls that 'the robust primary path'. The code already anticipates this exact mismatch: play_completion_beep's comment says 'post on the calling thread avoids run-loop issues - the daemon thread context can differ from what UNUserNotificationCenter/its delegate callbacks expect, and a daemon thread can be killed during process shutdown before the completion handler fully executes'. WHAT IS THEREFORE STILL UNPROVEN, and belongs in the gap list: whether a real sync completion in the PACKAGED app delivers a visible banner. mac_smoke reports 'UNUserNotifications delivered - a banner should be visible', and a UserNotificationCenter window (260x300) does appear on each call, but the banner itself outran every capture attempt (macOS banners last ~5s) and no screenshot of our banner text was obtained. A SEPARATE FALSE LEAD, recorded so the next audit does not chase it: a 'Terminal would like to access the microphone' TCC prompt was captured while investigating this and initially looked like the notification path requesting the microphone. It is not - re-running the identical code produced no such prompt, nothing in the notification chain (UNUserNotificationCenter -> NSUserNotification -> pync -> osascript) or in afplay touches audio input, and a UserNotificationCenter window was already present BEFORE the first notification call. It was almost certainly one of the pending permission prompts the operator approved minutes earlier.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -1063,7 +1061,8 @@ THE PERMISSION LESSON, which cost a run: there are THREE separate macOS gates an
   * driving a NAMED app (Finder, Word) -> AUTOMATION, per source-app to target-app pair; its refusal is a consent prompt that BLOCKS.
 So "tell application Finder to close every window" hung for the full timeout on the FIRST case, and a propagating TimeoutExpired lost the whole run before any data was collected. macOS refuses synthetic clicks on consent prompts by design, so the operator has to answer it; scripts/mac_eyes.py dialogs screenshots whatever is waiting, which is how it was identified. Every osascript call in the probe now degrades that one check instead of the run.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -1082,7 +1081,8 @@ So "tell application Finder to close every window" hung for the full timeout on 
 
 Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Access absent, and every context that can run the app had FDA. Solved by running the app from the SSH session, whose responsible process (/usr/libexec/sshd-keygen-wrapper) carries an explicit DENIED row for kTCCServiceSystemPolicyAllFiles, so has_full_disk_access() returns False for real rather than by patching. Login was done by hand through the real form because the Keychain is Aqua-scoped - and that incidentally confirmed the 'a persistence failure must never block a login' rule: keyring was unavailable, restore_saved_session correctly fell back to the login page, and a pasted URL+token logged in with no error. VERIFIED: (1) Today page - dismissed state renders the subtle re-spawn link with the exact copy, clicking it spawns the full card, all four walkthrough steps render as a real ordered list with no HTML leaking, the close button collapses the card back to the link and the persisted flag holds. (2) The button runs open_full_disk_access_settings(): System Settings opened directly on Privacy & Security > Full Disk Access with 'Canvas Downloader' present in the app list by name - so the legacy x-apple.systempreferences anchor still deep-links correctly on macOS 15, and step 2 of the walkthrough ('Toggle on Canvas Downloader in the app list') describes what the user actually sees. Screenshot 183506_desktop.png. The toast fired with the right text (fda_08_toast.png). (3) Settings dialog - render_fda_settings_card in its NOT-GRANTED state: blue dot, 'Not granted' status line, full step list. (4) Download settings step 2 - gated on an Office converter; enabling Legacy Word inside Card 3's FRAGMENT made the nudge appear even though the slot lives OUTSIDE that fragment, i.e. the documented escalation to a full-page rerun fired, and disabling it removed the nudge again. Both directions left exactly one Card 3 header and one Confirm button, so the escalation does not produce the inherited-children artifact this repo has hit elsewhere. (5) Quick Download - present for 'Daily study pack (Optimized)', absent for 'Files Only', so the preset gate is real and not always-on.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -1102,7 +1102,8 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 
 core/library_migrate.py was never reached by the 'unreadable is not empty' sweep that hardened core/library.py, preset_manager, ui/auth.py, today_store and atomic_update_sync_pairs - and it is the worst member of that family to miss: it runs on EVERY launch (app.py) and sits UPSTREAM of the hardened store, so it destroys the library before load_library's guards can run. The legacy stores are never deleted (only copied to *.bak), so a re-run always has something to import and importing REBUILDS the library from its state at first migration. `needs_migration` answered 'yes, migrate' for any library file it could not read, and `_read_json` swallowed OSError alongside JSONDecodeError. REPRODUCED against the real functions: one OSError on that read - antivirus lock, config dir on an offline share, permissions blip - and a pair the user had renamed reverted to its original name while a second saved pair DISAPPEARED. Two more in the same read: UnicodeDecodeError (a SIBLING of JSONDecodeError, both ValueError) escaped both entry points, breaking the 'never raises' docstring contract (one settings file re-saved in a Danish ANSI codepage is enough); and an unreadable LEGACY file was treated as empty, which writes a library missing every pair it held, after which needs_migration answers False for ever. FIXED: three outcomes, not two. Transient -> refuse, touch nothing. Damaged -> quarantine the bytes, then rebuild. Legacy unreadable -> abort and retry next launch. tests/test_library_migration_hardening.py (13).
 
-**Notes**: Fixed in this pass; see CLAUDE.md 'The pre-release audit of the UNTOUCHED corners'.
+**Notes**: Fixed in this pass; see CLAUDE.md 'The pre-release audit of the UNTOUCHED corners'.  
+> Not observed in the latest run.
 
 ---
 
@@ -1128,7 +1129,8 @@ The product's stated contract is that local edits are never overwritten and the 
 
 (2) 2026-08-10, macOS 15, the 6 occurrences in `20260810_151922_macos-15-v2.0.2` (s001/s013/s029, `.xlsx`, converters OFF - so cause 1 does NOT apply): the fixture was asserting **Windows semantics**. Measured on a mode-444 file: `open(target,'wb')` raises PermissionError but **`os.replace(tmp, target)` SUCCEEDS** - on POSIX a rename is authorised by write permission on the DIRECTORY, not by the target's mode. The engine's fallback is `except PermissionError` around that rename (sync/execution.py ~1081), so `_register_new_version(..., 'in_use')` is unreachable on macOS and a read-only file is simply updated. NOT data loss: the file is a CLEAN update, and the EDITED-file fork is a separate md5-based path that works on every platform. `seed.readonly_target` now sets `expect_after=""` on POSIX; the 3 rows were re-run with the corrected fixture and reported 0 criticals.
 
-So the earlier claim here that "the locked-target fallback is verified working elsewhere" is true **on Windows only** - that run was Windows. Do not read it as cross-platform. Full reasoning, including why the product was deliberately NOT changed, is in the low-severity finding "The locked-target _NewVersion fallback is unreachable on macOS".
+So the earlier claim here that "the locked-target fallback is verified working elsewhere" is true **on Windows only** - that run was Windows. Do not read it as cross-platform. Full reasoning, including why the product was deliberately NOT changed, is in the low-severity finding "The locked-target _NewVersion fallback is unreachable on macOS".  
+> Not observed in the latest run.
 
 ---
 
@@ -1310,6 +1312,27 @@ Guarded by tests/test_link_content_sig_parity.py, which runs BOTH directions and
 
 ---
 
+### ~~A corrupt or 0-byte .doc wedges Microsoft Word on macOS, and every later Word conversion in the run then silently fails~~
+<!-- fp:200c7fea9f04 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: conversion
+**Oracles**: O2,O3
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 11
+**Scenario**: mac_m1_word_wedge
+
+**Detail**:
+
+REPRODUCED on real macOS with real Office; only this machine can produce it. CHAIN OF EVENTS, measured: (1) feed the macOS Word converter a hostile legacy .doc (2 KB of random bytes, and separately a 0-byte file). The delete gate behaves CORRECTLY - the source is kept, verified by md5 - and the log records '[AppleScript] Word failed (other)'. Run 1 also logged 'Microsoft Word got an error: AppleEvent timed out. (-1712)', consistent with Word raising a MODAL dialog that waits for a human (hypothesis - not directly observed, see below). (2) Word is then WEDGED: 'count of documents' answers 1, the document's name cannot be read, and 'close every document saving no' answers 'missing value' and changes nothing. (3) EVERY subsequent Word conversion fails with 'missing value doesn't understand the save as message. (-1708)' - INCLUDING a genuine 153 KB .doc from course 43660 that converted perfectly moments earlier in a clean process. Measured across two fresh processes: 4 of 4 good-file conversions failed, each reporting 'word docs before=1'. (4) The app's OWN recovery does not help: engine.applescript_bridge._force_close_canvas_docs_sync left the count at 1. (5) Killing the process DOES recover it: after 'pkill -x Microsoft Word', a good file CONVERTED and a second good file straight after also CONVERTED. WHY IT MATTERS: no data loss (the gate keeps every source), but for the rest of that run the user silently gets NO PDFs from any .doc/.rtf/.odt, with one generic 'Conversion failed' line per file. Reachable in normal use by a single corrupt legacy .doc in a course followed by others. WHY THE EXISTING MECHANISM MISSES IT: the codebase already models this exact class - _abort_applescript_phase exists to 'log a single actionable message instead of spamming dozens of generic errors' for failures that 'will identically doom every remaining file in the phase' - but FATAL_CATEGORIES is only ('permission','app_missing'), keyed on -1743 and -600/-10810. A wedged Word yields -1708, which _classify_stderr maps to 'other' = per-file, so the phase dutifully attempts and fails every remaining file. RECOMMENDED FIX (not applied): treat a run of consecutive identical AppleScript failures within one phase as fatal for that phase and emit one actionable message ('Microsoft Word is not responding to conversion requests - quit Word and run again'). A blind kill+relaunch is NOT safe and must not be added: in the wedged state the documents cannot be enumerated, so the app cannot certify that no USER document is open, and every other Office path in this codebase deliberately refuses to act without that certificate. THE MODAL IS CONFIRMED, by the operator's own eyes: 'word was jumping in the dock and when i clicked it it had some error dialog saying file "name" couldnt be opened or something and i clicked ok to all of them and quit word'. So the chain is: hostile .doc -> Word raises a MODAL file-open error and bounces in the Dock demanding attention -> AppleScript's 'open' never yields an active document -> every later conversion answers -1708 -> nothing in the app dismisses the alert, so the phase is dead until a human clicks OK or the process is killed. Note the converter DOES attempt 'set display alerts to false', but it is wrapped in its own try and evidently does not suppress a file-corruption alert raised during open. I could not observe this myself - screenshots were blind at the time and System Events refused with 'osascript is not allowed assistive access (-1728)' - which is a good argument for keeping a human in the loop on a GUI-automation phase.
+
+**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: engine/applescript_bridge carries SYSTEMIC_REPEAT_THRESHOLD + systemic_failure(), so a repeated -1708 now aborts the phase once with an actionable message instead of dooming every remaining file; tests/test_office_wedge_abort.py 9 passed. The Detail above still reads 'RECOMMENDED FIX (not applied)' - that sentence is historical, the fix landed after it was written. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.  
+> Not observed in the latest run.
+
+---
+
 ### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~
 <!-- fp:91d640ef7d5a -->
 
@@ -1469,6 +1492,53 @@ Now derived from the folder's stored `sync_contract`. Re-checked on the same pri
 
 ---
 
+### ~~A failed Keychain save DESTROYS the token that was already saved, tells the user nothing, and logs a DPAPI fallback that does not exist on macOS - so the next launch is a login page~~
+<!-- fp:03713060d77a -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: persistence
+**Oracles**: O1 UI (lane apps on ?mode=auth) vs O3 disk (Keychain probe)
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 6
+
+**Detail**:
+
+Found because every lane of the sync matrix failed identically ("btn_analyze_sync not clickable"), which turned out to be every lane app sitting on ?mode=auth. The Keychain held NO token at all - and it had held one earlier the same day, because an Aqua-launched app restored its session and rendered "Logged in as Birk".
+
+MEASURED against the real library, not reasoned about:
+
+    keyring.set_password(SVC, USER, "probe-value-before")   -> stored, reads back
+    keyring.set_password(SVC, USER, "probe-value-AFTER")    -> PasswordSetError (-25308)
+    keyring.get_password(SVC, USER)                          -> None
+
+The macOS backend DELETES any existing item before adding the new one, so a refused write leaves nothing behind. What destroyed the audit's token was me logging in through the real UI from a session whose Keychain is unwritable; the same shape reaches a real user whenever the login keychain is locked for writing, or when ui/auth.py's own 90-second keyring watchdog times out.
+
+Three things in ui/auth.py then combined so that the user was told nothing:
+1. _safe_keyring_set RETURNS False rather than raising, so the login flow's `except Exception` amber notice was unreachable for this failure - the only branch that ran was the else.
+2. _save_fallback_token returns immediately when sys.platform != 'win32'. That is deliberate and correct (the app must not write tokens to disk on macOS), but it means macOS has no second copy.
+3. The else branch's only output was logger.warning("Keyring save failed or timed out. Saved to DPAPI-encrypted fallback storage.") - which off Windows describes a save that did not happen.
+
+So: the previously saved credential is destroyed, nothing new is stored, no notice appears, and the next launch shows the login page. Recovering means going back into Canvas to mint a fresh access token.
+
+WORSE AT THE TWO LEGACY-MIGRATION SITES. Both of them (macOS base64-in-JSON, Windows plain-JSON) did: kr_ok = set(...); if not kr_ok: _save_fallback_token(...); config.pop('<token field>'); write_config_atomically(config) - popping the JSON copy and rewriting the file whatever the keyring returned. That is the one run where the JSON copy is the ONLY copy, which CLAUDE.md already flags in another context as "exactly when the file is most worth not corrupting".
+
+FIX: ui.auth.store_token(username, token) -> bool, now the only writer, with three properties in order because each alone is insufficient:
+  (a) SKIP a write that cannot change anything. If the stored value already equals the token there is nothing to gain and a credential to lose - and this is the common path (re-login with the same token, plus both migration sites). Verified live on the real Keychain: same token + refused write = 0 set_password attempts, value intact.
+  (b) write, then fall back (Windows DPAPI; nothing on macOS by design).
+  (c) VERIFY by reading back, so the return value describes the STORED STATE rather than the return code of one attempt. That is what makes it safe for a caller to delete its own copy - and it matters beyond this bug, because _safe_keyring_set also returns False on a watchdog TIMEOUT, where the native call may still be in flight.
+Both migrations now pop the JSON field only when it returns True, and the login flow renders an amber notice ("Your login could not be saved on this device") instead of logging a DPAPI save that did not happen. store_token never raises: a persistence failure must not be able to abort a login.
+
+WHAT THE FIX CANNOT DO, stated plainly: if the Keychain is unreadable as well as unwritable, store_token cannot detect an identical token and the write is attempted, so the old item is still destroyed. That is the context my SSH session was in. It is not worth defending - a machine whose Keychain answers nothing has no credential to preserve - but it is why the audit's own token vanished rather than being skipped.
+
+Verified live in the Aqua session against the real macOS Keychain (all three cases), covered by tests/test_token_store_preserves_credential.py (10 tests), and all 7 mutations of the real code are caught - including one per migration site and one for the amber notice. The 7th survived a first pass as an apparent equivalent mutant (the wrapper it guards swallows backend errors itself) and is genuinely reachable: _safe_keyring_set does `import keyring` OUTSIDE its own try, so a broken or build-excluded keyring package raises straight through it.
+
+**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: ui/auth.store_token is the single writer (skip-if-unchanged, write, fall back, verify by read-back); tests/test_token_store_preserves_credential.py 11 passed. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.  
+> Not observed in the latest run.
+
+---
+
 ### ~~A file that is both a Files-tab file and a Canvas Content attachment is downloaded twice, and the first copy is orphaned~~
 <!-- fp:f5c9f9d3c10f -->
 
@@ -1513,6 +1583,84 @@ TWO WAYS TO IMPLEMENT, both needing a verifying run:
   (a) give the Catch-All the ids the Canvas Content phase will claim. Complete, but the API-attachment half of that set needs a per-assignment refetch that the secondary phase already performs - so it either costs the calls twice or needs the secondary enumeration split into plan-then-execute.
   (b) let the secondary phase MOVE an already-downloaded copy into the entity folder instead of re-fetching it. One download, correct placement, one manifest row, no pre-pass - but it changes the engine's write path.
 (b) is the smaller change and fixes all three symptoms; (a) is the more conservative one. Deferred rather than guessed at: this area already carries one duplicate-files fix, and the matrix owns the machine until the GPU lane finishes.  
+> Not observed in the latest run.
+
+---
+
+### ~~One transient read destroyed the ENTIRE sync history - the unreadable-is-not-empty sweep never reached this store~~
+<!-- fp:e3b5253e0e54 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: persistence
+**Oracles**: O3 disk (register file before/after a forced read failure)
+**First seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Last seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Occurrences**: 1
+
+**Detail**:
+
+REAL PRODUCT DEFECT, found offline by sweeping the "unreadable is not empty" class across every remaining persistent store, and REPRODUCED against the real class: 50 seeded history entries became 1.
+
+core.sync_manager.SyncHistoryManager.load_history() degraded EVERY failure to [] - by design for the two DISPLAY surfaces - and BOTH mutators then did `history = load_history()` -> append/amend -> atomic write. So a single TRANSIENT read failure (an antivirus lock, the config dir on a share that is briefly offline, a permissions blip, errno 35/13/5) replaced the user's whole record with the one entry being added.
+
+This class has been fixed SIX times in this repo (core.library, core.library_migrate, core.preset_manager, core.today_store, ui.auth, atomic_update_sync_pairs). The sweep never reached canvas_sync_history.json. That is the playbook's own thesis restated: the productive question is not "what could be wrong" but "which module did the last fix for this class NOT reach".
+
+amend_last_entry was the same bug in disguise. It answered False on an empty history and its own docstring says the caller then "creates one" - so a transient failure funnelled straight into the add_entry that does the damage. It now answers True ("handled, change nothing"); a GENUINELY empty history still answers False, because that answer is what makes the caller create the entry, and a test pins both directions.
+
+WHAT IS LOST: canvas_sync_history.json is the complete record of every sync in both modes. It backs the Sync page's history, the Today page's lens (which is a filter over this same record, never a second one), and shared.components._course_id_from_sync_pairs, which matches error rows against the stored course_names.
+
+FIX: split by CAUSE, reusing the ONE existing implementation rather than restating it - shared.helpers.read_json_for_update, generalised with an `expect` type (defaulting to dict, so all pre-existing callers are unchanged) and asked for a list here. Damaged content (malformed JSON, or bytes that are not UTF-8 - UnicodeDecodeError is a SIBLING of JSONDecodeError, both ValueError) is quarantined and the write PROCEEDS, so the user gets a working file back. A transient OSError returns may_write=False and the caller writes NOTHING. The two display readers stay total and now LOG rather than swallow, because rendering [] tells the user "you have no sync history" - the same confusion already fixed once in _render_sync_history.
+
+SWEPT the last store holding the same shape: engine.applescript_bridge's macOS Office permission record, where a transient read dropped the other apps' answered Automation prompts and would silently re-launch Word, Excel and PowerPoint on a later run.
+
+Covered by tests/test_sync_history_hardening.py (26). ALL 11 mutations of the real code are caught, including deleting either guard, making either condition unreachable, flipping amend's answer back to False, reverting to the display reader, and asking the primitive for the dict default. Full suite green after the pass (3487).
+
+**Notes**: Found and fixed in the pre-launch offline hardening pass on the
+macOS audit machine. Reproduced against the real function, fixed, tested,
+mutation-verified and the full suite re-run after each pass.  
+> Not observed in the latest run.
+
+---
+
+### ~~SAFETY GUARD BYPASSED ON macOS: /etc and /var were accepted as sync folders because the check resolves symlinks before comparing~~
+<!-- fp:d6ba79f3db46 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: persistence
+**Oracles**: O3,O4
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 10
+**Scenario**: mac_m4_system_roots
+
+**Detail**:
+
+REAL PRODUCT DEFECT, found by running the unit suite on macOS for the first time. sync/persistence._validate_pair_folder refuses 'obviously dangerous system roots' and is the gate on add_pair/add_pairs_batch. It calls Path(folder).resolve() and THEN compares against a blocklist written in plain spelling - but macOS symlinks /etc, /var and /tmp into /private, so '/etc' arrives as '/private/etc', matches nothing, and is ACCEPTED. Measured on macOS 15.6.1: _validate_pair_folder('/etc') -> True, '/etc/nested' -> True, '/var/log' -> True, and add_pair('/etc') WROTE the pairs file instead of rejecting it and showing the 'system folders cannot be used' toast. WHY IT SURVIVED: the tests for this were correct all along and had never run anywhere. They carry skipif(sys.platform == 'win32') with reason 'POSIX system roots', so Windows skipped them, and nobody had ever run the suite on a Mac - six of them fail on the very platform they were written for. This is the platform-asymmetric class CLAUDE.md documents (the Office delete-gate fixed on Windows and left broken on macOS for a full round). WHY IT MATTERS: a sync pair is a folder the engine writes course files into, creates a hidden .canvas_sync.db in, and sweeps .part files out of. The folder normally comes from the native picker, and FINDER RESOLVES SYMLINKS - so '/private/etc' is the spelling a real user is most likely to arrive with, which the raw-only alternative would also have missed. FIXED: the check now refuses a candidate if EITHER the raw or the resolved form names a system root, and _BAD_ROOTS_MAC adds the /private spellings. An explicit exemption keeps the OS's own per-user temp area usable ('/var/folders/<user>/T', which resolves under /private/var and would otherwise be swallowed by the /var entry) - that distinction is real, not a concession to the fixtures: /var/log is the system, /var/folders/<user> is the user's scratch space. Verified on this Mac: /etc, /etc/nested, /private/etc, /var/log, /private/var/log and /usr/local all rejected; /Users/m1/Courses and both the temp root and a mkdtemp under it accepted; all 53 tests in tests/test_sync_persistence.py pass where 6 failed. KNOWN RESIDUAL, deliberately not changed: '/System', '/Library' and '/Applications' are not in the blocklist and are still accepted. Adding new roots is a design decision rather than a bug fix, and SIP makes /System unwritable in practice.
+
+**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: sync/persistence carries _BAD_ROOTS_MAC and checks the raw AND resolved form, so the /private spellings are refused; tests/test_sync_persistence.py 53 passed, 5 skipped - the six that used to fail on this very platform now pass. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.  
+> Not observed in the latest run.
+
+---
+
+### ~~A download then a sync duplicated every lecture's audio: 70 mp3 files for 36 lectures, because the shortcut's disambiguated path defined the stem for all media~~
+<!-- fp:5a4befe8de50 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: placement
+**Oracles**: O3,O4
+**First seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Last seen**: 2026-08-10 (20260810_151922_macos-15-v2.0.2)
+**Occurrences**: 9
+**Scenario**: mac_m4_panopto_dupes
+
+**Detail**:
+
+REAL PRODUCT DEFECT, found by driving the real app: a download of course 43660 with mp3+txt+srt, then a real sync of the same folder. NOT macOS-specific - the same collision happens on Windows with .url, and CLAUDE.md already records it there ('34 identically-named .url files'). MEASURED: 70 .mp3 files in a course with 36 lectures - 36 without a suffix and 34 with ' (Panopto)', the same lectures twice, about 400 MB duplicated and the originals orphaned. Proof by pair: 'Forelaesningsvideo (1) organisationsprojekt - klargoering af data.mp3' beside 'Forelaesningsvideo (1) organisationsprojekt - klargoering af data (Panopto).mp3'. O4 shows the cause exactly - for one video_id the manifest held url -> '<title> (Panopto).webloc' and mp3 -> '<title>.mp3'. MECHANISM: panopto.runner._recording_base is manifest-first and its kind list was (SHORTCUT_KIND, 'mp4', 'mp3', 'txt', 'srt') - shortcut FIRST, returning on the first hit. The shortcut is the ONE kind whose path is legitimately disambiguated, because in the match layout the Canvas file sync owns '<title>.url' and resolve_shortcut_path therefore writes ours as '<title> (Panopto).url'. Asked first, that stem became the base for every other kind, so the sync re-downloaded all 34 recordings it touched to '<title> (Panopto).mp3' beside the mp3s already on disk. This is precisely the divergence the function's own docstring promises to prevent ('instead of diverging to a fresh Title (2)'), and it is invisible in a download-only or sync-only run - it needs a download followed by a sync of the same folder, which is the normal lifecycle. FIXED: media kinds are consulted first, shortcut last. That costs nothing - the shortcut is still reached whenever no media kind is recorded, which is the only case its inclusion was ever justified by ('a folder whose ONLY produced output is the shortcut still has a stem the manifest knows'). tests/test_panopto_stem_from_manifest.py, 9 tests, both directions (the media stem wins when both exist; the shortcut stem is still used when it is alone; an undisambiguated shortcut agrees either way; the no-manifest fallback is unchanged) plus an AST check that the shortcut kind is last. Both mutations caught: restoring the old order fails 6, dropping the shortcut kind fails the alone-case. SIDE OBSERVATION, correct behaviour: those 34 recordings were offered for sync at all because their mp3 existed with no transcript (I had cancelled transcription after 2), which is RUNBOOK's 'a recording with mp3 present but srt missing must appear as new / missing outputs, not as up to date'.
+
+**Notes**: Verified fixed on the macOS audit machine during the 2026-08-11 pre-launch pass: panopto/runner._recording_base consults media kinds before SHORTCUT_KIND; tests/test_panopto_stem_from_manifest.py 9 passed. Status moved open -> fixed; if it is ever seen again the audit now reports it as a REGRESSION, which is the line worth watching.  
 > Not observed in the latest run.
 
 ---
@@ -2058,7 +2206,40 @@ convert_zip extracted these, but post-processing filters every converter through
 
 engine/progress_dashboard._pct exists because the value goes into `width: N%`, where -3 and nan are INVALID CSS - the browser drops the declaration and a block div renders as a FULL bar, so 'less than nothing happened' looks like 'finished'. That hardening reached build_progress_bar_html and not shared/helpers.render_progress_bar, the OTHER live renderer (three call sites in sync/execution.py's run loop, where the values arrive from counters owned by several subsystems). Measured before the fix: NaN -> ValueError, inf -> OverflowError, None -> TypeError. FIXED by routing through the same _pct/_num - one clamp, imported not copied. NOTE the two renderers still differ in signature and visuals; unifying them is a visual change to the sync run screen and needs its own before/after.
 
-**Notes**: Fixed in this pass; see CLAUDE.md 'The pre-release audit of the UNTOUCHED corners'.
+**Notes**: Fixed in this pass; see CLAUDE.md 'The pre-release audit of the UNTOUCHED corners'.  
+> Not observed in the latest run.
+
+---
+
+### ~~The LTI-stream verdict was written TWICE and both copies dropped .m4v, so a streamed video was reported as a hard failure~~
+<!-- fp:924e500e49c7 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: delivery
+**Oracles**: O2 log / O5 UI classification (split_delivery_errors)
+**First seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Last seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Occurrences**: 1
+
+**Detail**:
+
+REAL PRODUCT DEFECT, found by scanning for near-miss literal collections (sets that overlap heavily but are not identical - the shape a divergent primitive makes as it drifts).
+
+When Canvas serves a file with NO download URL, each engine decides from the extension whether this is a plugin-streamed video - a permanent fact about the course, which no retry, setting or wait can change - or a genuine failure. That verdict selects LTI_STREAM_REASON / LTI_STREAM_ERROR_TYPE, which the completion screen classifies to decide what to colour as an error.
+
+The MESSAGE and the ERROR TYPE were unified into shared.helpers long ago. The PREDICATE that chooses them was left behind as two copies - core.canvas_logic (download, line 4544) and sync.execution (sync, line 1007) - and BOTH omitted '.m4v', while the size-mismatch tolerance in the very same download engine (flexible_extensions) lists '.m4v' as media. So one engine disagreed with ITSELF, and an .m4v stream was reported as a hard failure in both flows: an otherwise-clean run rendering as "Completed with Errors", the colour that is supposed to mean "look at this".
+
+Same shape as make_long_path's second copy in core.sync_manager (the fix reached none of the 26 manifest call sites) and the three AppleScript escapers: a rule written more than once is a rule some caller is following an old version of.
+
+FIX: shared.helpers.is_lti_stream_ext + LTI_STREAM_EXTENSIONS, placed beside the two constants they select, and both engines ask it. The neighbouring size-mismatch list is deliberately NOT merged and a test pins that: it holds the same members today but answers a different question ("may a short read be tolerated?" vs "is this a stream?"), and this repo has the standing .pdf-in-file_in_scope example of what merging two same-looking lists costs.
+
+Covered by tests/test_lti_stream_classification.py (29); all 8 mutations caught. TWO of my own tests were weak and the pass found both: one fed LTI_STREAM_REASON straight to the downstream classifier and so passed WITH the bug present (the defect is upstream, in producing that message at all), and one grepped for the token "flexible_extensions", which a mutation aliasing the shared set to that very name satisfied. Both rewritten to assert the binding and the producer branch via AST.
+
+**Notes**: Found and fixed in the pre-launch offline hardening pass on the
+macOS audit machine. Reproduced against the real function, fixed, tested,
+mutation-verified and the full suite re-run after each pass.  
+> Not observed in the latest run.
 
 ---
 
@@ -2382,7 +2563,8 @@ What was actually wrong was only the other half - the Panopto card rendering '36
 
 The bar gated its ratio on `avail_bytes > 0`, so a genuinely full volume fell to the same 1% floor as an empty one and the '>70% of remaining space' notice could not fire. Measured on the dialog's own expression: 0.4 MB free warned, 0 B free did not - the one case the warning exists for was the only one it could not reach. Separately, an UNREADABLE volume drew a 1% bar while the code's own comment claimed the maths 'suppresses the bar instead of drawing a false one'. FIXED: shared/helpers.disk_fill_percent has three outcomes - None (never measured: draw nothing, warn nothing), 100.0 (no room), else the linear ratio with the 1% floor. Extracted rather than left inline so a test calls the decision instead of re-implementing it. ui/sync_review.py blocks a full volume upstream (it demands 1 GB), so the full-disk half is belt-and-braces; the unmeasured half is not. Verified in the browser in all four states.
 
-**Notes**: Fixed in this pass; see CLAUDE.md 'The pre-release audit of the UNTOUCHED corners'.
+**Notes**: Fixed in this pass; see CLAUDE.md 'The pre-release audit of the UNTOUCHED corners'.  
+> Not observed in the latest run.
 
 ---
 
@@ -2444,6 +2626,34 @@ Two changes shipped:
 2. The card's subtitle said *"Saved alongside the files you had edited"*, which is FALSE for the locked-file route - the category is assigned purely from the "_NewVersion" filename, so a file that was merely open in another program landed there too and the user was told they had edited something they never touched. Now *"Saved next to your copy, which was left untouched"*, true of both routes. The category legend on the sync page was corrected the same way. Verified in the real app via the sync-history panel, which shares the renderer.
 
 Guarded by tests/test_newversion_notice.py, including a check that every _NewVersion construction site in the sync engine is instrumented, so a third route added later cannot silently under-report the count.  
+> Not observed in the latest run.
+
+---
+
+### ~~The Windows PE version resource shipped one release behind, so file properties reported the previous version~~
+<!-- fp:83f38c06929c -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: release
+**Oracles**: O3 disk (version_info.py vs version.py)
+**First seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Last seen**: 2026-08-11 (20260811_macos-15-v2.0.2__offline-hardening)
+**Occurrences**: 1
+
+**Detail**:
+
+version_info.py is GENERATED by scripts/build_windows.py, but it is also CHECKED IN, and Canvas_Downloader.spec consumes it directly (version='version_info.py'). CLAUDE.md documents the Windows build as a bare `pyinstaller Canvas_Downloader.spec`, which does NOT regenerate it - so a release built the documented way stamps whatever version was last committed.
+
+MEASURED: version_info.py declared 2, 0, 1, 0 / "2.0.1" while version.py said 2.0.2. Explorer's file properties, and anything else reading the PE resource, would have reported the previous release for the whole of v2.0.2. It does not affect the in-app update banner, which reads version.__version__ - which is precisely why nothing caught it.
+
+Related to the already-registered release gate ("version.py still says 2.0.1"), but a DIFFERENT file: that one was fixed in version.py and the generated PE resource was not regenerated with it.
+
+FIX: regenerated with the real generator, plus two tests - one fails when the PE resource and version.py disagree, and one fails if the spec stops consuming the file (without which the first would be measuring nothing). Verified the test actually FAILS against the stale value rather than only passing against the fixed one.
+
+**Notes**: Found and fixed in the pre-launch offline hardening pass on the
+macOS audit machine. Reproduced against the real function, fixed, tested,
+mutation-verified and the full suite re-run after each pass.  
 > Not observed in the latest run.
 
 ---
