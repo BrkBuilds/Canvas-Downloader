@@ -136,6 +136,31 @@ Re-running these is pure cost. They were done properly and found nothing.
 
 ---
 
+## How the operator wants this run (stated repeatedly, 2026-08-10/11)
+
+Four standing instructions. They are not style preferences - this is shipped
+solo, to students, and it can absorb neither a false alarm nor a missed
+data-loss bug.
+
+- **Real application behaviour is the deliverable.** An early keychain
+  investigation done with synthetic probes was called *"hypothetical in-vitro
+  style ... a bit stupid"*. Fixing the harness is fine and often necessary, but
+  it is not the finding. Drive the real function, and where it is reachable from
+  the UI, the real app.
+- **Write findings down as you go**, into the repo, so nothing durable lives
+  only in conversation context - the context ends, and on the rented audit box
+  the whole machine ends with it.
+- **Be self-critical, including about earlier sessions and your own fixes.** Two
+  of this pass's tests were exposed as weak by its own mutation runs; saying so
+  is worth more than the finding count. Correct a previous conclusion the moment
+  the evidence turns.
+- **Do not report a finding you have not separated from its confounds.** Several
+  "defects" have turned out to be fixture artifacts, environmental limits or
+  test-design errors. The triage is valued above the count: say plainly when
+  something is environmental, unverified, or when you were simply wrong.
+
+---
+
 ## The workflow for a finding
 
 Non-negotiable order. Skipping step 1 produces "fixes" for bugs that do not exist;
