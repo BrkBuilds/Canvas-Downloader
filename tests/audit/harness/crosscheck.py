@@ -1209,8 +1209,33 @@ def _size_limit(ev: Evidence) -> list[Finding]:
 
     snap, db = ev.canvas, ev.db
     if snap and db.get("exists"):
+        # ONLY files the folder is allowed to hold. A file that is out of the
+        # folder's SCOPE never reaches the size gate at all - the download
+        # engine returns above it (`if not file_in_scope(...): return`) - so
+        # there is no skip to record and no ignored row to expect.
+        #
+        # Without this the check demanded a row for exactly the thing the app
+        # deliberately stopped writing: "out of scope is NOT the same as
+        # ignored ... it made a scope decision look like a per-file decision
+        # the user had taken", after the Ignored Files dialog listed 23 such
+        # files in a real folder and offered to restore them into a folder
+        # configured to exclude them. Measured on the 2026-08-11 macOS matrix
+        # (rows m025/m031, file_filter=study): both "unrecorded" ids were
+        # 12.5 MB .jpg files, which `file_in_scope(name, "study")` answers
+        # False for. The app was right and the checker was asking it to
+        # recreate a fixed bug.
+        #
+        # The app's own predicate is imported rather than restated - a rule
+        # copied into a checker is a rule that drifts from the thing it checks.
+        from core.canvas_logic import file_in_scope
+        _filter = ev.expect.get("file_filter", "all") or "all"
+
+        def _in_scope(f: dict) -> bool:
+            name = f.get("display_name") or f.get("filename") or ""
+            return file_in_scope(name, _filter) if name else True
+
         big = {f["id"] for f in snap.get("files_tab", {}).values()
-               if f["size"] > cap and f["has_url"]}
+               if f["size"] > cap and f["has_url"] and _in_scope(f)}
         # An over-cap file SHOULD have a row - an IGNORED one. That is the
         # mechanism, not a bug: the engine records what it skipped so a later
         # sync does not re-offer it, and Settings promises the user "you can
