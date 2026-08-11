@@ -208,5 +208,13 @@ def test_a_cycle_in_the_parent_chain_cannot_hang_the_walk(tmp_path, monkeypatch)
     monkeypatch.setattr(AB, "_any_office_running", lambda: False)
     _build(db, [(1, 2, "A"), (2, 1, "B"),
                 (40, 1, f"file:///x/{MARK}/cd_aaa/src_1.pptx")])
-    AB._purge_recents_sqlite()          # must terminate
+    # ON A THREAD WITH A JOIN TIMEOUT, so a regression FAILS instead of hanging
+    # the suite. Removing the walk's `seen` guard makes this loop forever, and
+    # the first version of this test simply hung the mutation pass for the full
+    # 10-minute budget instead of reporting the mutant as caught.
+    import threading
+    t = threading.Thread(target=AB._purge_recents_sqlite, daemon=True)
+    t.start()
+    t.join(timeout=20)
+    assert not t.is_alive(), "the ancestor walk did not terminate on a cycle"
     assert 40 in _nodes(db), "no MruUserData ancestor, so it must be left alone"
