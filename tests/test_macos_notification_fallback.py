@@ -19,10 +19,23 @@ It also broke the function's own documented promise: "Returns False on ANY
 failure so the caller falls back to NSUserNotification, keeping us strictly no
 worse than before".
 
-THE FALLBACK FIRES ONLY ON AN EXPLICIT REJECTION, and the timeout deliberately
-keeps the OLD answer. If the request is merely slow and we guessed failure, the
-UN banner could still land AND a fallback banner beside it - two notifications
-for one event, which is a worse defect than the one being fixed.
+TWO RULES, and the second is a CORRECTION to the first version of this fix
+(fd05d18), which fell back on ANY error:
+
+1. **The timeout keeps the OLD answer.** If the request is merely slow and we
+   guessed failure, the UN banner could still land AND a fallback banner beside
+   it - two notifications for one event, worse than the defect being fixed.
+
+2. **A user DENIAL is not a delivery failure.**
+   ``UNErrorCodeNotificationsNotAllowed`` (code 1, verified against the
+   framework) means someone turned this app's notifications off in System
+   Settings. The only fallback that could still show a banner is ``osascript``,
+   which posts under **Script Editor's** identity - so it would route around an
+   explicit permission decision AND show a banner attributed to an app the user
+   never ran. Product owner's call, 2026-08-11: respect the denial. The user is
+   not left with nothing - ``play_completion_beep`` starts the chime on its own
+   thread first, governed by the app's own Settings toggle rather than by macOS
+   notification permission.
 """
 
 from __future__ import annotations
@@ -66,7 +79,11 @@ class _Center:
         def _fire():
             if self.delay:
                 time.sleep(self.delay)
-            cb("UNErrorDomain Code=1" if self.mode == "reject" else None)
+            # "reject" is a USER DENIAL (UNErrorCodeNotificationsNotAllowed);
+            # "fail" is any other delivery failure. The two must take opposite
+            # branches, which is the correction this file exists to pin.
+            cb({"reject": "UNErrorDomain Code=1",
+                "fail": "UNErrorDomain Code=1401"}.get(self.mode))
 
         if self.mode == "never":
             return                      # handler is simply never called
@@ -112,10 +129,32 @@ def un(monkeypatch):
 # the three outcomes
 # --------------------------------------------------------------------------
 
-def test_a_REJECTED_request_reports_failure_so_the_caller_falls_back(un):
-    """The reported defect. Before the fix this returned True."""
+def test_a_DENIED_request_does_NOT_route_around_the_users_choice(un):
+    """Rule 2. `_Center("reject")` returns UNErrorDomain code 1 - a denial - so
+    the chain must STOP, not reach osascript under Script Editor's name."""
+    N._un_denial_logged = False
     un.setattr(N, "_get_un_center", lambda: _Center("reject"), raising=False)
+    assert N._show_macos_notification_un("Sync done", "12 files") is True
+
+
+def test_a_NON_denial_failure_still_falls_back(un):
+    """The original defect, and the half that must survive rule 2: a genuine
+    delivery failure has to reach the next mechanism."""
+    un.setattr(N, "_get_un_center", lambda: _Center("fail"), raising=False)
     assert N._show_macos_notification_un("Sync done", "12 files") is False
+
+
+def test_the_denial_explanation_is_logged_ONCE_per_session(un, caplog):
+    """It fires per completed download/sync otherwise, burying the run's real
+    errors - the same reasoning as `_pan_hook_errs`."""
+    import logging
+    N._un_denial_logged = False
+    un.setattr(N, "_get_un_center", lambda: _Center("reject"), raising=False)
+    with caplog.at_level(logging.INFO, logger=N.logger.name):
+        for _ in range(3):
+            N._show_macos_notification_un("Sync done", "12 files")
+    said = [r for r in caplog.records if "turned OFF" in r.getMessage()]
+    assert len(said) == 1, f"logged {len(said)} times"
 
 
 def test_an_ACCEPTED_request_still_reports_success(un):
@@ -135,10 +174,11 @@ def test_a_handler_that_never_answers_keeps_the_OLD_answer(un):
     assert time.time() - t0 >= monkey_timeout, "it must actually have waited"
 
 
-def test_a_SLOW_rejection_is_still_caught(un):
+def test_a_SLOW_answer_is_still_read(un):
     """The handler is not required to be synchronous, and on a real system it
-    is not - it arrives on an internal queue."""
-    un.setattr(N, "_get_un_center", lambda: _Center("reject", delay=0.05),
+    is not - it arrives on an internal queue. A slow NON-denial failure must
+    still reach the fallbacks."""
+    un.setattr(N, "_get_un_center", lambda: _Center("fail", delay=0.05),
                raising=False)
     assert N._show_macos_notification_un("Sync done", "12 files") is False
 
@@ -196,3 +236,79 @@ def test_the_fallback_chain_below_it_is_still_wired():
     assert "_show_macos_notification_native" in disp[i:], (
         "NSUserNotification must still be tried when the UN path reports "
         "failure")
+
+
+# --------------------------------------------------------------------------
+# the predicate that separates a denial from a failure
+# --------------------------------------------------------------------------
+
+class _NSError:
+    """What PyObjC hands back when the error IS a live NSError."""
+
+    def __init__(self, domain, code):
+        self._d, self._c = domain, code
+
+    def code(self):
+        return self._c
+
+    def domain(self):
+        return self._d
+
+    def __str__(self):
+        return f"{self._d} Code={self._c}"
+
+
+@pytest.mark.parametrize("err,want,why", [
+    (_NSError("UNErrorDomain", 1), True, "the real denial"),
+    (_NSError("UNErrorDomain", 1401), False, "invalid-no-content is a FAILURE"),
+    (_NSError("UNErrorDomain", 105), False, "attachment corrupt is a FAILURE"),
+    (_NSError("NSCocoaErrorDomain", 1), False,
+     "code 1 in another domain means something else entirely"),
+    ("UNErrorDomain Code=1", True, "the string form the macOS 15 audit LOGGED"),
+    ('Error Domain=UNErrorDomain Code=1 "Notifications are not allowed"', True,
+     "the fuller NSError description"),
+    ("UNErrorDomain Code=105", False, "string form, not a denial"),
+    ("something unreadable", False, "unreadable is NOT evidence of a denial"),
+    (None, False, "no error at all"),
+])
+def test_only_a_real_denial_counts_as_a_denial(err, want, why):
+    assert N._un_error_is_denial(err) is want, why
+
+
+def test_an_unreadable_error_falls_back_rather_than_going_silent():
+    """The safe direction is the one that cannot suppress a notification the
+    user still wants: at worst it costs one extra fallback attempt, whereas
+    guessing "denied" would stop trying on evidence we do not have."""
+    class _Hostile:
+        def code(self): raise RuntimeError("nope")
+        def domain(self): raise RuntimeError("nope")
+        def __str__(self): raise RuntimeError("nope")
+    assert N._un_error_is_denial(_Hostile()) is False
+
+
+def test_the_denial_branch_returns_SETTLED_not_delivered():
+    """The docstring must not go back to promising a banner - the return value
+    now means "stop asking", and one of the three ways to settle is that the
+    user said no."""
+    fn = next(n for n in ast.walk(ast.parse(SRC))
+              if isinstance(n, ast.FunctionDef)
+              and n.name == "_show_macos_notification_un")
+    doc = ast.get_docstring(fn) or ""
+    assert "NOT" in doc and "banner was shown" in doc.lower(), (
+        "the docstring must state that True means settled, not delivered")
+    assert "NotificationsNotAllowed" in doc
+
+
+def test_the_chime_is_dispatched_before_the_banner_and_independently():
+    """The denial policy is only defensible because the user still gets a
+    signal. `_play_macos_sound` runs on its own thread and is governed by the
+    app's own Settings toggle, not by macOS notification permission - so a
+    denied user still hears the run finish."""
+    fn = next(n for n in ast.walk(ast.parse(SRC))
+              if isinstance(n, ast.FunctionDef) and n.name == "play_completion_beep")
+    body = ast.unparse(fn)
+    i_sound = body.index("_play_macos_sound")
+    i_notify = body.index("_show_macos_notification")
+    assert i_sound < i_notify, (
+        "the chime must be started before the notification path, so a denial "
+        "cannot cost the user both signals")
