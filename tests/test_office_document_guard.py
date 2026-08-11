@@ -155,6 +155,21 @@ def test_no_converter_hand_rolls_the_comparison(app):
         f"come from engine.applescript_bridge.our_document_test")
 
 
+def test_excel_takes_page_setup_from_our_workbook_not_the_application():
+    """Excel is the only converter that MUTATES the document before exporting.
+
+    `page setup of active sheet` is the application's frontmost sheet. The
+    guard above runs immediately before, so in practice it is ours - but this
+    line rewrites orientation and fit-to-page, i.e. it would EDIT a user's
+    workbook (and dirty it) if the binding ever drifted. Binding to `theBook`
+    costs nothing and removes the question. Added because the mutation pass
+    found this was the one part of the fix nothing tested.
+    """
+    code = _code_only(CONVERTERS["Excel"][0])
+    assert "page setup of active sheet of theBook" in code
+    assert not re.search(r"page setup of active sheet(?!\s+of\s+theBook)", code)
+
+
 def test_every_office_converter_is_covered_by_these_tests():
     """A fourth converter must not be able to join quietly.
 
