@@ -122,6 +122,71 @@ def test_mac_eyes_is_honest_about_tcc_prompts():
     assert "synthetic clicks" in text and "consent" in text
 
 
+def _eyes_module():
+    """Import mac_eyes without running it. Skips off macOS - it calls
+    require_darwin() at the top of every command, but the pure predicates
+    under test here are importable anywhere."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("_mac_eyes_under_test", EYES)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_phantom_alert_needs_AGE_not_just_an_empty_title():
+    """`dialogs` decides when to interrupt a human, so a false alarm is the one
+    failure it must not have - it trains the reader to ignore the real prompt.
+
+    macOS 15's phantom carried an EMPTY title, and the suppression keyed on that.
+    Measured on macOS 26.6 Tahoe 2026-08-11 the SAME phantom holds the title
+    'Screen Recording' (461x181, owner alive 1h24m, and a healthy screenshot
+    showing nothing on screen), so the title test missed it and the command cried
+    wolf. Age is the discriminator the original comment already reasons from: a
+    genuine prompt is created by the request you just made, the phantom persists
+    for hours.
+
+    Both directions are asserted here, because a suppression that cannot stay
+    sensitive is worse than none."""
+    eyes = _eyes_module()
+    old, young = 99_999, 5
+
+    def w(**kw):
+        base = {"id": 1, "pid": 4242, "owner": "universalAccessAuthWarn",
+                "title": "Screen Recording", "w": 461, "h": 181}
+        base.update(kw)
+        return base
+
+    eyes._process_age_seconds = lambda pid: old
+    assert eyes._is_phantom_alert(w()) is True, \
+        "the Tahoe phantom (titled, hours old) must be suppressed"
+    assert eyes._is_phantom_alert(w(title="")) is True, \
+        "the macOS 15 phantom (untitled) must still be suppressed"
+    assert eyes._is_phantom_alert(w(owner="SecurityAgent")) is False, \
+        "suppression must never reach another owner"
+
+    eyes._process_age_seconds = lambda pid: young
+    assert eyes._is_phantom_alert(w()) is False, \
+        "a YOUNG window from that owner is a real prompt and must still alarm"
+
+    eyes._process_age_seconds = lambda pid: None
+    assert eyes._is_phantom_alert(w()) is False, \
+        "unknown age must fail OPEN (alarm), never suppress"
+
+
+def test_dialogs_reports_a_suppressed_phantom_rather_than_dropping_it():
+    """A suppression is a judgement about one known window. If it is ever wrong,
+    this line is the only way a reader could notice - so it must not be silent."""
+    text = EYES.read_text(encoding="utf-8")
+    assert "ignoring known phantom" in text
+
+
+def test_windows_exposes_the_owner_pid():
+    """Age is measured from the OWNING process, so the pid has to survive the
+    Quartz -> dict conversion. Without it the suppression above is unwritable."""
+    text = EYES.read_text(encoding="utf-8")
+    assert "kCGWindowOwnerPID" in text and '"pid"' in text
+
+
 def test_the_doctor_is_valid_python():
     ast.parse(DOCTOR.read_text(encoding="utf-8"))
 
