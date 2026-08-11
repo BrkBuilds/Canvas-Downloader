@@ -205,13 +205,26 @@ cat <<EOF
     2. System Settings > Privacy & Security > Full Disk Access > + > Terminal
     3. Start the long-lived session ON THIS DESKTOP:
 
-           cd ~ && tmux new -s audit
+           tmux kill-server 2>/dev/null; cd ~ && tmux new -s audit
+
+       The kill-server is load-bearing: a tmux SERVER is one process per user
+       socket and \`tmux new\` joins the running one. Start a tmux over SSH
+       first and this command makes an Aqua-looking session inside the
+       Background server, inherits Background, and every Keychain result is
+       quietly false. The first tmux server of the day must be born here.
 
        This one matters more than it looks. macOS gives an SSH login a
        *Background* session with no window server: osascript cannot drive
        Word, Playwright cannot open a browser, and TCC prompts cannot appear.
        A tmux server keeps the session it was born in, so starting it HERE and
        attaching from SSH later is what makes everything work.
+
+       The Keychain is the half you cannot probe your way around: it is scoped
+       to the security session, so a tmux born over SSH drives the whole GUI
+       and still cannot create an item of its own - and then every Keychain
+       observation in the audit is false rather than the product. Gate on
+       `python3 scripts/mac_aqua.py check` saying "keychain usable: True",
+       never on `launchctl managername`, which reports Background even here.
 
   THEN LEAVE VNC. From your Windows PC:
 
@@ -227,7 +240,7 @@ cat <<EOF
   Either way, first command:
 
        tmux attach -t audit
-       git clone -b macos-audit-v2.0.2 https://github.com/birkls/Canvas_LMS_batch_file_downloader.git ~/Canvas_Downloader
+       git clone https://github.com/birkls/Canvas_LMS_batch_file_downloader.git ~/Canvas_Downloader
        cd ~/Canvas_Downloader && ./scripts/mac_audit_bootstrap.sh
 
   You can see the Mac's screen at any time without a remote desktop:

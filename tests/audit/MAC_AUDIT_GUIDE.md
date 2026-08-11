@@ -28,19 +28,19 @@ consent prompt. Roughly 10 minutes total.
 
 ### 0.1 Push your work
 
-> **Commit `308e734` contains a corrupted `panopto/shortcut.py`** — a commit
-> landed while a mutation pass had it swapped out, so `kind_extensions()` was
-> committed returning only the native suffix. Cross-platform `.url`/`.webloc`
-> adoption is broken in that commit, in the exact subsystem this audit is for.
-> Your working tree has the fix; HEAD does not.
+The macOS 15 audit is merged: **`main` is the trunk and carries every script
+this guide names.** Nothing needs a special branch to get onto the Mac — the
+Mac clones `main`. Branch on the Mac, for the fixes this run produces.
 
 ```bash
 cd "G:/18 AI/ANTIGRAVITY WORKSPACES/Canvas Downloader"
-python -m pytest tests/ -q                 # ~3218 passed, 0 failed
-git checkout -b macos-audit-v2.0.2
-git add -A && git commit -m "macOS audit tooling for v2.0.2"
-git push -u origin macos-audit-v2.0.2
+python -m pytest tests/ -q                 # 0 failed
+git status -sb                             # must be clean and level with origin
+git push
 ```
+
+**Push before you rent.** `mac_first_contact.sh` is fetched from `main` over
+`curl`, so anything not pushed does not exist as far as the Mac is concerned.
 
 ### 0.2 On your Windows PC
 
@@ -53,12 +53,13 @@ git push -u origin macos-audit-v2.0.2
 
 # PART 1 — Rent
 
-Scaleway → Apple silicon → **Mac mini M-series** → **macOS 15 Sequoia** →
+Scaleway → Apple silicon → **Mac mini M-series** → the OS this run is for →
 **closest region**.
 
-*Why 15:* `fda_nudge_applies()` is hard-gated to macOS 15+, so the Full Disk
-Access nudge and every `is_macos_15_plus()` path cannot render below it. Your
-build is made on macOS 14, so running on 15 is also the real user path.
+*Which OS:* every `is_macos_15_plus()` path — the Full Disk Access nudge above
+all — is hard-gated to 15+, so it cannot render below it. **macOS 15 has been
+audited** (2026-08-10; findings in `AUDIT_FINDINGS.md`). The run this guide is
+now pointed at is **macOS 26 Tahoe**; see Part 6 for what to expect to differ.
 
 Note the VNC address/password and the SSH user/IP.
 
@@ -100,15 +101,25 @@ Go and do something else for half an hour.
 3. **Start the session on this desktop:**
 
    ```bash
-   cd ~ && tmux new -s audit
+   tmux kill-server 2>/dev/null; cd ~ && tmux new -s audit
    ```
+
+   > **The `kill-server` is load-bearing, not tidying.** A tmux *server* is one
+   > process per user socket, and `tmux new` joins the running one instead of
+   > starting another. So if anything has already opened a tmux over SSH that
+   > day — running the setup script, say — this command creates an Aqua-looking
+   > session *inside the Background server*, inherits Background, and every
+   > Keychain result is quietly false with nothing to see. The first tmux server
+   > of the day must be born here.
 
    > This matters more than it looks. macOS gives an SSH login a *Background*
    > launchd session with **no window server**: osascript cannot drive Word,
    > Playwright cannot open a browser, TCC prompts cannot appear — each failing
    > differently and none of them saying why. A tmux **server** keeps the
    > session it was born in, so starting it here and attaching from SSH later
-   > is what makes the whole day work.
+   > is what makes the whole day work. It is also the only way the **Keychain**
+   > becomes reachable at all — see Part 4, and check it before you trust a
+   > single token result.
 
 Leave tmux running. **You are done with VNC.**
 
@@ -135,9 +146,9 @@ In the VS Code terminal:
 
 ```bash
 tmux attach -t audit
-git clone -b macos-audit-v2.0.2 \
-  https://github.com/birkls/Canvas_LMS_batch_file_downloader.git ~/Canvas_Downloader
+git clone https://github.com/birkls/Canvas_LMS_batch_file_downloader.git ~/Canvas_Downloader
 cd ~/Canvas_Downloader && ./scripts/mac_audit_bootstrap.sh
+git checkout -b macos-audit-26        # this run's fixes go here
 ```
 
 ~15 min: the venv, every dependency, the pyobjc-UserNotifications pin CI uses,
@@ -165,6 +176,7 @@ which the setup script installed — same thing, in the sidebar.)
 ```bash
 cd ~/Canvas_Downloader && source .venv/bin/activate
 
+python3 scripts/mac_aqua.py check        # keychain usable: True
 python scripts/mac_audit_doctor.py       # until it prints READY
 python scripts/mac_smoke.py --with-hfs   # ~2 min
 ```
@@ -173,10 +185,31 @@ The doctor probes window-server access directly (screencapture, System Events,
 launching a GUI app). Do **not** gate on `launchctl managername == "Aqua"` -
 it reports `Background` on a Scaleway Mac even when everything works.
 
+**The Keychain is the exception to that, and it is the trap that cost the last
+run its time.** It is scoped to the security session, not the framebuffer, so a
+tmux born over SSH drives the whole GUI and still cannot create an item of its
+own (`errSecInteractionNotAllowed`, -25308). Every Keychain observation in the
+audit is then false rather than the product: the token save "fails", auto-login
+"does not restore", the 90 s watchdog looks like it is being hit.
+
+```bash
+python3 scripts/mac_aqua.py check       # session + Keychain, one line each
+```
+
+`keychain usable: True` is the gate. If it is False, the root fix is to start
+tmux from a Terminal **on the desktop** (2.1 step 3) and re-attach. If you are
+already mid-session and do not want to lose it, route the command instead —
+Terminal.app is started by Launch Services inside Aqua and every child inherits
+it, a long-lived Streamlit included:
+
+```bash
+python3 scripts/mac_aqua.py run "python -m tests.audit app start"
+```
+
 Then prove the harness works before trusting any result from it:
 
 ```bash
-python -m tests.audit run new --label macos-15-v2.0.2
+python -m tests.audit run new --label macos-26-v2.0.2
 python -m tests.audit app start
 python -m tests.audit browser open
 python -m tests.audit canvas courses
@@ -244,23 +277,32 @@ until now.
 ### 5.2 Push
 
 ```bash
-git add -A && git commit -m "macOS 15 audit fixes" && git push
+git add -A && git commit -m "macOS 26 audit fixes" && git push
 ```
 
 **The Mac is rented. Nothing on it survives.** Push early and often.
 
 ---
 
-# PART 6 — macOS 26
+# PART 6 — what macOS 15 already settled, and where 26 is likely to differ
 
-Reinstall from the Scaleway console, repeat **Parts 2 → 5**. Much faster:
-every script detects what already exists, and `mac_audit_secrets.env` re-seeds
-the Keychain with no typing. The genuinely manual repeats are the same three:
-Office sign-in, TCC grants, tmux from the desktop.
+The 15 run is done and its findings are in `AUDIT_FINDINGS.md`. **Do not
+re-derive them.** This machine's value is the delta, so spend it where the OS
+itself is the variable and a unit test structurally cannot reach:
 
-Expect differences to cluster in **TCC behaviour**, **notification delivery**
-and **WKWebView rendering**. Anything that worked on 15 and misbehaves on 26 is
-the most valuable thing this second install can produce.
+| Area | Why 26 can differ | What a difference looks like |
+|---|---|---|
+| **TCC** | the prompt copy, the ordering, and which grant covers what have moved in every recent release | a prompt that never appears, or one that appears where 15 needed none — `mac_eyes.py dialogs` |
+| **Notifications** | the `UNUserNotificationCenter` path is fallback #1 of 4 and the rest were already thinned | a delivered-but-invisible banner; verify by eye, not by return code |
+| **WKWebView** | a new Safari engine renders the shipped app; the harness drives **Chrome over CDP**, so nothing CSS/JS is proven until 5.1 | layout that is correct in the harness and wrong in the `.app` |
+| **Office** | a new Office build against a new OS is where the converter gates earn their keep | a `SaveAs` that returns clean having written nothing |
+| **Keychain / session** | see Part 4 | measure it, never infer it |
+
+The one rule that does not change: **a finding is a disagreement between two
+oracles, and every finding names the pair.** Anything that worked on 15 and
+misbehaves here is the most valuable thing this install can produce — and
+anything that misbehaves on both is a product bug the 15 run missed, not a
+Tahoe finding. Say which you are claiming.
 
 ---
 
@@ -303,14 +345,15 @@ curl -fsSL https://raw.githubusercontent.com/birkls/Canvas_LMS_batch_file_downlo
 
 # ── VS Code Remote-SSH from Windows, everything after ───────────────
 tmux attach -t audit
-git clone -b macos-audit-v2.0.2 https://github.com/birkls/Canvas_LMS_batch_file_downloader.git ~/Canvas_Downloader
+git clone https://github.com/birkls/Canvas_LMS_batch_file_downloader.git ~/Canvas_Downloader
 cd ~/Canvas_Downloader && ./scripts/mac_audit_bootstrap.sh
 
 source .venv/bin/activate
+python3 scripts/mac_aqua.py check          # keychain usable: True
 python scripts/mac_audit_doctor.py         # READY
 python scripts/mac_smoke.py --with-hfs
 
-python -m tests.audit run new --label macos-15-v2.0.2
+python -m tests.audit run new --label macos-26-v2.0.2
 python -m tests.audit app start
 python -m tests.audit browser open
 python -m tests.audit canvas snapshot 43660
