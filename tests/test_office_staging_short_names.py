@@ -81,6 +81,16 @@ def test_the_suffixes_are_preserved_because_office_picks_its_filter_from_them(
             assert s_dst.suffix == out, f"{out} lost its suffix: {s_dst.name}"
 
 
+#: What Office would produce. It has to be a PLAUSIBLE PDF, not a 16-byte
+#: stand-in, because the promotion is now gated on `converters.verify`
+#: (>= 512 bytes and a %PDF magic) - a conversion that errors part-way still
+#: leaves whatever Office had written, and promoting that both orphaned a stub
+#: in the user's folder and destroyed the good PDF a previous run had made.
+#: Using a real-shaped product here means this test also proves the gate ACCEPTS
+#: one, which is the half a rejection test cannot show.
+REAL_PDF = b"%PDF-1.4\n" + b"%\xe2\xe3\xcf\xd3\n" + b"0" * 600 + b"\n%%EOF\n"
+
+
 def test_the_product_still_lands_under_the_REAL_long_name(container, tmp_path):
     """The whole point: Office writes a short name, the user gets the real one."""
     src = tmp_path / (LONG + ".doc")
@@ -88,10 +98,10 @@ def test_the_product_still_lands_under_the_REAL_long_name(container, tmp_path):
     dst = tmp_path / (LONG + ".pdf")
 
     with AB.office_container_stage(src, dst, "Word") as (s_src, s_dst):
-        s_dst.write_bytes(b"%PDF-1.4 pretend")     # what Office would produce
+        s_dst.write_bytes(REAL_PDF)
 
     assert dst.exists(), "the product was not moved back to the real name"
-    assert dst.read_bytes() == b"%PDF-1.4 pretend"
+    assert dst.read_bytes() == REAL_PDF
     assert not s_dst.exists(), "staging dir should be cleaned up"
 
 
