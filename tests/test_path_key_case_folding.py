@@ -222,3 +222,41 @@ def test_a_root_or_relative_ancestor_is_refused():
     assert SM._case_insensitive_volume("/12345/not/here") is False
     assert SM._case_insensitive_volume("relative/thing") is False
     assert SM._case_insensitive_volume("") is False
+
+
+def test_a_relative_path_is_refused_even_when_an_ancestor_EXISTS(tmp_path, monkeypatch):
+    """The root-ancestor guard alone does NOT cover this, which a mutation run
+    showed: a relative path's anchor is "" (== Path(".")), so "relative/thing"
+    happens to be caught by the root check. Give it a real existing ancestor that
+    is not "." and only the is_absolute() guard stops it.
+
+    It must stop it: the cwd is not where the course folder lives, so probing it
+    answers about the wrong volume."""
+    (tmp_path / "subdir").mkdir()
+    monkeypatch.chdir(tmp_path)
+    assert SM._case_insensitive_volume("subdir/Notes.pdf") is False
+
+
+def test_a_caseless_child_is_SKIPPED_not_a_reason_to_stop_looking():
+    """Also from a mutation run: with `continue` swapped for `break`, a directory
+    whose first entry happens to be caseless ("12345") would abandon the child
+    probe entirely and fall back to flipping the directory name - i.e. straight
+    back to the mount-point bug, but only for folders that happen to start with a
+    numeric file. Course folders are full of those."""
+    orig_listdir, orig_samefile = SM.os.listdir, SM.os.path.samefile
+    SM._probe_case_insensitive.cache_clear()
+    probed = []
+    try:
+        SM.os.listdir = lambda d: ["12345", "Report.pdf"]
+
+        def fake_samefile(a, b):
+            probed.append(os.path.basename(a))
+            return a == b                     # a case-SENSITIVE volume
+        SM.os.path.samefile = fake_samefile
+        assert SM._probe_case_insensitive("/Volumes/Drive") is False
+        assert probed == ["Report.pdf"], (
+            f"expected the caseless entry to be skipped and Report.pdf probed, "
+            f"got {probed!r}")
+    finally:
+        SM.os.listdir, SM.os.path.samefile = orig_listdir, orig_samefile
+        SM._probe_case_insensitive.cache_clear()
