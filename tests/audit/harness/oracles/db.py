@@ -138,25 +138,47 @@ def reconcile_with_disk(dbinfo: dict, diskinfo: dict) -> dict:
     on_disk = {key(f["rel"]): f for f in diskinfo["files"]
                if not f["app_generated"] and not f["partial"]}
     tracked: dict[str, dict] = {}
+    ignored_paths: set[str] = set()
     dup_paths: dict[str, list[int]] = {}
     for r in dbinfo["rows"]:
         k = key(r["local_path"])
-        # An IGNORED row has no local path, because nothing was written: the
-        # engine records files it deliberately skipped (study filter, size cap)
-        # so a later sync does not re-offer them, and the Settings copy promises
-        # exactly that. Keying them all on "" made them collide with each other
-        # - measured on course 43660 under the study filter, 23 skipped files
-        # reported as "1 local path claimed by more than one manifest row" at
-        # HIGH, which reads as data loss and is the opposite of what happened.
-        if not k or r.get("is_ignored"):
+        # AN IGNORED ROW COMES IN TWO SHAPES AND THEY ARE NOT INTERCHANGEABLE.
+        # `SyncManager.ignore_file` is an UPSERT:
+        #
+        #   * brand-new file  -> INSERT with local_path='' - nothing was ever
+        #     written, and this is also how the engine records what it skipped
+        #     (study filter, size cap) so a later sync does not re-offer it.
+        #   * already downloaded -> ON CONFLICT ... SET is_ignored = 1, which
+        #     leaves local_path AND downloaded_at intact, with the file still
+        #     sitting on disk.
+        #
+        # Excluding BOTH from `tracked` made the second shape read as an orphan:
+        # measured on course 43660, the two ignored fixtures were reported as
+        # "2 content file(s) on disk with no manifest row" at HIGH, whose detail
+        # says they "will be re-offered as New forever". They will not - the
+        # analyzer has a row for them and files them under Ignored, which is
+        # exactly where the review screen showed them. Not a seeding artefact
+        # either: any user who ignores a file they already have produces it.
+        #
+        # The first shape still has to go, and `if not k` is what removes it -
+        # keying them all on "" made them collide with each other (23 skipped
+        # files under the study filter reported as "1 local path claimed by more
+        # than one manifest row", which reads as data loss and is the opposite
+        # of what happened).
+        if not k:
+            continue
+        if r.get("is_ignored"):
+            # Accounted for, but NOT tracked: the app maintains no expectation
+            # about an ignored file's bytes, so it must stay out of the size and
+            # md5 comparisons below, and out of `missing_on_disk` - a user is
+            # free to delete a file they told the app to leave alone.
+            ignored_paths.add(k)
             continue
         dup_paths.setdefault(k, []).append(r["canvas_file_id"])
         tracked[k] = r
 
     missing = []          # manifest says it is there; it is not
     for k, r in tracked.items():
-        if r["is_ignored"]:
-            continue
         if k not in on_disk:
             missing.append({"canvas_file_id": r["canvas_file_id"],
                             "entity": r["entity"],
@@ -165,7 +187,7 @@ def reconcile_with_disk(dbinfo: dict, diskinfo: dict) -> dict:
 
     untracked = []        # on disk, no row - will be re-offered as New forever
     for k, f in on_disk.items():
-        if k not in tracked:
+        if k not in tracked and k not in ignored_paths:
             untracked.append({"rel": f["rel"], "size": f["size"], "ext": f["ext"],
                               "secondary_html": f["secondary_html"],
                               "new_version": f["new_version"]})
@@ -191,6 +213,9 @@ def reconcile_with_disk(dbinfo: dict, diskinfo: dict) -> dict:
     return {
         "applicable": True,
         "tracked": len(tracked),
+        # Reported separately so "why is this file not in either list?" has an
+        # answer in the evidence rather than only in this function.
+        "ignored_on_disk": sorted(k for k in ignored_paths if k in on_disk),
         "on_disk": len(on_disk),
         "missing_on_disk": missing,
         "untracked_on_disk": untracked,

@@ -723,3 +723,193 @@ def test_ambiguous_basenames_are_reported_not_asserted():
     assert "fork_rel" in src, (
         "the _NewVersion check must resolve the fork at the fixture's relative "
         "path; a flat basename set sees a fork created for a different file")
+
+
+# ---------------------------------------------------------------------------
+# "-1" IS SOMETIMES CANVAS'S OWN NAME (macOS 26.6 run, 2026-08-11)
+# ---------------------------------------------------------------------------
+#
+# `_DEDUP_SUFFIX` cannot tell the engine's dedup "-1" from a trailing "-1" that
+# Canvas put there - and Canvas does. Course 43660 holds THREE distinct files
+# whose `filename` is all `CBS_SolbjergPlads_ImageHeader.jpg`; Canvas
+# disambiguates them as display names `...ImageHeader.jpg`, `...ImageHeader-1.jpg`
+# and `...ImageHeader-1-1.jpg`. The seeder orphans two, so the plan carries one
+# fixture named X and one named X-1.
+#
+# The screen's row for X-1 was then aliased onto X, the X fixture matched the
+# OTHER fixture's row, and the run reported a disagreement between two oracles
+# that had in fact agreed - both showed exactly one of the pair, which is what
+# the app really did.
+
+def _register_aliases(ui_cat: dict, fixtures: list[dict]) -> dict:
+    """Drive the REAL alias rule out of crosscheck.py against a tiny plan.
+
+    Extracted by executing the module's own source region would be fragile, so
+    this mirrors ONLY the loop under test by calling the module's own
+    `_DEDUP_SUFFIX` and `_stem` - the two pieces that decide it.
+    """
+    cc = _cc()
+    out = dict(ui_cat)
+    real = set(ui_cat) | {cc._stem(f.get("match_name", "")) for f in fixtures}
+    exact = {cc._stem(f.get("match_name", "")) for f in fixtures}
+    claims: dict = {}
+    for k in list(out):
+        s = cc._DEDUP_SUFFIX.sub("", k).strip()
+        if s and s != k:
+            claims.setdefault(s, set())
+            claims[s] |= {n for n in real if n != s
+                          and cc._DEDUP_SUFFIX.sub("", n).strip() == s}
+    for k in list(out):
+        s = cc._DEDUP_SUFFIX.sub("", k).strip()
+        if not s or s == k or k in exact:
+            continue
+        if len(claims.get(s, ())) <= 1:
+            out.setdefault(s, out[k])
+    return out
+
+
+def test_a_plan_name_ending_in_a_number_is_not_a_dedup_artefact():
+    """The measured false positive: two fixtures, X and X-1, both real."""
+    cc = _cc()
+    x = cc._stem("CBS_SolbjergPlads_ImageHeader.jpg")
+    x1 = cc._stem("CBS_SolbjergPlads_ImageHeader-1.jpg")
+    fixtures = [{"match_name": "CBS_SolbjergPlads_ImageHeader.jpg"},
+                {"match_name": "CBS_SolbjergPlads_ImageHeader-1.jpg"}]
+    got = _register_aliases({x1: "new"}, fixtures)
+    assert got.get(x) is None, (
+        "the row for X-1 must not be lent to the fixture named X - they are "
+        "different Canvas files")
+
+
+def test_the_engines_real_dedup_suffix_still_resolves():
+    """The other direction, and the one the alias exists for: no fixture is
+    called X-1, so X-1 on screen really is the engine's output for X."""
+    cc = _cc()
+    x = cc._stem("Report.pdf")
+    x1 = cc._stem("Report-1.pdf")
+    got = _register_aliases({x1: "new"}, [{"match_name": "Report.pdf"}])
+    assert got.get(x) == "new", (
+        "over-suppressing the alias was the first version of this guard, and "
+        "it broke every genuine dedup match")
+
+
+def test_the_guard_is_wired_into_the_real_module():
+    src = (REPO / "tests" / "audit" / "harness" / "crosscheck.py").read_text(
+        encoding="utf-8")
+    assert "_exact_plan_names" in src
+    assert "k in _exact_plan_names" in src, (
+        "the alias loop must skip a screen name the plan carries verbatim")
+
+
+# ---------------------------------------------------------------------------
+# "no oracle placed it" was a claim the branch had not checked
+# ---------------------------------------------------------------------------
+
+def test_absence_from_one_oracle_is_not_absence_from_all():
+    """The old wording pointed the reader at a blind spot in the harness rather
+    than at the app, and cost a session: the next run went looking for an
+    oracle-selection bug that did not exist. Three situations, three answers."""
+    src = (REPO / "tests" / "audit" / "harness" / "crosscheck.py").read_text(
+        encoding="utf-8")
+    assert "no oracle placed it in any category" not in src, (
+        "that title claims something the branch never verified")
+    assert "was not offered as" in src, "the genuinely-absent case needs a title"
+    assert "but absent from" in src, "the two-oracle disagreement needs its own"
+    # matched on a fragment that survives the source line-wrap; the full
+    # sentence is split across two f-string pieces
+    assert "oracle can see that category this run" in src, (
+        "a log with no rows for the wanted category is BLIND, not evidence of "
+        "absence - that must be an observation, not a high")
+
+
+def test_the_blind_case_is_not_reported_as_a_defect():
+    """`_LOG_DETAILED_CATS` exists because the log writes per-file rows for only
+    two categories. Where it wrote none at all, absence proves nothing."""
+    import ast
+    src = (REPO / "tests" / "audit" / "harness" / "crosscheck.py").read_text(
+        encoding="utf-8")
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "_categories_match")
+    body = ast.unparse(fn)
+    i = body.index("no oracle can see that category this run")
+    # the nearest constructor before it must be `observation(`, not a disagreement
+    assert "observation(" in body[max(0, i - 400):i], (
+        "the blind case must be an observation")
+
+
+# ---------------------------------------------------------------------------
+# An IGNORED manifest row comes in two shapes (macOS 26.6 run, 2026-08-11)
+# ---------------------------------------------------------------------------
+#
+# `SyncManager.ignore_file` is an UPSERT. A brand-new file INSERTs with
+# `local_path=''` - nothing was written, and that is also how the engine records
+# what it skipped. An ALREADY-DOWNLOADED file takes the `ON CONFLICT ... SET
+# is_ignored = 1` arm, which leaves `local_path` and `downloaded_at` intact with
+# the file still on disk.
+#
+# The oracle dropped BOTH from `tracked`, so the second shape read as an orphan:
+# measured on course 43660, the two ignored fixtures were reported as "2 content
+# file(s) on disk with no manifest row" at HIGH, whose detail says they "will be
+# re-offered as New forever". They will not - the analyzer has a row and files
+# them under Ignored, which is where the review screen showed them.
+
+def _reconcile(rows: list[dict], files: list[dict]) -> dict:
+    return odb.reconcile_with_disk(
+        {"exists": True, "rows": rows},
+        {"exists": True, "files": files})
+
+
+def _row(fid, path, ignored=False, size=10):
+    return {"canvas_file_id": fid, "canvas_filename": Path(path).name if path else "",
+            "local_path": path, "is_ignored": ignored, "entity": "file",
+            "original_size": size, "original_md5": "", "content_sig": ""}
+
+
+def _file(rel, size=10):
+    return {"rel": rel, "size": size, "ext": Path(rel).suffix.lower(),
+            "app_generated": False, "partial": False, "secondary_html": False,
+            "new_version": False, "md5": ""}
+
+
+def test_an_ignored_row_with_a_file_on_disk_is_not_an_orphan():
+    """The measured false positive: the user ignored a file they already had."""
+    rec = _reconcile([_row(1, "notes.pdf", ignored=True)], [_file("notes.pdf")])
+    assert [u["rel"] for u in rec["untracked_on_disk"]] == [], (
+        "an ignored row accounts for its own file")
+    assert rec["ignored_on_disk"], "and it must be visible in the evidence"
+
+
+def test_an_ignored_row_with_no_path_is_still_dropped():
+    """The other shape - the engine's record of a file it never wrote. Keying
+    them all on '' made 23 of them collide as duplicate local paths."""
+    rec = _reconcile([_row(1, "", ignored=True), _row(2, "", ignored=True)], [])
+    assert rec["duplicate_local_paths"] == {}
+    assert rec["missing_on_disk"] == []
+
+
+def test_a_genuinely_untracked_file_is_still_reported():
+    """The direction that matters: the fix must not blind the check."""
+    rec = _reconcile([_row(1, "notes.pdf", ignored=True)],
+                     [_file("notes.pdf"), _file("stranger.pdf")])
+    assert [u["rel"] for u in rec["untracked_on_disk"]] == ["stranger.pdf"]
+
+
+def test_an_ignored_row_whose_file_the_user_deleted_is_not_a_broken_row():
+    """They told the app to leave it alone; deleting it is their business."""
+    rec = _reconcile([_row(1, "gone.pdf", ignored=True)], [])
+    assert rec["missing_on_disk"] == []
+
+
+def test_an_ignored_file_is_not_size_or_md5_checked():
+    """The app maintains no expectation about the bytes of a file it was told
+    to skip, so a difference there is not a defect."""
+    rows = [_row(1, "notes.pdf", ignored=True, size=10)]
+    rec = _reconcile(rows, [_file("notes.pdf", size=999)])
+    assert rec["size_mismatch"] == []
+    assert rec["md5_mismatch"] == []
+
+
+def test_a_TRACKED_row_still_reports_a_size_mismatch():
+    """Positive control - without it the test above passes on a dead check."""
+    rec = _reconcile([_row(1, "notes.pdf", size=10)], [_file("notes.pdf", size=999)])
+    assert [m["local_path"] for m in rec["size_mismatch"]] == ["notes.pdf"]
