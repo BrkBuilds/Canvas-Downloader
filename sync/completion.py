@@ -32,6 +32,62 @@ from core.state_registry import cleanup_sync_state
 from engine.notifications import play_completion_beep
 
 
+def build_quick_sync_skip_notice(skipped: dict | None) -> str | None:
+    """The Quick Sync "here is what I left alone" sentence, or None.
+
+    A PURE function because the app and `scripts/completion_gallery.py` both
+    render this panel and had two copies of the sentence - which is exactly how
+    the `filtered` clause came to survive in the gallery for a while after the
+    app had (correctly) dropped it, leaving the review instrument describing a
+    screen that no longer existed. One definition, two callers.
+
+    TWO RULES, both decided on the real screen (2026-08-11, product owner):
+
+    * It is INFORMATION, not a warning. Declining a locally-edited or
+      locally-deleted file is the documented difference between Quick Sync and
+      Analyze/Review/Sync, so the run did exactly what was asked. The caller
+      renders it with `render_info_notice` - see the ignored-files panel
+      directly below it, moved to info for the identical reason.
+    * `canvas_del` is COUNTED AND NEVER LISTED. The detail line offers to fetch
+      the skipped files, and a file deleted on Canvas is not there to fetch -
+      so it was the one clause in the sentence with no follow-up action. The
+      review screen already reports it, as information about the course.
+
+    Returns None when there is nothing ACTIONABLE to report, which includes a
+    run whose only skip was `canvas_del`. An empty panel is worse than no panel.
+    """
+    skipped = skipped or {}
+
+    def _n(key) -> int:
+        try:
+            return max(0, int(skipped.get(key) or 0))
+        except (TypeError, ValueError):
+            # These are counters summed from several subsystems and the panel
+            # renders inside a terminal screen; a bad value must cost the
+            # sentence, never the screen.
+            return 0
+
+    edited, local_del = _n('edited'), _n('local_del')
+    pan_local_del = _n('panopto_local_del')
+
+    parts = []
+    if edited:
+        parts.append(f"{edited} {'file' if edited == 1 else 'files'} you edited locally")
+    if local_del:
+        parts.append(f"{local_del} {'file' if local_del == 1 else 'files'} deleted locally")
+    if pan_local_del:
+        parts.append(f"{pan_local_del} Panopto recording"
+                     f"{'s' if pan_local_del != 1 else ''} deleted locally")
+    if not parts:
+        return None
+    return f"Quick Sync skipped {' and '.join(parts)}."
+
+
+#: The one follow-up action, beside the sentence it belongs to.
+QUICK_SYNC_SKIP_DETAIL = ("To download them, run a normal 'Analyze, Review & Sync' "
+                          "and select them manually.")
+
+
 def build_newversion_notice(records) -> dict | None:
     """Copy for "we saved a second copy instead of overwriting yours".
 
@@ -252,45 +308,36 @@ def show_sync_complete():
         # NOTICES, last, as one block. Everything above is a metric or a
         # collapsible; these are the run's asides, and interleaving them
         # broke both groups. Same rule, same order, on app.py's screen.
-        # UN-TRAPPED QUICK SYNC WARNING:
-        skipped_data = st.session_state.get('qs_skipped', {})
-        local_del = skipped_data.get('local_del', 0)
-        canvas_del = skipped_data.get('canvas_del', 0)
-        edited = skipped_data.get('edited', 0)
-        pan_local_del = skipped_data.get('panopto_local_del', 0)
-
-        if local_del > 0 or canvas_del > 0 or edited > 0 or pan_local_del > 0:
-            parts = []
-            if edited > 0:
-                parts.append(f"{edited} {'file' if edited == 1 else 'files'} you edited locally")
-            if local_del > 0:
-                parts.append(f"{local_del} {'file' if local_del == 1 else 'files'} deleted locally")
-            if pan_local_del > 0:
-                parts.append(f"{pan_local_del} Panopto recording{'s' if pan_local_del != 1 else ''} deleted locally")
-            if canvas_del > 0:
-                parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
-            # NO "outside this course's file-type filter" LINE HERE ANY MORE.
-            # It was amber, it was scoped to Quick Sync, and its detail line told
-            # the user to "run a normal Analyze, Review & Sync and select them
-            # manually" - an instruction that WIDENED the folder past the shape
-            # they configured, and which `analyze_course` now (correctly) declines
-            # to make possible. Those files are not a skip that happened on this
-            # run; they are a standing property of the folder, on every run of
-            # both flows. `render_folder_scope_notice` states it once, in the
-            # "deliberately left alone" family where nothing failed.
-
-            joined_parts = " and ".join(parts)
-            from ui.amber_notice import render_amber_notice
-            render_amber_notice(
-                f"Quick Sync skipped {joined_parts}.",
-                icon="⚠️",
-                detail="To download them, run a normal 'Analyze, Review & Sync' and select them manually.",
+        #
+        # QUICK SYNC'S OWN SKIPS - INFO, NOT A WARNING (2026-08-11, product
+        # owner, on the real screen). Quick Sync declines a locally-edited or
+        # locally-deleted file BY DESIGN: that is the whole difference between
+        # it and Analyze/Review/Sync, and it is stated up front. So the run did
+        # exactly what was asked, and an amber "⚠️" said something had gone
+        # wrong - directly above the ignored-files panel, which had already
+        # been moved to info for the identical reason. Two panels, one rule.
+        # NO "outside this course's file-type filter" CLAUSE ANY MORE. It was
+        # amber, it was scoped to Quick Sync, and its detail line told the user
+        # to "run a normal Analyze, Review & Sync and select them manually" - an
+        # instruction that WIDENED the folder past the shape they configured,
+        # and which `analyze_course` now (correctly) declines to make possible.
+        # Those files are not a skip that happened on this run; they are a
+        # standing property of the folder, on every run of both flows.
+        # `render_folder_scope_notice` states it once, in the "deliberately left
+        # alone" family where nothing failed.
+        _qs_message = build_quick_sync_skip_notice(st.session_state.get('qs_skipped'))
+        if _qs_message:
+            from ui.amber_notice import render_info_notice
+            render_info_notice(
+                _qs_message,
+                detail=QUICK_SYNC_SKIP_DETAIL,
                 margin="0",  # the card's flex gap (16px) is the ONE rhythm; a margin here adds to it
             )
 
-            # Cleanup
-            if 'qs_skipped' in st.session_state:
-                del st.session_state['qs_skipped']
+        # Cleanup runs whatever was in it - OUTSIDE the branch above. A run
+        # whose only skip was `canvas_del` renders no panel, and leaving the key
+        # behind would carry this run's tally into the next one's screen.
+        st.session_state.pop('qs_skipped', None)
 
         # Post-processing failure warning
         render_pp_warning(st.session_state.get('pp_failure_count', 0))
