@@ -146,37 +146,52 @@ class PowerPointToPDF:
     def _convert_applescript_pptx(self, src: Path, dst: Path) -> bool:
         """Convert a PowerPoint file to PDF via AppleScript on macOS.
 
-        Two hard-won correctness rules baked into this script:
+        Three hard-won correctness rules baked into this script:
 
         1. PowerPoint's ``open`` does NOT return a usable reference, so
            ``set theDoc to open ...`` leaves theDoc undefined and the later
            ``save theDoc`` dies with -2753 ("variable theDoc is not defined").
-           We must ``open`` and then grab ``active presentation`` - the same
-           pattern Excel uses with ``active workbook``.
-        2. The whole open→save→close runs inside ``try``; on ANY error we
-           ``close active presentation saving no`` and re-raise. Without this,
-           a failed conversion left every presentation OPEN, so a batch of N
-           failures stacked N presentations on top of each other in PowerPoint
-           (which could exhaust memory / crash the machine).
+           Re-measured 2026-08-11 on macOS 26.6: still true, in all three apps.
+           We must ``open`` and then reach for ``active presentation``.
+        2. The whole open→save→close runs inside ``try``; on ANY error we close
+           the presentation and re-raise. Without this, a failed conversion left
+           every presentation OPEN, so a batch of N failures stacked N
+           presentations on top of each other in PowerPoint (which could
+           exhaust memory / crash the machine - and on 2026-08-11 did).
+        3. **``active presentation`` is whoever is FRONTMOST, which is not
+           necessarily ours** - so both of those closes were aimed at a document
+           we may never have opened, and ``saving no`` discards the user's
+           unsaved edits. Every reference is therefore gated on
+           ``our_document_test``, which compares the frontmost presentation's
+           name with the basename we staged. See that function for the measured
+           table of binding forms and why a name comparison beats every
+           reference form (two of which wedge the app outright).
 
         PowerPoint's dictionary also has NO ``display alerts`` property (unlike
         Word/Excel) - adding ``set display alerts to false`` is a -2740 COMPILE
         error. Do not re-add it.
         """
-        from engine.applescript_bridge import _as_posix, office_container_stage
+        from engine.applescript_bridge import (
+            OFFICE_WRONG_DOC_ERRNO, _as_posix, office_container_stage,
+            our_document_test,
+        )
         with office_container_stage(src, dst, "PowerPoint") as (s_src, s_dst):
             posix_src = _as_posix(s_src)
             posix_dst = _as_posix(s_dst)
+            ours = our_document_test("PowerPoint", s_src.name)
             script = f'''
                 tell application "Microsoft PowerPoint"
                     try
                         open POSIX file "{posix_src}"
+                        if not {ours} then
+                            error "the frontmost presentation is not the one Canvas Downloader opened" number {OFFICE_WRONG_DOC_ERRNO}
+                        end if
                         set theDoc to active presentation
                         save theDoc in POSIX file "{posix_dst}" as save as PDF
                         close theDoc saving no
                     on error errMsg number errNum
                         try
-                            close active presentation saving no
+                            if {ours} then close active presentation saving no
                         end try
                         error errMsg number errNum
                     end try

@@ -157,9 +157,18 @@ class ExcelToPDF:
         is the exact form that has reliably converted Excel→PDF on macOS).
 
         Robustness rule shared with the PowerPoint/Word converters: the whole
-        open→export→close runs inside ``try``; on ANY error we
-        ``close active workbook saving no`` and re-raise, so a failed conversion
-        can never leave workbooks stacking up open in Excel.
+        open→export→close runs inside ``try``; on ANY error we close the
+        workbook and re-raise, so a failed conversion can never leave workbooks
+        stacking up open in Excel.
+
+        **``active workbook`` is whoever is FRONTMOST, not necessarily ours**,
+        so every reference is gated on ``our_document_test``. Excel is the app
+        that demonstrated why while the fix was being verified: handed a corrupt
+        file it declines to open anything, leaving the USER'S workbook
+        frontmost - and the ungated code closed that, ``saving no``. The gate
+        raises -30001 there instead. ``page setup`` is likewise taken from
+        ``active sheet of theBook`` rather than the application's ``active
+        sheet``, or a mis-bound workbook would have its layout rewritten.
 
         Prompt handling lives OUTSIDE this script on purpose - putting an
         unverified property like ``set ask to update ... links`` inline is a
@@ -168,18 +177,25 @@ class ExcelToPDF:
         prompt is instead suppressed best-effort, in an isolated osascript, by
         ``prime_office_automation``; macros are handled there via VBAWarnings.
         """
-        from engine.applescript_bridge import _as_posix, office_container_stage
+        from engine.applescript_bridge import (
+            OFFICE_WRONG_DOC_ERRNO, _as_posix, office_container_stage,
+            our_document_test,
+        )
         with office_container_stage(src, dst, "Excel") as (s_src, s_dst):
             posix_src = _as_posix(s_src)
             posix_dst = _as_posix(s_dst)
+            ours = our_document_test("Excel", s_src.name)
             script = f'''
                 tell application "Microsoft Excel"
                     set display alerts to false
                     try
                         open POSIX file "{posix_src}"
+                        if not {ours} then
+                            error "the frontmost workbook is not the one Canvas Downloader opened" number {OFFICE_WRONG_DOC_ERRNO}
+                        end if
                         set theBook to active workbook
                         try
-                            tell page setup of active sheet
+                            tell page setup of active sheet of theBook
                                 set orientation to landscape
                                 set (fit to pages wide) to 1
                                 set (fit to pages tall) to false
@@ -189,7 +205,7 @@ class ExcelToPDF:
                         close theBook saving no
                     on error errMsg number errNum
                         try
-                            close active workbook saving no
+                            if {ours} then close active workbook saving no
                         end try
                         error errMsg number errNum
                     end try

@@ -138,18 +138,27 @@ class WordToPDF:
         1. Grab ``active document`` after ``open`` rather than relying on
            ``open``'s return value (avoids the -2753 "variable not defined"
            failure mode).
-        2. The whole open→save→close runs inside ``try``; on ANY error we
-           ``close active document saving no`` and re-raise, so a failed
-           conversion can never leave documents stacking up open in Word.
+        2. The whole open→save→close runs inside ``try``; on ANY error we close
+           the document and re-raise, so a failed conversion can never leave
+           documents stacking up open in Word.
+        3. **``active document`` is whoever is FRONTMOST, not necessarily
+           ours.** Every reference to it is gated on ``our_document_test`` -
+           without that gate the error handler closes the USER'S document
+           ``saving no`` (measured: their open document went 1 -> 0), and the
+           success path can export THEIR document into our PDF.
 
         Word's ``display alerts`` is an ENUM (none/all/messages), not a boolean,
         so ``set display alerts to false`` is wrapped in its own ``try`` - a
         coercion error there must never abort the conversion.
         """
-        from engine.applescript_bridge import _as_posix, office_container_stage
+        from engine.applescript_bridge import (
+            OFFICE_WRONG_DOC_ERRNO, _as_posix, office_container_stage,
+            our_document_test,
+        )
         with office_container_stage(src, dst, "Word") as (s_src, s_dst):
             posix_src = _as_posix(s_src)
             posix_dst = _as_posix(s_dst)
+            ours = our_document_test("Word", s_src.name)
             script = f'''
                 tell application "Microsoft Word"
                     try
@@ -157,12 +166,15 @@ class WordToPDF:
                     end try
                     try
                         open POSIX file "{posix_src}"
+                        if not {ours} then
+                            error "the frontmost document is not the one Canvas Downloader opened" number {OFFICE_WRONG_DOC_ERRNO}
+                        end if
                         set theDoc to active document
                         save as theDoc file name POSIX file "{posix_dst}" file format format PDF
                         close theDoc saving no
                     on error errMsg number errNum
                         try
-                            close active document saving no
+                            if {ours} then close active document saving no
                         end try
                         error errMsg number errNum
                     end try
