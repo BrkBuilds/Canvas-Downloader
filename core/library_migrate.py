@@ -31,12 +31,37 @@ _LEGACY_HUB = "saved_sync_groups.json"
 _LEGACY_TODAY = "today_dashboard.json"
 
 
+# Three outcomes, not two. Collapsing them is what let one transient read blip
+# destroy a user's whole library at launch - see needs_migration.
+_READ_FAILED = object()   # the file is THERE and we could not read it this time
+_DAMAGED = object()       # we read it and the content is not usable
+
+
 def _read_json(path: Path):
+    """``data`` | ``None`` (absent) | ``_DAMAGED`` | ``_READ_FAILED``.
+
+    Split by CAUSE, mirroring ``core.library.load_library`` and every other store
+    in this app: "unreadable" is not "empty", and the two demand opposite
+    responses. Total by construction - ``migrate_if_needed`` promises never to
+    raise, and its `needs_migration` call sits outside its own try.
+
+    ``UnicodeDecodeError`` is listed explicitly because it is a SIBLING of
+    ``json.JSONDecodeError`` (both ``ValueError``), not a subclass, so the old
+    ``except (OSError, json.JSONDecodeError)`` let it escape - and it escaped
+    ``needs_migration``, which runs before ``migrate_if_needed``'s handler. One
+    config file re-saved by an editor in a Danish ANSI codepage was enough.
+    """
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except (OSError, json.JSONDecodeError):
+    except FileNotFoundError:
         return None
+    except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
+        return _DAMAGED
+    except OSError:
+        return _READ_FAILED
+    except Exception:
+        return _DAMAGED
 
 
 def _config_dir(config_dir: str | None) -> Path:
@@ -57,17 +82,51 @@ def needs_migration(config_dir: str | None = None) -> bool:
     migration. A future schema change must be a library-to-library migration,
     never a re-run of this legacy import.
 
-    A file that exists but is not a well-formed library (missing/corrupt) still
-    counts as "needs migration": rebuilding from the still-present legacy
-    originals is strictly better than the empty library ``load_library`` would
-    otherwise degrade to.
+    A file that exists but whose CONTENT is not a well-formed library still counts
+    as "needs migration": rebuilding from the still-present legacy originals is
+    strictly better than the empty library ``load_library`` would otherwise
+    degrade to. It is quarantined first, so the original bytes survive on disk.
+
+    **A TRANSIENT read failure is NOT "no library", and reading it as one destroyed
+    real data.** The legacy stores are never deleted (only copied to ``*.bak``), so
+    a migration can always re-run - and re-running it REBUILDS the library from the
+    state it had at first migration. Reproduced against these functions: one
+    ``OSError`` on this read - an antivirus lock, a config dir on an offline share,
+    a permissions blip - and a pair the user had renamed reverted to its 2026 name
+    while a second pair they had saved **disappeared entirely**. Every saved pair,
+    every name, every group and every daily-sync membership created since the first
+    migration, gone at launch, with a debug-level log as the only trace.
+
+    So an unreadable-THIS-TIME library refuses to migrate. The cost of refusing is
+    one launch that shows Canvas names; the cost of proceeding is permanent loss.
+    Same asymmetry, same verdict, as the corruption whitelist in
+    ``core/sync_manager.py``: destroy nothing on the strength of an error you have
+    not identified.
     """
     lib_path = _config_dir(config_dir) / library._FILENAME
     data = _read_json(lib_path)
-    return not (isinstance(data, dict)
-                and isinstance(data.get("version"), int)
-                and data.get("version", 0) >= 1
-                and isinstance(data.get("pairs"), list))
+    if data is _READ_FAILED:
+        import logging
+        logging.getLogger(__name__).warning(
+            "Could not read %s this time; NOT re-importing the legacy stores over "
+            "it. The library is left exactly as it is.", lib_path)
+        return False
+    well_formed = (isinstance(data, dict)
+                   and isinstance(data.get("version"), int)
+                   and data.get("version", 0) >= 1
+                   and isinstance(data.get("pairs"), list))
+    if well_formed:
+        return False
+    if data is not None:
+        # Present but unusable - malformed JSON, bytes that are not UTF-8, a list
+        # at the root, a missing `pairs`. Rebuilding from the legacy originals is
+        # right (that is this docstring's original reasoning), but the bytes are
+        # kept first: a damaged library can still be salvaged by hand, and the
+        # rebuild is about to overwrite the file. `library._quarantine` is reused
+        # rather than reimplemented - a second copy of the naming and slot logic
+        # is how the two would come to disagree about where the evidence went.
+        library._quarantine(lib_path, "unusable library content at migration check")
+    return True
 
 
 def migrate_if_needed(config_dir: str | None = None) -> dict:
@@ -78,11 +137,10 @@ def migrate_if_needed(config_dir: str | None = None) -> dict:
     stop the app from launching (the app falls back to an empty library, which
     degrades to Canvas names everywhere).
     """
-    cfg = _config_dir(config_dir)
-    if not needs_migration(str(cfg)):
-        return {"migrated": False, "reason": "already"}
-
     try:
+        cfg = _config_dir(config_dir)
+        if not needs_migration(str(cfg)):
+            return {"migrated": False, "reason": "already"}
         return _do_migrate(cfg)
     except Exception as e:  # never block launch
         import logging
@@ -92,8 +150,22 @@ def migrate_if_needed(config_dir: str | None = None) -> dict:
 
 
 def _do_migrate(cfg: Path) -> dict:
-    hub = _read_json(cfg / _LEGACY_HUB) or {}
-    today = _read_json(cfg / _LEGACY_TODAY) or {}
+    # A LEGACY file that exists and cannot be read THIS TIME aborts the whole
+    # migration, writing nothing. Treating it as empty instead would build a
+    # library missing every pair that file held - and `needs_migration` would
+    # then answer False for ever, so the loss would be permanent and silent.
+    # Aborting costs one launch with Canvas names; the next one retries.
+    hub_raw = _read_json(cfg / _LEGACY_HUB)
+    today_raw = _read_json(cfg / _LEGACY_TODAY)
+    for _name, _raw in ((_LEGACY_HUB, hub_raw), (_LEGACY_TODAY, today_raw)):
+        if _raw is _READ_FAILED:
+            import logging
+            logging.getLogger(__name__).warning(
+                "Legacy store %s could not be read; aborting migration so it can "
+                "be retried rather than importing a partial library.", _name)
+            return {"migrated": False, "reason": f"legacy read failed: {_name}"}
+    hub = hub_raw if isinstance(hub_raw, dict) else {}
+    today = today_raw if isinstance(today_raw, dict) else {}
     legacy_groups = hub.get("groups") if isinstance(hub, dict) else None
     legacy_groups = legacy_groups if isinstance(legacy_groups, list) else []
     today_pairs = today.get("pairs") if isinstance(today, dict) else None

@@ -154,3 +154,91 @@ def test_the_sentinel_constant_matches_what_check_disk_space_actually_returns(
     assert avail_mb == DISK_SPACE_UNKNOWN
     assert total_mb == DISK_SPACE_UNKNOWN
     assert format_available_space(avail_mb) == "Unknown"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# THE SAME SENTINEL, ONE SCREEN LATER: the bar and the warning (2026-08-11)
+#
+# `format_available_space` fixed what the Confirm Sync dialog PRINTS. The
+# arithmetic beside it still could not tell three cases apart, and two of them
+# were wrong:
+#
+#   * a volume that was never measured (the -1 sentinel) got the 1% floor, so an
+#     offline share drew a bar - and the code's own comment claimed the maths
+#     "suppresses the bar instead of drawing a false one";
+#   * a genuinely FULL volume also got the 1% floor, because the ratio was gated
+#     on `avail_bytes > 0`. Measured on the dialog's own expression: 0.4 MB free
+#     warned, 0 B free did NOT. The one case the "your disk is getting full"
+#     notice exists for was the only one it could not reach.
+#
+# `ui/sync_review.py` blocks a full volume before the dialog is reached (it
+# demands 1 GB), so that half is belt-and-braces; the unmeasured half is not.
+# ═══════════════════════════════════════════════════════════════════════════
+
+MB = 1024 * 1024
+
+
+def test_an_unmeasured_volume_draws_no_bar_and_no_warning():
+    from shared.helpers import disk_fill_percent
+    assert disk_fill_percent(500 * MB, -1) is None, \
+        "None is what lets the caller draw nothing; 0 would be a claim"
+
+
+def test_a_full_volume_is_the_most_severe_case_not_the_least():
+    from shared.helpers import disk_fill_percent
+    assert disk_fill_percent(500 * MB, 0) == 100.0
+
+
+def test_a_nearly_full_volume_still_warns():
+    """The neighbour that always worked - it must not regress while fixing 0."""
+    from shared.helpers import disk_fill_percent
+    assert disk_fill_percent(500 * MB, 0.4) == 100.0
+
+
+def test_the_linear_middle_is_unchanged():
+    from shared.helpers import disk_fill_percent
+    assert disk_fill_percent(500 * MB, 600) == pytest.approx(83.33, abs=0.01)
+
+
+def test_a_tiny_run_keeps_its_1_percent_floor():
+    """The floor exists so a small download is still visible; it must survive."""
+    from shared.helpers import disk_fill_percent
+    assert disk_fill_percent(1024, 50000) == 1.0
+
+
+def test_nothing_to_transfer_is_zero_not_the_floor():
+    from shared.helpers import disk_fill_percent
+    assert disk_fill_percent(0, 50000) == 0.0
+
+
+@pytest.mark.parametrize("avail", [None, float('nan'), 'x', -2, float('-inf')])
+def test_any_unusable_availability_reads_as_unmeasured(avail):
+    """It runs inside a dialog, where a raise blanks the modal - the same rule
+    `format_file_size` follows in this file."""
+    from shared.helpers import disk_fill_percent
+    assert disk_fill_percent(500 * MB, avail) is None
+
+
+@pytest.mark.parametrize("total", [None, float('nan'), 'x'])
+def test_an_unusable_total_reads_as_unmeasured_too(total):
+    from shared.helpers import disk_fill_percent
+    assert disk_fill_percent(total, 50000) is None
+
+
+def test_the_dialog_calls_the_helper_rather_than_re_deriving_it():
+    """The whole reason this is a named function.
+
+    `format_available_space`'s own history: "The first version of the test
+    re-implemented the dialog's expression instead of calling it, and two
+    mutations survived because of it."
+    """
+    import ast
+    import pathlib
+    src = (pathlib.Path(__file__).resolve().parents[1]
+           / "ui" / "sync_confirmation.py").read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    called = {n.func.id for n in ast.walk(tree)
+              if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+    assert 'disk_fill_percent' in called
+    # and the old inline arithmetic is gone, so there is nothing to drift from
+    assert 'real_ratio' not in src and 'real_pct' not in src
