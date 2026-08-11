@@ -12,6 +12,7 @@ import logging
 import shutil
 import subprocess
 import sys
+import time
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
@@ -316,11 +317,20 @@ def our_document_test(app_name: str, staged_name: str) -> str:
 #   'permission'  - macOS Automation (TCC) denied (-1743). FATAL for the
 #                   whole phase: every subsequent file will fail identically.
 #   'app_missing' - Office app not installed / can't be launched. FATAL.
+#   'app_crashed' - the app was running and now is not (-600). Per-file, and
+#                   RETRIED once, because `tell application` relaunches it.
+#                   Deliberately NOT fatal - see `_classify_stderr` for the
+#                   measured run where treating it as fatal abandoned 57 files.
 #   'timeout'     - this file took too long (huge deck, hung app). Per-file.
 #   'other'       - anything else (corrupt file, sandbox denial, ...). Per-file.
 _last_error: tuple[str, str] | None = None
 
 # Categories that doom every remaining file in a conversion phase.
+#
+# 'app_crashed' is NOT here. A crash is recoverable by relaunch, and a crash
+# that is NOT recoverable still ends the phase - it just does it through
+# SYSTEMIC_REPEAT_THRESHOLD, after three consecutive failures, which is the
+# mechanism that can tell "one bad deck" from "the app is gone".
 FATAL_CATEGORIES = ('permission', 'app_missing')
 
 # A failure that REPEATS is systemic even when its category is per-file.
@@ -351,6 +361,13 @@ FATAL_CATEGORIES = ('permission', 'app_missing')
 # with one actionable message is the honest option, and the next run recovers.
 SYSTEMIC_REPEAT_THRESHOLD = 3
 
+# How long to wait after an Office app was found not running before asking for
+# it again. macOS needs a moment to reap the dead process - and Microsoft Error
+# Reporting takes its own turn first - so an immediate retry tends to inherit
+# the same corpse. Small enough that one crash costs a couple of seconds
+# against the 57 files the old classification abandoned.
+_CRASH_RELAUNCH_PAUSE_S = 3.0
+
 # (app|category) of the last failure, and how many times it has repeated.
 _repeat_key: str | None = None
 _repeat_count: int = 0
@@ -375,18 +392,40 @@ def systemic_failure() -> tuple[str, int] | None:
 
 
 def _classify_stderr(err_msg: str) -> str:
-    """Map an osascript stderr message to an error category."""
+    """Map an osascript stderr message to an error category.
+
+    ``-600`` / "isn't running" is deliberately NOT ``app_missing``. It is
+    ``procNotFound``: the app is not running *right now*, which is exactly the
+    state a CRASH leaves behind - and the next ``tell application`` relaunches
+    it. Treating it as "not installed" made a recoverable condition fatal.
+
+    Measured on the 2026-08-11 download matrix, course 43660, in three log
+    lines three seconds apart::
+
+        21:29:47  PowerPoint failed (other): ... Parameter error. (-50)
+        21:29:50  PowerPoint failed (app_missing): ... Application isn't running. (-600)
+        21:29:50  ... skipping remaining 57 PowerPoint file(s)
+
+    PowerPoint had crashed. The user was told it "is not installed or could not
+    be launched" - about an app they had just watched convert forty files - and
+    **57 files were abandoned for the rest of the run**, permanently, because
+    ``app_missing`` is in ``FATAL_CATEGORIES``.
+
+    Genuine absence still lands in ``app_missing``: ``-10810`` (launch failed),
+    ``-10814`` (kLSApplicationNotFoundErr) and the "can't be found" wordings.
+    """
     low = err_msg.lower()
     if '-1743' in err_msg or 'not authorized to send apple events' in low:
         return 'permission'
     if (
-        '-600' in err_msg or '-10810' in err_msg
+        '-10810' in err_msg or '-10814' in err_msg
         or "application can't be found" in low
         or "can't get application" in low
         or 'unable to find application' in low
-        or "isn't running" in low
     ):
         return 'app_missing'
+    if '-600' in err_msg or "isn't running" in low or "isn’t running" in low:
+        return 'app_crashed'
     return 'other'
 
 
@@ -553,6 +592,38 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
         if result.returncode != 0:
             err_msg = result.stderr.strip()
             category = _classify_stderr(err_msg)
+
+            # A CRASHED app is not a missing one - relaunch and try this file
+            # once more. `tell application` launches it for us, so the retry is
+            # simply the same script again; the pause lets macOS finish tearing
+            # the dead process down (and lets Microsoft Error Reporting take its
+            # own turn) before we ask for a new one.
+            #
+            # Bounded at ONE retry per file on purpose. A file that reliably
+            # crashes the app would otherwise loop, and the existing
+            # SYSTEMIC_REPEAT_THRESHOLD still ends the phase after three such
+            # failures in a row - so a genuinely wedged app is still caught,
+            # while a single crash costs one file's delay instead of the
+            # remaining 57 files.
+            if category == 'app_crashed':
+                logger.warning(
+                    f"[AppleScript] {app_name} was not running ({err_msg}) - it "
+                    f"most likely crashed; relaunching and retrying {src.name} once"
+                )
+                time.sleep(_CRASH_RELAUNCH_PAUSE_S)
+                result = subprocess.run(
+                    ['osascript', '-e', script],
+                    capture_output=True, text=True, timeout=timeout_s,
+                )
+                if result.returncode == 0 and dst.exists():
+                    global _repeat_key, _repeat_count
+                    _repeat_key, _repeat_count = None, 0
+                    logger.info(f"[AppleScript] {app_name} recovered after a crash; "
+                                f"{src.name} converted on the retry")
+                    return True
+                err_msg = result.stderr.strip() or err_msg
+                category = _classify_stderr(err_msg)
+
             if category == 'permission':
                 detail = (
                     f"macOS blocked Canvas Downloader from controlling Microsoft {app_name} "
@@ -561,6 +632,12 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
                 )
             elif category == 'app_missing':
                 detail = f"Microsoft {app_name} is not installed or could not be launched."
+            elif category == 'app_crashed':
+                detail = (
+                    f"Microsoft {app_name} stopped running while converting "
+                    f"{src.name} (it may have crashed or been quit) and did not "
+                    f"come back on a retry."
+                )
             else:
                 detail = err_msg or f"Microsoft {app_name} returned an unknown error."
             logger.error(f"[AppleScript] {app_name} failed ({category}): {err_msg}")
@@ -570,7 +647,6 @@ def run_applescript(src: Path, dst: Path, app_name: str, script: str) -> bool:
             # here. Without this reset, a phase with scattered bad documents
             # would eventually accumulate to the threshold and abort a run that
             # was converting everything else perfectly well.
-            global _repeat_key, _repeat_count
             _repeat_key, _repeat_count = None, 0
             return True
         return _fail('other', f"Microsoft {app_name} reported success but no output file was created.")
