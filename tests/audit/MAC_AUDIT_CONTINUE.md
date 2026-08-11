@@ -58,6 +58,27 @@ Product fixes shipped: `91c7c58` (case probe). Checker fixes: `13c70c7`,
 
 ---
 
+## READ FIRST: `MAC_OFFICE_FIXES.md`
+
+**2026-08-11, late.** An operator report during the download matrix (PowerPoint
+crashed, then every conversion showed a full-screen window) uncovered FOUR
+Office-conversion defects, one of them DATA LOSS - all three converters can
+close the USER'S document with `saving no`. The investigation is COMPLETE and
+measured; the fixes are NOT written.
+
+That work is the top priority and lives in its own file:
+**`tests/audit/MAC_OFFICE_FIXES.md`**. It carries the causal chain, the exact
+fix for each defect, the operator's decisions, the verified-safe recipe for
+cleaning 490 rows out of Office's shared Recents store, and two harness bugs
+found alongside.
+
+Also since this file was last written: the cold-launch WHITE FLASH is FIXED and
+proven on the packaged bundle (255080d - 0 white frames, was 5 at 249 luma), and
+the notification denial policy is settled (588bead - respect a denial, never
+route around it via osascript's Script Editor identity).
+
+---
+
 ## What is LEFT, ranked, with how to do it
 
 **Updated 2026-08-11 evening.** Items 3, 4 and 5 are DONE; 1 and 2 are partly
