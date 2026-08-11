@@ -328,6 +328,11 @@ class AnalysisResult:
     locally_deleted_files: list[SyncFileInfo] = field(default_factory=list)
     untracked_shortcuts: int = 0
     structural_errors: int = 0
+    # Canvas files this folder's file filter excludes. Counted, never listed:
+    # the user cannot act on them (see the scope block in analyze_course), but
+    # the number is what makes the "not a complete copy" notice concrete instead
+    # of a vague caveat.
+    out_of_scope_files: int = 0
 
     @property
     def updated_files(self) -> list[tuple[CanvasFileInfo, SyncFileInfo]]:
@@ -1259,6 +1264,16 @@ class SyncManager:
             contract_dict = {}
         convert_urls_enabled = contract_dict.get('convert_urls', False)
         convert_zip_enabled = contract_dict.get('convert_zip', False)
+        # The folder's FILE FILTER decides what this diff may even consider.
+        # Deliberately permissive on failure: a folder with no stored contract
+        # (or a damaged one) shows MORE than it should rather than silently
+        # hiding a file the user has.
+        scope_filter = contract_dict.get('file_filter', 'all') or 'all'
+        # FUNCTION-SCOPED, and it must stay that way: core.canvas_logic imports
+        # this module at module level (`preferred_disk_name`, `secondary_id_type`),
+        # so a module-level import here closes the cycle. Once per call, above
+        # the loop - not inside it.
+        from core.canvas_logic import file_in_scope, real_canvas_file_id
         
         # 0. Pre-calculate Target Paths
         #    Prefer the pre-built module_map from the metadata scan (Fix 1 -
@@ -1395,6 +1410,40 @@ class SyncManager:
             if _legacy and file_id not in files_section \
                     and str(_legacy) in files_section:
                 file_id = str(_legacy)
+
+            # ── SCOPE ────────────────────────────────────────────────────────
+            # Out of scope is not "ignored" and not "deleted": it is a file this
+            # folder was never set up to hold. The download engine drops it at
+            # `_download_file_async`, so the manifest can never contain it, and
+            # an analyzer that enumerated it anyway reported it as new on EVERY
+            # sync for ever - the same defect as the Pages/links half, which
+            # `module_item_in_scope` fixed at the metadata scan.
+            #
+            # `real_canvas_file_id` is the gate, not `id > 0`, and that is
+            # load-bearing: it is the app's existing answer to "is this a real
+            # Canvas FILE?", and it says yes for the `attachment` band too. An
+            # isolate-mode attachment reaches the ANALYZER under a synthetic
+            # negative id while the engine downloads it under its real positive
+            # one and applies the filter there - so gating on the sign would
+            # have left every out-of-scope attachment permanently new. Every
+            # other synthetic band is an ENTITY (assignment, quiz, announcement,
+            # …) governed by the secondary-content contract, which the engine
+            # does NOT gate on file_filter - scoping those by extension here
+            # would recreate the same bug in mirror image.
+            #
+            # CUSTODY, not creation: the rule answers "may this folder gain this
+            # file?", so a file the user already HAS is never dropped from
+            # tracking. A row with a `downloaded_at` keeps its updates and its
+            # deletion detection whatever its extension (a Canvas-side rename
+            # can move a tracked file out of scope), while the stub rows the old
+            # filter wrote - no download, no local file - fall through here and
+            # stop being reported at all. That is the reclassification: they were
+            # never the user's decision to make.
+            if real_canvas_file_id(c_file) is not None \
+                    and not file_in_scope(calc_path, scope_filter):
+                if not (files_section.get(file_id) or {}).get('downloaded_at'):
+                    result.out_of_scope_files += 1
+                    continue
 
             if file_id not in files_section:
                 # Not in manifest - try to recognize a file the student already
@@ -2592,13 +2641,49 @@ class SyncManager:
             return False
 
     def get_ignored_files(self) -> list[SyncFileInfo]:
-        """Return a list of all files currently marked as ignored in the DB."""
+        """The files the USER chose to skip - never the ones this folder is not for.
+
+        An ignored row means a decision someone took about a file that was
+        offered to them: the review screen's Ignore button, or the max-file-size
+        limit they set. A row for a file OUT OF THIS FOLDER'S SCOPE is neither.
+        Until 2026-08-11 the download engine wrote an ignored stub for every file
+        its "Slides & PDFs" filter dropped, so a real folder's dialog listed 23
+        of them and offered to restore them - and restoring one would have pulled
+        a `.docx` into a folder configured to exclude `.docx`, while
+        `analyze_course` (which now applies the same filter) would decline to
+        produce it. A button that cannot do what it says is worse than no button.
+
+        THE RECLASSIFICATION IS A QUERY, NOT A MIGRATION. Nothing rewrites those
+        rows: the scope question is asked here, from the folder's own stored
+        contract, so the answer follows the folder instead of being frozen into
+        it at whatever moment a migration happened to run. Rows written before
+        this version are covered for free, a damaged contract falls back to 'all'
+        (showing more, never silently hiding a real decision), and there is no
+        irreversible write to get wrong.
+
+        A row with a `downloaded_at` is exempt for the reason `analyze_course`
+        states: the folder HAS that file, so custody outranks scope.
+        """
         ignored = []
         try:
             manifest = self.load_manifest()
+            scope_filter = 'all'
+            try:
+                _raw = self._load_metadata('sync_contract')
+                if _raw:
+                    scope_filter = (json.loads(_raw) or {}).get('file_filter', 'all') or 'all'
+            except (json.JSONDecodeError, TypeError, ValueError, sqlite3.Error) as e:
+                logger.warning("Could not read this folder's file filter, "
+                               "listing every ignored row: %s", e)
+            from core.canvas_logic import file_in_scope  # cycle: see analyze_course
             for fid, info in manifest.get('files', {}).items():
-                if info.get('is_ignored'):
-                    ignored.append(self._dict_to_sync_info(fid, info))
+                if not info.get('is_ignored'):
+                    continue
+                if not info.get('downloaded_at') and not file_in_scope(
+                        info.get('canvas_filename', '') or info.get('local_path', ''),
+                        scope_filter):
+                    continue
+                ignored.append(self._dict_to_sync_info(fid, info))
         except Exception as e:
             logger.warning(f"Error getting ignored files: {e}")
         return ignored

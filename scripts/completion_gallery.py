@@ -52,6 +52,7 @@ from shared.components import (  # noqa: E402
     render_panopto_disabled_notice, render_cancelled_card,
     render_completion_card, render_error_section, render_folder_cards,
     render_pp_warning, inject_material_icons_font,
+    render_folder_scope_notice,
 )
 from shared.helpers import (  # noqa: E402
     LOCKED_FILE_ERROR_TYPE, LOCKED_FILE_REASON, LTI_STREAM_ERROR_TYPE,
@@ -272,7 +273,7 @@ def _reset_state(**overrides):
               "panopto_summary", "sync_quick_mode", "sync_uptodate_stats",
               "qs_skipped", "sync_has_ignored_files", "sync_newversion_files",
               "error_log_enabled", "is_post_processing", "sync_pairs",
-              "courses_to_download"):
+              "courses_to_download", "file_filter", "sync_analysis_results"):
         st.session_state.pop(k, None)
     # THE REAL DEFAULT, and it must stay that way. `error_log_enabled` is False
     # in core/state_registry.py, and three separate places branch on it: the
@@ -297,7 +298,7 @@ def download_screen(*, synced, courses, total_bytes, errors=(),
                     retry_attempted=False, retry_resolved=0, retry_total=0,
                     retry_failed=False, pp_failures=0, force_kill=False,
                     panopto=None, folder_courses=3, error_log=False,
-                    panopto_off_courses=()):
+                    panopto_off_courses=(), scope_courses=()):
     """app.py, `download_status == 'done'` (lines ~2276-2499)."""
     st.session_state["error_log_enabled"] = error_log
     st.session_state["size_skipped_files"] = list(size_skipped)
@@ -313,6 +314,13 @@ def download_screen(*, synced, courses, total_bytes, errors=(),
         st.session_state["persistent_pan_out_mp3"] = True
         st.session_state["courses_to_download"] = [
             SimpleNamespace(name=n) for n in panopto_off_courses]
+    # The scope panel resolves the same way - the run's file_filter plus the
+    # selected courses - so seeding those two IS the whole mock. Unlike the
+    # Panopto panel it needs no Settings state, so it renders here always.
+    if scope_courses:
+        st.session_state["file_filter"] = 'study'
+        st.session_state["courses_to_download"] = [
+            SimpleNamespace(name=n) for n in scope_courses]
 
     render_download_wizard(st, 'complete')
     st.markdown('<h2 class="step-header">Download Complete!</h2>',
@@ -344,6 +352,7 @@ def download_screen(*, synced, courses, total_bytes, errors=(),
         # error panel is the last collapsible; notices come last as one block.
         render_archives_skipped_notice()
         render_panopto_disabled_notice(mode='download')
+        render_folder_scope_notice(mode='download')
         has_retriable = any(
             not e.is_app_error and e.context.get('filepath')
             and e.error_type != LTI_STREAM_ERROR_TYPE and not e.retry_exhausted
@@ -371,13 +380,30 @@ def download_screen(*, synced, courses, total_bytes, errors=(),
     _front_page()
 
 
+def _seed_scope_pairs(scope_courses):
+    """Real folders with a real 'study' sync_contract, in the gallery's temp dir."""
+    import json as _json
+    from core.sync_manager import SyncManager
+    root = Path(tempfile.gettempdir()) / "cd_completion_gallery" / "scope"
+    pairs = []
+    for i, (name, _n) in enumerate(scope_courses):
+        d = root / name
+        d.mkdir(parents=True, exist_ok=True)
+        sm = SyncManager(d, course_id=90000 + i, course_name=name)
+        sm._save_metadata('sync_contract', _json.dumps(
+            {'file_filter': 'study', 'download_mode': 'flat'}))
+        pairs.append({'course_id': 90000 + i, 'course_name': name,
+                      'local_folder': str(d)})
+    return pairs
+
+
 def sync_screen(*, synced, courses, total_bytes, errors=(),
                 size_skipped=(), size_limit=0, archives=(), archive_limit=0,
                 retry_attempted=False, retry_resolved=0, retry_total=0,
                 retry_failed=False, pp_failures=0, force_kill=False,
                 panopto=None, quick=False, uptodate_stats=None, qs_skipped=None,
                 ignored=False, newversion=None, structural=0, folder_courses=2,
-                interactive_files=True, error_log=False):
+                interactive_files=True, error_log=False, scope_courses=()):
     """sync/completion.py, `show_sync_complete` (lines ~128-383)."""
     st.session_state["error_log_enabled"] = error_log
     st.session_state["size_skipped_files"] = list(size_skipped)
@@ -387,6 +413,16 @@ def sync_screen(*, synced, courses, total_bytes, errors=(),
     st.session_state["sync_quick_mode"] = quick
     if uptodate_stats:
         st.session_state["sync_uptodate_stats"] = uptodate_stats
+
+    # The scope panel resolves per PAIR from each folder's stored sync_contract,
+    # so the mock is a real SyncManager over a temp folder - the same read the app
+    # performs. `out_of_scope_files` rides in on a mock analysis result, which is
+    # the only path that renders the per-course count badge.
+    if scope_courses:
+        st.session_state["sync_pairs"] = _seed_scope_pairs(scope_courses)
+        st.session_state["sync_analysis_results"] = [
+            {'pair': pr, 'result': SimpleNamespace(out_of_scope_files=n)}
+            for pr, (_, n) in zip(st.session_state["sync_pairs"], scope_courses)]
 
     render_sync_wizard(st, 'complete')
     st.markdown('<h2 class="step-header">Sync Complete!</h2>',
@@ -416,6 +452,7 @@ def sync_screen(*, synced, courses, total_bytes, errors=(),
         # ORDER BY KIND, exactly as sync/completion.py does it.
         render_archives_skipped_notice()
         render_panopto_disabled_notice(mode='sync')
+        render_folder_scope_notice(mode='sync')
         render_error_section(
             list(errors), key_prefix='sync_complete',
             retry_btn_callback=(lambda: None) if errors else None,
@@ -543,6 +580,29 @@ SCENARIOS: dict[str, tuple[str, str, callable]] = {
             size_skipped=SIZE_SKIPPED, size_limit=50,
             archives=ARCHIVES, archive_limit=1000,
             panopto_off_courses=("Makroøkonomi (XB)", "Statistik 2. semester")),
+    ),
+    "d-scope-study": (
+        "Download \u00b7 Success + Slides & PDFs only",
+        "The FOURTH member of the \"deliberately left alone\" family. Fires only "
+        "when the run carried the \"Slides & PDFs\" filter, which is the whole "
+        "point - it is a standing property of the folder, not a per-run event, "
+        "and it replaced an amber Quick-Sync line that told users to widen the "
+        "folder past the shape they chose.",
+        lambda: download_screen(
+            synced=118, courses=2, total_bytes=int(840 * MB),
+            size_skipped=SIZE_SKIPPED, size_limit=50,
+            archives=ARCHIVES, archive_limit=1000,
+            scope_courses=("Makro\u00f8konomi (XB)", "Digitalisering af Forretningsprocesser")),
+    ),
+    "s-scope-study": (
+        "Sync \u00b7 Complete + Slides & PDFs only",
+        "The sync side of the scope panel. This is the ONLY path that renders the "
+        "per-course count badge - the analyzer knows exactly how many Canvas files "
+        "the filter excluded, where a plain download never asks.",
+        lambda: sync_screen(
+            synced=4, courses=2, total_bytes=int(9.6 * MB),
+            scope_courses=(("Digitalisering af Forretningsprocesser", 76),
+                           ("Makro\u00f8konomi (XB)", 12))),
     ),
     "d-success-locked": (
         "Download · Success + declined files",

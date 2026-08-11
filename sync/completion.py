@@ -25,6 +25,7 @@ from shared.components import (
     render_completion_card, render_folder_cards,
     render_pp_warning, render_error_section,
     render_archives_skipped_notice, render_panopto_disabled_notice,
+    render_folder_scope_notice,
     fresh_container,
 )
 from core.state_registry import cleanup_sync_state
@@ -196,6 +197,7 @@ def show_sync_complete():
         # panel is last because it is the one the user opens.
         render_archives_skipped_notice()
         render_panopto_disabled_notice(mode='sync')
+        render_folder_scope_notice(mode='sync')
 
         retry_selections = st.session_state.get('retry_selections', [])
 
@@ -255,10 +257,9 @@ def show_sync_complete():
         local_del = skipped_data.get('local_del', 0)
         canvas_del = skipped_data.get('canvas_del', 0)
         edited = skipped_data.get('edited', 0)
-        filtered = skipped_data.get('filtered', 0)
         pan_local_del = skipped_data.get('panopto_local_del', 0)
 
-        if local_del > 0 or canvas_del > 0 or edited > 0 or filtered > 0 or pan_local_del > 0:
+        if local_del > 0 or canvas_del > 0 or edited > 0 or pan_local_del > 0:
             parts = []
             if edited > 0:
                 parts.append(f"{edited} {'file' if edited == 1 else 'files'} you edited locally")
@@ -268,10 +269,15 @@ def show_sync_complete():
                 parts.append(f"{pan_local_del} Panopto recording{'s' if pan_local_del != 1 else ''} deleted locally")
             if canvas_del > 0:
                 parts.append(f"{canvas_del} {'file' if canvas_del == 1 else 'files'} deleted on Canvas")
-            if filtered > 0:
-                # M-5: files hidden by this course's saved file-type filter
-                # (e.g. "study materials only") - surfaced instead of silently dropped.
-                parts.append(f"{filtered} {'file' if filtered == 1 else 'files'} outside this course's file-type filter")
+            # NO "outside this course's file-type filter" LINE HERE ANY MORE.
+            # It was amber, it was scoped to Quick Sync, and its detail line told
+            # the user to "run a normal Analyze, Review & Sync and select them
+            # manually" - an instruction that WIDENED the folder past the shape
+            # they configured, and which `analyze_course` now (correctly) declines
+            # to make possible. Those files are not a skip that happened on this
+            # run; they are a standing property of the folder, on every run of
+            # both flows. `render_folder_scope_notice` states it once, in the
+            # "deliberately left alone" family where nothing failed.
 
             joined_parts = " and ".join(parts)
             from ui.amber_notice import render_amber_notice
@@ -290,6 +296,7 @@ def show_sync_complete():
         render_pp_warning(st.session_state.get('pp_failure_count', 0))
         render_archives_skipped_notice()
         render_panopto_disabled_notice(mode='sync')
+        render_folder_scope_notice(mode='sync')
 
         # L-12: Warn user when Office watchdog did a broad /IM kill (may have
         # closed other open Office documents the user had open independently).
