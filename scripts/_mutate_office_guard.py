@@ -22,7 +22,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 TARGETS = ["converters/pdf.py", "converters/word.py", "converters/excel.py",
-           "engine/applescript_bridge.py"]
+           "engine/applescript_bridge.py", "core/sync_manager.py"]
 TEST = "tests/test_office_document_guard.py"
 
 # (label, file, old, new)
@@ -147,6 +147,56 @@ GATE_MUTANTS = [
 ]
 
 
+# --- concurrency: unique staged names + the cross-process lock -------------
+CONC_TEST = "tests/test_office_concurrency.py"
+CONC_MUTANTS = [
+    ("staged basename back to a constant", AB,
+     '_tok = work.name[-6:]\n    staged_src = work / (f"src_{_tok}" + src.suffix)\n    staged_dst = work / (f"out_{_tok}" + dst.suffix)',
+     '_tok = work.name[-6:]\n    staged_src = work / ("src" + src.suffix)\n    staged_dst = work / ("out" + dst.suffix)'),
+    ("only the SOURCE gets a token", AB,
+     'staged_dst = work / (f"out_{_tok}" + dst.suffix)',
+     'staged_dst = work / ("out" + dst.suffix)'),
+    ("token appended AFTER the suffix", AB,
+     'staged_src = work / (f"src_{_tok}" + src.suffix)',
+     'staged_src = work / ("src" + src.suffix + _tok)'),
+    ("run_applescript stops taking the lock", AB,
+     "    with _office_app_lock(app_name):\n        return _run_applescript_locked(",
+     "    if True:\n        return _run_applescript_locked("),
+    ("lock made global instead of per app", AB,
+     'f"canvas_dl_office_{app_name.lower()}.lock"', '"canvas_dl_office.lock"'),
+    ("lock never actually acquired", AB,
+     "fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)",
+     "pass"),
+    ("lock never released", AB,
+     "            if held:\n                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)",
+     "            if False:\n                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)"),
+    ("unbounded wait", AB, "_OFFICE_LOCK_TIMEOUT_S = 120.0",
+     "_OFFICE_LOCK_TIMEOUT_S = 100000.0"),
+    ("lock active on Windows too", AB,
+     "    if sys.platform != 'darwin':\n        yield\n        return\n    try:\n        import fcntl",
+     "    if False:\n        yield\n        return\n    try:\n        import fcntl"),
+]
+
+
+# --- macOS volumes: the empty-mount-point case probe ----------------------
+SM = "core/sync_manager.py"
+VOL_TEST = "tests/test_path_key_case_folding.py"
+VOL_MUTANTS = [
+    ("mount-point guard removed", SM,
+     "    try:\n        if os.path.ismount(directory):\n            return False\n    except Exception:       # noqa: BLE001\n        return False\n    flipped = directory.swapcase()",
+     "    flipped = directory.swapcase()"),
+    ("mount point answers True instead", SM,
+     "        if os.path.ismount(directory):\n            return False",
+     "        if os.path.ismount(directory):\n            return True"),
+    ("guard inverted - refuses ordinary dirs", SM,
+     "        if os.path.ismount(directory):\n            return False",
+     "        if not os.path.ismount(directory):\n            return False"),
+    ("a failing ismount is treated as certainty", SM,
+     "    except Exception:       # noqa: BLE001\n        return False\n    flipped = directory.swapcase()",
+     "    except Exception:       # noqa: BLE001\n        pass\n    flipped = directory.swapcase()"),
+]
+
+
 def _clean() -> bool:
     r = subprocess.run(["git", "status", "--porcelain"] + TARGETS + [TEST],
                        cwd=REPO, capture_output=True, text=True)
@@ -194,4 +244,6 @@ if __name__ == "__main__":
     which = sys.argv[1] if len(sys.argv) > 1 else "guard"
     raise SystemExit(main(CRASH_MUTANTS, CRASH_TEST) if which == "crash"
                      else main(GATE_MUTANTS, GATE_TEST) if which == "gate"
+                     else main(CONC_MUTANTS, CONC_TEST) if which == "conc"
+                     else main(VOL_MUTANTS, VOL_TEST) if which == "vol"
                      else main())
