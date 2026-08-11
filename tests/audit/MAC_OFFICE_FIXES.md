@@ -245,15 +245,31 @@ is that the checker is under test too, and historically fails more often.
 ## STILL OPEN — the honest list
 
 * **D4's root cause** (above). No artefact exists; not claimed as fixed.
-* **D8: "N over-cap file(s) were skipped without an ignored row"** (MEDIUM, 3
-  rows). NOT fixed and NOT dismissed. The download engine *does* call
-  `sync_manager.ignore_file` at its size gate
-  (`core/canvas_logic.py`, the `max_bytes` branch), a `SyncManager` *is*
-  constructed in download mode, and that call is wrapped in
-  `except Exception: pass` — a silent swallow of exactly the kind this repo has
-  a rule against. Which of those explains the missing rows was not determined:
-  it needs a reproduction with `max_file_size` set, checking the manifest
-  immediately afterwards. Do that before changing anything.
-* **The matrix findings were collected BEFORE the checker fix**, so
-  `findings.jsonl` still contains the six archive rows as MEDIUMs. A re-run of
-  `matrix collect` would reclassify them; it was not re-run.
+* **The matrix findings were collected BEFORE the checker fixes**, so
+  `findings.jsonl` still contains the six archive rows and the three over-cap
+  rows at their old severities. A re-run of `matrix collect` would reclassify
+  them; it was not re-run.
+* **No fresh matrix was run against the fixed code.** The verification is the
+  targeted controls above (harness + real app), not another 56-row sweep.
+
+## RESOLVED after this file was first written
+
+**D8 — "N over-cap file(s) were skipped without an ignored row"** (MEDIUM, 3
+rows) turned out to be a **fourth checker defect**, fixed in `6bad460`.
+
+The check built its over-cap set from the whole Files tab with no regard for the
+folder's `file_filter`. A file outside the folder's SCOPE never reaches the size
+gate at all — `_download_file_async` returns above it — so there is no skip to
+record and no ignored row to expect. Measured on the rows that reported it
+(m025/m031, `file_filter=study`, cap 5 MB): **both "unrecorded" ids were 12.5 MB
+`.jpg` files**, and `file_in_scope(name, "study")` is False for each.
+
+It was asking the app to recreate a bug it had deliberately removed — *"out of
+scope is NOT the same as ignored … it made a scope decision look like a per-file
+decision the user had taken"*, after the Ignored Files dialog listed 23 such
+files in a real folder and offered to restore them into a folder configured to
+exclude them.
+
+**Four of the six defects triaged in this pass were in the checker, not the
+product.** That is the ratio the brief predicts, and the reason a red row is a
+question before it is a finding.
