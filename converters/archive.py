@@ -44,6 +44,28 @@ def _decline(extract_dir) -> bool:
     return False
 
 
+def _ratio_txt(uncompressed: int, archive_size: int) -> str:
+    """The compression ratio for the bomb message, or "?" when it cannot exist.
+
+    THE GUARD IS ON THE CONDITION AND THE MESSAGE DIVIDED UNGUARDED. Both bomb
+    checks read `archive_size > 0 and (uncompressed / archive_size) > RATIO`, but
+    the `raise` beside them interpolated the same division with no guard - and the
+    condition's OTHER clause (`uncompressed > MAX_UNCOMPRESSED_SIZE`) is true
+    independently of `archive_size`. So the one line meant to EXPLAIN a declined
+    archive could raise ZeroDivisionError instead, replacing "Zip bomb detected"
+    with a crash in the same handler.
+
+    Not reachable today - `archive_size` is a real `stat().st_size` and a 0-byte
+    file cannot be parsed as a zip or a tar, so a populated member list implies a
+    non-zero size. Kept because the shape is the trap, not this instance: the
+    reachability argument depends on a fact two libraries away, and the fix costs
+    one branch.
+    """
+    if not archive_size:
+        return "?"
+    return f"{uncompressed / archive_size:.1f}"
+
+
 def extract_archive(archive_path: str | Path,
                     max_files: int | None = None) -> bool | None:
     """Extract one archive in place, into a folder named after it.
@@ -119,7 +141,7 @@ def extract_archive(archive_path: str | Path,
                         return _decline(extract_dir)
                 uncompressed_size = sum(info.file_size for info in members)
                 if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
-                    raise Exception(f"Zip bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
+                    raise Exception(f"Zip bomb detected (Ratio: {_ratio_txt(uncompressed_size, archive_size)}, Size: {uncompressed_size/(1024**3):.1f}GB).")
                 # Guard against zip slip: validate every member path resolves inside
                 # extract_dir before extraction (mirrors the TAR guard below).
                 # Use os.path.commonpath for a robust comparison that is correct
@@ -150,7 +172,7 @@ def extract_archive(archive_path: str | Path,
                         return _decline(extract_dir)
                 uncompressed_size = sum(info.size for info in tar_members if info.isfile())
                 if uncompressed_size > MAX_UNCOMPRESSED_SIZE or (archive_size > 0 and (uncompressed_size / archive_size) > MAX_COMPRESSION_RATIO):
-                    raise Exception(f"Archive bomb detected (Ratio: {uncompressed_size/archive_size:.1f}, Size: {uncompressed_size/(1024**3):.1f}GB).")
+                    raise Exception(f"Archive bomb detected (Ratio: {_ratio_txt(uncompressed_size, archive_size)}, Size: {uncompressed_size/(1024**3):.1f}GB).")
 
                 # Mitigation for CVE-2007-4559 (tarfile path traversal)
                 if hasattr(tarfile, 'data_filter'):
