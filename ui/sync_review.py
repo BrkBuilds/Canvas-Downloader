@@ -62,6 +62,7 @@ def _checkbox_default(key: str) -> bool:
     return True
 from core.state_registry import cleanup_sync_state
 from shared.components import HELP_ICONS
+from shared.components import render_folder_scope_review_notice
 from shared.legal import (
     clear_panopto_skip, panopto_skipped_this_run, require_panopto_notice,
 )
@@ -916,6 +917,16 @@ def show_analysis_review(on_confirm_sync):
         # else: user ignored all files - fall through to render the page normally.
         # The action buttons section below will show the disabled sync button.
 
+
+    # THE FOLDER'S SCOPE, stated once, above the lists it explains.
+    #
+    # Placed here and not beside the metric cards on purpose: those live inside
+    # `sum_cols[0]`, a 3/5-width column of a conditional block, so a notice there
+    # would be both narrow and absent from a Panopto-only review. Placed AFTER the
+    # nothing-actionable redirect so an empty review does not paint it a frame
+    # before leaving the screen. Silent unless a folder in this run carries the
+    # "Slides & PDFs" filter, so the common All-Files review is unchanged.
+    render_folder_scope_review_notice()
 
     # Feature 1: Advanced filtering & Global Selection
     all_extensions = set()

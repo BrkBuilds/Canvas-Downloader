@@ -2331,6 +2331,236 @@ _SKIP_PANOPTO_SVG = (
 )
 
 
+# FILLED and in the same grey as its three siblings above. Three bars of
+# decreasing width - the standard "narrowed list" glyph - chosen because every
+# other candidate was already taken or already means something else on these
+# screens: the funnel is the SIZE panel's, the box is the archive panel's, the
+# film strip is Panopto's, and a document-with-fold is the "files downloaded"
+# metric card's icon two rows above, so a panel wearing it would read as that
+# stat. No holes to punch, so no `fill-rule` and none of the evenodd trap the
+# film strip hit.
+#
+# THE BAR WEIGHT IS MEASURED, not eyeballed - and the first version failed the
+# same way the film strip did. Counting glyph-coloured pixels at 4x device scale
+# in the real gallery: funnel 34.6%, archive box 50.4%, and 2.4px-tall bars
+# **14.3%** - under half its lightest sibling, so it read as line art beside two
+# solid shapes. At 4.5px the three bars measure 32.8%, i.e. the funnel's weight,
+# which is the right sibling to match: both name the FILTER rather than the thing
+# filtered. Re-measure if the paths change; the eye cannot judge this at 16px.
+_SKIP_SCOPE_SVG = (
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'"
+    " fill='%239ca3af'%3E"
+    "%3Cpath d='M2 2.25h20v4.5H2zM5 9.75h14v4.5H5zM8 17.25h8v4.5H8z'/%3E"
+    "%3C/svg%3E"
+)
+
+
+def folder_scope_limited_courses(mode: str) -> list[tuple[str, int]]:
+    """``(course name, excluded file count)`` for folders narrowed by their filter.
+
+    Resolved at RENDER from what is already stored, exactly like
+    :func:`panopto_disabled_courses` and for the same reason: a stateless read of
+    the folder's own contract cannot go stale, and nothing has to be plumbed
+    through the engine to reach a terminal screen.
+
+    The count is the analyzer's ``out_of_scope_files`` when this run performed an
+    analysis, and ``0`` when it did not (a plain download never asks Canvas which
+    files it is declining). ``0`` means "not known", never "none" - the caller
+    renders the row without a number rather than claiming zero.
+
+    Never raises: it decorates screens that must appear in one frame.
+    """
+    out: list[tuple[str, int]] = []
+    try:
+        if mode == 'sync':
+            import json as _json
+            from core.sync_manager import SyncManager
+            from core.pair_labels import pair_display_name, pair_key
+
+            # Counts by pair, from this run's analysis if there was one.
+            counts: dict = {}
+            for res in (st.session_state.get('sync_analysis_results') or []):
+                try:
+                    _p = res.get('pair') or {}
+                    counts[pair_key(_p.get('course_id'), _p.get('local_folder'))] = int(
+                        getattr(res.get('result'), 'out_of_scope_files', 0) or 0)
+                except Exception:
+                    continue
+
+            for pair in (st.session_state.get('sync_pairs') or []):
+                folder = pair.get('local_folder')
+                if not folder or not Path(folder).exists():
+                    continue
+                try:
+                    sm = SyncManager(folder, pair.get('course_id'),
+                                     pair.get('course_name', ''))
+                    raw = sm._load_metadata('sync_contract')
+                    if not raw:
+                        continue
+                    if (_json.loads(raw) or {}).get('file_filter', 'all') != 'study':
+                        continue
+                    out.append((
+                        pair_display_name(pair),
+                        counts.get(pair_key(pair.get('course_id'), folder), 0),
+                    ))
+                except Exception:
+                    continue
+        else:
+            if st.session_state.get('file_filter', 'all') != 'study':
+                return []
+            for c in (st.session_state.get('courses_to_download') or []):
+                nm = getattr(c, 'name', None) or (
+                    c.get('name') if isinstance(c, dict) else None)
+                if nm:
+                    out.append((str(nm), 0))
+    except Exception:
+        return []
+    return out
+
+
+def folder_scope_copy(n: int) -> tuple[str, str]:
+    """The two sentences, in ONE place, for both surfaces that state this fact.
+
+    The completion screens render it as the fourth member of the "deliberately
+    left alone" panel family; the sync review screen renders it as an info notice,
+    because that page does not inject ``completion.css`` and injecting it there
+    would collapse the review screen's own style-only element containers (see the
+    two-ghost-box rule in CLAUDE.md - completion.css's purge rule is the LIVE one
+    and those screens are tuned WITH the collapse).
+
+    Two presentations, one text. Writing the copy twice is how the two would come
+    to describe the folder differently - the exact failure this whole change is
+    about - so the surfaces own their markup and share their words. Both callers
+    render HTML, so the ``<b>`` markup suits each unchanged.
+
+    Takes the COUNT and not the rows, deliberately: both return values are
+    interpolated into HTML without escaping (they carry `<b>` on purpose), so the
+    only safe version of this function is one that CANNOT receive a course name.
+    With an int in, every character of the output is a literal from this file, and
+    the architecture audit's Rule 4 suppression below is a statement of fact rather
+    than a promise. Course names are escaped where they enter, in the callers.
+    """
+    plural = n != 1
+    headline = (
+        f"<b>{n}</b> course{'s' if plural else ''} "
+        f"{'are' if plural else 'is'} set up for <b>Slides &amp; PDFs</b>, so "
+        f"{'their folders are not complete copies' if plural else 'its folder is not a complete copy'}"
+        " of Canvas."
+    )
+    detail = (
+        "These folders take PowerPoint and PDF files only &mdash; Word documents, "
+        "spreadsheets, images, videos, archives, Canvas Pages and links stay on "
+        "Canvas and are never counted as new. Nothing you already have is "
+        "affected. A folder keeps the setup it was created with, so download the "
+        "course again with <b>All Files</b> if you want everything."
+    )
+    return headline, detail
+
+
+def render_folder_scope_notice(mode: str = 'download') -> None:
+    """Say that a folder holds only part of its Canvas course, on purpose.
+
+    The FOURTH member of the "deliberately left alone" family (size-skipped
+    files, unpacked archives, Panopto switched off), sharing their markup and CSS
+    exactly. It belongs there for the same reason: nothing failed, nothing the
+    user had is missing, and it is noted rather than shouted.
+
+    WHY IT EXISTS. "Slides & PDFs" is an explicit, uncommon choice, and until
+    2026-08-11 the app never said what it cost. The one place that came close was
+    an amber Quick-Sync line reading "N files outside this course's file-type
+    filter", whose detail told the user to "run a normal Analyze, Review & Sync
+    and select them manually" - an instruction to WIDEN the folder past the shape
+    they had chosen, which the analyzer now (correctly) declines to make possible.
+    A standing property of the folder was being reported as a per-run event, in
+    one flow out of two, with advice that no longer works.
+
+    NO WIDENING CONTROL, decided by the product owner 2026-08-11: one folder, one
+    configuration. So this states a fact and names the one route that does work -
+    downloading the course again - instead of offering a button that would leave
+    the folder in a shape nothing else in the app can describe.
+
+    Silent unless a folder in this run actually carries the filter, so the
+    overwhelming majority of runs (All Files) never see it.
+    """
+    try:
+        rows = folder_scope_limited_courses(mode)
+    except Exception:
+        return
+    if not rows:
+        return
+
+    headline, detail = folder_scope_copy(len(rows))
+    rows_html = ''.join(
+        f'<div class="skip-file-row">'
+        f'<img class="skip-file-icon" src="{_SKIP_SCOPE_SVG}" alt=""/>'
+        f'<span class="skip-file-name">{esc(name)}</span>'
+        + (f'<span class="skip-file-size">{cnt} not included</span>' if cnt > 0 else '')
+        + '</div>'
+        for name, cnt in rows[:50]
+    )
+    st.markdown(
+        "<details class='skip-panel skip-panel-solo'>"
+        "<summary class='skip-panel-header'><div class='sp-header-row'>"
+        f'<img class="sp-chevron" src="{_SKIP_CHEVRON_SVG}" alt="toggle"/>'
+        f'<img class="sp-funnel" src="{_SKIP_SCOPE_SVG}" alt=""/>'
+        # Markup by construction: folder_scope_copy takes an int and returns only
+        # literals from this file, so there is nothing to escape - and escaping
+        # would print its b tags. (Suppression must be INLINE: the audit reads the
+        # flagged line and the one directly above it, so a three-line comment
+        # block above it does not reach.)
+        f"<span class='sp-title'>{headline}</span>"  # audit-ignore
+        "</div></summary>"
+        "<div class='skip-panel-body'>"
+        f"<div class='sp-subtitle'>{detail}</div>"  # audit-ignore: as above
+        f"<div class='skip-file-list'>{rows_html}</div>"
+        "</div></details>",
+        unsafe_allow_html=True,
+    )
+
+
+def render_folder_scope_review_notice() -> None:
+    """The same fact, on the sync REVIEW screen, in that page's own idiom.
+
+    Rendered here rather than as a `.skip-panel` because the review page does not
+    inject ``completion.css`` and must not start: its purge rule is the live one
+    (61 nodes, genuinely collapsing), so injecting it would silently re-space every
+    style-only injection on the review screen. `render_info_notice` is the
+    component that page already uses, and the words come from `folder_scope_copy`
+    so the two surfaces cannot describe the folder differently.
+
+    This is where it earns its keep. The review screen is where the user reads
+    "N new files" and asks where the rest of the course is - the very question that
+    produced the 76-new-files report - and it is the screen from which a sync is
+    launched, so it is the last moment the scope is worth restating.
+    """
+    try:
+        rows = folder_scope_limited_courses('sync')
+    except Exception:
+        return
+    if not rows:
+        return
+    headline, detail = folder_scope_copy(len(rows))
+    known = [(nm, c) for nm, c in rows if c > 0]
+    if known:
+        # Concrete beats categorical: the analyzer counted these, and "99 files"
+        # answers "is something missing?" in a way a list of file TYPES cannot.
+        # Only courses with a count are named - a 0 means "not measured", never
+        # "none" (see folder_scope_limited_courses).
+        detail += "<br>" + " &nbsp;·&nbsp; ".join(
+            f"<b>{esc(nm)}</b>: {c} file{'s' if c != 1 else ''} not included"
+            for nm, c in known[:6])
+    from ui.amber_notice import render_info_notice
+    # No `key=`: that wraps the notice in a keyed st.container, i.e. an extra
+    # `vertical` block on a screen where element INDEX is load-bearing. One
+    # markdown element is the smallest shape that can do the job.
+    #
+    # margin="0" is the app's one notice rhythm (tests/test_newversion_notice.py):
+    # a notice must not add to its container's own gap. Measured on the real review
+    # screen: 18px above, 30px below, against the 48px the metric row previously
+    # had to the section beneath it.
+    render_info_notice(headline, detail=detail, allow_html=True, margin="0")
+
+
 def render_archives_skipped_notice():
     """Name the archives the file-count guard declined to unpack.
 

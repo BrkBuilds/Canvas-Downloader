@@ -185,7 +185,7 @@ def _wait_for_server(health_url: str, failed_event: threading.Event,
 _PREWARM_CRITICAL = (
     "shared.helpers", "shared.components", "shared.legal", "styles",
     "core.state_registry", "core.cancellation", "core.canvas_logic",
-    "core.course_cache",
+    "core.course_cache", "core.sync_manager",
     "engine.estimation", "engine.progress_dashboard",
     "engine.post_processing_bridge", "engine.notifications",
     "sync_ui", "ui.auth", "ui.course_selector",

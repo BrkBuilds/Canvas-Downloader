@@ -8,7 +8,7 @@ import hashlib
 import html
 import urllib.parse
 import unicodedata
-from pathlib import Path
+from pathlib import Path, PurePath
 from datetime import datetime, timezone
 from canvasapi import Canvas
 from canvasapi.exceptions import (CanvasException, Forbidden,
@@ -1007,6 +1007,37 @@ def module_item_in_scope(item_type: str, file_filter: str) -> bool:
     return True
 
 
+# The "Slides & PDFs" filter's allowlist. ONE definition: this list was written
+# out by hand in FOUR places (the download gate, the two estimators, and Quick
+# Sync's own re-filter), which is the same divergent-primitive shape as
+# `make_long_path`'s duplicate in core/sync_manager.py and the three AppleScript
+# escapers - a rule written more than once is a rule some caller is following an
+# old version of.
+STUDY_FILE_EXTENSIONS = frozenset({'.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx'})
+
+
+def file_in_scope(disk_name, file_filter: str) -> bool:
+    """Would a download with *file_filter* keep this Files-tab file?
+
+    The companion of `module_item_in_scope` for the other half of a course: that
+    one answers for module ITEMS by type, this one for FILES by extension. Both
+    exist because the download engine and the sync analyzer have to agree on what
+    a folder is for, and where they disagreed the analyzer offered files the
+    engine would never have produced - permanently, on every sync.
+
+    **Pass the name the file will have ON DISK, not `file_obj.filename`.** Canvas
+    exposes two names per file and the engine writes `preferred_disk_name`, which
+    prefers the teacher-curated `display_name`; the two can carry different
+    extensions ("Lecture" vs "Lecture.pdf"). The estimators used to read the raw
+    `filename` here, so a course could be counted one way and downloaded another.
+    A path is accepted as well as a bare name - `analyze_course` holds the
+    computed destination, which is the most authoritative form of all.
+    """
+    if file_filter != 'study':
+        return True
+    return PurePath(str(disk_name)).suffix.lower() in STUDY_FILE_EXTENSIONS
+
+
 class CanvasManager:
     def __init__(self, api_key, api_url):
         self.api_key = api_key
@@ -1339,7 +1370,8 @@ class CanvasManager:
                                                                     secondary_content_settings=secondary_content_settings,
                                                                     known_file_ids=set(all_files_map.keys()),
                                                                     page_meta=page_meta,
-                                                                    download_mode=download_mode)
+                                                                    download_mode=download_mode,
+                                                                    file_filter=file_filter)
             module_only_count = 0
             for f_info in module_files:
                 if f_info.id not in all_files_map:
@@ -1390,7 +1422,8 @@ class CanvasManager:
         return list(all_files_map.values()), secondary_fetch_success, module_map
 
     def _get_files_from_modules(self, course, progress_callback=None, secondary_content_settings=None,
-                                known_file_ids=None, page_meta=None, download_mode=None):
+                                known_file_ids=None, page_meta=None, download_mode=None,
+                                file_filter='all'):
         """Fallback: Get files by iterating through modules.
 
         ``known_file_ids`` (set[int] | None): file IDs already fetched by the
@@ -2496,7 +2529,6 @@ class CanvasManager:
         Matches the logic of download_course_async (including Hybrid Mode catch-all).
         """
         count = 0
-        allowed_exts = ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']
         
         try:
             if mode == 'flat':
@@ -2504,11 +2536,7 @@ class CanvasManager:
                 try:
                     files = list(course.get_files())
                     for f in files:
-                        if file_filter == 'study':
-                            ext = os.path.splitext(getattr(f, 'filename', ''))[1].lower()
-                            if ext in allowed_exts:
-                                count += 1
-                        else:
+                        if file_in_scope(preferred_disk_name(f), file_filter):
                             count += 1
                 except Exception:
                     pass # Fallback to modules will catch files if get_files failed
@@ -2560,11 +2588,9 @@ class CanvasManager:
                         if file.id in module_file_ids:
                             continue # Already counted
                         
-                        if file_filter == 'study':
-                            ext = os.path.splitext(getattr(file, 'filename', ''))[1].lower()
-                            if ext not in allowed_exts:
-                                continue
-                        
+                        if not file_in_scope(preferred_disk_name(file), file_filter):
+                            continue
+
                         count += 1
                 except Exception:
                     pass
@@ -2577,16 +2603,13 @@ class CanvasManager:
     def get_course_total_size_mb(self, course, mode='modules', file_filter='all'):
         """Calculate total size in MB."""
         total_bytes = 0
-        allowed_exts = ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']
         try:
             # Try get_files() first
             try:
                 files = course.get_files()
                 for file in files:
-                    if file_filter == 'study':
-                        ext = os.path.splitext(getattr(file, 'filename', ''))[1].lower()
-                        if ext not in allowed_exts:
-                            continue
+                    if not file_in_scope(preferred_disk_name(file), file_filter):
+                        continue
                     total_bytes += getattr(file, 'size', 0) or 0
             except Exception:
                 # Fallback to modules
@@ -2597,10 +2620,8 @@ class CanvasManager:
                         if item.type == 'File':
                             try:
                                 file_obj = course.get_file(item.content_id)
-                                if file_filter == 'study':
-                                    ext = os.path.splitext(getattr(file_obj, 'filename', ''))[1].lower()
-                                    if ext not in allowed_exts:
-                                        continue
+                                if not file_in_scope(preferred_disk_name(file_obj), file_filter):
+                                    continue
                                 total_bytes += getattr(file_obj, 'size', 0) or 0
                             except Exception:
                                 pass
@@ -4301,28 +4322,22 @@ class CanvasManager:
             filename = self._sanitize_filename(preferred_disk_name(file_obj) or 'unknown')
             filepath = folder_path / filename
 
-        if file_filter == 'study':
-            ext = filepath.suffix.lower()
-            if ext not in ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']:
-                # "Only slides & PDF" filtered this file out. Register it as
-                # ignored in the sync DB - exactly like the max-file-size gate
-                # below - so a later sync of this folder treats it as an
-                # intentional skip and lands it in the Ignored bucket, instead
-                # of resurfacing it as "new" on every sync. The user can restore
-                # it any time from the Sync Hub's ignored-files list.
-                if sync_manager:
-                    _fid = getattr(file_obj, 'id', 0)
-                    if _fid:
-                        try:
-                            await asyncio.to_thread(
-                                sync_manager.ignore_file,
-                                _fid,
-                                getattr(file_obj, 'filename', ''),
-                                getattr(file_obj, 'size', 0) or 0,
-                            )
-                        except Exception:
-                            pass  # Non-fatal: never break a download for a DB write
-                return
+        # OUT OF SCOPE, and that is not the same as IGNORED. This used to write an
+        # `is_ignored` row for every file the filter dropped, so that a later sync
+        # would not resurface it as new - a crutch for the analyzer, which did not
+        # apply the filter at all. It made a scope decision look like a per-file
+        # decision the user had taken: the Ignored Files dialog listed 23 files in
+        # a real folder and offered to restore them, and restoring one would have
+        # pulled a file into a folder configured to exclude it.
+        #
+        # `analyze_course` now asks `file_in_scope` itself, so the row is
+        # unnecessary; and `sync/analysis.py` had already reached the same verdict
+        # for its own copy of this filter ("M-12: files a non-'all' filter drops
+        # are SKIPPED, not ignored"). The download engine was the last place still
+        # doing it. Nothing is written here now - the file is simply not part of
+        # what this folder is for.
+        if not file_in_scope(filepath, file_filter):
+            return
 
         # We save the original filepath to serve as our concurrency lock target key.
         # This resolves the race where two threads competing for the same base name

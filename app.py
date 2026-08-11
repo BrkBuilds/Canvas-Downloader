@@ -1,6 +1,8 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from core.canvas_logic import CanvasManager, DownloadError
+from core.canvas_logic import (CanvasManager, DownloadError, file_in_scope,
+                              real_canvas_file_id)
+from core.sync_manager import preferred_disk_name
 import asyncio
 import collections
 import os
@@ -22,6 +24,7 @@ from shared.components import (
     render_completion_card, render_folder_cards,
     render_error_section, render_pp_warning,
     render_archives_skipped_notice, render_panopto_disabled_notice,
+    render_folder_scope_notice,
     error_log_dialog, render_panopto_summary,
     fresh_container,
 )
@@ -1316,21 +1319,22 @@ with st.container():
                         download_mode=st.session_state.get('download_mode'),
                     )
                     
-                    # Apply file filter if needed ('study' vs 'all')
-                    allowed_exts = ['.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx']
-                    filtered_files = []
-                    for f in course_files:
-                        if st.session_state['file_filter'] == 'study':
-                            # Synthetic secondary items (negative ID) bypass the file filter
-                            # Since the user specifically checked the box to download them.
-                            if getattr(f, 'id', 1) < 0:
-                                filtered_files.append(f)
-                            else:
-                                ext = os.path.splitext(getattr(f, 'filename', ''))[1].lower()
-                                if ext in allowed_exts:
-                                    filtered_files.append(f)
-                        else:
-                            filtered_files.append(f)
+                    # Apply the folder's file filter, through the SAME two
+                    # primitives the download engine and the sync analyzer use.
+                    # This was a fifth hand-written copy of the allowlist and it
+                    # was wrong twice: it read the raw `filename` where the engine
+                    # writes `preferred_disk_name` (which APPENDS the real
+                    # extension when the display name lacks it), and it exempted
+                    # every negative id - which is right for a secondary ENTITY
+                    # but not for an isolate-mode ATTACHMENT, a real Canvas file
+                    # the engine does filter. Both errors landed in the progress
+                    # denominator, which is what the ETA divides by.
+                    _ff = st.session_state['file_filter']
+                    filtered_files = [
+                        f for f in course_files
+                        if real_canvas_file_id(f) is None
+                        or file_in_scope(preferred_disk_name(f), _ff)
+                    ]
                             
                     # Calculate accurate file count by excluding synthetic secondary items (id < 0)
                     # from the initial total_items count. These items, along with Pages/Links, 
@@ -2781,6 +2785,7 @@ with st.container():
                 # the one the user opens.
                 render_archives_skipped_notice()
                 render_panopto_disabled_notice(mode='download')
+                render_folder_scope_notice(mode='download')
 
                 # (error section: the last expander, plus the retry button and
                 #  the app-error report that belong to it)

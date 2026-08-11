@@ -923,31 +923,20 @@ def run_analysis(sync_pairs, main_placeholder=None):
     # Quick Sync mode - skip review and go straight to sync
     if st.session_state.get('sync_quick_mode'):
         
-        def apply_file_filter(file_list, filter_mode, is_tuple=False):
-            if filter_mode == 'all':
-                return file_list
-            elif filter_mode == 'study':
-                allowed_exts = {'.pdf', '.ppt', '.pptx', '.pptm', '.pot', '.potx'}
-                filtered = []
-                for item in file_list:
-                    # updated_files is a list of tuples: (canvas_file, local_file)
-                    f = item[0] if is_tuple else item
-                    
-                    if hasattr(f, 'canvas_filename'):
-                        fname = f.canvas_filename
-                    elif hasattr(f, 'filename'):
-                        fname = getattr(f, 'display_name', '') or getattr(f, 'filename', '')
-                    else:
-                        fname = getattr(f, 'display_name', '')
-                        
-                    if Path(fname).suffix.lower() in allowed_exts:
-                        filtered.append(item)
-                return filtered
-            return file_list
-
-        # Auto-select all new, updated, locally deleted, and missing files
+        # NO SECOND FILTER HERE. Quick Sync used to re-apply the "Slides & PDFs"
+        # extension allowlist to the analyzer's output - a fourth hand-written
+        # copy of a rule that had already drifted in one of its four homes, and
+        # which the Review flow never applied at all, so the same folder answered
+        # differently depending on which button you pressed.
+        #
+        # Scope is now enforced ONCE, upstream, in `analyze_course`, which is the
+        # only place both flows pass through - so they cannot disagree, and a
+        # single contract read decides. It also resolved the name wrongly: it took
+        # `display_name or filename` where the engine writes `preferred_disk_name`,
+        # which APPENDS the real extension when the display name lacks it. A file
+        # displayed as "Lecture" and stored as "Lecture.pdf" was therefore dropped
+        # here and downloaded by the engine.
         sync_selections = []
-        total_filter_skipped = 0  # M-5: files hidden by a non-'all' file_filter
         for idx, res_data in enumerate(all_results):
             result = res_data['result']
             cid = res_data['pair']['course_id']
@@ -968,28 +957,13 @@ def run_analysis(sync_pairs, main_placeholder=None):
                 
             current_filter = _contract.get('file_filter', 'all')
 
-            # Apply the gatekeeper BEFORE execution
-            actionable_new = apply_file_filter(result.new_files, current_filter, is_tuple=False)
+            actionable_new = result.new_files
             # Quick Sync processes CLEAN updates only. Modified updates stay
             # behind for the full Review flow so students can't accidentally
             # clutter their folder with `_NewVersion` siblings of files they
             # edited. (Confirmed by the user's design choice.)
-            actionable_updated_clean = apply_file_filter(result.updated_clean_files, current_filter, is_tuple=True)
-            actionable_del = apply_file_filter(result.locally_deleted_files, current_filter, is_tuple=False)
-
-            # M-5: account for new/clean-update files hidden by a non-'all'
-            # file_filter so the completion screen can surface them instead of
-            # silently dropping them. (Locally-deleted/edited are skipped by
-            # design and tallied separately as qs_skipped.)
-            total_filter_skipped += (len(result.new_files) - len(actionable_new))
-            total_filter_skipped += (len(result.updated_clean_files) - len(actionable_updated_clean))
-
-            # M-12: files a non-'all' filter drops are SKIPPED, not ignored.
-            # They were previously swept into the permanent Ignored bucket as a
-            # side effect of the filter - surprising, invisible, and sticky
-            # (the flag survived even a later successful download). Skipping is
-            # cheap: the same filter drops them again next run, and the
-            # completion notice reports the count so nothing happens silently.
+            actionable_updated_clean = result.updated_clean_files
+            actionable_del = result.locally_deleted_files
 
             # Debug: log Quick Sync auto-selection per course
             if st.session_state.get('debug_mode'):
@@ -1103,7 +1077,6 @@ def run_analysis(sync_pairs, main_placeholder=None):
             'local_del': total_locdel,
             'canvas_del': total_canvasdel,
             'edited': total_edited,
-            'filtered': total_filter_skipped,
             'panopto_local_del': total_pan_locdel,
         }
         logger.debug(f"Quick Sync Skipped Payload: {st.session_state['qs_skipped']}")
