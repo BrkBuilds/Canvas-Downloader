@@ -1,4 +1,4 @@
-# The macOS Office-conversion defect set — SHIPPED 2026-08-11
+# The macOS Office-conversion defect set — SHIPPED 2026-08-11/12
 
 **All measurements on the Tahoe (macOS 26.6) audit box, against the real
 applications.** Read `MAC_RUNBOOK.md` for the phase plan and `RUNBOOK.md` for
@@ -10,18 +10,22 @@ ppt file converting, full screen, until the conversions ended"* — followed by 
 screenshot of PowerPoint's Recents list full of `src` entries pointing into our
 temp staging directory.
 
-That one report, plus the download matrix that ran afterwards, produced **three
-product defects (all HIGH) and three checker defects**. Every product defect was
-a class this repo already documents, surviving in a module the earlier fix did
-not reach — the playbook's thesis for the fourth pass running.
+That one report, plus the download matrix that ran afterwards, produced **four
+product defects (all HIGH) and four checker defects** — and the operator's own
+hypothesis about two concurrent lanes is what led to the root cause, D4.
+
+Three of the four product defects were a class this repo already documents,
+surviving in a module the earlier fix did not reach — the playbook's thesis for
+the fourth pass running. The fourth (D4) is new, and it is the one that
+actually crashes PowerPoint.
 
 ---
 
-## THE CAUSAL CHAIN — confirmed, and it starts at D1
+## THE CAUSAL CHAIN — reproduced end to end, and it starts at D4
 
-    D1  `active <doc>` is trusted        -> a FAILED conversion never closes OUR document
-      -> documents accumulate in PowerPoint
-      -> memory pressure -> PowerPoint CRASHES
+    D4  two app instances drive the ONE PowerPoint macOS gives a user session
+      -> one instance's `open` lands between the other's `open` and `save`
+      -> -609 / "success but no output" / a raced destination -> PowerPoint CRASHES
       -> the next Apple event returns -600 "Application isn't running"
       -> D6 that is misread as "not installed" -> 57 files abandoned
       -> Microsoft Error Reporting restarts PowerPoint VISIBLE
@@ -34,8 +38,12 @@ the first hop, and while probing this the audit accidentally reproduced the MER
 hop — a wedged Excel, killed, produced exactly the "click the blue button and
 the app comes back visible" dialog the operator described.
 
-**So D2 and D3 are downstream of D1/D5/D6, and fixing those is what removes
-them.** See "D2 / D3" below for why neither gets a direct fix.
+D1 makes each failure worse (a failed conversion never closed OUR document, so
+they accumulate), but the CRASH itself is D4 - two instances, one application.
+That was established by reproducing it on demand; see D4 below.
+
+**D2 and D3 are downstream, and fixing D4/D1/D5/D6 is what removes them.** See
+"D2 / D3" for why neither gets a direct fix.
 
 ---
 
@@ -208,12 +216,75 @@ made.
 
 ---
 
-## D4 — PowerPoint crashes. Root cause NOT established.
+## D4 — ROOT CAUSE FOUND AND FIXED: two instances, one PowerPoint
 
-Twice, under two-lane memory pressure. `~/Library/Logs/DiagnosticReports` is
-empty (Microsoft routes its own crashes to MER, which uploads and discards), so
-there is no artefact to read. The D1 chain is the leading hypothesis and D1 is
-now fixed; **if the crashes stop, that is the evidence.** Not claimed as fixed.
+**Shipped in `9854a8d`.** Reproduced on demand, which is what turned this from
+a hypothesis into a defect.
+
+The operator's hypothesis was that the two audit lanes caused it. That was
+right in mechanism and wrong in pressure: it is not memory or CPU contention.
+**macOS gives a user session exactly ONE Microsoft PowerPoint**, so two Canvas
+Downloader processes drive the same application - and a conversion is
+`open` → `save active <doc>` → `close`, which is INDIVISIBLE. The other
+instance's `open` lands between our `open` and our `save`.
+
+Two batches started at the same moment against the real applications:
+
+    batch A   8 files ->  0 converted, 8 failed
+    batch B   8 files ->  0 converted, 8 failed
+    errors    "Connection is invalid. (-609)"
+              "reported success but no output file was created"
+    artefact  `B8 (1).pdf` - two conversions racing for one destination
+    result    PowerPoint CRASHED into Microsoft Error Reporting
+
+i.e. the operator's original screenshot, on demand.
+
+**It also exposed a hole in D1's fix.** The staged basename was the constant
+`src.<ext>`, with the uuid only in the DIRECTORY - so `our_document_test`,
+which identifies our document by NAME, answered "yes, mine" for the other
+instance's document. `guard_trips` was **0** while all 16 files failed. The
+basename now carries 6 hex of the work dir (15 bytes total, so Word's
+~255-byte staged-path limit is untouched).
+
+And `run_applescript` now holds a per-app `flock` for one conversion.
+`flock` because the kernel releases it when the holder dies - a crashed
+instance is the very thing this defends against. Bounded at 120 s, then
+proceeds anyway, so the degraded case is the old behaviour rather than a
+stalled run.
+
+After both fixes, the identical run: **8/8 and 8/8**, no stray PDFs,
+PowerPoint alive, batch B taking 14.2 s against A's 7.7 s.
+
+### Ruled out by measurement - do not re-chase
+
+* **A load-fragile guard.** `open` might have returned before the document
+  became frontmost, which would make the D1 guard reject good conversions
+  under load. It does not: **0 polls needed in 10/10 opens, cold and under
+  full 10-core load** (`scripts/probe_office_open_latency.py`). The polling
+  machinery was written and then dropped.
+* **The 448 MB deck.** Course 43660 contains one, and the matrix named it among
+  the failures. It converts in **3.0 s at 245 MB peak RSS**, no crash.
+* **Synthetic load alone.** 30 files under 10 CPU burners + 6 GB resident:
+  30/30 converted, no crash.
+
+### The recovery is proven independently of the cause
+
+`scripts/verify_office_crash_recovery.py` INJECTS the crash - it kills
+PowerPoint mid-batch, which forces the exact condition instead of racing for
+it. With the D6 fix, and under CPU+memory pressure:
+
+| run | result |
+|---|---|
+| control, no kill | 5/5 converted, user document intact |
+| kill after 2 PDFs | **6/6 converted**, 0 failed, nothing left behind |
+| kill + 10 burners + 5 GB | **6/6 converted**, 0 failed |
+
+Under the old classification this is precisely where 57 files were abandoned.
+
+**Note on one number**: in a kill run, `user_docs_after` is 0 because the
+injected `pkill` closes the user's document - not the app. A real crash does
+the same and PowerPoint's own auto-recovery is what offers the work back. Only
+the control run can test whether OUR code closes it, and it does not.
 
 ---
 
