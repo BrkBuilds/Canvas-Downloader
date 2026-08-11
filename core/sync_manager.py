@@ -144,8 +144,32 @@ def _probe_case_insensitive(directory: str) -> bool:
             return False
 
     # No usable child (empty, unreadable, or every name caseless). Fall back to
-    # the directory's own name, which is right everywhere except at a mount
-    # point - and answers False on doubt, which is the safe direction.
+    # the directory's own name - EXCEPT at a mount point, where that name lives
+    # on the PARENT volume and the answer would be about the wrong filesystem.
+    #
+    # This is the same trap the child-flip above was introduced to fix, in the
+    # one case the child-flip cannot cover: a directory with nothing in it.
+    # Measured on macOS 26.6 against a real case-sensitive APFS image, probed
+    # while still EMPTY: the fallback flipped `/Volumes/CDCaseSens`, resolved it
+    # against `/Volumes` on the case-INSENSITIVE root volume, and returned True
+    # for a case-SENSITIVE drive. The comment here used to claim the fallback
+    # "answers False on doubt"; at a mount point it answered True, which is the
+    # direction that MERGES two genuinely distinct files into one manifest row.
+    #
+    # Reachable: the app climbs to the nearest EXISTING ancestor, so a course
+    # folder that does not exist yet on a freshly-formatted case-sensitive
+    # external drive resolves to the drive's root. `_probe_case_insensitive` is
+    # lru_cached, so the wrong answer would then be frozen for the session even
+    # after the first files land.
+    #
+    # False here costs only a case-only rename going unrecognised on an empty
+    # case-INSENSITIVE drive - the recoverable direction, and it self-corrects
+    # as soon as the folder holds one file with a letter in its name.
+    try:
+        if os.path.ismount(directory):
+            return False
+    except Exception:       # noqa: BLE001
+        return False
     flipped = directory.swapcase()
     if flipped == directory:
         return False
