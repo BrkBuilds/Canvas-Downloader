@@ -78,7 +78,7 @@ def registry(tmp_path, monkeypatch):
     db = home / "Library" / "Group Containers" / "UBF8T346G9.Office" \
         / "MicrosoftRegistrationDB.reg"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
-    monkeypatch.setattr(AB, "_any_office_running", lambda: False)
+    monkeypatch.setattr(AB, "_running_office_apps", lambda: set())
     # 1 root -> Software/.../MruUserData/.../Documents -> entries
     rows = [
         (1, 0, "Software"),
@@ -125,7 +125,7 @@ def test_a_marked_node_OUTSIDE_MruUserData_is_left_alone(tmp_path, monkeypatch):
     db = home / "Library" / "Group Containers" / "UBF8T346G9.Office" \
         / "MicrosoftRegistrationDB.reg"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
-    monkeypatch.setattr(AB, "_any_office_running", lambda: False)
+    monkeypatch.setattr(AB, "_running_office_apps", lambda: set())
     _build(db, [(1, 0, "Software"),
                 (2, 1, "SomethingElse"),
                 (20, 2, f"file:///x/{MARK}/cd_aaa/src_1.pptx")])
@@ -140,7 +140,7 @@ def test_a_marked_node_WITH_CHILDREN_is_left_alone(tmp_path, monkeypatch):
     db = home / "Library" / "Group Containers" / "UBF8T346G9.Office" \
         / "MicrosoftRegistrationDB.reg"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
-    monkeypatch.setattr(AB, "_any_office_running", lambda: False)
+    monkeypatch.setattr(AB, "_running_office_apps", lambda: set())
     _build(db, [(1, 0, "Software"), (2, 1, "MruUserData"), (3, 2, "Documents"),
                 (30, 3, f"file:///x/{MARK}/cd_aaa"),
                 (31, 30, "a child that would be orphaned")])
@@ -153,7 +153,8 @@ def test_it_declines_while_an_office_app_is_running(registry, monkeypatch):
     """A live app holds Recents in memory and rewrites this DB when it exits,
     resurrecting whatever was deleted - so a purge that races it produces the
     half-state for a different reason."""
-    monkeypatch.setattr(AB, "_any_office_running", lambda: True)
+    monkeypatch.setattr(AB, "_running_office_apps",
+                        lambda: set(AB._OFFICE_PROCESSES))
     AB._purge_recents_sqlite()
     assert {10, 11} <= _nodes(registry), "purged while Office was running"
 
@@ -162,7 +163,7 @@ def test_the_running_check_does_not_LAUNCH_office(monkeypatch):
     """Asking the app over Apple events would start it - the opposite of what a
     'has everything shut down?' test wants."""
     import inspect
-    src = inspect.getsource(AB._any_office_running)
+    src = inspect.getsource(AB._running_office_apps)
     assert "pgrep" in src
     assert "osascript" not in src and "tell application" not in src
 
@@ -179,7 +180,7 @@ def test_the_running_check_is_TRUE_on_doubt(monkeypatch):
 def test_a_missing_registry_is_a_no_op(tmp_path, monkeypatch):
     home = tmp_path / "empty"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
-    monkeypatch.setattr(AB, "_any_office_running", lambda: False)
+    monkeypatch.setattr(AB, "_running_office_apps", lambda: set())
     AB._purge_recents_sqlite()          # must not raise
 
 
@@ -195,7 +196,7 @@ def test_an_unexpected_schema_is_a_no_op(tmp_path, monkeypatch):
     con.commit()
     con.close()
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
-    monkeypatch.setattr(AB, "_any_office_running", lambda: False)
+    monkeypatch.setattr(AB, "_running_office_apps", lambda: set())
     AB._purge_recents_sqlite()          # must not raise
 
 
@@ -205,7 +206,7 @@ def test_a_cycle_in_the_parent_chain_cannot_hang_the_walk(tmp_path, monkeypatch)
     db = home / "Library" / "Group Containers" / "UBF8T346G9.Office" \
         / "MicrosoftRegistrationDB.reg"
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
-    monkeypatch.setattr(AB, "_any_office_running", lambda: False)
+    monkeypatch.setattr(AB, "_running_office_apps", lambda: set())
     _build(db, [(1, 2, "A"), (2, 1, "B"),
                 (40, 1, f"file:///x/{MARK}/cd_aaa/src_1.pptx")])
     # ON A THREAD WITH A JOIN TIMEOUT, so a regression FAILS instead of hanging
@@ -218,3 +219,72 @@ def test_a_cycle_in_the_parent_chain_cannot_hang_the_walk(tmp_path, monkeypatch)
     t.join(timeout=20)
     assert not t.is_alive(), "the ancestor walk did not terminate on a cycle"
     assert 40 in _nodes(db), "no MruUserData ancestor, so it must be left alone"
+
+
+# --------------------------------------------------------------------------
+# per-app scoping: clean up after ourselves while the user keeps editing
+# --------------------------------------------------------------------------
+
+@pytest.fixture
+def per_app(tmp_path, monkeypatch):
+    """Our entries under each app's own Recents subtree, as the real DB has
+    them: MruUserData/UnsignedUser/<App>/Local/Documents."""
+    home = tmp_path / "home"
+    db = home / "Library" / "Group Containers" / "UBF8T346G9.Office" \
+        / "MicrosoftRegistrationDB.reg"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    rows = [(1, 0, "MruUserData"), (2, 1, "UnsignedUser")]
+    nid = 100
+    ids = {}
+    for app in ("PowerPoint", "Word", "Excel"):
+        rows += [(nid, 2, app), (nid + 1, nid, "Documents")]
+        rows.append((nid + 2, nid + 1, f"file:///x/{MARK}/cd_a/src_1.bin"))
+        rows.append((nid + 3, nid + 1, "file:///Users/me/real.bin"))
+        ids[app] = (nid + 2, nid + 3)
+        nid += 10
+    _build(db, rows)
+    return db, ids
+
+
+def test_the_users_open_app_keeps_its_entries_and_the_others_are_cleaned(per_app,
+                                                                        monkeypatch):
+    """THE SCENARIO THAT MATTERS: the user is editing in Word while a run
+    converts. Word's entries must survive - it would rewrite them from memory
+    on exit anyway - but PowerPoint's and Excel's are ours to clean, and
+    leaving them would mean a run never tidies up whenever any Office app
+    happens to be open."""
+    db, ids = per_app
+    monkeypatch.setattr(AB, "_running_office_apps", lambda: {"Word"})
+    AB._purge_recents_sqlite()
+    left = _nodes(db)
+    assert ids["Word"][0] in left, "cleaned a running app's entry - it will "\
+                                   "come back when that app exits"
+    assert ids["PowerPoint"][0] not in left, "left PowerPoint's entry behind"
+    assert ids["Excel"][0] not in left, "left Excel's entry behind"
+    for app in ("PowerPoint", "Word", "Excel"):
+        assert ids[app][1] in left, f"deleted the user's own {app} document"
+
+
+def test_an_unattributable_entry_is_only_taken_when_nothing_runs(tmp_path,
+                                                                 monkeypatch):
+    """An entry we cannot pin to an app could belong to the running one."""
+    home = tmp_path / "home"
+    db = home / "Library" / "Group Containers" / "UBF8T346G9.Office" \
+        / "MicrosoftRegistrationDB.reg"
+    monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
+    _build(db, [(1, 0, "MruUserData"),
+                (2, 1, f"file:///x/{MARK}/cd_a/src_1.bin")])
+    monkeypatch.setattr(AB, "_running_office_apps", lambda: {"Word"})
+    AB._purge_recents_sqlite()
+    assert 2 in _nodes(db), "took an unattributable entry while an app was running"
+    monkeypatch.setattr(AB, "_running_office_apps", lambda: set())
+    AB._purge_recents_sqlite()
+    assert 2 not in _nodes(db), "never cleaned it even with nothing running"
+
+
+def test_the_probe_reports_every_app_on_doubt(monkeypatch):
+    def boom(*_a, **_k):
+        raise OSError("pgrep unavailable")
+    monkeypatch.setattr(AB.subprocess, "run", boom)
+    assert AB._running_office_apps() == set(AB._OFFICE_PROCESSES)
+    assert AB._any_office_running() is True
