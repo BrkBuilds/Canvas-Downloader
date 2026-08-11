@@ -10,8 +10,8 @@ ppt file converting, full screen, until the conversions ended"* — followed by 
 screenshot of PowerPoint's Recents list full of `src` entries pointing into our
 temp staging directory.
 
-That one report, plus the download matrix that ran afterwards, produced **four
-product defects (all HIGH) and four checker defects** — and the operator's own
+That one report, plus the download matrix that ran afterwards, produced **seven
+product defects and four checker defects** — and the operator's own
 hypothesis about two concurrent lanes is what led to the root cause, D4.
 
 Three of the four product defects were a class this repo already documents,
@@ -189,6 +189,55 @@ PowerPoint was kept alive **because** it held the user's document; Word and
 Excel, holding only ours, were quit.
 
 ---
+
+## D9 — the teardown quit Word and DISCARDED THE USER'S DOCUMENT
+
+**HIGH, data loss. Shipped in `70ce78c`.** Found by driving all three apps in
+the "user is editing while a sync converts" state, which is the check the
+operator asked for and the reason it surfaced:
+
+    Word        docs 1 -> 0   THE USER'S DOCUMENT WAS CLOSED, app quit
+    Excel       docs 1 -> 1   survived
+    PowerPoint  docs 1 -> 1   survived
+
+`_idle_quit_script` defaulted a failed property read to `hasPath=false` /
+`isSaved=true` — which IS the definition of pristine — so an undescribable
+document did not block the `quit saving no`. Its docstring claimed the
+opposite.
+
+And the documents ARE undescribable: before a conversion phase Word reports
+`path=[Macintosh HD:…:MY WORD WORK.doc] saved=false`; after one, **name, path,
+full name and saved ALL FAIL**, even inside a single `tell` block. Every app is
+left holding one, and `_force_close_canvas_docs_sync` cannot close it because
+it matches on those same properties.
+
+Both defaults are wrong in one direction, so the fix stops asking the documents
+and asks **who launched the app** — the rule the product owner chose. Verified:
+cold 12/12 converted + all three quit + Recents 37 → 0; busy 12/12 converted +
+**3/3 user documents survived** + all three left running.
+
+**Then the real app found the follow-on defect the harness could not**:
+`prime_office_automation` launches all three at run start, so the observation
+had to move to the top of priming — otherwise every app is running by our own
+hand and the gate calls them all the user's, leaving all three in the dock.
+That is exactly why a harness pass is not a substitute for a real run.
+
+## D10 — the Recents purge had never removed an entry
+
+**Shipped in `745d99b` / `d9fc0ad`.** It selected
+`HKEY_CURRENT_USER_values WHERE name='path'` and deleted only value rows:
+measured on the real registry, **495 value rows removed, 0 nodes**, with every
+entry still on screen and now stripped of its values. The list is driven by the
+NODES, whose `name` is the `file://` URL; the database held 36 rows named
+`path` in total.
+
+Now matched on the node name and deleting node + values, behind three gates
+(marker, leaf-only, `MruUserData` ancestor). **636 removed, 0 of the user's
+1041 nodes touched, 0.04 s.** Per APP, so an open Word does not block cleaning
+PowerPoint's and Excel's.
+
+**It lands ~15 s after the last process dies**, on a daemon thread. Measuring
+before that reports a working purge as broken — which cost one cycle here.
 
 ## D2 / D3 — NOT fixed directly, and that is the decision
 
