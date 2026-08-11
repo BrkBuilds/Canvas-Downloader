@@ -176,15 +176,36 @@ def _analyze_course_blocking(cm, course_id, course_name, local_folder,
     # mode a fresh download would pick. It decides where an isolated Page is
     # expected to sit, so guessing it wrong makes every page read as new.
     _built_mode = sync_mgr._load_metadata('download_mode') or None
+    # The folder's FILE FILTER, for the same reason as download_mode: it decides
+    # what a download for this folder would ever have produced. "Slides & PDFs"
+    # (study) excludes Canvas Pages and module links outright, and without this
+    # the scan enumerated all of them and the diff reported them as NEW on every
+    # single sync - measured at 76 for course 43660. See
+    # core.canvas_logic.module_item_in_scope.
+    #
+    # Falls back to 'all' when a folder has no stored contract (pre-contract
+    # folders, or a first analysis): 'all' is the permissive answer, so an unknown
+    # contract can only ever show MORE than it should, never silently hide a file.
+    _built_filter = 'all'
+    _raw_contract = sync_mgr._load_metadata('sync_contract')
+    if _raw_contract:
+        try:
+            _built_filter = (json.loads(_raw_contract) or {}).get('file_filter', 'all')
+        except (json.JSONDecodeError, TypeError, ValueError):
+            _built_filter = 'all'
     canvas_files, sec_fetch_status, module_map = cm.get_course_files_metadata(
         course,
         progress_callback=progress_hook,
         secondary_content_settings=_secondary_settings,
         timings=_fetch_timings,
         download_mode=_built_mode,
+        file_filter=_built_filter,
     )
     if debug_file:
         _fetch_ms = int((time.perf_counter() - _t_fetch) * 1000)
+        log_debug(f"Folder scope: mode={_built_mode or '?'} | file_filter={_built_filter}"
+                  + (" | Pages+links EXCLUDED" if _built_filter == 'study' else ""),
+                  debug_file)
         log_debug(f"Fetched {len(canvas_files)} files from Canvas "
                   f"(secondary: {sec_fetch_status}) ({_fetch_ms} ms)", debug_file)
         log_debug(
