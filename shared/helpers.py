@@ -385,7 +385,7 @@ def quarantine_corrupt_json(path, reason: str) -> None:
         logger.warning("Could not quarantine the damaged config file %s: %s", path, e)
 
 
-def read_json_for_update(path) -> tuple[dict, bool]:
+def read_json_for_update(path, expect: type = dict) -> tuple:
     """``(data, may_write)`` for a read-modify-write of a shared JSON config.
 
     **THE ONE implementation of this decision.** ``canvas_downloader_settings.json``
@@ -427,12 +427,23 @@ def read_json_for_update(path) -> tuple[dict, bool]:
       notice, their Panopto engine settings and their download folder is not.
     * **missing file** - a genuinely fresh install. ``({}, True)``.
 
-    A non-dict payload (a JSON list or scalar) is damaged content too: callers
-    subscript the result, so returning it would raise inside the writer.
+    A payload of the wrong shape is damaged content too: callers subscript the
+    result, so returning it would raise inside the writer.
+
+    *expect* is the top-level JSON type the caller needs - ``dict`` for the
+    settings files, ``list`` for ``canvas_sync_history.json``. It exists so the
+    history store can reuse THIS decision instead of restating it: that store
+    had the identical defect (``load_history`` degraded every failure to ``[]``
+    and ``add_entry`` wrote it back, so one transient read replaced up to 50
+    recorded runs with the single entry being added), and writing a second
+    list-shaped copy of this logic is the mistake the paragraph above is about.
+    The empty value returned on damage/absence is ``expect()``, so a caller that
+    asks for a list is never handed a dict.
     """
     path = str(path)
+    empty = expect()
     if not os.path.exists(path):
-        return {}, True
+        return empty, True
     try:
         with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -440,13 +451,14 @@ def read_json_for_update(path) -> tuple[dict, bool]:
         logger.warning(
             "Could not read config at %s (%s); skipping this write so the "
             "existing settings are not discarded.", path, e)
-        return {}, False
+        return empty, False
     except Exception as e:
         quarantine_corrupt_json(path, f"{type(e).__name__}: {e}")
-        return {}, True
-    if not isinstance(data, dict):
-        quarantine_corrupt_json(path, f"top level is {type(data).__name__}, not an object")
-        return {}, True
+        return empty, True
+    if not isinstance(data, expect):
+        quarantine_corrupt_json(
+            path, f"top level is {type(data).__name__}, not {expect.__name__}")
+        return empty, True
     return data, True
 
 
