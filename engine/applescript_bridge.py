@@ -1803,9 +1803,17 @@ def _idle_quit_script(app: str, collection: str,
 
     Second defect fixed at the same time: the ``full name`` fallback tested
     ``contains "/"``, but Word returns an HFS **colon** path
-    (``Macintosh HD:Users:...``), so that test could never fire for Word - it
-    now accepts any non-empty name. Both defaults leaned the same way, toward
-    calling a real document pristine.
+    (``Macintosh HD:Users:...``), so that test could never fire for Word.
+
+    IT MUST TEST FOR A PATH SEPARATOR, NOT MERELY A NON-EMPTY NAME. Loosening
+    it to "any non-empty full name" - which this file did for a few hours on
+    2026-08-12 - makes an UNSAVED document look like it has a path, because an
+    unsaved document's ``full name`` is just its name. Measured on the real
+    app: ``Book1 || path=[] || full name=[Book1] || saved=true`` was reported
+    as user-owned, so Excel's own auto-created blank blocked the quit for ever
+    and the operator's cancelled run left all three apps in the dock. That is
+    the exact "a single pristine blank keeps Excel in the dock forever" failure
+    this function was originally written to fix.
 
     Structured as three PHASE-TAGGED stages so the returned status pinpoints
     exactly where a failure happened (Excel's gallery-state ``-1700: Can't
@@ -1862,25 +1870,31 @@ def _idle_quit_script(app: str, collection: str,
                 try
                     set hasPath to false
                     set pathKnown to false
+                    set isOurs to false
                     try
                         tell application "{app}" to set p to (path of d as text)
                         set pathKnown to true
                         if p is not "" then set hasPath to true
+                        if p contains "{_CANVAS_TMP_MARKER}" then set isOurs to true
                     end try
-                    if not hasPath then
+                    if not hasPath or not isOurs then
                         try
                             tell application "{app}" to set fn to (full name of d as text)
                             set pathKnown to true
-                            if fn is not "" then set hasPath to true
+                            if fn contains "/" or fn contains ":" then set hasPath to true
+                            if fn contains "{_CANVAS_TMP_MARKER}" then set isOurs to true
                         end try
                     end if
+                    if isOurs then set pristine to true
                     set isSaved to true
                     set savedKnown to false
                     try
                         tell application "{app}" to set isSaved to (saved of d)
                         set savedKnown to true
                     end try
-                    if pathKnown and savedKnown then
+                    if isOurs then
+                        set pristine to true
+                    else if pathKnown and savedKnown then
                         if (not hasPath) and isSaved then set pristine to true
                     else
                         set pristine to {str(undescribable_is_ours).lower()}
