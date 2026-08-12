@@ -1885,7 +1885,6 @@ def _idle_quit_script(app: str, collection: str,
                             if fn contains "{_CANVAS_TMP_MARKER}" then set isOurs to true
                         end try
                     end if
-                    if isOurs then set pristine to true
                     set isSaved to true
                     set savedKnown to false
                     try
