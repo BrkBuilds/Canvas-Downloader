@@ -237,8 +237,8 @@ PURGE_MUTANTS = [
 QUIT_TEST = "tests/test_office_quit_scoping.py"
 QUIT_MUTANTS = [
     ('our staged document counts as the user\'s', AB,
-     '                    if isOurs then set pristine to true',
-     '                    if False then set pristine to true'),
+     '                    if isOurs then\n                        set pristine to true',
+     '                    if False then\n                        set pristine to true'),
     ('preexisting gate removed from the quit loop', AB,
      '            if short and office_was_preexisting(short):',
      '            if False:'),
