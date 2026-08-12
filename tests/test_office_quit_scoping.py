@@ -183,12 +183,13 @@ def test_an_undescribable_document_is_OURS_only_when_we_launched_the_app():
 
 
 def test_the_full_name_fallback_accepts_an_HFS_path():
-    """Word reports `Macintosh HD:Users:...`, with no forward slash in it, so
-    the old `contains "/"` test could never fire for Word - a second default
-    leaning the same way, toward calling a real document pristine."""
+    """Word reports `Macintosh HD:Users:...`, with no forward slash in it, so a
+    slash-ONLY test could never fire for Word - a default leaning toward
+    calling a real document pristine. Both separators must be accepted; see
+    `test_a_full_name_needs_a_SEPARATOR_to_count_as_a_path` for why it must not
+    be loosened all the way to "any non-empty name"."""
     script = AB._idle_quit_script("Microsoft Word", "documents")
-    assert 'fn contains "/"' not in script
-    assert 'fn is not ""' in script
+    assert 'fn contains ":"' in script
 
 
 def test_the_observation_is_taken_BEFORE_priming_launches_the_apps():
@@ -225,3 +226,46 @@ def test_the_two_app_name_tables_agree():
     same apps in the same words. If they drift, priming records a key the gate
     never reads and the gate silently stops protecting that app."""
     assert {t[2] for t in AB._APP_TRIPLES} == set(AB._APP_DOC_MAP)
+
+
+# --------------------------------------------------------------------------
+# what counts as "has a path" - the test that decides whether an app is quit
+# --------------------------------------------------------------------------
+
+def test_a_full_name_needs_a_SEPARATOR_to_count_as_a_path():
+    """An UNSAVED document's `full name` is just its NAME.
+
+    Measured on the real app: `Book1 || path=[] || full name=[Book1] ||
+    saved=true`. Excel auto-creates that blank on a hidden launch, so if any
+    non-empty full name counts as "has a path", the blank looks user-owned and
+    keeps Excel in the dock FOR EVER - which is the exact failure this function
+    was originally written to fix, and which left all three apps running after
+    the operator's cancelled run on 2026-08-12.
+
+    The test must therefore be for a path SEPARATOR. Both are needed: `/` for
+    Excel and PowerPoint, which report POSIX, and `:` for Word, which reports
+    an HFS path (`Macintosh HD:Users:...`) and so could never satisfy a
+    slash-only test.
+    """
+    script = AB._idle_quit_script("Microsoft Excel", "workbooks")
+    assert 'fn is not ""' not in script, (
+        "any non-empty full name counts as a path - an unsaved document's full "
+        "name is its NAME, so a pristine blank would block the quit for ever")
+    assert 'fn contains "/"' in script, "POSIX paths (Excel, PowerPoint) unmatched"
+    assert 'fn contains ":"' in script, "HFS paths (Word) unmatched"
+
+
+def test_a_document_staged_in_OUR_temp_dir_never_blocks():
+    """Our own staged conversion file HAS a real path on disk, so without this
+    it reads as user-owned and blocks the quit - which is what left PowerPoint
+    and Word running after the cancelled run. A path carrying the
+    CanvasDownloaderTmp marker is ours by construction, whoever launched the
+    app."""
+    for app, coll in (("Microsoft Word", "documents"),
+                      ("Microsoft Excel", "workbooks"),
+                      ("Microsoft PowerPoint", "presentations")):
+        script = AB._idle_quit_script(app, coll)
+        assert AB._CANVAS_TMP_MARKER in script, f"{app}: no marker test"
+        assert "set isOurs to true" in script
+        assert "if isOurs then" in script, (
+            f"{app}: the marker result does not short-circuit the blocker test")
