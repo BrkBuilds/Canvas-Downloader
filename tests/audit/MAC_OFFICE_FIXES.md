@@ -14,8 +14,8 @@ carries the whole Tahoe session; the Office detail is unchanged below.
 
 | | |
 |---|---|
-| branch | `macos-audit-26`, 51 commits, pushed |
-| test suite | **3678 passed, 26 skipped** (run on this Mac) |
+| branch | `macos-audit-26`, 55 commits, pushed |
+| test suite | **3680 passed, 26 skipped** (run on this Mac) |
 | architecture audit | **0 violations** (Rules 4–10) |
 | artifact | `dist/Canvas_Downloader_v2.0.2_macOS.dmg`, 105 MB, arm64 |
 | signature | `codesign --verify --deep --strict` rc=0, `apple-events` entitlement intact |
@@ -74,7 +74,49 @@ its distinctive strings.
 
 ---
 
-## WHAT THIS SESSION DID — 51 commits
+## D11 — a CANCELLED run left all three apps open, with temp files in Recents
+
+**Found by the operator's own "chill test": two courses, all conversions plus
+Panopto, cancelled during PowerPoint conversion.** All three apps still
+running, Recents full of our staged `src_*` files. Process times settled who
+launched them (app 02:03:50, PowerPoint 02:05:16), so the gate should have
+taken them.
+
+**No scenario in this session exercised CANCEL** — that is the gap the operator
+closed, and it is worth remembering that the cancel path reaches the same
+teardown but leaves the apps in a different state.
+
+Two causes:
+
+1. **Our OWN staged document blocked the quit.** It has a real path on disk, so
+   the "is this the user's?" test called it user-owned and kept the app alive
+   for ever. A path carrying the `CanvasDownloaderTmp` marker is ours by
+   construction, whoever launched the app, and can never be a blocker now.
+2. **A regression from earlier the same day.** `full name` had been loosened
+   from `contains "/"` to "any non-empty name" to fix Word's HFS colon path.
+   Too loose: an UNSAVED document's full name is just its NAME. Measured —
+
+       Book1 || path=[] || full name=[Book1] || saved=true
+
+   so Excel's own auto-created blank read as user-owned. That is precisely the
+   *"a single pristine blank keeps Excel in the dock forever"* failure the
+   function was originally written to fix. The test is now for a path
+   SEPARATOR, and needs BOTH: `/` for Excel and PowerPoint, which report
+   POSIX, and `:` for Word, which reports HFS.
+
+Verified against the operator's actually-stuck apps — the app's own quit script
+took Excel immediately after the fix — then both scenarios re-run end to end:
+busy 8/8 converted with 3/3 user documents surviving and all three left
+running; cold 8/8 converted, all three quit, **Recents 40 → 0**.
+
+**The lesson for the next session**: a fix that loosens a predicate to make one
+app work can break a different app in the opposite direction. Word needed the
+colon; Excel needed the separator requirement kept. Both apps had to be driven
+to see it.
+
+---
+
+## WHAT THIS SESSION DID — 55 commits
 
 Grouped by what a reader would look for. Every entry was measured on this
 machine; the commit named in each carries its evidence.
