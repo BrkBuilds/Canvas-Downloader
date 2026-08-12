@@ -1,3 +1,135 @@
+# The macOS 26.6 (Tahoe) audit — session record and state of the app
+
+**Tracked in git on purpose.** Assistant memory does not survive a machine
+being reimaged and does not travel between the operator's three checkouts, so
+anything durable about this audit lives here, in `CLAUDE.md`, or in
+`AUDIT_FINDINGS.md`. This file began as the Office-conversion handoff and now
+carries the whole Tahoe session; the Office detail is unchanged below.
+
+---
+
+## STATE OF THE APP — 2026-08-12, end of the Tahoe session
+
+**Launch-ready for macOS, with one written-down untested area (iCloud).**
+
+| | |
+|---|---|
+| branch | `macos-audit-26`, 51 commits, pushed |
+| test suite | **3678 passed, 26 skipped** (run on this Mac) |
+| architecture audit | **0 violations** (Rules 4–10) |
+| artifact | `dist/Canvas_Downloader_v2.0.2_macOS.dmg`, 105 MB, arm64 |
+| signature | `codesign --verify --deep --strict` rc=0, `apple-events` entitlement intact |
+| packaged app | boots, health 200, renders the course list, **0 exceptions / 0 console errors** |
+| version | `version.py` = 2.0.2, leads every shipped tag |
+
+The DMG was built with CI's own recipe (`npx create-dmg`, drag-to-Applications)
+and verified by MOUNTING it and checking the app inside — signature,
+entitlement, architecture, and the presence of every fix from this session by
+its distinctive strings.
+
+### What was PROVEN on real hardware this session
+
+* **Office → PDF, all three apps, both starting states.** Cold: 12/12 convert,
+  all three quit, Recents 0. Busy (the user editing a dirty document in each):
+  12/12 convert, **3/3 user documents survive**, all three left running.
+  Repeated through the REAL app on course 43660 with PDFs deleted first to
+  force genuine conversions: cold 8/8, busy 6/6, zero failures either way.
+* **Crash recovery.** PowerPoint killed mid-batch → **6/6 files still convert**,
+  with and without CPU+memory pressure. Under the old code this is exactly
+  where 57 files were abandoned.
+* **Volumes.** Case-sensitive and case-insensitive APFS images (`hdiutil`), NFC
+  and NFD names, and a real READ-ONLY mount — the manifest survives untouched
+  with an honest error, no corrupt-backup, no deletion.
+* **Sync matrix** 43/43 and **download matrix** 56/56, 0 failed.
+
+### Known gaps — stated, not hidden
+
+1. **iCloud Drive eviction is UNTESTED.** No iCloud account on the audit box.
+   Nothing in the app is aware of dataless files. Reasoning (not measurement)
+   says the likely effect is a slow or failing read rather than a missing file.
+   `brctl evict` makes it testable in ~30 minutes on a Mac with an account.
+2. **D4's crash artefact cannot be read** — Microsoft routes its own crashes to
+   MER, which uploads and discards, so `~/Library/Logs/DiagnosticReports` is
+   empty. The root cause was established by reproduction instead (see D4).
+3. **No fresh 56-row matrix against the final code.** Verification is targeted
+   controls plus real-app runs, not another full sweep.
+4. **Intel Macs are not supported** — arm64-only, stated in the README. A
+   documented product decision, not an oversight.
+
+### What still needs a Mac, and what does not
+
+* **Does NOT need a Mac**: copy changes, CSS changes, Python changes, the test
+  suite, the architecture audit. All cross-platform.
+* **Does NOT need a Mac**: building the release DMG — `.github/workflows/
+  build-macos.yml` does it on a `macos-14` (arm64) runner via
+  `workflow_dispatch`, using the same `create-dmg` recipe verified here.
+* **DOES need a Mac**: verifying anything platform-specific — Office
+  automation, TCC prompts, Keychain, WKWebView rendering, the packaged
+  bundle's behaviour, and iCloud.
+* **The one residual risk in giving up the Mac**: macOS renders in **WKWebView**,
+  not Chromium, and this repo already ships a WebKit compatibility patch for
+  Streamlit. A CSS change verified only in Chrome is *probably* fine when it
+  copies a pattern already proven elsewhere in this app — but it is not
+  verified. Re-renting for an hour is the remedy if a rendering report comes in.
+
+---
+
+## WHAT THIS SESSION DID — 51 commits
+
+Grouped by what a reader would look for. Every entry was measured on this
+machine; the commit named in each carries its evidence.
+
+### Product fixes — macOS, data loss (all HIGH)
+
+| fix | commit | what it destroyed |
+|---|---|---|
+| `active document` is whoever is FRONTMOST | `066b6da` | a failed conversion closed the USER'S open document `saving no` (1 → 0, reproduced) |
+| the teardown quit Word | `70ce78c` | quit an app the user was editing in and discarded the document; Excel and PowerPoint did not, which is why it needed all three to surface |
+| …and its follow-on | `a934cec` | the "who launched it" observation was taken AFTER priming had launched everything, so the gate protected nothing — caught only by the real app |
+| a failed conversion's stub was promoted | `f2692dd` | an 870-byte "PDF" orphaned in the course folder AND the good PDF from a previous run destroyed |
+| two instances, one PowerPoint | `9854a8d` | 0/16 files converted and PowerPoint crashed — the root cause of the operator's original report |
+| an EMPTY case-sensitive volume | `e64e800` | answered "case-insensitive", merging two distinct files onto one manifest row |
+
+### Product fixes — macOS, correctness and UX
+
+| fix | commit | |
+|---|---|---|
+| a CRASHED app read as "not installed" | `2c11a0e` | abandoned **57 files** mid-phase; now retried once, still bounded by the wedge threshold |
+| the Recents purge never removed an entry | `745d99b`, `3360b80` | deleted values, not nodes: 495 rows / **0 entries**. Now node-based, triple-gated, per-app |
+| the cold-launch WHITE flash | `255080d` | the WKWebView painted it, not the window |
+| a notification DENIAL | `588bead` | is the user's decision, not a delivery failure to route around |
+| the case probe flipped the directory | `91c7c58` | which lives on its PARENT volume |
+
+### Checker / harness defects — four of the eight issues triaged were the CHECKER
+
+`479cd29`, `bd03305`, `6bad460`, `aade2c0`, `13c70c7` — the archive-conversion
+rule the repo had deliberately reversed and the checker kept re-filing; `matrix
+lanes` counting a previous matrix's rows (23/37 reported against a true 2/37);
+`REC_COST_MB` encoding the CUDA figure so transcription was under-priced 3.4x
+and always wrong on macOS; the over-cap check demanding a row the app
+deliberately stopped writing; four name-matching defects; `mac_eyes` crying
+wolf on Tahoe's titled phantom alert.
+
+### Tests and tooling
+
+Seven new test files, every one mutation-verified: **15/15, 10/10, 9/9, 8/9,
+4/4, 9/10, 6/6** (two documented equivalent mutants). New instruments kept for
+the next session: `verify_office_document_guard.py`,
+`verify_office_crash_recovery.py`, `verify_office_end_to_end.py`,
+`probe_office_document_binding.py`, `probe_office_open_latency.py`,
+`measure_office_window.py`, `measure_launch_flash.py`.
+
+### The methodological lesson worth carrying forward
+
+**Every harness in this repo passed the priming-order defect.** They drive the
+converters directly and never call `prime_office_automation`, so they
+structurally could not see that our own priming launches the apps before the
+"was it already running?" question is asked. Only the real app caught it. That
+is the strongest evidence this session produced for the rule the repo already
+states: *verify in the REAL app, not a mock.*
+
+---
+
 # The macOS Office-conversion defect set — SHIPPED 2026-08-11/12
 
 **All measurements on the Tahoe (macOS 26.6) audit box, against the real
