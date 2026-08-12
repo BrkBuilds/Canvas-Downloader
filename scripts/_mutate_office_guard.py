@@ -236,6 +236,9 @@ PURGE_MUTANTS = [
 # --- quit scoping: only what we launched ----------------------------------
 QUIT_TEST = "tests/test_office_quit_scoping.py"
 QUIT_MUTANTS = [
+    ('our staged document counts as the user\'s', AB,
+     '                    if isOurs then set pristine to true',
+     '                    if False then set pristine to true'),
     ('preexisting gate removed from the quit loop', AB,
      '            if short and office_was_preexisting(short):',
      '            if False:'),
@@ -249,10 +252,10 @@ QUIT_MUTANTS = [
      '        _note_office_preexisting(app_name)\n        return _run_applescript_locked(',
      '        return _run_applescript_locked('),
     ('undescribable document back to pristine unconditionally', AB,
-     '                    if pathKnown and savedKnown then\n                        if (not hasPath) and isSaved then set pristine to true\n                    else\n                        set pristine to {str(undescribable_is_ours).lower()}\n                    end if',
-     '                    if (not hasPath) and isSaved then set pristine to true'),
+     '                    else\n                        set pristine to {str(undescribable_is_ours).lower()}\n                    end if',
+     '                    end if'),
     ('HFS path fallback back to slash-only', AB,
-     'if fn is not "" then set hasPath to true',
+     'if fn contains "/" or fn contains ":" then set hasPath to true',
      'if fn contains "/" then set hasPath to true'),
 ]
 
