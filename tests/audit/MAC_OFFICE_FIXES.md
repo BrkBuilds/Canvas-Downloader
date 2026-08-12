@@ -82,9 +82,27 @@ running, Recents full of our staged `src_*` files. Process times settled who
 launched them (app 02:03:50, PowerPoint 02:05:16), so the gate should have
 taken them.
 
-**No scenario in this session exercised CANCEL** — that is the gap the operator
-closed, and it is worth remembering that the cancel path reaches the same
-teardown but leaves the apps in a different state.
+**No AUTOMATED scenario in this session exercised CANCEL** — that is the gap
+the operator closed by hand, and it is worth remembering that the cancel path
+reaches the same teardown but leaves the apps in a different state.
+
+**Closed manually on 2026-08-12, against the rebuilt DMG**: "download a bit,
+cancel, download a bit more, cancel, until I reached a download in each step —
+came out perfect." One earlier run appeared to reach the completion screen
+after a cancel; the four cancel checkpoints were then read and are sound
+(engine event poll; end-of-course → `cancelled` before the phase decision; an
+explicit `is_download_cancelled()` re-entry guard on the Panopto branch; both
+flags after the isolated retry — and sync's
+`'sync_cancelled' if is_sync_cancelled() else 'sync_complete'` mirrors it).
+`cancel_download()` sets the Event and BOTH session flags in one callback, so
+no checkpoint can see a half-set state. The likeliest explanation, and the
+operator's own, is a click that did not reach the app over a
+phone→PC→TeamViewer chain on a very fast download.
+
+**A Panopto phase that finds nothing is NOT a missing gate.** The gates are the
+global switch, the run's Section 4 selection (download) and the folder's stored
+contract (sync). None of them is "does this course have Panopto", because that
+question cannot be answered without discovery — discovery IS the question.
 
 Two causes:
 
