@@ -311,10 +311,31 @@ around it is not.**
       an app we never observed must read `left alone (we never drove it this
       run)`.
 
-   `scripts/verify_office_end_to_end.py` already drives the cold/busy pair and
-   is the right shape to extend for (b) — what it does not do is run the
-   sequence TWICE in one process, which is the whole point. Note `pkill`ing
-   between runs is NOT a substitute: the bug is about state inside one process.
+   `scripts/verify_office_end_to_end.py` DRIVES ALL THREE as of 2026-08-13,
+   and the important half of that change is not the new states: it now runs the
+   app's real run-start sequence (`reset_office_priming` →
+   `first_run_permission_setup` → per-course `prime_office_automation`)
+   instead of calling the converters directly. Priming is what launches the
+   apps, so who-launched-what was never decided the way a real run decides it
+   — which is exactly why every harness in this repo passed while D11 was
+   live.
+
+       python scripts/verify_office_end_to_end.py --state cold --forget-permissions   # (a)
+       python scripts/verify_office_end_to_end.py --state two-runs                    # (b)
+       python scripts/verify_office_end_to_end.py --state cancel                      # (c)
+
+   Each prints JSON ending in `VERDICT` and exits non-zero on a problem. They
+   assert the `[OfficeQuit]` **reason**, not merely the outcome — a stale
+   "ours" that happened not to quit Word would pass every outcome check, so
+   (b) requires `left alone (we did not launch it)` and (c) requires `left
+   alone (we never drove it this run)`. Both strings are pinned against the
+   bridge by `tests/test_mac_audit_tooling.py`, so a reword fails on Windows
+   rather than here.
+
+   `pkill`ing between runs is NOT a substitute for (b): the bug is about state
+   inside one process, which is why `--state two-runs` keeps both runs in one
+   interpreter. (a) deletes the answered-prompts record, so macOS re-asks and
+   someone must be at the screen to click Allow.
 
 ## Phase M2 — Panopto *(entirely new since the last Mac audit)*
 

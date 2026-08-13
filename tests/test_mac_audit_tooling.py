@@ -388,3 +388,84 @@ def test_mac_smoke_never_degrades_a_check_into_nothing():
     assert not bad, (
         f"hasattr() at line(s) {bad} - resolve the symbol properly or let it "
         f"raise; a silently-skipped check is worse than a missing one")
+
+
+# --------------------------------------------------------------------------
+# The Office end-to-end verifier: its verdict strings are COPIED from the
+# bridge, and a copied literal is exactly what this repo has watched rot.
+# --------------------------------------------------------------------------
+
+E2E = REPO / "scripts" / "verify_office_end_to_end.py"
+BRIDGE = REPO / "engine" / "applescript_bridge.py"
+
+
+def _e2e_const(name: str) -> str:
+    """The literal assigned to a module-level constant in the verifier."""
+    tree = ast.parse(E2E.read_text(encoding="utf-8"))
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name) and t.id == name:
+                    assert isinstance(node.value, ast.Constant), name
+                    return node.value.value
+    raise AssertionError(f"{name} is not defined in {E2E.name}")
+
+
+@pytest.mark.parametrize("const", ["LEFT_OBSERVED", "LEFT_UNOBSERVED"])
+def test_the_office_verifier_asserts_on_verdicts_the_bridge_really_emits(const):
+    """MAC_RUNBOOK step 8 asks for the REASON an app was left alone, not the
+    outcome - "left alone because it was yours" and "left alone because we
+    never looked" are the fixed behaviour and the D11 bug respectively, and
+    they are indistinguishable from the outside.
+
+    So the verifier matches on the bridge's own wording, which makes it a
+    copied literal. Reword the bridge and the check stops matching: it fails
+    LOUD (it reports a problem that is not there), but it does so on the Mac,
+    at the one moment the operator is paying for. Catch it here instead.
+
+    Same class as the stale mutation anchors in `test_mutation_anchors.py`.
+    """
+    literal = _e2e_const(const)
+    assert literal in BRIDGE.read_text(encoding="utf-8"), (
+        f"{const} = {literal!r} in {E2E.name} appears nowhere in "
+        f"{BRIDGE.name} - the bridge's wording changed and the verifier will "
+        f"report a false failure on the audit machine")
+
+
+def test_the_office_verifier_runs_the_app_s_own_run_start_sequence():
+    """The reason this harness could not see D11 was that it drove the
+    converters directly and never primed - so "who launched this app?" was
+    never asked the way a real run asks it. CLAUDE.md records that as the
+    whole miss: *"every harness in this repo passed, because they drive the
+    converters directly and never prime"*.
+
+    Pin the three calls, so a future tidy-up cannot quietly remove them and
+    leave a green harness that proves nothing again.
+    """
+    tree = ast.parse(E2E.read_text(encoding="utf-8"))
+    called = {n.func.id for n in ast.walk(tree)
+              if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+    for fn in ("reset_office_priming", "first_run_permission_setup",
+               "prime_office_automation", "quit_idle_office_apps"):
+        assert fn in called, (
+            f"{E2E.name} no longer calls {fn}() - it is back to driving the "
+            f"converters directly, which is the shape that missed D11")
+
+
+def test_the_office_verifier_offers_the_two_states_step_8_requires():
+    """Step 8(b) and 8(c) are the two checks that have never run on a Mac."""
+    src = E2E.read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    choices: set = set()
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "add_argument"):
+            for kw in node.keywords:
+                if kw.arg == "choices" and isinstance(kw.value, ast.Tuple):
+                    vals = {e.value for e in kw.value.elts
+                            if isinstance(e, ast.Constant)}
+                    if "cold" in vals:
+                        choices = vals
+    assert {"cold", "busy", "two-runs", "cancel"} <= choices, (
+        f"--state offers {sorted(choices)}; step 8(b) needs 'two-runs' and "
+        f"8(c) needs 'cancel'")
