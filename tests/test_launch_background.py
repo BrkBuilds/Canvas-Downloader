@@ -156,6 +156,40 @@ def test_it_turns_the_web_views_own_background_OFF():
         "measured to change nothing here - shipping it would imply it does")
 
 
+def test_nothing_stands_between_the_platform_gate_and_the_patch():
+    """No colour parse, no extra import, no third `return False`.
+
+    The function shipped with a leftover r/g/b parse of `_LAUNCH_BG` and an
+    `import AppKit`, both from the `setUnderPageBackgroundColor_` candidate that
+    was measured NOT to fix this and dropped. They were dead - `drawsBackground
+    = False` needs no colour - but not harmlessly dead: each sat in front of the
+    patch behind its own `return False`, so an AppKit import failure, or a
+    `_LAUNCH_BG` this parse did not accept, would have disabled the fix in the
+    PACKAGED APP (the only place it matters) for a reason unrelated to anything
+    the function does.
+
+    Turning the view's painting off is what makes the NSWindow's colour show, so
+    the two surfaces agree by construction rather than by holding the same hex
+    twice - which is also what `test_the_background_hex_is_written_exactly_once`
+    is protecting from the other side.
+    """
+    body = _code_of("_match_macos_webview_background")
+    assert "int(" not in body, (
+        "a colour is being parsed again - `drawsBackground = False` uses none, "
+        "and a parse that can fail is a new way to silently skip the fix")
+    assert "AppKit" not in body, "AppKit is not needed to turn the background off"
+    fn = _module_functions()["_match_macos_webview_background"]
+    returns = [n for n in fn.body if isinstance(n, ast.Return)] + [
+        n for s in fn.body if isinstance(s, (ast.If, ast.Try))
+        for n in ast.walk(s) if isinstance(n, ast.Return)]
+    falses = [n for n in returns
+              if isinstance(n.value, ast.Constant) and n.value.value is False]
+    assert len(falses) == 2, (
+        f"expected exactly two ways to decline - not macOS, and no Cocoa "
+        f"backend - found {len(falses)}; every extra one is another way the "
+        f"fix silently does not run")
+
+
 def test_the_deprecated_key_is_not_used():
     """`setValue_forKey_(True, 'drawsTransparentBackground')` is what pywebview
     does for `transparent=True`. Probed on macOS 26.6 it makes the system log
