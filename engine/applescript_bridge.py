@@ -1020,6 +1020,21 @@ def office_is_ours_to_quit(app_name: str) -> bool:
     "We never used it, so it is not ours to quit" is also simply the correct
     reading, not merely the safe one; `test_an_unobserved_app_is_not_treated_as_the_users`
     said so in its own docstring while asserting the opposite.
+
+    THE ONE RESIDUAL CASE, CONSIDERED AND DECLINED. This asks "was it running
+    when we looked?", not "did we drive it?" - and `_QUIT_TARGETS` is all three
+    apps on every run. So an app we observed as idle and then never touched (a
+    .pptx-only run leaves Word alone) still counts as ours. If the user opens it
+    MID-RUN it is asked to quit, and the document check is what protects them
+    there - which is sound precisely because no conversion phase ran for that
+    app, so its documents are still describable: a real path blocks, and so do
+    unsaved changes in a never-saved one. Only a pristine blank is quit, and
+    that is the documented behaviour this function was originally written for.
+
+    Recording a separate "we actually drove it" set would close the gap exactly,
+    and was rejected: it is a SECOND fact about the same question, kept in a
+    second place, and two records of one question drifting apart is the entire
+    bug this file has now fixed twice.
     """
     return _office_preexisting.get(app_name) is False
 
