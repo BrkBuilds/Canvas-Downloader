@@ -685,12 +685,57 @@ def test_the_secondary_prefix_rule_is_case_insensitive():
 
     Measured: `Page Uge 13 pensum.html` was placed correctly under New (the
     review screen shows the ENTITY TITLE, "Uge 13 pensum") and was reported as
-    "no oracle placed it in any category"."""
-    cands = _cc()._name_candidates("Page Uge 13 pensum.html")
-    assert "Uge 13 pensum" in cands, (
+    "no oracle placed it in any category".
+
+    ASSERTED THROUGH `_stem`, NOT AGAINST A LITERAL. The first version of this
+    test spelled the expected candidate `"Uge 13 pensum"` with its capital, so
+    it encoded macOS's normcase and FAILED ON WINDOWS - against correct code, on
+    the platform the `.exe` ships from. (Its second assertion, `"uge 13 pensum"
+    not in cands`, was the same mistake inverted: on Windows the lowercase form
+    is exactly what the function correctly produces.)
+
+    `_stem` is the right expectation because it is what builds the keys this
+    candidate has to match - `ui_cat[_stem(token)]` and `log_cat[_norm(n)]`. So
+    both sides fold identically on either platform, and the property under test
+    is "the prefix was stripped", which is platform-independent. Verified to
+    still fail against the pre-fix case-SENSITIVE `stem.startswith(pre)`.
+    """
+    cc = _cc()
+    cands = cc._name_candidates("Page Uge 13 pensum.html")
+    assert cc._stem("Uge 13 pensum") in cands, (
         f"the 'page ' prefix must strip regardless of case; got {sorted(cands)}")
-    # and the original case is preserved, because that is what the screen shows
-    assert "uge 13 pensum" not in cands
+    # ...and it is the ENTITY TITLE that is offered, not the prefixed name only
+    assert cands != {cc._stem("Page Uge 13 pensum.html"), cc._norm("Page Uge 13 pensum.html")}
+
+
+def test_a_stripped_candidate_matches_the_key_the_oracle_actually_builds():
+    """The end-to-end property, stated once: a file on disk called
+    `Page <title>.html` must resolve to the same key the review screen's token
+    produces, or the classification oracle reports "no oracle placed it in any
+    category" for a file the app placed correctly.
+
+    This is what makes the platform question moot - both sides go through the
+    same fold, so the match holds whether or not `normcase` does anything.
+    """
+    cc = _cc()
+    cands = cc._name_candidates("Page Uge 13 pensum.html")
+
+    # O1, the review screen: `ui_cat[_stem(token)]`, and the token IS the entity
+    # title - so the stripped candidate is looked up directly.
+    ui_cat = {cc._stem("Uge 13 pensum"): "new"}
+    assert next((ui_cat[c] for c in cands if c in ui_cat), None) == "new", (
+        "the review screen's key misses the stripped candidate")
+
+    # O2, the debug log: `log_cat[_norm(n)]` carries the FULL name, extension
+    # and all, so the direct lookup cannot hit a stripped stem. That is exactly
+    # why crosscheck falls back to comparing `_stem(n)` against the candidates,
+    # and this asserts the pair works together rather than either half alone.
+    log_cat = {cc._norm("Uge 13 pensum.html"): "new"}
+    assert not any(c in log_cat for c in cands), (
+        "a stripped stem hit the full-name map directly - re-derive this test, "
+        "the fallback below is no longer the thing being relied on")
+    assert next((v for n, v in log_cat.items() if cc._stem(n) in cands), None) == "new", (
+        "the debug log's stem fallback misses the stripped candidate")
 
 
 def test_a_dedup_alias_two_real_names_claim_is_not_evidence():
