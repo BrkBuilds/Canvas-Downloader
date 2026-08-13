@@ -376,10 +376,16 @@ def main(mutants=None, test=None) -> int:
         if src != snapshot[rel]:
             print(f"  !! {rel} CHANGED UNDER THE PASS - aborting at {label!r}")
             print(f"     Something else is editing it: another session, an "
-                  f"editor, or you. Every result after the change would "
-                  f"describe a tree nobody wrote, and restoring would delete "
-                  f"that edit. Nothing else has been touched.")
-            _restore(snapshot)
+                  f"editor, or you. Every result after this point would "
+                  f"describe a tree nobody wrote.")
+            print(f"     NOTHING HAS BEEN RESTORED, deliberately: the change is "
+                  f"on disk and it is not ours, so writing the snapshot over it "
+                  f"is the exact data loss this guard exists to stop. No mutant "
+                  f"is on disk either - the check runs BEFORE the write, and the "
+                  f"previous mutant was already restored.")
+            # Only the bytecode, which may be a mutant's.
+            for d in REPO.rglob("__pycache__"):
+                shutil.rmtree(d, ignore_errors=True)
             return 3
         if old not in src:
             print(f"  !! ANCHOR MISSING  {label}  ({rel})")
