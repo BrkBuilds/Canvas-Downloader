@@ -386,7 +386,7 @@ def _launch_streamlit(port: int | None = None) -> tuple[bool, str, threading.Eve
 _LAUNCH_BG = '#0d1117'
 
 
-def _match_macos_webview_background(hex_color: str = _LAUNCH_BG) -> bool:
+def _match_macos_webview_background() -> bool:
     """Stop the WKWebView flashing WHITE before its first document paints.
 
     MEASURED on macOS 26.6 against the packaged app, screen RECORDED at ~57 fps
@@ -437,7 +437,6 @@ def _match_macos_webview_background(hex_color: str = _LAUNCH_BG) -> bool:
         return False
     try:
         from webview.platforms import cocoa
-        import AppKit
     except Exception as e:                          # pragma: no cover - platform
         logger.debug(f"Cocoa backend unavailable; leaving the web-view "
                      f"background alone: {e}")
@@ -447,13 +446,20 @@ def _match_macos_webview_background(hex_color: str = _LAUNCH_BG) -> bool:
     if getattr(original, '_cd_bg_patched', False):
         return True                                 # idempotent
 
-    try:
-        r = int(hex_color[1:3], 16) / 255.0
-        g = int(hex_color[3:5], 16) / 255.0
-        b = int(hex_color[5:7], 16) / 255.0
-    except (ValueError, IndexError) as e:           # pragma: no cover - constant
-        logger.debug(f"Unusable launch background {hex_color!r}: {e}")
-        return False
+    # NO COLOUR IS PARSED OR APPLIED HERE, and that is the shipped design rather
+    # than an omission. Turning the view's own painting OFF means the NSWindow's
+    # `background_color` - already `_LAUNCH_BG`, already correct, and previously
+    # just never seen - is what shows. So the two surfaces agree by construction
+    # instead of by being given the same hex twice.
+    #
+    # An earlier draft parsed `_LAUNCH_BG` into r/g/b for the
+    # `setUnderPageBackgroundColor_` candidate, and kept the parse (and an
+    # `import AppKit`) after that candidate was measured not to work and
+    # dropped. Both were dead, and not harmlessly so: they sat in front of the
+    # patch behind `return False` paths, so an AppKit that failed to import - or
+    # a `_LAUNCH_BG` written in any form this parse did not accept - would have
+    # silently disabled the fix in the packaged app, which is the only place it
+    # matters, for a reason unrelated to anything it does.
 
     def _init(self, window):
         original(self, window)
@@ -461,7 +467,7 @@ def _match_macos_webview_background(hex_color: str = _LAUNCH_BG) -> bool:
             self.webview.setValue_forKey_(False, 'drawsBackground')
         except Exception as e:                      # pragma: no cover - platform
             # A cosmetic improvement must never stop the window being created.
-            logger.debug(f"Could not set the web-view background colour: {e}")
+            logger.debug(f"Could not turn the web view's own background off: {e}")
 
     _init._cd_bg_patched = True
     cocoa.BrowserView.__init__ = _init
