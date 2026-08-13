@@ -55,6 +55,20 @@ its distinctive strings.
    controls plus real-app runs, not another full sweep.
 4. **Intel Macs are not supported** — arm64-only, stated in the README. A
    documented product decision, not an oversight.
+5. **The 2026-08-13 quit-gate fix has NEVER RUN ON A MAC.** Added after this
+   session ended, from Windows. Three holes were found in the gate D9/D11 built
+   — the run-start launcher never observed, the observation was per PROCESS
+   rather than per RUN, and an unobserved app counted as ours — and all three
+   were reproduced and fixed against a *simulation*: `sys.platform` patched to
+   darwin, with `pgrep` and `_warmup_apps` modelled. That proves the DECISION
+   path and nothing else. The half it cannot prove is the one that makes a
+   wrong decision destructive: that a conversion phase leaves Word's documents
+   undescribable, so the document check — the only remaining defence — cannot
+   see the mistake. That is D9's measurement, not re-measured.
+   **`MAC_RUNBOOK.md` Phase M1 step 8 is the procedure**, and the case that
+   matters is two runs in one session with a dirty document opened in between.
+   Windows evidence: full suite 3719 passed, 17/17 mutations,
+   16/16 scenario checks. None of that is a Mac.
 
 ### What still needs a Mac, and what does not
 

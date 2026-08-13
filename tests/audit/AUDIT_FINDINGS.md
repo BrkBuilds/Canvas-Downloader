@@ -11,7 +11,69 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260811_155557_macos-26-v2.0.2` on 2026-08-12.
 
-**9 open** · 136 total · 72 fixed · 23 accepted · 1 wontfix · 31 invalid
+**10 open** · 137 total · 72 fixed · 23 accepted · 1 wontfix · 31 invalid
+
+---
+
+### The per-run Office quit observation has never run on a Mac - the two-run data-loss path is verified only by a Windows simulation
+<!-- fp:989c128a238d -->
+
+**Status**: open
+**Severity**: high
+**Category**: conversion
+**Oracles**: none - this entry EXISTS because no oracle has seen it
+**First seen**: 2026-08-13 (windows-offline-followup)
+**Last seen**: 2026-08-13 (windows-offline-followup)
+**Occurrences**: 1
+**Scenario**: mac_office_quit_scope
+
+**Detail**:
+
+HAND-ADDED, from Windows, in the same commit as the fix it describes - so the
+gap is in the work list rather than only in a commit message. It is filed at
+HIGH because the code path it guards sends `quit saving no` to an application
+that may hold a student's unsaved document.
+
+WHAT WAS FIXED (2026-08-13). Three holes in the quit gate D9/D11 built, each
+reproduced against the real functions:
+
+  1. `first_run_permission_setup` launches all three Office apps and never
+     recorded who was already open. It runs at RUN START in both flows,
+     reaching `prime_office_automation` only per course - so on a machine whose
+     Automation grants are not yet recorded (a NEW USER'S FIRST RUN) the later
+     observation saw our own launch, every app read as the user's, nothing was
+     quit, and the Recents purge declined too.
+  2. `reset_office_priming` cleared every other piece of per-run Office state
+     and not this one, so run 2 of a session answered with run 1's facts:
+     run 1 launches Word and records "ours"; the user then opens Word and
+     starts an unsaved essay; run 2 still reads "ours" and the teardown quits
+     it `saving no`.
+  3. An app never observed at all counted as ours - reachable by cancelling
+     before priming ran, and the teardown fires on the cancelled screens too.
+
+WHAT IS AND IS NOT PROVEN. Every reproduction patched `sys.platform` to darwin
+and modelled `pgrep` and `_warmup_apps`. That proves the DECISION path: which
+app the gate calls ours, and when. It does NOT prove the other half of the
+chain, which is what makes a wrong decision destructive - that a conversion
+phase leaves Word's documents undescribable, so `_idle_quit_script` cannot
+tell whose they are and the document check (the only remaining defence) is
+blind. That is the 2026-08-12 measurement on Tahoe, not re-measured here.
+
+Windows evidence, none of which is a Mac: full suite 3719 passed, 17/17
+mutations of the real code caught, 16/16 scenario checks (first run cold and
+busy, two runs with the user opening and closing an app in between,
+unobserved, the teardown's actual quit targets, the explicit policy, the
+thread race), architecture audit 0 violations.
+
+HOW TO CLOSE IT: `MAC_RUNBOOK.md` Phase M1 step 8 - three checks, of which (b)
+is the one that matters: two runs in ONE session with a dirty document opened
+in between, without restarting the app. `scripts/verify_office_end_to_end.py`
+drives the cold/busy pair and is the right shape to extend; what it does not
+do is run the sequence twice in one process, which is the whole point.
+`pkill`ing between runs is not a substitute - the bug is about state inside
+one process.
+
+**Notes**:
 
 ---
 
