@@ -159,9 +159,16 @@ CONC_MUTANTS = [
     ("token appended AFTER the suffix", AB,
      'staged_src = work / (f"src_{_tok}" + src.suffix)',
      'staged_src = work / ("src" + src.suffix + _tok)'),
+    # RE-ANCHORED 2026-08-13. `70ce78c` inserted `_note_office_preexisting`
+    # between the `with` and the `return`, which invalidated the original
+    # anchor - so from that commit onward this mutant could not run on any
+    # platform and the recorded "8/9 caught" stopped being reproducible. The
+    # quit set was re-anchored at the time (`7a2a674`); this one was not.
+    # `tests/test_mutation_anchors.py` now fails the SUITE when an anchor goes
+    # stale, so it cannot rot silently again.
     ("run_applescript stops taking the lock", AB,
-     "    with _office_app_lock(app_name):\n        return _run_applescript_locked(",
-     "    if True:\n        return _run_applescript_locked("),
+     "    with _office_app_lock(app_name):\n        # Under the lock",
+     "    if True:\n        # Under the lock"),
     ("lock made global instead of per app", AB,
      'f"canvas_dl_office_{app_name.lower()}.lock"', '"canvas_dl_office.lock"'),
     ("lock never actually acquired", AB,
@@ -240,13 +247,13 @@ QUIT_MUTANTS = [
      '                    if isOurs then\n                        set pristine to true',
      '                    if False then\n                        set pristine to true'),
     ('preexisting gate removed from the quit loop', AB,
-     '            if short and office_was_preexisting(short):',
+     '            if not (short and office_is_ours_to_quit(short)):',
      '            if False:'),
     ("preexisting probe defaults to NOT the user's on failure", AB,
-     "    except Exception:       # noqa: BLE001\n        running = True      # on doubt, treat it as the user's and never quit it",
-     '    except Exception:       # noqa: BLE001\n        running = False'),
+     "        except Exception:       # noqa: BLE001\n            running = True      # on doubt, treat it as the user's and never quit it",
+     '        except Exception:       # noqa: BLE001\n            running = False'),
     ('observation re-taken on every conversion', AB,
-     '    if app_name in _office_preexisting:\n        return',
+     '    if app_name in _office_preexisting:     # fast path: no lock once answered\n        return',
      '    if False:\n        return'),
     ('observation moved outside the lock', AB,
      '        _note_office_preexisting(app_name)\n        return _run_applescript_locked(',
@@ -257,6 +264,38 @@ QUIT_MUTANTS = [
     ('HFS path fallback back to slash-only', AB,
      'if fn contains "/" or fn contains ":" then set hasPath to true',
      'if fn contains "/" then set hasPath to true'),
+
+    # --- per-RUN scoping, 2026-08-13 -------------------------------------
+    ('the observation survives a run boundary (back to per-process)', AB,
+     '    with _office_observe_lock:\n        _office_preexisting.clear()',
+     '    pass'),
+    ('the per-run clear is not serialised against the write', AB,
+     '    with _office_observe_lock:\n        _office_preexisting.clear()',
+     '    _office_preexisting.clear()'),
+    ('an UNOBSERVED app is ours again (the boolean-with-a-default)', AB,
+     '    return _office_preexisting.get(app_name) is False',
+     '    return not bool(_office_preexisting.get(app_name, False))'),
+    ('the run-start launcher stops observing', AB,
+     '    observe_office_before_launch()\n\n    if _first_run_batch_started:',
+     '    if _first_run_batch_started:'),
+    ('the run-start observation moves BELOW the once-per-process guard', AB,
+     '    observe_office_before_launch()\n\n    if _first_run_batch_started:\n        return False',
+     '    if _first_run_batch_started:\n        return False\n    observe_office_before_launch()'),
+    ('priming stops observing', AB,
+     '    observe_office_before_launch()\n\n    to_launch = []',
+     '    to_launch = []'),
+    ('priming observes only the apps it is about to launch', AB,
+     '    for _key, _ms, short in _APP_TRIPLES:\n        _note_office_preexisting(short)',
+     '    return'),
+    ('the launcher itself stops observing', AB,
+     '    observe_office_before_launch()\n\n    if write_macro_pref:',
+     '    if write_macro_pref:'),
+    ('the teardown inherits the undescribable policy again', AB,
+     '                     _idle_quit_script(app, collection, undescribable_is_ours=True)],',
+     '                     _idle_quit_script(app, collection)],'),
+    ('the undescribable DEFAULT goes back to the unsafe answer', AB,
+     '                      undescribable_is_ours: bool = False) -> str:',
+     '                      undescribable_is_ours: bool = True) -> str:'),
 ]
 
 
