@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260811_155557_macos-26-v2.0.2` on 2026-08-12.
 
-**71 open** · 136 total · 35 fixed · 30 invalid
+**9 open** · 136 total · 72 fixed · 23 accepted · 1 wontfix · 31 invalid
 
 ---
 
@@ -38,7 +38,7 @@ Renamed, row dropped, and another file shares its size and extension. The unique
 ### All three Office converters can close the USER'S document without saving
 <!-- fp:352362c84bf8 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: conversion
 **Oracles**: O2,O3
@@ -120,14 +120,16 @@ conversion failures) vs O3 (what is on disk / what would be closed). Severity
 HIGH on consequence: silent loss of a user's unsaved work in another
 application.
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: Shipped in `066b6da` (D1). All three converters bind the document by `name of active <klass>` against the staged basename and refuse anything else with -30001; the error handler no longer closes a document it did not open. Reproduced pre-fix as 1 -> 0 user documents and fixed as 1 -> 1, with a converting control in both. 15/15 mutations caught; re-verified on Windows 2026-08-13.
 
 ---
 
 ### Unexpected bridged_error in debug log: 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx  Conversion failed - 710
 <!-- fp:3f6131f0f3a2 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -140,14 +142,16 @@ application.
 
 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx  Conversion failed twice
 <!-- fp:ddf8db2a5ddb -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -160,14 +164,16 @@ application.
 
 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx  Conversion failed twice
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Uploa
 <!-- fp:68ede2da0e43 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -180,14 +186,16 @@ application.
 
 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: 2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_uploa
 <!-- fp:b6b66eb33701 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -200,14 +208,16 @@ application.
 
 2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: 2025 7.lektion 31.marts .pptx  Conversion failed - 710:716: execution error: Microsoft Pow
 <!-- fp:1f62689d78bf -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -220,14 +230,16 @@ application.
 
 2025 7.lektion 31.marts .pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx 
 <!-- fp:1dc7bf542396 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -240,14 +252,16 @@ application.
 
 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: Forandring i organisationer_video1_upload_2025.pptx  Conversion failed - 710:716: executio
 <!-- fp:23234eb36bd0 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -260,14 +274,16 @@ application.
 
 Forandring i organisationer_video1_upload_2025.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: Forelæsning 22 - Cloud &amp; Security 101.pptx  Conversion failed - 710:716: execution err
 <!-- fp:21fe1446d2b5 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -280,14 +296,16 @@ Forandring i organisationer_video1_upload_2025.pptx  Conversion failed - 710:716
 
 Forelæsning 22 - Cloud &amp; Security 101.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx  Conversion failed - 710:716: execution er
 <!-- fp:5177e5643619 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -300,14 +318,16 @@ Forelæsning 22 - Cloud &amp; Security 101.pptx  Conversion failed - 710:716: ex
 
 Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: Microsoft PowerPoint is not installed or could not be launched.  skipping remaining 57 Pow
 <!-- fp:e864ab10ed83 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -320,14 +340,16 @@ Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx  Conversion failed - 710:716: e
 
 Microsoft PowerPoint is not installed or could not be launched.  skipping remaining 57 PowerPoint file(s)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716: execution 
 <!-- fp:4887012ff14c -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -340,14 +362,16 @@ Microsoft PowerPoint is not installed or could not be launched.  skipping remain
 
 Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (app_missing): 710:716: execution error: Microsoft PowerPo
 <!-- fp:e05c7d6a0ca4 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -360,14 +384,16 @@ Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716:
 
 [AppleScript] PowerPoint failed (app_missing): 710:716: execution error: Microsoft PowerPoint got an error: Application isn’t running. (-600)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 710:716: execution error: Microsoft PowerPoint go
 <!-- fp:51a25192e4d2 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -380,14 +406,16 @@ Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716:
 
 [AppleScript] PowerPoint failed (other): 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_error in debug log: Øvelsesslides_mål og strategi_XA-1.pptx  Conversion failed - Microsoft PowerPoint is not i
 <!-- fp:7bf0f1751dca -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: robustness
 **Oracles**: O2
@@ -400,14 +428,16 @@ Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716:
 
 Øvelsesslides_mål og strategi_XA-1.pptx  Conversion failed - Microsoft PowerPoint is not installed or could not be launched.
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### The case half of _path_key is a no-op on macOS, so a case-only rename still drops a tracked file out of the tracked set
 <!-- fp:f3cdebbc44ff -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: classification
 **Oracles**: O3,O4
@@ -420,7 +450,10 @@ Slides (2) Motivationsfaktorer forelæsning 2.pptx  Conversion failed - 710:716:
 
 REAL PRODUCT DEFECT on macOS, in a primitive whose Unicode half I verified as working. CLAUDE.md justifies core.sync_manager._path_key = normcase(normpath(NFC(s))) with: 'Case - a case-only rename (Notes.pdf -> notes.pdf) is legal and invisible on Windows/macOS, but the raw strings stop matching. Measured: the tracked file drops out of the tracked set, so it is offered to the healer as an orphan AND inflates the untracked files count the review screen shows.' That fix works on Windows only: os.path.normcase LOWERCASES on Windows and is IDENTITY on POSIX. MEASURED here: os.path.normcase('AbC') -> 'AbC'; _path_key('Notes.pdf') == _path_key('notes.pdf') -> False; _path_key('Tema 1/Slides.PDF') == _path_key('tema 1/slides.pdf') -> False - while the boot volume IS case-insensitive (wrote CaseProbe.txt, and (dir/'caseprobe.txt').exists() -> True, i.e. both names are the SAME FILE). So on macOS the documented symptom is still live: a case-only rename makes the manifest row dangle, offers the file as 'deleted locally' (a re-download of a file that is already there under a different spelling), and inflates the untracked count whose stated purpose is to match what the user sees in the folder. No data loss - the app never deletes on a Canvas-side diff. Two Windows-written tests fail here for the same underlying reason and are the trail that led to it: test_library.py::test_save_pair_matches_link_across_path_spelling and test_pair_labels.py::test_pair_key_normalises_folder_and_course_id, both asserting that 'C:\Courses\Makro' and 'c:/courses/makro' resolve to one key. NOT FIXED, deliberately, and this is the important part: the obvious fix - always .lower() in _path_key - is NOT safe. _path_key drives heal_manifest's local-to-local matching, the untracked count and analyze_course, and on a case-SENSITIVE volume (a case-sensitive APFS or HFS+ format, or an ext4 external drive - and course folders do live on external drives, which is why the NFD case matters at all) 'Notes.pdf' and 'notes.pdf' are two different files. Folding them would let a heal bind a manifest row to the WRONG file, which is data-integrity territory and strictly worse than today's over-reporting. The correct fix is to fold case only when the containing volume is case-insensitive, which needs a per-volume probe (pathconf/_PC_CASE_SENSITIVE or a write-probe, cached per mount) rather than a global lower(), and that is a change I am not willing to make blind at the end of a release. RECOMMENDED: add the volume probe, cache it per mount point, and pin both directions - a case-only rename adopted on the case-insensitive boot volume, and two genuinely distinct names kept apart on a case-sensitive one. REAL-FOLDER CONFIRMATION, measured on the synced 43660 folder: took a tracked row ('Tema 4 .../Maurer_Introduction to Change.pdf'), renamed the file to 'maurer_introduction to change.pdf' (two-step, since a case-only rename needs it on a case-insensitive volume), and asked the manifest. The file's REAL spelling is NOT in the tracked set (_path_key miss), while the row's stored path STILL OPENS because the volume is case-insensitive. So the precise macOS symptom is not a dangling row and not a 'deleted locally' offer - it is DOUBLE COUNTING: the same file is tracked under the old spelling and simultaneously counted as UNTRACKED under its real one, inflating the very count whose stated purpose is to match what the user sees in the folder. Milder than the Windows description in CLAUDE.md, and still wrong. The file was restored to its original spelling afterwards.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: Shipped 2026-08-10 and hardened in `e64e800`. `_path_key` folds case behind `_case_insensitive_volume()`, a read-only per-volume probe that flips a CHILD entry (a directory's own name lives on its PARENT volume) and now refuses at a mount point, so an EMPTY case-sensitive volume can no longer answer 'insensitive' and merge two files onto one manifest row. 4/4 mutations caught; re-verified on Windows 2026-08-13.
+
 > Not observed in the latest run.
 
 ---
@@ -428,7 +461,7 @@ REAL PRODUCT DEFECT on macOS, in a primitive whose Unicode half I verified as wo
 ### Packaged .app fails codesign --verify --strict: pync's vendored nested terminal-notifier.app is path-mangled by PyInstaller
 <!-- fp:b7bc37bfb6fc -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: config
 **Oracles**: O3,O2
@@ -441,7 +474,10 @@ REAL PRODUCT DEFECT on macOS, in a primitive whose Unicode half I verified as wo
 
 PRODUCT/BUILD finding, first time the macOS bundle's signature has been verified. Built with 'pyinstaller --clean --noconfirm Canvas_Downloader_macOS.spec' (rc=0, 266 MB) and signed exactly as CLAUDE.md documents (codesign --force --deep -s - --entitlements entitlements.mac.plist). The signature then does NOT verify: 'codesign --verify --strict' rc=1, 'the main executable or Info.plist must be a regular file (no symlinks, etc.) In subcomponent: .../Contents/Frameworks/pync/vendor/terminal-notifier-2__dot__0__dot__0/terminal-notifier__dot__app/Contents/MacOS/terminal-notifier'. CAUSE: pync vendors a nested terminal-notifier.app and PyInstaller rewrites '.' to '__dot__' in those directory names, so 'terminal-notifier__dot__app' is no longer a valid bundle - its Info.plist/executable relationship is broken and strict verification of the WHOLE app fails. Both a correct 'terminal-notifier.app' and the mangled copy are present, under two mangled version directories. NOT OVERCLAIMED: 'spctl -a -vv' also says 'rejected', but that is expected for ANY ad-hoc signature (no Developer ID) and is not evidence of this defect. The app LAUNCHES and runs correctly despite it - verified by the operator's own screenshot: splash, login card, onboarding panel and institution picker all render correctly in WKWebView. CONSEQUENCE: harmless for today's ad-hoc distribution; NOTARIZATION would reject this bundle, so it blocks any future Developer-ID release, and it means '--force --deep' silently produces an unverifiable artifact. PROPOSED FIX (not applied - build-policy change, and the notification chain deserves care): exclude pync in scripts/build_excludes.py. It is fallback #3 of 4 in engine/notifications.py; CLAUDE.md documents it as unreliable on arm64 Sequoia; MAC_RUNBOOK says not to report it doing nothing; the PRIMARY UNUserNotificationCenter path is verified working by mac_smoke on this machine; the #4 osascript fallback was fixed 2026-08-10. Cost 180 KB. Stripping only the vendored .app is worse - it leaves pync importable but broken at runtime.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: pync is no longer bundled: `Canvas_Downloader_macOS.spec` drops it from `collect_all` AND from `binaries`, with the reason recorded inline (PyInstaller rewrites its vendored `terminal-notifier.app` to `__dot__app`, which fails `codesign --verify --strict` for the WHOLE bundle). Verified rc=0 with the `apple-events` entitlement intact; the notification path it served was fallback 3 of 4 and its import was already guarded.
+
 > Not observed in the latest run.
 
 ---
@@ -449,7 +485,7 @@ PRODUCT/BUILD finding, first time the macOS bundle's signature has been verified
 ### RELEASE GATE: version.py still says 2.0.1, so a v2.0.2 build tells every user on every launch that an update is available - to the release they are already running
 <!-- fp:240733a9e166 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: config
 **Oracles**: O1 UI vs O3 disk (version.py + git tags)
@@ -461,7 +497,10 @@ PRODUCT/BUILD finding, first time the macOS bundle's signature has been verified
 
 The sidebar of the running app reads 'v2.0.1' (screenshot fda_06_today_card.png, bottom left) while this audit is the final gate before v2.0.2 (tests/audit/MAC_AUDIT_PROMPT.md line 10) and v2.0.1 is ALREADY a shipped git tag. version.py has not been bumped. Four consequences, all measured or read off the source rather than supposed: (1) ui/auth.py:3915 prints the wrong version in the sidebar - observed. (2) ui/update_banner.py:97 computes update_available = _is_newer(github_tag, __version__); driven against the real function, _is_newer('2.0.2','2.0.1') returns True, so once the release is tagged v2.0.2 on GitHub EVERY user of that build sees the update notice permanently, pointing at the build they are running, on every launch. It cannot self-clear. (3) core/health_log.py:162 and core/canvas_debug.py:293 stamp diagnostics with 2.0.1, so every support report from the new release is mis-attributed to the old one - which matters most for the defects this very audit fixed. (4) CLAUDE.md records version.py as read by CI and both build specs, so the installer and bundle metadata would be stamped 2.0.1 too. Fix is one line, but it has to happen before the tag, and nothing in the build or the test suite currently asserts that version.py leads the newest tag.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: `version.py` reads 2.0.2 and leads every shipped tag (v2.0.1 is the newest). Guarded from now on by `tests/test_version_leads_tags.py`. Re-verified on Windows 2026-08-13.
+
 > Not observed in the latest run.
 
 ---
@@ -469,7 +508,7 @@ The sidebar of the running app reads 'v2.0.1' (screenshot fda_06_today_card.png,
 ### Office staging preserved the FILENAME while shortening the directory, so a Canvas file named past ~164 bytes silently failed to convert on macOS - the limit is Word's ~255-char TOTAL path
 <!-- fp:7674d2b31d38 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: conversion
 **Oracles**: O3 disk (real Word converter,control per case) vs O2 log
@@ -506,7 +545,10 @@ A TRAP worth not repeating: the unstaged path is not a usable control for any of
 
 Guarded by tests/test_office_staging_short_names.py (5 tests), which force the staging branch on whatever the host platform is - off macOS the container lookup returns None and staging degrades to a pass-through, so an unpatched test would assert nothing while appearing to cover the fix.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: Shipped 2026-08-10. `office_container_stage` stages as `src_<tok>.<ext>` / `out_<tok>.<ext>` - 15 bytes - instead of preserving `src.name`, so Word's ~255-byte TOTAL staged-path budget is no longer spent on the filename. A 240-byte name converts. The token was added in `9854a8d` for a second reason (a constant basename made `our_document_test` answer yes for another instance's document) and `tests/test_office_staging_short_names.py` still pins the <= 16 ceiling.
+
 > Not observed in the latest run.
 
 ---
@@ -514,7 +556,7 @@ Guarded by tests/test_office_staging_short_names.py (5 tests), which force the s
 ### convert_pptx enabled but 2 source file(s) survived conversion
 <!-- fp:73bd0e4c557b -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: conversion
 **Oracles**: O1,O3
@@ -527,14 +569,16 @@ Guarded by tests/test_office_staging_short_names.py (5 tests), which force the s
 
 This converter is documented to replace its source. A surviving source at module level means the conversion ran and failed for that file - check whether the failure was reported to the user or only swallowed.
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: Same run, same cause: the two surviving `.pptx` sources are the files PowerPoint crashed on (scenario m032_c43660). A source survives when the conversion fails, which is correct - the delete is gated on `pdf_looks_real`. The failure WAS reported rather than swallowed; what was wrong is that it should not have happened. See the D4/D6 note on the conversion-failure rows above, and `f2692dd`, which additionally stops a failed conversion promoting its stub over a good PDF from a previous run.
 
 ---
 
 ### 2 over-cap file(s) were skipped without an ignored row
 <!-- fp:5b1db04502d0 -->
 
-**Status**: open
+**Status**: invalid
 **Severity**: medium
 **Category**: persistence
 **Oracles**: O5,O4
@@ -547,7 +591,9 @@ This converter is documented to replace its source. A surviving source at module
 
 Nothing records that these were deliberately skipped, so the next sync lists them as new again and the Sync Hub cannot offer them for restore.
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: CHECKER DEFECT, fixed in `6bad460` - not a product defect. The check built its over-cap set from the whole Files tab with no regard for the folder's `file_filter`, but a file outside the folder's SCOPE never reaches the size gate at all (`_download_file_async` returns above it), so there is no skip to record and no ignored row to expect. Measured on the rows that reported it (m025/m031, `file_filter=study`, cap 5 MB): both 'unrecorded' ids were 12.5 MB `.jpg` files, and `file_in_scope(name, 'study')` is False for each. It was asking the app to recreate a bug it deliberately removed - out of scope is NOT the same as ignored.
 
 ---
 
@@ -575,7 +621,7 @@ REFINES the earlier 'attribution uncertain' note by separating two phenomena I h
 ### Architecture Rule 4 has regressed from 0 to 9, and 6 of them are deliberate audit-ignore comments off by ONE LINE
 <!-- fp:238af9b928ce -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2,O3
@@ -588,7 +634,10 @@ REFINES the earlier 'attribution uncertain' note by separating two phenomena I h
 
 CROSS-PLATFORM, not macOS-specific - surfaced because the full unit suite was run here for the first time and tests/test_architecture_audit.py::test_repository_passes_its_own_audit fails. CLAUDE.md states Rule 4 is 'a real gate again (0 unsuppressed violations)'; it now reports 12, which this session reduced to 9. WHAT I FIXED (provably correct, 3 of the 12): ui/auth.py escapes with 'from html import escape as _he', and _SAFE_CALL_NAMES whitelists escaper ALIASES by name ('escape', 'html_escape', '_html_escape') but not '_he' - so three already-escaped interpolations read as unescaped. Added '_he'. The list's own comment records this having happened before with another private alias, so name-whitelisting has this cost by design; a named alias is still better than a suppression comment, which would also hide a genuine miss on the same line. WHAT I DID NOT FIX, and why: of the remaining 9, SIX carry a deliberate '# audit-ignore: <var> is a local filesystem path' comment that sits EXACTLY ONE LINE BELOW the reported violation - ui/sync_dialogs.py ignore at 1172 vs violation at 1171, ui/hub_dialog.py 1066 vs 1065 and 1272 vs 1271. The rule is documented as 'on or above a flagged line', so an ignore below suppresses nothing. The consistent off-by-one points at line attribution for a multi-line implicit f-string concatenation (the flagged expression is on one fragment, the author's comment on the next), which means a naive fix - moving the comments - could break on a different Python version, since PEP 701 changed f-string tokenisation in 3.12 and this machine runs 3.11. That needs verifying on both versions, which is off-machine work, so it is recorded rather than guessed at. RISK ASSESSMENT of the 9: none is Canvas-controlled data. Six are local folder names/paths (self-inflicted at worst - a user would have to name a folder with markup), and the other three are app-controlled (a CSS spacing value from _row_gap(), a metric label, and pre-built HTML rows in ui/panopto_page.py). So the gate is broken but the exposure is low. RECOMMENDED: decide whether the suppression window should include the line below for multi-line f-strings, or move the six comments and pin the behaviour with a test that runs on 3.11 and 3.12.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: `python scripts/verify_architecture.py` reports PASS with 0 violations across Rules 4-10 (65 python + 8 css files, 28 suppressed), and `tests/test_architecture_audit.py::test_repository_passes_its_own_audit` is green. Re-verified on Windows 2026-08-13.
+
 > Not observed in the latest run.
 
 ---
@@ -617,7 +666,7 @@ Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full
 ### On macOS a NORMAL quit is never recorded as a clean exit, so the health log reports every session as a crash
 <!-- fp:75d3790bac46 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2,O3
@@ -630,7 +679,10 @@ Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full
 
 REAL PRODUCT DEFECT, reachable only from a packaged Mac app. start.py wraps webview.start() in try/finally and calls core.health_log.session_end(reason) from the finally, with a comment stating 'this marker is what the next launch reads to decide whether the app died or exited' and that its absence 'is the entire signal the health log carries'. On macOS the finally never runs: a Quit Apple event (what Cmd-Q and the Quit menu send) terminates the process from inside Cocoa's run loop without unwinding the Python stack. MEASURED, controlled, on the ad-hoc-signed bundle built here: launch -> pid 12966, state file reads clean_exit=False while running (correct, _save_state writes that on every sample); quit via 'tell application "Canvas Downloader" to quit'; process confirmed gone; state file STILL reads clean_exit=False with exit_reason=None. Three consecutive launches earlier the same hour each logged 'PREVIOUS SESSION DID NOT EXIT CLEANLY', including pid=6737 which had been quit gracefully after 788s of idle uptime. CONSEQUENCES: (1) the health log's central signal is permanently wrong on macOS - a genuine crash is indistinguishable from a normal Tuesday, on the platform CLAUDE.md itself calls out as having 'no crash-telemetry channel' and 'the least-tested path this app has'. (2) core.health_log._reap_recorded_orphans is armed on EVERY launch rather than after a real crash. The liveness guard added 2026-08-07 stops it destroying a live session's children, so this is not dangerous today - but it means that guard is now load-bearing in normal use rather than an edge case. (3) _terminate_child_processes() sits in the SAME finally, so on a normal quit it does not run either; no orphans were observed in practice, but the reaping that is supposed to happen before the hard exit is being skipped. FIXED (commit ad13d00): start.py now hooks pywebview's `closed` event, which fires from the Cocoa delegate - a path the Quit event does reach - and routes it through an idempotent `_shutdown` guarded by a threading.Event, so the ordinary window-close route (where start() DOES return and the finally also runs) still closes the record exactly once. VERIFIED on a rebuilt, re-signed bundle: after a normal quit the state file reads clean_exit=True and the log carries 'SESSION END (clean) uptime=14s'; the NEXT launch's SESSION START is followed by NO post-mortem line, where every earlier launch had one. The app still exits promptly and leaves nothing behind - two processes visible 6s after the quit were teardown lag and were gone shortly after. tests/test_startup.py, test_health_log.py and test_orphan_reaper_liveness.py all pass (60).
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: `start.py` now hooks `_main_window.events.closed` to an idempotent `_shutdown()` guarded by a `threading.Event`, so a Cocoa Quit event - which terminates from inside the run loop without unwinding the Python stack - still closes the health record.
+
 > Not observed in the latest run.
 
 ---
@@ -659,7 +711,7 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 ### Unexpected bridged_warning in debug log: PDF conversion failed for 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.ppt
 <!-- fp:2141f8bfb693 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2
@@ -672,14 +724,16 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 PDF conversion failed for 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_warning in debug log: PDF conversion failed for 2024_Lektion uge 46_1 Organisationer i et foranderligt perspekti
 <!-- fp:3cca535595db -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2
@@ -692,14 +746,16 @@ PDF conversion failed for 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3
 
 PDF conversion failed for 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_warning in debug log: PDF conversion failed for 2025 7.lektion 31.marts .pptx: 710:716: execution error: Microso
 <!-- fp:2f6dd44da632 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2
@@ -712,14 +768,16 @@ PDF conversion failed for 2024_Lektion uge 46_1 Organisationer i et foranderligt
 
 PDF conversion failed for 2025 7.lektion 31.marts .pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_warning in debug log: PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over 
 <!-- fp:721e4990f066 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2
@@ -732,14 +790,16 @@ PDF conversion failed for 2025 7.lektion 31.marts .pptx: 710:716: execution erro
 
 PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_warning in debug log: PDF conversion failed for Forandring i organisationer_video1_upload_2025.pptx: 710:716: ex
 <!-- fp:8e9ab25f1ea4 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2
@@ -752,14 +812,16 @@ PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og ove
 
 PDF conversion failed for Forandring i organisationer_video1_upload_2025.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_warning in debug log: PDF conversion failed for Forelæsning 22 - Cloud & Security 101.pptx: 710:716: execution e
 <!-- fp:eb62775757c5 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2
@@ -772,14 +834,16 @@ PDF conversion failed for Forandring i organisationer_video1_upload_2025.pptx: 7
 
 PDF conversion failed for Forelæsning 22 - Cloud & Security 101.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_warning in debug log: PDF conversion failed for Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx: 710:716: execut
 <!-- fp:23340d4cc103 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2
@@ -792,14 +856,16 @@ PDF conversion failed for Forelæsning 22 - Cloud & Security 101.pptx: 710:716: 
 
 PDF conversion failed for Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_warning in debug log: PDF conversion failed for Slides (2) Motivationsfaktorer forelæsning 2.pptx: 710:716: exec
 <!-- fp:5a8a4afe9135 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2
@@ -812,14 +878,16 @@ PDF conversion failed for Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx: 710:
 
 PDF conversion failed for Slides (2) Motivationsfaktorer forelæsning 2.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### Unexpected bridged_warning in debug log: PDF conversion failed for Øvelsesslides_mål og strategi_XA-1.pptx: Microsoft PowerPoint is
 <!-- fp:48aebaa68260 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O2
@@ -832,14 +900,16 @@ PDF conversion failed for Slides (2) Motivationsfaktorer forelæsning 2.pptx: 71
 
 PDF conversion failed for Øvelsesslides_mål og strategi_XA-1.pptx: Microsoft PowerPoint is not installed or could not be launched.
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
 ### mac_eyes dialogs cried wolf: Tahoe's phantom alert carries a title, macOS 15's did not
 <!-- fp:1006b5789ca8 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O1,O3
@@ -864,14 +934,16 @@ FIX: discriminate on AGE, which is exactly what the original comment's reasoning
 
 VALIDATED IN BOTH DIRECTIONS against the live machine and in tests: the real 84-minute phantom is suppressed (and reported as ignored); a YOUNG window with the SAME owner and SAME title still alarms; the untitled macOS 15 shape still suppresses; a different owner is never masked; unknown age alarms. tests/test_mac_audit_tooling.py gains 3 tests; all 6 mutations of the real code are caught (revert to empty-title-only, fail-closed on unknown age, flipped comparison, suppress-every-owner, drop the pid, rename the report line). Full file suite 42 passed / 1 skipped.
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: Shipped in `13c70c7`. `_is_phantom_alert` was scoped to an EMPTY title on macOS 15 evidence; the same phantom carries the title 'Screen Recording' on Tahoe, so the suppression missed it entirely. `mac_eyes dialogs` now suppresses it and PRINTS that it did. Pinned by `tests/test_mac_audit_tooling.py`.
 
 ---
 
 ### After a PowerPoint crash-restart, every Office conversion shows a full-screen window
 <!-- fp:774fb9eb861b -->
 
-**Status**: open
+**Status**: wontfix
 **Severity**: medium
 **Category**: ui-truth
 **Oracles**: O1,O2
@@ -955,14 +1027,16 @@ ORACLE PAIR: O1 (the operator's screen - MER dialog screenshotted, then a
 full-screen PowerPoint window per file) vs O2 (the run's own logs, which record
 the conversions completing normally and say nothing about a window).
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: DELIBERATE, 2026-08-12. Hiding our own document's window requires locating it, and every locating form is an ENUMERATION - two of which were measured to wedge the app hard enough that Microsoft Error Reporting offered to restart it, which is the very thing that puts an Office window on screen. A fix whose mechanism can cause the defect it treats is not a fix. The root cause is addressed by D1/D5/D6 (MER only restarted PowerPoint because it had crashed), and the post-fix real-app run measured 0 visible windows and 0 focus steals across a full conversion phase, 353 samples. If it is reported again, re-measure with `scripts/measure_office_window.py --state visible` FIRST - a cold-app control passes with the bug fully present, which is the mistake the original measurement made.
 
 ---
 
 ### The first-run macOS notice said 'Click Allow / OK on each', but the Accessibility prompt it raises has NO Allow button - and denying it is harmless, which the copy never said
 <!-- fp:6ac20c9e6ed2 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: ui-truth
 **Oracles**: O1 UI (operator screenshot of the real app) vs the source
@@ -992,7 +1066,10 @@ FIX: one shared constant, engine.applescript_bridge.TCC_FIRST_RUN_NOTICE, used b
 
 STILL TO DO OUTSIDE THIS REPO: the docs site's macOS setup page does not mention this dialog at all. It should list the same three-way distinction - Automation prompts (Allow), folder access (OK), and Accessibility (optional, needs a System Settings toggle, safe to deny).
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: The prompt the copy could not describe is GONE: the System Events `set visible ... to false` that raised the Accessibility dialog was deleted 2026-08-10 after measurement showed doing nothing is the quietest option (visible 0/7 samples, against 2/11 with the hide). Every prompt the app now raises - Automation, and the macOS 15 folder powerbox - can be answered in place, which is what makes `TCC_FIRST_RUN_NOTICE`'s 'Click Allow or OK on each' true. Guarded by `tests/test_macos_no_accessibility_permission.py`.
+
 > Not observed in the latest run.
 
 ---
@@ -1150,7 +1227,7 @@ WHAT WAS FIXED is the audit's own expectation, which produced 6 spurious CRITICA
 ### _path_key's case half was a no-op on the macOS default volume, which IS case-insensitive - now folded, gated on a per-volume probe
 <!-- fp:7332efa73631 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: low
 **Category**: persistence
 **Oracles**: O3 disk (real case-sensitive and case-insensitive volumes)
@@ -1174,7 +1251,10 @@ BOTH DIRECTIONS VERIFIED ON REAL VOLUMES, not simulated:
 
 Guarded by tests/test_path_key_case_folding.py (7), which pin both directions, that the probe never raises on a missing or odd path (it runs inside the analysis loop, where an exception would take out the whole course), that NFC and normpath were not displaced by the fold, and - not a tautology - that the real default macOS volume is still detected as insensitive, so the fix keeps reaching people.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: Shipped 2026-08-10 and hardened in `e64e800`. `_path_key` folds case behind `_case_insensitive_volume()`, a read-only per-volume probe that flips a CHILD entry (a directory's own name lives on its PARENT volume) and now refuses at a mount point, so an EMPTY case-sensitive volume can no longer answer 'insensitive' and merge two files onto one manifest row. 4/4 mutations caught; re-verified on Windows 2026-08-13.
+
 > Not observed in the latest run.
 
 ---
@@ -1182,7 +1262,7 @@ Guarded by tests/test_path_key_case_folding.py (7), which pin both directions, t
 ### The packaged app wrote SESSION END twice per launch: the finally bypassed the very idempotence guard its own comment claimed
 <!-- fp:9539bb01d76e -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: low
 **Category**: robustness
 **Oracles**: O2 log (health.log) vs O3 disk
@@ -1194,7 +1274,10 @@ Guarded by tests/test_path_key_case_folding.py (7), which pin both directions, t
 
 Found by exercising the clean-exit fix in the PACKAGED 2.0.2 app, which is the only place it runs - start.py is not reached from source. Closing the window produced TWO identical lines for one SESSION START, one second apart: 'SESSION END (clean) uptime=169s peak_self=220.1MB' then the same with 220.2MB. CAUSE: the shutdown was written as an idempotent _shutdown() guarded by a threading.Event, and the comment above it stated that the ordinary window-close route therefore closes the record exactly once - but the finally block called session_end() and _terminate_child_processes() DIRECTLY, bypassing the guard. So on a window close the whole shutdown ran twice: events.closed fires, then webview.start() returns and the finally repeats it. Harmless for the clean_exit flag, which is idempotent, but it breaks the one-START-one-END shape the log is read for, and reaps the process tree a second time for nothing. Fixed by routing the finally through _shutdown(_exit_reason), which preserves the ordering the block documented - health record closed FIRST while the children are still alive and measurable, tree reaped before the hard exit. ALSO CONFIRMED by the same run: the clean-exit fix itself WORKS in the bundle (the record closes as clean on a window close, where a Quit Apple event used to leave it looking like a crash), and the bundle reports app=2.0.2, so the version bump reached the artifact.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: Same fix, second half: the `finally` now calls `_shutdown(_exit_reason)` instead of calling `session_end()` and `_terminate_child_processes()` directly, so the window-close route can no longer run the whole shutdown twice. Verified in `start.py` on 2026-08-13.
+
 > Not observed in the latest run.
 
 ---
@@ -1202,7 +1285,7 @@ Found by exercising the clean-exit fix in the PACKAGED 2.0.2 app, which is the o
 ### _show_macos_notification_un returns True before the delivery result arrives, so a REJECTED notification is reported as success and all three fallbacks are skipped
 <!-- fp:3833d3d15043 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: low
 **Category**: robustness
 **Oracles**: O2 log (async ordering) vs O1 UI (9s of identical frames)
@@ -1238,7 +1321,11 @@ WHAT A LATER SESSION SHOULD DO: launch dist/Canvas Downloader.app, complete one 
 
 Also seen: the diagnostic process ended with "Killed: 9" after driving all three paths in one short-lived process, matching the already-recorded finding that the notification path crashes a bare short-lived python process and is not reproducible in the real app shape.
 
-**Notes**: > Not observed in the latest run (a source run has no bundle identity, so it
+**Notes**:
+
+> 2026-08-13 reconciliation: Corrected twice, and the second correction is the one that matters. `fd05d18` made the UN path report delivery rather than hand-off; `588bead` then distinguished a DENIAL (`UNErrorDomain` code 1 - the user turned notifications off in System Settings) from a delivery failure, because falling back on a denial would route around an explicit permission decision AND post the banner under Script Editor's identity. The user still gets the chime, which starts on its own thread BEFORE the notification path. Re-verified on Windows 2026-08-13: 10/10 checks on the real predicate, including code 1 in another domain, `Code=10`, an unreadable error and the beep ordering.
+
+> Not observed in the latest run (a source run has no bundle identity, so it
 > cannot reach the state).
 >
 > **2026-08-11, macOS 26.6 Tahoe - THE CODE DEFECT IS FIXED (fd05d18); THE
@@ -1319,7 +1406,7 @@ Also seen: the diagnostic process ended with "Killed: 9" after driving all three
 ### Three user-visible copy defects in the two macOS Full Disk Access surfaces - never caught because the gate has never opened on a dev machine
 <!-- fp:5c546d9a8ecf -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: low
 **Category**: ui-truth
 **Oracles**: O1 UI vs O1 UI (the app's own naming elsewhere)
@@ -1331,7 +1418,10 @@ Also seen: the diagnostic process ended with "Killed: 9" after driving all three
 
 Both FDA surfaces rendered for the first time in this audit (they need macOS 15+ AND Full Disk Access absent, which no dev machine satisfies), and all three defects are in the copy a user reads at the moment they are being asked for a system permission. (1) shared/components.py:3779, Settings dialog card: 'asks a one-click "access data from other apps" permission THE every time you start the app' - a stray word. (2) shared/components.py:3716, Today nudge card: "makes features like the 'Todays Files' mode require your input" - the feature is called 'Today's files' in the sidebar, the page title and the query param; the nudge invented a third spelling and dropped the apostrophe. (3) shared/components.py:3715: 'your ai-ready formats' against 'Optimized for AI.' on the login page (ui/auth.py:1867). Fixed in this commit: the stray word removed, 'Today's files' bolded to match the sidebar label the step list already points at, 'AI-ready' capitalised, and 'office conversions' -> 'Office conversions' in the same sentence as (1). No behaviour change - these are string literals inside f-strings whose render path is verified by the same screenshots.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: The three copy defects are gone: no stray article in the Settings FDA card, and 'Todays Files' now appears 0 times in `shared/components.py` (the feature is 'Today's files' everywhere). Verified on Windows 2026-08-13.
+
 > Not observed in the latest run.
 
 ---
@@ -1360,7 +1450,7 @@ ui/panopto_page.py's trash icon calls pmodels.delete_model(mid) immediately - no
 ### M5 PASS: a quoted folder name survives the native picker's round trip, and the macOS-only trailing slash it returns is normalised by all three path keys
 <!-- fp:624f77bfea70 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: config
 **Oracles**: O1 UI (real modal,operator click) vs O3 disk
@@ -1372,7 +1462,10 @@ ui/panopto_page.py's trash icon calls pmodels.delete_model(mid) immediately - no
 
 The last unproven half of the 2026-08-10 AppleScript escaping unification, and it needed one human click: sending keystrokes is refused on this box (System Events: 'osascript is not allowed to send keystrokes'), so the modal was opened by the real shared.helpers.native_folder_picker and dismissed by the operator. MEASURED: target /tmp/m5_picker/quoted "folder" name, returned /private/tmp/m5_picker/quoted "folder" name/ - the double quote survived intact, the returned path resolves to the folder chosen, and it exists on disk as returned. So both directions of the escaping rule now hold on a Mac: the INPUT (a default location containing a quote produced a working dialog, listing both fixtures correctly) and the OUTPUT. TWO INCIDENTAL FINDINGS, both benign, both worth knowing because they are macOS-only: (1) the returned path carries a TRAILING SLASH, because the macOS branch returns result.stdout.strip() and AppleScript's 'POSIX path of' appends one for a directory - Windows' shell picker and the tkinter fallback both return bare paths, so macOS is the only platform where a picked folder differs in spelling from a typed one. Verified harmless against the real functions: core.library.save_pair returns the SAME pair id for the bare and slashed forms, core.pair_labels.pair_key gives the same key, and core.sync_manager._path_key normalises both to the same string - so picking a folder twice cannot produce two pairs for one link. (2) it returns the /private/tmp resolved form rather than /tmp, because macOS symlinks /tmp into /private - the same symlink resolution that let /etc through the sync-folder safety guard earlier in this audit, here doing no harm because the comparison sites resolve too.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1380,7 +1473,7 @@ The last unproven half of the 2026-08-10 AppleScript escaping unification, and i
 ### M1 PASS: all three macOS Office converters correct on Tahoe; delete gate observed firing
 <!-- fp:1f13ed39a7b5 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: conversion
 **Oracles**: O2,O3
@@ -1412,14 +1505,16 @@ M1 PASS on macOS 26.6 Tahoe / arm64, Office 16.111.3. Every case ran the REAL co
 
 NOT COVERED: revoking Automation for Word mid-run to exercise _abort_applescript_phase. It needs a human toggling System Settings; the classification it depends on (-1743 -> 'permission') and the SYSTEMIC_REPEAT_THRESHOLD logic are unit-tested, so this was deprioritised rather than skipped silently.
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
 
 ---
 
 ### M2 PASS: all 36 Panopto mp3s verify through bundled arm64 ffmpeg, duration matching the Windows-recorded baseline
 <!-- fp:c671e557d0f3 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: delivery
 **Oracles**: O3,O5
@@ -1432,7 +1527,10 @@ NOT COVERED: revoking Automation for Word mid-run to exercise _abort_applescript
 
 Verified with RUNBOOK.md's own classification rule rather than by counting stderr lines (a non-empty ffmpeg stderr is muxer noise, not decode failure). Bundled binary: imageio_ffmpeg/binaries/ffmpeg-macos-aarch64-v7.1, i.e. the arm64 build the app ships. Results over all 36 recordings of course 43660: 0 decode failures (rc=0 throughout), 0 lines matching the real-error set (Invalid data / corrupt / error while decoding / moov atom not found / Invalid NAL), 0 files missing an audio stream, 0 suspiciously short files, 0 leftover .part or .part.mp3. TOTAL DURATION 8.20 h across 36 files, mean 13.7 min - which matches the figure RUNBOOK.md recorded on Windows ('36 files, 8.21 h total, mean 13.7 min') to within a rounding step, so the arm64 ffmpeg produced equivalent content rather than merely producing something. Note 0 muxer-noise lines here, against the 1-532 per file the runbook records for mp4: the duplicate-DTS complaint is an mp4-muxer artifact and does not arise for mp3, so the 'do not report' trap is specific to the video output. STILL UNTESTED and listed as a gap: the mp4 output, whose specific checks are both streams present and '+faststart' honoured (moov before mdat) - 36 recordings of video is ~3.8 GB and was not run.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1440,7 +1538,7 @@ Verified with RUNBOOK.md's own classification rule rather than by counting stder
 ### CONFIRMED GOOD: both branches of resolve_shortcut_path verified live (free name vs Canvas collision)
 <!-- fp:773eebe9d42e -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O3
@@ -1453,7 +1551,10 @@ Verified with RUNBOOK.md's own classification rule rather than by counting stder
 
 CLAUDE.md documents that a Panopto lecture IS a Canvas ExternalTool module item, so _create_link has usually already written a .url at the same name; the Shortcut output must ADOPT a link we produced, else take the first FREE name, else step over the foreign one to '<title> (Panopto).url'. Both branches exercised on the real course. BRANCH A (names free): convert_urls had compiled and consumed all 41 Canvas .url files first, so all 36 shortcuts took the PLAIN name; 36/36 carried the [CanvasDownloader] Source=Panopto marker and survived the URL compiler in the SAME run - the marker is the only thing preventing the app from deleting its own selected output. BRANCH B (names taken): a later run recreated the 41 Canvas links with convert_urls OFF, then pan_out_url ON produced 36 shortcuts - ALL 36 landed with the '(Panopto)' suffix, 0 took a plain name, and the 41 Canvas links were left untouched (77 .url total = 41 plain + 36 produced). Also verified: with pan_out_url OFF, the Canvas link phase legitimately reclaims those paths (36 produced -> 0), which is correct - the user did not ask for shortcuts that run.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1461,7 +1562,7 @@ CLAUDE.md documents that a Panopto lecture IS a Canvas ExternalTool module item,
 ### CONFIRMED GOOD: cancel mid-transcription leaves no orphaned worker and no .part files
 <!-- fp:744c29fe6cbf -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O3
@@ -1474,7 +1575,10 @@ CLAUDE.md documents that a Panopto lecture IS a Canvas ExternalTool module item,
 
 Cancelled during Phase 3 via cancel_panopto_btn (NOT cancel_download_btn - the Panopto phase has its own control; app.py:908 _active_dl_statuses includes 'panopto' so the click is not swallowed). Python pids before: ...35020, 35512 (workers). After: both gone; the only surviving pythons were the app (18944) and six unrelated processes started hours earlier. Leftover .part/.tmp files: 0. The 6 already-completed txt/srt pairs were correctly KEPT.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1482,7 +1586,7 @@ Cancelled during Phase 3 via cancel_panopto_btn (NOT cancel_download_btn - the P
 ### CONFIRMED GOOD: the CPU downgrade path works end to end - proven for the first time
 <!-- fp:684b77fa669f -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O2,O3
@@ -1495,7 +1599,10 @@ Cancelled during Phase 3 via cancel_panopto_btn (NOT cancel_download_btn - the P
 
 RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that _is_vad_engine_error exists. Fault injected by replacing the run's cuda_libs JUNCTION with a real dir of 14 zero-value stub DLLs (the developer's real 1.8GB cuda_libs was verified intact at 14 files before and after, and the junction was restored). Settings still requested device=cuda, so the downgrade was genuinely exercised. Evidence chain from debug_log.txt: (1) 'Transcribe worker spawned: pid=30320 device=cuda'; (2) 'worker error: RuntimeError: Library cublas64_12.dll is not found or cannot be loaded' - exactly the injected fault; (3) failed FAST, 3.5s, no hang; (4) 'GPU transcription failed (...); falling back to CPU FOR THE REST OF THE RUN' - the fallback is run-scoped, so it does not re-attempt a broken GPU on all 30 remaining recordings; (5) 'Transcribing [1/30] (device=cpu)'; (6) two transcripts COMPLETED on CPU (srt 6->8). Measured cost: GPU 22.4/40.8/55.4s per recording vs CPU 104.7/129.8s (~3x). The downgrade does not merely log - it finishes the work.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1503,7 +1610,7 @@ RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that 
 ### M2 PASS: Panopto Shortcut output on macOS - 36 .webloc, Canvas collision resolved, Finder opens them
 <!-- fp:07aab6792186 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O4,O5
@@ -1532,14 +1639,16 @@ THE ONE QUESTION ONLY THIS MACHINE COULD ANSWER - DOES FINDER OPEN IT? Yes. Evid
 
 The 2 errors in this run are both ERROR [Locked File] on teacher-locked .pptx files, which RUNBOOK classifies as the benign all-locked case, not a delivery failure.
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
 
 ---
 
 ### M2 PASS: Panopto discovery, 36 collision-resolved .webloc shortcuts, kind=url rows, and Launch Services opens ours
 <!-- fp:f8d392f9cffb -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O3,O4
@@ -1552,7 +1661,10 @@ The 2 errors in this run are both ERROR [Locked File] on teacher-locked .pptx fi
 
 FIRST TIME the Panopto subsystem has ever run on macOS. All of it passed. (1) DISCOVERY via module-item LTI launches: 'Discovered 36 recording(s) ... by source {module: 36}', matching O5's ground truth for course 43660. The documented economy held: 'needs no media this run (Shortcut output only) - skipping the per-course session bootstrap', i.e. 0 runner handshakes. Closing line: 'found=36 downloaded=0 transcribed=0 shortcuts=36 skipped=0 failed=0 courses=1'. (2) THE CANVAS COLLISION CASE, which CLAUDE.md records as having shipped broken (36 recordings discovered, 34 identically-named .url files on disk, 0 shortcuts written): the M1 download had already written 41 Canvas ExternalTool/.webloc links via _create_link, so the precondition was real. Result on disk: 77 .webloc total = 41 Canvas-written (is_produced_shortcut False, untouched) + 36 ours, and ALL 36 of ours are named '<title> (Panopto).webloc' beside a still-present Canvas link. Ours carry source='Panopto' and point at the real Panopto viewer (cbs.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=...), not at the Canvas module item. (3) O4: 36 rows in panopto_manifest, ALL with kind='url' - the documented rule that a .webloc must be recorded as kind 'url' and never 'webloc'. (4) DOES macOS OPEN IT - the one question MAC_RUNBOOK reserves for a human, and which CLAUDE.md says reasoning cannot settle ('what that cannot prove is Finder itself'). Answered: A/B'd a URL-only plist against one carrying our extra CanvasDownloaderSource key, both opened through Launch Services, and Safari reported 'https://example.com/plain, https://example.com/ours' - so the marker key does NOT prevent the URL being read. Finder also renders both with the internet-location icon. NOTE ON A FALSE ALARM: a first attempt produced a blank Safari with an empty address bar, which looked like the shortcut being broken. Safari on this cloud image is flaky (it failed to launch at all with _LSOpenURLsWithCompletionHandler error -600 for Safari.app itself), and the operator confirmed their own double-clicks worked. An mdls probe was uninformative - kMDItemURL is null for OUR file AND for a Canvas one, so it distinguishes nothing.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1560,7 +1672,7 @@ FIRST TIME the Panopto subsystem has ever run on macOS. All of it passed. (1) DI
 ### M2 PASS: URL compiler consumes the 41 Canvas .webloc and spares all 36 Panopto ones
 <!-- fp:af4007a3c476 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O3,O4
@@ -1579,14 +1691,16 @@ RESULT: consumed 41, all Canvas. 0 app-produced shortcuts in the consumed list. 
 
 This is the macOS half of the rule that shipped for the .url side on Windows; mac_smoke proves it on a synthetic pair, this proves it on a real course folder where the two kinds are interleaved across module subfolders.
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
 
 ---
 
 ### M2 PASS: all 36 Panopto mp4s carry both streams and honour +faststart, and the mp4-only DTS 'muxer noise' is provably an artifact of RE-muxing, not of the stored file
 <!-- fp:4297120c0e6d -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O3 disk (mp4 atoms + ffmpeg decode) vs O1 UI vs O4 manifest
@@ -1608,7 +1722,10 @@ STEM FIX VERIFIED LIVE, on the exact video id that produced the 70-mp3 duplicati
 
 Also confirmed in passing: a download re-run does NOT duplicate existing Canvas files. A first pass counting names containing "(N)" reported 136 conflict copies, which was a FALSE POSITIVE - these Canvas lecture titles literally contain "(1)"/"(2)" ("Forelaesningsvideo (2): ..."). Counting only files whose stem ENDS in " (N)" and whose un-suffixed sibling also exists gives 0. The skip-if-size-matches path in _download_file_async is doing its job; 36 of 177 files were skipped in the first 25 seconds and the MB denominator correctly excluded them (0.0 / 849.4 MB).
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1616,7 +1733,7 @@ Also confirmed in passing: a download re-run does NOT duplicate existing Canvas 
 ### M2 PASS: hardware probe reports Apple Silicon CPU-only calmly, and the model download works through the real dialog
 <!-- fp:23e00263ae66 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O1,O3
@@ -1629,7 +1746,10 @@ Also confirmed in passing: a download re-run does NOT duplicate existing Canvas 
 
 Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requires that 'there is no CUDA, so the CPU path is the only path; panopto/hardware.py must report that calmly rather than raising'. Verified on screen in the Transcription Configuration dialog: 'Detected Hardware - GPU: Apple Silicon - no GPU mode (the engine runs on the CPU)' and 'CPU: 10-core CPU - Apple M4', with Compute Device defaulting to CPU and GPU offered but not selected. The guidance line adapts to the hardware too ('Large v3 Turbo is recommended for CPU transcription on 10 cores. A GPU would allow a larger model.'). No exception, no empty state, no claim of CUDA. mac_smoke independently confirms the same four facts from the probe API (is_mac, no CUDA claimed, CPU recommended, ctranslate2 4.8.1 imports in a clean process). The Tiny model (75 MB) downloaded through the dialog and shows as Active with a delete control, which is MAC_RUNBOOK item 6's 'Manage installed models' state.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1637,7 +1757,7 @@ Real app, real dialog, macOS 15.6.1 on an Apple M4. MAC_RUNBOOK M2 item 5 requir
 ### M2 PASS: mp3 for all 36 recordings on arm64 - 0 decode failures, duration matches the mp4 run exactly
 <!-- fp:3375fec96632 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O3,O4
@@ -1663,14 +1783,16 @@ THE STRONGEST EVIDENCE IS THE DURATION, because it is an independent cross-check
 
 This run also re-exercised the download-side Panopto notice fix (56fa5f6) with the acknowledgement deliberately REMOVED from the isolated config, i.e. the dialog genuinely had to be raised and answered for the run to proceed at all. It completed, so the fix works against a live dialog and not only in the reproduction.
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
 
 ---
 
 ### M2 PASS: transcription on Apple Silicon CPU, and cancel leaves no .part and no worker
 <!-- fp:e64f6d5d56e4 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O2,O3
@@ -1701,14 +1823,16 @@ That is the `finally`-scoped _clean_part_files behaving correctly. The original 
 
 NOT COVERED THIS RUN: the mp3 and mp4 MEDIA download paths. mp4 was verified end to end on macOS 15 (all 36 recordings, both streams, moov before mdat); mp3 remains unproven on macOS. This run configured Shortcut output only, so no media was fetched - see the M2 shortcut finding for why that was the right first pass (it costs zero Panopto handshakes).
 
-**Notes**: 
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
 
 ---
 
 ### M2 PASS: transcription runs on the Apple-silicon CPU path out-of-process, and the 2026-08-09 cancel/.part fix holds on macOS
 <!-- fp:8865d4a80a5d -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O2,O3
@@ -1721,7 +1845,10 @@ NOT COVERED THIS RUN: the mp3 and mp4 MEDIA download paths. mp4 was verified end
 
 FIRST macOS run of the transcription subsystem, and of the .part cleanup fix that was written for a Windows-observed defect. (1) MODEL: Tiny (75 MB) downloaded through the real Transcription Configuration dialog, landing in panopto_models/tiny/model.bin (90 MB on disk) and shown as Active. (2) MEDIA: all 36 recordings' mp3 produced through the BUNDLED ffmpeg on arm64 in about two minutes; sizes 17.8-24.3 MB. (3) WORKER: 'Transcribe worker spawned: pid=10891 device=cpu frozen=False' - so it runs OUT OF PROCESS as designed (panopto/transcribe_worker.py exists because of an OpenMP clash that segfaults rather than erroring), on the CPU, with no CUDA claimed. Two recordings completed: 'OK in 86.8s: txt, srt' and 'OK in 140.7s: txt, srt' on a 10-core M4. Outputs are genuine, not stubs: srt 25,847 and 33,171 bytes with real timecoded Danish ('Velkommen til enddel af forlaesning om ...' - tiny-model accuracy, as expected), txt 17,519 and 25,158 bytes, each beside its mp3 as a complete triplet. (4) THE CANCEL, which is the point: cancelled 5 seconds into worker pid=11065 while it was actively WRITING - two sidecars ('...organisationsstruktur 2025 37.srt.part' and '.txt.part') were confirmed present on disk at the moment of the click, which is precisely the mid-write condition that produced the original leak. AFTER: zero .part files anywhere in the tree, and no transcribe_worker/faster_whisper process left. So the sweep-in-a-finally fix (panopto/runner.py) and the make_long_path delete (panopto/transcribe.py) both hold on real macOS. NOTE: the log carries no explicit cleanup line, so O3 (the absent files) is the only oracle for the sweep here - the same asymmetry the original finding relied on in the other direction, where the ABSENCE of post-loop lines was the proof it had not run.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1729,7 +1856,7 @@ FIRST macOS run of the transcription subsystem, and of the .part cleanup fix tha
 ### M3 PASS: the frozen bundle routes transcription workers correctly - argv drop defended, no phantom GUI child
 <!-- fp:3597eb288d36 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: panopto
 **Oracles**: O2,O3
@@ -1742,7 +1869,10 @@ FIRST macOS run of the transcription subsystem, and of the .part cleanup fix tha
 
 FIRST test of this from a real bundle. A macOS windowed .app rebuilds sys.argv from Apple events and silently drops a custom flag, which made a child launched with --panopto-transcribe-worker boot the FULL GUI instead: 'a second app window opened for every transcription and the parent blocked until the user closed it'. The fix routes primarily via the CANVAS_DL_TRANSCRIBE_WORKER env var, keeps the flag as a backup, and records the winner in _CANVAS_DL_WORKER_ROUTE. Driven against dist/Canvas Downloader.app built and ad-hoc signed on this machine, feeding a job on stdin: (a) the bundle SHIPS the console worker binary _worker_command prefers (Canvas_Downloader_Worker, arm64) alongside Canvas_Downloader; (b) with ONLY the env var - no flag at all - both binaries answered 'worker start: frozen=True routed_via=env device=cpu want_txt=True want_srt=True' and exited in 0.1-0.2s, so the argv-drop defence itself works; (c) with ONLY the flag, both answered 'routed_via=argv', so the backup signal works too; (d) with NEITHER, both sat until my 20s timeout, i.e. they booted the app rather than a worker - the correct negative control, and the thing that proves (b) and (c) measured routing rather than a binary that always enters worker mode. (e) The count of 'Canvas Downloader' GUI processes stayed at 0 across all six launches, which is the phantom-second-Dock-app symptom absent. The 'KeyError: mp3' each worker returned is my probe's deliberately incomplete job payload, and is itself evidence: worker mode was entered and answered on stdout with a JSON error event instead of ignoring stdin.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1750,7 +1880,7 @@ FIRST test of this from a real bundle. A macOS windowed .app rebuilds sys.argv f
 ### M4 PASS on real HFS+: the one place _path_key's Unicode normalisation is not a no-op
 <!-- fp:2477d9d49c3c -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: persistence
 **Oracles**: O3,O4
@@ -1763,7 +1893,10 @@ FIRST test of this from a real bundle. A macOS windowed .app rebuilds sys.argv f
 
 Verified on a REAL HFS+ volume created with hdiutil, which is the only way to reach this: APFS is normalisation-PRESERVING so a modern Mac hides the case entirely, and an external drive does not. Four rows, all passing: 'APFS is normalisation-PRESERVING - os.walk returned the NFC we wrote'; '_path_key agrees across NFC/NFD'; 'HFS+ hands back the DECOMPOSED name - as expected, this is the case APFS hides'; '_path_key maps both forms to ONE key'. This is the class CLAUDE.md records as reading like a random defect, because Danish 'aa' decomposes while 'oe' and 'ae' do not - so on an HFS+ external drive a tracked file with an a-ring would drop out of the tracked set and inflate the review screen's untracked count, while its siblings behaved. The single _path_key primitive (normcase(normpath(NFC(s)))) holds. Also green in the same suite: make_long_path is a no-op off Windows, >600-char paths, and the 255-BYTE component limit.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1771,7 +1904,7 @@ Verified on a REAL HFS+ volume created with hdiutil, which is the only way to re
 ### All 6 remaining macOS suite failures were Windows-semantics TESTS, not product defects - suite now green at 3240 passed
 <!-- fp:e3d7560a21b4 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: regression-guard
 **Oracles**: O3 disk (real functions driven per platform) vs the suite
@@ -1797,7 +1930,10 @@ The six, with what each actually proved:
 
 THE CASE QUESTION IS STILL OPEN and is deliberately not closed by this work. On a case-INSENSITIVE macOS volume (the default) a case-only rename is the same folder to the OS and a different link to the app, so _path_key's case half being a no-op is a real defect there. It is not fixable with a .lower(): an external case-SENSITIVE volume is an ordinary place to keep a course folder, and folding there would mis-bind heals. It needs a per-volume probe. Its own finding covers it.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1805,7 +1941,7 @@ THE CASE QUESTION IS STILL OPEN and is deliberately not closed by this work. On 
 ### CONFIRMED GOOD: 3 transient Excel COM failures, 2 recovered by retry, 1 permanent - original kept and the UI reported the TRUE final count
 <!-- fp:854cd2ac81f9 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: regression-guard
 **Oracles**: O1,O2,O3
@@ -1818,7 +1954,10 @@ THE CASE QUESTION IS STILL OPEN and is deliberately not closed by this work. On 
 
 Full reconciliation of the only genuine conversion survivor in the matrix. O2 (log) records THREE Excel timeouts on m028: 'ekstraopgave 1 - VL.xlsx', 'HA.IT-reeksamen-2020-VL-Endelig1.xlsx' and 'OmkostningerAfsaetning - Ekstra - LOESNING.xlsx', each '[COM Timeout] Excel hung >180s ... Killing PID <n>' with a DIFFERENT pid, so the app spawned a fresh instance per attempt and reclaimed each hung one. O3 (disk) then shows exactly ONE surviving .xlsx and 60 PDFs - the other two converted on a later attempt in the same phase. O1 (completion screen) says '1 file could not be converted', i.e. the TRUE FINAL count, not the 3 transient errors, and explains it in the user's terms: 'The original file downloaded fine and is in your course folder - only the converted copy could not be made ... Close any open Office windows and run this course again to retry just it. Details are in download_errors.txt in each course folder.' Same screen also reports '24 files skipped because they exceeded the 5 MB limit'. So all three oracles agree at 1, the source-deleting converter kept the file it could not convert (the 2026-08-08 pdf_looks_real gate), and the user is told what happened and what to do. CORRECTS an earlier mid-run note of mine that said two originals were kept - that was a snapshot taken while the phase was still running; the end state is one.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1826,7 +1965,7 @@ Full reconciliation of the only genuine conversion survivor in the matrix. O2 (l
 ### CONFIRMED GOOD: a real Excel COM failure did NOT delete the user's original workbook
 <!-- fp:6b63263260b9 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: regression-guard
 **Oracles**: O2,O3
@@ -1839,7 +1978,10 @@ Full reconciliation of the only genuine conversion survivor in the matrix. O2 (l
 
 Reproduced live, not synthetically. The office lane hit '[ERROR] [converters.excel] [COM] Excel init failed: (-2146959355, Server-udfoerelse mislykkedes)' = CO_E_SERVER_EXEC_FAILURE, followed by '[ERROR] [converters.post_processing] ekstraopgave 1 - VL.xlsx  Conversion timed out after 180s (Excel stopped responding)'. O3 then shows the source STILL PRESENT at 'Ekstra traening (traening i gl. eksamensopgaver)/ekstraopgave 1 - VL.xlsx', with its 'ekstraopgave 1 - VL_Data.txt' sidecar beside it. This is the exact condition the 2026-08-08 hardening was written for ('An Office converter deletes the user's original - so the PDF must be PROVEN first'): the COM call did not raise cleanly, no usable PDF was produced, pdf_looks_real refused the delete and the workbook was kept. The run also continued to later files rather than aborting the phase, which is _run_phase's isolation doing its job. Worth recording as evidence that the guard holds against a REAL Office failure and not only against a seeded stub.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1847,7 +1989,7 @@ Reproduced live, not synthetically. The office lane hit '[ERROR] [converters.exc
 ### PACKAGED APP PASS: signature verifies strictly, Word->PDF converts, the probe-timeout and clean-exit fixes hold, and WKWebView renders - every fix from this session proven in the artifact users run
 <!-- fp:5b851dc96d60 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: regression-guard
 **Oracles**: O1 UI + O2 log + O3 disk,against the signed bundle
@@ -1877,7 +2019,10 @@ WHAT THE RUN ALSO SHOWED, and it is a correction to my own reasoning: post-proce
 
 THE KEYCHAIN REMAINS THE ONE HONEST GAP on this hardware, and it is environmental. A rebuilt app carries a NEW ad-hoc signature, so macOS treats it as a different application reading the previous build's keychain item and demands the LOGIN KEYCHAIN PASSWORD - unknown on a rented cloud image, and there was no option to set one at provisioning. The prompt therefore cannot be satisfied, it repeats once per access, and the operator denied it. Consequences seen and understood rather than mis-attributed: the token is not persisted, so the next launch shows the login page. On a normal machine the user clicks Always Allow once per new version. Not reproducible here; the operator confirms earlier versions remembered the login on real use.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1885,7 +2030,7 @@ THE KEYCHAIN REMAINS THE ONE HONEST GAP on this hardware, and it is environmenta
 ### Notification path crashes a bare short-lived python process; NOT reproduced in the real app shape
 <!-- fp:ad41f04027c9 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: robustness
 **Oracles**: O1,O2
@@ -1898,7 +2043,10 @@ THE KEYCHAIN REMAINS THE ONE HONEST GAP on this hardware, and it is environmenta
 
 OBSERVATION with an explicit caveat, recorded so it is not lost and not overstated. Calling the REAL engine.notifications.play_completion_beep(mode='daily_sync', ...) from a bare python process repeatedly produced 'Python quit unexpectedly' (the macOS crash reporter) and a shell 'Killed: 9'; the operator confirmed 'python keeps crashing when you do that'. It is NOT consistently fatal - one invocation that slept 4s afterwards printed 'fired ok' and exited cleanly - so it is a race. WHY THIS IS PROBABLY NOT A PRODUCT DEFECT: my test posts a notification from a short-lived python with no Cocoa NSApplication run loop and then exits, which is not the app's shape. The real app shares the process with the PyWebView Cocoa NSApplication (start.py) and lives on, which is precisely why _show_macos_notification_native calls that 'the robust primary path'. The code already anticipates this exact mismatch: play_completion_beep's comment says 'post on the calling thread avoids run-loop issues - the daemon thread context can differ from what UNUserNotificationCenter/its delegate callbacks expect, and a daemon thread can be killed during process shutdown before the completion handler fully executes'. WHAT IS THEREFORE STILL UNPROVEN, and belongs in the gap list: whether a real sync completion in the PACKAGED app delivers a visible banner. mac_smoke reports 'UNUserNotifications delivered - a banner should be visible', and a UserNotificationCenter window (260x300) does appear on each call, but the banner itself outran every capture attempt (macOS banners last ~5s) and no screenshot of our banner text was obtained. A SEPARATE FALSE LEAD, recorded so the next audit does not chase it: a 'Terminal would like to access the microphone' TCC prompt was captured while investigating this and initially looked like the notification path requesting the microphone. It is not - re-running the identical code produced no such prompt, nothing in the notification chain (UNUserNotificationCenter -> NSUserNotification -> pync -> osascript) or in afplay touches audio input, and a UserNotificationCenter window was already present BEFORE the first notification call. It was almost certainly one of the pending permission prompts the operator approved minutes earlier.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: KNOWN AND NOT REPRODUCED IN THE REAL APP SHAPE, which is what the title says - so it is acknowledged rather than left as an open work item. If it is ever seen in the real app it should be re-filed with that evidence.
+
 > Not observed in the latest run.
 
 ---
@@ -1906,7 +2054,7 @@ OBSERVATION with an explicit caveat, recorded so it is not lost and not overstat
 ### M5 PASS: Reveal in Finder selects the RIGHT file for every hostile name - quote, backslash, newline, Danish, 200 bytes - verified by asking Finder what it selected
 <!-- fp:11326e82e0d8 -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: ui-truth
 **Oracles**: O1 UI (Finder's own selection) vs O3 disk
@@ -1928,7 +2076,10 @@ THE PERMISSION LESSON, which cost a run: there are THREE separate macOS gates an
   * driving a NAMED app (Finder, Word) -> AUTOMATION, per source-app to target-app pair; its refusal is a consent prompt that BLOCKS.
 So "tell application Finder to close every window" hung for the full timeout on the FIRST case, and a propagating TimeoutExpired lost the whole run before any data was collected. macOS refuses synthetic clicks on consent prompts by design, so the operator has to answer it; scripts/mac_eyes.py dialogs screenshots whatever is waiting, which is how it was identified. Every osascript call in the probe now degrades that one check instead of the run.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
@@ -1936,7 +2087,7 @@ So "tell application Finder to close every window" hung for the full timeout on 
 ### M5 PASS: the macOS 15 Full Disk Access nudge verified end to end on all FOUR surfaces, in both gate directions - the first time this code has ever rendered
 <!-- fp:afd30c33904c -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: info
 **Category**: ui-truth
 **Oracles**: O1 UI vs O3 disk (today_dashboard.json,TCC.db)
@@ -1948,7 +2099,10 @@ So "tell application Finder to close every window" hung for the full timeout on 
 
 Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Access absent, and every context that can run the app had FDA. Solved by running the app from the SSH session, whose responsible process (/usr/libexec/sshd-keygen-wrapper) carries an explicit DENIED row for kTCCServiceSystemPolicyAllFiles, so has_full_disk_access() returns False for real rather than by patching. Login was done by hand through the real form because the Keychain is Aqua-scoped - and that incidentally confirmed the 'a persistence failure must never block a login' rule: keyring was unavailable, restore_saved_session correctly fell back to the login page, and a pasted URL+token logged in with no error. VERIFIED: (1) Today page - dismissed state renders the subtle re-spawn link with the exact copy, clicking it spawns the full card, all four walkthrough steps render as a real ordered list with no HTML leaking, the close button collapses the card back to the link and the persisted flag holds. (2) The button runs open_full_disk_access_settings(): System Settings opened directly on Privacy & Security > Full Disk Access with 'Canvas Downloader' present in the app list by name - so the legacy x-apple.systempreferences anchor still deep-links correctly on macOS 15, and step 2 of the walkthrough ('Toggle on Canvas Downloader in the app list') describes what the user actually sees. Screenshot 183506_desktop.png. The toast fired with the right text (fda_08_toast.png). (3) Settings dialog - render_fda_settings_card in its NOT-GRANTED state: blue dot, 'Not granted' status line, full step list. (4) Download settings step 2 - gated on an Office converter; enabling Legacy Word inside Card 3's FRAGMENT made the nudge appear even though the slot lives OUTSIDE that fragment, i.e. the documented escalation to a full-page rerun fired, and disabling it removed the nudge again. Both directions left exactly one Card 3 header and one Confirm button, so the escalation does not produce the inherited-children artifact this repo has hit elsewhere. (5) Quick Download - present for 'Daily study pack (Optimized)', absent for 'Files Only', so the preset gate is real and not always-on.
 
-**Notes**:   
+**Notes**:
+
+> 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.
+
 > Not observed in the latest run.
 
 ---
