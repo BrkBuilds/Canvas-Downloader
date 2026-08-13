@@ -252,9 +252,25 @@ QUIT_MUTANTS = [
     ("preexisting probe defaults to NOT the user's on failure", AB,
      "        except Exception:       # noqa: BLE001\n            running = True      # on doubt, treat it as the user's and never quit it",
      '        except Exception:       # noqa: BLE001\n            running = False'),
-    ('observation re-taken on every conversion', AB,
-     '    if app_name in _office_preexisting:     # fast path: no lock once answered\n        return',
-     '    if False:\n        return'),
+    # BOTH guards, not just the outer one. Since 2026-08-13 the function is
+    # double-checked (fast path, then the same test inside the lock), so
+    # removing the FAST PATH ALONE is an EQUIVALENT MUTANT - the inner check
+    # still makes it idempotent and only lock contention changes. Verified
+    # surviving for exactly that reason; the mutant that must be caught is the
+    # one that removes idempotence altogether.
+    ('observation re-taken on every conversion (BOTH guards)', AB,
+     '    if app_name in _office_preexisting:     # fast path: no lock once answered\n'
+     '        return\n'
+     '    bundle = _APP_DOC_MAP.get(app_name, (None,))[0]\n'
+     '    if not bundle:\n'
+     '        return\n'
+     '    with _office_observe_lock:\n'
+     '        if app_name in _office_preexisting:  # another thread got there first\n'
+     '            return\n',
+     '    bundle = _APP_DOC_MAP.get(app_name, (None,))[0]\n'
+     '    if not bundle:\n'
+     '        return\n'
+     '    with _office_observe_lock:\n'),
     ('observation moved outside the lock', AB,
      '        _note_office_preexisting(app_name)\n        return _run_applescript_locked(',
      '        return _run_applescript_locked('),
