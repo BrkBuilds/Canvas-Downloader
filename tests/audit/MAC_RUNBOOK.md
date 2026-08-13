@@ -273,6 +273,48 @@ around it is not.**
    1024-char paths but only **255 bytes per component** — a *different* limit
    from Windows, and one nothing has ever tested. Build a deep course folder
    and convert inside it.
+8. **WHO THE APP BELONGS TO — the one thing on this list that has never run on
+   a Mac** (added 2026-08-13). The quit gate decides whether to send
+   `quit saving no` to an app that may hold a student's unsaved essay, and its
+   three known failure modes were fixed against a *Windows simulation*
+   (`sys.platform` patched to darwin, `pgrep` and `_warmup_apps` modelled).
+   That proves the DECISION path. It does not prove the other half of the
+   chain — that a conversion phase leaves the documents undescribable, which is
+   the 2026-08-12 measurement and is what makes a wrong decision destructive.
+
+   Three checks, in this order. Each needs `pgrep -x "Microsoft Word"` before
+   and after, and the `[OfficeQuit]` lines from `debug_log.txt`.
+
+   a. **FIRST RUN on this machine.** Delete the permission record
+      (`rm "$(python -c 'from shared.helpers import get_config_dir; print(get_config_dir())')"/office_permissions.json`)
+      and `pkill` all three apps. Run a download that converts. `first_run_permission_setup`
+      launches all three for the TCC batch — the gate must still quit them
+      afterwards. **Before the fix this left all three in the dock with Recents
+      full of our `src_*` files**, because the observation was taken after our
+      own launch.
+
+   b. **TWO RUNS IN ONE SESSION, the user opens Word in between.** This is the
+      data-loss path and the reason this step exists.
+
+          run 1  nothing open -> download+convert -> all three quit
+          then   open Word, type something, DO NOT SAVE, leave it open
+          run 2  download+convert a second course, WITHOUT restarting the app
+
+      **Word must survive run 2 with its document intact**, and the log must
+      read `left alone (we did not launch it)`. Before the fix the observation
+      was per PROCESS, so run 2 answered with run 1's facts, called Word ours,
+      and — because run 2's conversion phase had just made the documents
+      undescribable — quit it `saving no`.
+
+   c. **CANCEL before anything primes.** Start a download with Word open and
+      cancel immediately. The teardown fires on the cancelled screens too, and
+      an app we never observed must read `left alone (we never drove it this
+      run)`.
+
+   `scripts/verify_office_end_to_end.py` already drives the cold/busy pair and
+   is the right shape to extend for (b) — what it does not do is run the
+   sequence TWICE in one process, which is the whole point. Note `pkill`ing
+   between runs is NOT a substitute: the bug is about state inside one process.
 
 ## Phase M2 — Panopto *(entirely new since the last Mac audit)*
 
