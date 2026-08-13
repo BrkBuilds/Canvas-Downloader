@@ -12,6 +12,7 @@ import logging
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import uuid
 from contextlib import contextmanager
@@ -919,7 +920,7 @@ def _marker_in_value(value) -> bool:
     return False
 
 
-#: Which Office apps were ALREADY RUNNING when this process first drove them.
+#: Which Office apps were ALREADY RUNNING when this RUN first drove them.
 #:
 #: THIS IS THE QUIT DECISION, and it replaces asking the documents. A document
 #: check cannot answer it: measured 2026-08-12, every app is left holding one
@@ -933,30 +934,94 @@ def _marker_in_value(value) -> bool:
 #: "Was it running before we touched it?" is answerable, cheap, and exactly the
 #: rule the product owner chose. If the user already had Word open, it is
 #: theirs and we never quit it; if we launched it, every document in it is ours.
+#:
+#: PER **RUN**, NOT PER PROCESS - it used to be per process, and that was the
+#: same defect one level up (2026-08-13). `reset_office_priming` clears every
+#: other piece of per-run Office state and this was not in its list, so run 2 of
+#: a session inherited run 1's answer. Reproduced against these functions:
+#:
+#:     run 1  nothing open, we launch all three   -> recorded False (ours)
+#:            ...the user opens Word and starts an unsaved essay...
+#:     run 2  Word IS the user's                  -> still reads False
+#:            -> the teardown calls it ours, the conversion phase has just made
+#:               its documents undescribable, `undescribable_is_ours` says
+#:               pristine, and the quit goes out `saving no`
+#:
+#: i.e. the D9 data loss, reached through a stale fact rather than a wrong
+#: default. Three states, and `None` is a real answer - see
+#: `office_is_ours_to_quit`.
 _office_preexisting: dict = {}
+
+#: Guards the check-then-set in `_note_office_preexisting`. The observation is
+#: taken from a worker thread (`_warmup_apps`) as well as the main one, and two
+#: callers straddling a launch could otherwise both pass the "not recorded yet"
+#: check and let the LATER, post-launch answer win - which is the one direction
+#: that costs a user's document. First writer wins, always.
+_office_observe_lock = threading.Lock()
 
 
 def _note_office_preexisting(app_name: str) -> None:
-    """Record, ONCE per app per process, whether the user already had it open."""
-    if app_name in _office_preexisting:
+    """Record, ONCE per app per run, whether the user already had it open."""
+    if app_name in _office_preexisting:     # fast path: no lock once answered
         return
     bundle = _APP_DOC_MAP.get(app_name, (None,))[0]
     if not bundle:
         return
-    try:
-        running = subprocess.run(["pgrep", "-x", bundle],
-                                 capture_output=True, timeout=5).returncode == 0
-    except Exception:       # noqa: BLE001
-        running = True      # on doubt, treat it as the user's and never quit it
-    _office_preexisting[app_name] = running
+    with _office_observe_lock:
+        if app_name in _office_preexisting:  # another thread got there first
+            return
+        try:
+            running = subprocess.run(["pgrep", "-x", bundle],
+                                     capture_output=True, timeout=5).returncode == 0
+        except Exception:       # noqa: BLE001
+            running = True      # on doubt, treat it as the user's and never quit it
+        _office_preexisting[app_name] = running
     if running:
         logger.info(f"[OfficeQuit] {app_name} was already running before this "
                     f"run - it will be left alone at the end")
 
 
-def office_was_preexisting(app_name: str) -> bool:
-    """True when the user already had *app_name* open before we used it."""
-    return bool(_office_preexisting.get(app_name, False))
+def observe_office_before_launch() -> None:
+    """Record who was already open, for EVERY app, before we launch anything.
+
+    THE ONE PLACE THE RULE IS WRITTEN, because it has to hold at three call
+    sites and a rule written three times is a rule one caller is following an
+    old version of. It is idempotent, so calling it again costs a dict lookup.
+
+    Note it observes ALL THREE apps, not just the ones about to launch: the
+    run's contract can widen between courses (`office_contract_from_folder` is
+    scoped per folder), so the app nobody was going to open is exactly the one
+    that gets launched later - and by then our own launch has already happened.
+    """
+    for _key, _ms, short in _APP_TRIPLES:
+        _note_office_preexisting(short)
+
+
+def office_is_ours_to_quit(app_name: str) -> bool:
+    """True only for an app we OBSERVED not running and then drove ourselves.
+
+    THREE STATES, and the third is why this is not `dict.get(app, False)`:
+
+    =====================  ==========================================  ========
+    `_office_preexisting`  meaning                                     verdict
+    =====================  ==========================================  ========
+    ``False``              we looked, it was not running, we launched  **quit**
+    ``True``               the user already had it open                leave
+    *absent*               we never drove this app this run            leave
+    =====================  ==========================================  ========
+
+    The absent case used to collapse into "ours", which is the direction that
+    reaches `quit saving no`. It is reachable: cancel a download before priming
+    has run and NOTHING has been observed, so the teardown - which also fires on
+    the cancelled screens - would ask every Office app to quit, including one
+    the user is working in. The only thing standing in the way was the document
+    check, and D9 is the record of that check being unable to answer.
+
+    "We never used it, so it is not ours to quit" is also simply the correct
+    reading, not merely the safe one; `test_an_unobserved_app_is_not_treated_as_the_users`
+    said so in its own docstring while asserting the opposite.
+    """
+    return _office_preexisting.get(app_name) is False
 
 
 #: The registry segment naming each app's Recents subtree, measured on the real
@@ -1750,7 +1815,7 @@ def _force_close_canvas_docs_async(only_app: str | None = None) -> None:
 
 
 def _idle_quit_script(app: str, collection: str,
-                      undescribable_is_ours: bool = True) -> str:
+                      undescribable_is_ours: bool = False) -> str:
     """AppleScript that quits *app* unless a REAL user document is open.
 
     Returns a human-readable status string (captured on stdout and logged) so a
@@ -1775,11 +1840,18 @@ def _idle_quit_script(app: str, collection: str,
     PRISTINE, and the quit goes out `saving no`.
 
     The caller passes True only for an app IT LAUNCHED, where every open
-    document is ours by construction. An app the user already had open never
-    reaches this script at all - `quit_idle_office_apps` refuses it on
-    `office_was_preexisting`, which is the gate that actually carries the
-    safety, because after a conversion phase the documents cannot be described
-    and no property test can tell whose they are.
+    document is ours by construction. An app the user already had open - or one
+    we never drove at all - never reaches this script: `quit_idle_office_apps`
+    refuses it on `office_is_ours_to_quit`, which is the gate that actually
+    carries the safety, because after a conversion phase the documents cannot be
+    described and no property test can tell whose they are.
+
+    **THE DEFAULT IS THE SAFE ONE AND THE CALLER STATES THE POLICY.** It used to
+    default to True while the single call site said nothing, so the sentence
+    above ("the caller passes True only for...") described a contract nothing
+    enforced - a second call site would have inherited the answer that discards
+    a document. Now saying nothing means "not ours", and the teardown passes
+    True explicitly, one line under the gate that earns it.
 
     MEASURED 2026-08-12, the ordinary "the user is editing while a sync
     converts" case. A real .doc, open and modified:
@@ -1992,19 +2064,28 @@ def quit_idle_office_apps() -> None:
         still_running = []
         statuses: dict = {}
         for app, collection in targets:
-            # THE FIRST GATE, and the one that carries the safety: an app the
-            # user already had open is never quit, whatever its documents say.
-            # See `_office_preexisting` - the document check cannot answer this
+            # THE FIRST GATE, and the one that carries the safety: we quit only
+            # an app we OBSERVED not running and then launched ourselves. See
+            # `office_is_ours_to_quit` - the document check cannot answer this
             # question, because after a conversion phase the documents are
             # unreadable.
             short = next((k for k, v in _APP_DOC_MAP.items() if v[0] == app), None)
-            if short and office_was_preexisting(short):
-                statuses[app] = "left alone (the user already had it open)"
+            if not (short and office_is_ours_to_quit(short)):
+                statuses[app] = ("left alone (we did not launch it)" if short
+                                 in _office_preexisting else
+                                 "left alone (we never drove it this run)")
                 logger.info(f"[OfficeQuit] pass {pass_no}: {app} -> {statuses[app]}")
                 continue
             try:
                 r = subprocess.run(
-                    ['osascript', '-e', _idle_quit_script(app, collection)],
+                    ['osascript', '-e',
+                     # EXPLICIT, never the default. Reaching this line means the
+                     # gate above certified we launched the app, which is the
+                     # ONLY condition under which an undescribable document may
+                     # be treated as ours; the signature defaults to False so a
+                     # future second call site cannot inherit the dangerous
+                     # answer by saying nothing.
+                     _idle_quit_script(app, collection, undescribable_is_ours=True)],
                     capture_output=True, text=True, timeout=30,
                 )
                 status = (r.stdout or "").strip() or f"osascript rc={r.returncode}"
@@ -2204,16 +2285,40 @@ _OFFICE_EXTS = {
 
 
 def reset_office_priming() -> None:
-    """Forget which Office apps were primed, so the next run launches them fresh.
+    """Forget this run's Office state, so the next run starts from the truth.
 
     Call at the start of each download/sync run. The apps are quit at the previous
     run's completion screen, so their primed-state must be cleared or the next run
     would wrongly skip (re-)launching them.
+
+    **`_office_preexisting` IS PER-RUN STATE AND WAS THE ONE PIECE THIS FUNCTION
+    DID NOT CLEAR** (fixed 2026-08-13). Everything else about priming was reset
+    here while "was this app the user's?" was recorded once per PROCESS, so the
+    second download in a session answered with the first one's facts. The
+    dangerous direction is not hypothetical:
+
+        run 1  nothing open -> we launch Word -> recorded "ours"
+               ...the user opens Word and starts an unsaved essay...
+        run 2  Word is now THEIRS, but the record still says ours
+               -> the teardown quits it `saving no`
+
+    and run 2 has just had a conversion phase, which is exactly the state D9
+    measured Word's documents as undescribable in - so the document check, the
+    only remaining defence, cannot see it either. `_office_quit_fired` is reset
+    per run by both callers, so the teardown really does fire again.
+
+    The opposite direction (a stale "theirs") only ever costs an app left in the
+    dock, which is why the fix is to re-observe rather than to age the value.
     """
     global _macro_pref_written, _dock_recents_before
     _primed_apps.clear()
     _macro_pref_written = False
     _dock_recents_before = None
+    # Under the lock: `_warmup_apps` may still be observing on its worker thread
+    # from the previous run, and a write landing after this clear would seed the
+    # new run with the old run's answer - the very thing being fixed.
+    with _office_observe_lock:
+        _office_preexisting.clear()
 
 
 def office_contract_from_folder(folder, base_contract: dict) -> dict:
@@ -2274,7 +2379,15 @@ def _warmup_apps(apps: list, write_macro_pref: bool,
     (Allow → rc 0, or explicit Deny → -1743) - NOT when it timed out unanswered,
     so an ignored prompt is retried on the next run. Callers run this on a
     worker thread; everything is best-effort.
+
+    IT OBSERVES WHO WAS ALREADY OPEN FIRST, because this is the ONE function in
+    the app that launches an Office app, and the observation is only meaningful
+    before that. Both callers observe on their own (calling) thread too, which
+    is what actually orders it correctly - this call is the backstop that makes
+    a FUTURE third caller safe by construction rather than by remembering.
     """
+    observe_office_before_launch()
+
     if write_macro_pref:
         # Kill the "this workbook contains macros" dialog suite-wide BEFORE any
         # Office app launches. The CORRECT macOS key is VisualBasicMacroExecutionState
@@ -2389,16 +2502,20 @@ def prime_office_automation(contract: dict) -> None:
     # the same app.
     # WHO WAS ALREADY OPEN, recorded BEFORE we launch anything.
     #
-    # This is the earliest point the app touches Office, and it has to be here:
-    # priming launches all three with `open -g -j`, so by the time the first
+    # Priming launches all three with `open -g -j`, so by the time the first
     # conversion asks, every app is running - launched by US - and the quit
     # gate would call them all the user's and never quit anything. Measured
     # exactly that in the real app on 2026-08-12, with all three killed
     # beforehand: "PowerPoint was already running before this run" and all
     # three left in the dock. The harness never saw it, because it drives the
     # converters directly and never primes.
-    for _key, _ms, _short in _APP_TRIPLES:
-        _note_office_preexisting(_short)
+    #
+    # It sits ABOVE the `if not to_launch: return` on purpose: a run whose
+    # courses hold no Office files still ends at a completion screen that calls
+    # the teardown, and an unobserved app is one the teardown must leave alone.
+    # Recording "we did not launch these" here is what makes that a decision
+    # rather than an absence.
+    observe_office_before_launch()
 
     to_launch = []
     for key, ms, _short in _APP_TRIPLES:
@@ -2627,7 +2744,32 @@ def first_run_permission_setup(contract: dict) -> bool:
     outstanding, already ran this process).
     """
     global _first_run_batch_started, _macro_pref_written
-    if sys.platform != 'darwin' or _first_run_batch_started:
+    if sys.platform != 'darwin':
+        return False
+
+    # WHO WAS ALREADY OPEN, before this function's own `open -g -j` batch.
+    #
+    # THIS FUNCTION IS A LAUNCHER TOO, and it is the EARLIER of the two - both
+    # `app.py` and `sync/execution.py` call it at run start and reach
+    # `prime_office_automation` only per course, later. It was missed when the
+    # observation was hoisted into priming on 2026-08-12, so on a machine whose
+    # Automation grants were not yet recorded - i.e. a new user's FIRST run -
+    # the batch launched all three, the later observation saw our own launch,
+    # every app read as the user's, nothing was quit, and (because all three
+    # were running) the Recents purge declined as well. Reproduced against
+    # these functions on 2026-08-13:
+    #
+    #     first-run batch ran: True;  alive after it: [Excel, PowerPoint, Word]
+    #     gate 'this is the user's' -> {PowerPoint: True, Word: True, Excel: True}
+    #     >> apps this run will QUIT: NONE
+    #
+    # ABOVE the `_first_run_batch_started` guard, not below it: that flag is
+    # once per PROCESS while `_office_preexisting` is now once per RUN, so a
+    # second run must still be able to take its observation here - at run start,
+    # which is the earliest moment either flow touches Office.
+    observe_office_before_launch()
+
+    if _first_run_batch_started:
         return False
     record = _load_permission_record()
     wanted = []
