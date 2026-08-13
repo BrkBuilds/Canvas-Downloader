@@ -18,8 +18,10 @@
   <meta name="twitter:image" content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/icon.png" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <style>
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+<style>
     :root {
       --bg: #0b0c14;
       --surf: #10111e;
@@ -547,9 +549,9 @@
         <div class="dl-stack">
           <a href="https://apps.microsoft.com/detail/9n1dwwvrq5wc?referrer=appbadge&mode=full" target="_blank"
             rel="noopener noreferrer" class="store-badge">
-            <img src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft" />
+            <img decoding="async" loading="lazy" src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft" />
           </a>
-          <a id="win-exe" href="#" class="btn-download btn-dl-ghost">
+          <button id="win-exe" type="button" class="btn-download btn-dl-ghost" style="background:none; border:none; padding:0; cursor:pointer; font:inherit;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -557,10 +559,10 @@
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
             Download direct (.exe)
-          </a>
+          </button>
         </div>
         <p class="dl-subtitle">Both methods add a Start Menu icon and uninstall cleanly via Settings &rarr; Apps.
-          The <b>Microsoft Store version is easier to install</b> - no SmartScreen warning.</p>
+          The <b>Microsoft Store version is easier to install</b> - no SmartScreen warning. About 140 MB to download.</p>
       </div>
     </div>
 
@@ -573,11 +575,11 @@
         </svg>
         <div>
           <div class="plat-name">macOS <span class="ver-pill" id="mac-ver"></span></div>
-          <div class="plat-req">Apple Silicon (M1 or later) &middot; macOS 11+</div>
+          <div class="plat-req">Apple Silicon (M1 or later) &middot; macOS 14+</div>
         </div>
       </div>
       <div class="plat-body">
-        <a id="mac-dmg" href="#" class="btn-download btn-dl-primary">
+        <button id="mac-dmg" type="button" class="btn-download btn-dl-primary" style="background:none; border:none; padding:0; cursor:pointer; font:inherit;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -585,8 +587,8 @@
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           Download for macOS (.dmg)
-        </a>
-        <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported. Needs macOS 11 (Big Sur) or newer.
+        </button>
+        <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported. Needs macOS 14 (Sonoma) or newer. About 150 MB.
           First launch needs a one-time approval: see the <a href="mac-setup.html"
             style="color:var(--cyan);text-decoration:none;">setup guide</a>.</p>
       </div>
@@ -594,7 +596,7 @@
 
     <!-- OS toggle -->
     <div class="os-toggle hidden" id="os-toggle">
-      <a href="#" id="toggle-os-btn">Need the other version?</a>
+      <button type="button" id="toggle-os-btn" style="background:none; border:none; padding:0; cursor:pointer; font:inherit;">Need the other version?</button>
     </div>
 
     <!-- OLDER RELEASES -->
@@ -635,7 +637,10 @@
       const olderHeading = el('older-heading');
       const olderList = el('older-list');
 
-      let showingMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      // navigator.platform is deprecated and reports "MacIntel" on iPadOS.
+      var _uad = navigator.userAgentData;
+      var _plat = (_uad && _uad.platform) || navigator.platform || '';
+      let showingMac = /Mac/i.test(_plat) || /Mac OS X/i.test(navigator.userAgent || '');
       let hasWin = false, hasMac = false;
 
       // ---- Asset helpers ----
@@ -784,7 +789,10 @@
 
     // OS-aware setup links: Windows users get the Windows guide.
     (function () {
-      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+      // navigator.platform is deprecated and reports "MacIntel" on iPadOS.
+      var _uad = navigator.userAgentData;
+      var _plat = (_uad && _uad.platform) || navigator.platform || '';
+      if (!/Mac/i.test(_plat) && !/Mac OS X/i.test(navigator.userAgent || '')) {
         document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
       }
     })();

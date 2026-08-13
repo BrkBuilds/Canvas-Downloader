@@ -17,11 +17,10 @@
   <meta name="twitter:image" content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/icon.png" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-  <style>
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+<style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -478,12 +477,12 @@
 
         <div class="kv">
           <div class="kv-c">
-            <h5><img class="ti" src="assets/icon_subfolders.png" alt="" />With Subfolders</h5>
+            <h5><img decoding="async" loading="lazy" class="ti" src="assets/icon_subfolders.png" alt="" />With Subfolders</h5>
             <p>Mirrors the course's module structure - <code>Module 1</code>, <code>Module 2</code>, and so on. Best
               if you think in weeks or topics.</p>
           </div>
           <div class="kv-c">
-            <h5><img class="ti" src="assets/icon_flat.png" alt="" />All in One Folder</h5>
+            <h5><img decoding="async" loading="lazy" class="ti" src="assets/icon_flat.png" alt="" />All in One Folder</h5>
             <p>Every file sits directly in the course folder. Best if you search rather than browse, or you're
               feeding the folder to something else.</p>
           </div>
@@ -506,12 +505,12 @@
           <table>
             <thead><tr><th>Folder</th><th>What goes in it</th></tr></thead>
             <tbody>
-              <tr><td class="nm"><img class="ti" src="assets/icon_assignments.png" alt="" />Assignments/</td><td>The brief for each assignment, plus anything attached to it</td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_announcements.png" alt="" />Announcements/</td><td>Course announcements and their attachments</td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_quizzes.png" alt="" />Quizzes/</td><td>Quiz questions and answers</td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_discussions.png" alt="" />Discussions/</td><td>Discussion threads</td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_syllabus.png" alt="" />Syllabus/</td><td>The course syllabus</td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_submissions.png" alt="" />Submission&nbsp;Feedback/</td><td>Your grades, rubric scores and teacher comments</td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_assignments.png" alt="" />Assignments/</td><td>The brief for each assignment, plus anything attached to it</td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_announcements.png" alt="" />Announcements/</td><td>Course announcements and their attachments</td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_quizzes.png" alt="" />Quizzes/</td><td>Quiz questions and answers</td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_discussions.png" alt="" />Discussions/</td><td>Discussion threads</td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_syllabus.png" alt="" />Syllabus/</td><td>The course syllabus</td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_submissions.png" alt="" />Submission&nbsp;Feedback/</td><td>Your grades, rubric scores and teacher comments</td></tr>
               <tr><td class="nm"><svg class="ti" viewBox="0 0 24 24" stroke="#68d4a3"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>Pages/</td><td>Canvas pages</td></tr>
               <tr><td class="nm"><svg class="ti" viewBox="0 0 24 24" stroke="#68d4a3"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>Links/</td><td>External links saved as shortcuts</td></tr>
             </tbody>
@@ -530,7 +529,7 @@
       <!-- ============ SIMULATOR ============ -->
       <section class="guide-section" id="simulator">
         <div class="sh">
-          <div class="icon-h2"><img src="assets/icon_custom_download.png" alt="" /><h2>Try it yourself</h2></div>
+          <div class="icon-h2"><img decoding="async" loading="lazy" src="assets/icon_custom_download.png" alt="" /><h2>Try it yourself</h2></div>
           <p>These are the real switches from Custom Download. Flip them and watch the folder redraw. The example
             course has slides, a spreadsheet, a legacy Word doc, a code project in a zip, a video and a web link.</p>
         </div>
@@ -552,43 +551,43 @@
               <div class="ctl-grp">
                 <div class="ctl-lbl"><span class="cbadge c1">Card 1</span>Organisation</div>
                 <div class="opt-row" id="seg-layout">
-                  <button type="button" class="opt k1" data-v="subfolders" aria-pressed="true"><img src="assets/icon_subfolders.png" alt="" />With Subfolders</button>
-                  <button type="button" class="opt k1" data-v="flat" aria-pressed="false"><img src="assets/icon_flat.png" alt="" />All in One Folder</button>
+                  <button type="button" class="opt k1" data-v="subfolders" aria-pressed="true"><img decoding="async" loading="lazy" src="assets/icon_subfolders.png" alt="" />With Subfolders</button>
+                  <button type="button" class="opt k1" data-v="flat" aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_flat.png" alt="" />All in One Folder</button>
                 </div>
               </div>
 
               <div class="ctl-grp">
                 <div class="ctl-lbl"><span class="cbadge c1">Card 1</span>Include files</div>
                 <div class="opt-row" id="seg-filter">
-                  <button type="button" class="opt k1" data-v="all" aria-pressed="true"><img src="assets/icon_all_files.png" alt="" />All files</button>
-                  <button type="button" class="opt k1" data-v="study" aria-pressed="false"><img src="assets/icon_study_files.png" alt="" />Slides &amp; PDFs</button>
+                  <button type="button" class="opt k1" data-v="all" aria-pressed="true"><img decoding="async" loading="lazy" src="assets/icon_all_files.png" alt="" />All files</button>
+                  <button type="button" class="opt k1" data-v="study" aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_study_files.png" alt="" />Slides &amp; PDFs</button>
                 </div>
               </div>
 
               <div class="ctl-grp wide">
                 <div class="ctl-lbl"><span class="cbadge c2">Card 2</span>Canvas content</div>
                 <div class="opt-row">
-                  <button type="button" class="opt k2" data-flag="assignments"   aria-pressed="true"><img src="assets/icon_assignments.png" alt="" />Assignments</button>
-                  <button type="button" class="opt k2" data-flag="announcements" aria-pressed="true"><img src="assets/icon_announcements.png" alt="" />Announcements</button>
-                  <button type="button" class="opt k2" data-flag="quizzes"       aria-pressed="true"><img src="assets/icon_quizzes.png" alt="" />Quizzes</button>
-                  <button type="button" class="opt k2" data-flag="discussions"   aria-pressed="false"><img src="assets/icon_discussions.png" alt="" />Discussions</button>
-                  <button type="button" class="opt k2" data-flag="syllabus"      aria-pressed="false"><img src="assets/icon_syllabus.png" alt="" />Syllabus</button>
-                  <button type="button" class="opt k2" data-flag="submissions"   aria-pressed="false"><img src="assets/icon_submissions.png" alt="" />Submissions</button>
-                  <button type="button" class="opt k2 sep" data-flag="isolate"   aria-pressed="true"><img src="assets/icon_sec_subfolders.png" alt="" />Own subfolders</button>
+                  <button type="button" class="opt k2" data-flag="assignments"   aria-pressed="true"><img decoding="async" loading="lazy" src="assets/icon_assignments.png" alt="" />Assignments</button>
+                  <button type="button" class="opt k2" data-flag="announcements" aria-pressed="true"><img decoding="async" loading="lazy" src="assets/icon_announcements.png" alt="" />Announcements</button>
+                  <button type="button" class="opt k2" data-flag="quizzes"       aria-pressed="true"><img decoding="async" loading="lazy" src="assets/icon_quizzes.png" alt="" />Quizzes</button>
+                  <button type="button" class="opt k2" data-flag="discussions"   aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_discussions.png" alt="" />Discussions</button>
+                  <button type="button" class="opt k2" data-flag="syllabus"      aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_syllabus.png" alt="" />Syllabus</button>
+                  <button type="button" class="opt k2" data-flag="submissions"   aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_submissions.png" alt="" />Submissions</button>
+                  <button type="button" class="opt k2 sep" data-flag="isolate"   aria-pressed="true"><img decoding="async" loading="lazy" src="assets/icon_sec_subfolders.png" alt="" />Own subfolders</button>
                 </div>
               </div>
 
               <div class="ctl-grp wide">
                 <div class="ctl-lbl"><span class="cbadge c3">Card 3</span>AI Optimization - conversions</div>
                 <div class="opt-row">
-                  <button type="button" class="opt k3" data-flag="zip"   aria-pressed="false"><img src="assets/icon_conv_zip.png" alt="" />Unpack archives</button>
-                  <button type="button" class="opt k3" data-flag="pptx"  aria-pressed="false"><img src="assets/icon_conv_pptx.png" alt="" />PowerPoint &rarr; PDF</button>
-                  <button type="button" class="opt k3" data-flag="word"  aria-pressed="false"><img src="assets/icon_conv_word.png" alt="" />Legacy Word &rarr; PDF</button>
-                  <button type="button" class="opt k3" data-flag="excel" aria-pressed="false"><img src="assets/icon_conv_excel.png" alt="" />Excel &rarr; PDF + data</button>
-                  <button type="button" class="opt k3" data-flag="html"  aria-pressed="false"><img src="assets/icon_conv_html.png" alt="" />Canvas Pages &rarr; text</button>
-                  <button type="button" class="opt k3" data-flag="code"  aria-pressed="false"><img src="assets/icon_conv_code.png" alt="" />Code &rarr; .txt</button>
-                  <button type="button" class="opt k3" data-flag="urls"  aria-pressed="false"><img src="assets/icon_conv_urls.png" alt="" />Gather web links</button>
-                  <button type="button" class="opt k3" data-flag="video" aria-pressed="false"><img src="assets/icon_conv_video.png" alt="" />Video &rarr; audio</button>
+                  <button type="button" class="opt k3" data-flag="zip"   aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_conv_zip.png" alt="" />Unpack archives</button>
+                  <button type="button" class="opt k3" data-flag="pptx"  aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_conv_pptx.png" alt="" />PowerPoint &rarr; PDF</button>
+                  <button type="button" class="opt k3" data-flag="word"  aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_conv_word.png" alt="" />Legacy Word &rarr; PDF</button>
+                  <button type="button" class="opt k3" data-flag="excel" aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_conv_excel.png" alt="" />Excel &rarr; PDF + data</button>
+                  <button type="button" class="opt k3" data-flag="html"  aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_conv_html.png" alt="" />Canvas Pages &rarr; text</button>
+                  <button type="button" class="opt k3" data-flag="code"  aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_conv_code.png" alt="" />Code &rarr; .txt</button>
+                  <button type="button" class="opt k3" data-flag="urls"  aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_conv_urls.png" alt="" />Gather web links</button>
+                  <button type="button" class="opt k3" data-flag="video" aria-pressed="false"><img decoding="async" loading="lazy" src="assets/icon_conv_video.png" alt="" />Video &rarr; audio</button>
                 </div>
               </div>
 
@@ -641,12 +640,12 @@
           <table>
             <thead><tr><th>Option</th><th>What you get</th><th>Attachments?</th></tr></thead>
             <tbody>
-              <tr><td class="nm"><img class="ti" src="assets/icon_assignments.png" alt="" />Assignments</td><td>The full brief and description, saved as HTML</td><td><span class="pill keep">Yes</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_announcements.png" alt="" />Announcements</td><td>Each announcement as HTML, dated</td><td><span class="pill keep">Yes</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_quizzes.png" alt="" />Quizzes</td><td>Questions and answers as HTML</td><td><span class="pill na">n/a</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_discussions.png" alt="" />Discussions</td><td>The thread, including replies</td><td><span class="pill na">n/a</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_syllabus.png" alt="" />Syllabus</td><td>The syllabus page as HTML</td><td><span class="pill na">n/a</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_submissions.png" alt="" />Submissions&nbsp;(Results)</td><td>Grades, rubric scores, teacher comments</td><td><span class="pill keep">Teacher's only</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_assignments.png" alt="" />Assignments</td><td>The full brief and description, saved as HTML</td><td><span class="pill keep">Yes</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_announcements.png" alt="" />Announcements</td><td>Each announcement as HTML, dated</td><td><span class="pill keep">Yes</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_quizzes.png" alt="" />Quizzes</td><td>Questions and answers as HTML</td><td><span class="pill na">n/a</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_discussions.png" alt="" />Discussions</td><td>The thread, including replies</td><td><span class="pill na">n/a</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_syllabus.png" alt="" />Syllabus</td><td>The syllabus page as HTML</td><td><span class="pill na">n/a</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_submissions.png" alt="" />Submissions&nbsp;(Results)</td><td>Grades, rubric scores, teacher comments</td><td><span class="pill keep">Teacher's only</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -675,10 +674,10 @@
           <table>
             <thead><tr><th>Output</th><th>What it is</th><th>Notes</th></tr></thead>
             <tbody>
-              <tr><td class="nm"><img class="ti" src="assets/pan_mp4.png" alt="" />Video</td><td>The full lecture as MP4</td><td>By far the largest option</td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/pan_mp3.png" alt="" />Audio</td><td>Audio only, as MP3</td><td>A fraction of the size; enough to re-listen</td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/pan_txt.png" alt="" />Transcript</td><td>Plain-text transcript</td><td><span class="pill need">Needs a model</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/pan_srt.png" alt="" />Subtitles</td><td>Subtitles with timestamps</td><td><span class="pill need">Needs a model</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_mp4.png" alt="" />Video</td><td>The full lecture as MP4</td><td>By far the largest option</td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_mp3.png" alt="" />Audio</td><td>Audio only, as MP3</td><td>A fraction of the size; enough to re-listen</td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_txt.png" alt="" />Transcript</td><td>Plain-text transcript</td><td><span class="pill need">Needs a model</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_srt.png" alt="" />Subtitles</td><td>Subtitles with timestamps</td><td><span class="pill need">Needs a model</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -716,14 +715,14 @@
           <table>
             <thead><tr><th>Conversion</th><th>Applies to</th><th>You get</th><th>Original</th></tr></thead>
             <tbody>
-              <tr><td class="nm"><img class="ti" src="assets/icon_conv_zip.png" alt="" />Unpack Archives</td><td><code>.zip</code> <code>.tar</code> <code>.tar.gz</code></td><td>A folder with the contents</td><td><span class="pill gone">Replaced</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_conv_pptx.png" alt="" />PowerPoint &rarr; PDF</td><td><code>.ppt</code> <code>.pptx</code> <code>.pptm</code> <code>.pot</code> <code>.potx</code></td><td>A PDF of the deck</td><td><span class="pill gone">Replaced</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_conv_word.png" alt="" />Legacy Word &rarr; PDF</td><td><code>.doc</code> <code>.rtf</code> <code>.odt</code></td><td>A PDF</td><td><span class="pill gone">Replaced</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_conv_excel.png" alt="" />Excel &rarr; PDF &amp; data</td><td><code>.xlsx</code> <code>.xls</code> <code>.xlsm</code></td><td>A PDF, plus a <code>_Data.txt</code> with every cell value (<code>.xls</code> gets the PDF only)</td><td><span class="pill gone">Replaced</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_conv_html.png" alt="" />Canvas Pages &rarr; Plain Text</td><td><code>.html</code></td><td>A Markdown version beside it</td><td><span class="pill keep">Kept</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_conv_code.png" alt="" />Code &amp; Data &rarr; .txt</td><td>50+ code and data formats - <code>.py</code> <code>.js</code> <code>.sql</code> <code>.json</code> <code>.csv</code> <code>.yaml</code> and more</td><td>A readable <code>.txt</code> with a header</td><td><span class="pill gone">Replaced</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_conv_urls.png" alt="" />Gather Web Links</td><td><code>.url</code> <code>.webloc</code></td><td>One <code>Compiled_External_Links.txt</code> for the course</td><td><span class="pill gone">Replaced</span></td></tr>
-              <tr><td class="nm"><img class="ti" src="assets/icon_conv_video.png" alt="" />Video &rarr; Audio</td><td><code>.mp4</code> <code>.mov</code> <code>.mkv</code> <code>.avi</code> <code>.m4v</code></td><td>An MP3 of the audio</td><td><span class="pill gone">Replaced</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_zip.png" alt="" />Unpack Archives</td><td><code>.zip</code> <code>.tar</code> <code>.tar.gz</code></td><td>A folder with the contents</td><td><span class="pill gone">Replaced</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_pptx.png" alt="" />PowerPoint &rarr; PDF</td><td><code>.ppt</code> <code>.pptx</code> <code>.pptm</code> <code>.pot</code> <code>.potx</code></td><td>A PDF of the deck</td><td><span class="pill gone">Replaced</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_word.png" alt="" />Legacy Word &rarr; PDF</td><td><code>.doc</code> <code>.rtf</code> <code>.odt</code></td><td>A PDF</td><td><span class="pill gone">Replaced</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_excel.png" alt="" />Excel &rarr; PDF &amp; data</td><td><code>.xlsx</code> <code>.xls</code> <code>.xlsm</code></td><td>A PDF, plus a <code>_Data.txt</code> with every cell value (<code>.xls</code> gets the PDF only)</td><td><span class="pill gone">Replaced</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_html.png" alt="" />Canvas Pages &rarr; Plain Text</td><td><code>.html</code></td><td>A Markdown version beside it</td><td><span class="pill keep">Kept</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_code.png" alt="" />Code &amp; Data &rarr; .txt</td><td>50+ code and data formats - <code>.py</code> <code>.js</code> <code>.sql</code> <code>.json</code> <code>.csv</code> <code>.yaml</code> and more</td><td>A readable <code>.txt</code> with a header</td><td><span class="pill gone">Replaced</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_urls.png" alt="" />Gather Web Links</td><td><code>.url</code> <code>.webloc</code></td><td>One <code>Compiled_External_Links.txt</code> for the course</td><td><span class="pill gone">Replaced</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_video.png" alt="" />Video &rarr; Audio</td><td><code>.mp4</code> <code>.mov</code> <code>.mkv</code> <code>.avi</code> <code>.m4v</code></td><td>An MP3 of the audio</td><td><span class="pill gone">Replaced</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -805,7 +804,7 @@
           <p>Two ways to download less, and one important consequence.</p>
         </div>
 
-        <h3 class="sub-h"><img class="shi-img" src="assets/icon_study_files.png" alt="" />Slides &amp; PDFs only</h3>
+        <h3 class="sub-h"><img decoding="async" loading="lazy" class="shi-img" src="assets/icon_study_files.png" alt="" />Slides &amp; PDFs only</h3>
         <p class="body">
           Narrows the download to slide decks and PDFs, and nothing else: <code>.pdf</code>, <code>.ppt</code>,
           <code>.pptx</code>, <code>.pptm</code>, <code>.pot</code> and <code>.potx</code>. Datasets, images, videos
@@ -899,7 +898,7 @@
       <!-- ============ CATEGORIES ============ -->
       <section class="guide-section" id="categories">
         <div class="sh">
-          <div class="icon-h2"><img src="assets/icon_sync_review.png" alt="" /><h2>The six categories</h2></div>
+          <div class="icon-h2"><img decoding="async" loading="lazy" src="assets/icon_sync_review.png" alt="" /><h2>The six categories</h2></div>
           <p>Every difference between Canvas and your folder lands in exactly one of these.</p>
         </div>
 
@@ -914,37 +913,37 @@
             <thead><tr><th>Category</th><th>What it means</th><th>What happens</th><th>Default</th></tr></thead>
             <tbody>
               <tr>
-                <td class="nm"><img class="ti" src="assets/Icon_Sync_Review_New_File.png" alt="" />New Files</td>
+                <td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/Icon_Sync_Review_New_File.png" alt="" />New Files</td>
                 <td>On Canvas, not in your folder yet</td>
                 <td>Downloaded into the right place</td>
                 <td><span class="pill keep">Checked</span></td>
               </tr>
               <tr>
-                <td class="nm"><img class="ti" src="assets/Icon_Sync_Review_Update.png" alt="" />Updates (Clean)</td>
+                <td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/Icon_Sync_Review_Update.png" alt="" />Updates (Clean)</td>
                 <td>Canvas has a newer version and you haven't touched your copy</td>
                 <td>Replaced in place - same name, same folder</td>
                 <td><span class="pill keep">Checked</span></td>
               </tr>
               <tr>
-                <td class="nm"><img class="ti" src="assets/Icon_Sync_Review_Missing_File.png" alt="" />Edited locally</td>
+                <td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/Icon_Sync_Review_Missing_File.png" alt="" />Edited locally</td>
                 <td>Canvas has a newer version <em>and</em> you've annotated or edited yours</td>
                 <td>New version saved as <code>_NewVersion</code> beside yours. Your file is untouched.</td>
                 <td><span class="pill na">Unchecked</span></td>
               </tr>
               <tr>
-                <td class="nm"><img class="ti" src="assets/Icon_Sync_Review_Locally_Deleted.png" alt="" />Deleted Locally</td>
+                <td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/Icon_Sync_Review_Locally_Deleted.png" alt="" />Deleted Locally</td>
                 <td>You deleted it; Canvas still has it</td>
                 <td>Nothing, unless you tick it. Quick Sync always skips these.</td>
                 <td><span class="pill na">Unchecked</span></td>
               </tr>
               <tr>
-                <td class="nm"><img class="ti" src="assets/Icon_Sync_Review_Deleted_On_Canvas.png" alt="" />Deleted on Canvas</td>
+                <td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/Icon_Sync_Review_Deleted_On_Canvas.png" alt="" />Deleted on Canvas</td>
                 <td>Teacher removed it; you still have it</td>
                 <td>Nothing at all. Your copy stays exactly where it is.</td>
                 <td><span class="pill na">Info only</span></td>
               </tr>
               <tr>
-                <td class="nm"><img class="ti" src="assets/Icon_Ignore.svg" alt="" />Ignored Files</td>
+                <td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/Icon_Ignore.svg" alt="" />Ignored Files</td>
                 <td>You chose to permanently skip it</td>
                 <td>Never appears again until you restore it</td>
                 <td><span class="pill na">Permanent skip</span></td>
@@ -1042,18 +1041,18 @@
       <!-- ============ MODES ============ -->
       <section class="guide-section" id="modes">
         <div class="sh">
-          <div class="icon-h2"><img src="assets/icon_sync_quick.png" alt="" /><h2>Quick Sync vs Analyze, Review &amp; Sync</h2></div>
+          <div class="icon-h2"><img decoding="async" loading="lazy" src="assets/icon_sync_quick.png" alt="" /><h2>Quick Sync vs Analyze, Review &amp; Sync</h2></div>
           <p>Same engine, same rules - one shows you the plan first.</p>
         </div>
 
         <div class="kv">
           <div class="kv-c">
-            <h5><img class="ti" src="assets/icon_sync_review.png" alt="" />Analyze, Review &amp; Sync</h5>
+            <h5><img decoding="async" loading="lazy" class="ti" src="assets/icon_sync_review.png" alt="" />Analyze, Review &amp; Sync</h5>
             <p>Scans, then shows you every change grouped by category. You tick and untick, optionally sweep things
               into Ignored, and confirm. Nothing is written until you say so.</p>
           </div>
           <div class="kv-c">
-            <h5><img class="ti" src="assets/icon_sync_quick.png" alt="" />Quick Sync</h5>
+            <h5><img decoding="async" loading="lazy" class="ti" src="assets/icon_sync_quick.png" alt="" />Quick Sync</h5>
             <p>Skips the review screen and applies the safe defaults: new files and clean updates only.</p>
           </div>
         </div>

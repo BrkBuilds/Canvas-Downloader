@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Canvas Downloader — Pre-launch site audit</title>
+<style>
+  :root {
+    --ground: #f5f7f9;
+    --surface: #ffffff;
+    --surface-sunk: #eef1f5;
+    --ink: #111620;
+    --ink-soft: #3d4854;
+    --muted: #5d6874;
+    --hairline: #e1e6ec;
+    --hairline-strong: #cdd5de;
+    --accent: #1e3a5c;
+    --accent-soft: #e8eef5;
+
+    --sev-blocker: #b3261e;
+    --sev-blocker-bg: #fbeceb;
+    --sev-high: #9c5510;
+    --sev-high-bg: #fbf0e3;
+    --sev-med: #35608f;
+    --sev-med-bg: #e9f0f7;
+    --sev-low: #5b6675;
+    --sev-low-bg: #edeff2;
+    --sev-good: #256b4d;
+    --sev-good-bg: #e6f2ec;
+
+    --serif: ui-serif, Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0e1218;
+      --surface: #151a22;
+      --surface-sunk: #1b212b;
+      --ink: #e7ebf1;
+      --ink-soft: #c3ccd7;
+      --muted: #929db0;
+      --hairline: #262d38;
+      --hairline-strong: #36404e;
+      --accent: #8fb3d9;
+      --accent-soft: #1a2432;
+
+      --sev-blocker: #f08a80;
+      --sev-blocker-bg: #2e1a18;
+      --sev-high: #e0a865;
+      --sev-high-bg: #2b2116;
+      --sev-med: #86b3e0;
+      --sev-med-bg: #16222f;
+      --sev-low: #9aa5b3;
+      --sev-low-bg: #1d232c;
+      --sev-good: #79c9a3;
+      --sev-good-bg: #14261e;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0e1218;
+    --surface: #151a22;
+    --surface-sunk: #1b212b;
+    --ink: #e7ebf1;
+    --ink-soft: #c3ccd7;
+    --muted: #929db0;
+    --hairline: #262d38;
+    --hairline-strong: #36404e;
+    --accent: #8fb3d9;
+    --accent-soft: #1a2432;
+
+    --sev-blocker: #f08a80;
+    --sev-blocker-bg: #2e1a18;
+    --sev-high: #e0a865;
+    --sev-high-bg: #2b2116;
+    --sev-med: #86b3e0;
+    --sev-med-bg: #16222f;
+    --sev-low: #9aa5b3;
+    --sev-low-bg: #1d232c;
+    --sev-good: #79c9a3;
+    --sev-good-bg: #14261e;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+  }
+
+  /* ---------- masthead ---------- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 18px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(32px, 5vw, 46px);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 20px;
+  }
+
+  .standfirst {
+    font-size: 18.5px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    max-width: 68ch;
+    margin: 0 0 36px;
+  }
+
+  /* ---------- verdict ---------- */
+  .verdict {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-top: 3px solid var(--sev-good);
+    padding: 26px 28px;
+    margin-bottom: 14px;
+  }
+
+  .verdict h2 {
+    font-family: var(--serif);
+    font-size: 23px;
+    font-weight: 700;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+  }
+
+  .verdict p { margin: 0 0 14px; color: var(--ink-soft); max-width: 72ch; }
+  .verdict p:last-child { margin-bottom: 0; }
+
+  .tally {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    gap: 1px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+    margin-bottom: 44px;
+  }
+
+  .tally div {
+    background: var(--surface);
+    padding: 16px 18px;
+  }
+
+  .tally .n {
+    font-family: var(--mono);
+    font-size: 27px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    display: block;
+  }
+
+  .tally .k {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .n-blocker { color: var(--sev-blocker); }
+  .n-high { color: var(--sev-high); }
+  .n-med { color: var(--sev-med); }
+  .n-low { color: var(--sev-low); }
+  .n-good { color: var(--sev-good); }
+
+  /* ---------- section headers ---------- */
+  .sec {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin: 56px 0 6px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .sec h2 {
+    font-family: var(--serif);
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -0.012em;
+    margin: 0;
+  }
+
+  .sec .count {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    margin-left: auto;
+  }
+
+  .sec-note {
+    color: var(--muted);
+    font-size: 14.5px;
+    margin: 12px 0 8px;
+    max-width: 74ch;
+  }
+
+  /* ---------- findings ---------- */
+  .find {
+    display: grid;
+    grid-template-columns: 128px 1fr;
+    gap: 0 26px;
+    padding: 26px 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .find-meta { padding-top: 3px; }
+
+  .fid {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .chip {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid currentColor;
+  }
+
+  .c-blocker { color: var(--sev-blocker); background: var(--sev-blocker-bg); }
+  .c-high { color: var(--sev-high); background: var(--sev-high-bg); }
+  .c-med { color: var(--sev-med); background: var(--sev-med-bg); }
+  .c-low { color: var(--sev-low); background: var(--sev-low-bg); }
+  .c-good { color: var(--sev-good); background: var(--sev-good-bg); }
+
+  .status-done, .status-part {
+    display: inline-block;
+    margin-top: 7px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+  }
+
+  .status-done { color: var(--sev-good); background: var(--sev-good-bg); border: 1px solid currentColor; }
+  .status-part { color: var(--sev-high); background: var(--sev-high-bg); border: 1px solid currentColor; }
+
+  p.outcome {
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    background: var(--sev-good-bg);
+    border-left: 2px solid var(--sev-good);
+    font-size: 14.5px;
+    color: var(--ink-soft);
+  }
+
+  .find h3 {
+    font-family: var(--serif);
+    font-size: 20.5px;
+    font-weight: 700;
+    line-height: 1.28;
+    letter-spacing: -0.008em;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+
+  .find p { margin: 0 0 12px; max-width: 74ch; color: var(--ink-soft); }
+  .find p:last-child { margin-bottom: 0; }
+
+  .ev {
+    background: var(--surface-sunk);
+    border-left: 2px solid var(--hairline-strong);
+    padding: 12px 16px;
+    margin: 0 0 12px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.72;
+    color: var(--ink-soft);
+    overflow-x: auto;
+  }
+
+  .ev b { color: var(--ink); font-weight: 700; }
+
+  .ev-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .fix {
+    border-top: 1px dashed var(--hairline-strong);
+    padding-top: 12px;
+    margin-top: 14px;
+  }
+
+  .fix > strong {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 7px;
+  }
+
+  .fix ul { margin: 0; padding-left: 20px; }
+  .fix li { margin-bottom: 6px; color: var(--ink-soft); max-width: 72ch; }
+  .fix li:last-child { margin-bottom: 0; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-sunk);
+    padding: 1px 5px;
+    border: 1px solid var(--hairline);
+    white-space: nowrap;
+  }
+
+  .ev code { background: none; border: none; padding: 0; }
+
+  /* ---------- decision block ---------- */
+  .decide {
+    background: var(--accent-soft);
+    border: 1px solid var(--hairline-strong);
+    padding: 26px 28px;
+    margin-top: 26px;
+  }
+
+  .decide h3 {
+    font-family: var(--serif);
+    font-size: 21px;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+
+  .decide ol { margin: 0; padding-left: 22px; }
+  .decide li { margin-bottom: 12px; max-width: 72ch; color: var(--ink-soft); }
+  .decide li:last-child { margin-bottom: 0; }
+  .decide li b { color: var(--ink); }
+
+  /* ---------- method + strengths ---------- */
+  .method {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    padding: 22px 26px;
+    margin-bottom: 8px;
+  }
+
+  .method h3 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+
+  .method ul { margin: 0; padding-left: 20px; }
+  .method li { margin-bottom: 5px; color: var(--ink-soft); font-size: 14.5px; }
+
+  .good-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+  }
+
+  .good-grid div { background: var(--surface); padding: 18px 20px; }
+
+  .good-grid h4 {
+    font-family: var(--serif);
+    font-size: 17px;
+    margin: 0 0 6px;
+    font-weight: 700;
+  }
+
+  .good-grid p { margin: 0; font-size: 14.5px; color: var(--muted); }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--hairline);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 40px 18px 72px; }
+    .find { grid-template-columns: 1fr; gap: 12px; }
+    .find-meta { display: flex; align-items: center; gap: 10px; padding-top: 0; }
+    .fid { margin-bottom: 0; }
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Pre-launch audit · 13 August 2026 · birkls.github.io/Canvas_LMS_batch_file_downloader</p>
+  <h1>Is the site launch-ready?</h1>
+  <p class="standfirst">
+    Short answer: the writing is ready, the plumbing is not. This is the strongest indie-app trust
+    story I have read in a while — the disclaimer and privacy pages are genuinely better than most
+    commercial equivalents. What is not ready is the part a student actually touches: a homepage that
+    weighs 64&nbsp;MB, a macOS system requirement the build cannot honour, and a broken overlay that
+    traps phone users on a black screen.
+  </p>
+
+  <div class="verdict">
+    <h2>Verdict: fixed — 18 of 19 done, one action left for you</h2>
+    <p>
+      All three blockers and every High, Medium and Low finding have been implemented and verified in
+      a browser. The homepage went from <b>64&nbsp;MB to 5.0&nbsp;MB</b> with the demo videos still
+      autoplaying, the broken lightbox is fixed, the macOS requirement now matches what the build can
+      actually honour, and the app's own first-run permission notice was corrected too.
+    </p>
+    <p>
+      <b>The one thing left is yours:</b> cut the v2.0.2 release and attach the macOS DMG. The site now
+      says 2.0.2, so publish the release before (or with) deploying these changes — see B3.
+    </p>
+    <p>
+      Everything below was measured against the live site and the <code>main</code> working tree, not
+      inferred. Each finding carries the measurement that produced it, and the outcome it now has.
+    </p>
+  </div>
+
+  <div class="tally">
+    <div><span class="n n-good">18</span><span class="k">Fixed</span></div>
+    <div><span class="n n-blocker">1</span><span class="k">Needs you</span></div>
+    <div><span class="n n-good">92%</span><span class="k">Page weight cut</span></div>
+    <div><span class="n n-good">3725</span><span class="k">Tests passing</span></div>
+    <div><span class="n n-good">0</span><span class="k">Audit violations</span></div>
+  </div>
+
+  <div class="method">
+    <h3>How this was checked</h3>
+    <ul>
+      <li>All 10 pages, <code>mac-wizard.js/css</code> and <code>sitemap.xml</code> read in full.</li>
+      <li>Live site driven in a real browser: network measured, console captured, layout probed at 1912px and 390px.</li>
+      <li>GitHub Releases API and the Microsoft Store listing queried directly.</li>
+      <li>Every factual claim cross-checked against the app source — <code>engine/applescript_bridge.py</code>,
+          <code>panopto/settings.py</code>, <code>core/preset_manager.py</code>, <code>ui/institution_picker.py</code>,
+          the macOS spec and the build workflow.</li>
+      <li>Dependency wheel platform tags queried from PyPI to establish the real macOS floor.</li>
+    </ul>
+  </div>
+
+  <!-- ============ BLOCKERS ============ -->
+  <div class="sec"><h2>Blockers</h2><span class="count">3 findings</span></div>
+  <p class="sec-note">Each of these either breaks a promise to the user or costs you installs on day one.</p>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">B1</span>
+      <span class="status-done">Fixed</span><span class="chip c-blocker">Blocker</span></div>
+    <div>
+      <h3>The macOS requirement you advertise is not the one you ship</h3>
+      <p>
+        The site states three different minimums, and the most generous one is very likely wrong. The
+        build declares <code>LSMinimumSystemVersion 11.0</code>, but the actual floor is set by whatever
+        native wheels pip resolves at build time — and the CI runner is <code>macos-14</code>. The
+        transcription stack's arm64 wheels are tagged for macOS 14. A student on Ventura downloads
+        151&nbsp;MB and gets a failure.
+      </p>
+      <div class="ev">
+        <span class="ev-label">Measured</span>
+        schema.org  <b>"macOS 12 or later"</b><br>
+        hero + cards <b>"macOS 11 Big Sur or later"</b><br>
+        mac-setup   <b>"Monterey, Ventura, Sonoma, Sequoia, Tahoe all work"</b><br>
+        spec        <b>LSMinimumSystemVersion 11.0</b><br>
+        <br>
+        PyPI arm64 wheel floors — onnxruntime <b>macosx_14_0 only</b>, av <b>14.0</b>, numpy <b>11.0 + 14.0</b><br>
+        CI runner    <b>macos-14</b> (pip prefers the highest compatible tag)<br>
+        requirements <b>onnxruntime and numpy are unpinned transitives</b><br>
+        <br>
+        macOS versions ever tested (tests/audit/*.md): <b>15 and 26 only</b><br>
+        branch <code>fix/macos13-transcription-wheels</code> — <b>not merged into main</b>
+      </div>
+      <p>
+        The deeper problem is that an unpinned native transitive means <b>the macOS floor changes
+        silently on every rebuild</b>. The v2.0.1 DMG from July may well run on Big Sur; a rebuild
+        today may not, and nothing would tell you.
+      </p>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Pick one number and use it in all four places. Until someone runs the DMG on an older
+              Mac, the defensible claim is <b>macOS 14 Sonoma or later</b>.</li>
+          <li>Pin <code>onnxruntime</code> and <code>numpy</code> explicitly in
+              <code>requirements.txt</code> so the floor stops drifting, or merge
+              <code>fix/macos13-transcription-wheels</code>.</li>
+          <li>Drop "Monterey, Ventura, Sonoma, Sequoia, Tahoe all work" — you have evidence for two of
+              those five. Replace with the versions you have actually run.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — macOS 14 stated in all four places; spec floor raised to 14.0; CI now measures the real floor from the built binaries and fails if it drifts.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">B2</span>
+      <span class="status-done">Fixed</span><span class="chip c-blocker">Blocker</span></div>
+    <div>
+      <h3>The homepage costs 64&nbsp;MB to read, and GitHub Pages is already refusing requests</h3>
+      <p>
+        Four demo videos autoplay with no poster and no lazy-loading, and every one buffers to
+        completion. The hero is a 4.8&nbsp;MB square PNG rendered into a 327px slot on a phone; your
+        avatar is a 2&nbsp;MB image rendered at 72px. During a plain page load the server dropped an
+        icon with a 503.
+      </p>
+      <div class="ev">
+        <span class="ev-label">Measured — live site, real browser</span>
+        Sync_Review_Demo.mp4            <b>26,637 KB</b>   readyState 4 (fully buffered)<br>
+        Quick_Sync_Demo.mp4             <b>14,276 KB</b>   readyState 4<br>
+        AI-Optimization.mp4             <b>13,048 KB</b>   readyState 4<br>
+        DownloadAllCourses_Folders.mp4   <b>2,652 KB</b>   readyState 4<br>
+        images                           <b>8,860 KB</b><br>
+        <b>total ≈ 64 MB</b>  ·  36 requests  ·  docs/assets total 87 MB<br>
+        <br>
+        CanvasDownloaderHero.png  natural <b>2048×2048</b> → rendered <b>327×327</b>  (4,822 KB)<br>
+        icon_website_brk.png      natural <b>2048×2048</b> → rendered <b>72px</b>     (2,101 KB)<br>
+        <br>
+        console: <b>503</b> on assets/icon_conv_excel.png — an icon silently failed to render
+      </div>
+      <p>
+        Resource Timing reports only 11.5&nbsp;MB, which is why this is easy to miss: the three large
+        videos arrive by range request and report <code>transferSize: 300</code>. The
+        <code>Content-Length</code> figures above are the truth.
+      </p>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Give every video a <code>poster</code>, drop <code>autoplay</code>, add
+              <code>preload="none"</code>, and play on click or on intersection. This alone removes
+              ~55&nbsp;MB from a normal visit.</li>
+          <li>Re-encode the four MP4s — they are screen recordings, so a 1280px-wide H.264 at CRF 28
+              typically lands 5–10× smaller. 26&nbsp;MB for one UI clip is roughly 20× what it needs.</li>
+          <li>Export the hero at 1200px and the avatar at 220px, as WebP. That is ~6.9&nbsp;MB → under
+              150&nbsp;KB.</li>
+          <li>Add <code>loading="lazy"</code> and <code>decoding="async"</code> to the icon images.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — videos re-encoded 2560px→1920px (still autoplaying MP4), hero and avatar to WebP. <b>64 MB → 5.0 MB</b>, verified in-browser.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">B3</span>
+      <span class="status-part">Partly</span><span class="chip c-blocker">Blocker</span></div>
+    <div>
+      <h3>Version, release and download are three different answers</h3>
+      <p>
+        <code>version.py</code> says 2.0.2. The newest release is v2.0.1. The site's structured data
+        says 2.0.1, and both download buttons resolve to the v2.0.1 assets. That is internally
+        consistent <em>only</em> if you are launching 2.0.1. If 2.0.2 is the launch build, there is no
+        release to serve it — and no macOS DMG at all, because the mac workflow uploads a CI artifact
+        with 14-day retention rather than attaching an asset to a release.
+      </p>
+      <div class="ev">
+        <span class="ev-label">Measured</span>
+        version.py                <b>2.0.2</b><br>
+        git tags                  v1.0.0, v2.0.0, <b>v2.0.1</b>  (no v2.0.2)<br>
+        index.html softwareVersion <b>2.0.1</b><br>
+        <br>
+        Releases API — v2.0.1 <b>Canvas_Downloader_v2.0.1_Windows.exe</b> 140,130,279 B (9 downloads)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        v2.0.1 <b>Canvas_Downloader_v2.0.1_MacOS.dmg</b> 151,503,877 B (8 downloads)<br>
+        build-macos.yml — <b>workflow_dispatch</b>, <code>upload-artifact</code>, retention 14 days<br>
+        <br>
+        v2.0.0 is flagged <b>prerelease</b> and holds a file named <code>..._v2.0.1_macOS.dmg</code>
+      </div>
+      <p>
+        There is also a latent trap in the resolver on <code>index.html</code>,
+        <code>thanks-win.html</code> and <code>thanks-mac.html</code>: it skips <code>draft</code>
+        releases but <b>not <code>prerelease</code></b>, and takes the first match in API order. Publish
+        a beta and every visitor is silently served the beta.
+      </p>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Decide the launch version, then make all three agree. If it is 2.0.2: cut the tag, run the
+              mac workflow, and <b>attach the DMG to the release</b> — the download buttons read release
+              assets, not artifacts.</li>
+          <li>Add <code>if (rel.prerelease) continue;</code> next to the existing draft check in all
+              three resolvers.</li>
+          <li>Rename the mislabelled asset on v2.0.0, or delete that prerelease.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Partly — prerelease guard added to all three resolvers and the site now says 2.0.2. <b>You still need to cut the v2.0.2 release and attach the DMG.</b></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HIGH ============ -->
+  <div class="sec"><h2>High</h2><span class="count">6 findings</span></div>
+  <p class="sec-note">Not launch-stopping, but each one costs installs or tells the user something untrue.</p>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">H1</span>
+      <span class="status-done">Fixed</span><span class="chip c-high">High</span></div>
+    <div>
+      <h3>Clicking a screenshot on the homepage opens a black dead end</h3>
+      <p>
+        The video-modal markup, CSS and script are all present <b>twice</b>. Two elements share
+        <code>id="videoModal"</code> and two share <code>id="modalVideo"</code>, so
+        <code>getElementById</code> always returns the first — while <code>#modalImage</code> lives in
+        the second. Clicking the Today-mode screenshot therefore writes the image into the hidden
+        modal and opens the empty one. The visible X then does nothing, because one script toggles
+        <code>.show</code> and the other <code>.active</code>.
+      </p>
+      <div class="ev">
+        <span class="ev-label">Reproduced on the live site</span>
+        document.querySelectorAll('[id="videoModal"]').length  <b>2</b><br>
+        document.querySelectorAll('[id="modalVideo"]').length  <b>2</b><br>
+        getElementById('videoModal') → modal index <b>0</b><br>
+        #modalImage lives in modal index <b>1</b><br>
+        <br>
+        after clicking .expandable-img (TodayMode_Auto-download-new-files.png):<br>
+        &nbsp;&nbsp;modal 0 — class "video-modal <b>active</b>", visible <b>true</b>, contains visible image <b>false</b><br>
+        &nbsp;&nbsp;modal 1 — hidden, opacity 0, holds the image<br>
+        <br>
+        clicking the visible X → class unchanged, <b>closedByX: false</b><br>
+        pressing Escape   → <b>closedByEscape: true</b>
+      </div>
+      <p>
+        On desktop a user presses Escape and moves on. On a phone there is no Escape key, so the only
+        way out is tapping the backdrop precisely — otherwise the homepage is a black screen.
+      </p>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Delete the first modal block and its script (<code>index.html</code> ~4689–4725) and keep
+              the second, which is the one that handles both video and image. Then correct the ids so
+              the surviving script resolves its own elements.</li>
+          <li>Remove the now-dead <code>.video-modal.show</code> CSS block so only one rule set governs
+              the modal.</li>
+          <li>Add a visible close affordance that works on touch.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — duplicate modal, script and stylesheet removed. Image opens, X closes, video expand still works, Escape still works.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">H2</span>
+      <span class="status-done">Fixed</span><span class="chip c-high">High</span></div>
+    <div>
+      <h3>On a phone there is no download button until you scroll past the fold</h3>
+      <p>
+        The hero image consumes the entire first screen, pushing the first download control just below
+        the fold. The nav's Download button collapses to a bare icon with no label. And OS detection is
+        a single <code>navigator.platform</code> test with a Windows fallback — so every phone, tablet
+        and Chromebook is offered a Windows <code>.exe</code>, and every iPad (which reports
+        <code>MacIntel</code>) is offered a macOS DMG it cannot install.
+      </p>
+      <div class="ev">
+        <span class="ev-label">Measured at 390×844</span>
+        viewport height                 <b>844 px</b><br>
+        first download CTA top          <b>886 px</b>  → <b>1.05 screens down</b><br>
+        nav Download button label       <b>hidden</b> (innerText empty, icon only)<br>
+        navigator.platform on mobile    <b>"Win32"</b> → Windows card shown<br>
+        page height                     <b>14,224 px</b>
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>On viewports under ~700px, move the download control above the hero image, or cap the
+              image height so both fit.</li>
+          <li>Keep the word "Download" in the nav button on mobile — an unlabelled icon is the weakest
+              possible CTA.</li>
+          <li>Detect touch/mobile explicitly and swap in a third state: "Canvas Downloader is a desktop
+              app for Windows and Mac" plus a copy-link / email-to-myself action. Right now a shared
+              link — the main way this spreads between students — lands on the wrong offer.</li>
+          <li>Replace <code>navigator.platform</code> (deprecated) with
+              <code>navigator.userAgentData?.platform</code> falling back to a UA test.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — CTA moved above the artwork (886px → 507px, above the fold), nav keeps its label, and a phone/tablet state replaces the uninstallable download.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">H3</span>
+      <span class="status-done">Fixed</span><span class="chip c-high">High</span></div>
+    <div>
+      <h3>The macOS guide explains a permission using behaviour you deliberately removed</h3>
+      <p>
+        Step 5 lists System Events as dialog 3 of 6 and explains it as: "keeps Office windows hidden
+        during conversions — nothing flashes or bounces in the Dock." That behaviour was measured as
+        counter-productive and deleted on 2026-08-10. The permission is still real — but for a
+        different reason, and it does not appear where the page says it does.
+      </p>
+      <div class="ev">
+        <span class="ev-label">Cross-checked against engine/applescript_bridge.py</span>
+        <code>set visible of … to false</code>  <b>removed</b> — measured: no hide is quietest
+        (visible 0/7 samples vs 2/11 with it)<br>
+        <br>
+        remaining System Events use — <b>4 sites, all <code>exists process</code></b><br>
+        &nbsp;&nbsp;lines 1765, 1942, 2020, 2169 — the Office <b>quit / teardown</b> path<br>
+        <br>
+        first_run_permission_setup primes <b>_APP_TRIPLES only</b> (Word/Excel/PowerPoint)<br>
+        → the System Events prompt fires at <b>end of the conversion phase</b>, not in the opening batch
+      </div>
+      <p>
+        So two statements on that page are wrong: the reason for the permission, and the promise that
+        the app "asks macOS for all remaining permissions up front — so they never interrupt a run
+        later." If the user walks away, that prompt goes unanswered and Office is left open with the
+        Recents list unpurged — exactly the symptom the teardown exists to prevent.
+      </p>
+      <p>
+        <b>Same drift exists inside the app.</b> <code>TCC_FIRST_RUN_NOTICE</code> ends with "you are
+        only asked once", which is false on macOS 15+ where the App Data consent is per-session. Your
+        website is currently more accurate than your app on this point.
+      </p>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Rewrite dialog 3's explanation: System Events lets the app check whether Word, Excel or
+              PowerPoint is still running, so it can close the copies it opened and clean up your
+              Recent Files list.</li>
+          <li>Say when it appears — at the end of the first conversion run, not in the opening batch —
+              or prime it in <code>first_run_permission_setup</code> so the page becomes true as written.</li>
+          <li>Amend <code>TCC_FIRST_RUN_NOTICE</code>: only asked once, except the macOS 15+ App Data
+              prompt, which returns once per session unless Full Disk Access is granted.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed in both — guide rewritten and moved to position 6, wizard row corrected, and <code>TCC_FIRST_RUN_NOTICE</code> in the app fixed with two new tests.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">H4</span>
+      <span class="status-done">Fixed</span><span class="chip c-high">High</span></div>
+    <div>
+      <h3>Every download depends on an unauthenticated API call, and the failure state lies</h3>
+      <p>
+        Both platforms resolve their download by calling the GitHub API from the browser. That endpoint
+        is rate-limited to 60 requests per hour <em>per IP</em> — and a university NAT is one IP. When
+        it fails, <code>thanks-mac.html</code> still renders the headline "Your download has started!
+        🎉" while nothing has downloaded.
+      </p>
+      <div class="ev">
+        <span class="ev-label">Read from the page source</span>
+        index.html, thanks-win.html, thanks-mac.html →<br>
+        &nbsp;&nbsp;<code>fetch('https://api.github.com/repos/.../releases?per_page=30')</code><br>
+        unauthenticated limit: <b>60 req/hour/IP</b> (shared campus NAT = one IP)<br>
+        <br>
+        on failure — mac: headline still reads <b>"Your download has started! 🎉"</b>,<br>
+        &nbsp;&nbsp;only recovery is a link reading "Download didn't start? Click here"<br>
+        on failure — win: button falls back to <b>releases.html</b>, which makes the same call
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Only show the success headline after the fetch resolves. Until then, render a neutral
+              "Preparing your download…", and on failure switch to "We couldn't start the download —
+              get it from GitHub Releases" with a prominent button.</li>
+          <li>Ship a hardcoded fallback URL for the current release so a rate-limited visitor still gets
+              a working direct link rather than a page that makes the same failing call.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — the headline only claims success once the download resolves, and a failure switches to a working GitHub button.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">H5</span>
+      <span class="status-done">Fixed</span><span class="chip c-high">High</span></div>
+    <div>
+      <h3>The homepage promotes Panopto with none of the care the disclaimer shows</h3>
+      <p>
+        Your disclaimer is unusually honest about lecture recordings: it states plainly that the app
+        ignores the download-permission flag, that saving may breach institutional rules, and that
+        redistribution is the real harm. The homepage FAQ promotes the same feature with none of that,
+        and the neighbouring FAQ answers the legality question in a way the disclaimer would not
+        endorse.
+      </p>
+      <div class="ev">
+        <span class="ev-label">The two pages, side by side</span>
+        disclaimer.html — "Canvas Downloader <b>does not read that setting</b>… Saving a recording
+        <b>may be contrary to your institution's IT rules or to Panopto's terms of service</b>"<br>
+        <br>
+        index.html FAQ — "Can it download lecture recordings (Panopto)? <b>Yes.</b> … automatically
+        finds…"  <b>no caveat, no link to the disclaimer</b><br>
+        <br>
+        index.html FAQ — "Is this allowed by my university? … <b>You're downloading your own course
+        materials.</b>"  <b>no link to the disclaimer</b><br>
+        <br>
+        the app itself is stricter: <code>require_panopto_notice</code> +
+        <code>panopto_notice_ack_version</code> gate the feature behind an acknowledgement
+      </div>
+      <p>
+        The app asks for acknowledgement, and the disclaimer is careful. Only the shop window
+        oversells. That is the wrong way round, and it is the page an institution would read first.
+      </p>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Add one sentence and a link to the Panopto FAQ answer: recordings belong to your lecturer
+              and institution, downloads are for personal study, never redistribute — see the
+              disclaimer.</li>
+          <li>Soften "You're downloading your own course materials" to reference institutional rules,
+              and link the disclaimer there too.</li>
+          <li>Both are two-line edits and they materially reduce your exposure.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — both FAQ answers now carry the caveat and link the disclaimer.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">H6</span>
+      <span class="status-done">Fixed</span><span class="chip c-high">High</span></div>
+    <div>
+      <h3>Your best onboarding feature is invisible on the site</h3>
+      <p>
+        The app ships a searchable directory of verified Canvas institutions on the login screen —
+        accent-folded search, opening on the user's own country, built from a crawl and hand-reviewed.
+        The website mentions it nowhere. Instead the homepage teaches the manual method the picker was
+        built to replace, and answers the single biggest pre-download objection with a shrug.
+      </p>
+      <div class="ev">
+        <span class="ev-label">App vs site</span>
+        app  — <code>ui/institution_picker.py</code>, <code>shared/institutions.py</code>
+        <b>343 KB</b> of verified institutions, live on the login screen<br>
+        site — occurrences of the picker across all 10 pages: <b>0</b><br>
+        <br>
+        index.html instead says: "Log in to Canvas in your browser. Examine the address bar…"<br>
+        index.html FAQ: "Will it work with my university?" → "<b>Almost certainly.</b>"
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Put the picker in the "How to login" section, above the manual instructions: "Start typing
+              your university — thousands are already in the list. Not there? Paste your Canvas address
+              instead." Keep the manual path as the fallback it now is.</li>
+          <li>Answer "Will it work with my university?" with the number of verified institutions rather
+              than "almost certainly" — a concrete count converts an objection into reassurance.</li>
+          <li>This is the cheapest conversion win available: the feature exists, works, and is
+              genuinely differentiating.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — the picker leads the login section, and the FAQ answers with 4,757 verified institutions.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MEDIUM ============ -->
+  <div class="sec"><h2>Medium</h2><span class="count">6 findings</span></div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">M1</span>
+      <span class="status-done">Fixed</span><span class="chip c-med">Medium</span></div>
+    <div>
+      <h3>An EU-facing student site loads Google Fonts on every page while the privacy policy claims to cover it</h3>
+      <p>
+        The policy explicitly says it covers "the project website", then lists only the app's
+        connections. In fact every page pulls fonts from Google, and two embed YouTube. Serving Google
+        Fonts from Google's CDN transmits the visitor's IP to Google — which a German court has already
+        found unlawful without consent. Your audience is European students and your strongest selling
+        point is privacy.
+      </p>
+      <div class="ev">
+        <span class="ev-label">Third-party origins contacted by the site</span>
+        fonts.googleapis.com  <b>all 10 pages</b><br>
+        fonts.gstatic.com     5 pages<br>
+        youtube-nocookie.com  index.html, mac-setup.html<br>
+        get.microsoft.com     3 pages<br>
+        api.github.com        3 pages (fetch)<br>
+        <br>
+        privacy.html third-party list: Canvas, Panopto, Hugging Face, PyPI, GitHub, Microsoft Store —
+        <b>no mention of fonts or the video embed</b>
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Self-host Inter (two weights as woff2 in <code>docs/assets</code>). Removes the legal
+              question and one render-blocking third party.</li>
+          <li>Make the YouTube embed click-to-load with a poster image.</li>
+          <li>Add a short "About this website" section to the policy: no cookies, no analytics, and the
+              exact third parties the pages contact.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — Inter and JetBrains Mono self-hosted (21 Google links removed, 0 requests), YouTube is click-to-load, and the policy has an "About this website" section.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">M2</span>
+      <span class="status-done">Fixed</span><span class="chip c-med">Medium</span></div>
+    <div>
+      <h3>The Panopto Shortcut output is undocumented — and it is the first toggle users see</h3>
+      <p>
+        The app produces five Panopto outputs. The site documents four. The missing one,
+        <code>output_url</code>, is the first control on the Card 4 panel, so the first thing a user
+        meets in that card is the one thing the guide never explains.
+      </p>
+      <div class="ev">
+        <span class="ev-label">panopto/settings.py vs the site</span>
+        app  — output_url (<b>first toggle</b>, default False), output_mp4, output_mp3, output_txt, output_srt<br>
+        site — MP4, MP3, .txt, .srt  ·  Shortcut: <b>absent from all 10 pages</b><br>
+        site — Card 4 illustration shows <b>4 icons</b>, the app shows 5
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Add Shortcut to the guide's Panopto section and to the Card 4 illustration: a link file
+              that reopens the lecture on Panopto with the slides and search intact — costs no disk and
+              no bandwidth, but stops working if you lose Canvas access.</li>
+          <li>Note that it is off by default, unlike MP3/TXT/SRT.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — Shortcut documented in the guide, including that it is off by default.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">M3</span>
+      <span class="status-done">Fixed</span><span class="chip c-med">Medium</span></div>
+    <div>
+      <h3>Nowhere does the site say how big the download is, or how the .exe updates</h3>
+      <p>
+        Three practical questions a cautious student asks before installing a 140&nbsp;MB unsigned
+        binary go unanswered: how big is it, will my antivirus complain, and how do I get the next
+        version? The Store path answers the third implicitly; the direct download does not.
+      </p>
+      <div class="ev">
+        <span class="ev-label">Missing across all 10 pages</span>
+        download size          Windows <b>140 MB</b>, macOS <b>151 MB</b> — <b>never stated</b><br>
+        installed footprint    <b>~326 MB</b> — never stated<br>
+        antivirus false positives on unsigned PyInstaller builds — <b>never mentioned</b><br>
+        how the direct .exe updates (in-app banner → manual reinstall) — <b>never explained</b><br>
+        <br>
+        win-setup.html does say the Store build has "automatic updates" — the contrast is left implicit
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Put the size next to each download button.</li>
+          <li>Add one line to win-setup: some antivirus tools flag unsigned installers; the source is
+              public and the file can be checked on VirusTotal.</li>
+          <li>State the update model for both paths — Store updates itself, the direct build tells you
+              and you reinstall.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — sizes on both download buttons, plus an antivirus and update note on the Windows page.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">M4</span>
+      <span class="status-done">Fixed</span><span class="chip c-med">Medium</span></div>
+    <div>
+      <h3>Link previews use a square app icon, on a product that spreads by sharing</h3>
+      <p>
+        Every page sets <code>twitter:card = summary</code> with the 1024px icon as the image. Shared
+        into a group chat, Discord or Reddit — the way this product will actually spread — it renders
+        as a small square thumbnail rather than a banner. You already have a hero image that would make
+        a good card.
+      </p>
+      <div class="ev">
+        <span class="ev-label">Head metadata</span>
+        twitter:card  <b>summary</b>  (not summary_large_image)<br>
+        og:image      <b>icon.png</b> — 1024×1024 square app icon<br>
+        og:image:width / :height / og:image:alt — <b>absent</b><br>
+        og:site_name, og:locale — <b>absent</b><br>
+        thanks-mac.html / thanks-win.html — no canonical, no description (both noindex, so minor)
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Export a 1200×630 card — app window plus the headline — and set it as
+              <code>og:image</code> with <code>twitter:card = summary_large_image</code>.</li>
+          <li>Add <code>og:image:width</code>, <code>og:image:height</code>, <code>og:image:alt</code>,
+              <code>og:site_name</code> and <code>og:locale</code>.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — a real 1200×630 card, summary_large_image, and the missing og tags.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">M5</span>
+      <span class="status-done">Fixed</span><span class="chip c-med">Medium</span></div>
+    <div>
+      <h3>No robots.txt, no 404 page, stale sitemap dates</h3>
+      <div class="ev">
+        <span class="ev-label">Measured against the live site</span>
+        /robots.txt              <b>404</b>  (so no Sitemap: directive anywhere)<br>
+        /does-not-exist.html     <b>404</b>, GitHub's generic page — no nav, no way back<br>
+        sitemap.xml              8 URLs, correctly excludes the two noindex thank-you pages<br>
+        sitemap lastmod          <b>2026-08-06 / 08</b> — older than the most recent docs commits<br>
+        unreferenced assets      icon_download.png, icon_quick_download.png, icon_rubrics.png (57 KB)
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Add <code>docs/robots.txt</code> with <code>Sitemap:</code> pointing at the sitemap.</li>
+          <li>Add <code>docs/404.html</code> with your nav and a link home — GitHub Pages serves it
+              automatically.</li>
+          <li>Refresh <code>lastmod</code> when you ship the fixes above.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — robots.txt with the sitemap directive, a branded 404 page, and refreshed lastmod dates.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">M6</span>
+      <span class="status-done">Fixed</span><span class="chip c-med">Medium</span></div>
+    <div>
+      <h3>The macOS limitations section is hidden from the people who most need it</h3>
+      <p>
+        The five "Known limitations on Mac" cards — Gatekeeper, managed Macs, Keychain re-entry after
+        updates, Office requirements, Apple Silicon only — are genuinely useful and honest. They are
+        rendered <code>display:none</code> unless the Mac card happens to be showing, which depends on
+        <code>navigator.platform</code>. A Mac user reading on their phone, or anyone comparing before
+        they choose a machine, never sees them.
+      </p>
+      <div class="ev">
+        <span class="ev-label">index.html</span>
+        <code>&lt;section id="macos-notes" style="padding:80px 0 70px; display:none;"&gt;</code><br>
+        revealed only when <code>#get-mac</code> is visible, i.e. when platform contains "MAC"<br>
+        on a phone → platform <b>"Win32"</b> → section stays hidden<br>
+        <br>
+        the same content is <b>not indexable in practice</b> — it is the answer to
+        "does Canvas Downloader work on Mac", which is a real search query
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul>
+          <li>Always render the section; label it "On a Mac?" and let the OS toggle scroll to it rather
+              than gate it.</li>
+          <li>Alternatively move it into <code>mac-setup.html</code>, which is already the destination
+              for Mac users and is indexed.</li>
+        </ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — always rendered. Doing so exposed a hidden responsive bug (66px overflow at 390px) which is also fixed.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LOW ============ -->
+  <div class="sec"><h2>Low</h2><span class="count">4 findings</span></div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">L1</span>
+      <span class="status-done">Fixed</span><span class="chip c-low">Low</span></div>
+    <div>
+      <h3>Five decorative images have no alt attribute</h3>
+      <div class="ev">
+        index.html — 5 of 39 <code>&lt;img&gt;</code> lack <code>alt</code>: the 14px sync-review status
+        icons. Screen readers announce the filename.
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul><li>Add <code>alt=""</code> — they sit next to text that already names them, so empty alt is correct.</li></ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — the five decorative icons carry alt="".</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">L2</span>
+      <span class="status-done">Fixed</span><span class="chip c-low">Low</span></div>
+    <div>
+      <h3>Five <code>href="#"</code> placeholders</h3>
+      <div class="ev">
+        index.html ×2, releases.html ×3 — the OS-toggle links. Without JS they jump to the top of the
+        page; they are controls, not links.
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul><li>Make them <code>&lt;button type="button"&gt;</code> so they are keyboard- and
+        screen-reader-correct, and cannot navigate.</li></ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — all five are &lt;button type="button"&gt; now.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">L3</span>
+      <span class="status-part">Partly</span><span class="chip c-low">Low</span></div>
+    <div>
+      <h3>Every page re-inlines its own stylesheet</h3>
+      <div class="ev">
+        index.html <b>178 KB</b> · guide.html <b>110 KB</b> · engine.html <b>89 KB</b> — almost all CSS,
+        inline, so nothing is cached between pages. The shared nav/footer/type rules are duplicated
+        across all 10 files.
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul><li>Lift the shared rules into one <code>site.css</code> (the pattern
+        <code>mac-wizard.css</code> already uses) and keep only page-specific CSS inline. Second and
+        subsequent page views get materially faster.</li></ul>
+        <p class="outcome"><b>Outcome:</b> Partly — 170 images lazy-load and the fonts are shared, but the per-page inline CSS is unchanged (it would touch every file for a second-visit-only gain).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="find">
+    <div class="find-meta"><span class="fid">L4</span>
+      <span class="status-done">Fixed</span><span class="chip c-low">Low</span></div>
+    <div>
+      <h3>The Ko-fi ask is doing less work than it could</h3>
+      <p>
+        The support pitch is well written and honest — "gets us closer to the paid app certificates
+        that would remove the install warnings for everyone" is a good line, because it ties the ask to
+        a benefit the reader has already felt. But it is buried at the very bottom, after the FAQ.
+      </p>
+      <div class="ev">
+        support CTA position: <b>last section</b>, ~14,000 px down on mobile<br>
+        the same argument is made in the security Q&amp;A near the top, without a link
+      </div>
+      <div class="fix">
+        <strong>Fix</strong>
+        <ul><li>Add the Ko-fi link inside the "Why is Windows / Mac warning me?" answer, where the
+        reader is actively thinking about the certificate cost.</li></ul>
+        <p class="outcome"><b>Outcome:</b> Fixed — the Ko-fi link now sits inside the certificate answer.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STRENGTHS ============ -->
+  <div class="sec"><h2>What is already strong</h2><span class="count">keep these</span></div>
+  <p class="sec-note">
+    Listed because they are the reason the fixes above are worth doing — the foundation is good.
+  </p>
+
+  <div class="good-grid">
+    <div>
+      <h4>The disclaimer</h4>
+      <p>Honest about exactly the thing most projects hide: that the app ignores Panopto's download
+      flag. Naming the risk, explaining why the feature exists, and inviting rights holders to make
+      contact is a stronger legal position than silence.</p>
+    </div>
+    <div>
+      <h4>The privacy policy</h4>
+      <p>Specific, structured, and it names each third party with the condition that triggers it.
+      Better than most commercial software. Only the website's own third parties are missing (M1).</p>
+    </div>
+    <div>
+      <h4>The security Q&amp;A</h4>
+      <p>"The certificate program isn't a safety check — it's a publisher registry" is the correct
+      argument, made without defensiveness. Pointing at three specific files to read is a real
+      verification path, not a gesture.</p>
+    </div>
+    <div>
+      <h4>The macOS wizard</h4>
+      <p>Version-branched instructions, real screenshots of every dialog, and a troubleshooting section
+      organised by what the user did wrong. This is the hardest onboarding on either platform and it is
+      handled thoroughly.</p>
+    </div>
+    <div>
+      <h4>The positioning</h4>
+      <p>"Built by a student, between lectures" with a real name, face and university is the right
+      trust play for an unsigned app, and the problem framing — hours lost, exam-season chaos, manual
+      AI prep — is specific to the audience rather than generic.</p>
+    </div>
+  </div>
+
+  <div class="decide">
+    <h3>What is left for you</h3>
+    <ol>
+      <li><b>Cut the v2.0.2 release, then deploy these changes.</b> The site's structured data now says
+          2.0.2 and the download buttons read release assets, so publish the tag and
+          <b>attach the DMG to the release</b> - the mac workflow only uploads a 14-day CI artifact,
+          which the buttons cannot see. If you deploy the site first there is a window where it names a
+          version nobody can download.</li>
+      <li><b>Run the mac build once and watch the new step.</b>
+          <code>scripts/check_macos_floor.py</code> runs after PyInstaller and reads the real minimum OS
+          out of every binary in the bundle. If it fails, it names the offending library - that is the
+          honest macOS floor, and both the spec and the website should be moved to whatever it says.</li>
+      <li><b>Optional: confirm on a real Mac.</b> Everything macOS here was verified by reading the code
+          and driving the real functions from Windows. The one thing that needs hardware is watching the
+          System Events dialog actually appear at the end of a conversion run, which is what the rewritten
+          Step 5 now promises.</li>
+    </ol>
+  </div>
+
+  <div class="method" style="margin-top: 26px;">
+    <h3>How the fixes were verified</h3>
+    <ul>
+      <li>Site served locally and driven in a real browser: page weight measured by
+          <code>Content-Length</code> (Resource Timing hides range-requested video), lightbox exercised
+          click by click, layout probed at 1280px and 390px.</li>
+      <li>All four demo videos confirmed still autoplaying and fully buffered after re-encoding
+          (<code>readyState 4</code>), with frame counts identical to the originals.</li>
+      <li>Zero requests to Google or YouTube on load; one font request, served from this site.</li>
+      <li>Mobile detection replayed against six device profiles including the two that were broken
+          (iPad reporting as a Mac, and a Windows touch laptop that must stay on desktop).</li>
+      <li>App side: <b>3,725 tests pass</b>, architecture audit reports <b>0 violations</b>, and two new
+          tests pin the corrected permission notice - both confirmed to fail against the old copy.</li>
+    </ul>
+  </div>
+
+  <footer>
+    Audit performed 13 August 2026 against birkls.github.io/Canvas_LMS_batch_file_downloader and
+    Canvas Downloader main @ e170df8 · 19 findings · 18 fixed and verified, 1 awaiting the v2.0.2 release · every measurement reproducible from the evidence blocks above
+  </footer>
+
+</div>
+
+</body>
+</html>

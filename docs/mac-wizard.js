@@ -268,8 +268,13 @@
       rows += permRow(ICO.layers(16), 'App data access', 'Lets conversions run in a private scratch folder. The one repeat: macOS forgets this consent when the app quits, so it re-asks once per session - granting the app Full Disk Access silences it for good (see the full guide).', true);
     }
     rows += permRow(ICO.folder(16),   'Your Downloads folder',              'So your course files can be saved.',              false);
-    rows += permRow(ICO.terminal(16), 'System Events',                      'Keeps Office windows hidden during conversions.', false);
     rows += permRow(ICO.grid(16),     'Microsoft PowerPoint, Word &amp; Excel', 'The PowerPoint / Word / Excel → PDF conversions.', false);
+    // Listed LAST because it arrives last. This row used to say "Keeps Office
+    // windows hidden during conversions" - behaviour the app removed in August
+    // 2026 after measuring that doing nothing is quieter. The permission is
+    // still real, but it belongs to the tidy-up at the end of the run, not to
+    // the opening batch.
+    rows += permRow(ICO.terminal(16), 'System Events',                      'Lets the app close the Office windows it opened once the run finishes. Appears at the end, not the start.', false);
 
     return {
       eyebrow: 'Step 5 of 5',

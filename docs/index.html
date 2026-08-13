@@ -14,18 +14,31 @@
   <meta property="og:description"
     content="Batch-download your Canvas courses. Smart sync, AI-ready conversion. Free." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/icon.png" />
-  <meta name="twitter:card" content="summary" />
+  <meta property="og:site_name" content="Canvas Downloader" />
+  <meta property="og:locale" content="en" />
+  <!-- A 1200x630 card, not the square app icon. This product spreads by one
+       student pasting the link into a group chat, a Discord server or a course
+       forum - so the link preview IS the advert, and `summary` rendered it as a
+       small square thumbnail with no room for the pitch. -->
+  <meta property="og:image"
+    content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/assets/og-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt"
+    content="Canvas Downloader - download every file from all your Canvas courses at once" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Canvas Downloader" />
   <meta name="twitter:description" content="Batch-download your Canvas courses. Smart sync, AI-ready conversion. Free." />
-  <meta name="twitter:image" content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/icon.png" />
+  <meta name="twitter:image"
+    content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/assets/og-card.png" />
+  <meta name="twitter:image:alt"
+    content="Canvas Downloader - download every file from all your Canvas courses at once" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-    rel="stylesheet" />
-  <style>
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+<style>
     *,
     *::before,
     *::after {
@@ -394,14 +407,21 @@
 
     @media(max-width:860px) {
 
-      .btn-nav-ghost span,
-      .btn-nav span {
+      /* The GitHub button may collapse to its icon - it is a secondary link.
+         The Download button must not: it is the page's primary action, and an
+         unlabelled 32px glyph is the weakest CTA on offer. Only the word is
+         kept; the padding still tightens. */
+      .btn-nav-ghost span {
         display: none;
       }
 
-      .btn-nav-ghost,
-      .btn-nav {
+      .btn-nav-ghost {
         padding: 8px 10px;
+      }
+
+      .btn-nav {
+        padding: 8px 12px;
+        font-size: 12.5px;
       }
     }
 
@@ -497,13 +517,20 @@
     }
 
     @media(max-width:760px) {
+      /* Actions BEFORE the artwork on a phone.
+         With "visual" in the middle, the square hero image filled the whole
+         first screen and pushed the download button to y=886px on a 844px
+         viewport - measured - so every mobile visitor had to scroll past a
+         full screen height before being offered anything to click, while the
+         only CTA above the fold was an unlabelled 32px icon in the nav.
+         The image is the argument; the button is the point. */
       .hero-inner {
         grid-template-areas:
           "heading"
-          "visual"
-          "actions";
+          "actions"
+          "visual";
         grid-template-columns: 1fr;
-        row-gap: 40px;
+        row-gap: 28px;
         text-align: center;
       }
 
@@ -2570,63 +2597,13 @@
       color: var(--cyan);
     }
 
-    /* Video Modal */
-    .video-modal {
-      display: none;
-      position: fixed;
-      z-index: 9999;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(11, 12, 20, 0.9);
-      backdrop-filter: blur(8px);
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .video-modal.show {
-      display: flex;
-      opacity: 1;
-    }
-
-    .video-modal-content {
-      position: relative;
-      width: 90%;
-      max-width: 1200px;
-      transform: scale(0.95);
-      transition: transform 0.3s ease;
-    }
-
-    .video-modal.show .video-modal-content {
-      transform: scale(1);
-    }
-
-    .video-modal-content video {
-      width: 100%;
-      border-radius: var(--rad-l);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
-      display: block;
-      border: 1px solid var(--border);
-    }
-
-    .close-video-modal {
-      position: absolute;
-      top: -40px;
-      right: 0;
-      color: var(--txt3);
-      font-size: 32px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: color 0.2s;
-      line-height: 1;
-    }
-
-    .close-video-modal:hover {
-      color: #fff;
-    }
+    /* The dead half of the duplicated lightbox lived here: a second
+       `.video-modal` rule set keyed on `.show`, plus `.close-video-modal`.
+       Both belonged to a modal that no longer exists (see the comment above
+       the surviving markup near the end of this file). Keeping two rule sets
+       for one component is how the `.show` / `.active` mismatch that broke the
+       close button survived unnoticed. The live rules are the `.active` block
+       directly below. */
 
     .expandable-video {
       cursor: pointer;
@@ -2929,12 +2906,12 @@
         "url": "https://birkls.github.io/Canvas_LMS_batch_file_downloader/",
         "applicationCategory": "EducationalApplication",
         "applicationSubCategory": "Course file downloader for Canvas LMS",
-        "operatingSystem": "Windows 10, Windows 11, macOS 12 or later",
-        "softwareVersion": "2.0.1",
+        "operatingSystem": "Windows 10, Windows 11, macOS 14 or later (Apple Silicon)",
+        "softwareVersion": "2.0.2",
         "description": "Download all files from every Canvas course at once. Canvas Downloader connects with your own Canvas access token, batch-downloads assignments, modules, pages, quizzes and lecture recordings, keeps the folders synced with one click, and converts Office files to PDF or text so they are ready for AI study tools. Runs entirely on your own computer with no server and no account.",
         "downloadUrl": "https://birkls.github.io/Canvas_LMS_batch_file_downloader/releases.html",
         "installUrl": "https://apps.microsoft.com/detail/9n1dwwvrq5wc",
-        "screenshot": "https://birkls.github.io/Canvas_LMS_batch_file_downloader/assets/CanvasDownloaderHero.png",
+        "screenshot": "https://birkls.github.io/Canvas_LMS_batch_file_downloader/assets/og-card.png",
         "license": "https://github.com/birkls/Canvas_LMS_batch_file_downloader/blob/main/LICENSE",
         "isAccessibleForFree": true,
         "offers": {
@@ -3036,7 +3013,7 @@
               <a href="https://apps.microsoft.com/detail/9n1dwwvrq5wc?referrer=appbadge&mode=full" target="_blank"
                 rel="noopener noreferrer" style="transition: transform 0.15s; display: flex; justify-content: center;"
                 onmouseover="this.style.transform='scale(1.03)';" onmouseout="this.style.transform='scale(1)';">
-                <img src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft"
+                <img decoding="async" loading="lazy" src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft"
                   style="display: block; width: 100%;" />
               </a>
             </div>
@@ -3049,12 +3026,12 @@
             </a>
           </div>
           <div id="hero-os-toggle" style="margin-bottom: 24px; margin-top: -6px; display: none;">
-            <a href="#" id="hero-toggle-os-btn"
-              style="display: inline-block; font-size: 13px; font-weight: 500; color: var(--txt3); text-decoration: none; transition: transform 0.2s, color 0.2s;"
+            <button type="button" id="hero-toggle-os-btn"
+              style="background:none; border:none; padding:0; cursor:pointer; font:inherit; display: inline-block; font-size: 13px; font-weight: 500; color: var(--txt3); text-decoration: none; transition: transform 0.2s, color 0.2s;"
               onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.05)';"
               onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">
               Need the Mac version?
-            </a>
+            </button>
           </div>
         </div>
         <!-- ══ HERO IMAGE SLOT ══════════════════════════════════════════════
@@ -3082,8 +3059,8 @@
               style="inset: -32px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;">
             </div>
             <div class="hero-media">
-              <img src="assets/CanvasDownloaderHero.png" alt="Canvas Downloader turning a Canvas course into an organised folder of files"
-                class="hero-media-img" width="2048" height="2048" fetchpriority="high"
+              <img src="assets/CanvasDownloaderHero.webp" alt="Canvas Downloader turning a Canvas course into an organised folder of files"
+                class="hero-media-img" width="1200" height="1200" fetchpriority="high" decoding="async"
                 onerror="this.closest('.hero-media').classList.add('is-empty'); this.remove();" />
               <div class="hero-media-fallback" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
@@ -3103,7 +3080,7 @@
       <div class="reveal"
         style="margin-top: 20px; background: var(--surf); border: 1px solid var(--border); padding: 24px; border-radius: var(--rad-l); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);">
         <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-          <img src="assets/icon_website_brk.png" alt="Birk"
+          <img src="assets/icon_website_brk.webp" alt="Birk" width="240" height="240" loading="lazy" decoding="async"
             style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2.5px solid rgba(59, 113, 184, 0.5); flex-shrink: 0;" />
           <div style="flex: 1; min-width: 240px;">
             <h4
@@ -3241,7 +3218,7 @@
                     <div class="check"><svg viewBox="0 0 10 8">
                         <polyline points="1,4 3.5,6.5 9,1" />
                       </svg></div>
-                    <img src="assets/icon_all_files.png" alt="All Files" />
+                    <img decoding="async" loading="lazy" src="assets/icon_all_files.png" alt="All Files" />
                     <div class="fb-title">All Files</div>
                     <div class="fb-desc">PDFs, slides, videos, ZIP, code - everything uploaded</div>
                   </div>
@@ -3249,7 +3226,7 @@
                     <div class="check"><svg viewBox="0 0 10 8">
                         <polyline points="1,4 3.5,6.5 9,1" />
                       </svg></div>
-                    <img src="assets/icon_study_files.png" alt="Study Files" />
+                    <img decoding="async" loading="lazy" src="assets/icon_study_files.png" alt="Study Files" />
                     <div class="fb-title">Study Files</div>
                     <div class="fb-desc">Slides and PDFs only - skips all other files</div>
                   </div>
@@ -3260,7 +3237,7 @@
                     <div class="check"><svg viewBox="0 0 10 8">
                         <polyline points="1,4 3.5,6.5 9,1" />
                       </svg></div>
-                    <img src="assets/icon_subfolders.png" alt="With Subfolders" />
+                    <img decoding="async" loading="lazy" src="assets/icon_subfolders.png" alt="With Subfolders" />
                     <div class="sb-title">With Subfolders</div>
                     <div class="sb-desc">Mirrors Canvas module structure</div>
                   </div>
@@ -3268,7 +3245,7 @@
                     <div class="check"><svg viewBox="0 0 10 8">
                         <polyline points="1,4 3.5,6.5 9,1" />
                       </svg></div>
-                    <img src="assets/icon_flat.png" alt="All in One Folder" />
+                    <img decoding="async" loading="lazy" src="assets/icon_flat.png" alt="All in One Folder" />
                     <div class="sb-title">All in One Folder</div>
                     <div class="sb-desc">Flat - all files in one place</div>
                   </div>
@@ -3293,42 +3270,42 @@
                     <div class="check"><svg viewBox="0 0 10 8">
                         <polyline points="1,4 3.5,6.5 9,1" />
                       </svg></div>
-                    <img src="assets/icon_assignments.png" alt="Assignments" />
+                    <img decoding="async" loading="lazy" src="assets/icon_assignments.png" alt="Assignments" />
                     <div class="cc-title">Assignments</div>
                   </div>
                   <div class="cc-btn active">
                     <div class="check"><svg viewBox="0 0 10 8">
                         <polyline points="1,4 3.5,6.5 9,1" />
                       </svg></div>
-                    <img src="assets/icon_syllabus.png" alt="Syllabus" />
+                    <img decoding="async" loading="lazy" src="assets/icon_syllabus.png" alt="Syllabus" />
                     <div class="cc-title">Syllabus</div>
                   </div>
                   <div class="cc-btn active">
                     <div class="check"><svg viewBox="0 0 10 8">
                         <polyline points="1,4 3.5,6.5 9,1" />
                       </svg></div>
-                    <img src="assets/icon_announcements.png" alt="Announcements" />
+                    <img decoding="async" loading="lazy" src="assets/icon_announcements.png" alt="Announcements" />
                     <div class="cc-title">Announcements</div>
                   </div>
                   <div class="cc-btn active">
                     <div class="check"><svg viewBox="0 0 10 8">
                         <polyline points="1,4 3.5,6.5 9,1" />
                       </svg></div>
-                    <img src="assets/icon_discussions.png" alt="Discussions" />
+                    <img decoding="async" loading="lazy" src="assets/icon_discussions.png" alt="Discussions" />
                     <div class="cc-title">Discussions</div>
                   </div>
                   <div class="cc-btn">
                     <div class="check"><svg viewBox="0 0 10 8">
                         <polyline points="1,4 3.5,6.5 9,1" />
                       </svg></div>
-                    <img src="assets/icon_quizzes.png" alt="Quizzes" />
+                    <img decoding="async" loading="lazy" src="assets/icon_quizzes.png" alt="Quizzes" />
                     <div class="cc-title">Quizzes</div>
                   </div>
                   <div class="cc-btn active">
                     <div class="check"><svg viewBox="0 0 10 8">
                         <polyline points="1,4 3.5,6.5 9,1" />
                       </svg></div>
-                    <img src="assets/icon_submissions.png" alt="Submissions" />
+                    <img decoding="async" loading="lazy" src="assets/icon_submissions.png" alt="Submissions" />
                     <div class="cc-title">Submissions</div>
                   </div>
                 </div>
@@ -3430,7 +3407,7 @@
                image with a cursor in it. -->
           <div class="pillar-vis aligned-to-title"
             style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
-            <img class="expandable-img" src="assets/TodayMode_Auto-download-new-files.png"
+            <img decoding="async" loading="lazy" class="expandable-img" src="assets/TodayMode_Auto-download-new-files.png"
               alt="The Today page: a daily auto-sync toggle above a list of courses and the new files that arrived today"
               style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);" />
           </div>
@@ -3505,7 +3482,7 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/icon_conv_zip.png" alt="Unpack Archives" />
+              <img decoding="async" loading="lazy" src="assets/icon_conv_zip.png" alt="Unpack Archives" />
               <div class="pp-btn-text">
                 <div class="pp-title">Unpack Archives</div>
               </div>
@@ -3514,7 +3491,7 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/icon_conv_pptx.png" alt="PowerPoint to PDF" />
+              <img decoding="async" loading="lazy" src="assets/icon_conv_pptx.png" alt="PowerPoint to PDF" />
               <div class="pp-btn-text">
                 <div class="pp-title">PowerPoint to PDF</div>
               </div>
@@ -3523,7 +3500,7 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/icon_conv_word.png" alt="Word to PDF" />
+              <img decoding="async" loading="lazy" src="assets/icon_conv_word.png" alt="Word to PDF" />
               <div class="pp-btn-text">
                 <div class="pp-title">Legacy Word to PDF</div>
               </div>
@@ -3532,7 +3509,7 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/icon_conv_excel.png" alt="Excel" />
+              <img decoding="async" loading="lazy" src="assets/icon_conv_excel.png" alt="Excel" />
               <div class="pp-btn-text">
                 <div class="pp-title">Excel to PDF & AI Data</div>
               </div>
@@ -3541,7 +3518,7 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/icon_conv_html.png" alt="HTML to Markdown" />
+              <img decoding="async" loading="lazy" src="assets/icon_conv_html.png" alt="HTML to Markdown" />
               <div class="pp-btn-text">
                 <div class="pp-title">Pages to Plain Text</div>
               </div>
@@ -3550,7 +3527,7 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/icon_conv_code.png" alt="Code to txt" />
+              <img decoding="async" loading="lazy" src="assets/icon_conv_code.png" alt="Code to txt" />
               <div class="pp-btn-text">
                 <div class="pp-title">Code to .txt</div>
               </div>
@@ -3559,7 +3536,7 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/icon_conv_urls.png" alt="Gather Links" />
+              <img decoding="async" loading="lazy" src="assets/icon_conv_urls.png" alt="Gather Links" />
               <div class="pp-btn-text">
                 <div class="pp-title">Gather Web Links</div>
               </div>
@@ -3568,7 +3545,7 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/icon_conv_video.png" alt="Video to Audio" />
+              <img decoding="async" loading="lazy" src="assets/icon_conv_video.png" alt="Video to Audio" />
               <div class="pp-btn-text">
                 <div class="pp-title">Video to Audio</div>
               </div>
@@ -3611,7 +3588,7 @@
           <div class="sync-cats-grid">
 
             <div class="app-card" style="border: 1px solid rgba(59, 130, 246, 0.4); background: rgba(30, 60, 90, 0.2);">
-              <div class="app-card-header" style="color: #60a5fa; display:flex; gap:8px; padding: 10px 14px;"><img
+              <div class="app-card-header" style="color: #60a5fa; display:flex; gap:8px; padding: 10px 14px;"><img decoding="async" loading="lazy" alt=""
                   src="assets/Icon_Sync_Review_New_File.png" style="width:14px;" /> New Files</div>
               <div class="app-card-body"
                 style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
@@ -3624,7 +3601,7 @@
             </div>
 
             <div class="app-card" style="border: 1px solid rgba(34, 197, 94, 0.4); background: rgba(20, 70, 40, 0.2);">
-              <div class="app-card-header" style="color: #4ade80; display:flex; gap:8px; padding: 10px 14px;"><img
+              <div class="app-card-header" style="color: #4ade80; display:flex; gap:8px; padding: 10px 14px;"><img decoding="async" loading="lazy" alt=""
                   src="assets/Icon_Sync_Review_Update.png" style="width:14px;" /> Updates (Clean)</div>
               <div class="app-card-body"
                 style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
@@ -3637,7 +3614,7 @@
             </div>
 
             <div class="app-card" style="border: 1px solid rgba(245, 158, 11, 0.4); background: rgba(90, 60, 20, 0.2);">
-              <div class="app-card-header" style="color: #fbbf24; display:flex; gap:8px; padding: 10px 14px;"><img
+              <div class="app-card-header" style="color: #fbbf24; display:flex; gap:8px; padding: 10px 14px;"><img decoding="async" loading="lazy" alt=""
                   src="assets/Icon_Sync_Review_Update.png" style="width:14px; filter:hue-rotate(290deg) saturate(3);" />
                 Edited Locally</div>
               <div class="app-card-body"
@@ -3651,7 +3628,7 @@
             </div>
 
             <div class="app-card" style="border: 1px solid rgba(168, 85, 247, 0.4); background: rgba(60, 30, 90, 0.2);">
-              <div class="app-card-header" style="color: #c084fc; display:flex; gap:8px; padding: 10px 14px;"><img
+              <div class="app-card-header" style="color: #c084fc; display:flex; gap:8px; padding: 10px 14px;"><img decoding="async" loading="lazy" alt=""
                   src="assets/Icon_Sync_Review_Locally_Deleted.png" style="width:14px;" /> Deleted Locally</div>
               <div class="app-card-body"
                 style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
@@ -3664,7 +3641,7 @@
             </div>
 
             <div class="app-card" style="border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(90, 30, 35, 0.2);">
-              <div class="app-card-header" style="color: #f87171; display:flex; gap:8px; padding: 10px 14px;"><img
+              <div class="app-card-header" style="color: #f87171; display:flex; gap:8px; padding: 10px 14px;"><img decoding="async" loading="lazy" alt=""
                   src="assets/Icon_Sync_Review_Deleted_On_Canvas.png" style="width:14px;" /> Deleted on Canvas</div>
               <div class="app-card-body"
                 style="font-size:12px; color:var(--txt2); padding: 10px 14px; display:flex; flex-direction:column; gap:8px;">
@@ -3701,22 +3678,22 @@
               style="display:grid; grid-template-columns:1fr 1fr; gap:14px; width:100%; max-width:380px;">
               <div
                 style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(184,157,254,0.28); border-radius:12px; padding:14px;">
-                <img src="assets/pan_mp4.png" alt="" style="width:30px; height:30px;" /><span
+                <img decoding="async" loading="lazy" src="assets/pan_mp4.png" alt="" style="width:30px; height:30px;" /><span
                   style="color:#fff; font-weight:600; font-size:14px;">Video<br><span
                     style="color:var(--txt3); font-weight:500; font-size:12px;">MP4</span></span></div>
               <div
                 style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(184,157,254,0.28); border-radius:12px; padding:14px;">
-                <img src="assets/pan_mp3.png" alt="" style="width:30px; height:30px;" /><span
+                <img decoding="async" loading="lazy" src="assets/pan_mp3.png" alt="" style="width:30px; height:30px;" /><span
                   style="color:#fff; font-weight:600; font-size:14px;">Audio<br><span
                     style="color:var(--txt3); font-weight:500; font-size:12px;">MP3</span></span></div>
               <div
                 style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(184,157,254,0.28); border-radius:12px; padding:14px;">
-                <img src="assets/pan_txt.png" alt="" style="width:30px; height:30px;" /><span
+                <img decoding="async" loading="lazy" src="assets/pan_txt.png" alt="" style="width:30px; height:30px;" /><span
                   style="color:#fff; font-weight:600; font-size:14px;">Transcript<br><span
                     style="color:var(--txt3); font-weight:500; font-size:12px;">.txt</span></span></div>
               <div
                 style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.04); border:1px solid rgba(184,157,254,0.28); border-radius:12px; padding:14px;">
-                <img src="assets/pan_srt.png" alt="" style="width:30px; height:30px;" /><span
+                <img decoding="async" loading="lazy" src="assets/pan_srt.png" alt="" style="width:30px; height:30px;" /><span
                   style="color:#fff; font-weight:600; font-size:14px;">Subtitles<br><span
                     style="color:var(--txt3); font-weight:500; font-size:12px;">.srt</span></span></div>
             </div>
@@ -3737,7 +3714,7 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/pan_mp4.png" alt="Video MP4" />
+              <img decoding="async" loading="lazy" src="assets/pan_mp4.png" alt="Video MP4" />
               <div class="pp-btn-text">
                 <div class="pp-title">Video (MP4)</div>
               </div>
@@ -3746,13 +3723,13 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/pan_mp3.png" alt="Audio MP3" />
+              <img decoding="async" loading="lazy" src="assets/pan_mp3.png" alt="Audio MP3" />
               <div class="pp-btn-text">
                 <div class="pp-title">Audio (MP3)</div>
               </div>
             </div>
             <div class="pp-btn active">
-              <img src="assets/pan_txt.png" alt="Transcript" />
+              <img decoding="async" loading="lazy" src="assets/pan_txt.png" alt="Transcript" />
               <div class="pp-btn-text">
                 <div class="pp-title">Transcript (.txt)</div>
               </div>
@@ -3761,7 +3738,7 @@
               <div class="check"><svg viewBox="0 0 10 8">
                   <polyline points="1,4 3.5,6.5 9,1" />
                 </svg></div>
-              <img src="assets/pan_srt.png" alt="Subtitles" />
+              <img decoding="async" loading="lazy" src="assets/pan_srt.png" alt="Subtitles" />
               <div class="pp-btn-text">
                 <div class="pp-title">Subtitles (.srt)</div>
               </div>
@@ -3810,7 +3787,7 @@
               <a href="https://apps.microsoft.com/detail/9n1dwwvrq5wc?referrer=appbadge&mode=full" target="_blank"
                 rel="noopener noreferrer" style="transition: transform 0.15s; display: flex; justify-content: center;"
                 onmouseover="this.style.transform='scale(1.03)';" onmouseout="this.style.transform='scale(1)';">
-                <img src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft"
+                <img decoding="async" loading="lazy" src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft"
                   style="display: block; width: 100%; max-width: 260px;" />
               </a>
               <a href="releases.html" class="btn-download btn-dl-ghost" data-latest-exe
@@ -3826,7 +3803,7 @@
             </div>
             <p class="dl-subtitle" style="text-align: left; margin-top: 16px;">Both methods add a Start Menu icon and
               uninstall cleanly via Settings - Apps. <br>The <b>Microsoft Store version is easier to install</b>: Has no
-              Smartscreen warning.</p>
+              Smartscreen warning. <br>About 140&nbsp;MB to download, ~330&nbsp;MB installed.</p>
           </div>
         </div>
 
@@ -3839,7 +3816,7 @@
             </svg>
             <div>
               <div class="plat-name">macOS</div>
-              <div class="plat-req">Apple Silicon (M1 or later) &middot; macOS 11+</div>
+              <div class="plat-req">Apple Silicon (M1 or later) &middot; macOS 14+</div>
             </div>
           </div>
           <div class="plat-body">
@@ -3852,15 +3829,47 @@
               </svg>
               Download for macOS (.dmg)
             </a>
-            <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported. Needs macOS 11 (Big Sur) or newer.</p>
+            <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported. Needs macOS 14 (Sonoma) or newer.<br>About 150&nbsp;MB to download.</p>
+          </div>
+        </div>
+
+        <!-- Phones and tablets. This product spreads by students sending each
+             other the link, so a large share of first visits arrive on a phone
+             - where neither download is installable. Previously those visitors
+             were shown the Windows card (the OS check fell back to Windows for
+             anything not reporting "Mac"), and iPads were shown the macOS DMG,
+             because iPadOS reports "MacIntel". Both are dead ends. -->
+        <div class="plat-card featured" id="get-mobile" style="display: none; text-align: left;">
+          <div class="plat-head">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            <div>
+              <div class="plat-name">You're on a phone</div>
+              <div class="plat-req">Canvas Downloader is a desktop app</div>
+            </div>
+          </div>
+          <div class="plat-body">
+            <p style="color: var(--txt2); font-size: 14.5px; margin-bottom: 16px;">
+              It downloads your course files onto a computer, so it needs Windows or a Mac.
+              Send yourself the link and open it on your laptop.
+            </p>
+            <button type="button" id="copy-link-btn" class="btn-download btn-dl-primary"
+              style="width: 100%; border: none; cursor: pointer; font: inherit;">
+              Copy the link
+            </button>
+            <p class="dl-subtitle" id="copy-link-note">Works on Windows 10/11 and Apple Silicon Macs (macOS 14+).</p>
           </div>
         </div>
 
         <div id="os-toggle" style="margin-top: 8px;">
-          <a href="#" id="toggle-os-btn"
-            style="display: inline-block; color: var(--txt3); font-size: 14px; font-weight: 500; text-decoration: none; transition: transform 0.2s, color 0.2s;"
+          <button type="button" id="toggle-os-btn"
+            style="background:none; border:none; padding:0; cursor:pointer; font:inherit; display: inline-block; color: var(--txt3); font-size: 14px; font-weight: 500; text-decoration: none; transition: transform 0.2s, color 0.2s;"
             onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.05)';"
-            onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">Need the Mac version?</a>
+            onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">Need the Mac version?</button>
         </div>
       </div>
 
@@ -3876,8 +3885,59 @@
           const heroToggleBtn = document.getElementById('hero-toggle-os-btn');
           const heroToggleContainer = document.getElementById('hero-os-toggle');
 
-          let isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+          const mobileCard = document.getElementById('get-mobile');
+          const osToggle = document.getElementById('os-toggle');
+
+          // `navigator.platform` is deprecated and answers "MacIntel" on an
+          // iPad, so it cannot tell a Mac from a tablet. Prefer the modern
+          // userAgentData, fall back to the UA string, and treat a touch
+          // device with no fine pointer as mobile whatever it claims to be.
+          const uaData = navigator.userAgentData;
+          const ua = navigator.userAgent || '';
+          const platform = (uaData && uaData.platform) || navigator.platform || '';
+          const isTouch = window.matchMedia('(pointer: coarse)').matches;
+
+          const isMobile = (uaData && uaData.mobile === true)
+            || /Android|iPhone|iPod/i.test(ua)
+            || (/iPad/i.test(ua))
+            // iPadOS 13+ masquerades as a Mac: same UA, but it is a touch
+            // device with no mouse, which a real Mac never is.
+            || (/Mac/i.test(platform) && isTouch && navigator.maxTouchPoints > 1);
+
+          let isMac = /Mac/i.test(platform) || /Mac OS X/i.test(ua);
           let showingMac = isMac;
+
+          if (isMobile) {
+            // One honest state instead of an uninstallable download.
+            if (winCard) winCard.style.display = 'none';
+            if (macCard) macCard.style.display = 'none';
+            if (mobileCard) mobileCard.style.display = 'block';
+            if (osToggle) osToggle.style.display = 'none';
+            if (heroWindowsGroup) heroWindowsGroup.style.display = 'none';
+            if (heroMacBtn) heroMacBtn.style.display = 'none';
+            if (heroToggleContainer) heroToggleContainer.style.display = 'none';
+
+            const copyBtn = document.getElementById('copy-link-btn');
+            const copyNote = document.getElementById('copy-link-note');
+            if (copyBtn) {
+              copyBtn.addEventListener('click', async () => {
+                const url = 'https://birkls.github.io/Canvas_LMS_batch_file_downloader/';
+                try {
+                  if (navigator.share) {
+                    await navigator.share({ title: 'Canvas Downloader', url: url });
+                    return;
+                  }
+                  await navigator.clipboard.writeText(url);
+                  copyBtn.textContent = 'Link copied';
+                  if (copyNote) copyNote.textContent = 'Paste it into a message to yourself, then open it on your computer.';
+                } catch (e) {
+                  // Clipboard can be refused; never leave the button lying.
+                  if (copyNote) copyNote.textContent = 'Copy this address: birkls.github.io/Canvas_LMS_batch_file_downloader';
+                }
+              });
+            }
+            return;   // no OS toggle to wire up on a phone
+          }
 
           function updateOSUI() {
             if (showingMac) {
@@ -3929,7 +3989,10 @@
             .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
             .then(rels => {
               for (const rel of (rels || [])) {
-                if (rel.draft) continue;
+                // Skip drafts AND prereleases: /releases is ordered newest-first,
+                // so publishing a single beta would otherwise silently become
+                // the download every visitor gets.
+                if (rel.draft || rel.prerelease) continue;
                 const exe = (rel.assets || []).find(a => /\.exe$/i.test(a.name));
                 if (exe) {
                   exeBtns.forEach(btn => {
@@ -3976,8 +4039,31 @@
               style="background: var(--cyan-bg); color: var(--cyan); width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px;">1</span>
             Your Canvas URL
           </h4>
-          <p style="color: var(--txt2); font-size: 15px; margin-bottom: 24px;">To connect the app, you need your
-            school's direct Canvas URL.</p>
+          <p style="color: var(--txt2); font-size: 15px; margin-bottom: 20px;">Most people never have to look this up.
+            The app opens on a searchable list of <strong>4,757 verified schools</strong> - start typing your
+            university and pick it, and the address fills itself in.</p>
+
+          <!-- The picker is the app's answer to this whole section, and the
+               site had never mentioned it: visitors were being taught the
+               manual address hunt that the picker exists to remove. -->
+          <div
+            style="background: var(--cyan-bg); border: 1px solid var(--cyan-b); border-radius: var(--rad); padding: 16px 18px; margin-bottom: 24px; display: flex; gap: 14px; align-items: flex-start;">
+            <svg style="color: var(--cyan); flex-shrink: 0; margin-top: 2px;" width="18" height="18"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <div style="font-size: 14px; color: var(--txt2); line-height: 1.6;">
+              <strong style="color: var(--txt); display: block; margin-bottom: 3px;">Find your school by name</strong>
+              It opens on the institutions in your own country, and accents are optional - typing
+              <em>kobenhavn</em> finds Københavns Universitet. Your school not listed? It still works: paste the
+              address below instead.
+            </div>
+          </div>
+
+          <p style="color: var(--txt2); font-size: 15px; margin-bottom: 24px;">If your school isn't in the list, you
+            need its direct Canvas URL.</p>
 
           <div
             style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
@@ -4028,13 +4114,29 @@
           <p style="color: var(--txt2); font-size: 15px; margin-bottom: 24px;">This is a secure key you generate
             yourself that lets the app access your courses. Here is exactly how to get it.</p>
 
+          <!-- Click-to-load. The iframe used to be in the markup, so simply
+               reading this page contacted YouTube and handed Google the
+               visitor's IP - on the page whose whole argument is that nothing
+               leaves your machine. The poster is served from this site; nothing
+               is requested from YouTube until the play button is pressed. -->
           <div id="video-container" style="width: 100%; aspect-ratio: 16/9; position: relative;">
-            <iframe id="video-iframe" width="100%" height="100%"
-              src="https://www.youtube-nocookie.com/embed/VadvcIvrrhU?vq=hd1080&modestbranding=1&rel=0"
-              title="Getting your Canvas Access Token" frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen referrerpolicy="strict-origin-when-cross-origin"
-              style="border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4); display: block; background: #000;"></iframe>
+            <button type="button" id="video-facade" aria-label="Play: how to get your Canvas Access Token"
+              style="all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden; cursor: pointer; background: #000;">
+              <img src="assets/token-video-poster.jpg" alt="" loading="lazy" decoding="async"
+                style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" />
+              <span
+                style="position: absolute; inset: 0; background: rgba(0,0,0,0.32); transition: background-color 0.2s;"></span>
+              <span class="play-btn-circle"
+                style="position: relative; z-index: 2; width: 68px; height: 68px; background: rgba(229,9,20,0.95); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: transform 0.2s;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 3px;">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </span>
+              <span
+                style="position: absolute; bottom: 12px; right: 12px; z-index: 2; background: rgba(11,12,20,0.82); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 9px; font-size: 11px; color: #e2e8f0; font-weight: 500;">
+                Play video
+              </span>
+            </button>
           </div>
         </div>
 
@@ -4166,17 +4268,29 @@
 
   <hr class="div" />
 
-  <!-- macOS Known Limitations -->
-  <section id="macos-notes" style="padding:80px 0 70px; display:none;">
+  <!-- macOS Known Limitations.
+       Always rendered. This used to be display:none unless the Mac download
+       card happened to be showing, which depended on a platform sniff - so a
+       Mac user reading on their phone never saw it, anyone comparing before
+       choosing a machine never saw it, and "does Canvas Downloader work on a
+       Mac" (a real search query, and the honest answer is right here) was
+       effectively unindexed. Hiding your own caveats is the opposite of the
+       trust posture the rest of this page takes. -->
+  <section id="macos-notes" style="padding:80px 0 70px;">
     <div class="container">
       <div class="sh reveal" style="text-align:center; max-width:540px; margin:0 auto 40px;">
         <div class="label org" style="justify-content:center;">macOS</div>
-        <h2>Known limitations on Mac</h2>
+        <h2>On a Mac? Read this first</h2>
         <p style="font-size:15px;">Canvas Downloader works on macOS, but there are a few things worth knowing before you
           dive in - especially if you're on a university-managed Mac.</p>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; max-width:860px; margin:0 auto;">
+      <!-- auto-fit, not a hardcoded 1fr 1fr: this section was display:none on
+           anything that didn't report a Mac, so its two fixed columns had never
+           been rendered at phone width and overflowed the viewport by 66px the
+           moment it became visible to everyone. -->
+      <div
+        style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px; max-width:860px; margin:0 auto;">
 
         <!-- Gatekeeper -->
         <div class="faq-item reveal" style="cursor:default;">
@@ -4251,36 +4365,24 @@
             with Apple Silicon or a Windows PC instead.</p>
         </div>
 
+        <!-- macOS version floor -->
+        <div class="faq-item reveal" style="cursor:default;">
+          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span
+              style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">MACOS
+              VERSION</span>
+            Needs macOS 14 Sonoma or newer
+          </h4>
+          <p>The Mac build is compiled against libraries that require macOS 14. On macOS 13 Ventura or older it will
+            not launch, so please don't download it there.<br><br>Check with the Apple menu →
+            <strong>About This Mac</strong>. Sonoma (14), Sequoia (15) and Tahoe (26) are supported.</p>
+        </div>
+
       </div>
     </div>
   </section>
 
-  <hr class="div" id="faq-divider" style="display:none;" />
-
-  <script>
-    // Show the macOS limitations section only when the Mac download card is visible.
-    // Runs after the existing OS-detection script has set showingMac.
-    document.addEventListener('DOMContentLoaded', () => {
-      const macSection = document.getElementById('macos-notes');
-      const faqDivider = document.getElementById('faq-divider');
-      const mainFaqDivider = macSection ? macSection.previousElementSibling : null;
-
-      function syncMacSection() {
-        const macCard = document.getElementById('get-mac');
-        const isVisible = macCard && macCard.style.display !== 'none';
-        if (macSection) macSection.style.display = isVisible ? 'block' : 'none';
-        if (faqDivider) faqDivider.style.display = isVisible ? 'block' : 'none';
-      }
-
-      // Poll briefly after DOMContentLoaded so the existing OS-detection script runs first.
-      setTimeout(syncMacSection, 50);
-
-      // Also hook the toggle buttons so it updates when user switches OS.
-      document.querySelectorAll('#toggle-os-btn, #hero-toggle-os-btn').forEach(btn => {
-        btn.addEventListener('click', () => setTimeout(syncMacSection, 10));
-      });
-    });
-  </script>
+  <hr class="div" id="faq-divider" />
 
 
   <!-- Section 5: Technical Trust -->
@@ -4321,6 +4423,10 @@
           <p class="qa-note">The certificate program isn't a safety check - it's a publisher registry. Any developer,
             including a malicious one, can buy one and appear clean to your OS. Skipping it doesn't say anything about
             the code.</p>
+          <p class="qa-note" style="margin-top: 10px;">If the warning bothers you and you'd like it gone for everyone,
+            <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"
+              style="color: var(--orange); font-weight: 600; text-decoration: none;">chipping in towards the
+              certificates</a> is the thing that would actually do it.</p>
         </details>
 
         <!-- Card 2: What it connects to -->
@@ -4416,9 +4522,13 @@
       <div class="faq-grid">
         <details class="faq-item reveal">
           <summary>Is this allowed by my university?</summary>
-          <p>Canvas Downloader only accesses files you already have permission to view as a student. It uses the
-            official Canvas API - the same one the Canvas mobile apps use. You're downloading your own course materials.
-          </p>
+          <p>Canvas Downloader signs in as you, with a token you create, and only reaches files your account can
+            already open. It uses the official Canvas API - the same one the Canvas mobile apps use - and breaks no
+            copy protection of any kind.</p>
+          <p>What it can't do is know your institution's rules, so that part is on you: keep downloads for your own
+            study and never redistribute course material. <strong>Lecture recordings need more care than files</strong>
+            - see the <a href="disclaimer.html">disclaimer</a>, which sets out exactly what the app does and where the
+            limits are.</p>
         </details>
         <details class="faq-item reveal">
           <summary>Is it really free? What's the catch?</summary>
@@ -4428,8 +4538,12 @@
         </details>
         <details class="faq-item reveal">
           <summary>Will it work with my university's Canvas?</summary>
-          <p>Almost certainly. Canvas Downloader uses the standard Canvas REST API, which works with every Canvas
-            institution. If you can log into Canvas at your university, it works.</p>
+          <p>Yes. Canvas Downloader uses the standard Canvas REST API, which every Canvas institution runs - if you can
+            log into Canvas at your university, it works.</p>
+          <p>To save you finding your Canvas address, the app ships a searchable list of <strong>4,757 verified
+              institutions</strong> across every country that uses Canvas, so most people just type their school's name
+            and pick it. Not in the list? Paste your Canvas address instead - nothing about the app depends on being
+            listed.</p>
         </details>
         <details class="faq-item reveal">
           <summary>Do I need Python or anything else installed?</summary>
@@ -4454,9 +4568,14 @@
         <details class="faq-item reveal">
           <summary>Can it download lecture recordings (Panopto)?</summary>
           <p>Yes. Canvas Downloader automatically finds <strong>Panopto</strong> lecture recordings linked in your
-            courses and saves them in the course folder as video (MP4), audio (MP3), or a written transcript (.txt) and
-            subtitles (.srt). Transcription runs entirely on your own computer - nothing is uploaded - and works in both
-            download and Sync modes. See the <a href="guide.html#panopto">Panopto guide</a> to set it up.</p>
+            courses and saves them in the course folder as video (MP4), audio (MP3), a written transcript (.txt),
+            subtitles (.srt), or just a shortcut back to the lecture. Transcription runs entirely on your own computer -
+            nothing is uploaded - and works in both download and Sync modes. See the
+            <a href="guide.html#panopto">Panopto guide</a> to set it up.</p>
+          <p><strong>Please read the <a href="disclaimer.html">disclaimer</a> before you turn this on.</strong>
+            Recordings belong to your lecturer and your institution, Panopto's download button is a setting the app does
+            not read, and saving one may be against your institution's rules even though you're allowed to watch it.
+            Keep them for your own study and never share or re-upload them.</p>
         </details>
         <details class="faq-item reveal">
           <summary>The security warning scared me - is it safe?</summary>
@@ -4617,25 +4736,38 @@
       });
     });
 
-    // YouTube Local File Protocol Fallback (Error 153 bypass)
-    if (window.location.protocol === 'file:') {
+    // Load the YouTube player only when the user asks for it.
+    //
+    // Opened from a file:// path the embed fails anyway (YouTube error 153),
+    // which is what the old "local preview mode" branch worked around - so that
+    // case simply opens the video on YouTube instead. Everywhere else the
+    // iframe is created on click, which is what keeps "nothing is requested
+    // from YouTube until you press play" true.
+    (function () {
+      const facade = document.getElementById('video-facade');
       const container = document.getElementById('video-container');
-      if (container) {
-        container.innerHTML = `
-          <a href="https://www.youtube.com/watch?v=VadvcIvrrhU" target="_blank" rel="noopener" class="video-local-fallback" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); background: url('https://img.youtube.com/vi/VadvcIvrrhU/maxresdefault.jpg') center/cover no-repeat; text-decoration: none; position: relative; overflow: hidden; cursor: pointer;">
-            <div style="position: absolute; inset: 0; background: rgba(0, 0, 0, 0.3); transition: background-color 0.2s;"></div>
-            <div class="play-btn-circle" style="position: relative; z-index: 2; width: 68px; height: 68px; background: rgba(229, 9, 20, 0.95); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); transition: transform 0.2s, background-color 0.2s;">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 3px;">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>
-            </div>
-            <div style="position: absolute; bottom: 12px; right: 12px; z-index: 2; background: rgba(11, 12, 20, 0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 8px; font-size: 11px; color: #e2e8f0; font-weight: 500;">
-              Local Preview Mode - Click to Watch on YouTube
-            </div>
-          </a>
-        `;
-      }
-    }
+      if (!facade || !container) return;
+
+      facade.addEventListener('click', function () {
+        if (window.location.protocol === 'file:') {
+          window.open('https://www.youtube.com/watch?v=VadvcIvrrhU', '_blank', 'noopener');
+          return;
+        }
+        const iframe = document.createElement('iframe');
+        iframe.width = '100%';
+        iframe.height = '100%';
+        iframe.src = 'https://www.youtube-nocookie.com/embed/VadvcIvrrhU'
+          + '?autoplay=1&vq=hd1080&modestbranding=1&rel=0';
+        iframe.title = 'Getting your Canvas Access Token';
+        iframe.frameBorder = '0';
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.allowFullscreen = true;
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        iframe.style.cssText = 'border-radius: var(--rad); border: 1px solid var(--border);'
+          + ' box-shadow: 0 8px 30px rgba(0,0,0,0.4); display: block; background: #000;';
+        container.replaceChildren(iframe);
+      });
+    })();
   </script>
 
   <!-- Typewriter Effect Script -->
@@ -4686,49 +4818,21 @@
     });
   </script>
 
-  <!-- Video Modal -->
+  <!-- The lightbox. There used to be TWO of these, with two ids of the same
+       name, two stylesheets and two scripts - and the duplication was not
+       harmless. `getElementById` returns the FIRST match, so both scripts drove
+       modal #1 while `#modalImage` lived in modal #2: clicking the Today-page
+       screenshot wrote the image into the hidden modal and opened the empty
+       one, and the visible X did nothing because one script toggled `.show`
+       while the other toggled `.active`. Measured on the live site: a black
+       overlay with no content that only Escape could dismiss - so on a phone,
+       which has no Escape key, the homepage became a dead end.
+       One modal, one script, one class. -->
   <div class="video-modal" id="videoModal">
     <div class="video-modal-content">
-      <span class="close-video-modal" id="closeVideoModal">&times;</span>
-      <video id="modalVideo" autoplay loop muted playsinline></video>
-    </div>
-  </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const modal = document.getElementById('videoModal');
-      const modalVideo = document.getElementById('modalVideo');
-      const closeBtn = document.getElementById('closeVideoModal');
-
-      document.querySelectorAll('.expandable-video').forEach(vid => {
-        vid.addEventListener('click', () => {
-          modalVideo.src = vid.src;
-          modal.classList.add('show');
-          modalVideo.play();
-        });
-      });
-
-      const closeModal = () => {
-        modal.classList.remove('show');
-        modalVideo.pause();
-        setTimeout(() => modalVideo.src = '', 300);
-      };
-
-      closeBtn.addEventListener('click', closeModal);
-      modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-      });
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
-      });
-    });
-  </script>
-  <!-- Video Modal Element -->
-  <div class="video-modal" id="videoModal">
-    <div class="video-modal-content">
-      <button class="close-modal" id="closeModal">&times;</button>
+      <button class="close-modal" id="closeModal" type="button" aria-label="Close">&times;</button>
       <video id="modalVideo" controls autoplay loop playsinline></video>
-      <img id="modalImage" alt="" style="display:none;" />
+      <img decoding="async" loading="lazy" id="modalImage" alt="" style="display:none;" />
     </div>
   </div>
   <script>
@@ -4781,7 +4885,10 @@
   <script>
     // OS-aware setup links: Windows users get the Windows guide.
     (function () {
-      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+      // navigator.platform is deprecated and reports "MacIntel" on iPadOS.
+      var _uad = navigator.userAgentData;
+      var _plat = (_uad && _uad.platform) || navigator.platform || '';
+      if (!/Mac/i.test(_plat) && !/Mac OS X/i.test(navigator.userAgent || '')) {
         document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
       }
     })();

@@ -7,8 +7,10 @@
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="mac-wizard.css" />
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+<link rel="stylesheet" href="mac-wizard.css" />
   <style>
     :root {
       --bg: #0b0c14;
@@ -171,6 +173,14 @@
     }
     .dl-fallback:hover { border-color: rgba(255,255,255,0.22); color: var(--txt); }
 
+    /* When the API call failed this link stops being a quiet afterthought and
+       becomes the only way forward, so it has to look like the primary action. */
+    .dl-fallback-strong {
+      font-size: 15px; padding: 13px 24px; color: #fff;
+      background: var(--blue); border-color: transparent;
+    }
+    .dl-fallback-strong:hover { filter: brightness(1.12); color: #fff; }
+
     .req-strip {
       display: flex; gap: 10px; align-items: center; justify-content: center;
       flex-wrap: wrap;
@@ -230,8 +240,13 @@
 
   <div class="hero">
     <div class="container">
-      <h1>Your download has started! 🎉</h1>
-      <p class="sub">Canvas Downloader is free and indie, so macOS needs you to approve it by hand the first time. The assistant below walks you through every step - it takes about two minutes.</p>
+      <!-- Starts neutral. The old copy claimed the download had started before
+           anything had been resolved, so a visitor whose request failed - the
+           GitHub API is rate-limited to 60/hour per IP, and a campus network is
+           one IP - read a cheerful success message next to nothing happening.
+           The heading now states what is actually true at each moment. -->
+      <h1 id="dl-headline">Getting your download ready…</h1>
+      <p class="sub" id="dl-sub">Canvas Downloader is free and indie, so macOS needs you to approve it by hand the first time. The assistant below walks you through every step - it takes about two minutes.</p>
       <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest" id="dmg-link" class="dl-fallback">&#8681;&nbsp; Download didn’t start? Click here</a>
     </div>
   </div>
@@ -240,7 +255,7 @@
     <div class="req-strip">
       <span>🖥️ <strong>Apple Silicon Mac</strong> (M1-M5)</span>
       <span class="dot">·</span>
-      <span><strong>macOS 11 Big Sur</strong> or later</span>
+      <span><strong>macOS 14 Sonoma</strong> or later</span>
       <span class="dot">·</span>
       <span>Microsoft Office optional (for PDF conversions)</span>
     </div>
@@ -274,28 +289,56 @@
   <script src="mac-wizard.js"></script>
   <script>
     // Resolve the newest .dmg from GitHub Releases (so this page never links a
-    // stale filename), then auto-trigger the download. If the API can't be
-    // reached, the fallback link simply opens the GitHub releases page.
+    // stale filename), then auto-trigger the download.
+    //
+    // The whole download path hangs off this one unauthenticated call, which
+    // GitHub rate-limits to 60 requests per hour PER IP - and a university NAT
+    // is a single IP, so a lecture hall can exhaust it between them. Two things
+    // therefore matter as much as the happy path: the page must not claim
+    // success it hasn't achieved, and there must still be a working link when
+    // the API says no. Hence the hardcoded fallback below - update it when you
+    // cut a release, it is only ever reached when the API is unavailable.
+    var FALLBACK_DMG = 'https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest';
+
+    function announceStarted(url) {
+      document.getElementById('dl-headline').textContent = 'Your download has started! 🎉';
+      document.getElementById('dmg-link').href = url;
+      setTimeout(function () { window.location.href = url; }, 400);
+    }
+
+    function announceFailed() {
+      document.getElementById('dl-headline').textContent = "We couldn't start the download";
+      document.getElementById('dl-sub').textContent =
+        'GitHub did not answer just now - it limits how many requests one network can make per hour. '
+        + 'The button below still gets you the file, and the setup assistant underneath is ready when you are.';
+      var link = document.getElementById('dmg-link');
+      link.href = FALLBACK_DMG;
+      link.textContent = '⇩  Get Canvas Downloader from GitHub';
+      link.classList.add('dl-fallback-strong');
+    }
+
     fetch('https://api.github.com/repos/birkls/Canvas_LMS_batch_file_downloader/releases?per_page=30',
       { headers: { 'Accept': 'application/vnd.github+json' } })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (rels) {
         for (var i = 0; i < (rels || []).length; i++) {
           var rel = rels[i];
-          if (rel.draft) continue;
+          // Skip drafts AND prereleases - /releases is newest-first, so one
+          // published beta would otherwise become everybody's download.
+          if (rel.draft || rel.prerelease) continue;
           var dmg = (rel.assets || []).find(function (a) { return /\.dmg$/i.test(a.name); });
-          if (dmg) {
-            document.getElementById('dmg-link').href = dmg.browser_download_url;
-            setTimeout(function () { window.location.href = dmg.browser_download_url; }, 400);
-            return;
-          }
+          if (dmg) { announceStarted(dmg.browser_download_url); return; }
         }
+        announceFailed();   // answered, but no .dmg on any published release
       })
-      .catch(function () { /* keep the releases-page fallback link */ });
+      .catch(announceFailed);
 
     // OS-aware setup links: Windows users get the Windows guide.
     (function () {
-      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+      // navigator.platform is deprecated and reports "MacIntel" on iPadOS.
+      var _uad = navigator.userAgentData;
+      var _plat = (_uad && _uad.platform) || navigator.platform || '';
+      if (!/Mac/i.test(_plat) && !/Mac OS X/i.test(navigator.userAgent || '')) {
         document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
       }
     })();

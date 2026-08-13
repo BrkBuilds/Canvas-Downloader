@@ -58,6 +58,19 @@ jobs:
           fi
           echo "✅ Canvas Downloader.app found"
 
+      # The macOS floor is decided by whatever native wheels pip resolved above,
+      # NOT by the number in the spec - and neither onnxruntime nor numpy is
+      # pinned, so it moves on its own between builds. This reads the real
+      # minimum out of every Mach-O in the bundle and fails if any binary needs
+      # a newer macOS than Info.plist promises. Without it, the only way to
+      # discover the floor had risen was a user on an older Mac reporting a
+      # crash. See scripts/check_macos_floor.py for the measurement.
+      - name: Verify the bundle runs on the macOS version it claims
+        run: |
+          set -euo pipefail
+          source .venv/bin/activate
+          python scripts/check_macos_floor.py "dist/Canvas Downloader.app"
+
       - name: Ad-hoc code sign & Package
         run: |
           set -euo pipefail
