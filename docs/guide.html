@@ -17,10 +17,10 @@
   <meta name="twitter:image" content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/icon.png" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <style>
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+<style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -696,7 +696,7 @@
       <section class="guide-section" id="quick-download">
         <div class="sh reveal">
           <div class="label">Fastest Way to Start</div>
-          <div class="icon-h2"><img src="assets/icon_sync_quick.png" alt="" /><h2>Quick Download</h2></div>
+          <div class="icon-h2"><img decoding="async" loading="lazy" src="assets/icon_sync_quick.png" alt="" /><h2>Quick Download</h2></div>
           <p>Pick a ready-made preset and start downloading in seconds. No manual configuration needed - each preset is tuned for a specific use case.</p>
         </div>
 
@@ -708,35 +708,35 @@
 
         <div class="preset-list reveal">
           <div class="preset-row">
-            <img src="assets/icon_quick_dl_complete.png" alt="" class="preset-icon" />
+            <img decoding="async" loading="lazy" src="assets/icon_quick_dl_complete.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>Complete Canvas Download</strong>
               <span>All course files and every Canvas web page - assignments, syllabus, announcements, discussions, quizzes, and submissions - organized by module, plus full Panopto lecture videos.</span>
             </div>
           </div>
           <div class="preset-row">
-            <img src="assets/icon_quick_dl_ai_optimized.png" alt="" class="preset-icon" />
+            <img decoding="async" loading="lazy" src="assets/icon_quick_dl_ai_optimized.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>Daily study pack (Optimized)</strong>
               <span>Same as Complete, plus PowerPoint and legacy Word files are automatically converted to PDF, Canvas Content is filed into its own subfolders (Assignments/, Quizzes/ &hellip;), and Panopto lecture video &amp; audio are both saved. Designed for uploading your whole course to an AI tool.</span>
             </div>
           </div>
           <div class="preset-row">
-            <img src="assets/icon_quick_dl_notebook.png" alt="" class="preset-icon" />
+            <img decoding="async" loading="lazy" src="assets/icon_quick_dl_notebook.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>100% AI &amp; NotebookLM Ready</strong>
               <span>All files in a single flat folder with every conversion enabled (archives, PPTX, Word, Excel, code files, web pages, links, videos), plus Panopto lecture audio in a separate Recordings folder. Optimized for NotebookLM and similar AI tools, which cannot import subfolders.</span>
             </div>
           </div>
           <div class="preset-row">
-            <img src="assets/icon_quick_dl_ppt_pdf.png" alt="" class="preset-icon" />
+            <img decoding="async" loading="lazy" src="assets/icon_quick_dl_ppt_pdf.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>Slides &amp; PDFs Only</strong>
               <span>Lecture slides (PowerPoint) and PDF documents only. Skips videos, spreadsheets, data files, and all Canvas web content. No conversions. Clean and fast.</span>
             </div>
           </div>
           <div class="preset-row">
-            <img src="assets/icon_quick_dl_all_files.png" alt="" class="preset-icon" />
+            <img decoding="async" loading="lazy" src="assets/icon_quick_dl_all_files.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>Files Only</strong>
               <span>All course files organized by module, exactly as your teacher uploaded them. Skips Canvas-only web content (assignments, syllabus, etc.), Panopto recordings, and every conversion - a ZIP stays a ZIP.</span>
@@ -753,11 +753,11 @@
 
         <div class="compare-grid reveal">
           <div class="compare-card">
-            <h4><img src="assets/icon_subfolders.png" alt="" class="card-icon" />With Subfolders</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_subfolders.png" alt="" class="card-icon" />With Subfolders</h4>
             <p>Mirrors the Canvas module layout. Each module becomes its own subfolder - e.g. <em>CHEM101 / Week 3 / lecture.pdf</em>. Recommended for courses with many files.</p>
           </div>
           <div class="compare-card">
-            <h4><img src="assets/icon_flat.png" alt="" class="card-icon" />All in One Folder</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_flat.png" alt="" class="card-icon" />All in One Folder</h4>
             <p>All files go directly in the course folder with no subfolders. Best for flat setups or AI tools that need all files in one place.</p>
           </div>
         </div>
@@ -773,13 +773,13 @@
       <section class="guide-section" id="download-settings">
         <div class="sh reveal">
           <div class="label">Full Control</div>
-          <div class="icon-h2"><img src="assets/icon_custom_download.png" alt="" /><h2>Custom Download</h2></div>
+          <div class="icon-h2"><img decoding="async" loading="lazy" src="assets/icon_custom_download.png" alt="" /><h2>Custom Download</h2></div>
           <p>Accessed via the <strong>Custom Download</strong> button from the course list. Configure exactly what files to grab, how to organize them, whether to convert them for AI tools, and which lecture recordings to save - across four independent cards.</p>
           <a href="engine.html#conversions" class="deep-link compact"><span class="dl-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v6h6"/><path d="M20 20v-6h-6"/><path d="M4 10a8 8 0 0114-3l2 3"/><path d="M20 14a8 8 0 01-14 3l-2-3"/></svg></span><span class="dl-tx"><span class="dl-tt">Which conversions replace your original file?</span><span class="dl-sb">Most of them delete the original once converted. See the full list before you turn them on.</span></span><svg class="arw" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
         </div>
 
         <div class="callout info reveal">
-          <strong>Tip - the Select All buttons.</strong> <img src="assets/icon_canvas_content_select_all.png" alt="" style="width:18px;height:18px;vertical-align:-4px;margin-right:2px;" /><img src="assets/icon_conv_select_all.png" alt="" style="width:18px;height:18px;vertical-align:-4px;margin-right:2px;" /><img src="assets/icon_pan_select_all.png" alt="" style="width:18px;height:18px;vertical-align:-4px;margin-right:6px;" />Cards 2, 3 and 4 each have a <strong>Select All</strong> button that flips every option in that card at once. It's the quickest way to say &ldquo;give me all the Canvas content&rdquo;, &ldquo;run every conversion&rdquo;, or &ldquo;save every recording format&rdquo; - and clicking it again clears them all just as fast.
+          <strong>Tip - the Select All buttons.</strong> <img decoding="async" loading="lazy" src="assets/icon_canvas_content_select_all.png" alt="" style="width:18px;height:18px;vertical-align:-4px;margin-right:2px;" /><img decoding="async" loading="lazy" src="assets/icon_conv_select_all.png" alt="" style="width:18px;height:18px;vertical-align:-4px;margin-right:2px;" /><img decoding="async" loading="lazy" src="assets/icon_pan_select_all.png" alt="" style="width:18px;height:18px;vertical-align:-4px;margin-right:6px;" />Cards 2, 3 and 4 each have a <strong>Select All</strong> button that flips every option in that card at once. It's the quickest way to say &ldquo;give me all the Canvas content&rdquo;, &ldquo;run every conversion&rdquo;, or &ldquo;save every recording format&rdquo; - and clicking it again clears them all just as fast.
         </div>
 
         <!-- Card 1 -->
@@ -788,22 +788,22 @@
 
         <div class="compare-grid reveal">
           <div class="compare-card">
-            <h4><img src="assets/icon_all_files.png" alt="" class="card-icon" />All Files</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_all_files.png" alt="" class="card-icon" />All Files</h4>
             <p>Downloads <strong>everything</strong> your professor uploaded: PDFs, PowerPoint slides, Word documents, images, videos, spreadsheets, zip archives, and more. Best if you want a complete offline copy of your course.</p>
           </div>
           <div class="compare-card">
-            <h4><img src="assets/icon_study_files.png" alt="" class="card-icon" />Slides &amp; PDFs</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_study_files.png" alt="" class="card-icon" />Slides &amp; PDFs</h4>
             <p>Downloads only PowerPoint slide decks and PDF documents - and nothing else. Use this if you want to skip large videos or data sets and just get the core study materials. <strong>Note:</strong> Word documents are <em>not</em> included, so if your reading list is a .docx, choose <strong>All Files</strong> instead.</p>
           </div>
         </div>
 
         <div class="compare-grid reveal">
           <div class="compare-card">
-            <h4><img src="assets/icon_subfolders.png" alt="" class="card-icon" />With Subfolders</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_subfolders.png" alt="" class="card-icon" />With Subfolders</h4>
             <p>Mirrors the Canvas module layout on your computer. Each module becomes its own subfolder - for example: <em>CHEM101 / Week 3 / lecture.pdf</em>. Recommended for courses with many files.</p>
           </div>
           <div class="compare-card">
-            <h4><img src="assets/icon_flat.png" alt="" class="card-icon" />All in One Folder</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_flat.png" alt="" class="card-icon" />All in One Folder</h4>
             <p>Puts every file directly in the course folder with no subfolders. Easier to search everything at once, but can get cluttered for larger courses.</p>
           </div>
         </div>
@@ -818,22 +818,22 @@
         <div class="info-card reveal">
           <h4>What you can download</h4>
           <ul class="icon-list">
-            <li><img src="assets/icon_assignments.png" alt="" class="li-icon" /><span><strong>Assignments</strong> - Full instructions, due dates, and any attached files saved as a file.</span></li>
-            <li><img src="assets/icon_syllabus.png" alt="" class="li-icon" /><span><strong>Syllabus</strong> - Grading policies, office hours, and weekly schedules.</span></li>
-            <li><img src="assets/icon_announcements.png" alt="" class="li-icon" /><span><strong>Announcements</strong> - All course announcements in order. Great for finding deadline changes.</span></li>
-            <li><img src="assets/icon_discussions.png" alt="" class="li-icon" /><span><strong>Discussions</strong> - Discussion board threads, useful if your professor posts key content there.</span></li>
-            <li><img src="assets/icon_quizzes.png" alt="" class="li-icon" /><span><strong>Quizzes</strong> - Quiz questions and answer choices (visibility depends on your professor's settings).</span></li>
-            <li><img src="assets/icon_submissions.png" alt="" class="li-icon" /><span><strong>Submissions (Results)</strong> - Feedback and grades you received on your own submitted work. Your professor is not notified.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_assignments.png" alt="" class="li-icon" /><span><strong>Assignments</strong> - Full instructions, due dates, and any attached files saved as a file.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_syllabus.png" alt="" class="li-icon" /><span><strong>Syllabus</strong> - Grading policies, office hours, and weekly schedules.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_announcements.png" alt="" class="li-icon" /><span><strong>Announcements</strong> - All course announcements in order. Great for finding deadline changes.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_discussions.png" alt="" class="li-icon" /><span><strong>Discussions</strong> - Discussion board threads, useful if your professor posts key content there.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_quizzes.png" alt="" class="li-icon" /><span><strong>Quizzes</strong> - Quiz questions and answer choices (visibility depends on your professor's settings).</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_submissions.png" alt="" class="li-icon" /><span><strong>Submissions (Results)</strong> - Feedback and grades you received on your own submitted work. Your professor is not notified.</span></li>
           </ul>
         </div>
 
         <div class="compare-grid reveal">
           <div class="compare-card">
-            <h4><img src="assets/icon_sec_inline.png" alt="" class="card-icon" />Match Course Folder</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_sec_inline.png" alt="" class="card-icon" />Match Course Folder</h4>
             <p>Places Canvas Content files alongside your regular course files in the same module subfolders.</p>
           </div>
           <div class="compare-card">
-            <h4><img src="assets/icon_sec_subfolders.png" alt="" class="card-icon" />In Separate Folders</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_sec_subfolders.png" alt="" class="card-icon" />In Separate Folders</h4>
             <p>Creates a dedicated subfolder per content type (Assignments/, Quizzes/, Discussions/, etc.) inside the course folder.</p>
           </div>
         </div>
@@ -848,14 +848,14 @@
         <div class="info-card reveal">
           <h4>Available conversions</h4>
           <ul class="icon-list">
-            <li><img src="assets/icon_conv_zip.png" alt="" class="li-icon" /><span><strong>Unpack Archives</strong> - Extracts .zip, .tar and .tar.gz files so the contents are immediately accessible. Most AI tools cannot read archives directly. Nothing <em>inside</em> an archive is converted - it comes out exactly as your teacher packed it, so a code project stays a working project.</span></li>
-            <li><img src="assets/icon_conv_pptx.png" alt="" class="li-icon" /><span><strong>PowerPoint &#8594; PDF</strong> - Converts slide decks to PDF. Original is replaced. Requires the Microsoft PowerPoint desktop app.</span></li>
-            <li><img src="assets/icon_conv_word.png" alt="" class="li-icon" /><span><strong>Legacy Word &#8594; PDF</strong> - Converts old .doc / .rtf / .odt formats to PDF. Modern .docx files are not affected.</span></li>
-            <li><img src="assets/icon_conv_excel.png" alt="" class="li-icon" /><span><strong>Excel &#8594; PDF &amp; Data</strong> - Creates a visual PDF plus a plain text data file holding every cell value (<em>Budget.xlsx</em> becomes <em>Budget.pdf</em> + <em>Budget_Data.txt</em>). The original spreadsheet is replaced. Legacy .xls files get the PDF only.</span></li>
-            <li><img src="assets/icon_conv_html.png" alt="" class="li-icon" /><span><strong>Canvas Pages &#8594; Plain Text</strong> - Strips web formatting from Canvas pages, making them easy for AI tools.</span></li>
-            <li><img src="assets/icon_conv_code.png" alt="" class="li-icon" /><span><strong>Code &amp; Data &#8594; .txt</strong> - Turns 50+ code and data formats into plain text for AI tools that refuse anything else. The dot becomes an underscore - <em>analysis.py</em> becomes <em>analysis_py.txt</em> - so the original type stays visible in the name and can never collide with a .txt that was already there. The original is replaced.</span></li>
-            <li><img src="assets/icon_conv_urls.png" alt="" class="li-icon" /><span><strong>Gather Web Links</strong> - Collects every .url / .webloc shortcut into one <em>Compiled_External_Links.txt</em> per course, and removes the shortcuts. Keeps NotebookLM from choking on files it cannot read.</span></li>
-            <li><img src="assets/icon_conv_video.png" alt="" class="li-icon" /><span><strong>Video &#8594; Audio</strong> - Extracts audio as MP3, typically 10-20x smaller. Original video is replaced.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_zip.png" alt="" class="li-icon" /><span><strong>Unpack Archives</strong> - Extracts .zip, .tar and .tar.gz files so the contents are immediately accessible. Most AI tools cannot read archives directly. Nothing <em>inside</em> an archive is converted - it comes out exactly as your teacher packed it, so a code project stays a working project.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_pptx.png" alt="" class="li-icon" /><span><strong>PowerPoint &#8594; PDF</strong> - Converts slide decks to PDF. Original is replaced. Requires the Microsoft PowerPoint desktop app.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_word.png" alt="" class="li-icon" /><span><strong>Legacy Word &#8594; PDF</strong> - Converts old .doc / .rtf / .odt formats to PDF. Modern .docx files are not affected.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_excel.png" alt="" class="li-icon" /><span><strong>Excel &#8594; PDF &amp; Data</strong> - Creates a visual PDF plus a plain text data file holding every cell value (<em>Budget.xlsx</em> becomes <em>Budget.pdf</em> + <em>Budget_Data.txt</em>). The original spreadsheet is replaced. Legacy .xls files get the PDF only.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_html.png" alt="" class="li-icon" /><span><strong>Canvas Pages &#8594; Plain Text</strong> - Strips web formatting from Canvas pages, making them easy for AI tools.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_code.png" alt="" class="li-icon" /><span><strong>Code &amp; Data &#8594; .txt</strong> - Turns 50+ code and data formats into plain text for AI tools that refuse anything else. The dot becomes an underscore - <em>analysis.py</em> becomes <em>analysis_py.txt</em> - so the original type stays visible in the name and can never collide with a .txt that was already there. The original is replaced.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_urls.png" alt="" class="li-icon" /><span><strong>Gather Web Links</strong> - Collects every .url / .webloc shortcut into one <em>Compiled_External_Links.txt</em> per course, and removes the shortcuts. Keeps NotebookLM from choking on files it cannot read.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_video.png" alt="" class="li-icon" /><span><strong>Video &#8594; Audio</strong> - Extracts audio as MP3, typically 10-20x smaller. Original video is replaced.</span></li>
           </ul>
         </div>
 
@@ -872,10 +872,16 @@
         <div class="info-card reveal">
           <h4>What you can save for each lecture</h4>
           <ul class="icon-list">
-            <li><img src="assets/pan_mp4.png" alt="" class="li-icon" /><span><strong>Video (MP4)</strong> - the full lecture video (combined screen + camera). Best for watching offline; can be large. No setup needed.</span></li>
-            <li><img src="assets/pan_mp3.png" alt="" class="li-icon" /><span><strong>Audio (MP3)</strong> - just the audio track, far smaller than video - great for re-listening or feeding to AI tools. No setup needed.</span></li>
-            <li><img src="assets/pan_txt.png" alt="" class="li-icon" /><span><strong>Transcript (.txt)</strong> - a written transcript of the spoken lecture, perfect for AI tools. Needs a transcription model (see below).</span></li>
-            <li><img src="assets/pan_srt.png" alt="" class="li-icon" /><span><strong>Subtitles (.srt)</strong> - timestamped captions you can load alongside the video. Needs a transcription model (see below).</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/pan_mp4.png" alt="" class="li-icon" /><span><strong>Video (MP4)</strong> - the full lecture video (combined screen + camera). Best for watching offline; can be large. No setup needed.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/pan_mp3.png" alt="" class="li-icon" /><span><strong>Audio (MP3)</strong> - just the audio track, far smaller than video - great for re-listening or feeding to AI tools. No setup needed.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/pan_txt.png" alt="" class="li-icon" /><span><strong>Transcript (.txt)</strong> - a written transcript of the spoken lecture, perfect for AI tools. Needs a transcription model (see below).</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/pan_srt.png" alt="" class="li-icon" /><span><strong>Subtitles (.srt)</strong> - timestamped captions you can load alongside the video. Needs a transcription model (see below).</span></li>
+            <li><span><strong>Shortcut</strong> - a small link file that reopens the lecture on Panopto, saved next to
+                the rest of the course. It costs no disk space, no bandwidth and no waiting, and it keeps the things a
+                local copy loses: the slide navigation, the screen capture and Panopto's own search. It is a pointer,
+                though, so it stops working if you lose access to the course - treat it as a companion to an offline
+                copy rather than a replacement. <strong>Off by default</strong>, unlike audio, transcript and
+                subtitles.</span></li>
           </ul>
         </div>
 
@@ -885,11 +891,11 @@
 
         <div class="compare-grid reveal">
           <div class="compare-card">
-            <h4><img src="assets/pan_matching.png" alt="" class="card-icon" />Match Course Folder structure</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/pan_matching.png" alt="" class="card-icon" />Match Course Folder structure</h4>
             <p>Saves each recording alongside your course files - in its module subfolder (subfolder mode) or the course root (flat mode).</p>
           </div>
           <div class="compare-card">
-            <h4><img src="assets/pan_separate_folders.png" alt="" class="card-icon" />In Separate Folders</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/pan_separate_folders.png" alt="" class="card-icon" />In Separate Folders</h4>
             <p>Groups all lectures into a dedicated &ldquo;Panopto Recordings&rdquo; folder inside the course, one subfolder per recording.</p>
           </div>
         </div>
@@ -961,18 +967,18 @@
         </div>
 
         <!-- Presets -->
-        <h3 class="sub-title reveal" id="presets"><img src="assets/icon_preset_user.png" alt="" class="sub-icon" />Download Presets</h3>
+        <h3 class="sub-title reveal" id="presets"><img decoding="async" loading="lazy" src="assets/icon_preset_user.png" alt="" class="sub-icon" />Download Presets</h3>
         <p class="body-text reveal">
           A Preset saves your entire Card 1, 2, 3 <strong>and 4</strong> configuration - including your Panopto recording formats - under a name and description you choose, and optionally the output folder too. Once saved, you can restore your full setup in one click instead of re-configuring everything from scratch.
         </p>
 
         <div class="compare-grid reveal">
           <div class="compare-card">
-            <h4><img src="assets/icon_preset_user.png" alt="" class="card-icon" />Saving a Preset</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_preset_user.png" alt="" class="card-icon" />Saving a Preset</h4>
             <p>Configure Cards 1-4, then click <strong>Save Preset</strong> in the top right. Give it a name - like <em>AI Ready</em> - add a short description if you want, tick the box if you'd like it to remember your output folder too, and click Save. Everything is stored locally on your computer.</p>
           </div>
           <div class="compare-card">
-            <h4><img src="assets/icon_preset_builtin.png" alt="" class="card-icon" />Loading a Preset</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_preset_builtin.png" alt="" class="card-icon" />Loading a Preset</h4>
             <p>Click the <strong>Presets</strong> button in the top right. The Preset Hub opens - click any preset name to instantly apply its settings to all four cards. The Hub also holds the same five built-in presets you get from Quick Download, so you can start from one and tweak it.</p>
           </div>
         </div>
@@ -984,12 +990,12 @@
       <section class="guide-section" id="sync-mode">
         <div class="sh reveal">
           <div class="label blu">Keep Your Courses Up to Date</div>
-          <div class="icon-h2"><img src="assets/icon_sync.png" alt="" /><h2>Sync Mode</h2></div>
+          <div class="icon-h2"><img decoding="async" loading="lazy" src="assets/icon_sync.png" alt="" /><h2>Sync Mode</h2></div>
           <p>Sync Mode intelligently tracks your download history and only fetches what is new or changed - so your folders stay current all semester.</p>
           <a href="engine.html#contract" class="deep-link compact"><span class="dl-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></span><span class="dl-tx"><span class="dl-tt">How does a folder remember its own settings?</span><span class="dl-sb">Why syncing never asks you to reconfigure anything - and why it has no settings screen.</span></span><svg class="arw" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
         </div>
 
-        <h3 class="sub-title reveal" id="course-pairs"><img src="assets/icon_sync_pair.png" alt="" class="sub-icon" />Course Pairs</h3>
+        <h3 class="sub-title reveal" id="course-pairs"><img decoding="async" loading="lazy" src="assets/icon_sync_pair.png" alt="" class="sub-icon" />Course Pairs</h3>
         <p class="body-text reveal">
           A <strong>Course Pair</strong> permanently links a Course Folder on your computer (e.g. <em>Documents\CHEM101</em>) to its matching Canvas course.
           Click <strong>Add Course</strong> on the Sync page to create a pair. Once linked, syncing will automatically process every pair on your list.
@@ -1013,20 +1019,20 @@
           <h4>Managing Your Course Pairs</h4>
           <p>Each course pair card on your list has inline actions:</p>
           <ul class="icon-list">
-            <li><img src="assets/Icon_Folder.svg" alt="" class="li-icon" /><span><strong>Open Folder</strong> - Instantly opens the local course folder in your file explorer.</span></li>
-            <li><img src="assets/Icon_Edit.svg" alt="" class="li-icon" /><span><strong>Edit</strong> - Change the course's display name or update the folder path (e.g. if you moved the folder).</span></li>
-            <li><img src="assets/Icon_Eye.svg" alt="" class="li-icon" /><span><strong>Ignored Files</strong> - View, manage, and restore any files you permanently skipped.</span></li>
-            <li><img src="assets/Icon_Trash.svg" alt="" class="li-icon" /><span><strong>Remove</strong> - Removes the course from the sync list. This will never delete your local files.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/Icon_Folder.svg" alt="" class="li-icon" /><span><strong>Open Folder</strong> - Instantly opens the local course folder in your file explorer.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/Icon_Edit.svg" alt="" class="li-icon" /><span><strong>Edit</strong> - Change the course's display name or update the folder path (e.g. if you moved the folder).</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/Icon_Eye.svg" alt="" class="li-icon" /><span><strong>Ignored Files</strong> - View, manage, and restore any files you permanently skipped.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/Icon_Trash.svg" alt="" class="li-icon" /><span><strong>Remove</strong> - Removes the course from the sync list. This will never delete your local files.</span></li>
           </ul>
         </div>
 
         <!-- Quick Sync vs Analyze -->
-        <h3 class="sub-title reveal" id="quick-vs-analyze"><img src="assets/icon_sync_quick.png" alt="" class="sub-icon" /><img src="assets/icon_sync_review.png" alt="" class="sub-icon" />Quick Sync vs Analyze &amp; Review</h3>
+        <h3 class="sub-title reveal" id="quick-vs-analyze"><img decoding="async" loading="lazy" src="assets/icon_sync_quick.png" alt="" class="sub-icon" /><img decoding="async" loading="lazy" src="assets/icon_sync_review.png" alt="" class="sub-icon" />Quick Sync vs Analyze &amp; Review</h3>
         <p class="body-text reveal">Both modes scan Canvas - the difference is how much control you have over what gets downloaded.</p>
 
         <div class="compare-grid reveal">
           <div class="compare-card">
-            <h4><img src="assets/icon_sync_quick.png" alt="" class="card-icon" />Quick Sync All</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_sync_quick.png" alt="" class="card-icon" />Quick Sync All</h4>
             <ul>
               <li>&#10003; Auto-downloads all new files</li>
               <li>&#10003; Auto-updates unedited files</li>
@@ -1038,7 +1044,7 @@
             <p style="margin-top:10px;font-size:12px;color:var(--txt)"><strong>Best for:</strong> <span style="color:var(--txt2)">Quick catch-ups between lectures, morning file checks - whenever you need the latest files as fast as possible.</span></p>
           </div>
           <div class="compare-card">
-            <h4><img src="assets/icon_sync_review.png" alt="" class="card-icon" />Analyze, Review &amp; Sync</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_sync_review.png" alt="" class="card-icon" />Analyze, Review &amp; Sync</h4>
             <ul>
               <li>&#10003; Full overview of all changes across 7 categories</li>
               <li>&#10003; Select per-file what to download</li>
@@ -1112,24 +1118,24 @@
         </div>
 
         <!-- Saved Groups -->
-        <h3 class="sub-title reveal" id="saved-groups"><img src="assets/icon_sync_hub.png" alt="" class="sub-icon" />Saved Groups &amp; Pairs</h3>
+        <h3 class="sub-title reveal" id="saved-groups"><img decoding="async" loading="lazy" src="assets/icon_sync_hub.png" alt="" class="sub-icon" />Saved Groups &amp; Pairs</h3>
         <p class="body-text reveal">
           The <strong>Saved Groups &amp; Pairs</strong> hub lets you save your course pairs so you only have to set them up once. Load them in one click any time you return.
         </p>
 
         <div class="compare-grid reveal">
           <div class="compare-card">
-            <h4><img src="assets/icon_sync_pair.png" alt="" class="card-icon" />Save a Pair</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_sync_pair.png" alt="" class="card-icon" />Save a Pair</h4>
             <p>After adding a pair to the Sync List, click the save icon on the pair card. Give it a name, and save it. It's now stored in the hub and can be loaded in a single click in any future session.</p>
           </div>
           <div class="compare-card">
-            <h4><img src="assets/icon_sync_group.png" alt="" class="card-icon" />Save a Group</h4>
+            <h4><img decoding="async" loading="lazy" src="assets/icon_sync_group.png" alt="" class="card-icon" />Save a Group</h4>
             <p>A Group is a named collection of multiple pairs - e.g. all your semester courses. Add all pairs to the sync list, then click <strong>Save Group</strong>. You need at least 2 pairs to save a group.</p>
           </div>
         </div>
 
         <div class="info-card reveal">
-          <h4><img src="assets/icon_sync_hub.png" alt="" class="card-icon" />Load from the Hub</h4>
+          <h4><img decoding="async" loading="lazy" src="assets/icon_sync_hub.png" alt="" class="card-icon" />Load from the Hub</h4>
           <p>Click <strong>Saved Groups &amp; Pairs</strong> in the top right. Browse your saved groups and individual pairs. Click any entry to load it onto the sync page instantly. You can load multiple groups one after another to build a combined list. Both Pairs and Groups can be viewed and edited - change names, update folder paths, or add new pairs to a group, all from the hub.</p>
         </div>
 
@@ -1200,7 +1206,7 @@
       <section class="guide-section" id="sync-review">
         <div class="sh reveal">
           <div class="label grn">Review &amp; Control Every Change</div>
-          <div class="icon-h2"><img src="assets/icon_sync_review.png" alt="" /><h2>Sync Review</h2></div>
+          <div class="icon-h2"><img decoding="async" loading="lazy" src="assets/icon_sync_review.png" alt="" /><h2>Sync Review</h2></div>
           <p>When you use Analyze &amp; Review, every file lands in one of five review categories you decide on - plus Ignored files you've set aside, and Up to Date files that already match Canvas. You have full control over exactly what gets downloaded.</p>
           <a href="engine.html#categories" class="deep-link compact"><span class="dl-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg></span><span class="dl-tx"><span class="dl-tt">What does sync do in every situation?</span><span class="dl-sb">What sync does in every case, and which categories are unchecked by default.</span></span><svg class="arw" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
         </div>
@@ -1210,42 +1216,42 @@
 
         <div class="cat-grid reveal">
           <div class="cat-card cat-new">
-            <img src="assets/Icon_Sync_Review_New_File.png" alt="" class="cat-icon" />
+            <img decoding="async" loading="lazy" src="assets/Icon_Sync_Review_New_File.png" alt="" class="cat-icon" />
             <h5>New Files</h5>
             <p class="cat-desc">Files on Canvas added by your teacher that are not in your course folder yet.</p>
             <p class="cat-action">Downloaded fresh into the correct subfolder.</p>
             <span class="cat-badge checked">Checked by default</span>
           </div>
           <div class="cat-card cat-clean">
-            <img src="assets/Icon_Sync_Review_Update.png" alt="" class="cat-icon" />
+            <img decoding="async" loading="lazy" src="assets/Icon_Sync_Review_Update.png" alt="" class="cat-icon" />
             <h5>Updates (Clean)</h5>
             <p class="cat-desc">Canvas has a newer version, and you haven't edited your local copy.</p>
             <p class="cat-action">Replaced in place with the newest version - same name, same location.</p>
             <span class="cat-badge checked">Checked by default</span>
           </div>
           <div class="cat-card cat-edited">
-            <img src="assets/Icon_Sync_Review_Update.png" alt="" class="cat-icon" />
+            <img decoding="async" loading="lazy" src="assets/Icon_Sync_Review_Update.png" alt="" class="cat-icon" />
             <h5>Updates (You Edited)</h5>
             <p class="cat-desc">Canvas has a newer version, and you've modified your local copy (e.g. added annotations).</p>
             <p class="cat-action">New version saved as <em>filename_NewVersion</em> alongside your original. Your edits are never touched.</p>
             <span class="cat-badge unchecked">Unchecked by default</span>
           </div>
           <div class="cat-card cat-locdel">
-            <img src="assets/Icon_Sync_Review_Locally_Deleted.png" alt="" class="cat-icon" />
+            <img decoding="async" loading="lazy" src="assets/Icon_Sync_Review_Locally_Deleted.png" alt="" class="cat-icon" />
             <h5>Deleted Locally</h5>
             <p class="cat-desc">You deleted a file from your folder, but Canvas still has it.</p>
             <p class="cat-action">Your deletion is respected - won't redownload unless you explicitly check the box. Quick Sync always skips these.</p>
             <span class="cat-badge unchecked">Unchecked by default</span>
           </div>
           <div class="cat-card cat-candel">
-            <img src="assets/Icon_Sync_Review_Deleted_On_Canvas.png" alt="" class="cat-icon" />
+            <img decoding="async" loading="lazy" src="assets/Icon_Sync_Review_Deleted_On_Canvas.png" alt="" class="cat-icon" />
             <h5>Deleted on Canvas</h5>
             <p class="cat-desc">The teacher removed a file from Canvas, but it is still in your course folder.</p>
             <p class="cat-action">Your local copy stays exactly where it is. The app never deletes local files.</p>
             <span class="cat-badge info">Info only - no action</span>
           </div>
           <div class="cat-card cat-ignored">
-            <img src="assets/Icon_Ignore.svg" alt="" class="cat-icon" />
+            <img decoding="async" loading="lazy" src="assets/Icon_Ignore.svg" alt="" class="cat-icon" />
             <h5>Ignored Files</h5>
             <p class="cat-desc">Files you permanently skipped, so they never appear in future syncs.</p>
             <p class="cat-action">Restore them any time in the Ignored Files section.</p>
@@ -1276,11 +1282,11 @@
           <h4>UI Tools Explained</h4>
           <ul class="icon-list">
             <li><span><strong>Smart Select (by filetype)</strong> - Tag buttons group every file by extension (e.g. .pdf, .docx). Click a tag to instantly toggle all files of that type across all courses.</span></li>
-            <li><img src="assets/icon_select_all_here.png" alt="" class="li-icon" /><span><strong>Select All / Deselect All</strong> - One-click bulk actions to check or uncheck every visible file.</span></li>
-            <li><img src="assets/icon_deselect_all_here.png" alt="" class="li-icon" /><span><strong>Select All / Deselect All here</strong> - Scoped actions at the top of each category to check or uncheck only the files within that specific category of a course.</span></li>
-            <li><img src="assets/Icon_Eye.svg" alt="" class="li-icon" /><span><strong>The Ignore icon</strong> - Hover over any file row and click the eye icon to move it to the Ignored section. Ignored files are permanently hidden from future syncs.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_select_all_here.png" alt="" class="li-icon" /><span><strong>Select All / Deselect All</strong> - One-click bulk actions to check or uncheck every visible file.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_deselect_all_here.png" alt="" class="li-icon" /><span><strong>Select All / Deselect All here</strong> - Scoped actions at the top of each category to check or uncheck only the files within that specific category of a course.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/Icon_Eye.svg" alt="" class="li-icon" /><span><strong>The Ignore icon</strong> - Hover over any file row and click the eye icon to move it to the Ignored section. Ignored files are permanently hidden from future syncs.</span></li>
             <li><span><strong>Move deselected to Ignored</strong> - Sits at the top of every category. Click it to sweep every unchecked file in that list into your permanent Ignored bucket.</span></li>
-            <li><img src="assets/icon_restore.png" alt="" class="li-icon" /><span><strong>The Restore icon</strong> - Inside the Ignored Files category, click the restore arrow next to a file, or use "Restore All" to bring them back into active sync.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_restore.png" alt="" class="li-icon" /><span><strong>The Restore icon</strong> - Inside the Ignored Files category, click the restore arrow next to a file, or use "Restore All" to bring them back into active sync.</span></li>
           </ul>
         </div>
 
@@ -1629,7 +1635,10 @@
 
   // OS-aware setup links: Windows users get the Windows guide.
   (function () {
-    if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+    // navigator.platform is deprecated and reports "MacIntel" on iPadOS.
+      var _uad = navigator.userAgentData;
+      var _plat = (_uad && _uad.platform) || navigator.platform || '';
+      if (!/Mac/i.test(_plat) && !/Mac OS X/i.test(navigator.userAgent || '')) {
       document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
     }
   })();

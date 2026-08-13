@@ -452,12 +452,38 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
 #   * the macOS 15 "access data from other apps" folder prompt - OK.
 # If a future change reintroduces an Accessibility prompt, this sentence stops
 # being true - which is the whole reason the copy lives beside the mechanism.
+#
+# TWO THINGS THE COPY GOT WRONG, corrected 2026-08-14 after the pre-launch audit.
+# Both are the same failure: the notice describes the batch, and then drifted
+# from what the batch actually does.
+#
+#   1. SYSTEM EVENTS IS NOT IN THE BATCH. `first_run_permission_setup` primes
+#      `_APP_TRIPLES` - PowerPoint, Word, Excel - and nothing else. The only
+#      remaining System Events use is `exists process` inside the Office TEARDOWN
+#      (`quit_idle_office_apps`, called from the completion screen), so its
+#      Automation prompt arrives when the run FINISHES, not while this notice is
+#      on screen. Listing it beside the others told the user to expect it now and
+#      then left them with an unanswered dialog at the end - which is exactly the
+#      state that leaves Office open with its Recents unpurged.
+#
+#   2. "YOU ARE ONLY ASKED ONCE" IS FALSE ON macOS 15+. The "access data from
+#      other apps" consent is per app INSTANCE by design - `arm_app_data_access`
+#      re-arms it every session, and this module's own docstring says so. Full
+#      Disk Access is the only permanent silence. The website has stated this
+#      correctly for months while the app denied it.
+#
+# So the rule this constant exists to enforce - the copy and the mechanism change
+# together - now has to cover WHEN a prompt appears, not just WHICH prompts exist.
 TCC_FIRST_RUN_NOTICE = (
-    "<b>First-time macOS setup:</b> macOS will show a few one-time permission "
-    "dialogs (control of Microsoft Word / Excel / PowerPoint, System Events, and "
-    "folder access). Click <b>Allow</b> or <b>OK</b> on each - Canvas Downloader "
-    "uses them only to convert Office files to PDF on your own Mac. Nothing is "
-    "sent anywhere, and you are only asked once."
+    "<b>First-time macOS setup:</b> macOS will ask you to allow control of "
+    "<b>Microsoft Word / Excel / PowerPoint</b>, and access to the folder you are "
+    "saving into. Click <b>Allow</b> or <b>OK</b> on each - Canvas Downloader uses "
+    "them only to convert Office files to PDF on your own Mac, and nothing is sent "
+    "anywhere. One more dialog, for <b>System Events</b>, appears when the run "
+    "finishes: that one lets the app close the Office windows it opened. All of "
+    "these are one-time - except on macOS 15 and later, where "
+    "&ldquo;access data from other apps&rdquo; returns once per session unless you "
+    "grant Full Disk Access."
 )
 
 

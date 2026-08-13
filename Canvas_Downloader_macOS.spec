@@ -196,8 +196,27 @@ app = BUNDLE(
         'CFBundleVersion': _APP_VERSION,
         'CFBundleName': 'Canvas Downloader',
         'NSRequiresAquaSystemAppearance': False,
-        # Minimum macOS version (CustomTkinter requires 11.0+)
-        'LSMinimumSystemVersion': '11.0',
+        # Minimum macOS version.
+        #
+        # 14.0, and it is NOT a preference - it is what the bundled native
+        # wheels actually require. The floor is set by whatever pip resolves at
+        # build time, and CI builds on `macos-14`, so pip takes the highest
+        # compatible platform tag: onnxruntime publishes arm64 wheels tagged
+        # `macosx_14_0` ONLY, and numpy ships both 11.0 and 14.0. Declaring 11.0
+        # here did not make the binaries run on Big Sur - it just meant a
+        # student on an older Mac downloaded 151 MB and got a dyld failure
+        # instead of an honest "requires macOS 14" refusal from the OS.
+        #
+        # The old comment ("CustomTkinter requires 11.0+") is also stale twice
+        # over: this app has no CustomTkinter, and 11.0 was the floor of Apple
+        # Silicon itself, not of anything we ship.
+        #
+        # This number is VERIFIED against the built bundle, not trusted:
+        # scripts/check_macos_floor.py reads LC_BUILD_VERSION out of every
+        # Mach-O in the .app and fails the build if any binary demands a newer
+        # macOS than this key promises. Raise the wheels and the build tells
+        # you; it can no longer drift silently between releases.
+        'LSMinimumSystemVersion': '14.0',
         # Required on macOS 10.14+ for AppleScript automation (Office).
         # Without this key the TCC permission dialog shows no description.
         'NSAppleEventsUsageDescription': (

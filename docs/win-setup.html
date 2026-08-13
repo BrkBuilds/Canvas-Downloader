@@ -17,8 +17,10 @@
   <meta name="twitter:image" content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/icon.png" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <style>
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+<style>
     :root {
       --bg: #0b0c14;
       --surf: #10111e;
@@ -293,7 +295,7 @@
       <p>The Store build installs like any other app: no SmartScreen warning, automatic updates, and clean uninstall via Settings &rarr; Apps.</p>
       <a href="https://apps.microsoft.com/detail/9n1dwwvrq5wc?referrer=appbadge&mode=full" target="_blank"
         rel="noopener noreferrer" class="store-badge">
-        <img src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft" />
+        <img decoding="async" loading="lazy" src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft" />
       </a>
     </div>
 
@@ -306,6 +308,25 @@
       </ol>
       <p style="margin-top: 12px;">The warning appears only because the app is a free, unsigned indie project - the full source code is public on
         <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>. You only see it once.</p>
+    </div>
+
+    <!-- The three things a cautious person wants to know before running an
+         unsigned 140 MB installer, none of which the page answered. -->
+    <div class="card">
+      <h3><span class="num">?</span> Before you install</h3>
+      <ul style="margin: 0; padding-left: 20px; line-height: 1.75;">
+        <li><strong>Size.</strong> The installer is about <strong>140 MB</strong> and uses roughly
+          <strong>330 MB</strong> once installed. Most of that is the bundled Python runtime and the media tools -
+          nothing has to be installed separately.</li>
+        <li><strong>Antivirus.</strong> Some antivirus tools flag <em>any</em> unsigned installer that bundles a Python
+          runtime, so a scanner may warn even though nothing is wrong. If yours does, the file is on
+          <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest" target="_blank"
+            rel="noopener">GitHub Releases</a> and can be checked with VirusTotal before you run it. The Microsoft Store
+          build avoids this entirely.</li>
+        <li><strong>Updates.</strong> The Store version updates itself. With the direct installer, the app tells you
+          when a new version is out and you download and run the new installer over the top - your settings, saved
+          pairs and downloaded files are kept.</li>
+      </ul>
     </div>
 
     <div class="done-strip">
@@ -341,7 +362,10 @@
   <script>
     // OS-aware setup links: Windows users get the Windows guide.
     (function () {
-      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+      // navigator.platform is deprecated and reports "MacIntel" on iPadOS.
+      var _uad = navigator.userAgentData;
+      var _plat = (_uad && _uad.platform) || navigator.platform || '';
+      if (!/Mac/i.test(_plat) && !/Mac OS X/i.test(navigator.userAgent || '')) {
         document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
       }
     })();

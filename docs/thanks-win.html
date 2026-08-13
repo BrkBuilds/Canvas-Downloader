@@ -7,8 +7,10 @@
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <style>
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+<style>
     :root {
       --bg: #0b0c14;
       --surf: #10111e;
@@ -303,7 +305,9 @@
       .then(function (rels) {
         for (var i = 0; i < (rels || []).length; i++) {
           var rel = rels[i];
-          if (rel.draft) continue;
+          // Skip drafts AND prereleases: /releases is newest-first, so a
+          // single published beta would become everybody's download.
+          if (rel.draft || rel.prerelease) continue;
           var exe = (rel.assets || []).find(function (a) { return /\.exe$/i.test(a.name); });
           if (exe) { document.getElementById('exe-link').href = exe.browser_download_url; return; }
         }
@@ -312,7 +316,10 @@
 
     // OS-aware setup links: Windows users get the Windows guide.
     (function () {
-      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+      // navigator.platform is deprecated and reports "MacIntel" on iPadOS.
+      var _uad = navigator.userAgentData;
+      var _plat = (_uad && _uad.platform) || navigator.platform || '';
+      if (!/Mac/i.test(_plat) && !/Mac OS X/i.test(navigator.userAgent || '')) {
         document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
       }
     })();

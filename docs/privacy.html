@@ -20,11 +20,10 @@
   <meta name="robots" content="index, follow" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-    rel="stylesheet" />
-  <style>
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+<style>
     *,
     *::before,
     *::after {
@@ -570,6 +569,27 @@
         </li>
       </ul>
 
+      <h2>This website</h2>
+      <p>
+        This policy says it covers the project website, so here is exactly what the website itself does. It is a set of
+        static pages hosted on GitHub Pages. <strong>It sets no cookies, runs no analytics, and has no tracking of any
+        kind</strong> - there is no script here that records who you are or what you clicked.
+      </p>
+      <ul>
+        <li><strong>Fonts are served from this site</strong>, not from Google. They used to be loaded from Google Fonts,
+          which meant your IP address reached Google before the page had even rendered. They are now part of the site.</li>
+        <li><strong>GitHub.</strong> The download buttons ask GitHub's public API which release is newest, so the links
+          never point at a stale file. GitHub sees that request the same way it sees any visit.</li>
+        <li><strong>YouTube.</strong> Two pages embed a short how-to video. Nothing is requested from YouTube until you
+          click play - the video is a still image until then, so simply reading the page contacts no one.</li>
+        <li><strong>Microsoft.</strong> The "Get it from Microsoft" badge is an image served by Microsoft, and the
+          button links to the Store listing.</li>
+      </ul>
+      <p>
+        Your browser contacts GitHub and Microsoft only for the reasons above. Nothing on this website is sent to the
+        developer, because there is no developer server to send it to.
+      </p>
+
       <h2>Data retention and deletion</h2>
       <p>You are always in full control of your data because it lives on your machine:</p>
       <ul>
@@ -634,7 +654,10 @@
   <script>
     // OS-aware setup links: Windows users get the Windows guide.
     (function () {
-      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+      // navigator.platform is deprecated and reports "MacIntel" on iPadOS.
+      var _uad = navigator.userAgentData;
+      var _plat = (_uad && _uad.platform) || navigator.platform || '';
+      if (!/Mac/i.test(_plat) && !/Mac OS X/i.test(navigator.userAgent || '')) {
         document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
       }
     })();

@@ -18,9 +18,10 @@
   <meta name="twitter:image" content="https://birkls.github.io/Canvas_LMS_batch_file_downloader/icon.png" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="mac-wizard.css" />
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+<link rel="stylesheet" href="mac-wizard.css" />
   <style>
     :root {
       --bg: #0b0c14;
@@ -819,7 +820,7 @@
           <div class="req-title">Before you start</div>
           <ul>
             <li><strong>Apple Silicon Mac</strong> - M1, M2, M3, M4 or M5 chip (not Intel)</li>
-            <li><strong>macOS 11 Big Sur or later</strong> - Monterey, Ventura, Sonoma, Sequoia, Tahoe all work</li>
+            <li><strong>macOS 14 Sonoma or later</strong> - Sonoma, Sequoia and Tahoe are supported. On macOS 13 Ventura or older the app will not launch.</li>
             <li><strong>Microsoft Office</strong> - optional. Only needed for PDF conversions (PowerPoint / Word / Excel →
               PDF). Everything else works without it and original files are always kept.</li>
           </ul>
@@ -856,7 +857,7 @@
                 Downloader</strong>. To keep this app completely free for students, I don't pay Apple the $99/year developer fee required to sign the app. Because it is an independent app without this certificate, macOS blocks it on the first attempt - this is completely normal for free, independent apps.</p>
 
             <p class="card-p"><strong>First, you'll see this:</strong></p>
-            <img class="screenshot sc-md sc-center" src="assets/mac-perm-gatekeeper1.png"
+            <img decoding="async" loading="lazy" class="screenshot sc-md sc-center" src="assets/mac-perm-gatekeeper1.png"
               alt="macOS Gatekeeper block dialog" onerror="this.style.display='none'" />
 
             <p class="card-p">Click <strong>Done</strong> (not "Move to Trash"). Then open <strong>Apple menu → System
@@ -864,7 +865,7 @@
                 Downloader was blocked…"</em> - click <strong>Open Anyway</strong>.</p>
 
             <p class="card-p">macOS then asks you to confirm your identity:</p>
-            <img class="screenshot sc-lg sc-center" src="assets/mac-perm-gatekeeper2.png"
+            <img decoding="async" loading="lazy" class="screenshot sc-lg sc-center" src="assets/mac-perm-gatekeeper2.png"
               alt="macOS Open Anyway confirmation" onerror="this.style.display='none'" />
 
             <div class="action"><span>→ Enter your Mac login password and click <strong>Open Anyway</strong> to confirm.</span></div>
@@ -873,10 +874,9 @@
               password step is macOS's standard safety gate for all unsigned apps from independent developers.</p>
 
             <div class="version-note">
-              <strong>macOS 14 Sonoma or earlier:</strong> you can skip the Settings detour entirely - just
-              <strong>right-click the app → Open → Open</strong>. &nbsp;·&nbsp;
-              <strong>macOS 12 or earlier:</strong> the settings path is called <em>System Preferences → Security &amp;
-                Privacy → General</em>.
+              <strong>On macOS 14 Sonoma:</strong> you can skip the Settings detour entirely - just
+              <strong>right-click the app → Open → Open</strong>. macOS 15 Sequoia removed that shortcut, which is why
+              the steps above go through System Settings instead.
             </div>
           </div>
 
@@ -904,7 +904,7 @@
             <p class="card-p">When the app opens, macOS shows a notification permission prompt in the top-right corner
               of your screen. Click it to open the permission dialog:</p>
 
-            <img class="screenshot sc-md sc-center" src="assets/mac-perm-notifications1.png"
+            <img decoding="async" loading="lazy" class="screenshot sc-md sc-center" src="assets/mac-perm-notifications1.png"
               alt="Canvas Downloader notification permission prompt" onerror="this.style.display='none'" />
 
             <div class="action"><span>→ Click <strong>Allow</strong> to enable notifications.</span></div>
@@ -912,7 +912,7 @@
             <p class="card-p" style="margin-top:16px;">Once allowed, the toggle in Notification Settings looks like
               this:</p>
 
-            <img class="screenshot sc-md sc-center" src="assets/mac-perm-notifications2.png"
+            <img decoding="async" loading="lazy" class="screenshot sc-md sc-center" src="assets/mac-perm-notifications2.png"
               alt="Notifications enabled in macOS Settings" onerror="this.style.display='none'" />
 
             <p class="why">Canvas Downloader sends one "Download Complete" or "Sync Complete" banner when a long run
@@ -958,9 +958,10 @@
           </div>
 
           <div class="card">
-            <p class="card-p">When you start your first download or sync, Canvas Downloader asks macOS for all remaining
-              permissions up front - so they never interrupt a run later. Up to six dialogs appear in sequence, depending
-              on which Microsoft Office apps you have installed.</p>
+            <p class="card-p">When you start your first download or sync, Canvas Downloader asks macOS for the Office
+              permissions up front - in one batch, so they don't interrupt the run later. Up to five dialogs appear in
+              sequence, depending on which Microsoft Office apps you have installed. A sixth, for
+              <strong>System Events</strong>, arrives at the <em>end</em> of that first run - see dialog 6.</p>
 
             <div class="perm-list">
 
@@ -973,7 +974,7 @@
                     <strong>"Canvas Downloader" would like to access data from other apps.</strong><br>
                     "Keeping app data separate makes it easier to manage your privacy and security."
                   </div>
-                  <img class="screenshot sc-sm sc-center" src="assets/mac-perm-appdata.png"
+                  <img decoding="async" loading="lazy" class="screenshot sc-sm sc-center" src="assets/mac-perm-appdata.png"
                     alt="Access data from other apps dialog" onerror="this.style.display='none'" />
                   <div class="action">→ Click Allow.</div>
                   <p class="why">PDF conversions use a private scratch folder inside Microsoft Office's own app container
@@ -1007,7 +1008,7 @@
                     <strong>"Canvas Downloader" would like to access files in your Downloads folder.</strong><br>
                     "Canvas Downloader may save downloaded course files to your Downloads folder."
                   </div>
-                  <img class="screenshot sc-sm sc-center" src="assets/mac-perm-downloads.png"
+                  <img decoding="async" loading="lazy" class="screenshot sc-sm sc-center" src="assets/mac-perm-downloads.png"
                     alt="Downloads folder permission" onerror="this.style.display='none'" />
                   <div class="action">→ Click Allow.</div>
                   <p class="why">macOS asks once per protected folder. If you save files to a custom folder (Documents,
@@ -1015,27 +1016,9 @@
                 </div>
               </div>
 
-              <!-- 3 · System Events -->
+              <!-- 3 · PowerPoint -->
               <div class="perm-item">
                 <div class="perm-num">3</div>
-                <div class="perm-body">
-                  <div class="perm-title">System Events</div>
-                  <div class="dialog-quote">
-                    <strong>"Canvas Downloader" wants access to control "System Events".</strong><br>
-                    "Allowing control will provide access to documents and data in "System Events", and to perform
-                    actions within that app."
-                  </div>
-                  <img class="screenshot sc-sm sc-center" src="assets/mac-perm-systemevents.png"
-                    alt="Control System Events dialog" onerror="this.style.display='none'" />
-                  <div class="action">→ Click Allow.</div>
-                  <p class="why">System Events is the macOS automation layer that keeps Office windows hidden during
-                    conversions - nothing flashes or bounces in the Dock while files are being processed.</p>
-                </div>
-              </div>
-
-              <!-- 4 · PowerPoint -->
-              <div class="perm-item">
-                <div class="perm-num">4</div>
                 <div class="perm-body">
                   <div class="perm-title">Microsoft PowerPoint</div>
                   <div class="dialog-quote">
@@ -1043,7 +1026,7 @@
                     "Allowing control will provide access to documents and data in "Microsoft PowerPoint", and to perform
                     actions within that app."
                   </div>
-                  <img class="screenshot sc-sm sc-center" src="assets/mac-perm-powerpoint.png"
+                  <img decoding="async" loading="lazy" class="screenshot sc-sm sc-center" src="assets/mac-perm-powerpoint.png"
                     alt="Control Microsoft PowerPoint dialog" onerror="this.style.display='none'" />
                   <div class="action">→ Click Allow.</div>
                   <p class="why">This is the PDF-conversion permission. Canvas Downloader opens each .pptx file in
@@ -1051,9 +1034,9 @@
                 </div>
               </div>
 
-              <!-- 5 · Word -->
+              <!-- 4 · Word -->
               <div class="perm-item">
-                <div class="perm-num">5</div>
+                <div class="perm-num">4</div>
                 <div class="perm-body">
                   <div class="perm-title">Microsoft Word</div>
                   <div class="dialog-quote">
@@ -1061,15 +1044,15 @@
                     "Allowing control will provide access to documents and data in "Microsoft Word", and to perform
                     actions within that app."
                   </div>
-                  <img class="screenshot sc-sm sc-center" src="assets/mac-perm-word.png"
+                  <img decoding="async" loading="lazy" class="screenshot sc-sm sc-center" src="assets/mac-perm-word.png"
                     alt="Control Microsoft Word dialog" onerror="this.style.display='none'" />
                   <div class="action">→ Click Allow.</div>
                 </div>
               </div>
 
-              <!-- 6 · Excel -->
+              <!-- 5 · Excel -->
               <div class="perm-item">
-                <div class="perm-num">6</div>
+                <div class="perm-num">5</div>
                 <div class="perm-body">
                   <div class="perm-title">Microsoft Excel</div>
                   <div class="dialog-quote">
@@ -1077,11 +1060,44 @@
                     "Allowing control will provide access to documents and data in "Microsoft Excel", and to perform
                     actions within that app."
                   </div>
-                  <img class="screenshot sc-sm sc-center" src="assets/mac-perm-excel.png"
+                  <img decoding="async" loading="lazy" class="screenshot sc-sm sc-center" src="assets/mac-perm-excel.png"
                     alt="Control Microsoft Excel dialog" onerror="this.style.display='none'" />
                   <div class="action">→ Click Allow.</div>
-                  <p class="why">Dialogs 4-6 only appear for Office apps you have installed. If you don't have Office,
+                  <p class="why">Dialogs 3-5 only appear for Office apps you have installed. If you don't have Office,
                     none of them appear and original files are always kept as-is.</p>
+                </div>
+              </div>
+
+              <!-- 6 · System Events.
+                   Moved to the end and rewritten 2026-08-14. It used to be listed
+                   third, as part of the opening batch, and explained as "keeps
+                   Office windows hidden during conversions". Both were wrong: the
+                   window-hiding was measured as counter-productive and deleted
+                   from the app in August 2026, and the batch never asked for this
+                   permission at all - the app only talks to System Events when it
+                   tidies up, so the dialog genuinely arrives at the END of the
+                   first run that converts something. Telling people to expect it
+                   up front left them with an unanswered dialog after they had
+                   walked away, which is exactly what strands Office open. -->
+              <div class="perm-item">
+                <div class="perm-num">6</div>
+                <div class="perm-body">
+                  <div class="perm-title">System Events <span class="badge-15">at the end of the run</span></div>
+                  <div class="dialog-quote">
+                    <strong>"Canvas Downloader" wants access to control "System Events".</strong><br>
+                    "Allowing control will provide access to documents and data in "System Events", and to perform
+                    actions within that app."
+                  </div>
+                  <img decoding="async" loading="lazy" class="screenshot sc-sm sc-center" src="assets/mac-perm-systemevents.png"
+                    alt="Control System Events dialog" onerror="this.style.display='none'" />
+                  <div class="action">→ Click Allow.</div>
+                  <p class="why">This one is the tidy-up. When the run finishes, Canvas Downloader closes the Word,
+                    Excel and PowerPoint windows it opened for the conversions and clears its temporary files out of
+                    your Office <em>Recent</em> lists. System Events is how macOS lets it check which of those apps are
+                    still running - it never touches documents you opened yourself.</p>
+                  <p class="why"><strong>It appears later than the others</strong>, once the download or sync is
+                    complete, so don't be surprised by a dialog after the run. If you miss it, nothing is lost - the
+                    Office apps just stay open and you can quit them by hand.</p>
                 </div>
               </div>
 
@@ -1166,7 +1182,10 @@
   <script>
     // OS-aware setup links: Windows users get the Windows guide.
     (function () {
-      if (navigator.platform.toUpperCase().indexOf('MAC') < 0) {
+      // navigator.platform is deprecated and reports "MacIntel" on iPadOS.
+      var _uad = navigator.userAgentData;
+      var _plat = (_uad && _uad.platform) || navigator.platform || '';
+      if (!/Mac/i.test(_plat) && !/Mac OS X/i.test(navigator.userAgent || '')) {
         document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
       }
     })();
@@ -1187,19 +1206,43 @@
       if (d) d.open = true;
     }
 
-    // Populate guide-embed YouTube players (plain iframes; file:// gets a link fallback)
+    // Guide-embed YouTube players, loaded ON CLICK.
+    //
+    // These were plain iframes written straight into the page, so opening the
+    // setup guide contacted YouTube - and therefore Google - before the reader
+    // had asked for anything. The poster is served from this site; the player
+    // is created only when the play button is pressed, which is what makes the
+    // privacy policy's statement about this page true.
     document.querySelectorAll('.guide-embed[data-yt]').forEach(function (box) {
       var id = box.getAttribute('data-yt');
-      if (location.protocol === 'file:') {
-        box.innerHTML = '<a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener"' +
-          ' style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
-          'background:#0c1424;text-decoration:none;color:#b8cad8;font-size:13px;font-weight:600;">Watch on YouTube ↗</a>';
-      } else {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Play video');
+      btn.style.cssText = 'all:unset;box-sizing:border-box;position:absolute;inset:0;display:flex;' +
+        'align-items:center;justify-content:center;cursor:pointer;background:#0c1424;overflow:hidden;';
+      btn.innerHTML =
+        '<img src="assets/token-video-poster.jpg" alt="" loading="lazy" decoding="async"' +
+        ' style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />' +
+        '<span style="position:absolute;inset:0;background:rgba(0,0,0,0.32);"></span>' +
+        '<span style="position:relative;z-index:2;width:60px;height:60px;background:rgba(229,9,20,0.95);' +
+        'border-radius:50%;display:flex;align-items:center;justify-content:center;' +
+        'box-shadow:0 4px 15px rgba(0,0,0,0.5);">' +
+        '<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" style="margin-left:3px;">' +
+        '<polygon points="5 3 19 12 5 21 5 3"></polygon></svg></span>';
+
+      btn.addEventListener('click', function () {
+        // From a file:// path the embed fails with YouTube error 153, so send
+        // the reader to the video itself rather than to a broken player.
+        if (location.protocol === 'file:') {
+          window.open('https://www.youtube.com/watch?v=' + id, '_blank', 'noopener');
+          return;
+        }
         box.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id +
-          '?modestbranding=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
+          '?autoplay=1&modestbranding=1&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
           ' allowfullscreen referrerpolicy="strict-origin-when-cross-origin"' +
           ' style="position:absolute;inset:0;width:100%;height:100%;border:0;"></iframe>';
-      }
+      });
+      box.appendChild(btn);
     });
   </script>
 

@@ -179,6 +179,64 @@ def test_notice_has_exactly_one_definition():
     assert len(defining) == 1, f"copy has drifted into several files: {defining}"
 
 
+# ── the notice must describe WHEN a prompt appears, not just WHICH ──
+#
+# Both properties below were false in shipped copy until 2026-08-14. They are
+# the same class as the Accessibility bug above: the constant lives beside the
+# mechanism precisely so the two change together, and twice now only the
+# mechanism moved.
+
+def test_system_events_is_not_promised_as_part_of_the_opening_batch():
+    """It is raised by the TEARDOWN, so the notice must not imply it comes now.
+
+    ``first_run_permission_setup`` primes ``_APP_TRIPLES`` and nothing else, so
+    the System Events Automation prompt only arrives when
+    ``quit_idle_office_apps`` runs on the completion screen. Telling the user to
+    expect it up front leaves an unanswered dialog at the end of the run - which
+    is the state that strands Office open with its Recents unpurged.
+    """
+    import engine.applescript_bridge as AB
+
+    primed = {ms for _key, ms, _short in AB._APP_TRIPLES}
+    assert "System Events" not in primed, (
+        "the batch now primes System Events - if that is deliberate, the notice "
+        "may go back to listing it with the others, and this test should say so"
+    )
+
+    notice = AB.TCC_FIRST_RUN_NOTICE
+    if "System Events" in notice:
+        assert re.search(r"finish|end of|when the run|afterwards", notice, re.I), (
+            "the notice names System Events but not that it comes at the END of "
+            "the run; the batch does not prime it (see _APP_TRIPLES above)"
+        )
+
+
+def test_notice_does_not_claim_an_unqualified_only_asked_once():
+    """macOS 15's App Data consent is per SESSION - the app said otherwise.
+
+    ``arm_app_data_access`` exists because that consent expires when the app
+    quits, so an unqualified "you are only asked once" is a promise the platform
+    breaks on every relaunch.
+    """
+    import engine.applescript_bridge as AB
+
+    notice = AB.TCC_FIRST_RUN_NOTICE
+    assert hasattr(AB, "arm_app_data_access"), (
+        "the per-session re-arm is what makes this claim false - if it is gone, "
+        "re-check whether the notice may promise a single prompt again"
+    )
+    if re.search(r"only asked once|asked only once", notice, re.I):
+        assert re.search(r"per session|each session|once per session", notice, re.I), (
+            "'only asked once' must be qualified: on macOS 15+ the "
+            "'access data from other apps' prompt returns every session unless "
+            "Full Disk Access is granted"
+        )
+    assert re.search(r"session", notice, re.I), (
+        "the notice must mention the per-session macOS 15+ prompt at all - it is "
+        "the one dialog a user will otherwise think is a bug"
+    )
+
+
 # ── 2. the case-only rename must not delete the file just written ──
 
 def _case_insensitive_here(tmp_path: Path) -> bool:

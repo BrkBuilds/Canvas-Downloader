@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# The two "your download has started" pages are per-visit confirmations, not
+# content - they also carry <meta name="robots" content="noindex"> themselves.
+Disallow: /thanks-win.html
+Disallow: /thanks-mac.html
+
+Sitemap: https://birkls.github.io/Canvas_LMS_batch_file_downloader/sitemap.xml
