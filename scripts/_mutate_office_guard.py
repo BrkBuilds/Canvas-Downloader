@@ -3,9 +3,15 @@
 Hazards this respects, all recorded in AUDIT_PLAYBOOK.md after they cost real
 code or real time:
 
-* **refuses a dirty tree.** `restore()` is a hard `git checkout`, so any
-  uncommitted edit would be silently discarded (it ate two finished fixes on
-  2026-08-11).
+* **refuses a dirty tree.** The pass rewrites its targets, so any uncommitted
+  edit would be silently discarded (it ate two finished fixes on 2026-08-11).
+* **aborts if a target changes MID-PASS.** The clean check runs once, at the
+  start, so an edit made while the pass is running was restored away with no
+  message - measured 2026-08-13, a docstring lost to a background pass. The
+  same window that can CAPTURE a mutant can DESTROY work, and only that
+  direction is silent. Restore is from a snapshot taken at the start rather
+  than from `git checkout`, which also means a commit landing mid-pass cannot
+  change what "restore" means.
 * **bytecode.** A same-size mutation restored inside the same second leaves a
   stale `.pyc` that Python trusts, so the next run tests the mutant. Runs with
   PYTHONDONTWRITEBYTECODE and clears __pycache__ between mutants.
@@ -321,9 +327,24 @@ def _clean() -> bool:
     return not r.stdout.strip()
 
 
-def _restore() -> None:
-    subprocess.run(["git", "checkout", "--"] + TARGETS, cwd=REPO,
-                   capture_output=True)
+def _snapshot() -> dict:
+    """The exact bytes of every target, read once, after the clean check."""
+    return {rel: (REPO / rel).read_text(encoding="utf-8") for rel in TARGETS}
+
+
+def _restore(snapshot: dict) -> None:
+    """Put the targets back from the SNAPSHOT, not from git.
+
+    `git checkout --` was the original and has two problems this does not: it
+    depends on HEAD still being the version the pass started from (a commit
+    landing mid-pass silently changes what "restore" means - the recorded
+    2026-08-10 incident), and it rewrites every target whether or not this pass
+    touched it. Writing back the bytes we read is exact and needs no git at all.
+    """
+    for rel, text in snapshot.items():
+        p = REPO / rel
+        if p.read_text(encoding="utf-8") != text:
+            p.write_text(text, encoding="utf-8")
     for d in REPO.rglob("__pycache__"):
         shutil.rmtree(d, ignore_errors=True)
 
@@ -333,13 +354,33 @@ def main(mutants=None, test=None) -> int:
     test = test or TEST
     if not _clean():
         print("REFUSING: tree is dirty for the targeted files. Commit first - "
-              "restore() is a hard git checkout and would discard your work.")
+              "the pass rewrites them and would discard your work.")
         return 2
+    snapshot = _snapshot()
     env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
     survivors = []
     for label, rel, old, new in mutants:
         p = REPO / rel
         src = p.read_text(encoding="utf-8")
+        # THE SOURCE MUST STILL BE WHAT WE STARTED FROM.
+        #
+        # `_clean()` runs ONCE, at the start, so an edit made to a target WHILE
+        # the pass runs was restored away with no message at all. Measured
+        # 2026-08-13: a docstring written into engine/applescript_bridge.py
+        # during a background pass, gone, noticed only because the editor
+        # warned the file had changed underneath it.
+        #
+        # It is the mirror of the recorded hazard - the same window that can
+        # CAPTURE a mutant can DESTROY work - and only this direction is
+        # silent, because the pass goes on reporting truthfully afterwards.
+        if src != snapshot[rel]:
+            print(f"  !! {rel} CHANGED UNDER THE PASS - aborting at {label!r}")
+            print(f"     Something else is editing it: another session, an "
+                  f"editor, or you. Every result after the change would "
+                  f"describe a tree nobody wrote, and restoring would delete "
+                  f"that edit. Nothing else has been touched.")
+            _restore(snapshot)
+            return 3
         if old not in src:
             print(f"  !! ANCHOR MISSING  {label}  ({rel})")
             survivors.append(f"{label} [anchor missing - the test proves nothing]")
@@ -355,7 +396,7 @@ def main(mutants=None, test=None) -> int:
             rc = r.returncode
         except subprocess.TimeoutExpired:
             rc = -9
-        _restore()
+        _restore(snapshot)
         caught = rc != 0
         print(f"  {'caught ' if caught else 'SURVIVED'}  {label}")
         if not caught:
