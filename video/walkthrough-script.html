@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canvas Downloader Walkthrough</title>
+</head>
+<body>
+<style>
+  :root {
+    --ground: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #eef1f5;
+    --ink: #131820;
+    --ink-2: #4a5563;
+    --ink-3: #79838f;
+    --rule: #dde2e9;
+    --rule-strong: #c3ccd7;
+    --accent: #0e7490;
+    --accent-soft: #e2f2f7;
+    --action: #955700;
+    --action-soft: #fbf1e2;
+    --cam: #6634cf;
+    --cam-soft: #ece6fb;
+
+    --sans: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", "Roboto Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0e1117;
+      --surface: #171b24;
+      --surface-2: #1e232e;
+      --ink: #e2e8f0;
+      --ink-2: #94a3b8;
+      --ink-3: #6b7688;
+      --rule: rgba(255, 255, 255, 0.10);
+      --rule-strong: rgba(255, 255, 255, 0.20);
+      --accent: #3fd9ff;
+      --accent-soft: rgba(63, 217, 255, 0.13);
+      --action: #f0a95c;
+      --action-soft: rgba(240, 169, 92, 0.12);
+      --cam: #b89dfe;
+      --cam-soft: rgba(184, 157, 254, 0.14);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0e1117;
+    --surface: #171b24;
+    --surface-2: #1e232e;
+    --ink: #e2e8f0;
+    --ink-2: #94a3b8;
+    --ink-3: #6b7688;
+    --rule: rgba(255, 255, 255, 0.10);
+    --rule-strong: rgba(255, 255, 255, 0.20);
+    --accent: #3fd9ff;
+    --accent-soft: rgba(63, 217, 255, 0.13);
+    --action: #f0a95c;
+    --action-soft: rgba(240, 169, 92, 0.12);
+    --cam: #b89dfe;
+    --cam-soft: rgba(184, 157, 254, 0.14);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .mast {
+    padding: 64px 0 28px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .kicker {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: var(--sans);
+    font-size: clamp(34px, 5.2vw, 56px);
+    line-height: 1.03;
+    letter-spacing: -0.028em;
+    font-weight: 700;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1.6;
+    color: var(--ink-2);
+    max-width: 62ch;
+    margin: 0 0 30px;
+  }
+
+  .specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .spec {
+    padding: 12px 26px 12px 0;
+    margin-right: 26px;
+    border-right: 1px solid var(--rule);
+  }
+
+  .spec:last-child { border-right: 0; margin-right: 0; }
+
+  .spec b {
+    display: block;
+    color: var(--ink-3);
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    margin-bottom: 3px;
+  }
+
+  .spec span { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* ---------- generic blocks ---------- */
+
+  h2.sec {
+    font-size: 13px;
+    font-family: var(--mono);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 400;
+    margin: 56px 0 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  p { margin: 0 0 14px; }
+  p:last-child { margin-bottom: 0; }
+
+  a {
+    color: var(--accent);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  a:focus-visible,
+  details > summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  code, .ui {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    padding: 1px 5px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .ui { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
+
+  /* ---------- prep checklist ---------- */
+
+  .prep {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+
+  .prep > div {
+    background: var(--surface);
+    padding: 18px 20px 20px;
+  }
+
+  .prep h3 {
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 400;
+    margin: 0 0 10px;
+  }
+
+  .prep ul { margin: 0; padding-left: 17px; }
+  .prep li { margin-bottom: 7px; font-size: 14.5px; color: var(--ink-2); }
+  .prep li:last-child { margin-bottom: 0; }
+  .prep li b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- legend ---------- */
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 22px;
+    padding: 16px 0 0;
+    font-size: 14px;
+    color: var(--ink-2);
+  }
+
+  .legend div { display: flex; align-items: baseline; gap: 9px; }
+
+  .swatch {
+    width: 3px;
+    align-self: stretch;
+    flex: 0 0 3px;
+  }
+
+  .sw-say { background: var(--accent); }
+  .sw-do { background: var(--action); }
+  .sw-cam { background: var(--cam); }
+
+  /* ---------- chapters ---------- */
+
+  .ch { margin-top: 44px; }
+
+  .ch-head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0 16px;
+    padding: 14px 0 11px;
+    background: var(--ground);
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  .ch-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    letter-spacing: 0.1em;
+  }
+
+  .ch-head h2 {
+    font-size: 22px;
+    letter-spacing: -0.018em;
+    font-weight: 650;
+    margin: 0;
+    flex: 1 1 auto;
+  }
+
+  .tc {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-2);
+  }
+
+  .tc b { color: var(--ink); font-weight: 600; }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border: 1px solid;
+  }
+
+  .chip-cam { color: var(--cam); border-color: var(--cam); background: var(--cam-soft); }
+  .chip-screen { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+  /* ---------- beats ---------- */
+
+  .beat {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    gap: 34px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .beat:last-child { border-bottom: 0; }
+
+  .say {
+    border-left: 3px solid var(--accent);
+    padding-left: 18px;
+    font-family: var(--serif);
+    font-size: 17.5px;
+    line-height: 1.62;
+  }
+
+  .say em { color: var(--accent); font-style: italic; }
+
+  .do {
+    border-left: 3px solid var(--action);
+    padding-left: 18px;
+    font-size: 14.5px;
+    color: var(--ink-2);
+  }
+
+  .do ul { margin: 0; padding-left: 16px; }
+  .do li { margin-bottom: 6px; }
+  .do li:last-child { margin-bottom: 0; }
+  .do strong { color: var(--ink); font-weight: 600; }
+
+  /* full-width camera beat */
+  .beat.solo { grid-template-columns: 1fr; }
+  .beat.solo .say { border-left-color: var(--cam); font-size: 19px; }
+  .beat.solo .say em { color: var(--cam); }
+
+  /* ---------- callouts ---------- */
+
+  .note, .signal {
+    margin: 4px 0 0;
+    padding: 12px 15px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    color: var(--ink-2);
+  }
+
+  .note b, .signal b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 400;
+    margin-bottom: 5px;
+  }
+
+  .note b { color: var(--ink-3); }
+
+  .signal {
+    border-color: var(--cam);
+    background: var(--cam-soft);
+  }
+
+  .signal b { color: var(--cam); }
+
+  /* a number that can only be known after the take */
+  .fill {
+    font-family: var(--mono);
+    font-size: 0.82em;
+    font-style: normal;
+    padding: 1px 7px;
+    color: var(--action);
+    border: 1px dashed var(--action);
+    background: var(--action-soft);
+  }
+
+  /* ---------- appendix ---------- */
+
+  details.fold {
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    padding: 0;
+    margin-bottom: 10px;
+  }
+
+  details.fold > summary {
+    cursor: pointer;
+    padding: 13px 18px;
+    font-weight: 600;
+    font-size: 15px;
+    list-style: none;
+  }
+
+  details.fold > summary::-webkit-details-marker { display: none; }
+
+  details.fold > summary::before {
+    content: "+";
+    font-family: var(--mono);
+    color: var(--accent);
+    margin-right: 11px;
+    font-weight: 400;
+  }
+
+  details.fold[open] > summary::before { content: "\2212"; }
+
+  details.fold > div {
+    padding: 0 18px 18px;
+    border-top: 1px solid var(--rule);
+    padding-top: 15px;
+    font-size: 14.5px;
+    color: var(--ink-2);
+  }
+
+  details.fold ul { padding-left: 18px; margin: 0; }
+  details.fold li { margin-bottom: 8px; }
+  details.fold li:last-child { margin-bottom: 0; }
+  details.fold b { color: var(--ink); }
+
+  .tablewrap { overflow-x: auto; }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    min-width: 460px;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 400;
+  }
+
+  td:first-child { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 2px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 760px) {
+    .wrap { padding: 0 18px 64px; }
+    .beat { grid-template-columns: 1fr; gap: 16px; }
+    .ch-head { position: static; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <p class="kicker">Shooting script &middot; v2.0.2 launch</p>
+    <h1>Canvas Downloader Walkthrough</h1>
+    <p class="standfirst">A chaptered product walkthrough for new users &mdash; and, quietly, a portfolio piece. Talking head opens and closes; the screen recording carries the middle. Everything below is written to be read aloud.</p>
+    <div class="specs">
+      <div class="spec"><b>Target runtime</b><span>13:05</span></div>
+      <div class="spec"><b>Chapters</b><span>10</span></div>
+      <div class="spec"><b>A&#8209;roll</b><span>Ch 0 &amp; 9 full frame</span></div>
+      <div class="spec"><b>B&#8209;roll</b><span>Ch 1&ndash;8 screen</span></div>
+      <div class="spec"><b>Language</b><span>English</span></div>
+    </div>
+  </header>
+
+  <h2 class="sec">How to read this</h2>
+  <div class="legend">
+    <div><span class="swatch sw-say"></span><span><b>Left lane</b> &mdash; what you say. Serif, verbatim. Italics mark a word to lean on.</span></div>
+    <div><span class="swatch sw-do"></span><span><b>Right lane</b> &mdash; what the mouse does, in order.</span></div>
+    <div><span class="swatch sw-cam"></span><span><b>Purple</b> &mdash; you are on camera, full frame.</span></div>
+  </div>
+
+  <h2 class="sec">Before you hit record</h2>
+  <div class="prep">
+    <div>
+      <h3>Account &amp; safety</h3>
+      <ul>
+        <li>Generate a <b>throwaway access token</b> named &ldquo;Video demo&rdquo;. Revoke it in Canvas the moment you stop recording &mdash; it will be on screen in Chapter 1.</li>
+        <li>Decide now whether real course names stay in. If not, pick a semester whose names you are happy to publish.</li>
+        <li>Sign out of anything personal in the browser tab you use for the token walkthrough.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>App state</h3>
+      <ul>
+        <li>Record the <b>packaged build</b>, not <code>streamlit run</code>. Users should see exactly what they install.</li>
+        <li>Start logged out so Chapter 1 is genuinely the first launch.</li>
+        <li>Have a second, already-synced course folder ready for Chapters 4&ndash;6 &mdash; you cannot demo a sync against a folder that has never been downloaded.</li>
+        <li>Keep <span class="ui">Show help text</span> ON. The help cards are part of the product story.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Staging the Sync Review</h3>
+      <ul>
+        <li>A folder that is already current returns <b>zero</b> actionable rows &mdash; everything sits in Up to Date. There is no take to get here; the screen has to be staged or the chapter cannot be shot.</li>
+        <li>On a <b>copy</b> of a synced folder, run<br><code>python scripts/seed_today_test.py "&lt;folder&gt;" --new 8 --updates 6</code></li>
+        <li>It deletes files with no backup. Use <code>--dry-run</code> first, and never point it at your real coursework.</li>
+        <li>Hand-edit one file so it lands in <b>Edited Locally</b> &mdash; that is the category that proves the safety claim.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Capture</h3>
+      <ul>
+        <li>App window at <b>1920&times;1080</b>, 100% display scaling, so text is readable after compression.</li>
+        <li>Every page transition is masked by a short overlay by design &mdash; let it play, do not cut mid&#8209;fade.</li>
+        <li>Record the long download and sync runs in full; you will speed&#8209;ramp them in the edit.</li>
+        <li>Grab spare footage of the finished folder in Explorer/Finder and of NotebookLM ingesting. Both are cutaways you will want.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ================= CH 0 ================= -->
+  <section class="ch">
+    <div class="ch-head">
+      <span class="ch-num">CH 00</span>
+      <h2>Why this exists</h2>
+      <span class="chip chip-cam">Camera</span>
+      <span class="tc"><b>00:00</b> &rarr; 01:15</span>
+    </div>
+
+    <div class="beat solo">
+      <div class="say">
+        <p>Hi, I'm Birk. I study Business Administration and Information Systems at Copenhagen Business School, and for three years I did the same thing every single semester.</p>
+        <p>Open Canvas. Click into a course. Click into a module. Download a file. Click back. Download the next one. For every course, every week.</p>
+      </div>
+    </div>
+
+    <div class="beat solo">
+      <div class="say">
+        <p>And by exam season I'd have this enormous folder that I didn't actually <em>trust</em>. I could never be sure I had everything, because there was no way to check without going through Canvas again by hand.</p>
+        <p>Then AI study tools showed up. Suddenly I wanted all of it as PDFs and plain text so I could feed a whole course into NotebookLM &mdash; which meant a <em>second</em> manual job stacked on top of the first one.</p>
+      </div>
+      <div class="note"><b>Delivery</b>Slow down on &ldquo;didn't actually trust&rdquo;. This is the emotional beat of the whole video &mdash; the pain isn't the clicking, it's the doubt.</div>
+    </div>
+
+    <div class="beat solo">
+      <div class="say">
+        <p>So I built Canvas Downloader. It pulls all of your Canvas courses onto your computer in one go, keeps them up to date with a single click, and converts everything into formats an AI tool can actually read.</p>
+        <p>It's free, it's open source, and it runs entirely on your own machine. Let me show you the whole thing &mdash; starting from a completely fresh install.</p>
+      </div>
+      <div class="signal"><b>Portfolio signal</b>&ldquo;I had a problem, I shipped the fix, and I gave it away&rdquo; is the strongest 15 seconds in the video for a hiring audience. Don't rush it and don't apologise for it.</div>
+    </div>
+  </section>
+
+  <!-- ================= CH 1 ================= -->
+  <section class="ch">
+    <div class="ch-head">
+      <span class="ch-num">CH 01</span>
+      <h2>Connecting to Canvas</h2>
+      <span class="chip chip-screen">Screen</span>
+      <span class="tc"><b>01:15</b> &rarr; 02:25</span>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>This is the app on first launch. It needs two things from you, and only two: your school's Canvas address, and an access token.</p>
+        <p>The address you almost never have to look up &mdash; there's a searchable directory of 4,757 verified schools built in. Start typing, and it fills the field for you.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Open the app cold on the <strong>login page</strong>.</li>
+          <li>Click the picker beside <span class="ui">Your Canvas URL</span>.</li>
+          <li>Type <code>copenhagen</code> slowly &mdash; let the list narrow live on camera.</li>
+          <li>Click <strong>Copenhagen Business School</strong>. Pause on the URL field auto-filling.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>It opens on the schools in your own country, and accents are optional &mdash; typing <em>k-o-b-e-n-h-a-v-n</em> finds K&oslash;benhavns Universitet. And if your school isn't in the list, that's fine: the field is a normal text field, so you just paste your Canvas address in instead.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Reopen the picker, type <code>kobenhavn</code> without the &oslash;, show the hit.</li>
+          <li>Close it. Click into the URL field and type a couple of characters by hand to prove it's editable.</li>
+          <li>Restore the CBS address.</li>
+        </ul>
+        <div class="note"><b>Why this beat</b>The picker is a shortcut, never a gate. Saying so out loud stops a student whose school is missing from concluding the app doesn't support them.</div>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>The token is a key you generate yourself, inside Canvas. In your browser: <em>Account</em>, <em>Settings</em>, scroll down to Approved Integrations, <em>New Access Token</em>. Give it a name, leave the expiry blank, generate it, and copy it.</p>
+        <p>That's it &mdash; paste it in, and connect.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Cut to the browser. Canvas &rarr; <strong>Account</strong> &rarr; <strong>Settings</strong>.</li>
+          <li>Scroll to <strong>Approved Integrations</strong> &rarr; <span class="ui">+ New Access Token</span>.</li>
+          <li>Purpose: <code>Canvas Downloader</code>. Expiry blank. <span class="ui">Generate Token</span>.</li>
+          <li>Copy, cut back to the app, paste, click connect.</li>
+          <li>Hold on the course list loading.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>One thing worth saying about that token, because you should be suspicious of any app that asks for one. It's stored in your operating system's own password vault &mdash; Windows Credential Manager, or the macOS Keychain &mdash; never in a plain text file. And it's only ever sent to one place: your own university's Canvas server.</p>
+        <p>There's no backend here. No analytics, nothing phoning home. The app talks to your school and to nobody else.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Stay on the loaded course list while you say this &mdash; don't visualise it, it'll look defensive.</li>
+        </ul>
+        <div class="signal"><b>Portfolio signal</b>Credential handling, stated plainly and without hedging. Reads as security literacy to an engineer and as trustworthiness to a student. Cheapest 15 seconds in the video.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CH 2 ================= -->
+  <section class="ch">
+    <div class="ch-head">
+      <span class="ch-num">CH 02</span>
+      <h2>Everything on disk, in one go</h2>
+      <span class="chip chip-screen">Screen</span>
+      <span class="tc"><b>02:25</b> &rarr; 04:15</span>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Here's every course you're enrolled in. You can flip between your favourites and the full list, search it, and select courses individually &mdash; or just take all of them.</p>
+        <p>This is the first thing I do every semester: get everything on disk, so I have an offline copy that doesn't depend on still having access to Canvas.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Toggle <span class="ui">Favorites</span> / <span class="ui">All</span>.</li>
+          <li>Type a query in the search box &mdash; the list filters as you type.</li>
+          <li>Clear it. Tick two courses, then click <span class="ui">Select All</span>.</li>
+          <li>Point out the live <strong>selected-count</strong> label as it updates. Don't say a total out loud &mdash; it's whatever you're enrolled in.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>From here there are two doors. <em>Quick Download</em> gives you five ready-made configurations. <em>Custom Download</em> lets you build your own, and we'll do that next.</p>
+        <p>For a full backup I use <em>Complete Canvas Download</em> &mdash; every file, plus all your Canvas content, organised exactly the way it looks in Canvas.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Click <span class="ui">Quick Download</span>.</li>
+          <li>Let the five preset cards land. Read the names on screen as you say them.</li>
+          <li>Select <strong>Complete Canvas Download</strong>.</li>
+          <li>Show the configuration summary badges underneath it.</li>
+        </ul>
+        <div class="note"><b>On screen</b>The five: Complete Canvas Download &middot; Daily study pack (Optimized) &middot; 100% AI &amp; NotebookLM Ready &middot; Slides &amp; PDFs Only &middot; Files Only.</div>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Pick where it should all go, and start.</p>
+        <p>While that runs &mdash; it's showing you the file it's on right now, how much has come down, the speed, and a time estimate that gets more accurate as it learns how fast your connection actually is.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Choose the destination folder in the native picker.</li>
+          <li>Start the run. Hold on the dashboard for a real 8&ndash;10 seconds before speed&#8209;ramping.</li>
+          <li>Push in slightly on the metrics row and the live file name.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>And that's the whole backup. One folder per course, and inside each one, the module structure straight out of Canvas &mdash; same names, same order.</p>
+        <p>Years of coursework, in the time it took to make coffee.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Land on the completion screen. Show the per-course cards and the totals.</li>
+          <li>Click <span class="ui">Open Folder</span>.</li>
+          <li>Cut to Explorer. Expand one course &rarr; its modules &rarr; the files inside.</li>
+        </ul>
+        <div class="note"><b>Cutaway</b>This Explorer shot is the single most persuasive frame in the video. Shoot it clean, and hold it a beat longer than feels necessary.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CH 3 ================= -->
+  <section class="ch">
+    <div class="ch-head">
+      <span class="ch-num">CH 03</span>
+      <h2>Building an AI study pack</h2>
+      <span class="chip chip-screen">Screen</span>
+      <span class="tc"><b>04:15</b> &rarr; 06:35</span>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Now the other door. Custom Download is where you decide exactly what comes down and what shape it arrives in &mdash; and it's four cards.</p>
+        <p>Card one is the files themselves. Everything your teacher uploaded, or just slides and PDFs if you want the noise gone. And either mirroring Canvas's modules, or flat &mdash; every file loose in one folder.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Back to the course list. Select <strong>one</strong> course this time.</li>
+          <li>Click <span class="ui">Custom Download</span>.</li>
+          <li>Card 1 &mdash; <strong>Course Files &amp; Organization</strong>. Click between <span class="ui">All Files</span> and <span class="ui">Slides &amp; PDFs</span>.</li>
+          <li>Click between <span class="ui">With Subfolders</span> and <span class="ui">All in One Folder</span>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Card two is the part I'm proudest of. Canvas holds a lot that isn't a file at all &mdash; your assignment briefs, the announcements, the quizzes, the syllabus, discussion threads, and your own grades and teacher feedback.</p>
+        <p>The app exports all of it as readable documents, with any attachments, so what lands on your disk is genuinely a one-to-one copy of the course rather than just its file tab.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Expand Card 2 &mdash; <strong>Canvas Content</strong>.</li>
+          <li>Toggle each of the six on: Assignments, Announcements, Quizzes, Syllabus, Discussions, Submissions&nbsp;(Results).</li>
+          <li>Show <span class="ui">Match Course Folder structure</span> vs <span class="ui">In Separate Folders</span>.</li>
+        </ul>
+        <div class="signal"><b>Portfolio signal</b>&ldquo;Everything that isn't a file&rdquo; is the bit that shows you modelled the domain instead of just hitting the files endpoint. Say it as a design decision, not a feature list.</div>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>And card three is the one that changed how I study. Turn these on, and every time you download or sync, the app converts your materials into formats AI tools can read.</p>
+        <p>PowerPoints become PDFs. Excel sheets become a PDF <em>and</em> a structured data file with every cell and formula in it. Canvas pages become plain text. Videos become audio, which matters because most AI tools won't take a video, and the audio is ten to twenty times smaller.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Expand Card 3 &mdash; <strong>Optimize for AI Tools</strong>.</li>
+          <li>Enable: <span class="ui">PowerPoint &rarr; PDF</span>, <span class="ui">Excel &rarr; PDF &amp; AI Data</span>, <span class="ui">Canvas Pages &rarr; Plain Text</span>, <span class="ui">Video &rarr; Audio</span>.</li>
+          <li>Hover one card to show the tooltip.</li>
+        </ul>
+        <div class="note"><b>Say once, don't dwell</b>Office conversions drive the real desktop app, so PowerPoint / Word / Excel need to be installed. If they aren't, those files are simply left alone.</div>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Run it &mdash; and this is the payoff. Open the folder, select everything, drag it into NotebookLM.</p>
+        <p>No converting files one at a time on some sketchy website. One course, fully readable, in one drag.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Start the download. Speed&#8209;ramp through the run and the conversion phase.</li>
+          <li>Completion screen &rarr; <span class="ui">Open Folder</span>.</li>
+          <li>Select all &rarr; drag into a NotebookLM notebook. <strong>Hold on the ingest.</strong></li>
+          <li>Optional: ask it one question about the course and show a real answer.</li>
+        </ul>
+        <div class="note"><b>Worth the extra 10s</b>If the notebook answers a genuine question about the course, that shot alone justifies the chapter. Have the question ready so you're not typing on camera.</div>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>And if you'll want that same setup again &mdash; save it as a preset, and it's one click next time.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Open the presets hub, save the current configuration under a name, show it appear as a card.</li>
+        </ul>
+        <div class="note"><b>First trim</b>If you're running long, this beat is the first to cut. It costs 12 seconds and nothing depends on it.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CH 4 ================= -->
+  <section class="ch">
+    <div class="ch-head">
+      <span class="ch-num">CH 04</span>
+      <h2>Staying current: Quick Sync</h2>
+      <span class="chip chip-screen">Screen</span>
+      <span class="tc"><b>06:35</b> &rarr; 08:10</span>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Downloading is the easy half. The hard half is Monday morning, when you don't know what your professors added over the weekend.</p>
+        <p>That's what Sync mode is for. You link a Canvas course to a folder on your computer &mdash; that's a <em>course pair</em> &mdash; and from then on the app remembers every single file it ever gave you for that folder.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Sidebar &rarr; <span class="ui">Sync Course Folders</span>.</li>
+          <li>Click <span class="ui">Add Course</span>, pick an already-synced folder.</li>
+          <li>Show the course being <strong>auto-detected</strong> from the folder.</li>
+          <li>Confirm. The pair appears on the Sync List.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>You can save pairs on their own, or group several together &mdash; I keep one called <em>Semester 1</em> &mdash; and load the whole group next time in one click.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Add a second pair so the list has two.</li>
+          <li>Click <span class="ui">Save as Group</span>, name it <code>Semester 1</code>.</li>
+          <li>Open <span class="ui">Saved Groups &amp; Pairs</span>, show the saved cards, close it.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Then it's one button. Quick Sync goes out to Canvas, compares it against what you already have, and brings down only what's genuinely new.</p>
+        <p><span class="fill">N</span> files. That's my week.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Click <span class="ui">Quick Sync</span>.</li>
+          <li>Let the run play, then land on the completion screen.</li>
+          <li>Expand a course card to show the file names that arrived.</li>
+        </ul>
+        <div class="note"><b>Shoot first, then say the number</b>Record the run, read the count off the completion screen, and dub the line to match. Any number written here in advance is a guess, and a guess that contradicts what's on screen costs you more trust than the whole chapter buys.</div>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>And the rules here matter more than the speed, so let me be exact about them.</p>
+        <p>Quick Sync will never overwrite a file you've annotated or edited. It will never bring back a file you deliberately deleted. And it never deletes anything &mdash; if your teacher pulls a file off Canvas, your copy stays exactly where it is.</p>
+        <p>It only ever adds new files, and replaces files you haven't touched. That's the whole contract.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Show the safety rules in the help card, or hold on the completion screen.</li>
+          <li>Deliver this slowly. It is the trust moment of the entire video.</li>
+        </ul>
+        <div class="signal"><b>Portfolio signal</b>A non-destructive-by-default sync engine with a stated contract. To an engineer this is the most technically interesting sentence you say &mdash; it implies per-file state, change detection and conflict handling, without you having to claim any of it.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CH 5 ================= -->
+  <section class="ch">
+    <div class="ch-head">
+      <span class="ch-num">CH 05</span>
+      <h2>Full control: Analyze, Review &amp; Sync</h2>
+      <span class="chip chip-screen">Screen</span>
+      <span class="tc"><b>08:10</b> &rarr; 10:00</span>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Quick Sync is the safe, fast option, and it's what I use most days. But sometimes you want to know <em>everything</em> that's different &mdash; and that's the other button.</p>
+        <p>Analyze compares your folder against Canvas file by file, and then shows you the full picture before it touches anything.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Same Sync List. Click <span class="ui">Analyze, Review &amp; Sync</span>.</li>
+          <li>Hold on the analysis dashboard &mdash; let the course counter tick.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Every difference is sorted into a category, and each one has its own default.</p>
+        <p><em>New files</em> your teacher added &mdash; ticked, they'll come down. <em>Clean updates</em>, where Canvas has a newer version and you haven't touched yours &mdash; also ticked, replaced in place. <em>Edited locally</em> is the interesting one: Canvas is newer, but you've written on your copy. That's unticked, and if you do take it, the new version arrives beside yours with <em>NewVersion</em> on the end. Your annotations are never overwritten.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Walk the review screen top to bottom, one category at a time.</li>
+          <li>On <strong>Edited Locally</strong>, expand the row and point at the default unticked state.</li>
+        </ul>
+        <div class="note"><b>Staging reminder</b>This screen needs the seeded folder from the prep list. An unstaged run shows two categories and the chapter falls flat.</div>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Then <em>deleted locally</em> &mdash; files you removed on purpose. Your deletion is respected; nothing comes back unless you ask for it. And <em>deleted on Canvas</em> is information only: your teacher took it down, you still have it, and the app leaves it alone.</p>
+        <p>You can tick and untick anything individually. And anything you never want to see again goes into Ignored, which you can undo later.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Show <strong>Deleted Locally</strong> and <strong>Deleted on Canvas</strong>.</li>
+          <li>Hover a file row &rarr; click the <strong>eye icon</strong> to ignore it.</li>
+          <li>Scroll to <span class="ui">Ignored Files</span> and restore it, so the round trip is visible.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Confirm, and it tells you exactly what it's about to do &mdash; how many files, how big, where they're going, and whether you've got the room.</p>
+        <p>And when that finishes, the folder isn't &ldquo;probably fine&rdquo;. You've seen every difference and decided on each one. It's genuinely up to date.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Click sync &rarr; hold on the <strong>Confirm Sync</strong> dialog: file count, total size, destination, free space.</li>
+          <li>Confirm. Speed&#8209;ramp the run, land on the completion screen.</li>
+          <li>Optional cutaway: the folder in Explorer with the new files highlighted by date.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CH 6 ================= -->
+  <section class="ch">
+    <div class="ch-head">
+      <span class="ch-num">CH 06</span>
+      <h2>The Today page</h2>
+      <span class="chip chip-screen">Screen</span>
+      <span class="tc"><b>10:00</b> &rarr; 11:10</span>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Once all of that is set up, you mostly stop thinking about it &mdash; and that's what the Today page is for.</p>
+        <p>You pick the courses you actually want kept current, once. Then you turn on daily sync.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Sidebar &rarr; <span class="ui">Today's files</span>.</li>
+          <li>Click <span class="ui">Add courses</span>, tick your saved pairs and the <code>Semester 1</code> group.</li>
+          <li>Close the dialog, show the course cards.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>From then on, the first time you open the app each day, it quietly fetches everything new before you've even clicked anything. Same engine as Quick Sync, so the same safety rules apply.</p>
+        <p>And this is what I actually look at in the morning: everything that arrived today, grouped by course. Open a file, or open the folder, right from here. No digging through Canvas, no wondering what's new.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Flip <span class="ui">Daily auto-sync</span> on &mdash; hold on the toggle turning green.</li>
+          <li>Click <span class="ui">Quick Sync now</span> to populate the list live.</li>
+          <li>Scroll <strong>Today's files</strong>. Click <span class="ui">Open Folder</span> on one card.</li>
+        </ul>
+        <div class="note"><b>Small detail worth saying</b>The day rolls over at 4 AM, so a late-night study session still counts as today. It gets a smile and it signals care.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CH 7 ================= -->
+  <section class="ch">
+    <div class="ch-head">
+      <span class="ch-num">CH 07</span>
+      <h2>Lecture recordings</h2>
+      <span class="chip chip-screen">Screen</span>
+      <span class="tc"><b>11:10</b> &rarr; 12:00</span>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>One more, because it's the thing people ask for most. A lot of courses post their lectures as Panopto recordings, and those are slow to rewatch and impossible to hand to an AI.</p>
+        <p>The app finds them and saves them into the course folder like any other file &mdash; as video, as audio, as a written transcript, as subtitles, or just a shortcut back to the lecture.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Custom Download &rarr; scroll to Card 4, <strong>Panopto Recordings</strong>.</li>
+          <li>Show the outputs: MP4, MP3, transcript <code>.txt</code>, subtitles <code>.srt</code>, shortcut.</li>
+          <li>Show the two layouts: alongside your files, or a separate <strong>Panopto Recordings</strong> folder.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Video and audio need no setup at all. Transcripts do a one-time model download, and then the speech recognition runs entirely on your own computer &mdash; nothing is uploaded anywhere.</p>
+        <p>Before your first recording the app also asks you to read a short notice about what it's doing and how to use it. And if you'd rather it never touched recordings at all, there's a single switch in Settings.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Open the transcription setup dialog briefly, show the model list, close it.</li>
+          <li>Show the acceptable-use notice.</li>
+          <li>Cut a transcript <code>.txt</code> open beside the lecture, if you have one recorded.</li>
+        </ul>
+        <div class="signal"><b>Portfolio signal</b>On-device inference with an explicit consent gate. Being visibly careful about the one legally interesting feature reads much better than pretending it isn't there.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CH 8 ================= -->
+  <section class="ch">
+    <div class="ch-head">
+      <span class="ch-num">CH 08</span>
+      <h2>Settings worth knowing</h2>
+      <span class="chip chip-screen">Screen</span>
+      <span class="tc"><b>12:00</b> &rarr; 12:30</span>
+    </div>
+
+    <div class="beat">
+      <div class="say">
+        <p>Quickly, three settings you'll actually use. A default save location, so you're not picking a folder every time. A file size limit &mdash; mine skips anything over 500 megabytes, which keeps the huge lecture videos out unless I ask for them. And notifications, so you know a sync finished without watching it.</p>
+        <p>Everything else you can leave alone.</p>
+      </div>
+      <div class="do">
+        <ul>
+          <li>Sidebar &rarr; <span class="ui">Settings</span>.</li>
+          <li>Point at <strong>default save location</strong>, the <strong>size limit</strong> toggle and its MB field, and <strong>notifications</strong>.</li>
+          <li>Close. Do not open the developer or health sections.</li>
+        </ul>
+        <div class="note"><b>Second trim</b>If you're over 14 minutes, cut this chapter whole. It costs 30 seconds and nothing above depends on it.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CH 9 ================= -->
+  <section class="ch">
+    <div class="ch-head">
+      <span class="ch-num">CH 09</span>
+      <h2>Close</h2>
+      <span class="chip chip-cam">Camera</span>
+      <span class="tc"><b>12:30</b> &rarr; 13:05</span>
+    </div>
+
+    <div class="beat solo">
+      <div class="say">
+        <p>So that's Canvas Downloader. Download everything once, keep it current with a click, and have it all in a shape your AI tools can actually use.</p>
+        <p>It's free, it's open source, it runs on Windows and on Apple Silicon Macs, and there's no account, no subscription and no server &mdash; it's just an app on your computer talking to your university.</p>
+      </div>
+    </div>
+
+    <div class="beat solo">
+      <div class="say">
+        <p>Link's below, and so is the GitHub if you want to read the code or tell me something's broken. I built it because I needed it, and it's free because every student I know needs it too.</p>
+        <p>Good luck with your exams.</p>
+      </div>
+      <div class="signal"><b>Portfolio signal</b>&ldquo;Read the code&rdquo; is an invitation only someone confident in their work extends. Leave it in &mdash; for the recruiter half of the audience it's the closing argument.</div>
+    </div>
+  </section>
+
+  <!-- ================= APPENDIX ================= -->
+  <h2 class="sec">Appendix</h2>
+
+  <details class="fold">
+    <summary>Runtime budget &mdash; where the time goes</summary>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>In</th><th>Chapter</th><th>Length</th><th>Cut priority</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>00:00</td><td>Why this exists</td><td>1:15</td><td>Never</td></tr>
+          <tr><td>01:15</td><td>Connecting to Canvas</td><td>1:10</td><td>Never</td></tr>
+          <tr><td>02:25</td><td>Everything on disk</td><td>1:50</td><td>Never</td></tr>
+          <tr><td>04:15</td><td>AI study pack</td><td>2:20</td><td>Trim the preset beat</td></tr>
+          <tr><td>06:35</td><td>Quick Sync</td><td>1:35</td><td>Never</td></tr>
+          <tr><td>08:10</td><td>Analyze &amp; Review</td><td>1:50</td><td>Trim to 4 categories</td></tr>
+          <tr><td>10:00</td><td>Today page</td><td>1:10</td><td>Low</td></tr>
+          <tr><td>11:10</td><td>Lecture recordings</td><td>0:50</td><td>Medium</td></tr>
+          <tr><td>12:00</td><td>Settings</td><td>0:30</td><td><b>Cut first</b></td></tr>
+          <tr><td>12:30</td><td>Close</td><td>0:35</td><td>Never</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>Deliberately left out &mdash; and what to say if asked</summary>
+    <div>
+      <p>These are all real behaviours and all interesting, and every one of them would stall the video. Keep them for the written guide and for the comments.</p>
+      <ul>
+        <li><b>Renamed-on-Canvas files</b> &mdash; the app matches on content rather than filename, so a rename doesn't produce a duplicate.</li>
+        <li><b>Ignore, then delete locally, then re-download</b> &mdash; and every other permutation of the category rules.</li>
+        <li><b>Folder scope</b> &mdash; a folder downloaded as &ldquo;Slides &amp; PDFs&rdquo; keeps that shape on every future sync.</li>
+        <li><b>Sync history</b> &mdash; the last runs, per course, with what each one did.</li>
+        <li><b>The manifest</b> &mdash; the per-folder database that makes all of the above possible.</li>
+        <li><b>Conversion edge cases</b> &mdash; what happens to a file you edited that then gets reconverted.</li>
+      </ul>
+      <p>If a comment asks about any of them, that's your next short-form video. Don't answer it in this one.</p>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>Two audiences, one script &mdash; how the split works</summary>
+    <div>
+      <p>Nothing in the script addresses employers directly, and it shouldn't &mdash; a student watching would feel it immediately. The portfolio layer is carried entirely by four moments that a technical viewer reads differently from a student:</p>
+      <ul>
+        <li><b>Ch 1</b> &mdash; credential storage and &ldquo;no backend&rdquo;. Security posture.</li>
+        <li><b>Ch 3</b> &mdash; exporting what isn't a file. Domain modelling.</li>
+        <li><b>Ch 4</b> &mdash; the non-destructive sync contract. The heaviest one; it implies an entire engine.</li>
+        <li><b>Ch 7</b> &mdash; local inference behind a consent gate. Judgement under legal ambiguity.</li>
+      </ul>
+      <p>A student hears four reassurances. An engineer hears four design decisions. Neither has to be told which they're getting.</p>
+      <p>For the version you send to employers, the only change worth making is a pinned comment or description linking the repo and naming the stack. Leave the video itself alone.</p>
+    </div>
+  </details>
+
+  <details class="fold">
+    <summary>Numbers used in the script &mdash; verify before recording</summary>
+    <div>
+      <ul>
+        <li><b>4,757 verified schools</b> &mdash; current as of v2.0.2. Re-check if the institution list is regenerated before launch.</li>
+        <li><b>Five Quick Download presets</b> &mdash; Complete Canvas Download, Daily study pack (Optimized), 100% AI &amp; NotebookLM Ready, Slides &amp; PDFs Only, Files Only.</li>
+        <li><b>Six Canvas Content types</b> &mdash; Assignments, Announcements, Quizzes, Syllabus, Discussions, Submissions (Results).</li>
+        <li><b>Eight AI conversions</b> &mdash; unpack archives, PowerPoint&rarr;PDF, legacy Word&rarr;PDF, Excel&rarr;PDF+data, Canvas pages&rarr;text, code&rarr;txt, gather web links, video&rarr;audio.</li>
+        <li><b>Ten to twenty times smaller</b> &mdash; the video-to-audio claim, matching the app's own tooltip.</li>
+        <li><b>Apple Silicon, macOS 14+</b> &mdash; say it in the close if the Mac build is shipping at launch; drop it if not.</li>
+      </ul>
+      <p>Everything spoken above matches what the app currently says on screen. If a label changes before launch, the narration has to change with it &mdash; a viewer hearing one name and reading another loses confidence instantly.</p>
+      <p><b>Counts from your own runs are marked <span class="fill">N</span> and are deliberately blank.</b> How many files a sync returns, how many courses you're enrolled in, how big the download is &mdash; none of that is knowable before the take, and a number invented here to sound plausible is the exact failure the paragraph above warns about. Shoot the run, read the figure off the screen, dub the line.</p>
+      <p>Two numbers stay yours to confirm rather than mine to supply: the <b>500 MB</b> size limit in Chapter 8 should be whatever you actually have set, and drop the <b>Apple Silicon / macOS 14+</b> line from the close if the Mac build isn't shipping at launch.</p>
+    </div>
+  </details>
+
+  <footer>
+    <span>Canvas Downloader v2.0.2 &middot; walkthrough shooting script</span>
+    <span>Target 13:05 &middot; 10 chapters</span>
+  </footer>
+
+</div>
+
+</body>
+</html>
