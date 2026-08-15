@@ -301,6 +301,10 @@
 .mw-help-body p {
   font-size: 13.5px; color: var(--mw-txt2); line-height: 1.65; margin: 0;
 }
+/* Sibling-only, so the single-paragraph case is unchanged and no margin can
+   land against the card's own padding. The card gained a second paragraph (the
+   macOS 14 floor) and without this the two ran together as one block. */
+.mw-help-body p + p { margin-top: 10px; }
 .mw-help-body strong { color: var(--mw-txt); }
 
 /* ── Permission checklist (first download) ──────────────── */

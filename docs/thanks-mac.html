@@ -165,32 +165,27 @@
     p.sub { font-size: 17px; color: var(--txt2); max-width: 560px; margin: 0 auto 22px; }
 
     .dl-fallback {
-      display: inline-flex; align-items: center; gap: 8px;
-      font-size: 13px; font-weight: 600; color: var(--txt2);
-      background: var(--surf); border: 1px solid var(--border);
-      padding: 9px 16px; border-radius: 8px; text-decoration: none;
-      transition: border-color 0.15s, color 0.15s;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13.5px; font-weight: 500; color: var(--txt2);
+      text-decoration: underline; text-underline-offset: 4px;
+      text-decoration-color: rgba(148, 163, 184, 0.5);
+      background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.12) 0%, rgba(56, 189, 248, 0) 70%);
+      padding: 6px 18px; border-radius: 20px;
+      transition: color 0.2s ease, text-decoration-color 0.2s ease, background 0.2s ease;
     }
-    .dl-fallback:hover { border-color: rgba(255,255,255,0.22); color: var(--txt); }
+    .dl-fallback:hover {
+      color: #fff; text-decoration-color: #fff;
+      background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.22) 0%, rgba(56, 189, 248, 0) 75%);
+    }
 
     /* When the API call failed this link stops being a quiet afterthought and
        becomes the only way forward, so it has to look like the primary action. */
     .dl-fallback-strong {
       font-size: 15px; padding: 13px 24px; color: #fff;
-      background: var(--blue); border-color: transparent;
+      background: var(--blue) !important; border-color: transparent !important;
+      text-decoration: none !important; border-radius: var(--rad) !important;
     }
     .dl-fallback-strong:hover { filter: brightness(1.12); color: #fff; }
-
-    .req-strip {
-      display: flex; gap: 10px; align-items: center; justify-content: center;
-      flex-wrap: wrap;
-      font-size: 13px; color: var(--txt3);
-      margin: 0 auto 40px; max-width: 640px;
-      padding: 10px 16px;
-      background: var(--surf); border: 1px solid var(--border); border-radius: 10px;
-    }
-    .req-strip strong { color: var(--txt2); }
-    .req-strip .dot { color: var(--txt3); opacity: 0.5; }
 
     .below-wizard { text-align: center; margin: 26px auto 0; }
     .below-wizard a {
@@ -246,20 +241,12 @@
            one IP - read a cheerful success message next to nothing happening.
            The heading now states what is actually true at each moment. -->
       <h1 id="dl-headline">Getting your download ready…</h1>
-      <p class="sub" id="dl-sub">Canvas Downloader is free and indie, so macOS needs you to approve it by hand the first time. The assistant below walks you through every step - it takes about two minutes.</p>
-      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest" id="dmg-link" class="dl-fallback">&#8681;&nbsp; Download didn’t start? Click here</a>
+      <p class="sub" id="dl-sub">Canvas Downloader is a free solo project, so macOS needs you to approve it by hand the first time. The assistant below walks you through every step - it takes about two minutes.</p>
+      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest" id="dmg-link" class="dl-fallback">Download didn’t start? Click here</a>
     </div>
   </div>
 
   <div class="container" style="padding-bottom: 20px;">
-    <div class="req-strip">
-      <span>🖥️ <strong>Apple Silicon Mac</strong> (M1-M5)</span>
-      <span class="dot">·</span>
-      <span><strong>macOS 14 Sonoma</strong> or later</span>
-      <span class="dot">·</span>
-      <span>Microsoft Office optional (for PDF conversions)</span>
-    </div>
-
     <!-- Interactive setup assistant -->
     <div id="mac-wizard" data-guide-href="mac-setup.html" data-guide-label="Open the full written guide"></div>
 

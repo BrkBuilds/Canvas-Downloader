@@ -456,8 +456,15 @@
     /* ---- HERO ---- */
     .hero-cursor {
       color: #38bdf8;
-      font-weight: 400;
+      font-weight: 300;
+      display: inline-block;
+      margin-left: 2px;
       animation: blink 1s step-end infinite;
+    }
+
+    .hero-cursor.typing {
+      animation: none;
+      opacity: 1;
     }
 
     @keyframes blink {
@@ -2587,6 +2594,65 @@
       /* High contrast minus sign */
     }
 
+
+    /* macOS notes: the category is a quiet kicker, not a badge.
+       Six saturated pills in two accent colours read as decoration rather than
+       information, and because the pill sat inline before the title the title
+       wrapped around it instead of starting on its own line. One colour, above
+       the title, no fill, no border. */
+    .mac-note summary {
+      /* CENTRED, not flex-start. The +/- is the affordance for the whole row,
+         so it belongs on the row's optical centre - top-aligning it left it
+         floating beside the kicker while the title sat below, which read as a
+         misalignment rather than a deliberate position. Inherited from
+         .faq-item summary; restated here because this summary is taller. */
+      align-items: center;
+      gap: 12px;
+      /* 3px either side takes a single-line summary from 38px to 44px, which is
+         the minimum comfortable touch target. Six of these are stacked on a
+         phone, so a near-miss opens the wrong one. */
+      padding: 3px 0;
+    }
+
+    .mac-sum {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .mac-kicker {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--txt3);
+      transition: color 0.15s;
+      line-height: 1.4;
+    }
+
+    .mac-title {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    /* Two of the six titles wrap to two lines, so side by side a wrapped card
+       stood ~20px taller than its neighbour and the row looked broken.
+       Reserving height on .mac-sum with vertical centering makes every CLOSED
+       card the same uniform height and vertically centers both 1-line and 2-line
+       title groups inside the card. */
+    @media (min-width: 681px) {
+      .mac-sum {
+        min-height: 55px;
+      }
+    }
+
+    .mac-note summary:hover .mac-kicker {
+      color: var(--cyan);
+    }
+
     .faq-item summary:hover,
     .sec-qa-card summary:hover {
       color: var(--cyan);
@@ -2988,12 +3054,9 @@
             Canvas is outdated, you deserve better.<br>
             <span style="display: grid; grid-template-columns: 1fr;">
               <!-- Invisible placeholders to lock the max height at any screen width -->
-              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Download all
-                your courses in minutes|</span>
-              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Get all new
-                files automatically every morning|</span>
-              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Auto-convert
-                all your files for AI|</span>
+              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Download all your courses in minutes|</span>
+              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Sync new files to your PC in one click|</span>
+              <span style="grid-area: 1 / 1; visibility: hidden; pointer-events: none;" aria-hidden="true">Auto&#8209;convert all your files for AI|</span>
               <!-- Actual visible text -->
               <span style="grid-area: 1 / 1;">
                 <span
@@ -3119,7 +3182,7 @@
         </svg>
         The Problem
       </div>
-      <h2>You're wasting hours managing files.</h2>
+      <h2><span style="border-bottom: 3px solid var(--red); padding-bottom: 6px; display: inline-block;">You're wasting hours managing files.</span></h2>
       <ul
         style="max-width: 640px; margin: 40px auto 0; text-align: left; font-size: 19px; line-height: 1.6; color: var(--txt2); list-style-type: none; padding: 0; display: flex; flex-direction: column; gap: 24px;">
         <li style="display: flex; align-items: flex-start; gap: 16px;">
@@ -3161,7 +3224,7 @@
           </svg>
         </div>
         <h3
-          style="font-size: clamp(24px, 3vw, 32px); font-weight: 800; letter-spacing: -0.02em; color: #fff; margin: 0;">
+          style="font-size: clamp(32px, 4vw, 48px); font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; color: #fff; margin: 0;">
           <span style="border-bottom: 3px solid var(--green); padding-bottom: 6px; display: inline-block;">Canvas Downloader puts an end to that.</span></h3>
       </div>
     </div>
@@ -3783,15 +3846,15 @@
           </div>
           <div class="plat-body">
             <div
-              style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; align-items: stretch; width: 100%;">
+              style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 8px; align-items: center; width: 100%;">
               <a href="https://apps.microsoft.com/detail/9n1dwwvrq5wc?referrer=appbadge&mode=full" target="_blank"
-                rel="noopener noreferrer" style="transition: transform 0.15s; display: flex; justify-content: center;"
+                rel="noopener noreferrer" style="transition: transform 0.15s; display: flex; justify-content: center; width: 100%; max-width: 260px;"
                 onmouseover="this.style.transform='scale(1.03)';" onmouseout="this.style.transform='scale(1)';">
                 <img decoding="async" loading="lazy" src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft"
                   style="display: block; width: 100%; max-width: 260px;" />
               </a>
               <a href="releases.html" class="btn-download btn-dl-ghost" data-latest-exe
-                style="width: 100%; padding: 10px 14px; font-size: 13px;">
+                style="width: 100%; max-width: 260px; margin: 0 auto; box-sizing: border-box; padding: 10px 14px; font-size: 13px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -3829,7 +3892,7 @@
               </svg>
               Download for macOS (.dmg)
             </a>
-            <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported. Needs macOS 14 (Sonoma) or newer.<br>About 150&nbsp;MB to download.</p>
+            <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported. Needs macOS 14 (Sonoma) or newer.</p>
           </div>
         </div>
 
@@ -4013,7 +4076,10 @@
     </div>
   </section>
 
-  <section class="security-section" style="padding-bottom: 90px;">
+  <!-- id="login": other pages send people here for "where do I find my Canvas
+       URL and token" (win-setup, mac-setup). Without an anchor those links
+       landed on the FAQ, which answers a different question. -->
+  <section class="security-section" id="login" style="padding-bottom: 90px;">
     <div class="container">
       <!-- Login Content -->
       <div style="max-width: 860px; margin: 0 auto; width: 100%;">
@@ -4025,9 +4091,10 @@
             </svg>
             Authentication
           </div>
-          <h2>How to login</h2>
-          <p>Canvas Downloader talks directly to your university's Canvas server. To connect, you just need two things
-            from your browser.</p>
+          <h2>How to log in</h2>
+          <p>Canvas Downloader talks directly to your university's own Canvas server - there is no account to create
+            and nothing to sign up for. It needs two things from Canvas, and the app helps you get both: your school's
+            address, and an access token you generate yourself. About two minutes, once.</p>
         </div>
 
         <!-- URL Guide -->
@@ -4111,15 +4178,130 @@
               style="background: var(--cyan-bg); color: var(--cyan); width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px;">2</span>
             Your Canvas Access Token
           </h4>
-          <p style="color: var(--txt2); font-size: 15px; margin-bottom: 24px;">This is a secure key you generate
-            yourself that lets the app access your courses. Here is exactly how to get it.</p>
+          <p style="color: var(--txt2); font-size: 15px; margin-bottom: 22px;">A key you generate yourself in Canvas,
+            which lets the app read your courses. It takes about a minute, and only once - the app remembers it
+            afterwards in your operating system's password vault.</p>
+
+          <!-- What the user is looking at when they start. The app puts a
+               "Get a token" button next to the token field that opens the
+               right Canvas page in one click, and the site had never mentioned
+               it - visitors were being sent to hunt through Canvas for a page
+               the app can open for them. Drawn rather than described, so it is
+               recognisable at a glance. -->
+          <div
+            style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--rad); padding: 14px 16px 16px; margin-bottom: 22px;">
+            <div style="font-size: 12.5px; color: var(--txt3); margin-bottom: 10px;">In the app</div>
+            <div
+              style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--txt2); margin-bottom: 7px;">
+              Your Canvas Access Token
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <!-- EMPTY on purpose: this is the screen at the moment you press
+                   the button, and a filled field would imply you already have
+                   the thing you are here to go and get. -->
+              <div
+                style="flex: 1 1 220px; min-width: 0; background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 6px; height: 38px; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </div>
+              <span
+                style="flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; background: #1f77b4; color: #fff; font-size: 13.5px; font-weight: 600; height: 38px; padding: 0 16px; border-radius: 6px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.3);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                Get a token
+              </span>
+            </div>
+          </div>
+
+          <ol
+            style="list-style: none; margin: 0 0 22px; padding: 0; display: flex; flex-direction: column; gap: 16px;">
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span
+                style="flex-shrink: 0; background: var(--cyan-bg); color: var(--cyan); width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 600; margin-top: 1px;">1</span>
+              <div style="font-size: 14.5px; color: var(--txt2); line-height: 1.6;">
+                Click <strong style="color: var(--txt);">Get a token</strong> next to the token field. It opens your
+                own Canvas token page in your browser.
+                <div style="color: var(--txt3); font-size: 13.5px; margin-top: 4px;">Nothing happens? Open Canvas
+                  yourself and go to <strong style="color: var(--txt2);">Account &#8594; Settings</strong> - that is
+                  the same page.</div>
+              </div>
+            </li>
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span
+                style="flex-shrink: 0; background: var(--cyan-bg); color: var(--cyan); width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 600; margin-top: 1px;">2</span>
+              <div style="font-size: 14.5px; color: var(--txt2); line-height: 1.6;">
+                Scroll down to <strong style="color: var(--txt);">Approved Integrations</strong> and click
+                <strong style="color: var(--txt);">+ New Access Token</strong>.
+              </div>
+            </li>
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span
+                style="flex-shrink: 0; background: var(--cyan-bg); color: var(--cyan); width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 600; margin-top: 1px;">3</span>
+              <div style="font-size: 14.5px; color: var(--txt2); line-height: 1.6;">
+                Give it any purpose - <em>Canvas Downloader</em> does fine - and leave
+                <strong style="color: var(--txt);">Expires</strong> blank, so you are not asked to do this again.
+                Then click <strong style="color: var(--txt);">Generate Token</strong>.
+              </div>
+            </li>
+            <li style="display: flex; gap: 14px; align-items: flex-start;">
+              <span
+                style="flex-shrink: 0; background: var(--cyan-bg); color: var(--cyan); width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 600; margin-top: 1px;">4</span>
+              <div style="font-size: 14.5px; color: var(--txt2); line-height: 1.6;">
+                Copy the token <strong style="color: var(--txt);">straight away</strong>, paste it into the app and
+                press <strong style="color: var(--txt);">Log In</strong>.
+              </div>
+            </li>
+          </ol>
+
+          <div
+            style="background: var(--org-bg); border: 1px solid var(--org-b); border-radius: var(--rad); padding: 14px 16px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start;">
+            <svg style="color: var(--orange); flex-shrink: 0; margin-top: 2px;" width="16" height="16"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div style="font-size: 14px; color: var(--txt2); line-height: 1.6;">
+              <strong style="color: var(--orange);">Canvas shows the token once.</strong> Leave that page without
+              copying it and the token is gone for good - generate a new one, no harm done.
+            </div>
+          </div>
+
+          <!-- Honest caption: the recording predates the current login screen
+               (it still says "Canvas API Token" and has the two help expanders
+               that are gone). The CANVAS half - which is all the video is
+               really for - has not changed, so the clip is still useful; the
+               claim that it matches the app step for step is what would not
+               be true. -->
+          <div style="font-size: 13.5px; color: var(--txt3); margin-bottom: 12px;">Prefer to watch? The clip walks
+            through it end to end. The app's login screen has been redesigned since it was recorded - the Canvas side
+            is identical.</div>
 
           <!-- Click-to-load. The iframe used to be in the markup, so simply
                reading this page contacted YouTube and handed Google the
                visitor's IP - on the page whose whole argument is that nothing
                leaves your machine. The poster is served from this site; nothing
                is requested from YouTube until the play button is pressed. -->
-          <div id="video-container" style="width: 100%; aspect-ratio: 16/9; position: relative;">
+          <!-- Capped, and left-aligned with the steps. The written walkthrough
+               above is the primary path now, so a full-width 16:9 poster of a
+               login screen that no longer looks like that was the loudest
+               thing in the card and the only out-of-date thing in it. -->
+          <div id="video-container"
+            style="width: 100%; max-width: 520px; aspect-ratio: 16/9; position: relative;">
             <button type="button" id="video-facade" aria-label="Play: how to get your Canvas Access Token"
               style="all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden; cursor: pointer; background: #000;">
               <img src="assets/token-video-poster.jpg" alt="" loading="lazy" decoding="async"
@@ -4285,98 +4467,100 @@
           dive in - especially if you're on a university-managed Mac.</p>
       </div>
 
-      <!-- auto-fit, not a hardcoded 1fr 1fr: this section was display:none on
-           anything that didn't report a Mac, so its two fixed columns had never
-           been rendered at phone width and overflowed the viewport by 66px the
-           moment it became visible to everyone. -->
-      <div
-        style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:14px; max-width:860px; margin:0 auto;">
+      <!-- Expanders, reusing the page's own `details.faq-item` pattern so this
+           section behaves like the FAQ below it. `.faq-grid` also supplies the
+           responsive columns: this grid used to be a hardcoded `1fr 1fr` that
+           had never been rendered at phone width (the whole section was
+           display:none unless the visitor reported a Mac) and overflowed the
+           viewport by 66px the moment it became visible to everyone. -->
+      <!-- No max-width. The Security and FAQ grids below are two-column
+           `.faq-grid`s at the full container width (~1012px), so capping this
+           one at 860px made the macOS section visibly inset from everything
+           under it - three stacked two-column card grids that did not share an
+           edge. Same component, same width. -->
+      <div class="faq-grid">
 
-        <!-- Gatekeeper -->
-        <div class="faq-item reveal" style="cursor:default;">
-          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span
-              style="background:rgba(249,115,22,0.12); color:var(--orange); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(249,115,22,0.3);">SETUP</span>
-            macOS blocks the app on first launch
-          </h4>
-          <p>Because Canvas Downloader is free and indie, it isn't signed with Apple's paid certificate. macOS will
+        <details class="faq-item mac-note reveal">
+          <summary>
+            <span class="mac-sum">
+              <span class="mac-kicker">Setup</span>
+              <span class="mac-title">macOS blocks the app on first launch</span>
+            </span>
+          </summary>
+          <p>Because Canvas Downloader is a free solo project, it isn't signed with Apple's paid certificate. macOS will
             block it with an "unidentified developer" or "damaged" message the first time you open it. This is normal
             for free apps.<br><br>The <a href="thanks-mac.html"
               style="color:var(--cyan); text-decoration:underline; text-underline-offset:2px;">install guide</a> walks
-            you through it in under a minute: approve it in <strong>System Settings → Privacy &amp; Security → Open
+            you through it in under a minute: approve it in <strong>System Settings &rarr; Privacy &amp; Security &rarr; Open
               Anyway</strong>, or run one Terminal command if it says "damaged". After that, it opens normally forever.
           </p>
-        </div>
+        </details>
 
-
-        <!-- University-managed Macs -->
-        <div class="faq-item reveal" style="cursor:default;">
-          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span
-              style="background:rgba(249,115,22,0.12); color:var(--orange); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(249,115,22,0.3);">MANAGED
-              MACS</span>
-            University-managed Macs may block installation
-          </h4>
+        <details class="faq-item mac-note reveal">
+          <summary>
+            <span class="mac-sum">
+              <span class="mac-kicker">Managed Macs</span>
+              <span class="mac-title">University-managed Macs may block installation</span>
+            </span>
+          </summary>
           <p>Some universities lock down their Macs so that students cannot install apps, unlock Privacy &amp; Security,
             or run Terminal commands without admin rights. If your Mac is managed by IT and the install guide doesn't
-            work, you have two options:<br><br>• Install Canvas Downloader on your personal Mac instead.<br>• Contact
+            work, you have two options:<br><br>&bull; Install Canvas Downloader on your personal Mac instead.<br>&bull; Contact
             your IT helpdesk and ask them to allow the app, or to temporarily grant admin rights for the installation
             step.</p>
-        </div>
+        </details>
 
-        <!-- Token re-entry after updates -->
-        <div class="faq-item reveal" style="cursor:default;">
-          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span
-              style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">UPDATES</span>
-            You may need to re-enter your Canvas Access Token after an update
-          </h4>
+        <details class="faq-item mac-note reveal">
+          <summary>
+            <span class="mac-sum">
+              <span class="mac-kicker">Updates</span>
+              <span class="mac-title">You may need to re-enter your Canvas Access Token after an update</span>
+            </span>
+          </summary>
           <p>macOS stores your Canvas Access Token in your Keychain. Because the app isn't signed with a paid Developer
-            ID
-            certificate, macOS may treat a new version as a different app and ask for your Keychain password again - or
-            prompt you to re-enter your token.<br><br>This is a one-time step per update, not per launch. Your token
+            ID certificate, macOS may treat a new version as a different app and ask for your Keychain password again -
+            or prompt you to re-enter your token.<br><br>This is a one-time step per update, not per launch. Your token
             hasn't changed - you can copy it from your Canvas account settings and paste it in again.</p>
-        </div>
+        </details>
 
-        <!-- Office conversions -->
-        <div class="faq-item reveal" style="cursor:default;">
-          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span
-              style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">CONVERSIONS</span>
-            Office → PDF needs the Microsoft desktop app
-          </h4>
-          <p>The PowerPoint → PDF, Word → PDF, and Excel → PDF conversions use AppleScript to drive the Microsoft Office
+        <details class="faq-item mac-note reveal">
+          <summary>
+            <span class="mac-sum">
+              <span class="mac-kicker">Conversions</span>
+              <span class="mac-title">Office &rarr; PDF needs the Microsoft desktop app</span>
+            </span>
+          </summary>
+          <p>The PowerPoint &rarr; PDF, Word &rarr; PDF, and Excel &rarr; PDF conversions use AppleScript to drive the Microsoft Office
             desktop app. If you use Office via the web browser or don't have it installed, those conversions are
             silently skipped and your original files are kept unchanged.<br><br>Everything else - downloading, syncing,
             video-to-audio, archive unpacking, Canvas pages to text, code files, and web links - works without any extra
             software.</p>
-        </div>
+        </details>
 
-        <!-- Apple Silicon only -->
-        <div class="faq-item reveal" style="cursor:default;">
-          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span
-              style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">HARDWARE</span>
-            Apple Silicon only (M1, M2, M3, M4, M5)
-          </h4>
+        <details class="faq-item mac-note reveal">
+          <summary>
+            <span class="mac-sum">
+              <span class="mac-kicker">Hardware</span>
+              <span class="mac-title">Apple Silicon only (M1, M2, M3, M4, M5)</span>
+            </span>
+          </summary>
           <p>The macOS build is compiled for Apple Silicon only. It will not run on older Intel Macs (2020 and
-            earlier).<br><br>Not sure which chip you have? Click the Apple menu → <strong>About This Mac</strong>. If it
-            says "Apple M…" next to Chip, you're good. If it says "Intel Core", the Mac version won't work - use a Mac
+            earlier).<br><br>Not sure which chip you have? Click the Apple menu &rarr; <strong>About This Mac</strong>. If it
+            says "Apple M&hellip;" next to Chip, you're good. If it says "Intel Core", the Mac version won't work - use a Mac
             with Apple Silicon or a Windows PC instead.</p>
-        </div>
+        </details>
 
-        <!-- macOS version floor -->
-        <div class="faq-item reveal" style="cursor:default;">
-          <h4 style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span
-              style="background:rgba(56,189,248,0.1); color:var(--cyan); font-size:10px; font-weight:800; padding:2px 8px; border-radius:100px; white-space:nowrap; border:1px solid rgba(56,189,248,0.3);">MACOS
-              VERSION</span>
-            Needs macOS 14 Sonoma or newer
-          </h4>
+        <details class="faq-item mac-note reveal">
+          <summary>
+            <span class="mac-sum">
+              <span class="mac-kicker">macOS version</span>
+              <span class="mac-title">Needs macOS 14 Sonoma or newer</span>
+            </span>
+          </summary>
           <p>The Mac build is compiled against libraries that require macOS 14. On macOS 13 Ventura or older it will
-            not launch, so please don't download it there.<br><br>Check with the Apple menu →
+            not launch, so please don't download it there.<br><br>Check with the Apple menu &rarr;
             <strong>About This Mac</strong>. Sonoma (14), Sequoia (15) and Tahoe (26) are supported.</p>
-        </div>
+        </details>
 
       </div>
     </div>
@@ -4473,7 +4657,8 @@
             affiliated with them, and the breach happened on their servers, not on your computer. Using this app doesn't
             change your exposure to that incident in either direction.</p>
           <p class="qa-note">The practical step is the same regardless of this app: update your Canvas password, and in
-            Canvas → Account Settings → Approved Integrations, remove any Canvas Access Tokens you don't recognize.</p>
+            Canvas → Account → Settings → Approved Integrations, remove any Canvas Access Tokens you don't recognize.
+          </p>
         </details>
 
         <!-- Card 4: Verify yourself -->
@@ -4513,6 +4698,41 @@
 
   <hr class="div" />
 
+  <!-- SUPPORT CTA -->
+  <section class="reveal" id="support" style="padding: 90px 0; position: relative; overflow: hidden;">
+    <div
+      style="position: absolute; top: -140px; left: 50%; transform: translateX(-50%); width: 600px; height: 400px; background: radial-gradient(ellipse, rgba(249,115,22,0.1) 0%, transparent 70%); pointer-events: none;">
+    </div>
+    <div class="container" style="max-width: 560px; text-align: center; position: relative;">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="#f97316" style="margin-bottom: 16px;">
+        <path
+          d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+      </svg>
+      <h2 style="font-size: clamp(24px, 3.5vw, 34px); font-weight: 900; letter-spacing: -0.03em; margin: 0 0 14px;">
+        Enjoying Canvas Downloader?</h2>
+      <p style="font-size: 15px; color: var(--txt2); line-height: 1.7; margin: 0 0 28px;">
+        It's built by one student, between lectures, and will always be 100% free. If it saves you hours every
+        semester, you can buy me a coffee - it keeps the project alive and gets us closer to the paid app
+        certificates that would remove the install warnings for everyone.
+      </p>
+      <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener" class="kofi-cta">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="#f97316">
+          <path
+            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        </svg>
+        Support me &amp; the project
+      </a>
+      <p style="font-size: 13px; color: var(--txt3); margin: 18px 0 0;">
+        Not in a position to donate? Starring the project on
+        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
+          style="color: var(--txt2); text-decoration: underline; text-underline-offset: 2px;">GitHub</a>
+        helps too.
+      </p>
+    </div>
+  </section>
+
+  <hr class="div" />
+
   <!-- FAQ -->
   <section class="faq-section" style="padding-top:90px;" id="faq">
     <div class="container">
@@ -4541,7 +4761,7 @@
           <p>Yes. Canvas Downloader uses the standard Canvas REST API, which every Canvas institution runs - if you can
             log into Canvas at your university, it works.</p>
           <p>To save you finding your Canvas address, the app ships a searchable list of <strong>4,757 verified
-              institutions</strong> across every country that uses Canvas, so most people just type their school's name
+            institutions</strong> across every country that uses Canvas, so most people just type their school's name
             and pick it. Not in the list? Paste your Canvas address instead - nothing about the app depends on being
             listed.</p>
         </details>
@@ -4579,7 +4799,7 @@
         </details>
         <details class="faq-item reveal">
           <summary>The security warning scared me - is it safe?</summary>
-          <p>Yes. The warning appears because code-signing certificates cost $99-300/year and this is an indie project.
+          <p>Yes. The warning appears because code-signing certificates cost $99-300/year and this is a solo project.
             The full source code is public on <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader"
               target="_blank" rel="noopener">GitHub</a>. Thousands of legitimate open-source apps show the same warning.
           </p>
@@ -4596,41 +4816,6 @@
               target="_blank" rel="noopener">GitHub Issues</a>. Pull requests welcome.</p>
         </details>
       </div>
-    </div>
-  </section>
-
-  <hr class="div" />
-
-  <!-- SUPPORT CTA -->
-  <section class="reveal" id="support" style="padding: 90px 0; position: relative; overflow: hidden;">
-    <div
-      style="position: absolute; top: -140px; left: 50%; transform: translateX(-50%); width: 600px; height: 400px; background: radial-gradient(ellipse, rgba(249,115,22,0.1) 0%, transparent 70%); pointer-events: none;">
-    </div>
-    <div class="container" style="max-width: 560px; text-align: center; position: relative;">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="#f97316" style="margin-bottom: 16px;">
-        <path
-          d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-      </svg>
-      <h2 style="font-size: clamp(24px, 3.5vw, 34px); font-weight: 900; letter-spacing: -0.03em; margin: 0 0 14px;">
-        Enjoying Canvas Downloader?</h2>
-      <p style="font-size: 15px; color: var(--txt2); line-height: 1.7; margin: 0 0 28px;">
-        It's built by one student, between lectures, and will always be 100% free. If it saves you hours every
-        semester, you can buy me a coffee - it keeps the project alive and gets us closer to the paid app
-        certificates that would remove the install warnings for everyone.
-      </p>
-      <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener" class="kofi-cta">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="#f97316">
-          <path
-            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-        </svg>
-        Support me &amp; the project
-      </a>
-      <p style="font-size: 13px; color: var(--txt3); margin: 18px 0 0;">
-        Not in a position to donate? Starring the project on
-        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
-          style="color: var(--txt2); text-decoration: underline; text-underline-offset: 2px;">GitHub</a>
-        helps too.
-      </p>
     </div>
   </section>
 
@@ -4776,20 +4961,24 @@
       const phrases = [
         "Download all your courses in minutes",
         "Sync new files to your PC in one click",
-        "Auto-optimize all your files for AI"
+        "Auto\u2011convert all your files for AI"
       ];
       const dynamicText = document.getElementById('hero-dynamic-text');
+      const cursor = document.querySelector('.hero-cursor');
       if (!dynamicText) return;
 
       let phraseIndex = 0;
       let charIndex = phrases[0].length;
       let isDeleting = true;
-      let typingDelay = 40;
-      let erasingDelay = 20;
-      let newTextDelay = 3000;
+      let typingDelay = 50;
+      let erasingDelay = 25;
+      let newTextDelay = 2800;
+      let pauseBeforeTyping = 400;
 
       function type() {
         const currentPhrase = phrases[phraseIndex];
+
+        if (cursor) cursor.classList.add('typing');
 
         if (isDeleting) {
           charIndex--;
@@ -4804,10 +4993,12 @@
         if (!isDeleting && charIndex === currentPhrase.length) {
           typeSpeed = newTextDelay;
           isDeleting = true;
+          if (cursor) cursor.classList.remove('typing');
         } else if (isDeleting && charIndex === 0) {
           isDeleting = false;
           phraseIndex = (phraseIndex + 1) % phrases.length;
-          typeSpeed = 500;
+          typeSpeed = pauseBeforeTyping;
+          if (cursor) cursor.classList.remove('typing');
         }
 
         setTimeout(type, typeSpeed);

@@ -22,8 +22,37 @@
   // Ordered, progress-bearing steps. 'done' is the celebration screen (not counted).
   var STEPS = ['install', 'open', 'notifications', 'login', 'permissions'];
 
+  // ── Which macOS versions the wizard offers ───────────────
+  // THE FLOOR IS macOS 14 SONOMA, and it is a measured fact, not a preference:
+  // the bundled arm64 wheels (onnxruntime, av) are tagged macosx_14_0, so
+  // Canvas_Downloader_macOS.spec declares LSMinimumSystemVersion 14.0 and
+  // scripts/check_macos_floor.py fails the build if any binary needs more than
+  // that. Offering an older macOS here would walk a student through a five-step
+  // setup for an app their Mac refuses to launch - which is exactly the failure
+  // the floor check exists to prevent, arriving one page earlier.
+  var VERSIONS = [
+    { id: 'new', title: 'macOS 15 Sequoia or 26 Tahoe', desc: 'The latest versions (2024-2025)' },
+    { id: 'mid', title: 'macOS 14 Sonoma',              desc: 'Released 2023' }
+  ];
+
+  // Retired 2026-08-15, when the floor moved to macOS 14. Kept as real code
+  // rather than commented-out text so it stays syntax-checked and greppable.
+  //
+  // TO SUPPORT AN OLDER macOS AGAIN: lower LSMinimumSystemVersion in
+  // Canvas_Downloader_macOS.spec FIRST (the build will refuse a bundle that
+  // promises more than the wheels can deliver), then splice the entry back into
+  // VERSIONS. Every retired screen's copy is still present below, marked
+  // RETIRED, so nothing has to be rewritten.
+  //
+  // Note 'mid' used to read "macOS 13 Ventura or 14 Sonoma" / "Released
+  // 2022-2023" and its open-screen copy said "on Ventura and Sonoma". Ventura
+  // was dropped from that pair; Sonoma kept it.
+  var RETIRED_VERSIONS = [
+    { id: 'old', title: 'macOS 11 Big Sur or 12 Monterey', desc: 'Released 2020-2021' }
+  ];
+
   var state = {
-    version: null,   // 'new' (15/26) | 'mid' (13/14) | 'old' (11/12)
+    version: null,   // 'new' (15/26) | 'mid' (14) | RETIRED: 'old' (11/12)
     screen: 'intro'  // 'intro' | <STEPS> | 'done'
   };
 
@@ -136,16 +165,16 @@
   // ── Screen content ───────────────────────────────────────
   function introScreen() {
     var mac = ICO.monitor(22);
+    var opts = '';
+    for (var i = 0; i < VERSIONS.length; i++) {
+      opts += optBtn(VERSIONS[i].id, mac, VERSIONS[i].title, VERSIONS[i].desc);
+    }
     return {
       eyebrow: 'Setup Assistant',
       title: 'Welcome! Let’s get you set up',
       sub: 'It only takes about two minutes. First - which version of macOS are you on? We’ll tailor the steps to your Mac.',
       body:
-        '<div class="mw-options">' +
-          optBtn('new', mac, 'macOS 15 Sequoia or 26 Tahoe', 'The latest versions (2024-2025)') +
-          optBtn('mid', mac, 'macOS 13 Ventura or 14 Sonoma', 'Released 2022-2023') +
-          optBtn('old', mac, 'macOS 11 Big Sur or 12 Monterey', 'Released 2020-2021') +
-        '</div>' +
+        '<div class="mw-options">' + opts + '</div>' +
         '<details class="mw-help-card">' +
           '<summary>' +
             '<span class="mw-help-icon">' + ICO.help(18) + '</span>' +
@@ -153,7 +182,11 @@
             '<span class="mw-help-chevron">' + ICO.chevron(16) + '</span>' +
           '</summary>' +
           '<div class="mw-help-body">' +
-            '<p>Click the <strong>Apple menu</strong> - the apple-shaped icon in the <strong>top-left corner</strong> of your menu bar - then choose <strong>About This Mac</strong>. Your macOS version name appears at the top (e.g. “Sequoia 15.1” or “Ventura 13.5”).</p>' +
+            '<p>Click the <strong>Apple menu</strong> - the apple-shaped icon in the <strong>top-left corner</strong> of your menu bar - then choose <strong>About This Mac</strong>. Your macOS version name appears at the top (e.g. “Sonoma 14.5” or “Sequoia 15.1”).</p>' +
+            // Says the floor out loud, in the one place a user comes to look up
+            // their version. Without it the options list is silent about why
+            // their OS is missing, and they set up an app that cannot launch.
+            '<p>Canvas Downloader needs <strong>macOS 14 Sonoma or later</strong>. On macOS 13 Ventura or older it won’t launch, so there’s no setup to run.</p>' +
           '</div>' +
         '</details>',
       noFoot: true
@@ -183,40 +216,57 @@
     };
   }
 
+  // The one step whose instructions genuinely differ per macOS version.
+  // The tail is the Sonoma screen rather than a retired one, so an unexpected
+  // state.version lands on the LOWEST SUPPORTED macOS's instructions instead of
+  // on System Preferences steps for an OS this build cannot run on.
   function openScreen() {
-    if (state.version === 'new') {
-      return {
-        eyebrow: 'Step 2 of 5',
-        title: 'Open the app for the first time',
-        sub: 'Apple is extra-cautious with free apps. Here’s the one-time fix.',
-        body:
-          note('cyan', ICO.shield(18), 'You’ll see a warning that the app “can’t be opened.” This is completely normal for free, open-source apps - it does <strong>not</strong> mean anything is wrong. Here’s the 30-second fix:') +
-          ytEmbed(YT_GATEKEEPER, 'Opening Canvas Downloader on macOS') +
-          '<p class="mw-media-cap">The full process, start to finish (shown on macOS Sequoia).</p>' +
-          '<ul class="mw-steps">' +
-            '<li>Double-click <strong>Canvas Downloader</strong> in Applications. In the “Not Opened” dialog, click <strong>Done</strong>.</li>' +
-            '<li>Open <strong>System Settings</strong> (Apple menu → System Settings) → <strong>Privacy &amp; Security</strong>.</li>' +
-            '<li>Scroll down to the <strong>Security</strong> section. Next to “Canvas Downloader was blocked”, click <strong>Open Anyway</strong>.</li>' +
-            '<li>Click <strong>Open Anyway</strong> again to confirm.</li>' +
-            '<li>Enter your Mac password and click <strong>OK</strong> - the app opens.</li>' +
-          '</ul>'
-      };
-    }
-    if (state.version === 'mid') {
-      return {
-        eyebrow: 'Step 2 of 5',
-        title: 'Open the app for the first time',
-        sub: 'Good news - on Ventura and Sonoma it’s just two clicks.',
-        body:
-          note('cyan', ICO.shield(18), 'Apple blocks unsigned apps from independent developers. To keep this app completely free for students, I don\'t pay Apple the $99/year developer fee required to sign it. This is completely normal for free, independent apps. The quickest way around it:') +
-          '<ul class="mw-steps">' +
-            '<li>In your <strong>Applications</strong> folder, <strong>right-click</strong> (or Control-click) Canvas Downloader and choose <strong>Open</strong>.</li>' +
-            '<li>A warning appears - click <strong>Open</strong>. The app launches and is trusted from now on.</li>' +
-          '</ul>' +
-          '<p class="mw-hint"><strong>No "Open" option?</strong> Go to System Settings → <strong>Privacy &amp; Security</strong> → <strong>Open Anyway</strong> instead - the full guide walks through every step.</p>'
-      };
-    }
-    // old (11/12)
+    if (state.version === 'new') return openScreenSequoia();
+    if (state.version === 'old') return openScreenBigSur();   // RETIRED - see RETIRED_VERSIONS
+    return openScreenSonoma();
+  }
+
+  // macOS 15 Sequoia / 26 Tahoe - Apple removed the right-click → Open shortcut.
+  function openScreenSequoia() {
+    return {
+      eyebrow: 'Step 2 of 5',
+      title: 'Open the app for the first time',
+      sub: 'Apple is extra-cautious with free apps. Here’s the one-time fix.',
+      body:
+        note('cyan', ICO.shield(18), 'You’ll see a warning that the app “can’t be opened.” This is completely normal for free, open-source apps - it does <strong>not</strong> mean anything is wrong. Here’s the 30-second fix:') +
+        ytEmbed(YT_GATEKEEPER, 'Opening Canvas Downloader on macOS') +
+        '<p class="mw-media-cap">The full process, start to finish (shown on macOS Sequoia).</p>' +
+        '<ul class="mw-steps">' +
+          '<li>Double-click <strong>Canvas Downloader</strong> in Applications. In the “Not Opened” dialog, click <strong>Done</strong>.</li>' +
+          '<li>Open <strong>System Settings</strong> (Apple menu → System Settings) → <strong>Privacy &amp; Security</strong>.</li>' +
+          '<li>Scroll down to the <strong>Security</strong> section. Next to “Canvas Downloader was blocked”, click <strong>Open Anyway</strong>.</li>' +
+          '<li>Click <strong>Open Anyway</strong> again to confirm.</li>' +
+          '<li>Enter your Mac password and click <strong>OK</strong> - the app opens.</li>' +
+        '</ul>'
+    };
+  }
+
+  // macOS 14 Sonoma - the lowest supported version, and the last one that still
+  // has the right-click → Open shortcut. This copy also covered macOS 13
+  // Ventura until the floor moved; see RETIRED_VERSIONS.
+  function openScreenSonoma() {
+    return {
+      eyebrow: 'Step 2 of 5',
+      title: 'Open the app for the first time',
+      sub: 'Good news - on Sonoma it’s just two clicks.',
+      body:
+        note('cyan', ICO.shield(18), 'Apple blocks unsigned apps from independent developers. To keep this app completely free for students, I don\'t pay Apple the $99/year developer fee required to sign it. This is completely normal for free, independent apps. The quickest way around it:') +
+        '<ul class="mw-steps">' +
+          '<li>In your <strong>Applications</strong> folder, <strong>right-click</strong> (or Control-click) Canvas Downloader and choose <strong>Open</strong>.</li>' +
+          '<li>A warning appears - click <strong>Open</strong>. The app launches and is trusted from now on.</li>' +
+        '</ul>' +
+        '<p class="mw-hint"><strong>No "Open" option?</strong> Go to System Settings → <strong>Privacy &amp; Security</strong> → <strong>Open Anyway</strong> instead - the full guide walks through every step.</p>'
+    };
+  }
+
+  // RETIRED - macOS 11 Big Sur / 12 Monterey. Unreachable while 'old' is absent
+  // from VERSIONS; kept intact so restoring it is a one-line change there.
+  function openScreenBigSur() {
     return {
       eyebrow: 'Step 2 of 5',
       title: 'Open the app for the first time',

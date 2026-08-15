@@ -642,7 +642,15 @@
 
         <h3 class="sub-title reveal" id="canvas-url">Your Canvas URL</h3>
         <p class="body-text reveal">
-          To connect Canvas Downloader to your courses, you must provide your school's specific Canvas URL. 
+          Canvas Downloader connects straight to your school's own Canvas server, so it needs that server's address.
+          <strong>Most people never type it.</strong> Beside the field is <strong>Find your institution</strong> - a
+          searchable list of 4,757 verified schools. Start typing your university, pick it, and the address fills
+          itself in. It opens on the schools in your own country, and accents are optional: typing
+          <em>kobenhavn</em> finds Københavns Universitet.
+        </p>
+        <p class="body-text reveal">
+          The list will never have everyone, and it does not need to - the field stays fully editable, so a school
+          that is not listed works exactly the same way. Here is how to find its address.
         </p>
 
         <div class="info-card reveal">
@@ -652,7 +660,7 @@
             <strong>2.</strong> Examine the address bar <strong>after</strong> logging in (most schools use one of two formats):<br/>
             &bull; <strong>Format 1:</strong> <code style="background:var(--cyan-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;font-size:0.9em;">canvas.[university].edu</code> (e.g., canvas.schoolname.edu)<br/>
             &bull; <strong>Format 2:</strong> <code style="background:var(--cyan-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;font-size:0.9em;">[university].instructure.com</code> (e.g., schoolname.instructure.com)<br/>
-            <strong>3.</strong> Copy the base portion of the URL (including the `https://`, e.g., <code style="background:var(--cyan-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;font-size:0.9em;">https://canvas.schoolname.edu</code> or <code style="background:var(--cyan-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;font-size:0.9em;">https://schoolname.instructure.com</code>) and paste it into the app.<br/><br/>
+            <strong>3.</strong> Copy the base portion of the URL (including the https://, e.g., <code style="background:var(--cyan-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;font-size:0.9em;">https://canvas.schoolname.edu</code> or <code style="background:var(--cyan-bg);padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;font-size:0.9em;">https://schoolname.instructure.com</code>) and paste it into the app.<br/><br/>
             <strong>Important:</strong> While your university's URL (like canvas.schoolname.edu) may be accepted, pasting the <strong>real Canvas URL</strong> (ending in .instructure.com) is always the best and most reliable option to prevent login issues.
           </p>
         </div>
@@ -666,12 +674,23 @@
         <div class="info-card reveal">
           <h4>How to generate your token</h4>
           <p>
-            <strong>1.</strong> Log in to Canvas in your browser.<br/>
-            <strong>2.</strong> Go to <strong>Account &#8594; Settings</strong>.<br/>
-            <strong>3.</strong> Scroll down to <strong>Approved Integrations</strong> and click <strong>"+ New Access Token"</strong>.<br/>
-            <strong>4.</strong> Give it a name (e.g. "Canvas Downloader"), leave the expiry blank, and click <strong>Generate Token</strong>.<br/>
-            <strong>5.</strong> Copy the token and paste it into the app.
+            <strong>1.</strong> Click <strong>Get a token</strong> beside the token field. It opens your own Canvas
+            token page in your browser - no hunting for it.<br/>
+            <strong>2.</strong> Scroll down to <strong>Approved Integrations</strong> and click <strong>"+ New Access Token"</strong>.<br/>
+            <strong>3.</strong> Give it a name (e.g. "Canvas Downloader"), leave the expiry blank, and click <strong>Generate Token</strong>.<br/>
+            <strong>4.</strong> Copy the token <strong>straight away</strong> - Canvas shows it only once - and paste it into the app.
           </p>
+          <p>
+            <strong>If that button does nothing</strong> (a wrong address, or a browser blocking the tab), the page it
+            opens is the one you reach in Canvas yourself: <strong>Account &#8594; Settings</strong>. Everything from
+            step 2 is the same.
+          </p>
+        </div>
+
+        <div class="callout info reveal">
+          <strong>You only do this once.</strong> After the first login the token is kept in your operating system's
+          password vault - Windows Credential Manager or macOS Keychain - and the app signs you in on its own. If it
+          ever expires or you revoke it, the app says so and asks for a fresh one, with your school already filled in.
         </div>
 
         <div class="callout info reveal">

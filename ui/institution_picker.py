@@ -8,6 +8,12 @@ WHAT THIS IS
     what keeps every one of the thousands of Canvas schools NOT in the list
     working exactly as before.
 
+    The bridge is also the login page's single reader of that URL field, so
+    everything DERIVED from it repaints here and cannot drift apart: the
+    picker's own trigger label, the live status row beneath the field, and the
+    "Get a token" shortcut beside the access-token field
+    (:func:`token_link_html`).
+
 WHY IT IS HAND-BUILT MARKUP AND NOT ``st.selectbox``
     Two independent reasons, either one sufficient:
 
@@ -556,16 +562,129 @@ def picker_html() -> str:
     )
 
 
-def url_status_html() -> str:
-    """The empty shell for live URL feedback; the bridge fills it in.
+def _status_row_html(host_class: str) -> str:
+    """One live-feedback row. Two hosts use it; there is only ever one of it.
 
     Rendered unconditionally and left empty rather than emitted only when there
     is something to say. Streamlit reconciles by position, so a row that comes
     and goes would shift every element below it by one slot and hand the next
     element this one's DOM node - the keyed-card inheritance bug. An always
     present, `display:none`-until-`data-state` row cannot do that.
+
+    ``role="status"`` makes it an ARIA live region, so a screen reader hears
+    "That looks like an access token. It goes in the field below" at the moment
+    of the paste. Without it the row is the one part of this form that speaks
+    only to people who can see it - and its whole purpose is catching a mistake
+    early.
+
+    The inner spans are named for what they ARE (`cd-status-ico` / `-tx`), not
+    for which row they sit in: the token row was briefly built by hand with the
+    URL row's class names inside it, which works and reads like a copy-paste
+    bug for as long as it lives.
     """
-    return "<div class='cd-url-status'><span class='cd-url-status-ico'></span><span class='cd-url-status-tx'></span></div>"
+    return (f"<div class='{host_class}' role='status'>"
+            "<span class='cd-status-ico'></span><span class='cd-status-tx'></span></div>")
+
+
+def url_status_html() -> str:
+    """Live feedback on the Canvas URL, under the URL field."""
+    return _status_row_html("cd-url-status")
+
+
+# The shortcut to Canvas's own token page, sitting beside the access-token
+# field exactly as the picker sits beside the URL field.
+#
+# THE LABEL IS SHORT BECAUSE IT IS MEASURED, not because short reads better.
+# The window opens maximized with `min_size=(1024, 700)` (start.py), and at
+# that MINIMUM the button's text box is ~73px: "Get my Canvas token" needs
+# 123px and truncates to "Get my Ca...", which says nothing. Measured in the
+# running app, the candidates that fit are ~11 characters and under. The full
+# sentence is the tooltip, so nothing is lost - and if this label is ever
+# changed, re-measure at 1024 rather than at a developer's monitor.
+TOKEN_LINK_LABEL = "Get a token"
+TOKEN_LINK_TITLE_ON = "Open my Canvas token settings page"
+TOKEN_LINK_TITLE_OFF = (
+    "Enter your Canvas URL above first - this link needs your school's address."
+)
+
+_ICO_EXTLINK = (
+    "<svg class='cd-tokenlink-ico' viewBox='0 0 24 24' width='15' height='15' fill='none' "
+    "stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+    "<path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/>"
+    "<polyline points='15 3 21 3 21 9'/><line x1='10' y1='14' x2='21' y2='3'/></svg>"
+)
+
+
+def token_link_html(fallback_url: str = "") -> str:
+    """A one-click link to ``<your canvas>/profile/settings``, as ONE line.
+
+    WHY IT LIVES IN THIS MODULE
+        Its target is DERIVED from the Canvas URL field, and that field is
+        inside ``st.form`` - so Python never sees what is typed until submit,
+        which is the one moment the shortcut is no longer wanted. The bridge
+        below already reads that field on every keystroke to paint the status
+        row and the picker's own label; this is a third consumer of the same
+        read. A second bridge for one button is how two readers of one value
+        start disagreeing (see CLAUDE.md on divergent primitives).
+
+    WHY THE STATE IS SET BY JAVASCRIPT AND SURVIVES
+        The shell below is a CONSTANT string per render, so React leaves the
+        subtree alone across reruns and the bridge's ``href``/``title``
+        mutations persist - the same property the picker's derived trigger
+        label relies on. Anything invented here that the server did not also
+        send would vanish on the first re-render; nothing is.
+
+    THE DISABLED STATE IS "NO ``href``", NOT ``pointer-events: none``
+        An anchor without an href does nothing when clicked and is not
+        keyboard-reachable, which is exactly the behaviour wanted - while
+        still receiving hover, so the ``title`` explaining WHY it is
+        unavailable can actually be read. ``pointer-events: none`` would take
+        the tooltip away with the click, turning an unavailable control into a
+        dead end. It is painted with the app's one disabled recipe.
+
+    ``fallback_url`` is the address to use when the URL FIELD says nothing:
+    reauth mode renders no field, and a returning login renders an empty one
+    while the verified address sits in config. Pass only a URL the app has
+    actually verified - this is the same rule the guide's copy of the button
+    uses ("blank input, or input matches the already-verified URL"), and the
+    two of them are on screen together.
+
+    Note what this deliberately does NOT do: the reachability check the
+    "How to get a Canvas Access Token?" guide's copy of this button performs
+    on click. That check needs a rerun, which a form cannot give us; and the
+    status row under the URL field already speaks up when the address looks
+    wrong. This is a shortcut, never a gate - the same contract as the picker.
+    """
+    return (
+        "<div class='cd-tokenlink'"
+        f" data-fallback='{_he(fallback_url)}'"
+        f" data-title-on='{_he(TOKEN_LINK_TITLE_ON)}'"
+        f" data-title-off='{_he(TOKEN_LINK_TITLE_OFF)}'>"
+        "<a class='cd-tokenlink-btn' target='_blank' rel='noopener noreferrer'"
+        f" aria-disabled='true' title='{_he(TOKEN_LINK_TITLE_OFF)}'>"
+        f"{_ICO_EXTLINK}<span class='cd-tokenlink-tx'>{_he(TOKEN_LINK_LABEL)}</span>"
+        "</a></div>"
+    )
+
+
+def token_status_html() -> str:
+    """The empty shell for live feedback on the pasted TOKEN.
+
+    The mirror of :func:`url_status_html`, and it inherits that row's whole
+    contract: rendered unconditionally and left empty (a row that comes and
+    goes shifts every element below it by one slot), `display: none` until the
+    bridge sets `data-state`, and **silent unless it knows something is
+    wrong**.
+
+    That last rule is the design. A token is an opaque string this app cannot
+    validate offline, and older Canvas instances issue them without the
+    `1234~` prefix - so anything resembling "that looks valid" would be a
+    guess dressed as a verdict, and anything resembling "that looks invalid"
+    would be wrong for a real token. It speaks for the three cases where the
+    field's CONTENT is provably not a token, not for the ones where it merely
+    cannot tell.
+    """
+    return _status_row_html("cd-tok-status")
 
 
 # ── The bridge ───────────────────────────────────────────────────────────────
@@ -679,14 +798,156 @@ _BRIDGE_JS = """
     return best;
   }
 
+  // The token-page shortcut beside the access-token field. Its target is the
+  // Canvas URL, so it is repainted from the same one place everything else
+  // derived from that field is.
+  function tokenLink() { return D.querySelector('.cd-tokenlink'); }
+
+  // Narrow mirror of ui/auth.py:normalize_canvas_url. Only two of its rules
+  // matter for a link target - keep the HOST, and expand a bare shorthand
+  // (`cbscanvas`) the way login itself will - so only those two are copied.
+  // Every href is built as 'https://' + host by US, never taken from what was
+  // typed, so a pasted `javascript:` or `data:` value cannot become the
+  // scheme; it degrades into a nonsense hostname and the tab fails to load.
+  function tokenHref(raw) {
+    raw = (raw || '').trim();
+    if (!raw || looksLikeToken(raw)) return '';
+    var h = hostOf(raw);
+    if (!h) return '';
+    if (h.indexOf('.') === -1) h += '.instructure.com';
+    return 'https://' + h + '/profile/settings';
+  }
+
+  function paintTokenLink() {
+    var box = tokenLink(); if (!box) return;
+    var a = box.querySelector('.cd-tokenlink-btn'); if (!a) return;
+    var inp = urlInput();
+    // The field wins whenever it SAYS something. The fallback answers the two
+    // cases where it says nothing: reauth mode renders no field at all, and a
+    // returning login renders an empty one even though the address is in
+    // config - and there, a disabled button reading "enter your Canvas URL"
+    // would be flatly untrue while the guide's copy of this button, which
+    // already falls back the same way, sits enabled further down the page.
+    var typed = inp ? (inp.value || '').trim() : '';
+    var raw = typed || (box.getAttribute('data-fallback') || '');
+    var href = tokenHref(raw);
+    if (href) {
+      a.setAttribute('href', href);
+      a.setAttribute('title', box.getAttribute('data-title-on') || '');
+      a.removeAttribute('aria-disabled');
+    } else {
+      // No href: the click does nothing and the control leaves the tab order,
+      // but hover still works, so the tooltip can say why.
+      a.removeAttribute('href');
+      a.setAttribute('title', box.getAttribute('data-title-off') || '');
+      a.setAttribute('aria-disabled', 'true');
+    }
+  }
+
+  // ── The TOKEN field: its own status row, and the mirror-image mistake ────
+  function tokenInput() {
+    return D.querySelector('div[class*="st-key-token_input"] input')
+        || D.querySelector('input[aria-label="Your Canvas Access Token"]');
+  }
+  function tokStatusEl() { return D.querySelector('.cd-tok-status'); }
+
+  // Speaks ONLY when the content is provably not a token. A token is opaque
+  // and some Canvas instances issue them without the `1234~` prefix, so
+  // "looks valid" is unknowable and "looks invalid" would be wrong for real
+  // tokens - see token_status_html's docstring. Three provable cases:
+  //   * it is a URL            -> the two fields are swapped (the #1 mistake)
+  //   * it contains whitespace -> the copy took surrounding text with it
+  //   * it is far too short    -> and only once the user has LEFT the field,
+  //     because every token is short while it is being typed. Nobody types
+  //     one, but nobody should be nagged for trying either.
+  var TOK_MIN = 20;
+  function paintTokenStatus(blurred) {
+    var box = tokStatusEl(); if (!box) return;
+    var inp = tokenInput();
+    var raw = inp ? (inp.value || '') : '';
+    var v = raw.trim();
+    var state = null, html = '';
+    if (!v) {
+      state = null;
+    } else if (/^https?:\\/\\//i.test(v) || v.indexOf('instructure.com') !== -1) {
+      state = 'warn';
+      html = 'That looks like a Canvas address. It goes in the field above, not here.';
+    } else if (/\\s/.test(raw.trim())) {
+      state = 'warn';
+      html = 'That has a space in it - the copy probably picked up extra text.';
+    } else if (blurred && v.length < TOK_MIN) {
+      state = 'warn';
+      html = 'That looks too short for an access token. Copy the whole code Canvas showed you.';
+    }
+    var tx = box.querySelector('.cd-status-tx');
+    var ic = box.querySelector('.cd-status-ico');
+    if (!state) { box.removeAttribute('data-state'); if (tx) tx.innerHTML = ''; if (ic) ic.innerHTML = ''; return; }
+    box.setAttribute('data-state', state);
+    if (ic) ic.innerHTML = ICO[state] || '';
+    if (tx) tx.innerHTML = html;
+  }
+
+  // Put the caret where the user's next action is, so a login does not start
+  // with a mouse. Decided ONCE per session, and only into an EMPTY field with
+  // nothing else focused - never steal a caret the user has already placed. On
+  // a returning login the URL arrives pre-filled, so the token field is the
+  // one that gets it, which is exactly the field that still needs something.
+  function focusFirstEmpty() {
+    if (reg.autofocused) return;
+    var ae = D.activeElement;
+    if (ae && ae !== D.body && ae.tagName !== 'IFRAME') { reg.autofocused = true; return; }
+    var fields = [urlInput(), tokenInput()];
+    for (var i = 0; i < fields.length; i++) {
+      var f = fields[i];
+      if (f && !(f.value || '').trim()) {
+        reg.autofocused = true;
+        try { f.focus({ preventScroll: true }); } catch (e) {}
+        return;
+      }
+    }
+  }
+
+  // THE BRIDGE MOUNTS BEFORE STREAMLIT HAS FILLED THE WIDGETS IN.
+  //
+  // Everything here derives from what the fields SAY, and at mount they can
+  // still say nothing: the iframe runs while React is hydrating, so a value
+  // the server sent is not necessarily in the input yet. That was invisible
+  // for as long as the login page rendered an empty URL field on every run -
+  // and it appeared the day the field started arriving pre-filled from config,
+  // as a picker labelled "Find your institution" beside a recognised school,
+  // an empty status row, and - worst - the caret landing in the FILLED field
+  // because the empty-check read "".
+  //
+  // So the mount is a short SETTLE rather than a single call: idempotent
+  // repaints over ~half a second, and the autofocus held back until either a
+  // field reports a value or the budget says hydration is done. Bounded, so a
+  // page that never fills anything in still focuses and still paints.
+  var SETTLE_TICKS = 6, SETTLE_MS = 70, AUTOFOCUS_AFTER = 3;
+  function settleMount(n) {
+    paintStatus();
+    // Never `true`: a repaint must not accuse a token field the user has not
+    // touched. Only a real blur may raise the "too short" line.
+    paintTokenStatus(false);
+    var inp = urlInput();
+    if (n >= AUTOFOCUS_AFTER || (inp && (inp.value || '').trim())) focusFirstEmpty();
+    if (n < SETTLE_TICKS) P.setTimeout(function () { settleMount(n + 1); }, SETTLE_MS);
+  }
+
   function paintStatus() {
-    // Same trigger, same moments: this fires on every URL keystroke, on pick
-    // and on mount, which is precisely when the derived label can go stale.
+    // The ONE "the Canvas URL may have changed" entry point: it fires on every
+    // URL keystroke, on pick and on mount, which is precisely when anything
+    // derived from that field can go stale. Every derived thing repaints here
+    // - the picker's trigger label, this status row, and the token link.
+    //
+    // The token link goes FIRST, above every early return below: those guard
+    // on the picker and the status row being present, and in reauth mode
+    // neither is, while the token link still is.
+    paintTokenLink();
     syncTrigger();
     var box = statusEl(), inp = urlInput();
     if (!box) return;
-    var tx = box.querySelector('.cd-url-status-tx');
-    var ic = box.querySelector('.cd-url-status-ico');
+    var tx = box.querySelector('.cd-status-tx');
+    var ic = box.querySelector('.cd-status-ico');
     var raw = inp ? (inp.value || '').trim() : '';
     var state = null, html = '';
     if (!raw) {
@@ -1379,20 +1640,33 @@ _BRIDGE_JS = """
     if (t.classList.contains('cd-inst-input')) { render(); return; }
     var inp = urlInput();
     if (inp && t === inp) paintStatus();
+    var tok = tokenInput();
+    if (tok && t === tok) paintTokenStatus(false);
+  }
+
+  // The token row's "too short" case is the only thing in this bridge that
+  // waits for focus to leave, so it gets the only focus listener. `focusout`
+  // rather than `blur` because blur does not bubble and every listener here is
+  // delegated on the document - see the re-bind block below for why.
+  function onFocusOut(e) {
+    var tok = tokenInput();
+    if (tok && e.target === tok) paintTokenStatus(true);
   }
 
   // Re-bind: drop the previous handlers (their refs stay valid for removal even
   // if their realm is dead) and attach fresh ones from THIS realm.
-  ['click', 'keydown', 'input'].forEach(function (evt) {
+  ['click', 'keydown', 'input', 'focusout'].forEach(function (evt) {
     var prev = reg[evt];
     if (prev) { try { D.removeEventListener(evt, prev, true); } catch (e) {} }
   });
   reg.click = onClick; reg.keydown = onKey; reg.input = onInput;
+  reg.focusout = onFocusOut;
   D.addEventListener('click', onClick, true);
   D.addEventListener('keydown', onKey, true);
   D.addEventListener('input', onInput, true);
+  D.addEventListener('focusout', onFocusOut, true);
 
-  paintStatus();
+  settleMount(0);
 })();
 </script>
 """

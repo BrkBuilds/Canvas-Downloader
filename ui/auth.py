@@ -547,29 +547,12 @@ def _looks_like_url(s: str) -> bool:
     return s.startswith(('http://', 'https://')) or 'instructure.com' in s
 
 
-def _canvas_url_reachable(base_url: str, timeout: float = 5.0) -> bool:
-    """Best-effort reachability check for a Canvas base URL.
-
-    Returns True if the host returns ANY HTTP response (even 401/403 or a
-    redirect) - we only care that the address resolves and answers, not the
-    status code. Returns False on DNS failure, refused connection, or timeout.
-
-    Used by the "Open my Canvas token settings page" helper to avoid sending a
-    first-time user to a dead browser tab when they typed a wrong URL (the #1
-    first-run mistake). If ``requests`` is somehow unavailable we degrade to
-    True so the link is never blocked by our own inability to check.
-    """
-    if not base_url:
-        return False
-    try:
-        import requests
-    except Exception:
-        return True
-    try:
-        requests.get(base_url, timeout=timeout, allow_redirects=True)
-        return True
-    except Exception:
-        return False
+# `_canvas_url_reachable` was deleted here on 2026-08-15 along with its only
+# caller, the token guide's copy of the "open my settings page" button. Its job
+# was to avoid sending a first-run user to a dead browser tab, and it worked by
+# running a one-shot HTTP GET on CLICK - which the replacement button cannot do
+# from inside st.form, where a click cannot rerun. Recorded rather than left in
+# place: a function with no callers reads as an applied decision.
 
 
 def force_reauth(reason: str = "") -> None:
@@ -737,10 +720,24 @@ def restore_saved_session() -> None:
                     config = _migrate_config(json.load(f))
                     st.session_state['api_url'] = config.get('api_url', '')
                     # A URL only gets persisted to config after a successful
-                    # login, so a saved api_url is implicitly verified. This is
-                    # why the token-settings link works on launch with a blank
-                    # input field.
+                    # login, so a saved api_url is implicitly verified.
                     st.session_state['url_verified'] = bool(st.session_state['api_url'])
+                    # ...and the field is PRE-FILLED with it, which the login
+                    # page used to leave blank. Reaching that page with a saved
+                    # api_url means one thing: the token is gone (expired,
+                    # revoked, or never stored) - the school has not changed.
+                    # Making the user find their institution again to fix a
+                    # token problem is friction the app already has the answer
+                    # to, and force_reauth has pre-filled it on the mid-session
+                    # path all along; this is the same courtesy on the launch
+                    # path. It is still just a default: the field is editable,
+                    # so switching schools is typing over it.
+                    #
+                    # Assigned only when the widget has no value yet, because
+                    # writing a widget key Streamlit is already tracking would
+                    # overwrite what the user has typed.
+                    if st.session_state['api_url'] and not st.session_state.get('url_input'):
+                        st.session_state['url_input'] = st.session_state['api_url']
 
                     if 'concurrent_downloads' in config:
                         st.session_state['concurrent_downloads'] = config.get('concurrent_downloads', 5)
@@ -897,7 +894,7 @@ def render_login_page(fetch_courses_fn):
     if st.session_state.get('is_authenticated'):
         return
 
-    from shared.helpers import get_base64_image
+    from shared.helpers import get_base64_image, help_text_enabled
     from ui import institution_picker
 
     icon_b64 = get_base64_image("assets/icon.png")
@@ -999,6 +996,25 @@ def render_login_page(fetch_courses_fn):
     div[class*="st-key-login_card_wrapper"] div[data-testid="stWidgetLabel"] label {
         margin: 0 !important;
         flex: 0 0 auto !important;
+    }
+
+    /* The help "?" belongs NEXT TO the label, not at the far end of the row.
+       Measured in 1.51: the widget label is itself a LABEL element (so every
+       rule above that says div + that testid matches nothing here), and it
+       holds two children - the label text, and an UNNAMED wrapper carrying
+       the tooltip icon at `flex: 1 1 0%; justify-content: flex-end`. That
+       wrapper is what pushed the icon 343px away from the word it explains.
+       Collapsing it to its content is the whole fix; the margin restores the
+       gap the flex-grow used to provide.
+
+       Direct-child `:has(> ...)`: the descendant form would also match every
+       ancestor that merely CONTAINS a tooltip icon. Only the token field has
+       a help tooltip on this page, so nothing else moves. */
+    div[class*="st-key-login_card_wrapper"]
+        [data-testid="stWidgetLabel"] > div:has(> [data-testid="stTooltipIcon"]) {
+        flex: 0 0 auto !important;
+        justify-content: flex-start !important;
+        margin-left: 6px !important;
     }
 
     div[class*="st-key-login_card_wrapper"] div[data-testid="stWidgetLabel"] div[data-testid="stTooltipHoverTarget"] {
@@ -1138,38 +1154,49 @@ def render_login_page(fetch_courses_fn):
         opacity: 0.85 !important;
     }
 
+    /* The video is now the LAST RESORT, so it has to look like a control.
+       Deleting the token expander left it as the only walkthrough on the page
+       beyond the two lines under the field - and it was drawn as grey text on
+       a 4%-white slab with a grey glyph, i.e. the quietest thing on a dark
+       screen. A confused user found it late or not at all.
+
+       Three changes, no new colour: the YouTube red the icon already used on
+       hover is on at rest (that red IS the recognition - a grey play button is
+       just a triangle); the text steps up to the same #b8c5d6 as the rest of
+       the card's body copy; and the slab gains enough contrast to read as a
+       button. It stays a quiet button, not a second CTA - it competes with
+       nothing above it, because there is nothing above it any more. */
     .youtube-link {
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 8px !important;
-        color: #94a3b8 !important;
+        gap: 9px !important;
+        color: #b8c5d6 !important;
         text-decoration: none !important;
-        font-size: 0.82rem !important;
-        font-weight: 500 !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
         transition: all 0.2s ease-in-out !important;
         margin: clamp(1vh, 2vh, 16px) auto 0 auto !important;
         max-width: fit-content !important;
-        background-color: rgba(255, 255, 255, 0.04) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background-color: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
         border-radius: 8px !important;
-        padding: 5px 8px !important;
+        padding: 8px 16px !important;
     }
 
     .youtube-link:hover {
         color: #ffffff !important;
-        background-color: rgba(255, 255, 255, 0.08) !important;
-        border-color: rgba(255, 255, 255, 0.16) !important;
-    }
-
-    .youtube-link:hover .youtube-icon {
-        color: #ef4444 !important;
+        background-color: rgba(255, 255, 255, 0.10) !important;
+        border-color: rgba(239, 68, 68, 0.45) !important;
     }
 
     .youtube-icon {
-        opacity: 0.85 !important;
-        color: currentColor !important;
-        transition: color 0.2s ease-in-out !important;
+        color: #ef4444 !important;
+        transition: transform 0.2s ease-in-out !important;
+    }
+
+    .youtube-link:hover .youtube-icon {
+        transform: scale(1.12) !important;
     }
 
 
@@ -1546,7 +1573,7 @@ def render_login_page(fetch_courses_fn):
         background: rgba(31, 119, 180, 0.06) !important;
         border: 1px solid rgba(31, 119, 180, 0.22) !important;
         border-radius: 8px !important;
-        padding: 8px 14px 16px 14px !important; /* less on top, more on bottom */
+        padding: 10px 14px 12px 14px !important;
         /* Top margin is NEGATIVE on purpose: it collapses with the title's
            20px margin-bottom, so only a negative value can shrink the gap
            above the strip. Bottom margin gives the URL field real breathing
@@ -1557,41 +1584,15 @@ def render_login_page(fetch_courses_fn):
         font-size: 0.9rem !important;
         font-weight: 700 !important;
         color: #cfe0f0 !important;
-        margin-bottom: 10px !important;
+        margin-bottom: 8px !important;
     }
-    .lgs-step {
-        display: flex !important;
-        align-items: flex-start !important;
-        gap: 9px !important;
-        margin-bottom: 7px !important;
-        font-size: 0.85rem !important;
-        line-height: 1.4 !important;
-        color: #b8c5d6 !important;
-    }
-    .lgs-step b {
-        color: #cfe0f0 !important;
-        font-weight: 700 !important;
-    }
-    .lgs-num {
-        flex: 0 0 auto !important;
-        width: 18px !important;
-        height: 18px !important;
-        border-radius: 50% !important;
-        background: #1f77b4 !important;
-        color: #ffffff !important;
-        font-size: 0.72rem !important;
-        font-weight: 700 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin-top: 1px !important;
-    }
+    /* .lgs-step / .lgs-num are GONE with the three numbered steps - see the
+       comment on _getstarted_html. Nothing else used them. */
     .lgs-safe {
         display: flex !important;
         align-items: flex-start !important;
         gap: 7px !important;
-        margin-top: 10px !important;
-        padding-top: 9px !important;
+        padding-top: 8px !important;
         border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
         font-size: 0.8rem !important;
         line-height: 1.4 !important;
@@ -1919,28 +1920,171 @@ def render_login_page(fetch_courses_fn):
 
     /* Live URL feedback. One row, three states, driven by the bridge - never
        rendered from Python, so it costs no rerun and no element-count change. */
-    div[class*="st-key-login_card_wrapper"] .cd-url-status {
+    /* A SILENT status row must cost nothing. Both rows are rendered on every
+       run and hidden until the bridge gives them a `data-state` - which is
+       correct (a row that comes and goes shifts every element below it), but
+       `display: none` on the row only removes its HEIGHT. Its element-
+       container is still a flex item in the form's 16px gap, so two silent
+       rows were charging 32px for saying nothing - measured, and worth ~a
+       fifth of what the whole first-run strip was cut to.
+
+       This is NOT the global ghost-box purge rule, which is deliberately inert
+       (every main-app screen is signed off WITH those slots present). It is
+       one targeted rule, scoped to this card, keyed on the row's own state, so
+       the container comes back the instant there is something to say -
+       verified live in both directions. Note the chain: stElementContainer >
+       stMarkdown > stMarkdownContainer > the row. Skipping stMarkdown matches
+       nothing and fails silently. */
+    div[class*="st-key-login_card_wrapper"] [data-testid="stElementContainer"]:has(
+        > [data-testid="stMarkdown"] > [data-testid="stMarkdownContainer"]
+        > .cd-url-status:not([data-state])),
+    div[class*="st-key-login_card_wrapper"] [data-testid="stElementContainer"]:has(
+        > [data-testid="stMarkdown"] > [data-testid="stMarkdownContainer"]
+        > .cd-tok-status:not([data-state])) {
         display: none !important;
-        /* Grouped with the field ABOVE, which is what it describes. Its own
-           markdown block sits in Streamlit's 1rem flow, which put 24px above it
-           and 0 below - i.e. visually attached to the NEXT field's label, the
-           opposite of what it means. Measured target: ~6px up, ~20px down. */
+    }
+
+    /* THE TWO STATUS ROWS ARE ONE COMPONENT (institution_picker's
+       _status_row_html), so they are one block of rules. They differ in
+       exactly one thing - the margin that groups each with the field it
+       describes - and writing them out twice is how "the token row warns in a
+       slightly different amber" happens six months from now. */
+    div[class*="st-key-login_card_wrapper"] .cd-url-status,
+    div[class*="st-key-login_card_wrapper"] .cd-tok-status {
+        display: none !important;
         align-items: flex-start !important;
         gap: 7px !important;
-        /* ONE margin declaration. A `margin-top` above a `margin` shorthand is
-           silently overwritten by it - which is exactly what made the first
-           attempt at this look like the CSS was not applying at all. */
-        margin: -0.65rem 0 0.75rem 0 !important;
         font-size: 0.79rem !important;
         line-height: 1.45 !important;
     }
-    div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state] {
+    /* Grouped with the field ABOVE, which is what each describes. Their own
+       markdown blocks sit in Streamlit's 1rem flow, which put 24px above and 0
+       below - i.e. visually attached to the NEXT field's label, the opposite
+       of what they mean.
+
+       ONE margin declaration each. A `margin-top` above a `margin` shorthand
+       is silently overwritten by it - which is exactly what made the first
+       attempt at this look like the CSS was not applying at all. */
+    div[class*="st-key-login_card_wrapper"] .cd-url-status {
+        margin: -0.65rem 0 0.75rem 0 !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-tok-status {
+        margin: -0.5rem 0 0.5rem 0 !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state],
+    div[class*="st-key-login_card_wrapper"] .cd-tok-status[data-state] {
         display: flex !important;
     }
-    div[class*="st-key-login_card_wrapper"] .cd-url-status svg {
+    div[class*="st-key-login_card_wrapper"] .cd-url-status svg,
+    div[class*="st-key-login_card_wrapper"] .cd-tok-status svg {
         flex: 0 0 auto !important;
         margin-top: 2px !important;
     }
+    div[class*="st-key-login_card_wrapper"] .cd-tok-status[data-state="warn"] { color: #fbbf24 !important; }
+    div[class*="st-key-login_card_wrapper"] .cd-tok-status[data-state="ok"] { color: #4ade80 !important; }
+    div[class*="st-key-login_card_wrapper"] .cd-tok-status b { font-weight: 700 !important; }
+    /* ── "Get my Canvas token" ─────────────────────────────────────────────
+       A copy of the guide's token-settings link, sitting beside the access
+       token field the way the picker sits beside the URL field. It is an
+       anchor and not an st.button because it lives inside st.form, where a
+       button cannot rerun; its href is derived from the URL field by the
+       picker's bridge (ui/institution_picker.py:token_link_html).
+
+       DISABLED here means "no href", so the anchor keeps receiving hover and
+       its title can say why - see the app's one disabled recipe below, and
+       note the deliberate absence of pointer-events:none, which would take
+       the explanation away along with the click. */
+    div[class*="st-key-login_card_wrapper"] .cd-tokenlink {
+        width: 100% !important;
+    }
+    /* Streamlit's -16px stMarkdownContainer margin would pull the button up
+       out of line with the input beside it - the same correction the picker
+       trigger needs one row above. */
+    div[class*="st-key-login_card_wrapper"]
+        [data-testid="stMarkdownContainer"]:has(> .cd-tokenlink) {
+        margin-bottom: 0 !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-tokenlink-btn {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        height: 40px !important;
+        padding: 0 10px !important;
+        border-radius: 6px !important;
+        background-color: #1f77b4 !important;
+        color: #ffffff !important;
+        font-size: 0.86rem !important;
+        font-weight: 600 !important;
+        font-family: inherit !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-tokenlink-btn:hover {
+        background-color: #2b8cbe !important;
+        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.2),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+        color: #ffffff !important;
+    }
+    /* The app's ONE disabled paint. Nothing on top of it: no opacity (it
+       multiplies), no second filter (it replaces), no flat grey repaint. */
+    div[class*="st-key-login_card_wrapper"] .cd-tokenlink-btn[aria-disabled="true"] {
+        filter: brightness(0.5) saturate(0.5) !important;
+        cursor: not-allowed !important;
+        box-shadow: none !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-tokenlink-ico {
+        flex: 0 0 auto !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .cd-tokenlink-tx {
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    /* The token walkthrough, under the field it describes. Pulled up tight
+       against the token row the way the URL status row is pulled up under the
+       URL field - Streamlit's 1rem block flow would otherwise attach it to the
+       Log In button below, which is the opposite of what it means. */
+    div[class*="st-key-login_card_wrapper"] .login-tokensteps {
+        margin: -0.55rem 0 0.6rem 0 !important;
+        font-size: 0.79rem !important;
+        line-height: 1.5 !important;
+        color: #8a99ad !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .login-tokensteps b {
+        color: #b8c5d6 !important;
+        font-weight: 600 !important;
+    }
+    /* The "copy it now" half is EMPHASIS, not a warning. It was amber, which
+       in this app means something is wrong - and nothing is. It gets bold and
+       a clipboard glyph instead, and it stays in the same grey as the path it
+       continues, so the two read as one sentence.
+
+       `inline` (not a flex row): it must flow on the same line as the path
+       when there is room and wrap as ordinary text when there is not - a
+       block would reserve a second row at every width.
+
+       `.lts-keep` holds the glyph and the words it marks together, so a wrap
+       can never leave a lone clipboard icon dangling at the end of a line
+       above the phrase it belongs to. It is deliberately the SHORT half
+       (~145px): making the whole sentence unbreakable would overflow the card
+       long before that. */
+    div[class*="st-key-login_card_wrapper"] .lts-note {
+        display: inline !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .lts-keep {
+        white-space: nowrap !important;
+    }
+    div[class*="st-key-login_card_wrapper"] .lts-note svg {
+        vertical-align: -2px !important;
+        margin-right: 4px !important;
+        opacity: 0.85 !important;
+    }
+
     div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state="ok"] { color: #4ade80 !important; }
     div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state="info"] { color: #8a99ad !important; }
     div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state="warn"] { color: #fbbf24 !important; }
@@ -2033,18 +2177,23 @@ def render_login_page(fetch_courses_fn):
             # title/subtitle are combined). Content is Markdown-safe raw HTML.
             # In reauth mode both are empty (the reconnect header above stands in),
             # but the st.markdown still renders so the element count never shifts.
+            # TWO LINES, and the length is the point. This strip used to carry
+            # three numbered steps and measured 262px - the largest element on
+            # the page - which at the app's MINIMUM window (1024x700, i.e. 636px
+            # of usable viewport) pushed the token field to y=715 and the Log In
+            # button to y=799: a first-time user saw a wall of instructions and
+            # neither input nor the button. It also said everything the two
+            # guides below said, so the page explained itself three times.
+            #
+            # What survives is the only thing that is not written anywhere else
+            # above the fold: an orienting sentence, and the answer to "is this
+            # safe?". The steps live where they are needed - the school picker
+            # and "Get a token" are beside the fields they fill, and the token
+            # walkthrough sits under the token field.
             _getstarted_html = (
                 "<div class='login-getstarted'>"
-                "<div class='lgs-head'>New here? You'll be set up in about 2 minutes.</div>"
-                "<div class='lgs-step'><span class='lgs-num'>1</span>"
-                "<span>Paste your Canvas web address below "
-                "(e.g. https://schoolname.instructure.com).</span></div>"
-                "<div class='lgs-step'><span class='lgs-num'>2</span>"
-                "<span>Generate a Canvas access token - the "
-                "<b>How to get a Canvas Access Token</b> guide below walks you "
-                "through it, with a one-click link straight to the right page.</span></div>"
-                "<div class='lgs-step'><span class='lgs-num'>3</span>"
-                "<span>Paste the token below and press Log In.</span></div>"
+                "<div class='lgs-head'>New here? Find your school, get a token, "
+                "log in - about 2 minutes.</div>"
                 "<div class='lgs-safe'>"
                 "<svg viewBox='0 0 24 24' width='14' height='14' fill='none' "
                 "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
@@ -2089,17 +2238,89 @@ def render_login_page(fetch_courses_fn):
                     st.markdown(institution_picker.url_status_html(),
                                 unsafe_allow_html=True)
 
-                st.text_input(
-                    'Your Canvas Access Token',
-                    type="password",
-                    key="token_input",
-                    help=(
-                        "**Why is this needed?**  \n"
-                        "This token acts as a private key that allows the app to fetch your course files directly from your school's Canvas instance, which it connects to.\n\n"
-                        "**Is it safe?**  \n"
-                        "Yes! Your token is stored securely on your device, in your operating system."
+                # Same two-column shape as the URL row above, so the token
+                # shortcut lines up under the institution picker: one column
+                # of controls that fill the field beside them. The link's
+                # target is derived from the URL field by the picker's bridge
+                # (a form widget's value never reaches Python before submit),
+                # and `fallback` covers reauth mode, which renders no URL
+                # field because the address is already known and verified.
+                _c_tok, _c_link = st.columns([1.6, 1], vertical_alignment="bottom")
+                with _c_tok:
+                    st.text_input(
+                        'Your Canvas Access Token',
+                        type="password",
+                        key="token_input",
+                        help=(
+                            "**Why is this needed?**  \n"
+                            "This token acts as a private key that allows the app to fetch your course files directly from your school's Canvas instance, which it connects to.\n\n"
+                            "**Is it safe?**  \n"
+                            "Yes! Your token is stored securely on your device, in your operating system."
+                        )
                     )
-                )
+                with _c_link:
+                    # What to point at when the FIELD says nothing. Two cases,
+                    # and both hold a URL this machine has already logged in
+                    # with: reauth mode renders no field, and a returning login
+                    # renders an empty one (the address lives in config, not in
+                    # the widget). Only ever a verified URL - the same rule the
+                    # guide's copy of this button uses, so the two cannot sit
+                    # on one page disagreeing about whether we know the school.
+                    _link_fallback = _saved_url if (
+                        _reauth_mode or st.session_state.get('url_verified')) else ''
+                    st.markdown(institution_picker.token_link_html(_link_fallback),
+                                unsafe_allow_html=True)
+
+                # The walkthrough, AT THE POINT OF NEED. It used to live in an
+                # expander at the bottom of the page - which is the one place
+                # it cannot be read from, because the work happens in ANOTHER
+                # APP: the user clicks "Get a token", lands in Canvas, and the
+                # instructions are on a screen they can no longer see. Two
+                # lines they can carry beat four they have to scroll back for.
+                #
+                # Kept to the two facts that are not self-evident once you are
+                # on Canvas's settings page: WHERE the control is, and that the
+                # token is shown exactly once.
+                #
+                # Emitted unconditionally with the CONTENT gated, never the
+                # element: Streamlit reconciles by position, and a row that
+                # comes and goes hands the next element its DOM node.
+                # THE PATH STARTS AT ACCOUNT, not at Approved Integrations.
+                # "Get a token" lands the user directly on /profile/settings,
+                # so the first two hops are ones the button walks for them -
+                # which is exactly why they have to be written down. The button
+                # is the only thing that can fail here (a wrong address, a
+                # blocked pop-up, an unusual Canvas), and when it does, the
+                # instructions that assume it worked are worth nothing.
+                #
+                # ONE flowing line, not two rows. The "copy it now" half used
+                # to be a second row in amber - which is this app's colour for
+                # something being WRONG, and nothing is wrong; it was reaching
+                # for emphasis and borrowing a meaning. Bold carries it, the
+                # clipboard glyph marks it, and the sentence simply continues
+                # on the same line, wrapping only when the card is too narrow.
+                st.markdown(
+                    "<div class='login-tokensteps'>"
+                    "<span class='lts-path'>In Canvas: <b>Account</b> "
+                    "&rarr; <b>Settings</b> &rarr; <b>Approved Integrations</b> "
+                    "&rarr; <b>+ New Access Token</b>.</span> "
+                    "<span class='lts-note'><span class='lts-keep'>"
+                    "<svg viewBox='0 0 24 24' width='12' height='12' fill='none' "
+                    "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
+                    "stroke-linejoin='round'><rect x='9' y='9' width='13' height='13' "
+                    "rx='2' ry='2'/><path d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 "
+                    "2 0 0 1 2 2v1'/></svg>"
+                    "<b>Copy it straight away</b></span> - Canvas shows it only once."
+                    "</span></div>"
+                    if help_text_enabled() else "",
+                    unsafe_allow_html=True)
+
+                # Live feedback on what was pasted, mirroring the URL field's
+                # status row. It speaks ONLY when it knows something is wrong -
+                # see the bridge for the three cases and why silence is the
+                # default everywhere else.
+                st.markdown(institution_picker.token_status_html(),
+                            unsafe_allow_html=True)
 
                 submitted = st.form_submit_button(
                     'Reconnect' if _reauth_mode else 'Log In',
@@ -2276,7 +2497,7 @@ def render_login_page(fetch_courses_fn):
                     elif "expired" in err_text_lower:
                         render_amber_notice(
                             "Token Expired",
-                            detail="Your Canvas Access Token has expired. Access tokens are set to expire periodically for security. Please generate a new token (see 'How to get a Canvas Access Token?' below) and paste it here."
+                            detail="Your Canvas Access Token has expired. Access tokens are set to expire periodically for security. Use 'Get a token' next to the field above to generate a new one, then paste it here."
                         )
                     # "invalid access token" is Canvas's OWN wording and contains
                     # none of "invalid token"/"unauthorized"/"401" - without it here
@@ -2288,7 +2509,7 @@ def render_login_page(fetch_courses_fn):
                     ]):
                         render_amber_notice(
                             "Authentication Failed",
-                            detail="Your Canvas Access Token is invalid or has been revoked. Please expand the 'How to get a Canvas Access Token?' section below to generate a new one."
+                            detail="Your Canvas Access Token is invalid or has been revoked. Use 'Get a token' next to the field above to generate a new one."
                         )
                     elif "403" in err_text_lower or "forbidden" in err_text_lower:
                         render_amber_notice(
@@ -2329,7 +2550,13 @@ def render_login_page(fetch_courses_fn):
             # URL guide is hidden in reauth mode - the address is already saved
             # and shown as a chip, so "how to find your URL" is just noise there.
             if not _reauth_mode:
-                with st.expander('How to find your Canvas URL?', expanded=_first_run):
+                # COLLAPSED even on a first run. It used to open automatically,
+                # which put "open Canvas, copy the address bar" above the token
+                # guide - the harder of the two - for every new user. The
+                # institution picker answers this question for 4,750 schools in
+                # one click, so the guide is now the fallback it describes
+                # itself as, one click away for the schools it is not.
+                with st.expander('How to find your Canvas URL?', expanded=False):
                     st.markdown(
                         # Kept deliberately lean: normalize_canvas_url + CanvasManager's
                         # redirect resolution already add https://, strip paths and follow
@@ -2346,91 +2573,22 @@ def render_login_page(fetch_courses_fn):
                         "(you'll see it in the address bar once you're inside Canvas) - that's the most reliable one.\n"
                     )
 
-            with st.expander('How to get a Canvas Access Token?', expanded=(_first_run or _reauth_mode)):
-                # Direct link to the user's own Canvas token settings page. Canvas
-                # has no deep-link to the token generator itself, so the settings
-                # page (with the Approved Integrations section) is the closest we
-                # can get. The link is only trustworthy when its target URL is
-                # known-good, so we distinguish three states:
-                #   - trusted  → a previously verified URL (saved config / prior
-                #                login) OR a typed URL we just reachability-checked
-                #                → render the real <a> link (one-click open).
-                #   - pending  → a typed-but-unverified URL → a button that runs a
-                #                one-shot reachability check on click, then either
-                #                reveals the link or shows an amber notice.
-                #   - none     → no URL anywhere → greyed button + tooltip.
-                # The reachability check only ever runs on click (never on every
-                # rerun), so there's no constant pinging.
-                def _render_settings_link(_url: str) -> None:
-                    _href = _he(_url + '/profile/settings')
-                    st.markdown(
-                        "<a href='" + _href + "' target='_blank' style='"
-                        "display:inline-flex; align-items:center; gap:8px; text-decoration:none; "
-                        "background:#1f77b4; color:#ffffff; font-weight:600; font-size:0.88rem; "
-                        "padding:5px 12px; border-radius:6px; margin-bottom:6px;'>"
-                        "<svg viewBox='0 0 24 24' width='15' height='15' fill='none' stroke='currentColor' "
-                        "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
-                        "<path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/>"
-                        "<polyline points='15 3 21 3 21 9'/><line x1='10' y1='14' x2='21' y2='3'/></svg>"
-                        "Open my Canvas token settings page</a>",
-                        unsafe_allow_html=True,
-                    )
-
-                _verified_url = (
-                    st.session_state.get('api_url', '')
-                    if st.session_state.get('url_verified') else ''
-                )
-                _typed_url = normalize_canvas_url(st.session_state.get('url_input', ''))
-
-                if _typed_url and _typed_url != _verified_url:
-                    # User is entering a (new) URL we haven't confirmed yet.
-                    _pending_url, _trusted_url = _typed_url, ''
-                    if st.session_state.get('_token_link_ready') == _typed_url:
-                        _trusted_url = _typed_url  # just passed the check this run
-                else:
-                    # Blank input, or input matches the already-verified URL.
-                    _pending_url, _trusted_url = '', _verified_url
-
-                if _trusted_url:
-                    _render_settings_link(_trusted_url)
-                elif _pending_url:
-                    if st.button(
-                        'Open my Canvas token settings page',
-                        key='open_token_settings_btn',
-                        use_container_width=False,
-                    ):
-                        if _canvas_url_reachable(_pending_url):
-                            st.session_state['_token_link_ready'] = _pending_url
-                            st.session_state.pop('_token_link_error', None)
-                        else:
-                            st.session_state['_token_link_error'] = _pending_url
-                            st.session_state.pop('_token_link_ready', None)
-                        st.rerun(scope="app")
-                    if st.session_state.get('_token_link_error') == _pending_url:
-                        from ui.amber_notice import render_amber_notice
-                        render_amber_notice(
-                            "We couldn't reach that Canvas address",
-                            detail=(
-                                "Double-check your Canvas URL above (e.g. "
-                                "https://schoolname.instructure.com) and that you're "
-                                "online, then try again."
-                            ),
-                            margin="4px 0 6px 0",
-                        )
-                else:
-                    st.button(
-                        'Open my Canvas token settings page',
-                        key='open_token_settings_btn',
-                        disabled=True,
-                        help="Enter your Canvas URL above first.",
-                        use_container_width=False,
-                    )
-                st.markdown(
-                    "1. Open the link above *(or in Canvas: click your **Profile** → **Settings**)*.\n"
-                    "2. Scroll to **Approved Integrations** and click **+ New Access Token**.\n"
-                    "3. Give it any purpose (e.g. \"Canvas Downloader\"), then click **Generate Token**.\n"
-                    "4. Copy the token right away - Canvas shows it only once - and paste it here.\n"
-                )
+            # THE TOKEN GUIDE IS GONE FROM HERE ON PURPOSE - it now sits under
+            # the token field, where the user is standing (see the
+            # `.login-tokensteps` block above). What used to be here was a
+            # second copy of the "Get a token" button plus the same four steps,
+            # i.e. the page explaining tokens twice, ~200px below the fold, in
+            # the one place a user who has just clicked through to Canvas
+            # cannot read them.
+            #
+            # Deleted with it: the click-time reachability check that button
+            # ran (`_canvas_url_reachable`), and its `_token_link_ready` /
+            # `_token_link_error` state. It cannot survive the move - the field
+            # -side button lives inside st.form, where a click cannot rerun -
+            # and what it bought was one dead browser tab avoided for a user
+            # who typed a bad address. The cost of losing it is bounded: the
+            # login attempt itself still names a bad URL, and the status row
+            # under the field flags an address that looks wrong before then.
 
         st.markdown(
             '<a href="https://youtu.be/VadvcIvrrhU" target="_blank" class="youtube-link">'

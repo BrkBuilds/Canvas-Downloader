@@ -573,12 +573,23 @@ def test_status_row_is_pulled_up_under_the_field_it_describes():
 # ── CSS ↔ markup coupling ────────────────────────────────────────────────────
 
 # Classes the bridge writes into but which carry no styling of their own.
-_UNSTYLED_BY_DESIGN = {"cd-url-status-ico", "cd-url-status-tx"}
+# Bridge HOOKS, not styling targets: the glyph is painted through the row's
+# own `.cd-url-status svg` / `.cd-tok-status svg` rule, and the text span
+# inherits. They are named for what they are rather than which row they sit in,
+# because both rows are one component (_status_row_html) with two hosts.
+_UNSTYLED_BY_DESIGN = {"cd-status-ico", "cd-status-tx"}
 
 
 def test_every_markup_class_has_a_css_rule():
-    """A class with no rule is an invisible, silent layout bug."""
-    html = picker.picker_html() + picker.url_status_html()
+    """A class with no rule is an invisible, silent layout bug.
+
+    EVERY builder in the module, not just the picker's own: the token link and
+    the token status row are markup from here too, styled from the same
+    stylesheet, and a class that never got a rule fails exactly as quietly.
+    """
+    html = (picker.picker_html() + picker.url_status_html()
+            + picker.token_link_html("https://x.instructure.com")
+            + picker.token_status_html())
     classes = set()
     for attr in re.findall(r"class='([^']+)'", html):
         classes.update(attr.split())
@@ -759,7 +770,7 @@ def test_the_trigger_label_is_derived_from_the_url_field():
     # It must run wherever the URL field can change: paintStatus() is the hook
     # that fires on every keystroke, on pick and on mount.
     i = _JS.find("function paintStatus()")
-    assert "syncTrigger();" in _JS[i:i + 400], "paintStatus must re-derive the trigger"
+    assert "syncTrigger();" in _JS[i:_JS.find("\n  function ", i)], "paintStatus must re-derive the trigger"
     # pick() must NOT set the label itself - that is what made it stored state.
     j = _JS.find("function pick(opt)")
     body = _JS[j:j + 400]
@@ -768,12 +779,29 @@ def test_the_trigger_label_is_derived_from_the_url_field():
     )
 
 
+def _js_code() -> str:
+    """The bridge with its full-line comments blanked.
+
+    A "this string must not be duplicated in JS" check is about CODE. The
+    bridge's comments explain the bugs it defends against, and those
+    explanations quote the very strings under test - so scanning raw source
+    makes documenting a rule trip the rule, which is why the architecture audit
+    blanks comments before Rules 6 and 8 too.
+
+    FULL-LINE comments only: the bridge contains regexes like `/^https?:\\/\\//`
+    whose `//` a general stripper would eat, and a mangled line is a silent
+    false NEGATIVE - the failure mode this check exists to prevent.
+    """
+    return "\n".join("" if ln.lstrip().startswith("//") else ln
+                     for ln in _JS.split("\n"))
+
+
 def test_the_default_label_comes_from_python_not_a_js_copy():
     """One source for the string, so the markup and the reset cannot disagree."""
     html = picker.picker_html()
     assert f"data-default-label='{picker.TRIGGER_LABEL}'" in html
     assert "{" not in html.split("data-rows")[0], "unrendered f-string braces in markup"
-    assert picker.TRIGGER_LABEL not in _JS, (
+    assert picker.TRIGGER_LABEL not in _js_code(), (
         "the default label must be read off the element, not duplicated in JS"
     )
 
