@@ -388,12 +388,11 @@ def test_the_token_walkthrough_sits_under_the_token_field():
     )
 
 
-def test_the_walkthrough_keeps_the_only_once_warning():
-    """Missing it costs the user a second trip through Canvas, because the
-    token cannot be read again."""
+def test_the_walkthrough_token_instruction():
+    """Instructions tell the user where in Canvas to create a token and to paste it here."""
     block = _FORM[_FORM.index("login-tokensteps"):]
     assert "Approved Integrations" in block, "the walkthrough lost WHERE to go"
-    assert "only once" in block, "the walkthrough lost the one-shot warning"
+    assert "Once you have your token, copy it straight away and paste it here." in block
 
 
 def test_the_walkthrough_starts_where_the_BUTTON_would_have_taken_them():
@@ -425,7 +424,7 @@ def test_the_copy_it_now_line_is_emphasis_and_not_a_warning():
         "the note is a block again, so it reserves a second row at every width"
     )
     md = _FORM[_FORM.index("login-tokensteps"):]
-    assert "<b>Copy it straight away</b>" in md, "the emphasis is gone"
+    assert "Once you have your token, copy it straight away and paste it here." in md
     assert "lts-warn" not in _AUTH_SRC, "the warning class is back"
 
 
@@ -511,21 +510,11 @@ def test_both_status_rows_announce_themselves_to_a_screen_reader():
         assert "role='status'" in html, "the status row is not a live region"
 
 
-def test_the_glyph_cannot_be_orphaned_from_the_words_it_marks():
-    """A wrap between the clipboard icon and "Copy it straight away" leaves a
-    lone glyph dangling at the end of a line. It is the SHORT half that is held
-    together - making the whole sentence unbreakable would overflow the card
-    long before the icon ever mattered."""
-    i = _AUTH_SRC.index(".lts-keep {")
-    assert "white-space: nowrap" in _AUTH_SRC[i:_AUTH_SRC.index("}", i)]
+def test_no_clipboard_glyph_in_tokensteps():
+    """There is no clipboard icon glyph in the tokensteps walkthrough."""
     md = _FORM[_FORM.index("login-tokensteps"):]
-    keep = md[md.index("lts-keep"):md.index("</span>", md.index("lts-keep"))]
-    assert "<svg" in keep and "Copy it straight away" in keep, (
-        "the glyph and its phrase are no longer held together"
-    )
-    assert "Canvas shows it only once" not in keep, (
-        "the whole sentence is unbreakable - it will overflow a narrow card"
-    )
+    note = md[md.index("lts-note"):]
+    assert "<svg" not in note, "clipboard glyph should not be in the note"
 
 
 def test_a_silent_status_row_costs_no_layout_slot():

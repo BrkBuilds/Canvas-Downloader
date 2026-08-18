@@ -2304,13 +2304,8 @@ def render_login_page(fetch_courses_fn):
                     "<span class='lts-path'>In Canvas: <b>Account</b> "
                     "&rarr; <b>Settings</b> &rarr; <b>Approved Integrations</b> "
                     "&rarr; <b>+ New Access Token</b>.</span> "
-                    "<span class='lts-note'><span class='lts-keep'>"
-                    "<svg viewBox='0 0 24 24' width='12' height='12' fill='none' "
-                    "stroke='currentColor' stroke-width='2' stroke-linecap='round' "
-                    "stroke-linejoin='round'><rect x='9' y='9' width='13' height='13' "
-                    "rx='2' ry='2'/><path d='M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 "
-                    "2 0 0 1 2 2v1'/></svg>"
-                    "<b>Copy it straight away</b></span> - Canvas shows it only once."
+                    "<span class='lts-note'>"
+                    "Once you have your token, copy it straight away and paste it here."
                     "</span></div>"
                     if help_text_enabled() else "",
                     unsafe_allow_html=True)
@@ -3510,11 +3505,7 @@ def _render_authenticated_nav_bottom(fetch_courses_fn):
                 "including after you raise this limit."
             )
             _stg_arch_tip = (
-                "Applies to downloads and syncs alike. The existing zip-bomb protection "
-                "measures size and compression ratio, never how MANY files are inside - so "
-                "an archive of thousands of small files passes it. One real course unpacked "
-                "21,630 files. Over the limit the archive is left as a .zip in your course "
-                "folder, so nothing is lost and you can extract it yourself."
+                "Applies to downloads and syncs alike. All archives over the limit are left as archives in your course folder, so nothing is lost and you can extract it yourself."
             )
 
             _dc1, _dc2, _dc3, _dc4 = st.columns(4)

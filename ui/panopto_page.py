@@ -797,7 +797,16 @@ def _render_model_manager() -> bool:
                                 _set_radio_card("pan_model", mid)
                                 st.rerun(scope="fragment")
                         with ac2:
-                            if st.button("", key=f"pan_model_del_{mid}", help="Remove model.", use_container_width=True):
+                            # The size is NOT repeated here - the row already shows it two
+                            # columns left, and `size_mb` above is bound only on the
+                            # not-downloading path. The tooltip carries the CONSEQUENCE
+                            # instead: removal is immediate and the model has to be
+                            # downloaded again to be used.
+                            if st.button("", key=f"pan_model_del_{mid}",
+                                         use_container_width=True,
+                                         help=f"Removes {m['label']} from your computer completely. "
+                                              "You will have to install it from scratch the next "
+                                              "time you want to transcribe with it."):
                                 pmodels.delete_model(mid)
                                 pmodels.clear_download_state(mid)
                                 # Drop the in-process handle too. faster-whisper

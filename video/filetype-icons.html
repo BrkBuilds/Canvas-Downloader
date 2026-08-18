@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filetype Icon Specimens</title>
+<style>
+</head>
+<body>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --ground:#f4f5f7; --surface:#ffffff; --sunken:#eceef2;
+  --ink:#12151d; --ink-2:#3d4453; --muted:#697384; --line:#dde1e8;
+  --accent:#3f5f7d; --rule:#c9cfd9;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Menlo,Consolas,monospace;
+  --sans:ui-sans-serif,"Segoe UI Variable Text","Segoe UI","SF Pro Text",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0f1115; --surface:#171a21; --sunken:#12151b;
+  --ink:#e4e8ef; --ink-2:#b7bfcc; --muted:#828b9b; --line:#272c36;
+  --accent:#8fb4d4; --rule:#333a46;
+}}
+:root[data-theme="dark"]{
+  --ground:#0f1115; --surface:#171a21; --sunken:#12151b;
+  --ink:#e4e8ef; --ink-2:#b7bfcc; --muted:#828b9b; --line:#272c36;
+  --accent:#8fb4d4; --rule:#333a46;
+}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  padding:clamp(20px,5vw,64px) clamp(16px,5vw,56px) 72px}
+.head,.sec,.fams,.ctx,.index,.foot,.scroller,.capt{max-width:1080px;margin-inline:auto}
+.eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.06;letter-spacing:-.025em;
+  font-weight:640;margin:0 0 18px;text-wrap:balance}
+.lede{font-size:17px;color:var(--ink-2);max-width:62ch;margin:0 0 10px}
+.lede-2{font-size:15px;color:var(--muted)}
+.head{padding-bottom:34px;border-bottom:1px solid var(--rule);margin-bottom:38px}
+.sec{margin:60px auto 20px}
+.sec h2{font-size:12px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);font-weight:600;margin:0 0 10px;
+  padding-bottom:9px;border-bottom:1px solid var(--line)}
+.note{font-size:14.5px;color:var(--muted);max-width:66ch;margin:0}
+code{font-family:var(--mono);font-size:.86em}
+.dim{color:var(--muted)}
+.scroller{overflow-x:auto}
+.ft{display:inline-block;vertical-align:middle;flex:0 0 auto;
+  width:16px;height:16px;background-repeat:no-repeat;background-size:contain;
+  background-position:center}
+
+/* --- ladder --- */
+.ladder{border-collapse:collapse;font-size:13px;min-width:560px}
+.ladder th,.ladder td{padding:9px 16px;text-align:center;border-bottom:1px solid var(--line)}
+.ladder thead th{color:var(--muted);font-weight:500;font-size:11px;
+  border-bottom:1px solid var(--rule)}
+.ladder tbody tr:hover{background:var(--surface)}
+.ladder th[scope="row"]{text-align:left;padding-left:0}
+.px{font-family:var(--mono);letter-spacing:.03em}
+.fam{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
+.glyphname{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-align:right}
+
+/* --- families --- */
+.fams{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.fam-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:18px 18px 16px;display:flex;flex-direction:column;gap:11px}
+.fam-top{display:flex;gap:15px;align-items:center}
+.fam-meta h3{margin:0 0 5px;font-size:15px;font-weight:600;font-family:var(--mono);
+  letter-spacing:-.01em}
+.swatches{margin:0;display:flex;align-items:center;gap:6px;font-size:11px;flex-wrap:wrap}
+.sw{width:11px;height:11px;border-radius:3px;flex:0 0 auto;
+  box-shadow:inset 0 0 0 1px rgba(128,128,128,.35)}
+.blurb{margin:0;font-size:13.5px;color:var(--ink-2)}
+.exts{margin:0;display:flex;flex-wrap:wrap;gap:4px 5px}
+.exts code{background:var(--sunken);border-radius:4px;padding:1px 5px;
+  font-size:11px;color:var(--muted)}
+
+/* --- surfaces --- */
+.surfaces{display:flex;gap:12px;min-width:640px}
+.surf{flex:1;border-radius:10px;padding:14px 16px 16px;border:1px solid var(--line)}
+.surf-name{margin:0 0 12px;font-size:11px;font-family:var(--mono);color:#c7ccd9;
+  letter-spacing:.03em}
+.surf-name .dim{color:#7b8496}
+.surf-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.surf-row:last-child{margin-bottom:0}
+
+/* --- in context: the app's own row markup --- */
+.ctx{background:#1a1d27;border:1px solid #2d3248;border-radius:12px;
+  padding:16px 18px;margin-top:18px}
+.filelist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+.filelist li{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;
+  background:rgba(255,255,255,.03)}
+.li-text{color:#f1f5f9;font-size:13.5px;flex:1;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.li-ext{font-size:10px;font-weight:700;letter-spacing:.4px;color:#bababa;
+  background:rgba(255,255,255,.08);border-radius:3px;padding:2px 6px;flex:0 0 auto;
+  font-family:var(--mono)}
+.li-size{font-size:11.5px;color:#8b949e;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.capt{margin:26px auto 0;font-size:13.5px;color:var(--muted)}
+.pills{display:flex;flex-wrap:wrap;gap:9px}
+.pill{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:5px 13px 5px 10px}
+.pill-l{font-size:11.5px;color:#e2e8f0;letter-spacing:.02em}
+.pill-c{font-size:11.5px;color:#8b949e;font-variant-numeric:tabular-nums}
+
+/* --- before / after --- */
+.ba{border-collapse:collapse;font-size:13px;min-width:520px;width:100%}
+.ba th,.ba td{padding:10px 14px;border-bottom:1px solid var(--line);text-align:center}
+.ba thead th{color:var(--muted);font-weight:500;font-size:11px;
+  border-bottom:1px solid var(--rule)}
+.ba th[scope="row"]{text-align:left;padding-left:0}
+.ba td:not(.why){background:#12151b}
+.why{text-align:left;color:var(--muted);font-size:12.5px}
+
+/* --- index --- */
+.index{display:flex;flex-wrap:wrap;gap:5px 6px}
+.ix{display:inline-flex;align-items:center;gap:6px;background:var(--surface);
+  border:1px solid var(--line);border-radius:6px;padding:4px 9px 4px 7px}
+.ix code{font-size:11px;color:var(--ink-2)}
+
+.foot{margin-top:64px;padding-top:22px;border-top:1px solid var(--rule)}
+.foot p{margin:0;font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.i-pdf{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%23ef4444'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%23f69898'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='6.9' y='11.1' width='10.2' height='1.9' rx='.95' fill='%23fff'/%3E%3Crect x='6.9' y='14.4' width='10.2' height='1.9' rx='.95' fill='%23fff'/%3E%3Crect x='6.9' y='17.7' width='6.6' height='1.9' rx='.95' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E")}
+.i-doc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%233b82f6'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%2393bafa'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='6.9' y='11.1' width='10.2' height='1.9' rx='.95' fill='%23fff'/%3E%3Crect x='6.9' y='14.4' width='10.2' height='1.9' rx='.95' fill='%23fff'/%3E%3Crect x='6.9' y='17.7' width='6.6' height='1.9' rx='.95' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E")}
+.i-xls{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%2316a34a'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%237fcc9b'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='6.9' y='11.1' width='10.2' height='2.3' rx='.8' fill='%23fff'/%3E%3Crect x='6.9' y='14.6' width='4.5' height='2.2' rx='.7' fill='%23fff'/%3E%3Crect x='12.6' y='14.6' width='4.5' height='2.2' rx='.7' fill='%23fff'/%3E%3Crect x='6.9' y='17.5' width='4.5' height='2.2' rx='.7' fill='%23fff'/%3E%3Crect x='12.6' y='17.5' width='4.5' height='2.2' rx='.7' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E")}
+.i-ppt{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%23ea580c'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%23f3a379'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='6.7' y='11' width='10.6' height='8.6' rx='1.3' fill='%23fff'/%3E%3Crect x='8.5' y='15.2' width='1.9' height='2.7' rx='.6' fill='%23ea580c'/%3E%3Crect x='11.05' y='13.3' width='1.9' height='4.6' rx='.6' fill='%23ea580c'/%3E%3Crect x='13.6' y='14.4' width='1.9' height='3.5' rx='.6' fill='%23ea580c'/%3E%3C/g%3E%3C/svg%3E")}
+.i-jpg{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%230d9488'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%237ac4be'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Ccircle cx='9.2' cy='12.7' r='1.6' fill='%23fff'/%3E%3Cpath d='M6.9 19.6l3.6-4.4 2.3 2.8 2.1-2.5 3.1 4.1z' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E")}
+.i-mp4{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%23ec4899'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%23f59ac7'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Cpath d='M9 11.9L15.3 15.3 9 18.7z' fill='%23fff' stroke='%23fff' stroke-width='1.7' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E")}
+.i-mp3{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%23a855f7'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%23cfa2fb'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Cpath d='M9.3 18.25V11.25L16.5 10.05V17.15H14.9V12.22L10.9 12.88V18.25z' fill='%23fff'/%3E%3Ccircle cx='9.15' cy='18.25' r='1.75' fill='%23fff'/%3E%3Ccircle cx='14.75' cy='17.15' r='1.75' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E")}
+.i-zip{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%23d97706'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%23eab476'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='8.8' y='9.1' width='3' height='1.9' rx='.95' fill='%23fff'/%3E%3Crect x='12.2' y='11.2' width='3' height='1.9' rx='.95' fill='%23fff'/%3E%3Crect x='8.8' y='13.3' width='3' height='1.9' rx='.95' fill='%23fff'/%3E%3Crect x='8.6' y='16.4' width='6.8' height='3.9' rx='1.1' fill='%23fff'/%3E%3Crect x='10.85' y='17.6' width='2.3' height='1.5' rx='.75' fill='%23d97706'/%3E%3C/g%3E%3C/svg%3E")}
+.i-url{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%230284c7'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%2374bbe0'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='6.4' y='10.8' width='11.2' height='9' rx='2.1' fill='%23fff'/%3E%3Cpath d='M9.6 17.7l4.8-4.8M11.6 12.9h2.8v2.8' fill='none' stroke='%230284c7' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E")}
+.i-html{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%230891b2'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%2377c2d5'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Ccircle cx='12' cy='15' r='5' fill='none' stroke='%23fff' stroke-width='1.4'/%3E%3Cpath d='M7 15h10' fill='none' stroke='%23fff' stroke-width='1.4'/%3E%3Cellipse cx='12' cy='15' rx='2.3' ry='5' fill='none' stroke='%23fff' stroke-width='1.4'/%3E%3C/g%3E%3C/svg%3E")}
+.i-md{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%230891b2'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%2377c2d5'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='6.5' y='11.4' width='11' height='7.8' rx='1.7' fill='%23fff'/%3E%3Cpath d='M8 17.2v-3.8l1.6 2 1.6-2v3.8' fill='none' stroke='%230891b2' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M14.85 13.3v2.9M13.75 15.6l1.1 1.6 1.1-1.6' fill='none' stroke='%230891b2' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E")}
+.i-srt{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%2364748b'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%23aab3bf'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='6.7' y='11.2' width='10.6' height='8.3' rx='1.4' fill='%23fff'/%3E%3Crect x='8.6' y='16.1' width='3.4' height='1.7' rx='.85' fill='%2364748b'/%3E%3Crect x='13' y='16.1' width='2.6' height='1.7' rx='.85' fill='%2364748b'/%3E%3C/g%3E%3C/svg%3E")}
+.i-txt{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%236b7280'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%23aeb1b9'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='6.9' y='11.1' width='10.2' height='1.9' rx='.95' fill='%23fff'/%3E%3Crect x='6.9' y='14.4' width='10.2' height='1.9' rx='.95' fill='%23fff'/%3E%3Crect x='6.9' y='17.7' width='6.6' height='1.9' rx='.95' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E")}
+.i-py{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%236366f1'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%23a9abf7'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Cpath d='M7.3 12.1l3.3 3.3-3.3 3.3' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='12' y='17.5' width='5.5' height='2' rx='1' fill='%23fff'/%3E%3C/g%3E%3C/svg%3E")}
+.i-other{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%234b5563'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%239ca2a9'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='7.2' y='12.7' width='9.6' height='1.8' rx='.9' fill='%23fff' opacity='.5'/%3E%3Crect x='7.2' y='16.1' width='6.2' height='1.8' rx='.9' fill='%23fff' opacity='.5'/%3E%3C/g%3E%3C/svg%3E")}
+.i-none{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z' fill='%234b5563'/%3E%3Cpath d='M14 2v4.5a1.5 1.5 0 0 0 1.5 1.5H20z' fill='%239ca2a9'/%3E%3Cg transform='translate(0 -0.7)'%3E%3Crect x='7.2' y='12.7' width='9.6' height='1.8' rx='.9' fill='%23fff' opacity='.5'/%3E%3Crect x='7.2' y='16.1' width='6.2' height='1.8' rx='.9' fill='%23fff' opacity='.5'/%3E%3C/g%3E%3C/svg%3E")}
+.o-pdf{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ef4444'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fca5a5'/%3E%3Ctext x='7' y='17' font-size='6' font-weight='bold' fill='white'%3EPDF%3C/text%3E%3C/svg%3E")}
+.o-pptx{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f97316'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fdba74'/%3E%3Ctext x='7' y='17' font-size='5' font-weight='bold' fill='white'%3EPPT%3C/text%3E%3C/svg%3E")}
+.o-ppt{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f97316'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fdba74'/%3E%3Ctext x='7' y='17' font-size='5' font-weight='bold' fill='white'%3EPPT%3C/text%3E%3C/svg%3E")}
+.o-docx{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2393c5fd'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EDOC%3C/text%3E%3C/svg%3E")}
+.o-doc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2393c5fd'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EDOC%3C/text%3E%3C/svg%3E")}
+.o-xlsx{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2386efac'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3EXLS%3C/text%3E%3C/svg%3E")}
+.o-xls{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2386efac'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3EXLS%3C/text%3E%3C/svg%3E")}
+.o-zip{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238b5cf6'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23c4b5fd'/%3E%3Ctext x='7' y='17' font-size='5' font-weight='bold' fill='white'%3EZIP%3C/text%3E%3C/svg%3E")}
+.o-html{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2306b6d4'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2367e8f9'/%3E%3Ctext x='4' y='17' font-size='5' font-weight='bold' fill='white'%3EHTML%3C/text%3E%3C/svg%3E")}
+.o-txt{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236b7280'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23d1d5db'/%3E%3Ctext x='7' y='17' font-size='5' font-weight='bold' fill='white'%3ETXT%3C/text%3E%3C/svg%3E")}
+.o-jpg{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eab308'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fde047'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3EJPG%3C/text%3E%3C/svg%3E")}
+.o-jpeg{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23eab308'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23fde047'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3EJPG%3C/text%3E%3C/svg%3E")}
+.o-png{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2314b8a6'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%235eead4'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EPNG%3C/text%3E%3C/svg%3E")}
+.o-mp4{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ec4899'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23f9a8d4'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EMP4%3C/text%3E%3C/svg%3E")}
+.o-mp3{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a855f7'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23d8b4fe'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EMP3%3C/text%3E%3C/svg%3E")}
+.o-csv{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%2386efac'/%3E%3Ctext x='6' y='17' font-size='5' font-weight='bold' fill='white'%3ECSV%3C/text%3E%3C/svg%3E")}
+.o-url{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2338bdf8'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%237dd3fc'/%3E%3Ctext x='5' y='17' font-size='5' font-weight='bold' fill='white'%3EURL%3C/text%3E%3C/svg%3E")}
+.o-other{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%23cbd5e1'/%3E%3Ctext x='2' y='17' font-size='5' font-weight='bold' fill='white'%3EOTHER%3C/text%3E%3C/svg%3E")}
+.o-none{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234b5563'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z'/%3E%3Cpath d='M14 2v6h6' fill='%239ca3af'/%3E%3C/svg%3E")}</style>
+<header class="head">
+<p class="eyebrow">Canvas Downloader &middot; shared/filetype_icons.py</p>
+<h1>Filetype Icon Specimens</h1>
+<p class="lede">Fifteen icons covering 161 extensions, each built from one page silhouette, one fold and a named glyph. The set they replace carried the extension as SVG <code>&lt;text&gt;</code> at 3.3&nbsp;CSS pixels, in the browser's fallback serif.</p>
+<p class="lede lede-2">This sheet is achromatic on purpose: the icons are the only colour on the page, so nothing competes with the judgement you are here to make.</p>
+</header>
+<section class="sec"><h2>The size ladder</h2><p class="note">16px is where these ship — the confirm dialog, the skipped-file panels, the synced-file rows. 18px is the error rows. Everything above is here so you can see what the mark is; everything at 16 is the actual judgement.</p></section>
+<div class="scroller"><table class="ladder">
+<thead><tr><th>Family</th><th><span class="px">16px</span></th><th><span class="px">18px</span></th><th><span class="px">24px</span></th><th><span class="px">32px</span></th><th><span class="px">64px</span></th><th></th></tr></thead><tbody>
+<tr><th scope="row"><span class="fam">pdf</span></th>
+<td><i class="ft i-pdf" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-pdf" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-pdf" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-pdf" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-pdf" style="width:64px;height:64px"></i></td>
+<td class="glyphname">lines</td></tr>
+<tr><th scope="row"><span class="fam">doc</span></th>
+<td><i class="ft i-doc" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-doc" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-doc" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-doc" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-doc" style="width:64px;height:64px"></i></td>
+<td class="glyphname">lines</td></tr>
+<tr><th scope="row"><span class="fam">xls</span></th>
+<td><i class="ft i-xls" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-xls" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-xls" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-xls" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-xls" style="width:64px;height:64px"></i></td>
+<td class="glyphname">grid</td></tr>
+<tr><th scope="row"><span class="fam">ppt</span></th>
+<td><i class="ft i-ppt" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-ppt" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-ppt" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-ppt" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-ppt" style="width:64px;height:64px"></i></td>
+<td class="glyphname">slide</td></tr>
+<tr><th scope="row"><span class="fam">jpg</span></th>
+<td><i class="ft i-jpg" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-jpg" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-jpg" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-jpg" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-jpg" style="width:64px;height:64px"></i></td>
+<td class="glyphname">image</td></tr>
+<tr><th scope="row"><span class="fam">mp4</span></th>
+<td><i class="ft i-mp4" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-mp4" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-mp4" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-mp4" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-mp4" style="width:64px;height:64px"></i></td>
+<td class="glyphname">video</td></tr>
+<tr><th scope="row"><span class="fam">mp3</span></th>
+<td><i class="ft i-mp3" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-mp3" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-mp3" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-mp3" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-mp3" style="width:64px;height:64px"></i></td>
+<td class="glyphname">audio</td></tr>
+<tr><th scope="row"><span class="fam">zip</span></th>
+<td><i class="ft i-zip" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-zip" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-zip" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-zip" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-zip" style="width:64px;height:64px"></i></td>
+<td class="glyphname">archive</td></tr>
+<tr><th scope="row"><span class="fam">url</span></th>
+<td><i class="ft i-url" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-url" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-url" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-url" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-url" style="width:64px;height:64px"></i></td>
+<td class="glyphname">link</td></tr>
+<tr><th scope="row"><span class="fam">html</span></th>
+<td><i class="ft i-html" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-html" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-html" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-html" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-html" style="width:64px;height:64px"></i></td>
+<td class="glyphname">webpage</td></tr>
+<tr><th scope="row"><span class="fam">md</span></th>
+<td><i class="ft i-md" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-md" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-md" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-md" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-md" style="width:64px;height:64px"></i></td>
+<td class="glyphname">markdown</td></tr>
+<tr><th scope="row"><span class="fam">srt</span></th>
+<td><i class="ft i-srt" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-srt" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-srt" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-srt" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-srt" style="width:64px;height:64px"></i></td>
+<td class="glyphname">subtitles</td></tr>
+<tr><th scope="row"><span class="fam">txt</span></th>
+<td><i class="ft i-txt" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-txt" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-txt" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-txt" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-txt" style="width:64px;height:64px"></i></td>
+<td class="glyphname">lines</td></tr>
+<tr><th scope="row"><span class="fam">py</span></th>
+<td><i class="ft i-py" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-py" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-py" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-py" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-py" style="width:64px;height:64px"></i></td>
+<td class="glyphname">code</td></tr>
+<tr><th scope="row"><span class="fam">other</span></th>
+<td><i class="ft i-other" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-other" style="width:18px;height:18px"></i></td>
+<td><i class="ft i-other" style="width:24px;height:24px"></i></td>
+<td><i class="ft i-other" style="width:32px;height:32px"></i></td>
+<td><i class="ft i-other" style="width:64px;height:64px"></i></td>
+<td class="glyphname">unknown</td></tr>
+</tbody></table></div>
+<section class="sec"><h2>The fifteen families</h2><p class="note">Colour carries recognition first — red is a PDF, green is a spreadsheet — and the glyph disambiguates within a colour. Extensions are listed in full: every one of them resolves to the icon shown, with no fallback.</p></section>
+<div class="fams">
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-pdf" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>lines</h3>
+<p class="swatches"><span class="sw" style="background:#ef4444"></span><code>#ef4444</code><span class="sw sw-t" style="background:#f69898"></span><code class="dim">#f69898 fold</code></p>
+</div></div>
+<p class="blurb">The one every course runs on. Red is doing most of the work here.</p>
+<p class="exts"><code>.pdf</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-doc" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>lines</h3>
+<p class="swatches"><span class="sw" style="background:#3b82f6"></span><code>#3b82f6</code><span class="sw sw-t" style="background:#93bafa"></span><code class="dim">#93bafa fold</code></p>
+</div></div>
+<p class="blurb">Word documents. Same lines as a PDF, because both are text - the colour is what separates them.</p>
+<p class="exts"><code>.doc</code> <code>.docx</code> <code>.docm</code> <code>.dot</code> <code>.dotx</code> <code>.rtf</code> <code>.odt</code> <code>.pages</code> <code>.wpd</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-xls" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>grid</h3>
+<p class="swatches"><span class="sw" style="background:#16a34a"></span><code>#16a34a</code><span class="sw sw-t" style="background:#7fcc9b"></span><code class="dim">#7fcc9b fold</code></p>
+</div></div>
+<p class="blurb">Spreadsheets. A header band over a 2x2 body reads as a table where drawn rules would blur.</p>
+<p class="exts"><code>.xls</code> <code>.xlsx</code> <code>.xlsm</code> <code>.xlsb</code> <code>.xlt</code> <code>.xltx</code> <code>.ods</code> <code>.numbers</code> <code>.csv</code> <code>.tsv</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-ppt" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>slide</h3>
+<p class="swatches"><span class="sw" style="background:#ea580c"></span><code>#ea580c</code><span class="sw sw-t" style="background:#f3a379"></span><code class="dim">#f3a379 fold</code></p>
+</div></div>
+<p class="blurb">Lecture decks. The bars are cut back out of the slide in the page colour.</p>
+<p class="exts"><code>.ppt</code> <code>.pptx</code> <code>.pptm</code> <code>.pps</code> <code>.ppsx</code> <code>.pot</code> <code>.potx</code> <code>.odp</code> <code>.key</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-jpg" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>image</h3>
+<p class="swatches"><span class="sw" style="background:#0d9488"></span><code>#0d9488</code><span class="sw sw-t" style="background:#7ac4be"></span><code class="dim">#7ac4be fold</code></p>
+</div></div>
+<p class="blurb">Images. Sun over a ridge, no frame - the page already is the frame.</p>
+<p class="exts"><code>.jpg</code> <code>.jpeg</code> <code>.jpe</code> <code>.png</code> <code>.gif</code> <code>.bmp</code> <code>.webp</code> <code>.tif</code> <code>.tiff</code> <code>.heic</code> <code>.heif</code> <code>.svg</code> <code>.ico</code> <code>.avif</code> <code>.psd</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-mp4" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>video</h3>
+<p class="swatches"><span class="sw" style="background:#ec4899"></span><code>#ec4899</code><span class="sw sw-t" style="background:#f59ac7"></span><code class="dim">#f59ac7 fold</code></p>
+</div></div>
+<p class="blurb">Video, including Panopto recordings kept as MP4.</p>
+<p class="exts"><code>.mp4</code> <code>.m4v</code> <code>.mov</code> <code>.mkv</code> <code>.avi</code> <code>.webm</code> <code>.wmv</code> <code>.flv</code> <code>.mpg</code> <code>.mpeg</code> <code>.mts</code> <code>.3gp</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-mp3" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>audio</h3>
+<p class="swatches"><span class="sw" style="background:#a855f7"></span><code>#a855f7</code><span class="sw sw-t" style="background:#cfa2fb"></span><code class="dim">#cfa2fb fold</code></p>
+</div></div>
+<p class="blurb">Audio, including the extracted lecture audio track.</p>
+<p class="exts"><code>.mp3</code> <code>.wav</code> <code>.m4a</code> <code>.aac</code> <code>.flac</code> <code>.ogg</code> <code>.oga</code> <code>.wma</code> <code>.aiff</code> <code>.aif</code> <code>.opus</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-zip" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>archive</h3>
+<p class="swatches"><span class="sw" style="background:#d97706"></span><code>#d97706</code><span class="sw sw-t" style="background:#eab476"></span><code class="dim">#eab476 fold</code></p>
+</div></div>
+<p class="blurb">Archives. Two teeth and a pull with a hole punched through it.</p>
+<p class="exts"><code>.zip</code> <code>.rar</code> <code>.7z</code> <code>.tar</code> <code>.gz</code> <code>.tgz</code> <code>.bz2</code> <code>.xz</code> <code>.iso</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-url" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>link</h3>
+<p class="swatches"><span class="sw" style="background:#0284c7"></span><code>#0284c7</code><span class="sw sw-t" style="background:#74bbe0"></span><code class="dim">#74bbe0 fold</code></p>
+</div></div>
+<p class="blurb">Shortcuts. The Panopto Link output lands here, as .url on Windows and .webloc on macOS.</p>
+<p class="exts"><code>.url</code> <code>.webloc</code> <code>.lnk</code> <code>.desktop</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-html" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>webpage</h3>
+<p class="swatches"><span class="sw" style="background:#0891b2"></span><code>#0891b2</code><span class="sw sw-t" style="background:#77c2d5"></span><code class="dim">#77c2d5 fold</code></p>
+</div></div>
+<p class="blurb">Saved web pages. Almost every .html in a course folder is a Canvas page this app exported, and it opens in a browser - so it gets a globe, not a code mark.</p>
+<p class="exts"><code>.html</code> <code>.htm</code> <code>.xhtml</code> <code>.xml</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-md" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>markdown</h3>
+<p class="swatches"><span class="sw" style="background:#0891b2"></span><code>#0891b2</code><span class="sw sw-t" style="background:#77c2d5"></span><code class="dim">#77c2d5 fold</code></p>
+</div></div>
+<p class="blurb">Markdown - what the HTML converter produces. The M and its arrow are the Markdown mark.</p>
+<p class="exts"><code>.md</code> <code>.mdx</code> <code>.markdown</code> <code>.rst</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-srt" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>subtitles</h3>
+<p class="swatches"><span class="sw" style="background:#64748b"></span><code>#64748b</code><span class="sw sw-t" style="background:#aab3bf"></span><code class="dim">#aab3bf fold</code></p>
+</div></div>
+<p class="blurb">Subtitles from transcription. A screen with caption bars along its foot.</p>
+<p class="exts"><code>.srt</code> <code>.vtt</code> <code>.sub</code> <code>.ass</code> <code>.sbv</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-txt" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>lines</h3>
+<p class="swatches"><span class="sw" style="background:#6b7280"></span><code>#6b7280</code><span class="sw sw-t" style="background:#aeb1b9"></span><code class="dim">#aeb1b9 fold</code></p>
+</div></div>
+<p class="blurb">Plain text, including transcripts and converted source files.</p>
+<p class="exts"><code>.txt</code> <code>.text</code> <code>.log</code> <code>.nfo</code> <code>.readme</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-py" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>code</h3>
+<p class="swatches"><span class="sw" style="background:#6366f1"></span><code>#6366f1</code><span class="sw sw-t" style="background:#a9abf7"></span><code class="dim">#a9abf7 fold</code></p>
+</div></div>
+<p class="blurb">Source code. A shell prompt, so it can never be mistaken for markup.</p>
+<p class="exts"><code>.py</code> <code>.pyw</code> <code>.ipynb</code> <code>.js</code> <code>.jsx</code> <code>.mjs</code> <code>.cjs</code> <code>.ts</code> <code>.tsx</code> <code>.java</code> <code>.class</code> <code>.jar</code> <code>.c</code> <code>.h</code> <code>.cpp</code> <code>.hpp</code> <code>.cc</code> <code>.cs</code> <code>.go</code> <code>.rs</code> <code>.rb</code> <code>.php</code> <code>.swift</code> <code>.kt</code> <code>.kts</code> <code>.scala</code> <code>.sh</code> <code>.bash</code> <code>.zsh</code> <code>.bat</code> <code>.cmd</code> <code>.ps1</code> <code>.pl</code> <code>.pm</code> <code>.r</code> <code>.rmd</code> <code>.m</code> <code>.mm</code> <code>.sql</code> <code>.dart</code> <code>.lua</code> <code>.asm</code> <code>.vba</code> <code>.vb</code> <code>.css</code> <code>.scss</code> <code>.sass</code> <code>.less</code> <code>.json</code> <code>.jsonc</code> <code>.yaml</code> <code>.yml</code> <code>.toml</code> <code>.ini</code> <code>.cfg</code> <code>.conf</code> <code>.env</code> <code>.vue</code> <code>.svelte</code> <code>.gradle</code> <code>.make</code> <code>.dockerfile</code></p>
+</article>
+<article class="fam-card">
+<div class="fam-top"><i class="ft i-other" style="width:56px;height:56px"></i>
+<div class="fam-meta">
+<h3>unknown</h3>
+<p class="swatches"><span class="sw" style="background:#4b5563"></span><code>#4b5563</code><span class="sw sw-t" style="background:#9ca2a9"></span><code class="dim">#9ca2a9 fold</code></p>
+</div></div>
+<p class="blurb">The type we could not name. Faint on purpose: it must read as a file without claiming to know which kind.</p>
+<p class="exts"><code>.other</code></p>
+</article>
+</div>
+<section class="sec"><h2>On every surface they land on</h2><p class="note">These are the four grounds the app actually paints behind an icon. A mark that holds on the page but disappears in the terminal log is not finished.</p></section>
+<div class="scroller"><div class="surfaces">
+<div class="surf" style="background:#0e1117">
+<p class="surf-name">Page ground<span class="dim"> the app&#x27;s base</span></p>
+<div class="surf-row"><i class="ft i-pdf" style="width:16px;height:16px"></i><i class="ft i-doc" style="width:16px;height:16px"></i><i class="ft i-xls" style="width:16px;height:16px"></i><i class="ft i-ppt" style="width:16px;height:16px"></i><i class="ft i-jpg" style="width:16px;height:16px"></i><i class="ft i-mp4" style="width:16px;height:16px"></i><i class="ft i-mp3" style="width:16px;height:16px"></i><i class="ft i-zip" style="width:16px;height:16px"></i><i class="ft i-url" style="width:16px;height:16px"></i><i class="ft i-html" style="width:16px;height:16px"></i><i class="ft i-md" style="width:16px;height:16px"></i><i class="ft i-srt" style="width:16px;height:16px"></i><i class="ft i-txt" style="width:16px;height:16px"></i><i class="ft i-py" style="width:16px;height:16px"></i><i class="ft i-other" style="width:16px;height:16px"></i></div>
+<div class="surf-row"><i class="ft i-pdf" style="width:32px;height:32px"></i><i class="ft i-doc" style="width:32px;height:32px"></i><i class="ft i-xls" style="width:32px;height:32px"></i><i class="ft i-ppt" style="width:32px;height:32px"></i><i class="ft i-jpg" style="width:32px;height:32px"></i><i class="ft i-mp4" style="width:32px;height:32px"></i><i class="ft i-mp3" style="width:32px;height:32px"></i><i class="ft i-zip" style="width:32px;height:32px"></i><i class="ft i-url" style="width:32px;height:32px"></i><i class="ft i-html" style="width:32px;height:32px"></i><i class="ft i-md" style="width:32px;height:32px"></i><i class="ft i-srt" style="width:32px;height:32px"></i><i class="ft i-txt" style="width:32px;height:32px"></i><i class="ft i-py" style="width:32px;height:32px"></i><i class="ft i-other" style="width:32px;height:32px"></i></div>
+</div>
+<div class="surf" style="background:#1a1d27">
+<p class="surf-name">Card<span class="dim"> BG_DARK - the confirm dialog, folder cards</span></p>
+<div class="surf-row"><i class="ft i-pdf" style="width:16px;height:16px"></i><i class="ft i-doc" style="width:16px;height:16px"></i><i class="ft i-xls" style="width:16px;height:16px"></i><i class="ft i-ppt" style="width:16px;height:16px"></i><i class="ft i-jpg" style="width:16px;height:16px"></i><i class="ft i-mp4" style="width:16px;height:16px"></i><i class="ft i-mp3" style="width:16px;height:16px"></i><i class="ft i-zip" style="width:16px;height:16px"></i><i class="ft i-url" style="width:16px;height:16px"></i><i class="ft i-html" style="width:16px;height:16px"></i><i class="ft i-md" style="width:16px;height:16px"></i><i class="ft i-srt" style="width:16px;height:16px"></i><i class="ft i-txt" style="width:16px;height:16px"></i><i class="ft i-py" style="width:16px;height:16px"></i><i class="ft i-other" style="width:16px;height:16px"></i></div>
+<div class="surf-row"><i class="ft i-pdf" style="width:32px;height:32px"></i><i class="ft i-doc" style="width:32px;height:32px"></i><i class="ft i-xls" style="width:32px;height:32px"></i><i class="ft i-ppt" style="width:32px;height:32px"></i><i class="ft i-jpg" style="width:32px;height:32px"></i><i class="ft i-mp4" style="width:32px;height:32px"></i><i class="ft i-mp3" style="width:32px;height:32px"></i><i class="ft i-zip" style="width:32px;height:32px"></i><i class="ft i-url" style="width:32px;height:32px"></i><i class="ft i-html" style="width:32px;height:32px"></i><i class="ft i-md" style="width:32px;height:32px"></i><i class="ft i-srt" style="width:32px;height:32px"></i><i class="ft i-txt" style="width:32px;height:32px"></i><i class="ft i-py" style="width:32px;height:32px"></i><i class="ft i-other" style="width:32px;height:32px"></i></div>
+</div>
+<div class="surf" style="background:#2d3248">
+<p class="surf-name">Raised card<span class="dim"> BG_CARD</span></p>
+<div class="surf-row"><i class="ft i-pdf" style="width:16px;height:16px"></i><i class="ft i-doc" style="width:16px;height:16px"></i><i class="ft i-xls" style="width:16px;height:16px"></i><i class="ft i-ppt" style="width:16px;height:16px"></i><i class="ft i-jpg" style="width:16px;height:16px"></i><i class="ft i-mp4" style="width:16px;height:16px"></i><i class="ft i-mp3" style="width:16px;height:16px"></i><i class="ft i-zip" style="width:16px;height:16px"></i><i class="ft i-url" style="width:16px;height:16px"></i><i class="ft i-html" style="width:16px;height:16px"></i><i class="ft i-md" style="width:16px;height:16px"></i><i class="ft i-srt" style="width:16px;height:16px"></i><i class="ft i-txt" style="width:16px;height:16px"></i><i class="ft i-py" style="width:16px;height:16px"></i><i class="ft i-other" style="width:16px;height:16px"></i></div>
+<div class="surf-row"><i class="ft i-pdf" style="width:32px;height:32px"></i><i class="ft i-doc" style="width:32px;height:32px"></i><i class="ft i-xls" style="width:32px;height:32px"></i><i class="ft i-ppt" style="width:32px;height:32px"></i><i class="ft i-jpg" style="width:32px;height:32px"></i><i class="ft i-mp4" style="width:32px;height:32px"></i><i class="ft i-mp3" style="width:32px;height:32px"></i><i class="ft i-zip" style="width:32px;height:32px"></i><i class="ft i-url" style="width:32px;height:32px"></i><i class="ft i-html" style="width:32px;height:32px"></i><i class="ft i-md" style="width:32px;height:32px"></i><i class="ft i-srt" style="width:32px;height:32px"></i><i class="ft i-txt" style="width:32px;height:32px"></i><i class="ft i-py" style="width:32px;height:32px"></i><i class="ft i-other" style="width:32px;height:32px"></i></div>
+</div>
+<div class="surf" style="background:#0d1117">
+<p class="surf-name">Terminal<span class="dim"> BG_TERMINAL - the run log</span></p>
+<div class="surf-row"><i class="ft i-pdf" style="width:16px;height:16px"></i><i class="ft i-doc" style="width:16px;height:16px"></i><i class="ft i-xls" style="width:16px;height:16px"></i><i class="ft i-ppt" style="width:16px;height:16px"></i><i class="ft i-jpg" style="width:16px;height:16px"></i><i class="ft i-mp4" style="width:16px;height:16px"></i><i class="ft i-mp3" style="width:16px;height:16px"></i><i class="ft i-zip" style="width:16px;height:16px"></i><i class="ft i-url" style="width:16px;height:16px"></i><i class="ft i-html" style="width:16px;height:16px"></i><i class="ft i-md" style="width:16px;height:16px"></i><i class="ft i-srt" style="width:16px;height:16px"></i><i class="ft i-txt" style="width:16px;height:16px"></i><i class="ft i-py" style="width:16px;height:16px"></i><i class="ft i-other" style="width:16px;height:16px"></i></div>
+<div class="surf-row"><i class="ft i-pdf" style="width:32px;height:32px"></i><i class="ft i-doc" style="width:32px;height:32px"></i><i class="ft i-xls" style="width:32px;height:32px"></i><i class="ft i-ppt" style="width:32px;height:32px"></i><i class="ft i-jpg" style="width:32px;height:32px"></i><i class="ft i-mp4" style="width:32px;height:32px"></i><i class="ft i-mp3" style="width:32px;height:32px"></i><i class="ft i-zip" style="width:32px;height:32px"></i><i class="ft i-url" style="width:32px;height:32px"></i><i class="ft i-html" style="width:32px;height:32px"></i><i class="ft i-md" style="width:32px;height:32px"></i><i class="ft i-srt" style="width:32px;height:32px"></i><i class="ft i-txt" style="width:32px;height:32px"></i><i class="ft i-py" style="width:32px;height:32px"></i><i class="ft i-other" style="width:32px;height:32px"></i></div>
+</div>
+</div></div>
+<section class="sec"><h2>In context</h2><p class="note">The Confirm Sync file list, rebuilt with the app's own row markup. Note the EXT badge beside each icon: the extension was never lost when the label came off the page, it just moved somewhere it can be read.</p></section>
+<div class="ctx"><ul class="filelist">
+<li><i class="ft i-pdf"></i><span class="li-text">TLS med Wireshark</span><span class="li-ext">PDF</span><span class="li-size">1.3 MB</span></li>
+<li><i class="ft i-ppt"></i><span class="li-text">Forelaesning 7 - Transportlaget</span><span class="li-ext">PPTX</span><span class="li-size">14.8 MB</span></li>
+<li><i class="ft i-xls"></i><span class="li-text">Karakterfordeling 2026</span><span class="li-ext">XLSX</span><span class="li-size">88 KB</span></li>
+<li><i class="ft i-mp4"></i><span class="li-text">Panopto - Uge 7 optagelse</span><span class="li-ext">MP4</span><span class="li-size">412 MB</span></li>
+<li><i class="ft i-mp3"></i><span class="li-text">Panopto - Uge 7 lydspor</span><span class="li-ext">MP3</span><span class="li-size">38 MB</span></li>
+<li><i class="ft i-srt"></i><span class="li-text">Panopto - Uge 7 undertekster</span><span class="li-ext">SRT</span><span class="li-size">16 KB</span></li>
+<li><i class="ft i-url"></i><span class="li-text">Link til optagelse</span><span class="li-ext">URL</span></li>
+<li><i class="ft i-md"></i><span class="li-text">Ugeplan</span><span class="li-ext">MD</span><span class="li-size">6 KB</span></li>
+<li><i class="ft i-py"></i><span class="li-text">Create_ILearn_tables</span><span class="li-ext">SQL</span><span class="li-size">3 KB</span></li>
+<li><i class="ft i-zip"></i><span class="li-text">Oevelser uge 1-7</span><span class="li-ext">ZIP</span><span class="li-size">62 MB</span></li>
+<li><i class="ft i-none"></i><span class="li-text">Datafil uden kendt type</span><span class="li-ext">DAT</span><span class="li-size">2 KB</span></li>
+</ul></div>
+<p class="capt">And the filetype pills, as the completion screen builds them:</p>
+<div class="ctx"><div class="pills">
+<div class="pill"><i class="ft i-pdf"></i><span class="pill-l">PDF</span><span class="pill-c">56</span></div>
+<div class="pill"><i class="ft i-ppt"></i><span class="pill-l">PPTX</span><span class="pill-c">51</span></div>
+<div class="pill"><i class="ft i-mp4"></i><span class="pill-l">MP4</span><span class="pill-c">12</span></div>
+<div class="pill"><i class="ft i-md"></i><span class="pill-l">MD</span><span class="pill-c">8</span></div>
+<div class="pill"><i class="ft i-none"></i><span class="pill-l">Other files</span><span class="pill-c">4</span></div>
+</div></div>
+<section class="sec"><h2>What they replace</h2><p class="note">Read at 16px, left to right. The old label is not small — it is absent: at the size it renders, a 5-unit glyph in a 24-unit viewBox is 3.3 CSS pixels.</p></section>
+<div class="scroller"><table class="ba"><thead><tr><th>Extension</th><th>Before 16px</th><th>After 16px</th><th>Before 64px</th><th>After 64px</th></tr></thead><tbody>
+<tr><th scope="row"><span class="fam">pdf</span></th>
+<td><i class="ft o-pdf" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-pdf" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-pdf" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-pdf" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">pptx</span></th>
+<td><i class="ft o-pptx" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-ppt" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-pptx" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-ppt" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">docx</span></th>
+<td><i class="ft o-docx" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-doc" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-docx" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-doc" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">xlsx</span></th>
+<td><i class="ft o-xlsx" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-xls" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-xlsx" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-xls" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">zip</span></th>
+<td><i class="ft o-zip" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-zip" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-zip" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-zip" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">html</span></th>
+<td><i class="ft o-html" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-html" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-html" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-html" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">mp4</span></th>
+<td><i class="ft o-mp4" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-mp4" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-mp4" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-mp4" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">mp3</span></th>
+<td><i class="ft o-mp3" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-mp3" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-mp3" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-mp3" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">jpg</span></th>
+<td><i class="ft o-jpg" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-jpg" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-jpg" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-jpg" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">txt</span></th>
+<td><i class="ft o-txt" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-txt" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-txt" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-txt" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">url</span></th>
+<td><i class="ft o-url" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-url" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-url" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-url" style="width:64px;height:64px"></i></td></tr>
+<tr><th scope="row"><span class="fam">none</span></th>
+<td><i class="ft o-none" style="width:16px;height:16px"></i></td>
+<td><i class="ft i-none" style="width:16px;height:16px"></i></td>
+<td><i class="ft o-none" style="width:64px;height:64px"></i></td>
+<td><i class="ft i-none" style="width:64px;height:64px"></i></td></tr>
+</tbody></table></div>
+<section class="sec"><h2>And the ones that had nothing</h2><p class="note">Ten extensions the old pill whitelist named itself had no icon in the table behind it, so they rendered as a blank grey page beside a label naming the type. So did two of this app's own outputs.</p></section>
+<div class="scroller"><table class="ba"><thead><tr><th>Extension</th><th>Before</th><th>After</th><th>Why it reaches the UI</th></tr></thead><tbody>
+<tr><th scope="row"><span class="fam">.md</span></th>
+<td><i class="ft o-none" style="width:22px;height:22px"></i></td>
+<td><i class="ft i-md" style="width:22px;height:22px"></i></td>
+<td class="why">The HTML converter writes it</td></tr>
+<tr><th scope="row"><span class="fam">.srt</span></th>
+<td><i class="ft o-none" style="width:22px;height:22px"></i></td>
+<td><i class="ft i-srt" style="width:22px;height:22px"></i></td>
+<td class="why">Panopto subtitles - in the Confirm Sync dialog</td></tr>
+<tr><th scope="row"><span class="fam">.webloc</span></th>
+<td><i class="ft o-none" style="width:22px;height:22px"></i></td>
+<td><i class="ft i-url" style="width:22px;height:22px"></i></td>
+<td class="why">The macOS Shortcut output</td></tr>
+<tr><th scope="row"><span class="fam">.pptm</span></th>
+<td><i class="ft o-none" style="width:22px;height:22px"></i></td>
+<td><i class="ft i-ppt" style="width:22px;height:22px"></i></td>
+<td class="why">Admitted by the Slides &amp; PDFs filter</td></tr>
+<tr><th scope="row"><span class="fam">.potx</span></th>
+<td><i class="ft o-none" style="width:22px;height:22px"></i></td>
+<td><i class="ft i-ppt" style="width:22px;height:22px"></i></td>
+<td class="why">Admitted by the Slides &amp; PDFs filter</td></tr>
+<tr><th scope="row"><span class="fam">.py</span></th>
+<td><i class="ft o-none" style="width:22px;height:22px"></i></td>
+<td><i class="ft i-py" style="width:22px;height:22px"></i></td>
+<td class="why">Named by the pill whitelist</td></tr>
+<tr><th scope="row"><span class="fam">.sql</span></th>
+<td><i class="ft o-none" style="width:22px;height:22px"></i></td>
+<td><i class="ft i-py" style="width:22px;height:22px"></i></td>
+<td class="why">Named by the pill whitelist</td></tr>
+<tr><th scope="row"><span class="fam">.json</span></th>
+<td><i class="ft o-none" style="width:22px;height:22px"></i></td>
+<td><i class="ft i-py" style="width:22px;height:22px"></i></td>
+<td class="why">Named by the pill whitelist</td></tr>
+<tr><th scope="row"><span class="fam">.css</span></th>
+<td><i class="ft o-none" style="width:22px;height:22px"></i></td>
+<td><i class="ft i-py" style="width:22px;height:22px"></i></td>
+<td class="why">Named by the pill whitelist</td></tr>
+<tr><th scope="row"><span class="fam">.java</span></th>
+<td><i class="ft o-none" style="width:22px;height:22px"></i></td>
+<td><i class="ft i-py" style="width:22px;height:22px"></i></td>
+<td class="why">Named by the pill whitelist</td></tr>
+</tbody></table></div>
+<section class="sec"><h2>Every extension</h2><p class="note">The full table, so you can check a type you expect to see rather than take the count on trust.</p></section>
+<div class="index">
+<span class="ix"><i class="ft i-pdf"></i><code>.pdf</code></span>
+<span class="ix"><i class="ft i-doc"></i><code>.doc</code></span>
+<span class="ix"><i class="ft i-doc"></i><code>.docx</code></span>
+<span class="ix"><i class="ft i-doc"></i><code>.docm</code></span>
+<span class="ix"><i class="ft i-doc"></i><code>.dot</code></span>
+<span class="ix"><i class="ft i-doc"></i><code>.dotx</code></span>
+<span class="ix"><i class="ft i-doc"></i><code>.rtf</code></span>
+<span class="ix"><i class="ft i-doc"></i><code>.odt</code></span>
+<span class="ix"><i class="ft i-doc"></i><code>.pages</code></span>
+<span class="ix"><i class="ft i-doc"></i><code>.wpd</code></span>
+<span class="ix"><i class="ft i-xls"></i><code>.xls</code></span>
+<span class="ix"><i class="ft i-xls"></i><code>.xlsx</code></span>
+<span class="ix"><i class="ft i-xls"></i><code>.xlsm</code></span>
+<span class="ix"><i class="ft i-xls"></i><code>.xlsb</code></span>
+<span class="ix"><i class="ft i-xls"></i><code>.xlt</code></span>
+<span class="ix"><i class="ft i-xls"></i><code>.xltx</code></span>
+<span class="ix"><i class="ft i-xls"></i><code>.ods</code></span>
+<span class="ix"><i class="ft i-xls"></i><code>.numbers</code></span>
+<span class="ix"><i class="ft i-xls"></i><code>.csv</code></span>
+<span class="ix"><i class="ft i-xls"></i><code>.tsv</code></span>
+<span class="ix"><i class="ft i-ppt"></i><code>.ppt</code></span>
+<span class="ix"><i class="ft i-ppt"></i><code>.pptx</code></span>
+<span class="ix"><i class="ft i-ppt"></i><code>.pptm</code></span>
+<span class="ix"><i class="ft i-ppt"></i><code>.pps</code></span>
+<span class="ix"><i class="ft i-ppt"></i><code>.ppsx</code></span>
+<span class="ix"><i class="ft i-ppt"></i><code>.pot</code></span>
+<span class="ix"><i class="ft i-ppt"></i><code>.potx</code></span>
+<span class="ix"><i class="ft i-ppt"></i><code>.odp</code></span>
+<span class="ix"><i class="ft i-ppt"></i><code>.key</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.jpg</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.jpeg</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.jpe</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.png</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.gif</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.bmp</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.webp</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.tif</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.tiff</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.heic</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.heif</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.svg</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.ico</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.avif</code></span>
+<span class="ix"><i class="ft i-jpg"></i><code>.psd</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.mp4</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.m4v</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.mov</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.mkv</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.avi</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.webm</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.wmv</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.flv</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.mpg</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.mpeg</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.mts</code></span>
+<span class="ix"><i class="ft i-mp4"></i><code>.3gp</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.mp3</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.wav</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.m4a</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.aac</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.flac</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.ogg</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.oga</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.wma</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.aiff</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.aif</code></span>
+<span class="ix"><i class="ft i-mp3"></i><code>.opus</code></span>
+<span class="ix"><i class="ft i-zip"></i><code>.zip</code></span>
+<span class="ix"><i class="ft i-zip"></i><code>.rar</code></span>
+<span class="ix"><i class="ft i-zip"></i><code>.7z</code></span>
+<span class="ix"><i class="ft i-zip"></i><code>.tar</code></span>
+<span class="ix"><i class="ft i-zip"></i><code>.gz</code></span>
+<span class="ix"><i class="ft i-zip"></i><code>.tgz</code></span>
+<span class="ix"><i class="ft i-zip"></i><code>.bz2</code></span>
+<span class="ix"><i class="ft i-zip"></i><code>.xz</code></span>
+<span class="ix"><i class="ft i-zip"></i><code>.iso</code></span>
+<span class="ix"><i class="ft i-url"></i><code>.url</code></span>
+<span class="ix"><i class="ft i-url"></i><code>.webloc</code></span>
+<span class="ix"><i class="ft i-url"></i><code>.lnk</code></span>
+<span class="ix"><i class="ft i-url"></i><code>.desktop</code></span>
+<span class="ix"><i class="ft i-html"></i><code>.html</code></span>
+<span class="ix"><i class="ft i-html"></i><code>.htm</code></span>
+<span class="ix"><i class="ft i-html"></i><code>.xhtml</code></span>
+<span class="ix"><i class="ft i-html"></i><code>.xml</code></span>
+<span class="ix"><i class="ft i-md"></i><code>.md</code></span>
+<span class="ix"><i class="ft i-md"></i><code>.mdx</code></span>
+<span class="ix"><i class="ft i-md"></i><code>.markdown</code></span>
+<span class="ix"><i class="ft i-md"></i><code>.rst</code></span>
+<span class="ix"><i class="ft i-srt"></i><code>.srt</code></span>
+<span class="ix"><i class="ft i-srt"></i><code>.vtt</code></span>
+<span class="ix"><i class="ft i-srt"></i><code>.sub</code></span>
+<span class="ix"><i class="ft i-srt"></i><code>.ass</code></span>
+<span class="ix"><i class="ft i-srt"></i><code>.sbv</code></span>
+<span class="ix"><i class="ft i-txt"></i><code>.txt</code></span>
+<span class="ix"><i class="ft i-txt"></i><code>.text</code></span>
+<span class="ix"><i class="ft i-txt"></i><code>.log</code></span>
+<span class="ix"><i class="ft i-txt"></i><code>.nfo</code></span>
+<span class="ix"><i class="ft i-txt"></i><code>.readme</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.py</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.pyw</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.ipynb</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.js</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.jsx</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.mjs</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.cjs</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.ts</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.tsx</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.java</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.class</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.jar</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.c</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.h</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.cpp</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.hpp</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.cc</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.cs</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.go</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.rs</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.rb</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.php</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.swift</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.kt</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.kts</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.scala</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.sh</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.bash</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.zsh</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.bat</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.cmd</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.ps1</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.pl</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.pm</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.r</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.rmd</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.m</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.mm</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.sql</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.dart</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.lua</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.asm</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.vba</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.vb</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.css</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.scss</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.sass</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.less</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.json</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.jsonc</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.yaml</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.yml</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.toml</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.ini</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.cfg</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.conf</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.env</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.vue</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.svelte</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.gradle</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.make</code></span>
+<span class="ix"><i class="ft i-py"></i><code>.dockerfile</code></span>
+<span class="ix"><i class="ft i-other"></i><code>.other</code></span>
+</div>
+<footer class="foot"><p>Generated from <code>shared/filetype_icons.py</code> by <code>scripts/filetype_icon_gallery.py</code>. Re-run it after any change to the set.</p></footer>
+</body>
+</html>
