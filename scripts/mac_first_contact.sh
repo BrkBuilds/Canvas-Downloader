@@ -2,7 +2,7 @@
 # Set up a bare rented Mac. ONE command, typed in the VNC console, ~30-45 min
 # mostly unattended. This is the ONLY thing you do in VNC.
 #
-#   curl -fsSL https://raw.githubusercontent.com/birkls/Canvas_LMS_batch_file_downloader/main/scripts/mac_first_contact.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_first_contact.sh | bash
 #
 # HOW TO TYPE IT: in the Scaleway VNC window press Cmd+Space, type "Terminal",
 # press Return. Paste the line above (Cmd+V) and press Return. That is it.
@@ -240,7 +240,7 @@ cat <<EOF
   Either way, first command:
 
        tmux attach -t audit
-       git clone https://github.com/birkls/Canvas_LMS_batch_file_downloader.git ~/Canvas_Downloader
+       git clone https://github.com/BrkBuilds/Canvas-Downloader.git ~/Canvas_Downloader
        cd ~/Canvas_Downloader && ./scripts/mac_audit_bootstrap.sh
 
   You can see the Mac's screen at any time without a remote desktop:

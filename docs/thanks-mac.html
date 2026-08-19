@@ -221,7 +221,7 @@
           </svg>
           <span>Download</span>
         </a>
-        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
+        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener"
           class="btn-nav-ghost">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -242,7 +242,7 @@
            The heading now states what is actually true at each moment. -->
       <h1 id="dl-headline">Getting your download ready…</h1>
       <p class="sub" id="dl-sub">Canvas Downloader is a free solo project, so macOS needs you to approve it by hand the first time. The assistant below walks you through every step - it takes about two minutes.</p>
-      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest" id="dmg-link" class="dl-fallback">Download didn’t start? Click here</a>
+      <a href="https://github.com/BrkBuilds/Canvas-Downloader/releases/latest" id="dmg-link" class="dl-fallback">Download didn’t start? Click here</a>
     </div>
   </div>
 
@@ -266,7 +266,7 @@
         <a href="disclaimer.html">Disclaimer</a>
       <a href="win-setup.html">Windows Setup</a>
       <a href="mac-setup.html">macOS Setup</a>
-      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">GitHub</a>
       <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
           style="color:#f97316;">&hearts;</span> Support the project</a>
       <div class="meta">Not affiliated with Instructure or Canvas LMS</div>
@@ -285,7 +285,7 @@
     // success it hasn't achieved, and there must still be a working link when
     // the API says no. Hence the hardcoded fallback below - update it when you
     // cut a release, it is only ever reached when the API is unavailable.
-    var FALLBACK_DMG = 'https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest';
+    var FALLBACK_DMG = 'https://github.com/BrkBuilds/Canvas-Downloader/releases/latest';
 
     function announceStarted(url) {
       document.getElementById('dl-headline').textContent = 'Your download has started! 🎉';
@@ -304,7 +304,7 @@
       link.classList.add('dl-fallback-strong');
     }
 
-    fetch('https://api.github.com/repos/birkls/Canvas_LMS_batch_file_downloader/releases?per_page=30',
+    fetch('https://api.github.com/repos/BrkBuilds/Canvas-Downloader/releases?per_page=30',
       { headers: { 'Accept': 'application/vnd.github+json' } })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (rels) {

@@ -1,0 +1,97 @@
+name: Bug report
+description: Something in the app does not work the way it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. The more concrete the detail, the faster it gets fixed.
+
+        **Please do not paste your Canvas access token anywhere in this issue.** If you paste a log,
+        check it first - the app redacts tokens, but a screenshot of your Canvas settings page may not.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what did you get instead?
+      placeholder: I selected 4 courses and pressed Quick Download. It downloaded 3 of them and reported an error on the fourth.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the app and sign in
+        2. Go to Sync Mode
+        3. Press Analyze, Review & Sync
+        4. See the error
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS 15 Sequoia or newer
+        - macOS 14 Sonoma
+        - macOS 13 Ventura or older
+        - Running from source
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown in the app's Settings page, or the version of the installer you downloaded.
+      placeholder: "2.0.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install it
+      options:
+        - Microsoft Store
+        - Windows .exe installer from Releases
+        - macOS .dmg from Releases
+        - Built from source
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: area
+    attributes:
+      label: Which part of the app
+      options:
+        - label: Download mode (Quick or Custom Download)
+        - label: Sync mode
+        - label: The Today page / daily auto-sync
+        - label: Panopto lecture recordings
+        - label: Transcription or subtitles
+        - label: File conversion (Office to PDF, video to MP3, and so on)
+        - label: Signing in / institution picker
+        - label: Something else
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error log or debug log
+      description: |
+        If a run failed, the completion screen has an **Export error log** button - please attach that file.
+        For a deeper problem, turn on **Debug mode** in the sidebar, reproduce the issue once, and attach the debug log.
+        The app redacts access tokens and signed download URLs from logs automatically.
+      render: text
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots are very welcome. Blur any personal or course-identifying detail you would rather not share.

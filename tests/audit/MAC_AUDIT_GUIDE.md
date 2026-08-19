@@ -74,7 +74,7 @@ Connect with Scaleway's VNC console. It will be slow. You are here once.
 **Paste this and press Return** (paste is `Cmd+V`):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/birkls/Canvas_LMS_batch_file_downloader/main/scripts/mac_first_contact.sh | bash
+curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_first_contact.sh | bash
 ```
 
 It asks for your password once at the start and then runs unattended. In order:
@@ -146,7 +146,7 @@ In the VS Code terminal:
 
 ```bash
 tmux attach -t audit
-git clone https://github.com/birkls/Canvas_LMS_batch_file_downloader.git ~/Canvas_Downloader
+git clone https://github.com/BrkBuilds/Canvas-Downloader.git ~/Canvas_Downloader
 cd ~/Canvas_Downloader && ./scripts/mac_audit_bootstrap.sh
 git checkout -b macos-audit-26        # this run's fixes go here
 ```
@@ -340,12 +340,12 @@ Then **revoke the Canvas token**, destroy the instance, merge the branch.
 
 ```bash
 # ── VNC, once: Cmd+Space -> Terminal -> paste ───────────────────────
-curl -fsSL https://raw.githubusercontent.com/birkls/Canvas_LMS_batch_file_downloader/main/scripts/mac_first_contact.sh | bash
+curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_first_contact.sh | bash
 # then: sign into Word | Full Disk Access for Terminal | cd ~ && tmux new -s audit
 
 # ── VS Code Remote-SSH from Windows, everything after ───────────────
 tmux attach -t audit
-git clone https://github.com/birkls/Canvas_LMS_batch_file_downloader.git ~/Canvas_Downloader
+git clone https://github.com/BrkBuilds/Canvas-Downloader.git ~/Canvas_Downloader
 cd ~/Canvas_Downloader && ./scripts/mac_audit_bootstrap.sh
 
 source .venv/bin/activate

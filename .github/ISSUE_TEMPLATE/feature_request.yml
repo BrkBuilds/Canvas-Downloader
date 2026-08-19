@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest something the app should be able to do.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: Describe the situation rather than the solution. What is annoying or impossible right now?
+      placeholder: I have the same course synced into two folders and I cannot tell the two apart in the sync list.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you have in mind
+      description: If you already have an idea of how it should work, describe it. If not, leave this blank.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do instead today
+      description: Any workaround you currently use.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the [guide](https://canvasdownloader.app/guide.html) and this is not already possible
+          required: true
+        - label: I searched existing issues for the same request
+          required: true
