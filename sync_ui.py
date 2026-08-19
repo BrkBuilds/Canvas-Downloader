@@ -1729,10 +1729,18 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         # Panopto Transcripts/Subtitles but the transcription engine/model isn't ready
         # (e.g. the model was deleted after setup). Offers one-click setup; clears the
         # instant a model is installed. Shared renderer with the sync-review notice.
+        #
+        # dismissible=True here and NOWHERE else: this is a STANDING mismatch that
+        # re-states itself on every render of this page for ever, and every way out
+        # of it is heavy (no UI edits a folder's stored panopto_contract). Dismissing
+        # collapses it to a one-line link that is always present, so the fact is
+        # never hidden - only stopped from leading. The review screen keeps the full
+        # card: there it is an event report about the run in front of you.
         from shared.components import render_transcription_setup_notice
         render_transcription_setup_notice(
             _sync_pairs_want_transcription(sync_pairs),
             key="sync_list_setup_tx",
+            dismissible=True,
         )
 
         # --- (5) Analyze + Quick Sync action buttons ---

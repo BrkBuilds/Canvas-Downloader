@@ -60,7 +60,7 @@ def cfg(tmp_path, monkeypatch):
 
 
 def _writers():
-    """The three writers, as ``(label, callable)``.
+    """Every writer of the co-owned settings file, as ``(label, callable)``.
 
     Imported inside the test so the isolated config dir is already in place.
     """
@@ -69,6 +69,8 @@ def _writers():
     return [
         ("panopto.settings.set_globally_enabled", lambda: ps.set_globally_enabled(False)),
         ("panopto.settings.save_settings", lambda: ps.save_settings({"model": "small"})),
+        ("panopto.settings.set_tx_setup_notice_dismissed",
+         lambda: ps.set_tx_setup_notice_dismissed(True)),
         ("shared.legal.record_panopto_acknowledgement", legal.record_panopto_acknowledgement),
     ]
 
@@ -244,7 +246,8 @@ def _calls_in(fn_node):
 
 
 @pytest.mark.parametrize("module_path,writers", [
-    ("panopto/settings.py", ["save_settings", "set_globally_enabled"]),
+    ("panopto/settings.py", ["save_settings", "set_globally_enabled",
+                             "set_tx_setup_notice_dismissed"]),
     ("shared/legal.py", ["record_panopto_acknowledgement"]),
 ])
 def test_every_writer_reads_through_the_for_update_reader(module_path, writers):

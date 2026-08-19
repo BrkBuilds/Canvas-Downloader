@@ -19,8 +19,6 @@ account, no telemetry.
 
 **[Download](#download)** · **[Website](https://canvasdownloader.app/)** · **[How it works](https://canvasdownloader.app/guide.html)** · **[Mac setup guide](https://canvasdownloader.app/mac-setup.html)** · **[FAQ](#faq)**
 
-<img src="docs/assets/CanvasDownloaderHero.webp" width="820" alt="Canvas Downloader running on Windows, showing a batch download of several Canvas courses in progress" />
-
 </div>
 
 ---
@@ -131,36 +129,24 @@ app to the Trash, and optionally delete `~/Library/Application Support/CanvasDow
 
 ## Screenshots
 
-<div align="center">
-
-<img src="docs/assets/TodayMode_Auto-download-new-files.png" width="820" alt="The Today page in Canvas Downloader, listing the files that arrived in each course today after an automatic daily sync" />
-
-<sub><b>The Today page.</b> Pick your courses once, flip a toggle, and the app syncs them by itself the first time you open it each day.</sub>
-
-</div>
-
-<!--
-  SCREENSHOT SLOTS - drop the files in docs/assets/screenshots/ and uncomment the block below.
-  Capture at 1440x900 or wider, light-on-dark app theme, real course names blurred or replaced.
-
-  1. course-selection.png  - Step 1 with several courses ticked and the search box in use
-  2. quick-download.png    - the five Quick Download preset cards
-  3. sync-review.png       - Analyze, Review & Sync showing the seven file states
-  4. progress.png          - the live run dashboard mid-download (metrics row + terminal log)
-  5. panopto-card.png      - Card 4 with the five recording outputs
-  6. institution-picker.png- the login screen with the institution directory open
-
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/screenshots/course-selection.png" alt="Selecting Canvas courses to download" /><br><sub><b>Pick your courses.</b> Search, filter and multi-select.</sub></td>
-    <td width="50%"><img src="docs/assets/screenshots/quick-download.png" alt="Quick Download presets" /><br><sub><b>Quick Download.</b> Five ready-made presets.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/screenshots/institution-picker.png" alt="The Canvas Downloader login screen with the institution directory open and a search typed" /><br><sub><b>Find your school.</b> 4,757 Canvas institutions, searchable - no need to know your URL.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/screenshots/progress.png" alt="The live download dashboard showing transferred bytes, speed, file count, time remaining and a running log" /><br><sub><b>Watch it run.</b> Live speed, ETA, and a log of every file.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/assets/screenshots/sync-review.png" alt="Per-file sync review screen" /><br><sub><b>Review every change.</b> Seven file states, per-file control.</sub></td>
-    <td width="50%"><img src="docs/assets/screenshots/progress.png" alt="Live download progress dashboard" /><br><sub><b>Watch it run.</b> Live progress and a full log.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/screenshots/course-selection.png" alt="The Canvas Downloader course list with several courses selected and a search filter applied" /><br><sub><b>Pick your courses.</b> Search, filter and select as many as you like.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/screenshots/quick-download.png" alt="The five Quick Download presets in Canvas Downloader" /><br><sub><b>Quick Download.</b> Five ready-made presets, one click.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/assets/screenshots/custom-download.png" alt="The Custom Download configuration screen: course files, Canvas content, AI conversions and Panopto recordings" /><br><sub><b>Or configure everything.</b> Files, Canvas content, AI conversions, Panopto recordings.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/screenshots/sync-review.png" alt="The sync review screen showing new, updated, locally edited and locally deleted files with per-file checkboxes" /><br><sub><b>Review every change.</b> New, updated, edited locally, deleted - you decide, file by file.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/assets/screenshots/Sync-frontpage.png" alt="The sync page listing local course folders linked to Canvas courses" /><br><sub><b>Link folders to courses.</b> Then keep them current without downloading it all again.</sub></td>
+    <td width="50%" valign="top"><img src="docs/assets/screenshots/today-page.png" alt="The Today page with the daily auto-sync switched on and the courses it covers" /><br><sub><b>Today.</b> Flip one toggle and your courses sync themselves each morning.</sub></td>
   </tr>
 </table>
--->
 
 > Short demo clips for each mode are on the **[website](https://canvasdownloader.app/)**.
 

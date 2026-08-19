@@ -38,18 +38,28 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[1]
-HARNESS = REPO / "scripts" / "_mutate_office_guard.py"
 
 
-def _harness():
-    spec = importlib.util.spec_from_file_location("_mutate_office_guard", HARNESS)
+def _harness_paths():
+    """Every mutation harness in scripts/, discovered by FILENAME.
+
+    Discovered rather than listed for the same reason `_all_sets` discovers by
+    name: the harness written for the next fix has to be covered without anyone
+    remembering to extend this file, and "nobody re-runs it" is precisely the
+    rot this module exists to catch. Sorted so parametrize ids are stable.
+    """
+    return sorted(REPO.glob("scripts/_mutate_*.py"))
+
+
+def _load(path):
+    spec = importlib.util.spec_from_file_location(path.stem, path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
 
 
 def _all_sets(mod):
-    """(set name, mutants) for every mutant list the harness exposes.
+    """(set name, mutants) for every mutant list a harness exposes.
 
     Discovered by NAME rather than listed here: a new `*_MUTANTS` set added for
     the next fix has to be covered without anyone remembering to extend this
@@ -59,15 +69,31 @@ def _all_sets(mod):
             if name.endswith("MUTANTS") and isinstance(getattr(mod, name), list)]
 
 
-def test_the_harness_still_imports():
-    mod = _harness()
-    assert _all_sets(mod), "no mutant sets found - has the harness been renamed?"
+def _every_set():
+    """(harness stem, set name) for every mutant set in every harness."""
+    out = []
+    for path in _harness_paths():
+        for name, _mutants in _all_sets(_load(path)):
+            out.append((path.stem, name))
+    return out
 
 
-@pytest.mark.parametrize("set_name", [n for n, _ in _all_sets(_harness())])
-def test_every_anchor_in_this_set_resolves(set_name):
-    mod = _harness()
-    mutants = getattr(mod, set_name)
+def _mutants_of(stem, set_name):
+    path = next(p for p in _harness_paths() if p.stem == stem)
+    return getattr(_load(path), set_name)
+
+
+def test_every_harness_still_imports():
+    paths = _harness_paths()
+    assert paths, "no mutation harnesses found in scripts/"
+    for path in paths:
+        assert _all_sets(_load(path)), (
+            f"{path.name} exposes no mutant sets - has one been renamed?")
+
+
+@pytest.mark.parametrize("stem,set_name", _every_set())
+def test_every_anchor_in_this_set_resolves(stem, set_name):
+    mutants = _mutants_of(stem, set_name)
     assert mutants, f"{set_name} is empty"
     stale = []
     for label, rel, old, _new in mutants:
@@ -82,16 +108,15 @@ def test_every_anchor_in_this_set_resolves(set_name):
         + "\n  ".join(stale))
 
 
-@pytest.mark.parametrize("set_name", [n for n, _ in _all_sets(_harness())])
-def test_every_mutant_actually_changes_the_source(set_name):
+@pytest.mark.parametrize("stem,set_name", _every_set())
+def test_every_mutant_actually_changes_the_source(stem, set_name):
     """`old != new`, and the replacement is not already what the file says.
 
     A mutant whose `new` text is present verbatim in the source would be a
     no-op the runner reports as SURVIVED, which reads as a missing test rather
     than as a broken mutant.
     """
-    mod = _harness()
-    for label, rel, old, new in getattr(mod, set_name):
+    for label, rel, old, new in _mutants_of(stem, set_name):
         assert old != new, f"{label}: the mutant does not change anything"
         src = (REPO / rel).read_text(encoding="utf-8")
         if old in src:
@@ -100,9 +125,8 @@ def test_every_mutant_actually_changes_the_source(set_name):
 
 
 def test_every_target_file_exists():
-    mod = _harness()
-    for _name, mutants in _all_sets(mod):
-        for label, rel, _old, _new in mutants:
+    for stem, set_name in _every_set():
+        for label, rel, _old, _new in _mutants_of(stem, set_name):
             assert (REPO / rel).is_file(), f"{label}: {rel} does not exist"
 
 
@@ -110,12 +134,18 @@ def test_every_named_test_file_exists():
     """A mutant set pointed at a deleted test file would report every mutant as
     caught - pytest exits non-zero on a missing path, which the runner reads as
     a failure, i.e. as the mutant having been detected."""
-    mod = _harness()
-    for attr in sorted(dir(mod)):
-        if not attr.endswith("TEST"):
-            continue
-        value = getattr(mod, attr)
-        if not isinstance(value, str):
-            continue
-        for part in value.split():
-            assert (REPO / part).exists(), f"{attr} names a missing path: {part}"
+    for path in _harness_paths():
+        mod = _load(path)
+        for attr in sorted(dir(mod)):
+            if not (attr.endswith("TEST") or attr.endswith("TESTS")
+                    or attr == "TEST_TARGET"):
+                continue
+            value = getattr(mod, attr)
+            parts = ([value] if isinstance(value, str)
+                     else value if isinstance(value, list) else [])
+            for entry in parts:
+                if not isinstance(entry, str):
+                    continue
+                for part in entry.split():
+                    assert (REPO / part).exists(), (
+                        f"{path.name}:{attr} names a missing path: {part}")
