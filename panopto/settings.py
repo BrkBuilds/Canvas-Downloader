@@ -85,6 +85,40 @@ def _read_full_config_for_update() -> tuple[dict, bool]:
     return read_json_for_update(_config_path())
 
 
+def _atomic_write_config(full: dict, what: str) -> bool:
+    """Write the WHOLE settings dict back atomically. Returns True on success.
+
+    The one implementation of the tmp + fsync + ``os.replace`` dance for this
+    module's three writers. It deliberately takes the already-merged dict and
+    performs NO read: the read is the half that has to be split by cause (see
+    :func:`_read_full_config_for_update`), and a writer that got its dict from
+    anywhere else is exactly the bug ``tests/test_settings_coownership.py``
+    exists to catch. Keeping the two halves separate is what lets that test go
+    on asserting, per writer, that the safe reader was used.
+    """
+    path = _config_path()
+    tmp = str(path) + ".tmp"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(full, f, indent=2, ensure_ascii=False)
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except OSError:
+                pass
+        os.replace(tmp, path)
+        return True
+    except Exception as e:
+        logger.warning(f"Could not save {what}: {e}")
+        try:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+        except OSError:
+            pass
+        return False
+
+
 def load_settings() -> dict:
     """Return the persisted Panopto settings merged over defaults.
 
@@ -123,27 +157,7 @@ def save_settings(settings: dict) -> bool:
         return False
     full[SETTINGS_KEY] = clean
 
-    path = _config_path()
-    tmp = str(path) + ".tmp"
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(full, f, indent=2, ensure_ascii=False)
-            f.flush()
-            try:
-                os.fsync(f.fileno())
-            except OSError:
-                pass
-        os.replace(tmp, path)
-        return True
-    except Exception as e:
-        logger.warning(f"Could not save Panopto settings: {e}")
-        try:
-            if os.path.exists(tmp):
-                os.unlink(tmp)
-        except OSError:
-            pass
-        return False
+    return _atomic_write_config(full, "the Panopto settings")
 
 
 # ── Global on/off preference ────────────────────────────────────────────────
@@ -180,27 +194,57 @@ def set_globally_enabled(enabled: bool) -> bool:
         return False
     full[GLOBAL_ENABLED_KEY] = bool(enabled)
 
-    path = _config_path()
-    tmp = str(path) + ".tmp"
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(full, f, indent=2, ensure_ascii=False)
-            f.flush()
-            try:
-                os.fsync(f.fileno())
-            except OSError:
-                pass
-        os.replace(tmp, path)
-        return True
-    except Exception as e:
-        logger.warning(f"Could not save the global Panopto preference: {e}")
-        try:
-            if os.path.exists(tmp):
-                os.unlink(tmp)
-        except OSError:
-            pass
+    return _atomic_write_config(full, "the global Panopto preference")
+
+
+# ── The "transcription isn't set up" notice: dismissal ──────────────────────
+# TOP-LEVEL for the same reason as GLOBAL_ENABLED_KEY above: this is a standing
+# preference about the USER ("I have read this, stop leading with it"), not a
+# property of a download, so it must never reach PANOPTO_DEFAULTS and be copied
+# into every run config and every synced folder's manifest.
+#
+# It exists because the notice reports a STANDING configuration mismatch rather
+# than an event: a folder whose stored contract asks for Transcript/Subtitles
+# with no model installed re-states that on every single render of the sync
+# page, for ever. The three ways out are all heavy (install a model, switch
+# Panopto off globally, or re-download the course with the outputs unticked) -
+# a folder's panopto_contract is written by the download flow and no UI edits
+# it - so without this the user has no proportionate answer at all.
+#
+# Dismissing NEVER hides the fact, it only stops it leading: the notice
+# collapses to a one-line re-spawn link that is always present. That is the
+# same shape as the Full Disk Access nudge (shared/components.render_fda_nudge)
+# and for the same reason - this is operational state, not help text, so it is
+# not allowed to disappear.
+TX_NOTICE_DISMISSED_KEY = "transcription_setup_notice_dismissed"
+
+
+def is_tx_setup_notice_dismissed() -> bool:
+    """True once the user has collapsed the transcription-setup notice.
+
+    Defaults to False: the first time a folder is configured for transcripts
+    without a model, the full card is the right thing to show.
+    """
+    return bool(_read_full_config().get(TX_NOTICE_DISMISSED_KEY, False))
+
+
+def set_tx_setup_notice_dismissed(dismissed: bool = True) -> bool:
+    """Persist the transcription-notice dismissal. Returns True on success.
+
+    Atomic read-modify-write through the for-update reader, like every other
+    writer of this co-owned file - a degrading read here would replace the
+    accepted acceptable-use notice, the global switch and every download
+    default with this one flag.
+    """
+    full, may_write = _read_full_config_for_update()
+    if not may_write:
+        logger.warning("Not saving the transcription-notice dismissal: the "
+                       "settings file could not be read, so a write would "
+                       "discard the rest of it.")
         return False
+    full[TX_NOTICE_DISMISSED_KEY] = bool(dismissed)
+
+    return _atomic_write_config(full, "the transcription-notice dismissal")
 
 
 def active_outputs(settings: dict) -> list[str]:

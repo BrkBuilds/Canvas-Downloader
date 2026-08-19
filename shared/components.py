@@ -3729,7 +3729,35 @@ def render_config_summary_badges(settings: dict, show_path: bool = True) -> str:
     return re.sub(r"\s*\n\s*", " ", f"{grid_container}{path_html}")
 
 
-def render_transcription_setup_notice(wants_transcription: bool, *, key: str, context_note: str = "") -> bool:
+# How many children the transcription-notice slot always emits. The full card
+# and the collapsed link render at the SAME index in the parent, and
+# ``AppRoot.addBlock`` hands a new block the CHILDREN of whatever block already
+# sat there - so the branch with fewer children would leave the other's tail on
+# screen INSIDE itself until the run finishes. Two, in both branches.
+_TX_NOTICE_SLOT_CHILDREN = 2
+
+
+def _dismiss_tx_setup_notice() -> None:
+    """on_click for the notice's close button - the card never auto-shows again.
+
+    A callback rather than ``if st.button(): ...; st.rerun()``: the click already
+    schedules a rerun, so an explicit one renders the page twice and the browser
+    drops its scroll anchor. This control sits directly above the Analyze /
+    Quick Sync buttons on a long page, which is exactly where that is felt.
+    """
+    from panopto.settings import set_tx_setup_notice_dismissed
+    set_tx_setup_notice_dismissed(True)
+    st.session_state.pop("tx_setup_card_open", None)
+
+
+def _spawn_tx_setup_card() -> None:
+    """on_click for the collapsed link - re-shows the full card this session."""
+    st.session_state["tx_setup_card_open"] = True
+
+
+def render_transcription_setup_notice(wants_transcription: bool, *, key: str,
+                                      context_note: str = "",
+                                      dismissible: bool = False) -> bool:
     """Shared "Panopto transcription isn't set up" warning + one-click setup.
 
     Renders an amber notice card (with the live, specific reason) and a "Set up
@@ -3745,7 +3773,28 @@ def render_transcription_setup_notice(wants_transcription: bool, *, key: str, co
     the notice clears the instant a model is installed/activated. Single source
     of this messaging for the sync list and the sync review page.
 
-    Returns True if the warning was rendered.
+    *dismissible* adds a close button, and once closed the card collapses to a
+    one-line re-spawn link that is ALWAYS present. The distinction is the point,
+    and it is why the flag is per call site rather than global:
+
+    * The SYNC LIST notice reports a STANDING mismatch - this folder's stored
+      contract asks for Transcript/Subtitles and the next sync will silently not
+      produce them - so it re-states itself on every render of that page, for
+      ever. All three ways out are heavy (install a model, switch Panopto off
+      globally, or re-download the course with the outputs unticked; a folder's
+      ``panopto_contract`` is written by the download flow and no UI edits it),
+      so without a dismissal the user has no proportionate answer at all.
+    * The SYNC REVIEW notice is an EVENT report about the run in front of you
+      ("N pending recordings are set to produce Transcript or Subtitle files"),
+      seen once per analysis at the last checkpoint before the run starts. It is
+      NOT dismissible, for the same reason the Today off-list footnote is not
+      gated behind Show help text: it is operational state, not help text.
+
+    Dismissing therefore never HIDES the fact, it only stops it leading - the
+    collapsed link says the same thing in one line. Same shape, and the same
+    reasoning, as :func:`render_fda_nudge`.
+
+    Returns True if anything was rendered.
     """
     if not wants_transcription:
         return False
@@ -3762,91 +3811,73 @@ def render_transcription_setup_notice(wants_transcription: bool, *, key: str, co
             if _any_installed else
             "No transcription model is installed yet.")
 
-    # CSS for the card container and its embedded button.  Uses amber tones
-    # (matching render_amber_notice) and the same structural pattern as the
-    # Custom Download page's purple pan_info_card.
-    _card_key = f"tx_setup_card_{key}"
-    _btn_key = key
-    st.html(f"""<style>
-    div[class*="st-key-{_card_key}"] {{
-        border: 1px solid rgba(234, 179, 8, 0.45) !important;
-        border-radius: 10px !important;
-        background: rgba(234, 179, 8, 0.08) !important;
-        margin-bottom: 0px !important;
-        padding: 12px 15px 12px 15px !important;
-    }}
-    div[class*="st-key-{_card_key}"] div[data-testid="stVerticalBlock"] {{
-        padding-bottom: 0 !important;
-    }}
-    div[class*="st-key-{_card_key}"] div[data-testid="stElementContainer"]:last-child {{
-        margin-bottom: 0 !important;
-    }}
-    div.st-key-{_btn_key} {{
-        margin-left: 32px !important;
-        margin-top: 6px !important;
-        margin-bottom: 18px !important;
-    }}
-    div.st-key-{_btn_key} button {{
-        background: rgba(176,157,254,0.10) !important;
-        border: 1px solid rgba(176,157,254,0.35) !important;
-        color: #d8caff !important; font-weight: 600 !important;
-        font-size: 0.85rem !important;
-        border-radius: 8px !important;
-        justify-content: center !important;
-        align-items: center !important;
-        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
-        height: 32px !important; min-height: 32px !important;
-        min-width: 220px !important;
-        padding: 0 14px !important;
-    }}
-    div.st-key-{_btn_key} button [data-testid="stMarkdownContainer"] {{
-        display: flex !important;
-        align-items: center !important;
-    }}
-    div.st-key-{_btn_key} button p {{
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        margin: 0 !important;
-    }}
-    div.st-key-{_btn_key} button p::before {{
-        content: "" !important;
-        display: inline-block !important;
-        width: 14px !important; height: 14px !important;
-        flex-shrink: 0 !important;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23d8caff'%3E%3Cpath fill-rule='evenodd' d='M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z' clip-rule='evenodd'/%3E%3C/svg%3E") !important;
-        background-size: contain !important;
-        background-repeat: no-repeat !important;
-        background-position: center !important;
-    }}
-    div.st-key-{_btn_key} button:hover {{
-        background-color: rgba(176,157,254,0.18) !important;
-        border-color: #b89dfe !important; color: #ffffff !important;
-    }}
-    </style>""")
+    # Collapsed = dismissed on disk AND not re-spawned for this session.
+    _collapsed = False
+    if dismissible and not st.session_state.get("tx_setup_card_open", False):
+        try:
+            from panopto.settings import is_tx_setup_notice_dismissed
+            _collapsed = bool(is_tx_setup_notice_dismissed())
+        except Exception:
+            # An unreadable settings file must never turn into a nag. The fact
+            # stays visible either way - the collapsed link states it too.
+            _collapsed = True
 
-    with st.container(key=_card_key):
-        # Amber info-circle SVG icon + title + detail, matching Custom Download layout
-        st.markdown(
-            "<div style='display:flex; align-items:flex-start; gap:12px;'>"
-            "<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='#fbbf24' stroke-width='2' "
-            "stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0; margin-top:1px;'>"
-            "<circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/>"
-            "<line x1='12' y1='16' x2='12.01' y2='16'/></svg>"
-            "<div style='flex:1;'>"
-            "<div style='color:#fde68a; font-weight:600; font-size:0.9rem;'>"
-            "Transcripts &amp; Subtitles need a one-time setup</div>"
-            f"<div style='color:#d4a017; font-size:0.84rem; margin-top:2px; line-height:1.45;'>"
-            f"{('<b>' + esc(context_note) + '</b> ') if context_note else ''}"
-            f"{esc(_why)} "
-            "Download a transcription model to unlock the <b>Transcript</b> &amp; <b>Subtitles</b> formats. "
-            "Video &amp; Audio work without it.</div></div></div>",
-            unsafe_allow_html=True,
-        )
-        if st.button("Set up transcription", key=_btn_key,
-                     help="Download and activate a transcription model, then continue."):
-            st.session_state['_pan_dialog_open'] = True
-            st.rerun(scope="app")
+    # NOTE: the stylesheet for all of this lives in styles/global.css, NOT in an
+    # st.html(<style>) here. Every style host on a page is reconciled BY INDEX,
+    # so a stylesheet emitted in only one branch shifts every LATER stylesheet
+    # onto its neighbour's host - and this notice now has a branch that flips on
+    # a click, mid-session. inject_css() puts it in the MAIN container, which no
+    # fragment rerun can reach, and costs no element here.
+    _card_key = f"tx_setup_card_{key}"
+    _link_key = f"tx_setup_link_{key}"
+
+    if _collapsed:
+        with st.container(key=_link_key):
+            st.button("Transcripts & Subtitles are not set up yet",
+                      key=f"tx_setup_relink_{key}",
+                      on_click=_spawn_tx_setup_card,
+                      help="Show the setup notice again.")
+            pad_slot_children(1, _TX_NOTICE_SLOT_CHILDREN)
+    else:
+        def _notice_body() -> None:
+            # ONE concatenated line: a blank line inside an HTML string handed to
+            # st.markdown ends the HTML block, and Markdown then reads the
+            # following indented line as a CODE BLOCK.
+            st.markdown(
+                "<div style='display:flex; align-items:flex-start; gap:12px;'>"
+                "<svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='#fbbf24' stroke-width='2' "
+                "stroke-linecap='round' stroke-linejoin='round' style='flex-shrink:0; margin-top:1px;'>"
+                "<circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/>"
+                "<line x1='12' y1='16' x2='12.01' y2='16'/></svg>"
+                "<div style='flex:1;'>"
+                "<div style='color:#fde68a; font-weight:600; font-size:0.9rem;'>"
+                "Transcripts &amp; Subtitles need a one-time setup</div>"
+                f"<div style='color:#d4a017; font-size:0.84rem; margin-top:2px; line-height:1.45;'>"
+                f"{('<b>' + esc(context_note) + '</b> ') if context_note else ''}"
+                f"{esc(_why)} "
+                "Download a transcription model to unlock the <b>Transcript</b> &amp; <b>Subtitles</b> formats. "
+                "Video &amp; Audio work without it.</div></div></div>",
+                unsafe_allow_html=True,
+            )
+
+        with st.container(key=_card_key):
+            if dismissible:
+                # vertical_alignment="top" pins the close square level with the
+                # title instead of floating it against the two-line body.
+                c_body, c_close = st.columns([0.95, 0.05], vertical_alignment="top")
+                with c_body:
+                    _notice_body()
+                with c_close:
+                    # No help= tooltip: it wraps the button in a
+                    # stTooltipHoverTarget, which breaks the fixed 32px sizing.
+                    st.button("\u200b", key=f"tx_setup_close_{key}",
+                              on_click=_dismiss_tx_setup_notice)
+            else:
+                _notice_body()
+            if st.button("Set up transcription", key=f"tx_setup_btn_{key}",
+                         help="Download and activate a transcription model, then continue."):
+                st.session_state['_pan_dialog_open'] = True
+                st.rerun(scope="app")
 
     st.markdown("<div style='margin-bottom:14px;'></div>", unsafe_allow_html=True)
     return True
