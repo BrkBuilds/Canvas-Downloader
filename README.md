@@ -15,7 +15,7 @@ Smart sync, daily auto-sync, Panopto lecture downloads with on-device transcript
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Z8Z01ZOY6Q)
 
-[**Website**](https://birkls.github.io/Canvas_LMS_batch_file_downloader/) · [**Microsoft Store**](https://apps.microsoft.com/detail/9n1dwwvrq5wc) · [**Download for Windows / macOS**](https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest) · [**How It Works**](https://birkls.github.io/Canvas_LMS_batch_file_downloader/guide.html)
+[**Website**](https://canvasdownloader.app/) · [**Microsoft Store**](https://apps.microsoft.com/detail/9n1dwwvrq5wc) · [**Download for Windows / macOS**](https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest) · [**How It Works**](https://canvasdownloader.app/guide.html)
 
 </div>
 
@@ -167,7 +167,7 @@ No Python installation required. Grab the latest release for your platform:
 2. **First launch:**
    - macOS 13/14: Right-click the app → **Open** → **Open** (Gatekeeper bypass for unsigned apps)
    - macOS 15 (Sequoia) or newer: double-click (it gets blocked), then **System Settings → Privacy & Security**, scroll down, click **Open Anyway**
-3. Follow the [interactive Mac setup guide](https://birkls.github.io/Canvas_LMS_batch_file_downloader/mac-setup.html) - it walks through every permission dialog for your exact macOS version
+3. Follow the [interactive Mac setup guide](https://canvasdownloader.app/mac-setup.html) - it walks through every permission dialog for your exact macOS version
 
 #### What macOS will ask you on first run (this is normal!)
 

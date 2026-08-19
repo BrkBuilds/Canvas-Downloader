@@ -49,7 +49,7 @@ ACK_KEY = "panopto_notice_ack_version"
 #: Published copy of DISCLAIMER.md. Defined here rather than in the dialog so the
 #: modal and the card's permanent note cannot drift onto different URLs.
 DISCLAIMER_URL = (
-    "https://birkls.github.io/Canvas_LMS_batch_file_downloader/disclaimer.html"
+    "https://canvasdownloader.app/disclaimer.html"
 )
 
 #: Session-state key holding the open/closed state of the modal, and the key

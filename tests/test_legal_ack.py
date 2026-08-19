@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+from urllib.parse import urlparse
 
 import pytest
 
@@ -526,8 +527,16 @@ def test_card_note_has_styling():
 
 
 def test_disclaimer_url_has_one_definition():
-    """The modal and the card note must not drift onto different URLs."""
-    assert _src("ui/panopto_notice.py").count('https://birkls.github.io') == 0
+    """The modal and the card note must not drift onto different URLs.
+
+    The host is DERIVED from ``legal.DISCLAIMER_URL``, never written as a
+    literal. A hardcoded domain stops guarding anything the moment the site
+    moves - and it did move (birkls.github.io -> canvasdownloader.app),
+    which would have left this green against a freshly hardcoded URL.
+    """
+    host = urlparse(legal.DISCLAIMER_URL).netloc
+    assert host, "DISCLAIMER_URL must carry a host"
+    assert _src("ui/panopto_notice.py").count(host) == 0
     assert legal.DISCLAIMER_URL.startswith("https://")
 
 
