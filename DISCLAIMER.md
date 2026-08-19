@@ -97,6 +97,6 @@ arising from your use of this software.
 
 If you represent an institution, a rights holder, or Panopto and you have a
 concern about this project, please
-[open an issue](https://github.com/birkls/Canvas_LMS_batch_file_downloader/issues)
+[open an issue](https://github.com/BrkBuilds/Canvas-Downloader/issues)
 or email **brkbuilds1@gmail.com** before taking any other step. Concerns raised
 in good faith will be addressed in good faith, and promptly.

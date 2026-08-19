@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Setup help for macOS
+    url: https://canvasdownloader.app/mac-setup.html
+    about: Step-by-step guide through every macOS permission dialog, for your exact version.
+  - name: How it works
+    url: https://canvasdownloader.app/guide.html
+    about: What each mode and setting does, with short demo clips.
+  - name: Report a security issue
+    url: https://github.com/BrkBuilds/Canvas-Downloader/security/policy
+    about: Please do not open a public issue for a security problem.
+  - name: Institution or rights holder concern
+    url: mailto:brkbuilds1@gmail.com
+    about: If you represent an institution or rights holder, email first and it will be addressed promptly.

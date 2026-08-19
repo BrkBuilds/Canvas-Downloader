@@ -245,7 +245,7 @@
           </svg>
           <span>Download</span>
         </a>
-        <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener"
+        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener"
           class="btn-nav-ghost">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path
@@ -266,11 +266,11 @@
         <ul class="steps">
           <li><strong>1.</strong> Run the downloaded installer. When Windows SmartScreen appears, click <strong>"More info"</strong>.</li>
           <li><strong>2.</strong> Click <strong>"Run anyway"</strong> and follow the installer.</li>
-          <li><strong>3.</strong> You only have to do this once! The warning appears because the app is a free, unsigned solo project - the full source code is public on <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener" style="color: var(--cyan); text-decoration: none;">GitHub</a>.</li>
+          <li><strong>3.</strong> You only have to do this once! The warning appears because the app is a free, unsigned solo project - the full source code is public on <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener" style="color: var(--cyan); text-decoration: none;">GitHub</a>.</li>
         </ul>
       </div>
 
-      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader/releases/latest" id="exe-link" class="btn-dl">If the download didn't start automatically, click here</a>
+      <a href="https://github.com/BrkBuilds/Canvas-Downloader/releases/latest" id="exe-link" class="btn-dl">If the download didn't start automatically, click here</a>
 
       <p style="margin-top: 28px; font-size: 13px; color: var(--txt2);">Prefer no warning at all? Get the app from the
         <a href="https://apps.microsoft.com/detail/9n1dwwvrq5wc?referrer=appbadge&mode=full" target="_blank"
@@ -289,7 +289,7 @@
         <a href="disclaimer.html">Disclaimer</a>
       <a href="win-setup.html">Windows Setup</a>
       <a href="mac-setup.html">macOS Setup</a>
-      <a href="https://github.com/birkls/Canvas_LMS_batch_file_downloader" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">GitHub</a>
       <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
           style="color:#f97316;">&hearts;</span> Support the project</a>
       <div class="meta">Not affiliated with Instructure or Canvas LMS</div>
@@ -299,7 +299,7 @@
   <script>
     // Point the fallback link at the newest .exe on GitHub Releases; if the
     // API is unreachable the link opens the GitHub releases page instead.
-    fetch('https://api.github.com/repos/birkls/Canvas_LMS_batch_file_downloader/releases?per_page=30',
+    fetch('https://api.github.com/repos/BrkBuilds/Canvas-Downloader/releases?per_page=30',
       { headers: { 'Accept': 'application/vnd.github+json' } })
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(function (rels) {

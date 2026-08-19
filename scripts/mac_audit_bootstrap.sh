@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Bare macOS -> ready to run a live audit, in one command.
 #
-#   curl -fsSL https://raw.githubusercontent.com/birkls/Canvas_LMS_batch_file_downloader/main/scripts/mac_audit_bootstrap.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_audit_bootstrap.sh | bash
 # or, once the repo is cloned:
 #   ./scripts/mac_audit_bootstrap.sh
 #
@@ -18,7 +18,7 @@
 #
 set -uo pipefail
 
-REPO_URL="https://github.com/birkls/Canvas_LMS_batch_file_downloader.git"
+REPO_URL="https://github.com/BrkBuilds/Canvas-Downloader.git"
 REPO_DIR="${REPO_DIR:-$HOME/Canvas_Downloader}"
 SECRETS="${SECRETS:-$HOME/mac_audit_secrets.env}"
 PYVER="3.11"
