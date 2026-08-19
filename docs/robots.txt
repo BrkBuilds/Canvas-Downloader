@@ -6,4 +6,4 @@ Allow: /
 Disallow: /thanks-win.html
 Disallow: /thanks-mac.html
 
-Sitemap: https://birkls.github.io/Canvas_LMS_batch_file_downloader/sitemap.xml
+Sitemap: https://canvasdownloader.app/sitemap.xml

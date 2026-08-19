@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 # api.github.com/.../releases/latest excludes drafts and pre-releases by default,
 # so we only ever nag about a release explicitly marked "latest".
 _GITHUB_API = "https://api.github.com/repos/birkls/Canvas_LMS_batch_file_downloader/releases/latest"
-RELEASES_PAGE = "https://birkls.github.io/Canvas_LMS_batch_file_downloader/releases.html"
+RELEASES_PAGE = "https://canvasdownloader.app/releases.html"
 
 _state: dict = {"checked": False, "latest": None, "update_available": False}
 _lock = threading.Lock()
