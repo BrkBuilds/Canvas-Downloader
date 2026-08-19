@@ -12,10 +12,9 @@ transcription, and convert everything into AI-ready study material. Windows and 
 account, no telemetry.
 
 [![Latest release](https://img.shields.io/github/v/release/BrkBuilds/Canvas-Downloader?style=flat-square&color=2563eb&label=release)](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/BrkBuilds/Canvas-Downloader/total?style=flat-square&color=16a34a&label=downloads)](https://github.com/BrkBuilds/Canvas-Downloader/releases)
+[![GitHub downloads](https://img.shields.io/github/downloads/BrkBuilds/Canvas-Downloader/total?style=flat-square&color=16a34a&label=GitHub%20downloads)](https://github.com/BrkBuilds/Canvas-Downloader/releases)
 [![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-install-0078D4?style=flat-square&logo=microsoftstore&logoColor=white)](https://apps.microsoft.com/detail/9n1dwwvrq5wc)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey?style=flat-square)](#download)
-[![Tests](https://img.shields.io/badge/tests-3%2C827-16a34a?style=flat-square)](tests/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
 
 **[Download](#download)** · **[Website](https://canvasdownloader.app/)** · **[How it works](https://canvasdownloader.app/guide.html)** · **[Mac setup guide](https://canvasdownloader.app/mac-setup.html)** · **[FAQ](#faq)**

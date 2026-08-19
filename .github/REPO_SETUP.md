@@ -49,9 +49,7 @@ survive a machine change lives in the repository. Pull before starting.
    letterboxes or centre-crops on every social card. Replace with **1280x640** - one of
    the eight Microsoft Store marketing images should crop cleanly.
    Settings, General, Social preview.
-3. **Description typo.** There is a double space after "AI". Corrected string:
-
-   `Download all your Canvas LMS files at once. Free Windows and macOS app with automatic course sync, file conversions for AI and 100% NotebookLM drag & drop, Panopto lecture downloads, offline transcription, and daily auto-download of newest course files`
+3. ~~Description typo.~~ **DONE 2026-08-19** - verified live, 252 chars, no double space.
 
 4. **Turn on Discussions** (Settings, General, Features). Absorbs the recurring
    "how do I get my token" and "does it work with my university" questions, and
