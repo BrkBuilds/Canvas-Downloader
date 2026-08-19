@@ -8,6 +8,77 @@ Target after the move: **`github.com/BrkBuilds/Canvas-Downloader`**
 
 ---
 
+# STATUS - 2026-08-19
+
+Read this section first. It is the handoff between machines: assistant memory does
+not travel between the laptop, the desktop and the mac box, so anything that has to
+survive a machine change lives in the repository. Pull before starting.
+
+## Done
+
+- **Organisation created**: `BrkBuilds`, contact `brkbuilds1@gmail.com`, ko-fi linked,
+  avatar set.
+- **Repository renamed and transferred**: `birkls/Canvas_LMS_batch_file_downloader`
+  is now `BrkBuilds/Canvas-Downloader`. Old URLs 301 permanently.
+- **DNS updated**: `www` CNAME now points at `brkbuilds.github.io`, DNS only.
+  Verified live: apex returns 200, `www` 301s to apex.
+- **URL migration applied**: 85 references across 22 files, including the three that
+  compile into the binaries (`ui/auth.py` x2, `ui/update_banner.py`). The dated record
+  `tests/audit/WEBSITE_LAUNCH_AUDIT.html` was deliberately left holding the old URLs.
+- **About panel**: description and all 20 topics set, website field points at
+  canvasdownloader.app.
+- **`brkbuilds1@gmail.com` verified** on the birkls account. This clone's git identity
+  is `BrkBuilds <brkbuilds1@gmail.com>` (repo-local, so other projects are unaffected).
+  **A fresh clone on another machine does NOT inherit this** - see "On a new machine".
+- **README rewritten**: version drift fixed (dynamic badge), 81 modules / 4.3 MB,
+  3,827 tests, plus the Panopto Shortcut output, the institution picker and the global
+  Panopto switch, none of which were documented before. Added a FAQ and a comparison
+  table for long-tail search.
+- **Community files**: CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, issue forms, PR
+  template, FUNDING.
+- Committed and pushed as `e4f949e`. Suite green (3,810 passed, 17 skipped),
+  architecture audit 0 violations.
+
+## To do
+
+1. **Six README screenshots.** Capture spec in `docs/assets/screenshots/README.md`.
+   Save with the exact filenames, then run
+   `python scripts/optimize_screenshots.py --apply` and uncomment the screenshot block
+   in README.md. Decide first whether real CBS course names should be public.
+2. **Social preview image.** Currently the app icon at **1024x1024 square**, which
+   letterboxes or centre-crops on every social card. Replace with **1280x640** - one of
+   the eight Microsoft Store marketing images should crop cleanly.
+   Settings, General, Social preview.
+3. **Description typo.** There is a double space after "AI". Corrected string:
+
+   `Download all your Canvas LMS files at once. Free Windows and macOS app with automatic course sync, file conversions for AI and 100% NotebookLM drag & drop, Panopto lecture downloads, offline transcription, and daily auto-download of newest course files`
+
+4. **Turn on Discussions** (Settings, General, Features). Absorbs the recurring
+   "how do I get my token" and "does it work with my university" questions, and
+   threads get indexed.
+5. **Rebuild the Windows and macOS bundles.** Not urgent - the redirect covers the
+   three compiled URLs - but new builds should point straight at the new address.
+   Note `version.py` is at 2.0.2 while the latest tag is v2.0.1.
+6. Optional: pin the repository on the org profile, and give `BrkBuilds` a profile
+   README via a `.github` repository.
+
+## On a new machine
+
+A fresh clone uses your GLOBAL git identity, which is still
+`birkls <birk.lykkeberg@gmail.com>`. To author as the developer identity there:
+
+```bash
+git config user.name  "BrkBuilds"
+git config user.email "brkbuilds1@gmail.com"
+```
+
+Both addresses are verified on the account, so either links correctly. This is only
+about which name appears on the commit.
+
+---
+
+---
+
 ## 1. The move: org transfer and rename
 
 Do these **one at a time**, checking the site in between, so that if something breaks you know which
