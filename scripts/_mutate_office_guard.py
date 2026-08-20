@@ -103,10 +103,15 @@ CRASH_MUTANTS = [
     ("successful retry does not reset the wedge counter", AB,
      "                    global _repeat_key, _repeat_count\n                    _repeat_key, _repeat_count = None, 0\n                    logger.info(",
      "                    logger.info("),
-    ("curly apostrophe dropped", AB,
-     ' or "isn\u2019t running" in low', ""),
-    ("straight apostrophe dropped", AB,
-     '"isn\'t running" in low or ', ""),
+    # RETIRED 2026-08-20. These two broke the two apostrophe CLAUSES, which no
+    # longer exist: `_classify_stderr` now normalises U+2019 once, up front, so
+    # a clause added later cannot inherit the bug that produced them. The same
+    # property - and the wider locale problem they were the first sighting of -
+    # is covered by scripts/_mutate_applescript_locale.py ("the apostrophe
+    # normalisation is dropped", "only the curly apostrophe is normalised").
+    # Deleted rather than re-anchored: pointing them at the normalisation line
+    # would just duplicate that set, and a duplicated mutant inflates a score
+    # without adding a property.
     ("crash detail claims not installed", AB,
      'f"Microsoft {app_name} stopped running while converting "',
      'f"Microsoft {app_name} is not installed or could not be launched. "'),

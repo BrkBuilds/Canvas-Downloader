@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260820_143238_macos-26-v2.0.2` on 2026-08-20.
 
-**8 open** · 138 total · 23 accepted · 75 fixed · 31 invalid · 1 wontfix
+**8 open** · 139 total · 23 accepted · 76 fixed · 31 invalid · 1 wontfix
 
 ---
 
@@ -4028,3 +4028,60 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 > Not observed in the latest run.
 
 ---
+
+---
+
+### An uninstalled Office app classified as 'other', not 'app_missing' - three of the four wording clauses were locale-dead
+<!-- fp:259a4ac3ac81 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: classification
+**Oracles**: the app's own classification rule vs the string macOS actually emits
+**First seen**: 2026-08-20 (20260820_143238_macos-26-v2.0.2)
+**Last seen**: 2026-08-20 (20260820_143238_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: M1.3 - `_classify_stderr`, macOS 26.6.1
+
+**Detail**:
+
+Found while chasing something else: a `mac_eyes` window query started failing
+with the real denial text, and that text did not match the clause written to
+catch it.
+
+Measured by making osascript fail for real. A genuinely missing app emits
+``Can't get application "X". (-1728)`` with a **typographic** apostrophe
+(U+2019); `_classify_stderr` matched only the ASCII one, and **-1728 is not in
+its numeric list**, so the verdict fell through to `other` - which is NOT in
+`FATAL_CATEGORIES`.
+
+Consequence, for a user without Microsoft Office (it is not free, so this is an
+ordinary state): no "Word is not installed or could not be launched" message.
+Instead three generic per-file errors, then `SYSTEMIC_REPEAT_THRESHOLD` fires
+and tells them to **"Quit Microsoft Word and run again"** - about an
+application they do not have.
+
+Same class one clause over: this machine's macOS emits the **British**
+"Not authorised to send Apple events", while the permission clause knew only
+"authorized". That verdict survived purely on its `-1743` companion. Only
+``isn't running`` worked - because the 2026-08-11 `-600` fix gave that ONE
+clause both apostrophe forms and never reached its neighbours. The docstring
+three lines below states the lesson the code beside it had not learned.
+
+**The wider point**: wording clauses are inherently locale-fragile. On a
+Danish-language macOS every one of them matches nothing and only the numeric
+codes decide. That is a KNOWN REMAINING GAP, not something this fix closes.
+
+**Notes**: FIXED 2026-08-20. Normalise the apostrophe **once**, so a clause
+added later cannot inherit the bug, plus the British spelling.
+
+`-1728` is deliberately **NOT** added to the numeric list, and that is the
+non-obvious half: it is `errAENoSuchObject`, which our own scripts raise for an
+absent DOCUMENT (``can't get active document``). Mapping the code wholesale
+would abort a phase with "Office is not installed" on a machine where it
+plainly is - a fatal, and the wrong one. The wording separates the two exactly,
+which is why the apostrophe had to be fixed rather than the number added. A
+mutant pins it ("the obvious fix, and wrong").
+
+`tests/test_office_crash_is_not_missing.py` (29);
+`scripts/_mutate_applescript_locale.py`, **6/6 caught**.
