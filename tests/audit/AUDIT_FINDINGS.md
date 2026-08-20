@@ -4222,7 +4222,47 @@ already open, so the words match an affordance that exists.
 No data loss at any point: the `.doc` survived, no stub PDF was promoted, 0
 staged dirs were left.
 
-`tests/test_container_denied_attribution.py` (16);
-`scripts/_mutate_container_denied.py`, **8/8 caught** - reached only after the
-pass exposed FOUR weak tests of mine that re-implemented the rule instead of
-calling it. Extracting `attribute_office_failure` is what made it testable.
+`tests/test_container_denied_attribution.py` (22);
+`scripts/_mutate_container_denied.py`, **10/10 caught**.
+
+**VERIFIED IN THE SHIPPED BUNDLE**, which is what caught the first fix being
+wrong. Rebuilt, re-signed, powerbox denied again:
+
+    [WARNING] container staging unavailable ([Errno 1] Operation not
+              permitted: .../com.microsoft.Word/Data/tmp/CanvasDownloaderTmp/
+              cd_483b93c19b); using direct path
+    [ERROR]   Word failed (container_denied): ... AppleEvent timed out. (-1712)
+    [ERROR]   Conversion failed - Microsoft Word did not respond, which usually
+              means macOS is waiting on permission to open files in this
+              folder. Turn on Canvas Downloader under System Settings →
+              Privacy & Security → Full Disk Access ...
+              skipping remaining 0 Word file(s)
+
+`Operation not permitted` on the container **mkdir** is the mechanism, proven.
+1 `container_denied`, **0** "failed twice", one ~2-minute attempt instead of
+two, `.doc` intact (153,600 B), no stub PDF, 0 staged dirs.
+
+### The first version of this fix was WRONG, and only the bundle showed it
+
+`office_container_stage` has **TWO** ways into the fallback and the fix
+instrumented one: `stage_root is None`. A denied app-data grant takes the
+OTHER - the container directory still exists and still lists, and what fails
+is the `mkdir`/`copy2` INTO it. Every unit test passed; the packaged app went
+on reporting a bare `-1712`.
+
+The record now lives in `_direct_passthrough`, which both routes converge on,
+so a third route added later gets it for free, and a test counts the routes.
+
+**Three rounds of my own tests were too weak, each caught by the mutation
+pass, never by review**: 3/7 (the tests re-implemented the rule instead of
+calling it, and one scanned a COMMENT that named both panes), then 6/8 (no
+case exercised an `other`-category NON-timeout, and nothing asserted the call
+site), then 9/10 (every test asserted STRUCTURE, so a guard changed to
+`and False` left the call in the AST and survived - only driving the real
+context manager catches a record that exists but never happens).
+
+**Also fixed**: that staging-unavailable line was `logger.debug`, and a real
+run with debug mode ON contains **zero** DEBUG lines - so the one line
+explaining why conversions are about to fail could never be read, by a user
+or by this audit. I nearly concluded from its absence that the branch had not
+run. It is a WARNING now.
