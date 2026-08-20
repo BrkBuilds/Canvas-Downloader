@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260820_143238_macos-26-v2.0.2` on 2026-08-20.
 
-**8 open** · 140 total · 23 accepted · 77 fixed · 31 invalid · 1 wontfix
+**8 open** · 141 total · 23 accepted · 78 fixed · 31 invalid · 1 wontfix
 
 ---
 
@@ -4154,3 +4154,75 @@ osascript's result, set to the exact stderr macOS produced at 20:49:20:
 
 The "without" column reproduces the packaged run's measured behaviour exactly,
 which is what makes the "with" column mean something.
+
+---
+
+### A denied "access data from other apps" prompt read as a slow document: ~4 minutes per file, and no cause named
+<!-- fp:f6924f2b9dbc -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: conversion
+**Oracles**: the debug log vs Word's own open-document path
+**First seen**: 2026-08-20 (packaged app, macOS 26.6.1)
+**Last seen**: 2026-08-20
+**Occurrences**: 1
+**Scenario**: the macOS powerbox prompt DENIED - a state nothing had ever driven
+
+**Detail**:
+
+Driving the untested state: **Don't Allow** on *"Canvas Downloader would like
+to access data from other apps"*. That is an ordinary click - the wording gives
+a cautious student no reason to accept. ONE `.doc` produced:
+
+    21:34:26  Word failed (other): ... AppleEvent timed out. (-1712)
+    21:34:26  Klyngevejledning_1_Program_2023.doc  Conversion failed - ... (-1712)
+    21:36:26  ... AppleEvent timed out. (-1712)            <- the retry
+    21:36:26  Klyngevejledning_1_Program_2023.doc  Conversion failed twice
+
+**~4 minutes for one file**, and a message naming neither the cause nor a
+remedy. On a thirty-file course that is hours of apparent hang.
+
+**Mechanism, confirmed rather than inferred.** Word was left holding
+`Klyngevejledning_1_Program_2023.doc @ Macintosh HD:private:tmp:...` - the
+ORIGINAL path, not a staged `src_*` one. So the denial made
+`_office_container_tmp` answer None, `office_container_stage` fell back to
+`_direct_passthrough`, and Word was asked to open a file OUTSIDE its container
+- which raises the per-folder powerbox prompt **that staging exists to avoid**.
+A blocked prompt holds the AppleEvent until it times out.
+
+That docstring called the degrade *"never worse than before, only ever
+better"*, and the trap note thirty lines below it **already described this
+exact mechanism** - as a hazard for anyone re-MEASURING staging, without
+anyone noticing it is a live USER path.
+
+Two knock-ons, both recorded rather than fixed: Word is left RUNNING (the quit
+gate sees a real path and calls the document user-owned), and
+`_force_close_canvas_docs_sync` cannot clear it - it marker-matches on the
+staging dir, and a passthrough document is not in one.
+
+**Notes**: FIXED 2026-08-20. The fallback records itself (`_office_unstaged`,
+per-run, cleared by `reset_office_priming`) and `attribute_office_failure`
+refines the stderr-only verdict with it: a timeout while unstaged becomes
+`container_denied`, which is FATAL, so the phase aborts once instead of
+grinding per file.
+
+**Deliberately narrow.** A timeout WITH staging stays a per-file `other` - a
+genuinely huge deck must not abort the phase and send the user to a setting
+that is fine - and only TIMEOUTS qualify, so `-1708` (wedged Word) and
+`-30001` (mis-bound document) are never blamed on permissions. Mutants pin
+both directions.
+
+**The remedy names FULL DISK ACCESS, not "Files and Folders".** Checked in
+System Settings with this denial recorded: the app appears under Files and
+Folders with **no toggle**, so naming that pane sends the user nowhere. FDA
+supersedes the grant and is the pane the app's own nudge and Settings card
+already open, so the words match an affordance that exists.
+
+No data loss at any point: the `.doc` survived, no stub PDF was promoted, 0
+staged dirs were left.
+
+`tests/test_container_denied_attribution.py` (16);
+`scripts/_mutate_container_denied.py`, **8/8 caught** - reached only after the
+pass exposed FOUR weak tests of mine that re-implemented the rule instead of
+calling it. Extracting `attribute_office_failure` is what made it testable.
