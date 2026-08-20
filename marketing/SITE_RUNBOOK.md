@@ -114,6 +114,7 @@ All fast, all offline.
 | `tests/test_website_internal_links.py` | Every internal `href`/`src` resolves; no pre-transfer path prefix; 404 uses root-relative paths; every sitemap URL exists and is indexable; no page is missing from the sitemap. |
 | `tests/test_no_stale_repo_urls.py` | No file links to the old owner or old Pages host; the installer's three URLs are separate and absolute. |
 | `tests/test_website_login_claims.py` | Pre-existing: what the site says about logging in is still true of the app. |
+| `tests/test_website_social_proof.py` | The adoption figures: one download count and one country count across every surface, neither exceeding what was measured, no rating markup anywhere, no page mentioning the absence of reviews, "used by" not "loved by", the strip renders without JavaScript, has no chrome but does have a blurred glow, spans the full width, and stays coupled to its CSS. 15 of 15 mutations caught by `scripts/_mutate_social_proof.py`. |
 
 10 of 10 mutations of the real code are caught by these. **Re-run the mutation
 pass, not just the suite, after touching any of them**, per this repo's standing
@@ -129,6 +130,13 @@ rule: a passing test proves nothing until it has been shown to fail.
 - **Every page under `docs/` is CRLF.** A multi-line anchor written with `\n`
   never matches and reads as a missing guard. Read and write with
   `newline=''` and build replacement strings with `\r\n`.
+- **`docs/llms.txt` is LF, unlike every `.html` page.** The rule above is about
+  the pages; a patch that assumes CRLF for the whole directory fails on this one
+  file, and the assertion that catches it is the only reason you find out. Detect
+  the newline from the file you are editing rather than hard-coding either.
+- **A hard-wrapped file breaks phrase matching.** `llms.txt` wraps at ~80
+  columns, so "June 2026" can straddle a line break and a literal search for it
+  fails against copy that is perfectly correct. Normalise whitespace first.
 - **A `<button>` does not inherit `color` from `body`.** Converting an `<a>` to
   a button silently drops any `.parent a` styling and falls back to the UA
   colour, which on this dark site is black on black.

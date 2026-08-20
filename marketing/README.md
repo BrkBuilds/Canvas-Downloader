@@ -26,7 +26,8 @@ as the change it describes.
 
 ## Where things stand, in ten lines
 
-Measured 2026-08-20. Re-measure before trusting; these rot.
+Measured 2026-08-20, with the last three lines added 2026-08-21. Re-measure
+before trusting; these rot.
 
 - The **Microsoft Store listing is the only surface that ranks**. The website
   appeared in **zero** of three web searches, including one containing the
@@ -51,8 +52,17 @@ Measured 2026-08-20. Re-measure before trusting; these rot.
 - Analytics: **none, by decision**. Search Console and Bing Webmaster only.
 - Five things need the operator personally and cannot be done from the repo.
   They are listed in `PLAYBOOK.md` section 1b.
-- Market is **overwhelmingly US** (1,330 US institutions vs 9 Danish in the
-  app's own verified list). English first, and this is measured, not assumed.
+- Market is **English-speaking but NOT predominantly US**: by Store installs,
+  Philippines 82, US 79, Australia 70, South Africa 62, India 55, Nigeria 27,
+  UK 24. This corrects an earlier reading taken from the app's institution
+  directory, which measures where tenants are, not where users are.
+- The site now carries **social proof**: 800+ downloads (767 Store installs plus
+  44 from GitHub) and 100 countries, in the hero strip and in `llms.txt`. The
+  Store has **0 ratings and 0 reviews**, so nothing on the site claims an
+  opinion, and nothing mentions the absence either.
+- **75% of the homepage and 97% of the guide are `opacity: 0` without
+  JavaScript**, `h1` included, with no `noscript` fallback. Open, with a one-line
+  inversion as the fix. This is a candidate cause of the indexing question above.
 
 ---
 
