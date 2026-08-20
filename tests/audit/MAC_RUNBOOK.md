@@ -1762,3 +1762,22 @@ through `_write()`, which appends to `diagnostics/health.log`; a whole-tree grep
 finds no UI surface for it. Worth knowing before anyone spends a rental hour
 reproducing it: the residual risk is a confusing line in a diagnostic file, not
 a scary screen.
+
+### Startup baseline on this machine, after the Keychain fix (2026-08-21)
+
+Packaged app, M4 / macOS 26.6.1, sampled at 4 Hz from `open` with `screencapture`
+and bracketed against a known-usable frame:
+
+| state | time |
+|---|---|
+| WARM launch -> fully usable, signed in, course list rendered | **2.56 s** |
+| post-update (Keychain prompt up) -> painted login page + notice | **~3 s** |
+| after the user answers the prompt -> signed in | **~3 s** |
+
+The middle row is the one that matters: the same moment used to be a
+"Connecting…" overlay for 30 s followed by a COMPLETELY EMPTY window until the
+prompt was answered or the 90 s watchdog fired.
+
+Caveat stated rather than glossed: 2.56 s is a WARM launch (the app had been
+running seconds earlier, so the bundle is in the page cache). A first launch
+after boot is slower and was not measured.
