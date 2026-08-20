@@ -949,33 +949,46 @@ other apps"* on first access. macOS ignores synthetic clicks on it - screenshot
 it and ask the operator.
 
 
-### iCloud Drive eviction - measured, and how (2026-08-20)
+### iCloud "Optimize Mac Storage" - the method, and the traps (2026-08-20)
 
 An iCloud account was created on the audit box for this; the previous two runs
-had none, which is the only reason it stayed open for so long.
+had none, which is the only reason it stayed open. **iCloud is supported** - see
+`CLAUDE.md` for the verdict and the contract tests. This is how to re-measure it.
 
     fresh file          st_size 124009  st_blocks 248   dataless False
     after brctl evict   st_size 124009  st_blocks 0     dataless True
-    compute_local_md5   CORRECT hash, 1.35 s
+    compute_local_md5   CORRECT hash, 0.9-1.35 s
     after the read      st_size 124009  st_blocks 248   dataless False
-    _classify_local_modification  ->  'clean'
 
-So the ordinary case has **no defect**: macOS materialises on read, the engine's
-hash is right, and the file is classified clean - not missing, not edited.
+Then, driving the REAL `SyncManager` on a fully evicted 10-12 file folder:
+
+    analysis, nothing changed on Canvas    0 materialised
+    analysis, ONE genuine update           1  (only the changed file)
+    heal_manifest after a RENAME           1  (only the renamed file)
+    os.replace onto a dataless target      OK, content correct
 
 **Detect dataless with `st_blocks == 0` at a nonzero `st_size`.** Do NOT use
 `brctl status`: on a freshly-enabled account it returns *"Client zone not
 found"* for a path that is plainly there, which reads like a broken test rather
-than an uninitialised zone. `stat` is the reliable signal and needs no daemon.
+than an uninitialised zone. That is brctl failing to QUERY, not the file being
+unsynced - proved by evicting (blocks 248 -> 0) and reading the correct md5 back
+in 0.89 s, which can only have come from the cloud copy.
+
+**A test fixture must change the SIZE, not just the timestamp.** `_is_canvas_newer`
+deliberately treats same-size-newer-timestamp as a metadata touch and returns
+False, so a timestamp-only "change" produces no update at all. The first version
+of this measurement fooled itself exactly that way and nearly recorded "0
+materialised on an update" as a good result.
 
 **Measure the failure case by its CONSEQUENCE, not by going offline.** This
 machine is reached over NoMachine, so cutting the network strands the operator
-and the agent. Make the read fail instead (`chmod 000`) and ask the real
-primitive: `compute_local_md5` returns `None` and
-`_classify_local_modification` answers **`modified`** - the `_NewVersion` fork,
-which is the documented deliberate bias ("preserve the local copy"). An
-unmaterialisable file therefore costs a sibling re-offered on later syncs, not
-an overwrite.
+and the agent. Make the read fail (`chmod 000`) and ask the real primitive:
+`compute_local_md5` returns `None` and `_classify_local_modification` answers
+**`modified`** - the `_NewVersion` fork, the documented deliberate bias
+("preserve the local copy"). An unmaterialisable file costs a sibling, not an
+overwrite. A real materialisation failure remains unmeasured; only its
+consequence is.
 
-What is still unmeasured is a real materialisation failure - offline, or an
-account over quota. Only its consequence is measured.
+`tests/test_icloud_dataless.py` pins the properties that make all of this work,
+portably (it counts `compute_local_md5` calls instead of needing iCloud), and
+`scripts/_mutate_icloud_dataless.py` proves those tests can fail - 5/5.
