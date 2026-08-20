@@ -1213,8 +1213,9 @@ def _kc_notice_html(state: str) -> str:
         "<ul class='kc-steps'>"
         "<li>In the macOS dialog, type your <b>Mac login password</b> - it goes "
         "to macOS, never to Canvas Downloader.</li>"
-        "<li>Click <b>Always Allow</b>. Plain <i>Allow</i> works only once, and "
-        "macOS will ask you again every time you open the app.</li>"
+        "<li>Click <b>Always Allow</b> - one click and macOS stops asking. Plain "
+        "<i>Allow</i> puts up a second dialog straight away, and asks again "
+        "every time you open the app.</li>"
         "<li>Would rather not? Click <b>Deny</b> and paste a Canvas token below "
         "instead - everything still works.</li>"
         "</ul>"
@@ -2473,41 +2474,51 @@ def render_login_page(fetch_courses_fn):
        block emitted conditionally shifts every later style host by one (they
        reconcile by index), which is a documented way to strip a neighbouring
        component of its CSS for a frame. */
+    /* Palette: ACCENT_BLUE (#4da8da = rgb 77,168,218) - the app's SOFT blue,
+       deliberately not BLUE_PRIMARY (#3b82f6), which is vivid enough to read as
+       an alert on a screen whose whole job is to be reassuring. Body copy stays
+       on the neutral slate ramp so the blue is a frame, not a wash. Written as
+       rgba() of the token's own channels rather than a near-neighbour hex -
+       inventing a neighbour is what Rule 8 exists to stop. */
     div[class*="st-key-kc_unlock_slot"] { gap: 0 !important; }
     .kc-notice {
-        background: rgba(56, 130, 246, 0.10);
-        border: 1px solid rgba(56, 130, 246, 0.35);
+        background: rgba(77, 168, 218, 0.12);
+        border: 1px solid rgba(77, 168, 218, 0.35);
         border-radius: 10px;
         padding: 14px 16px;
         margin-bottom: 16px;
     }
     .kc-notice-quiet {
-        background: rgba(148, 163, 184, 0.08);
-        border-color: rgba(148, 163, 184, 0.28);
+        background: rgba(77, 168, 218, 0.075);
+        border-color: rgba(77, 168, 218, 0.22);
     }
+    /* TEXT_SLATE_50. A fully blue TITLE reads as a link or an alert; the blue
+       belongs in the frame and the icon, where it says "system notice" without
+       shouting. The lock keeps ACCENT_BLUE via its own `color` because the SVG
+       strokes with currentColor. */
     .kc-head {
         display: flex; align-items: center; gap: 9px;
-        color: #cfe0ff; font-weight: 700; font-size: 0.95rem;
+        color: #f8fafc; font-weight: 700; font-size: 0.95rem;
     }
-    .kc-notice-quiet .kc-head { color: #cbd5e1; font-weight: 600; }
-    .kc-head svg { flex-shrink: 0; }
+    .kc-notice-quiet .kc-head { font-weight: 600; color: #e2e8f0; }
+    .kc-head svg { flex-shrink: 0; color: #4da8da; }
     .kc-body {
-        color: #dbe6f5; font-size: 0.88rem; line-height: 1.55; margin-top: 8px;
+        color: #cbd5e1; font-size: 0.88rem; line-height: 1.55; margin-top: 8px;
     }
     .kc-steps {
         margin: 8px 0 0 0; padding-left: 18px;
-        color: #dbe6f5; font-size: 0.86rem; line-height: 1.55;
+        color: #cbd5e1; font-size: 0.86rem; line-height: 1.55;
     }
     .kc-steps li { margin: 4px 0; }
-    .kc-steps b, .kc-body b { color: #ffffff; font-weight: 700; }
+    .kc-steps b, .kc-body b { color: #f1f5f9; font-weight: 700; }
     .kc-foot {
         display: flex; align-items: center; gap: 8px;
-        margin-top: 10px; color: #9fb3d0; font-size: 0.82rem;
+        margin-top: 10px; color: #94a3b8; font-size: 0.82rem;
     }
     .kc-spin {
         width: 13px; height: 13px; flex-shrink: 0;
-        border: 2px solid rgba(159, 179, 208, 0.30);
-        border-top-color: #9fb3d0; border-radius: 50%;
+        border: 2px solid rgba(77, 168, 218, 0.25);
+        border-top-color: #4da8da; border-radius: 50%;
         display: inline-block; animation: kc-spin 0.9s linear infinite;
     }
     @keyframes kc-spin { to { transform: rotate(360deg); } }

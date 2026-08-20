@@ -1682,3 +1682,83 @@ naming:
   "deleted on Canvas". Handled structurally; the log line is not load-bearing.
   What a user does not get on the DOWNLOAD path is any message saying the
   category was unavailable - a product decision, not a defect, and left alone.
+
+## The Keychain ACL prompt: how to reproduce it, and what it costs (2026-08-21)
+
+The mechanism, the fix and the two closed escapes are in `CLAUDE.md` ("The macOS
+Keychain prompt must never be on the SCRIPT THREAD"). This is only how to
+measure it, and the traps that cost this session wrong conclusions.
+
+**Put a machine into the post-update state on demand** - you do not have to ship
+an update. Re-create the item through `/usr/bin/security` so its ACL trusts
+`security` and not the app:
+
+    security add-generic-password -s CanvasDownloader -a "<api_url>" -w "<token>" -U
+
+Read the token with `ui.auth._safe_keyring_get` first and never print it. Restore
+afterwards with `ui.auth.store_token(url, token)`, which re-creates it under the
+app's own identity through the hardened verify-by-read-back path.
+
+**Rebuilding and re-signing the bundle IS a genuine app update** for keychain
+purposes - a new ad-hoc signature is a new cdhash, which is what the ACL keys
+on. That is the fastest faithful end-to-end test of the post-update path, and it
+is how the packaged verification here was done.
+
+**Ask "would this prompt?" WITHOUT prompting.** `SecKeychainSetUserInteractionAllowed(false)`
+is honoured by `SecItemCopyMatching`, so a read that would have raised a modal
+returns `-25293` (or `-25308`) in milliseconds instead of blocking. Measured:
+9.6 ms for "would prompt", 4.3 ms for a normal read. This is both the diagnostic
+AND the shipped fix. The flag is PROCESS-GLOBAL, so restore it in a `finally`.
+
+**A synthetic ESCAPE dismisses the keychain prompt; a synthetic CLICK does not.**
+`CGEventCreateKeyboardEvent(53)` posted to `kCGHIDEventTap` closed the
+SecurityAgent dialog on every one of four attempts (it acts as Deny). This
+narrows the standing rule: macOS refuses synthetic **clicks** on consent
+prompts, and `mac_eyes dialogs` is still the right detector, but an agent that
+merely needs to CLEAR a keychain prompt it raised itself does not have to
+interrupt the operator. Do not extend this to TCC/powerbox prompts without
+testing - it was only measured on the keychain ACL dialog.
+
+**`Allow` and `Always Allow` differ in two ways, both measured:**
+
+| button | ACL afterwards | second dialog? |
+|---|---|---|
+| Allow | UNCHANGED - prompts on every launch, for ever | YES, immediately (operator-observed, 3/3 runs) |
+| Always Allow | UPDATED - silent until the next update | no |
+
+Detection of the ACL half is automatic and needs no second click: after the
+answer, re-read with UI SUPPRESSED. Success means the ACL now trusts this
+binary; `-25293` means it does not. The second-dialog half is probably the two
+internal authorizations a data read needs (the item, then the key protecting
+it) being granted per-operation by `Allow` and permanently by `Always Allow` -
+stated as probable, not proven.
+
+### Three traps that produced wrong conclusions here
+
+* **A long-lived `streamlit run ... --server.fileWatcherType none` does not pick
+  up edits.** I concluded "the notice does not render" from a process launched
+  before the code existed. **Restart the app after every edit** - the same rule
+  the completion gallery already carries, and it applies to any harness started
+  before a change.
+* **A new browser session is NOT a fresh app.** The unlock single-flight is
+  module-global (a background thread has no `ScriptRunContext`) while
+  `keychain_unlock_pending` is per session, so a second Playwright context
+  inherits the first session's verdict. That confusion was worth having - it is
+  how the consume-the-token defect was found - but when measuring, restart the
+  PROCESS.
+* **A killed mutation pass leaves its mutant on disk.** A mutant that makes the
+  code block hangs pytest, the pass is killed from outside, and its `finally`
+  never runs. Found by grepping the source for `if False:` afterwards. The
+  harness now bounds each mutant with `subprocess.run(timeout=...)` and asserts
+  the restore took; the test's own duty is to run a "does not block" call on a
+  thread with a join timeout so it FAILS instead of hanging.
+
+### Correction: "PREVIOUS SESSION DID NOT EXIT CLEANLY" is NOT user-visible
+
+The third session's brief listed a possible unclean-exit-on-quit-during-a-TCC-prompt
+as something that "gets a scary 'PREVIOUS SESSION DID NOT EXIT CLEANLY' on their
+next launch". It does not. `_post_mortem` in `core/health_log.py` writes that line
+through `_write()`, which appends to `diagnostics/health.log`; a whole-tree grep
+finds no UI surface for it. Worth knowing before anyone spends a rental hour
+reproducing it: the residual risk is a confusing line in a diagnostic file, not
+a scary screen.

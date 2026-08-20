@@ -124,8 +124,9 @@ KEYCHAIN_UNLOCK_MUTANTS = [
     # -- the copy, which is a MEASURED instruction, not decoration -------------
     ("the copy stops naming Always Allow",
      AUTH,
-     "\"<li>Click <b>Always Allow</b>. Plain <i>Allow</i> works only once, and \"\n"
-     "        \"macOS will ask you again every time you open the app.</li>\"",
+     "\"<li>Click <b>Always Allow</b> - one click and macOS stops asking. Plain \"\n"
+     "        \"<i>Allow</i> puts up a second dialog straight away, and asks again \"\n"
+     "        \"every time you open the app.</li>\"",
      "\"<li>Click <b>Allow</b> to continue.</li>\""),
     ("the reassurance is dropped, leaving a bare instruction",
      AUTH,

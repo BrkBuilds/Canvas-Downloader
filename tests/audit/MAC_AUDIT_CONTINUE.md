@@ -136,16 +136,17 @@ Ranked. The first is the one that would keep me up at night.
    was a real defect** - `fp:f6924f2b9dbc`, fixed and verified in the
    rebuilt bundle.
 
-2b. **NEW, found on the way: a denied KEYCHAIN prompt costs ~90 seconds of
-   bare "Connecting…".** `restore_saved_session` runs on the script thread
-   during INIT and `_KEYRING_TIMEOUT` is 90 s on macOS, so the Streamlit
-   script does not finish and the frontend shows its own placeholder.
-   Confirmed with `sample <pid>` (the whole sample in
-   `SecItemCopyMatching`). It RECOVERS - a stall, not a hang - but nothing
-   explains it, and **the prompt fires on every app UPDATE**, because the
-   signature changes. Not fixed: shortening the timeout would break the
-   legitimate case where the user is typing their keychain password. A real
-   fix means moving session restore off the script thread.
+2b. ~~A denied KEYCHAIN prompt costs ~90 seconds of bare "Connecting…".~~
+   **FIXED AND VERIFIED IN THE PACKAGED APP, 2026-08-21** (register
+   `fp` "The macOS Keychain ACL prompt ran on the SCRIPT THREAD"). It was
+   worse than recorded: after the boot overlay's 30 s cap the window was
+   **completely EMPTY**, not "Connecting…", and on Deny the user landed on a
+   login page with **no explanation at all**. `keyring_get_without_prompting`
+   now probes with keychain UI suppressed (4.3 ms / 9.6 ms measured), the
+   login screen explains the dialog and steers to **Always Allow**, and a 1 Hz
+   fragment adopts the answer. Packaged app: notice up at **t=3 s**, signs
+   itself in ~3 s after the click, next launch silent in 1.15 s.
+   Full mechanism in `CLAUDE.md`; how to reproduce it in `MAC_RUNBOOK.md`.
 
 3. **The transcription phase never COMPLETED in the packaged app.** The worker
    spawned correctly at `[1/36]` and was deliberately killed there for M3.8,
@@ -160,10 +161,11 @@ Ranked. The first is the one that would keep me up at night.
    was run to watch the sweep happen by itself.
 
 5. **"Quitting while a TCC prompt is pending records an unclean exit" was not
-   reproduced.** Seen once (`pid=33358 phase='running'`); the same Quit event
-   records `clean_exit: True` when the app is responsive. If it IS real, a
-   user who quits during a permission prompt gets a scary "PREVIOUS SESSION
-   DID NOT EXIT CLEANLY" on their next launch, which is worth knowing.
+   reproduced** - and the stated CONSEQUENCE was wrong, so it is worth less
+   than it looks. `_post_mortem` writes that line through `_write()`, i.e. into
+   `diagnostics/health.log`; a whole-tree grep finds **no UI surface** for it,
+   so no user ever sees it. The residual is a confusing line in a diagnostic
+   file. Do not spend rental time reproducing it.
 
 6. **mp4** was deliberately left off (bandwidth); only the mp3 muxer path is
    proven. M2.4's video half is untested.
