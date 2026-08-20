@@ -992,3 +992,75 @@ consequence is.
 `tests/test_icloud_dataless.py` pins the properties that make all of this work,
 portably (it counts `compute_local_md5` calls instead of needing iCloud), and
 `scripts/_mutate_icloud_dataless.py` proves those tests can fail - 5/5.
+
+## Transcription on Apple silicon - M2.5, M2.6 and M3.3 settled (2026-08-20)
+
+The whole transcription subsystem had never run on a Mac. It does now, on macOS
+**26.6.1 / M4 arm64**, in both the dev tree and the packaged bundle. Nothing was
+found wrong with it; what follows is what "works" actually means, so the next
+session does not re-derive it.
+
+**Hardware detection is calm and correct.** `detect_compute_hardware()` returns
+in **0.09 s** with `status: cpu_only_mac`, `gpu_available: false`, cpu "Apple
+M4" / 10 cores, CT2 CPU compute types `{int8, int8_float32, float32}` -> picks
+`int8`. It recommends **Small** and deliberately omits the "a GPU would allow a
+larger model" upsell, which is right: the engine has no GPU backend on macOS at
+all, so no GPU a Mac user could buy changes the answer. `device_advisory` warns
+for medium / turbo / large-v3 and stays silent for tiny / base / small.
+
+**The measured speed table in `panopto/models.py` transfers.** 577 s of real
+speech transcribed in **95.8 s = 6.0x realtime** on `small` - against the 6.2x
+recorded there for an M4. That table is what stops Turbo being recommended on a
+Mac, so it is worth knowing it is still accurate.
+
+**Model download**: `start_download("small")` fetched 4 files / **486 MB in
+5.5 s** into `panopto_models/small`, reached terminal state `done`, and flipped
+`transcription_status()` to `ready: true` - which is the half that clears the
+setup notice. Note the progress denominator is the registry's `size_mb`
+(507.5 MB against 486.2 MB actual), so the bar tops out near 96 % and then
+jumps; that is the documented "approximate" denominator, not a defect.
+
+**The out-of-process design does its job.** Verified by sending a real
+**SIGSEGV** to a live worker - the closest thing to the uncatchable native crash
+the subprocess exists for:
+
+| | |
+|---|---|
+| parent | survived, raised `TranscriptionEngineCrash(exit_code=-11)` |
+| worker | reaped, no orphan |
+| stderr | faulthandler C-level traceback, mirrored into the parent's log |
+| `.part` | **left on disk** - see below |
+
+The abandoned sidecars are NOT a defect, because the phase-level `finally` in
+`panopto/runner.py` sweeps every task on the way out and there is exactly one
+production caller. That count is now a test (`CLAUDE.md` has the mechanism).
+
+**Cancel mid-transcription is clean, with a positive control.** The `.part`
+sidecars were confirmed present at 4.9 s, cancel took effect **0.1 s** after the
+flag, `PanoptoCancelled` was raised, **0 `.part` files remained**, no partial
+output was promoted, and the worker was reaped. That is the 2026-08-09 `finally`
+fix verified on a Mac for the first time.
+
+**M3.3 - the argv drop is genuinely fixed.** Driving the bundle's console worker
+with the env var ONLY and no argv flag:
+
+    worker start: pid=27989 frozen=True routed_via=env device=cpu ...
+
+`routed_via=env` is the proof, and the presence of that line at all is the
+documented tell that routing worked (its ABSENCE means the child booted the
+GUI). The frozen run produced **byte-identical** output to the dev run (9869 B
+txt / 10881 B srt, 30 segments, 95.7 s vs 95.8 s), which also proves
+faster-whisper, ctranslate2 and onnxruntime all load from the arm64 bundle.
+Exit 0, no `.part`, and only ONE `Canvas_Downloader` GUI process throughout.
+
+**Zero Dock footprint, confirmed.** With a frozen worker alive, `mac_eyes dock`
+showed `recent-apps` holding only Visual Studio Code - before, during and after
+the worker was killed - and System Events listed no worker among the non-
+background applications. The console-bootloader choice in `_worker_command()`
+is doing what its comment claims on macOS 26.
+
+**One thing the operator should expect, and it is cosmetic**: a worker that dies
+natively raises macOS's own *"Python quit unexpectedly"* crash-reporter dialog
+(in a packaged build it would name `Canvas_Downloader_Worker`). The app is fine
+and handles it - but the OS announces it regardless, and nothing in-process can
+suppress ReportCrash. Do not read that dialog as the app crashing.
