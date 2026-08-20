@@ -356,3 +356,61 @@ def test_the_staging_failure_is_logged_where_it_can_be_READ():
     assert levels and "debug" not in levels, (
         f"the staging-unavailable line is logged at {levels or 'nowhere'}; the "
         f"app's debug log captures INFO and above, so debug means invisible")
+
+
+# --------------------------------------------------------------------------
+# BEHAVIOURAL: actually take each fallback and check the set is populated
+# --------------------------------------------------------------------------
+#
+# The AST tests above assert the record EXISTS. They cannot see it being
+# disabled - a mutant that changed the guard to `and False` left the call in
+# the tree and survived. Only driving the real context manager catches that,
+# and driving it is also the only way to prove BOTH routes work, since the
+# route a denial takes is the one a structural test is least likely to name.
+
+def _drive(monkeypatch, *, container):
+    """Run office_container_stage for real and report what it yielded."""
+    import shutil, tempfile
+    AB._office_unstaged.clear()
+    with tempfile.TemporaryDirectory() as td:
+        src = Path(td) / "Lecture.doc"
+        src.write_bytes(b"legacy")
+        dst = Path(td) / "Lecture.pdf"
+        monkeypatch.setattr(AB, "_office_container_tmp", lambda app: container)
+        monkeypatch.setattr(AB.sys, "platform", "darwin", raising=False)
+        with AB.office_container_stage(src, dst, "Word") as (s_src, s_dst):
+            yielded_original = (Path(s_src) == src)
+    return yielded_original
+
+
+def test_route_1_container_missing_records_the_fallback(monkeypatch):
+    assert _drive(monkeypatch, container=None) is True, "expected the direct path"
+    assert "Word" in AB._office_unstaged, (
+        "the container-missing fallback did not record itself")
+
+
+def test_route_2_container_present_but_UNUSABLE_records_the_fallback(monkeypatch, tmp_path):
+    """THE ROUTE A DENIED APP-DATA GRANT TAKES, and the one the first fix missed.
+
+    macOS leaves the container directory existing and listable; what it refuses
+    is writing INTO it. Modelled by handing the stage a path whose mkdir fails -
+    a FILE where the directory should be.
+    """
+    blocker = tmp_path / "not-a-dir"
+    blocker.write_bytes(b"")
+    assert _drive(monkeypatch, container=blocker) is True, "expected the direct path"
+    assert "Word" in AB._office_unstaged, (
+        "the copy-failure fallback did not record itself - this is exactly the "
+        "route a denied app-data grant takes, and instrumenting only the "
+        "container-missing branch left the packaged app reporting a bare -1712")
+
+
+def test_a_WORKING_container_does_not_record_the_fallback(monkeypatch, tmp_path):
+    """The control: staging succeeded, so nothing should be marked unstaged."""
+    good = tmp_path / "container"
+    good.mkdir()
+    assert _drive(monkeypatch, container=good) is False, (
+        "expected the STAGED paths, not the originals")
+    assert AB._office_unstaged == set(), (
+        "a successful staging marked the app unstaged, which would blame an "
+        "ordinary timeout on permissions")
