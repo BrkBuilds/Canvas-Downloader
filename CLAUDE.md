@@ -922,6 +922,40 @@ The fix above is only as good as the moment its observation is taken, and that m
 - **A test counts the SITES, not the fix**: `test_EVERY_function_that_launches_an_office_app_observes_first` walks the module for everything that reaches `_warmup_apps` and asserts each observes first. The 2026-08-12 test checked `prime_office_automation` because that is where the fix landed - the same shape as `pdf_looks_real`, written for two delete sites and landing on one for eight months.
 - **A harness cannot catch this and did not**: every scenario here drives the converters directly, so the launchers never run. The reproduction was `sys.platform` patched to darwin with `pgrep` and the launcher modelled - which proves the DECISION path only; the "documents become undescribable" half is the 2026-08-12 macOS measurement, not re-measured. **STILL UNVERIFIED ON A MAC**, and filed as such: `MAC_RUNBOOK.md` Phase M1 **step 8** is the procedure, `AUDIT_FINDINGS.md` fp `989c128a238d` is the open work item, and `MAC_OFFICE_FIXES.md` known gap 5 is the honest list. The check that matters is **two runs in ONE session with a dirty document opened in between** - `pkill`ing between them is not a substitute, because the bug is about state inside one process, which is exactly why `scripts/verify_office_end_to_end.py` (cold/busy, one run each) cannot see it as written.
 - **The residual case, considered and DECLINED**: the predicate asks "was it running when we looked?", not "did we drive it?", and `_QUIT_TARGETS` is all three apps every run - so an app observed as idle and never touched still counts as ours, and a user opening it MID-RUN is asked to quit. The document check protects them there, soundly: no conversion phase ran for that app, so its documents are still describable and only a pristine blank is quit. A separate "we actually drove it" set would close it exactly, and is a SECOND fact about the same question kept in a second place - which is the bug this file has now fixed twice.
+### …and it RAN on a Mac at last - the document check has a THRESHOLD (2026-08-20)
+The gate above shipped verified only by a Windows simulation, and the register
+said so (`fp:989c128a238d`, HIGH). It now runs on macOS 26.6.1, and the half the
+simulation could not reach turns out to be **load-dependent** - which is what
+makes a small test pass while proving nothing.
+- **All three Phase M1 step 8 checks pass against the real applications**: first
+  run (both apps quit, Recents 4 -> 0), **two runs in ONE process with a dirty
+  unsaved Word document opened between them** (`left alone (we did not launch
+  it)`, document intact), and cancel (`left alone (we never drove it this
+  run)`). The two "left alone" reasons are told apart on real hardware, which is
+  the distinction D11 was about.
+- **A conversion phase leaves Word's documents undescribable only past THREE
+  files.** Measured, reading `name`/`path`/`full name`/`saved` after a real
+  phase with the user's document open: **2 files -> all four read correctly; 3,
+  4 and 6 -> all four FAIL.** Below the threshold the document check still
+  works, so it catches a wrong gate decision and nothing looks broken.
+- **So a harness that converts one or two files is STRUCTURALLY BLIND to this**
+  - the same shape as D11 passing every harness in the repo, one variable
+  further in. The first 8(b) run of this session used `--files 2` to save rented
+  time, printed `VERDICT: ALL GOOD`, and armed nothing; re-run at `--files 4` it
+  passes for the right reason. `scripts/verify_office_end_to_end.py:
+  MIN_ARMING_FILES` (3) now REFUSES a below-threshold run, naming why.
+- **The negative control is what proves the gate is the SOLE defence**, and it
+  needs no mutation: send `_idle_quit_script(..., undescribable_is_ours=True)` -
+  byte-for-byte what the teardown emits for an app it believes it launched -
+  after a 6-file phase with the user's dirty document open. It answers `quit
+  sent (1 open doc(s), none user-owned)`, Word quits, the document is closed.
+- **Probe traps**: `repeat with d in documents` INSIDE a `tell application`
+  block dies `-1708` ("every document doesn't understand the count message") -
+  the rule is already written in `_idle_quit_script`, so read the product's
+  idiom rather than inventing one. And building a `.pptx` by driving PowerPoint
+  (`make new presentation` + `save`) times out `-1712` and crashes it into
+  Microsoft Error Reporting, because the save panel is hidden under `open -g -j`.
+
 - **Modelling `pgrep` in a test: sample the process table at CALL time, then delay.** Sampling after the delay models a probe that sees the future, and the thread-race test then fails against correct code - which is how the first version of it "found" a defect that was not there.
 - `tests/test_office_quit_scoping.py` (27); all **17** mutations of the real code are caught. Note that removing EITHER idempotence guard alone is an equivalent mutant now the function is double-checked - the mutant has to span both.
 

@@ -11,17 +11,17 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260811_155557_macos-26-v2.0.2` on 2026-08-12.
 
-**10 open** · 137 total · 72 fixed · 23 accepted · 1 wontfix · 31 invalid
+**9 open** · 137 total · 73 fixed · 23 accepted · 1 wontfix · 31 invalid
 
 ---
 
 ### The per-run Office quit observation has never run on a Mac - the two-run data-loss path is verified only by a Windows simulation
 <!-- fp:989c128a238d -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: conversion
-**Oracles**: none - this entry EXISTS because no oracle has seen it
+**Oracles**: none - this entry EXISTED because no oracle had seen it; CLOSED 2026-08-20 by direct measurement on macOS 26.6.1
 **First seen**: 2026-08-13 (windows-offline-followup)
 **Last seen**: 2026-08-13 (windows-offline-followup)
 **Occurrences**: 1
@@ -74,6 +74,44 @@ do is run the sequence twice in one process, which is the whole point.
 one process.
 
 **Notes**:
+
+CLOSED 2026-08-20 on the rented Mac (macOS 26.6.1 Tahoe, M4 arm64), run
+`20260820_143238_macos-26-v2.0.2`. All three sub-checks of Phase M1 step 8 pass
+against the REAL applications, and - the part the Windows simulation could not
+reach - the destructive half was re-measured and ARMED while they ran.
+
+  8(a) first run, permission record deleted: 7/7 converted, Word and Excel both
+       `quit sent (1 open doc(s), none user-owned)`, Recents 4 -> 0.
+  8(b) two runs in ONE process, the user opening a dirty unsaved Word document
+       between them: run 1 quits both apps; run 2 logs `Word was already
+       running before this run` and `left alone (we did not launch it)`;
+       `word_running_after_run2: true`, `word_docs_after_run2: 1`. The
+       document survived. VERDICT ALL GOOD.
+  8(c) cancel, nothing ever observed: `left alone (we never drove it this run)`
+       - the distinct second reason, so the two "left alone" paths are told
+       apart on real hardware and not merely in the unit tests.
+
+THE OTHER HALF, re-measured rather than inherited. D9's 2026-08-12 claim that a
+conversion phase leaves Word's documents undescribable REPRODUCES, but it is
+LOAD-DEPENDENT and nobody had recorded that:
+
+    2 Word files converted -> name/path/full name/saved all READ correctly
+    3, 4, 6 files          -> name=[FAIL] path=[FAIL] full=[FAIL] saved=[FAIL]
+
+Negative control, with no product code mutated: `_idle_quit_script("Microsoft
+Word", "documents", undescribable_is_ours=True)` - byte-for-byte what the
+teardown emits for an app it believes it launched - was sent after a 6-file
+phase with the user's dirty document open. It returned `quit sent (1 open
+doc(s), none user-owned)`, Word quit, and the document was closed. So the
+document check really is blind and the gate really is the sole defence; the
+fix is load-bearing, not belt-and-braces.
+
+THE TRAP THIS SESSION WALKED INTO: the first 8(b) run was made with `--files 2`
+to save rented-machine time. It reported ALL GOOD - but 2 is below the
+threshold, so the documents were still describable and the destructive half was
+never armed. It was re-run at `--files 4` (above the threshold) and passes
+there, which is the result recorded above. `verify_office_end_to_end.py` now
+REFUSES a below-threshold `--files` for the states that depend on it.
 
 ---
 
