@@ -1526,3 +1526,33 @@ sitting at the Post-Processing header with the app at 0% CPU. That is the
 documented per-process re-arm, not a leak. Budget for it: every app restart
 costs one more click, so enable debug logging BEFORE the run rather than
 restarting to add it.
+
+### Confirmed live: an UNDESCRIBABLE document cannot be force-closed
+
+Chasing leftover state after the packaged run produced a direct sighting of the
+condition `_office_preexisting`'s design note describes, which had only ever
+been reasoned about from the quit side.
+
+Word was found holding **3 of our staged `src_*.doc` documents**, all pristine.
+`_force_close_canvas_docs_sync("Microsoft Word")` closed **one**; the remaining
+two then reported `name` as **`missing value`** and no number of further calls
+touched them. That is exactly the documented limitation:
+
+> every app is left holding one document whose name, path and `saved` are ALL
+> unreadable once a conversion phase has run, and `_force_close_canvas_docs_sync`
+> cannot close it either because it identifies documents by those same
+> properties
+
+So it is **not a defect** - it is why the quit decision is "was it running
+before we touched it?" rather than a document check. Here Word was pre-existing
+(from earlier harness runs), the app correctly left it alone, and the
+undescribable documents stayed. `quit saving no` clears them; the app's own
+`_purge_recents_sqlite()` then removed all 3 Recents entries.
+
+**TRAP: `only_app` takes the FULL name.** `_QUIT_TARGETS` holds
+`"Microsoft Word"`, and every real caller passes `mapping[0]`. Calling
+`_force_close_canvas_docs_sync("Word")` filters everything out and does nothing
+- which reads exactly like the remedy failing. That was the third time in this
+session that checking the call convention before filing turned a "finding" back
+into a harness error; the other two were `_path_key` on a relative path and
+`quit_idle_office_apps` from a fresh interpreter.
