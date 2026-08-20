@@ -1290,3 +1290,44 @@ DURING a Panopto download or transcription.
 A direct Quit Apple event to the app works, so M3.8 does not depend on the
 System Events grant. Useful, because that grant is exactly what a mid-session
 Automation experiment takes away (see M1.3).
+
+## M2.6 - the model manager, both switch states (2026-08-20)
+
+Driven in the real app (isolated `CANVAS_DL_CONFIG_DIR`, the model symlinked in
+so the config could be disposable). Settings is NOT reachable before login, so
+this needs the keychain token - read it, never print it.
+
+**Panopto ON, model installed:**
+
+    status line : "Ready · active model: small"
+    button      : "Manage transcription configuration"
+
+**Panopto OFF, model installed** - the "do not strand the user's disk" case:
+
+    status line : "Panopto is switched off · open to remove the installed
+                   model or GPU libraries and reclaim the space"
+    button      : "Manage installed models"
+    is_enabled  : True      computed filter: none
+
+That last pair is the check worth making: a correct LABEL on a DISABLED button
+would defeat the whole purpose, since this dialog is the only place a
+multi-gigabyte model can be deleted. It is genuinely live, and not painted with
+the app's disabled recipe.
+
+**The dialog itself, judged on screen:**
+
+* Detected Hardware reads *"GPU - Apple Silicon - no GPU mode (the engine runs
+  on the CPU)"* and *"CPU - 10-core CPU · Apple M4"*; the GPU device button is
+  correctly unavailable.
+* **Exactly ONE "Recommended" badge** (on Small) - the documented double-badge
+  bug, where the registry flag and the UI's own computation both fired, stays
+  fixed.
+* Small shows **Active** plus a delete control; the other five show Download.
+
+**Three model-size numbers, and they are NOT a divergence.** The registry
+declares `size_mb: 484`, the row displays **464 MB**, and the download
+denominator was 507.5 MB. The UI shows the declared size until a model is
+installed and then switches to the MEASURED `installed_size_mb` - preferring
+measured over declared, which is right. The denominator is the declared figure
+in bytes, so the bar tops out near 96 % and jumps; `size_mb`'s own docstring
+calls it approximate.
