@@ -110,6 +110,17 @@ done. Everything below is what genuinely remains.
 * **Item 1 - the notification code defect is FIXED** (fd05d18) but the PRODUCT
   question is unresolved - see below.
 
+### 1. ~~Can ANY fallback display a banner while the app is DENIED?~~ ANSWERED 2026-08-20
+
+**Answered, with one half left explicitly open.** The app never reaches any
+fallback while denied - that is by design and the code already does it. On a
+NON-denial failure osascript DELIVERS a Notification Center entry (photographed,
+grouped under "Script Editor") and paints NO banner. Whether it could banner on
+a LOCAL, non-remote session is unresolved and is confounded by NoMachine.
+Mechanism, measurement and the confounder are in `MAC_RUNBOOK.md` under
+"Notifications on macOS 26"; the overstated premise in
+`engine/notifications.py` was corrected in the same commit. Original text:
+
 ### 1. Can ANY fallback display a banner while the app is DENIED? - the last gap
 The code defect is fixed: `_show_macos_notification_un` now waits for the
 completion handler and returns False on an explicit rejection, so the fallbacks

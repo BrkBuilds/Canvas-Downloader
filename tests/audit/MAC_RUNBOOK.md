@@ -788,3 +788,53 @@ cluster in exactly three places: **TCC wording and prompt behaviour**,
 `scripts/mac_audit_bootstrap.sh`; it is idempotent and should take minutes.
 Carry `~/mac_audit_secrets.env` across so the Keychain and settings are seeded
 without retyping anything.
+
+
+---
+
+## Notifications on macOS 26: the osascript fallback DELIVERS but does not BANNER (2026-08-20)
+
+Measured on macOS 26.6.1 (Tahoe, M4), run `20260820_143238_macos-26-v2.0.2`,
+with the screen confirmed clear of consent prompts first (`mac_eyes dialogs`) -
+prompts sitting in the top-right corner are what invalidated the 2026-08-11
+attempt, because that is exactly where a banner would appear.
+
+**The question changes shape once the code is read.** `_show_macos_notification_un`
+already refuses to fall back on an explicit denial (`_un_error_is_denial` -> log
+once -> `return True`, meaning "the question is settled"). So the app NEVER
+reaches osascript while denied - that was settled by 588bead, product owner's
+call. The fallbacks run only on a NON-denial failure, and that is the case worth
+measuring.
+
+**What osascript actually does.** Screenshot diff (PIL `ImageChops.difference`
++ `getbbox`), banner region isolated, sampled at 0.4 / 0.9 / 1.6 / 2.6 / 4.0s:
+
+    topright bbox = None at every sample, 0 changed pixels
+
+Re-run after the operator enabled notifications: still no banner. (The pixel
+delta that appeared at 1.8s/3.0s was a VS Code redraw - the saved crop shows an
+editor, not a notification. **Always look at the crop before believing a
+bbox.**)
+
+**But it is delivered, not dropped.** The operator opened Notification Center
+and photographed it: every probe present, grouped under a header reading
+**"Script Editor"**. That is direct visual confirmation of the identity
+objection the product decision rests on, which until now was only reasoned - a
+user really would see `Script Editor: Sync done - 12 new files` attributed to an
+app they never ran.
+
+**CONFOUNDER, STATED RATHER THAN RESOLVED.** The operator is on NoMachine and
+raised it unprompted: a remote desktop may route banners straight to
+Notification Center without the popup. This session could not rule that out. The
+positive control needs an app with its OWN bundle identity to banner
+successfully in the same session; the packaged app now has that identity (the
+launch prompted, the operator allowed, Alert Style = **Temporary**), but making
+it post requires driving a run to completion.
+
+    TRUE            the fallback is not inert - it delivers a persistent entry
+    TRUE            the entry is attributed to Script Editor (photographed)
+    TRUE            the app attempts no fallback at all while denied
+    NOT ESTABLISHED whether osascript can banner on a LOCAL macOS 26 session
+
+Do not restate the banner claim as fact in either direction until someone
+measures it at the physical machine.
