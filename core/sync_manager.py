@@ -2217,11 +2217,41 @@ class SyncManager:
         your edits"), clean-vs-edited update routing, and content-based rename
         matching all key off original_md5. Canvas's API does not expose a usable
         file hash, so the fresh-download path hashes bytes inline and passes
-        local_md5. Callers that can't (skip-existing files, secondary HTML/URL
-        entities) leave it empty - compute it from the on-disk file here so the
-        baseline is never silently dropped. compute_local_md5 returns None on a
-        locked/unreadable file; coerce to "" so the DB always stores a string.
+        local_md5.
+
+        **A caller that supplies no md5 is one of two very different things, and
+        hashing the file for BOTH of them was a data-loss bug.**
+
+        * ``clear_ignored=True`` - the caller just WROTE these bytes (secondary
+          HTML/URL renders). What is on disk is ours, so hashing it is right.
+        * ``clear_ignored=False`` - a SKIP-EXISTING re-record: the file was
+          already there and was left alone. Those bytes are **not** ours; they
+          may be the student's edit. ``original_md5`` means *what we
+          downloaded*, which is precisely what must not change here.
+
+        Re-hashing on the skip path rewrote the baseline to the file's CURRENT
+        content, so an edit that preserved the file's SIZE (which is what makes
+        the skip branch fire at all) had its protection erased: measured
+        2026-08-20, `_classify_local_modification` flipped 'modified' ->
+        'clean', which is the verdict that lets the next sync overwrite it, with
+        `_NewVersion` unable to fire because it reads this row.
+
+        It was also a second, certain cost on macOS: hashing an evicted iCloud
+        file MATERIALISES it, so re-running a download re-downloaded the whole
+        course from iCloud. Measured on a real account - 19 of 19 untouched
+        files pulled back, against 0 of 22 for the sync path.
+
+        So the stored baseline is preferred whenever one exists. Hashing remains
+        the fallback for a row that has none (a folder from before baselines
+        existed, or a first download over pre-existing files), which is what
+        keeps the original promise that the baseline is never silently dropped.
+        compute_local_md5 returns None on a locked/unreadable file; coerce to ""
+        so the DB always stores a string.
         """
+        if not local_md5 and not clear_ignored:
+            _prev = self.get_manifest_baseline(canvas_file_id)
+            if _prev and _prev[0]:
+                local_md5 = _prev[0]
         if not local_md5:
             full_path = self.local_path / local_path
             if full_path.exists():

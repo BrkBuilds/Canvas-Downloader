@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260820_143238_macos-26-v2.0.2` on 2026-08-20.
 
-**8 open** · 137 total · 23 accepted · 74 fixed · 31 invalid · 1 wontfix
+**8 open** · 138 total · 23 accepted · 75 fixed · 31 invalid · 1 wontfix
 
 ---
 
@@ -265,10 +265,7 @@ NOT FIXED, deliberately, and the reasoning is the asymmetry: making this work on
 
 WHAT WAS FIXED is the audit's own expectation, which produced 6 spurious CRITICAL findings on the first macOS sync matrix - expensive noise in a release gate, and the second time this fixture has misfired (a 2026-07-28 run recorded the same shape after it chmod'ed a conversion output instead of a download target). `readonly_target` now sets expect_after="" on POSIX with the measurement written into the comment, keeping expect_category="updated_clean" so the row still asserts what it can on this platform: that a read-only file is still classified as a clean update, and that the run reports neither a silent success nor a hard error. Re-ran the 3 affected rows (ro001/ro013/ro029) with the corrected fixture: all ok, 0 criticals, only the pre-existing informational long-path note.
 
-**Notes**:   
-> Not observed in the latest run.
-
-RE-CONFIRMED on macOS 26.6.1 on 2026-08-20 (run 20260820_143238_macos-26-v2.0.2).
+**Notes**: RE-CONFIRMED on macOS 26.6.1 on 2026-08-20 (run 20260820_143238_macos-26-v2.0.2).
 Identical to macOS 15, so this is a stable property of the platform and not a
 15-only quirk:
 
@@ -301,7 +298,8 @@ round: re-applying the old mode after a successful replace. It is cheap and
 only touches the replace-existing path, but it half-honours the intent - the
 flag survives while the content changes underneath it - which reads as more
 confusing than the present honest-but-silent behaviour, and it does not address
-the actual complaint.
+the actual complaint.  
+> Not observed in the latest run.
 
 ---
 
@@ -801,6 +799,74 @@ File removed but its manifest row kept, which is what a real user deletion looks
 
 **Notes**: AUDIT DEFECT, fixed. The fixture predicts 'absent' because a deleted-locally row is UNCHECKED by default. This run ticked it on purpose (`--select deleted_locally`, the second Phase 2 scenario), so restoring the file is exactly what the user asked for. `_sync_outcome` is now selection-aware in BOTH directions: an unticked restore/new_version becomes 'unchanged', and a ticked 'absent' becomes 'restored'. Re-checked: 2 of these became 0.  
 > Not observed in the latest run.
+
+---
+
+### ~~A skip-existing re-download rewrote original_md5 from the on-disk bytes, erasing _NewVersion protection for a same-size local edit~~
+<!-- fp:2eabd836801f -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: delivery
+**Oracles**: O3,O4
+**First seen**: 2026-08-20 (20260820_143238_macos-26-v2.0.2)
+**Last seen**: 2026-08-20 (20260820_143238_macos-26-v2.0.2)
+**Occurrences**: 2
+
+**Detail**:
+
+FOUND 2026-08-20 on the rented Mac while measuring iCloud eviction, then
+reproduced against the real class on any platform. The iCloud symptom is what
+led here; the data-loss defect is the disease.
+
+`original_md5` means WHAT WE DOWNLOADED. It is the sole basis of
+`_classify_local_modification`, which decides 'clean' (safe to overwrite) vs
+'modified' (preserve as _NewVersion). `record_downloaded_file` rewrote it from
+whatever was on disk.
+
+THE PATH. `record_downloaded_file` runs after EVERY file of a download,
+including files SKIPPED because they already existed (core/canvas_logic.py,
+"Sync Run #0: Record skipped-but-existing files to the DB"). That call site
+passes no local_md5, so the function hashed the on-disk file and stored it.
+
+MEASURED, driving the real class:
+
+    first download        baseline = md5(original bytes)
+    student edits it      classification -> 'modified'   (protected)
+    re-download course    baseline = md5(THE EDIT)
+                          classification -> 'clean'      (NOT protected)
+
+'clean' is the verdict that lets the next sync overwrite the file, and
+_NewVersion cannot fire because it reads this row. The edit has to preserve the
+file's SIZE (a size change sends the download down the overwrite branch instead
+of the skip branch), so it is narrow - but silent, and aimed at the one thing
+the product promises about the user's own work.
+
+THE SECOND, CERTAIN COST. Hashing READS the file, and reading an evicted iCloud
+file materialises it. Re-running a download over a folder macOS had evicted
+pulled the entire course back down: 19 of 19 untouched files, against 0 of 22
+for the sync path, on a real iCloud account with a real 22-file Canvas course.
+
+THE FIX needed no new state: `clear_ignored` was already the fresh-vs-skip
+discriminator and its docstring already said so. A caller with no md5 is either
+recording bytes it just WROTE (clear_ignored=True - secondary HTML/URL renders,
+where the file is ours and hashing is correct) or re-recording a skip-existing
+file (where it is not). The stored baseline is now preferred whenever one
+exists; hashing remains the fallback for a row that has none, which keeps the
+original promise that a baseline is never silently dropped.
+
+VERIFIED END TO END on the real evicted iCloud folder: 0 files materialised
+after the fix. The single file whose blocks changed was the .webloc, which
+_create_link REWRITES every run - our own write, not a fetch, confirmed by its
+mtime being seconds old.
+
+COVERED by tests/test_download_baseline_preservation.py (8) and
+scripts/_mutate_download_baseline.py - 4/4 caught plus one documented
+EQUIVALENT mutant. The mutation pass exposed a real gap in the tests first: a
+row that is MISSING and a row that EXISTS WITH AN EMPTY md5 take different
+branches, and only the second tells the guards apart.
+
+**Notes**: 
 
 ---
 
