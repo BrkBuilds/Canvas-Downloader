@@ -902,6 +902,57 @@ Each was mechanical, whole-project, or driven against the real machine, so a fut
 
 **A leftover harness can impersonate the app, and it nearly cost a wrong conclusion.** Three streamlit processes from earlier sessions were still listening on 8599/8601/8603/8605. Launching the app on 8599 failed with "Port 8599 is already in use", the health check still answered 200, and the browser rendered the *completion-screen gallery* - which read exactly like "the app boots clean". **Always confirm the listener's PID is yours** (`lsof -nP -iTCP:<port> -sTCP:LISTEN`) before believing anything a local port tells you.
 
+## A re-download REWROTE the edit-protection baseline - one bookkeeping line (2026-08-20)
+`original_md5` means **what we downloaded**. It is the sole basis of the app's
+headline promise: `_classify_local_modification` compares the file on disk
+against it to answer `clean` (safe to overwrite) or `modified` (preserve as
+`_NewVersion`). `record_downloaded_file` rewrote it from whatever was on disk.
+
+- **Found while measuring something else.** The iCloud pass asked "does a
+  re-download materialise an evicted folder?" - it did, 19 of 19 - and chasing
+  the cause landed on a line whose *other* effect is data loss. The materialise
+  question was the symptom; this is the disease.
+- **`record_downloaded_file` runs after EVERY file of a download, including the
+  ones that were SKIPPED because they already existed** (`core/canvas_logic.py`,
+  *"Sync Run #0: Record skipped-but-existing files to the DB"*), and that call
+  site passes no md5. The function then hashed the file on disk and stored it -
+  so a re-download replaced the baseline with the file's CURRENT content.
+  Measured, driving the real class:
+
+      first download        baseline = md5(original bytes)
+      student edits it      classification -> 'modified'   (protected)
+      re-download course    baseline = md5(THE EDIT)
+                            classification -> 'clean'      (NOT protected)
+
+  `clean` is the verdict that lets the next sync overwrite the file, and
+  `_NewVersion` cannot fire because it reads this row.
+- **The edit must preserve the file's SIZE**, because a size change is what
+  sends the download down the overwrite branch instead of the skip branch. That
+  makes it narrow - and silent, and aimed at the one thing the product promises
+  about the user's own work.
+- **The same line was the certain iCloud cost**: hashing READS the file, and
+  reading an evicted file materialises it. Re-running a download over a folder
+  macOS had evicted pulled the whole course back - **19 of 19** untouched files,
+  against **0 of 22** for the sync path, measured on a real account.
+- **`clear_ignored` already was the fresh-vs-skip discriminator** and its
+  docstring already said so, so the fix needed no new state: a caller with no
+  md5 is either recording bytes it just WROTE (`clear_ignored=True` - secondary
+  HTML/URL renders, where the file is ours and hashing is right) or re-recording
+  a skip-existing file (where it is NOT ours). The stored baseline is preferred
+  whenever one exists; hashing stays the fallback for a row that has none, which
+  keeps the original promise that a baseline is never silently dropped.
+- **Verified end to end on the real folder**: after the fix a real download over
+  a fully evicted iCloud course materialised **0** files. The one that changed
+  blocks was the `.webloc`, which `_create_link` REWRITES every run - our own
+  write resetting its blocks, not a fetch (confirmed by its mtime).
+- `tests/test_download_baseline_preservation.py` (8) and
+  `scripts/_mutate_download_baseline.py` - **4/4 caught, plus one documented
+  EQUIVALENT** mutant (trusting an empty stored baseline changes nothing,
+  because the fallback hashes on any falsy md5; the `and _prev[0]` guard is
+  belt-and-braces). The mutation pass is what exposed a genuine gap in my own
+  tests first - a row that is MISSING and a row that EXISTS WITH AN EMPTY md5
+  reach different branches, and only the second distinguishes them.
+
 ## iCloud "Optimize Mac Storage": SUPPORTED, and now pinned by tests (2026-08-20)
 A student on a cheap small-SSD Mac is a core persona, and macOS EVICTS their
 course files to free space: the name and size stay, the bytes do not
