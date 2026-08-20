@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260820_143238_macos-26-v2.0.2` on 2026-08-20.
 
-**8 open** · 141 total · 23 accepted · 78 fixed · 31 invalid · 1 wontfix
+**8 open** · 142 total · 23 accepted · 79 fixed · 31 invalid · 1 wontfix
 
 ---
 
@@ -4266,3 +4266,67 @@ run with debug mode ON contains **zero** DEBUG lines - so the one line
 explaining why conversions are about to fail could never be read, by a user
 or by this audit. I nearly concluded from its absence that the branch had not
 run. It is a WARNING now.
+
+---
+
+### The macOS folder picker's cancel test matched the American spelling; macOS emits the British one
+<!-- fp:07f659093301 -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: classification
+**Oracles**: the app's predicate vs the string osascript actually emits
+**First seen**: 2026-08-20
+**Last seen**: 2026-08-20
+**Occurrences**: 1
+**Scenario**: pattern sweep after the `_classify_stderr` locale defect
+
+**Detail**:
+
+Found by sweeping for the PATTERN behind that day's classifier bug - predicates
+that decide behaviour by matching literal text ANOTHER system produced.
+Measured directly:
+
+    $ osascript -e 'error number -128'
+    0:17: execution error: User cancelled. (-128)
+
+while `shared/helpers.py` tested `'User canceled' in err` - **American, one L**.
+The clause was DEAD, exactly like `not authorized to send apple events`, and
+survived on the `'-128'` companion beside it.
+
+It decides something real: `[]` means the user cancelled, `None` means the
+picker could not run - and `native_folder_multi_picker` answers `None` by
+**falling back to the single picker**, i.e. opening a second dialog at someone
+who just pressed Cancel. Low severity only because the number is always
+present in osascript's output.
+
+**Notes**: FIXED - both spellings, case-folded, number kept. Verified LIVE
+against real osascript output: the picker returns `[]`. A mutant that keeps
+only the number is caught, so the wording clause cannot quietly become
+decoration again.
+
+**Swept at the same time, and clean** - recorded so nobody re-investigates:
+
+* **macOS does NOT localise errno strings** - `os.strerror(EACCES)` is
+  `'Permission denied'` under both `en_US` and `da_DK`, so OSError-text
+  matching is safe on this platform.
+* **SQLite lock messages are not localised** (fixed English in the C library).
+* Canvas-error predicates in `core/canvas_logic.py` and `shared/components.py`
+  already carry BOTH `authorized`/`authorised`.
+* `'CERTIFICATE_VERIFY_FAILED'`, `'0x80040154'` and the AppleScript error
+  numbers are structured tokens, not prose - not at risk.
+
+**One divergence fixed with it, NOT a live defect**: the same "is this a
+SQLite lock?" question was asked at 19 sites in `core/sync_manager.py` in TWO
+spellings - `'locked' in str(e).lower()` and the strictly narrower,
+case-sensitive `'database is locked' in str(e)`, which misses SQLITE_LOCKED
+(`database table is locked`) and sat on the paths that RE-RAISE rather than
+retry. Measured before claiming anything: this app opens one short-lived
+connection per operation and uses no shared cache, so a contended write raises
+SQLITE_BUSY - reproduced, `database is locked` - and SQLITE_LOCKED is not
+reachable. Unified into `_is_locked_error` because a rule spelled twice is one
+some caller is already following an old version of; retry POLICY was left
+alone, since the sites differ on attempts for real reasons.
+
+`tests/test_foreign_text_predicates.py` (14);
+`scripts/_mutate_foreign_text.py`, **7/7 caught**.

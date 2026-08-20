@@ -1295,8 +1295,21 @@ def _mac_multi_folder_picker(start_dir: str) -> list[str] | None:
         return None
     if result.returncode != 0:
         err = (result.stderr or '')
-        # -128 / "User canceled" is a normal cancel, not a failure.
-        if 'User canceled' in err or '-128' in err:
+        # -128 is a normal cancel, not a failure.
+        #
+        # BOTH spellings, because macOS emits the BRITISH one: measured on
+        # 26.6.1, `osascript -e 'error number -128'` says **"User cancelled."**
+        # with two L's, so the American clause here was DEAD and the verdict
+        # rested entirely on the number beside it. Same defect this app already
+        # had in `_classify_stderr`, where macOS's "Not authorised" never
+        # matched an American-only clause.
+        #
+        # It matters which one answers: `[]` means the user cancelled, `None`
+        # means the picker could not run - and the caller answers `None` by
+        # falling back to the SINGLE picker, i.e. by opening a second dialog at
+        # someone who just pressed Cancel.
+        _low = err.lower()
+        if 'user cancelled' in _low or 'user canceled' in _low or '-128' in err:
             return []
         logger.warning("Multi-folder picker (macOS) error: %s", err.strip())
         return None
