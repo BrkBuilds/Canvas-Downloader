@@ -4143,3 +4143,14 @@ data loss, hence low.
 
 `tests/test_conversion_retry.py` (37); `scripts/_mutate_retry_fatal_skip.py`,
 **6/6 caught**.
+
+**Verified through the REAL phase runner**, not only by unit tests - this repo's
+own rule, and the fix was briefly shipped without it. `run_word_conversion` plus
+the retry pass driven with a real `UIBridge`, with the ONLY substitution being
+osascript's result, set to the exact stderr macOS produced at 20:49:20:
+
+    WITHOUT the fix   aborts=2   "failed twice"=1   original survives=True
+    WITH the fix      aborts=1   "failed twice"=0   original survives=True
+
+The "without" column reproduces the packaged run's measured behaviour exactly,
+which is what makes the "with" column mean something.
