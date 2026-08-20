@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260820_143238_macos-26-v2.0.2` on 2026-08-20.
 
-**8 open** · 139 total · 23 accepted · 76 fixed · 31 invalid · 1 wontfix
+**8 open** · 140 total · 23 accepted · 77 fixed · 31 invalid · 1 wontfix
 
 ---
 
@@ -4085,3 +4085,61 @@ mutant pins it ("the obvious fix, and wrong").
 
 `tests/test_office_crash_is_not_missing.py` (29);
 `scripts/_mutate_applescript_locale.py`, **6/6 caught**.
+
+---
+
+### A phase that ABORTED on a fatal AppleScript condition was retried, emitting the actionable message twice
+<!-- fp:6c1a2474d09e -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: conversion
+**Oracles**: the debug log vs the health record - two independent counts of the same failure
+**First seen**: 2026-08-20 (packaged app, macOS 26.6.1)
+**Last seen**: 2026-08-20
+**Occurrences**: 1
+**Scenario**: M1.3 - Automation for Microsoft Word genuinely DENIED
+
+**Detail**:
+
+Measured in the PACKAGED app with the operator clicking **Don't Allow** on the
+real Automation prompt - the first time that state has been driven on a Mac.
+ONE `.doc` produced **3 per-file errors and 2 aborts**:
+
+    20:49:20.425  [AppleScript] Word failed (permission): ... Not authorised
+                  to send Apple events to Microsoft Word. (-1743)
+    20:49:20.435  Klyngevejledning_1_Program_2023.doc  Conversion failed - ...
+    20:49:20.440  macOS blocked ...  skipping remaining 0 Word file(s)
+    20:49:21.156  [AppleScript] Word failed (permission): ...   <- the RETRY
+    20:49:21.168  Klyngevejledning_1_Program_2023.doc  Conversion failed - ...
+    20:49:21.173  macOS blocked ...  skipping remaining 0 Word file(s)
+    20:49:21.242  Klyngevejledning_1_Program_2023.doc  Conversion failed twice
+
+Corroborated from a SECOND oracle rather than read twice out of one: the health
+record independently wrote `failures={'osascript_permission': 2}`.
+
+`retry_failed_conversions` retries anything whose source is still on disk. That
+is right for a destination locked by an editor and wrong for a FATAL category:
+`permission` and `app_missing` are in `FATAL_CATEGORIES` **precisely because**
+they "will identically doom every remaining file in the phase", so the second
+attempt cannot succeed. What it does instead is emit the one actionable message
+a second time - defeating the whole purpose of `_abort_applescript_phase` - and
+then label the file **"Conversion failed twice"**, which blames the document
+for a machine-wide permission state.
+
+**Notes**: FIXED 2026-08-20. `_abort_applescript_phase` records its phase label
+on the bridge - it is the one place that knows WHICH phase died and why - and
+the retry declines that phase.
+
+**The skip is per PHASE, not global, and that half is what makes it safe.** A
+Word denial says nothing about the HTML-to-Markdown runner, which uses no
+AppleScript at all, and Automation is granted per (client, target app) so it is
+not evidence about Excel either. Mutants pin both directions, including the
+tempting global form.
+
+The original `.doc` survived throughout (153,600 B) and no stub PDF was
+promoted, so the delete gate was never at risk - this is message quality, not
+data loss, hence low.
+
+`tests/test_conversion_retry.py` (37); `scripts/_mutate_retry_fatal_skip.py`,
+**6/6 caught**.
