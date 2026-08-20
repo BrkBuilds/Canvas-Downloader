@@ -328,3 +328,119 @@ def test_a_long_path_is_still_removed_when_the_bare_call_would_fail():
         assert not txt.exists(), (
             "the sidecar survived a remove that only accepts long-path form - "
             "which is what a stock Windows install does to a 341-char path")
+
+
+# --------------------------------------------------------------------------
+# a CRASHED worker leaves the sidecars behind, so EVERY caller needs the sweep
+# --------------------------------------------------------------------------
+#
+# Measured on macOS 26.6.1 (2026-08-20) by sending a real SIGSEGV to a live
+# transcription worker - which is exactly what an uncatchable native crash looks
+# like, and the failure this module's subprocess design exists to contain.
+#
+# Containment itself works: the parent survived, raised TranscriptionEngineCrash
+# with exit_code=-11, and reaped the child. But the CRASH path of
+# ``transcribe_in_subprocess`` does NOT sweep - only its CANCEL branch does - so
+# both ``<name>.txt.part`` and ``<name>.srt.part`` were still in the folder when
+# it returned.
+#
+# That is not a user-visible defect today, and the reason is a COUNT: there is
+# exactly one production caller, ``panopto/runner.py:_run_panopto_batch``, and
+# its phase-level ``finally`` sweeps every task on the way out. So containment
+# rests entirely on the caller, and a second caller added anywhere would leak on
+# the crash path with nothing failing - the same shape as ``pdf_looks_real``
+# landing on two of three delete sites and surviving eight months.
+#
+# The test therefore encodes the RULE rather than the count: a legitimate new
+# caller is fine, provided it sweeps the way the existing one does.
+
+_PRODUCTION_DIRS = ("app.py", "sync_ui.py", "core", "engine", "panopto",
+                    "sync", "ui", "shared", "converters")
+
+
+def _production_sources():
+    """Every production .py file, as (repo-relative path, parsed AST)."""
+    import ast
+    seen = []
+    for entry in _PRODUCTION_DIRS:
+        target = REPO / entry
+        files = [target] if target.is_file() else sorted(target.rglob("*.py"))
+        for f in files:
+            if "__pycache__" in f.parts:
+                continue
+            try:
+                seen.append((f.relative_to(REPO).as_posix(),
+                             ast.parse(f.read_text(encoding="utf-8"))))
+            except SyntaxError:                      # pragma: no cover
+                continue
+    return seen
+
+
+def _enclosing_function(tree, lineno):
+    """The innermost FunctionDef containing *lineno*, or None at module level."""
+    import ast
+    best = None
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            end = node.end_lineno or node.lineno
+            if node.lineno <= lineno <= end:
+                if best is None or node.lineno > best.lineno:
+                    best = node
+    return best
+
+
+def _sweeps_in_a_finally(func):
+    """True if *func* calls ``_clean_part_files`` from inside a ``finally``."""
+    import ast
+    for node in ast.walk(func):
+        if not (isinstance(node, ast.Try) and node.finalbody):
+            continue
+        for stmt in node.finalbody:
+            for call in ast.walk(stmt):
+                if (isinstance(call, ast.Call)
+                        and isinstance(call.func, ast.Name)
+                        and call.func.id == "_clean_part_files"):
+                    return True
+    return False
+
+
+def _subprocess_call_sites():
+    """(path, FunctionDef) for every production call of transcribe_in_subprocess."""
+    import ast
+    sites = []
+    for path, tree in _production_sources():
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            name = (node.func.id if isinstance(node.func, ast.Name)
+                    else node.func.attr if isinstance(node.func, ast.Attribute)
+                    else None)
+            if name != "transcribe_in_subprocess":
+                continue
+            sites.append((path, node.lineno, _enclosing_function(tree, node.lineno)))
+    return sites
+
+
+def test_the_subprocess_runner_has_at_least_one_production_caller():
+    """Without this the rule below is vacuous - it would pass on zero sites."""
+    assert _subprocess_call_sites(), (
+        "no production code calls transcribe_in_subprocess any more, so "
+        "test_every_caller_of_the_subprocess_runner_sweeps_in_a_finally is "
+        "asserting nothing")
+
+
+def test_every_caller_of_the_subprocess_runner_sweeps_in_a_finally():
+    offenders = []
+    for path, lineno, func in _subprocess_call_sites():
+        if func is None or not _sweeps_in_a_finally(func):
+            offenders.append(f"{path}:{lineno}"
+                             + (f" in {func.name}()" if func else " at module level"))
+    assert not offenders, (
+        "these call transcribe_in_subprocess without sweeping .part sidecars "
+        "from a `finally` in the same function: " + ", ".join(offenders) + ". "
+        "Measured on macOS 26.6.1: a worker killed by SIGSEGV (an uncatchable "
+        "native crash - the case this subprocess design exists for) returns "
+        "with both <name>.txt.part and <name>.srt.part still on disk, because "
+        "only the CANCEL branch of transcribe_in_subprocess cleans up. The "
+        "engine ignores .part artifacts everywhere else, so anything left is "
+        "invisible to the app for ever.")
