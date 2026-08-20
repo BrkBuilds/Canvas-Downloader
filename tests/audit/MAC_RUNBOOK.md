@@ -909,3 +909,41 @@ and a password field. It blocks the app's session restore until answered, and
 macOS refuses synthetic clicks on it by design - screenshot it and ask the
 operator. This is the prompt `CLAUDE.md` predicts under "Keyring"; it is
 expected on a rebuild and does not affect a released build a user installs once.
+
+
+### The sync REVIEW notice, live at last (2026-08-20)
+
+`CLAUDE.md` recorded this as *"never verified live - unit tests only"* on ANY
+platform. It now is, in the packaged app on macOS 26.6.1.
+
+**Getting there is the hard part, and it is worth writing down.** The notice
+counts recordings that are ACTIONABLE and carry `txt`/`srt` in their
+`download_kinds` (`ui/sync_review.py:_tx_recording_count`), so it needs:
+
+1. a pair pointed at a course that really has Panopto recordings (43660 has 36);
+2. that folder's stored `panopto_contract` asking for `output_txt`/`output_srt`
+   - seed it with `SyncManager._save_metadata('panopto_contract', ...)`, since
+   no UI edits a folder's contract;
+3. an **EMPTY** folder, which is what makes every recording actionable rather
+   than up-to-date.
+
+Result: 246 new files, 36 recordings, analysis complete in under 45s including
+the 36 LTI handshakes, and the card reads
+
+    Transcripts & Subtitles need a one-time setup
+    36 pending recordings are set to produce Transcript or Subtitle files.
+    No transcription model is installed yet. ...
+    [ Set up transcription ]
+
+**The `dismissible=` split is confirmed on the one thing only a live run could
+show.** With `transcription_setup_notice_dismissed: true` already on disk (set
+by dismissing the sync-LIST card earlier in the same session), the two call
+sites diverged exactly as designed: the sync list rendered its **one-line
+link**, the review screen rendered the **full card with no dismiss control**.
+Same flag, same session, same process - so this is the per-call-site decision
+working, not two copies that happen to agree.
+
+Note the powerbox prompt: a course folder outside the app's own container
+(here, under `/tmp`) raises *"Canvas Downloader would like to access data from
+other apps"* on first access. macOS ignores synthetic clicks on it - screenshot
+it and ask the operator.
