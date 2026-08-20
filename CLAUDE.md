@@ -897,12 +897,72 @@ Each was mechanical, whole-project, or driven against the real machine, so a fut
 - **The real app on this Mac**: boots headless, login page renders with 0 `stException` and 0 page errors, and the institution picker answers accent-folded queries correctly (`kobenhavn` -> Københavns Universitet, `harvard` -> Harvard University first, `erhvervsakademi` -> Erhvervsakademi Aarhus).
 
 ### Known, NOT verified - stated rather than guessed
-**iCloud Drive eviction - MEASURED 2026-08-20, and the reasoning above was right.** An iCloud account was created on the audit box specifically for this. `brctl evict` genuinely produces the dataless state (`st_blocks` **248 -> 0** at unchanged `st_size`), and then:
-- **Reading it materialises it, transparently.** `compute_local_md5` returned the CORRECT hash in **1.35 s**, `st_blocks` went back to 248, and `SyncManager._classify_local_modification` answered **`clean`**. So the ordinary case - a student on "Optimize Mac Storage" whose course file has been evicted - has **no defect**: the file is not seen as missing, not seen as edited, and nothing is re-downloaded.
-- **A read that FAILS forks rather than loses.** Measured directly instead of by cutting the network (not available on a machine reached over remote desktop - it strands the operator and the agent both): with the read made to fail, `compute_local_md5` returns `None` and `_classify_local_modification` answers **`modified`**, which is the `_NewVersion` path. That is the deliberate, documented bias ("we bias to `'modified'` so the local copy is always preserved"), so an unmaterialisable file costs a `_NewVersion` sibling re-offered on later syncs - **not** an overwrite and not a deletion.
-- **Still not measured**: an actual materialisation failure (offline, or an account over quota). The CONSEQUENCE of one is measured above; its likelihood is not. Do not write a fix without a machine that can show the failure itself.
+*(iCloud eviction used to be the headline entry here. It is MEASURED as of
+2026-08-20 - see "iCloud 'Optimize Mac Storage'" below.)*
 
 **A leftover harness can impersonate the app, and it nearly cost a wrong conclusion.** Three streamlit processes from earlier sessions were still listening on 8599/8601/8603/8605. Launching the app on 8599 failed with "Port 8599 is already in use", the health check still answered 200, and the browser rendered the *completion-screen gallery* - which read exactly like "the app boots clean". **Always confirm the listener's PID is yours** (`lsof -nP -iTCP:<port> -sTCP:LISTEN`) before believing anything a local port tells you.
+
+## iCloud "Optimize Mac Storage": SUPPORTED, and now pinned by tests (2026-08-20)
+A student on a cheap small-SSD Mac is a core persona, and macOS EVICTS their
+course files to free space: the name and size stay, the bytes do not
+(`st_blocks == 0`), and **the first process to READ one silently downloads it
+again**. So on such a folder hashing a file is not cheap - it is a network fetch
+and a disk refill, and it undoes the very setting the student turned on.
+
+**Measured on macOS 26.6.1 against a real iCloud account, driving the REAL
+`SyncManager`** (an account was created on the audit box for this; the two
+previous runs had none, which is the only reason this stayed open):
+
+    analysis, nothing changed on Canvas    0 of 10 files materialised
+    analysis, ONE genuine update           1 of 12   (only the changed one)
+    heal_manifest after a RENAME           1 of 12   (only the renamed one)
+    os.replace onto a dataless target      works, content correct
+    read of a dataless file                correct md5 in ~0.9-1.35 s -> 'clean'
+
+- **macOS 26 uses DATALESS FILES, not `.icloud` placeholder stubs.** The listing
+  after eviction shows the real names and nothing else, so an evicted file does
+  NOT read as a missing file plus an untracked stub - the failure that would
+  have made every sync re-download the course. (Not verified on macOS 13/14.)
+- **The engine passes because of three properties nothing was pinning**: the
+  folder walks take `stat().st_size` and never open a file; candidate md5s are
+  explicitly lazy (`'md5': None  # Lazy compute`); and the update path hashes
+  only what `_is_canvas_newer` already selected. A reasonable refactor - *"just
+  hash everything up front, it's simpler"* - would silently turn every sync into
+  a full re-download for these users, **and no existing test would have failed**.
+  `tests/test_icloud_dataless.py` is now that contract, and it is PORTABLE: it
+  counts calls to `compute_local_md5` rather than needing iCloud, so it holds
+  the line on Windows and in CI, where the failure it prevents is invisible.
+- **Hashing the updated file is REQUIRED and must not be "optimised" away.** It
+  is how an edited local copy is told from a clean one, which is what
+  `_NewVersion` rests on - and a dataless file can absolutely contain the user's
+  edits, because edits sync to iCloud and are then evicted. The materialisation
+  is the price of the edit-protection guarantee. What must never happen is
+  hashing its NEIGHBOURS.
+- **A materialisation that FAILS is safe by construction.** `compute_local_md5`
+  catches `OSError` broadly - which is what matters, since a failed fetch
+  surfaces as `EIO`/`ETIMEDOUT` and not `PermissionError` - returns `None`, and
+  `_classify_local_modification` biases to `'modified'`, i.e. `_NewVersion`.
+  The local copy is preserved; the cost is a sibling, never an overwrite.
+  Narrowing that handler would let the error escape into `analyze_course`, which
+  has NO try around the call and would abort the whole course.
+- **`_is_canvas_newer` treats same-size-newer-timestamp as a metadata touch**
+  and returns False. A probe that "changes" a file by bumping only its timestamp
+  therefore measures nothing - the first version of this measurement fooled
+  itself exactly that way and nearly recorded "0 materialised on an update" as a
+  good result. A test fixture here must change the SIZE.
+- **Detect dataless with `st_blocks == 0` at a nonzero `st_size`.** Do NOT use
+  `brctl status`: on a freshly-enabled account it returns *"Client zone not
+  found"* for a path that is plainly there, which reads like a broken test. That
+  is brctl failing to QUERY, not the file being unsynced - proved by evicting a
+  file (blocks 248 -> 0) and reading the correct md5 back.
+- 5/5 mutations caught (`scripts/_mutate_icloud_dataless.py`), each a plausible
+  refactor rather than a strawman. Re-run the pass, not just the suite.
+
+**Still unmeasured**: a real materialisation FAILURE (offline, or an account
+over quota). Only its consequence is measured, above. Cutting the network is not
+available on a machine reached over remote desktop - it strands the operator and
+the agent both.
+
 
 ## Quit only what WE launched - asking the documents cannot answer it (2026-08-12)
 Found by driving all three Office apps in the ordinary *"the user is editing while a sync converts"* state. **Word closed the user's document and quit; Excel and PowerPoint did not** - which is exactly why this needed all three to surface.
