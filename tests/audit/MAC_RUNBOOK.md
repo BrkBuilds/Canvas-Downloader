@@ -1241,3 +1241,52 @@ past ~900 needs more directory LEVELS, not a longer name - the two limits
 interact, since the component itself cannot exceed 255 units. Realistic worst
 case in this app is ~410 chars (root + course + module + file, each capped at
 120), so there is a wide margin.
+
+## M3.3 / M3.4 / M3.8 - the packaged app (2026-08-20)
+
+Run from `dist/Canvas Downloader.app` with `CANVAS_DL_CONFIG_DIR=/tmp/m34`, on a
+baseline with every earlier instance killed.
+
+**M3.4 - no phantom instance.** One process, one window
+(`Canvas Downloader`, 1920x960 - it opens BEHIND the editor, so "no window" is
+a false alarm; check `mac_eyes windows`, not the screen), one LaunchServices
+entry with a bundle path, and **no `duplicate_launches.log`**.
+
+`lsappinfo` additionally lists *"Canvas Downloader Networking"*, *"... Graphics
+and Media"* and *"... Web Content"*. **Those are WebKit's own XPC split**
+(`/System/Library/Frameworks/WebKit.framework/.../XPCServices/`), not instances
+and not Dock icons - do not report them.
+
+**M3.8 - quit and reap.** Quitting with a real Quit Apple event
+(`tell application "Canvas Downloader" to quit`, which is what Cmd-Q sends):
+
+    SESSION START ... 16:45:56Z
+    SESSION END (clean)  uptime=114s peak_self=222.2MB
+    clean_exit: True     children: []
+
+That is **exactly one END for one START**, and a `clean_exit` marker on the
+Cmd-Q route - the two defects `start.py`'s shutdown block documents (measured
+2026-08-10: `clean_exit=False` after a graceful quit, and later two identical
+END lines for one START). Both fixes hold on 26.6.1.
+
+Afterwards: **0 leftovers**, the app's own WebKit GPU helper reaped, port 8501
+released, `lsappinfo` reports no Canvas entry at all.
+
+**What this does NOT prove**: the session spawned no ffmpeg or transcription
+child, so only the WebKit teardown was exercised - not
+`_terminate_child_processes` against a real media child. That needs a quit taken
+DURING a Panopto download or transcription.
+
+### Two counting traps that produce fake orphans
+
+* `pgrep -f ffmpeg` **matches the shell running it**. Every "leftover" in a
+  naive sweep was the probe itself. Enumerate `ps -axo pid,command` and exclude
+  your own process explicitly.
+* WebKit helpers with pids far BELOW the app's belong to other applications
+  (the editor, Safari). Compare pids before concluding the app leaked one.
+
+### Quitting needs no System Events
+
+A direct Quit Apple event to the app works, so M3.8 does not depend on the
+System Events grant. Useful, because that grant is exactly what a mid-session
+Automation experiment takes away (see M1.3).
