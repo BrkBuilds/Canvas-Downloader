@@ -1366,3 +1366,48 @@ installed and then switches to the MEASURED `installed_size_mb` - preferring
 measured over declared, which is right. The denominator is the declared figure
 in bytes, so the bar tops out near 96 % and jumps; `size_mb`'s own docstring
 calls it approximate.
+
+## M4.1 - HFS+ / NFD, and the case-only rename (2026-08-20)
+
+Both halves of Phase M4's macOS additions, driven against a REAL HFS+ volume
+(`hdiutil create -size 400m -fs "HFS+" -volname NFDTest`).
+
+**How HFS+ actually stores Danish, measured by writing files:**
+
+| name | HFS+ | APFS |
+|---|---|---|
+| `Årsrapport 2025.pdf` | **NFD** | NFC |
+| `Résumé.pdf` | **NFD** | NFC |
+| `Økonomi og ændring.pdf` | NFC | NFC |
+| `Plain ASCII.pdf` | NFC | NFC |
+
+Exactly the partial symptom `_path_key`'s docstring predicts: `å` and `é`
+decompose, `ø` and `æ` have no decomposition and do not. A user with a course
+folder on an external drive sees SOME files misbehave and not others, which is
+what makes it read as random rather than as an encoding fault.
+
+**Result - every file stays tracked, and the controls are not vacuous:**
+
+| scenario | matched | orphans | untracked | untracked WITHOUT `_path_key` |
+|---|---|---|---|---|
+| NFD, HFS+ | 4/4 | 0 | 0 | **2** |
+| NFD, APFS (control) | 4/4 | 0 | 0 | 0 |
+| case rename, HFS+ | 1/1 | 0 | 0 | **1** |
+| case rename, APFS | 1/1 | 0 | 0 | **1** |
+
+The APFS column reading 0 for NFD is the point: it proves the HFS+ result is the
+normalisation doing work rather than a test that could not fail.
+`_case_insensitive_volume` answers True for both volumes (HFS+ is
+case-insensitive by default), so the case fold applies on both.
+
+### THE TRAP: `_path_key` must be given an ABSOLUTE path
+
+A first version passed bare filenames (`_path_key("Notes.pdf")`) and reported
+the case-only rename as UNTRACKED on both volumes - which reads exactly like a
+missing fix. It is not: `_case_insensitive_volume` **deliberately refuses a
+relative path**, because it would resolve against the current directory rather
+than the course folder, and its own docstring says so. The real call sites join
+the root - `_path_key(self.local_path / row['local_path'])` - and so must any
+test. A relative-path check silently measures nothing.
+
+Cleanup: `hdiutil detach /Volumes/NFDTest && rm /tmp/nfd.dmg`.
