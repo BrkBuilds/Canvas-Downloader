@@ -51,7 +51,25 @@ SHORTCUT_KIND = "url"
 #: Kinds that are downloaded/produced media, i.e. every kind whose extension IS
 #: its name. Kept next to SHORTCUT_KIND so "which kinds cost bandwidth" has one
 #: answer - the runner's auth bootstrap and the size estimator both ask it.
+#: txt/srt belong here because producing them still costs a download: the audio
+#: has to be fetched before it can be transcribed.
 MEDIA_KINDS = ("mp4", "mp3", "txt", "srt")
+
+#: The kinds that land as a KEPT media file, i.e. the ones that can advance
+#: ``summary["downloaded"]`` (`runner.py`: `if res.kept_any` -> "Downloaded
+#: counts recordings with a kept media file (mp4/mp3)").
+#:
+#: **NOT a duplicate of MEDIA_KINDS and must never be merged with it** - they
+#: answer different questions and differ by exactly the two kinds that make the
+#: difference. "Does this run cost bandwidth?" is true for a txt/srt-only run
+#: (the audio is fetched to feed the transcriber); "will this run DOWNLOAD
+#: anything?" is false for it, because txt/srt are produced by transcription and
+#: the audio is discarded. Asking MEDIA_KINDS the second question put a
+#: structurally impossible "0 Downloaded" box on the completion screen of every
+#: transcript-only run - the exact misreading `want_media` was added to prevent.
+#: Measured 2026-08-20 on course 43660: 36 recordings, txt+srt only, no model
+#: installed -> "36 processed / 0 DOWNLOADED / 0 TRANSCRIBED".
+DOWNLOADED_KINDS = ("mp4", "mp3")
 
 
 def kind_extensions(kind: str) -> tuple[str, ...]:

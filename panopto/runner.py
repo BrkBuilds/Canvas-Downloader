@@ -63,7 +63,7 @@ from panopto.transcribe import (
 )
 from panopto.settings import wants_transcription
 from panopto.shortcut import (
-    MEDIA_KINDS, SHORTCUT_KIND, kind_extensions, kind_from_path,
+    DOWNLOADED_KINDS, MEDIA_KINDS, SHORTCUT_KIND, kind_extensions, kind_from_path,
     resolve_recording_url, resolve_shortcut_path, write_recording_shortcut,
 )
 
@@ -505,8 +505,13 @@ def _run_panopto_batch(
     # the completion screen greets a link-only run with a "0 Downloaded" box,
     # which is the exact misreading the transcription companion above exists to
     # prevent. See render_panopto_summary.
+    # DOWNLOADED_KINDS, not MEDIA_KINDS: this flag decides whether the
+    # "Downloaded" BOX exists, and only mp4/mp3 can ever advance that counter.
+    # MEDIA_KINDS includes txt/srt because they cost bandwidth (the audio is
+    # fetched to transcribe), which is the right answer for the auth bootstrap
+    # and the size estimator and the wrong one here - see DOWNLOADED_KINDS.
     summary["want_media"] = any(
-        any(_ts(t).get("output_" + k) for k in MEDIA_KINDS) for t in targets)
+        any(_ts(t).get("output_" + k) for k in DOWNLOADED_KINDS) for t in targets)
     model_path = str(pmodels.model_dir(model_id)) if engine_ready else None
     device = settings.get("device", "cpu")
     language = settings.get("language", "auto")
