@@ -128,22 +128,24 @@ the model-delete UX, the read-only `os.replace` note).
 
 Ranked. The first is the one that would keep me up at night.
 
-1. **The PACKAGED app has never successfully converted an Office file.** Every
-   successful conversion this session ran under the venv, i.e. under the
-   EDITOR's TCC identity. The bundle's own identity
-   (`com.canvasdownloader.app`) has only ever been observed **denied**
-   (M1.3) - 3 failures, 0 successes in its debug log. That matters more than
-   it sounds: this is the subsystem that DELETES the user's original, and the
-   bundle differs from the venv in sandbox, entitlements and container
-   access. To close it: `tccutil reset AppleEvents com.canvasdownloader.app`
-   has already been run, so the next packaged Office run prompts fresh -
-   click **Allow** and confirm a real `%PDF-` appears and the `.doc` is gone.
+1. ~~The PACKAGED app has never successfully converted an Office file.~~
+   **CLOSED 2026-08-20**: 184,741-byte real `%PDF-`, source consumed, Word
+   correctly quit, under `com.canvasdownloader.app`'s own identity.
 
-2. **A DENIED powerbox prompt is an untested user state.** "Canvas Downloader
-   would like to access data from other apps" was only ever ALLOWED here. Its
-   wording is vague enough that a cautious student will decline, and what
-   `office_container_stage` then does - a clean error, or a confusing
-   file-access failure blamed on the document - is unknown.
+2. ~~A DENIED powerbox prompt is an untested user state.~~ **CLOSED, and it
+   was a real defect** - `fp:f6924f2b9dbc`, fixed and verified in the
+   rebuilt bundle.
+
+2b. **NEW, found on the way: a denied KEYCHAIN prompt costs ~90 seconds of
+   bare "Connecting…".** `restore_saved_session` runs on the script thread
+   during INIT and `_KEYRING_TIMEOUT` is 90 s on macOS, so the Streamlit
+   script does not finish and the frontend shows its own placeholder.
+   Confirmed with `sample <pid>` (the whole sample in
+   `SecItemCopyMatching`). It RECOVERS - a stall, not a hang - but nothing
+   explains it, and **the prompt fires on every app UPDATE**, because the
+   signature changes. Not fixed: shortening the timeout would break the
+   legitimate case where the user is typing their keychain password. A real
+   fix means moving session restore off the script thread.
 
 3. **The transcription phase never COMPLETED in the packaged app.** The worker
    spawned correctly at `[1/36]` and was deliberately killed there for M3.8,
