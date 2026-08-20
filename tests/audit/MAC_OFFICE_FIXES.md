@@ -44,10 +44,14 @@ its distinctive strings.
 
 ### Known gaps — stated, not hidden
 
-1. **iCloud Drive eviction is UNTESTED.** No iCloud account on the audit box.
-   Nothing in the app is aware of dataless files. Reasoning (not measurement)
-   says the likely effect is a slow or failing read rather than a missing file.
-   `brctl evict` makes it testable in ~30 minutes on a Mac with an account.
+1. ~~**iCloud Drive eviction is UNTESTED.**~~ **CLOSED 2026-08-20** - an
+   account was created on the audit box for it. `brctl evict` really does
+   produce the dataless state (`st_blocks` 248 -> 0), reading materialises it
+   transparently (correct md5 in 1.35 s, verdict `clean`), and a read that
+   FAILS answers `modified`, i.e. the `_NewVersion` fork - preserve, never
+   overwrite. See `CLAUDE.md` "Known, NOT verified" and MAC_RUNBOOK. An actual
+   materialisation failure (offline / over quota) is still unmeasured; only its
+   consequence is.
 2. **D4's crash artefact cannot be read** — Microsoft routes its own crashes to
    MER, which uploads and discards, so `~/Library/Logs/DiagnosticReports` is
    empty. The root cause was established by reproduction instead (see D4).

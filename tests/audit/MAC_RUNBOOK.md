@@ -947,3 +947,35 @@ Note the powerbox prompt: a course folder outside the app's own container
 (here, under `/tmp`) raises *"Canvas Downloader would like to access data from
 other apps"* on first access. macOS ignores synthetic clicks on it - screenshot
 it and ask the operator.
+
+
+### iCloud Drive eviction - measured, and how (2026-08-20)
+
+An iCloud account was created on the audit box for this; the previous two runs
+had none, which is the only reason it stayed open for so long.
+
+    fresh file          st_size 124009  st_blocks 248   dataless False
+    after brctl evict   st_size 124009  st_blocks 0     dataless True
+    compute_local_md5   CORRECT hash, 1.35 s
+    after the read      st_size 124009  st_blocks 248   dataless False
+    _classify_local_modification  ->  'clean'
+
+So the ordinary case has **no defect**: macOS materialises on read, the engine's
+hash is right, and the file is classified clean - not missing, not edited.
+
+**Detect dataless with `st_blocks == 0` at a nonzero `st_size`.** Do NOT use
+`brctl status`: on a freshly-enabled account it returns *"Client zone not
+found"* for a path that is plainly there, which reads like a broken test rather
+than an uninitialised zone. `stat` is the reliable signal and needs no daemon.
+
+**Measure the failure case by its CONSEQUENCE, not by going offline.** This
+machine is reached over NoMachine, so cutting the network strands the operator
+and the agent. Make the read fail instead (`chmod 000`) and ask the real
+primitive: `compute_local_md5` returns `None` and
+`_classify_local_modification` answers **`modified`** - the `_NewVersion` fork,
+which is the documented deliberate bias ("preserve the local copy"). An
+unmaterialisable file therefore costs a sibling re-offered on later syncs, not
+an overwrite.
+
+What is still unmeasured is a real materialisation failure - offline, or an
+account over quota. Only its consequence is measured.
