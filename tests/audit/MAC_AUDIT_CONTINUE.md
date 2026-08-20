@@ -104,25 +104,31 @@ Full detail for all of it is in `MAC_RUNBOOK.md`, in dated sections at the end.
 identical-size orphan pair, the Panopto-formats config gap, the model-delete UX,
 the read-only `os.replace` note). Investigate those OFF this machine.
 
-So what still needs a Mac is short:
+**Everything the fourth session listed as outstanding has now been driven.**
+A fifth pass (2026-08-20, late) closed the lot in one real packaged-app run of
+course 43660 plus a real HFS+ volume - see `MAC_RUNBOOK.md`:
 
-* **M1.3's Automation revoke.** Revoking Word's Automation for the editor does
-  NOTHING to a session already running - macOS caches the TCC decision in the
-  responsible process. Five convertible `.doc` files still converted in 3.9 s.
-  Do it as the FIRST action after a fresh login, or from a Terminal whose grant
-  you then clear with `tccutil reset AppleEvents com.apple.Terminal`. What is
-  unproven is narrow - whether macOS's denial WORDING reaches the classifier -
-  and after this session's fix the classifier accepts both spellings anyway.
-* **A quit taken DURING a Panopto download or transcription.** M3.8 passed, but
-  with no ffmpeg or worker child alive, so `_terminate_child_processes` was
-  never exercised against a real media child - only the WebKit teardown.
-* **M2.1 / M2.2 / M2.4** - Panopto discovery, double-clicking a `.webloc` in
-  Finder, and mp3/mp4 through the bundled ffmpeg. Not on this session's list.
-* **M4.1 HFS+ / NFD** - needs an HFS+ image (`hdiutil`); `mac_smoke.py
-  --with-hfs` covers part of it.
+| item | outcome |
+|---|---|
+| **M1.3** Automation revoke | CLOSED - a real Don't Allow in the PACKAGED app. `-1743`, classified `permission`, aborted, `.doc` intact, no stub PDF. Exposed and fixed a retry defect (`fp:6c1a2474d09e`). |
+| **M2.1** discovery | CLOSED - 36 recordings, 38 LTI handshakes |
+| **M2.2** `.webloc` | CLOSED - 77 files, 0 malformed, all 36 of ours collision-resolved to `(Panopto)`; Safari opens one onto the real SSO login |
+| **M2.4** mp3 via bundled ffmpeg | CLOSED - 36 mp3 in ~55 s, real streams and durations |
+| **M3.8** with a real media child | CLOSED - quit mid-transcription reaped a 577 MB worker, 0 leftovers, `clean_exit: True` |
+| **M4.1** HFS+ / NFD | CLOSED - on a real HFS+ image; 0 orphans, 0 untracked, and the control shows 2 would fail without `_path_key` |
 
-None of the register's 8 open findings is macOS-specific - they are Windows or
-cross-platform. Investigate those OFF this machine.
+So there is **no remaining runbook step that needs this Mac**. What is left is
+off-machine work: none of the register's 8 open findings is macOS-specific -
+they are Windows (the two COM `EXCEL.EXE` leaks, `bridged_warning`) or
+cross-platform (the identical-size orphan pair, the Panopto-formats config gap,
+the model-delete UX, the read-only `os.replace` note).
+
+Two things a future Mac session could still do, both optional:
+
+* **mp4** was deliberately left off (bandwidth); only the mp3 muxer path is
+  proven. M2.4's video half is untested.
+* **A LOCAL (non-remote) session** would settle whether the osascript
+  notification fallback can banner, which NoMachine confounds.
 
 ## Traps this session paid for
 
@@ -157,8 +163,14 @@ Nothing on a rented box survives reimaging, but these are the operator's:
    does not need it; it was granted so the agent could drive the WebView.
 3. Test folders under `/tmp/wkwebview_course`, `/tmp/pkgcfg` and
    `~/Library/Mobile Documents/com~apple~CloudDocs/CD*` are disposable.
-4. `/tmp/m2 m13 m17 m17c m17x m23 m26 m34` (this session, ~43 MB total,
-   mostly a generated lecture mp3) - disposable.
+4. `/tmp/m2 m13 m17 m17c m17x m23 m26 m34 m5 nfd2 nfd_apfs case_apfs`
+   - disposable. `/tmp/m5/downloads` holds a full copy of course 43660
+   (~1.3 GB with the Panopto mp3s).
+6. **The HFS+ test image**: `hdiutil detach /Volumes/NFDTest && rm /tmp/nfd.dmg`.
+7. **TCC already reset** for `com.canvasdownloader.app` (AppleEvents and
+   SystemPolicyAppData), so the app is NOT left denied - but it will
+   prompt again on its next Office conversion, which is the correct
+   first-run state.
 5. The **small Whisper model** at `panopto_models/small` (464 MiB, gitignored).
    Keep it if the next session does Panopto work; delete it to get the
    transcription-setup notice back.
