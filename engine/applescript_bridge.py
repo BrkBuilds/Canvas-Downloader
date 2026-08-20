@@ -243,16 +243,36 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
     powerbox prompt. On a clean exit the produced *staged_dst* is moved back to
     the real *dst*; the staging dir is always cleaned up.
 
-    Degrades safely: on any platform other than macOS, when the container is
-    unavailable, or if the staging copy fails, it yields the original
-    ``(src, dst)`` unchanged - behaviour is then identical to no staging
-    (i.e. never worse than before, only ever better).
+    Degrades to the original ``(src, dst)`` on any platform other than macOS,
+    when the container is unavailable, or if the staging copy fails.
+
+    **That degrade is NOT harmless on macOS 15+, and this docstring used to
+    say it was** ("never worse than before, only ever better"). Measured
+    2026-08-20 in the packaged app with the *"would like to access data from
+    other apps"* prompt DENIED: the container reads as unavailable, the
+    fallback asks Word to open a file at its real path, macOS raises the
+    per-folder file-access prompt **that staging exists to avoid**, and the
+    blocked AppleEvent times out after ~2 minutes - twice, because a timeout
+    is a per-file category and gets retried. One `.doc` cost ~4 minutes and
+    reported only ``AppleEvent timed out (-1712)`` then "Conversion failed
+    twice", naming neither the cause nor a remedy. The trap note further
+    down this function already described that exact mechanism - as a hazard
+    for anyone re-MEASURING staging, without noticing it is a live user path.
+
+    So the fallback still runs (a user who has granted per-folder access
+    converts fine), but it is RECORDED in ``_office_unstaged`` so a timeout
+    can be attributed to the prompt rather than blamed on the document.
     """
     src = Path(src)
     dst = Path(dst)
 
     stage_root = _office_container_tmp(app_name)
     if stage_root is None:
+        if sys.platform == 'darwin':
+            # Remember it, so a subsequent TIMEOUT can be attributed to the
+            # powerbox prompt instead of surfacing as a bare -1712 that names
+            # neither the cause nor a remedy. See `_office_unstaged`.
+            _office_unstaged.add(app_name)
         yield from _direct_passthrough(src, dst, app_name)
         return
 
@@ -565,7 +585,16 @@ _last_error: tuple[str, str] | None = None
 # that is NOT recoverable still ends the phase - it just does it through
 # SYSTEMIC_REPEAT_THRESHOLD, after three consecutive failures, which is the
 # mechanism that can tell "one bad deck" from "the app is gone".
-FATAL_CATEGORIES = ('permission', 'app_missing')
+FATAL_CATEGORIES = ('permission', 'app_missing', 'container_denied')
+
+#: Office apps whose conversions ran WITHOUT container staging this run, i.e.
+#: `_office_container_tmp` answered None. Per-run, cleared by
+#: `reset_office_priming`. Read only to explain a TIMEOUT: unstaged means
+#: macOS is being asked to let us drive Office over a file outside its own
+#: container, which is the per-folder powerbox prompt that staging exists to
+#: avoid - and an unanswered or denied prompt BLOCKS the AppleEvent until it
+#: times out.
+_office_unstaged: set = set()
 
 # A failure that REPEATS is systemic even when its category is per-file.
 #
@@ -677,6 +706,34 @@ def _classify_stderr(err_msg: str) -> str:
     if '-600' in err_msg or "isn't running" in low:
         return 'app_crashed'
     return 'other'
+
+
+def attribute_office_failure(category: str, app_name: str, err_msg: str) -> str:
+    """Refine a stderr-only verdict with what THIS RUN knows about staging.
+
+    `_classify_stderr` is handed the message and nothing else, so it cannot tell
+    a slow document from a blocked permission prompt - both surface as
+    ``AppleEvent timed out (-1712)``. The deciding fact is whether this run got
+    container staging for this app: unstaged means macOS was asked to let us
+    drive Office over a file OUTSIDE its container, which raises the per-folder
+    powerbox prompt that staging exists to avoid, and a denied or unanswered
+    prompt holds the event until it times out.
+
+    A separate function, not an inline test, for two reasons. It is the whole
+    decision, so tests can exercise the REAL rule instead of a copy - a copy is
+    how four mutants survived the first version of this. And it keeps
+    `run_applescript` reading as a sequence of verdicts rather than hiding a
+    second classifier inside it.
+
+    Deliberately narrow, because the failure in the other direction is real: a
+    genuinely huge deck that times out WITH staging must stay a per-file
+    ``other``, not abort the phase and tell the user to change a setting that is
+    fine.
+    """
+    if (category == 'other' and app_name in _office_unstaged
+            and ('-1712' in err_msg or 'timed out' in err_msg.lower())):
+        return 'container_denied'
+    return category
 
 
 def _timeout_for(src: Path, base: int = 180) -> int:
@@ -892,11 +949,30 @@ def _run_applescript_locked(src: Path, dst: Path, app_name: str, script: str) ->
                 err_msg = result.stderr.strip() or err_msg
                 category = _classify_stderr(err_msg)
 
+            # A timeout while UNSTAGED is the powerbox prompt, not a slow
+            # document - see `attribute_office_failure`.
+            category = attribute_office_failure(category, app_name, err_msg)
+
             if category == 'permission':
                 detail = (
                     f"macOS blocked Canvas Downloader from controlling Microsoft {app_name} "
                     f"(Automation permission denied). Enable it in System Settings → "
                     f"Privacy & Security → Automation → Canvas Downloader."
+                )
+            elif category == 'container_denied':
+                # Full Disk Access, NOT "Files and Folders": checked in System
+                # Settings on 26.6.1 with this denial recorded - the app appears
+                # under Files and Folders with NO TOGGLE, so sending the user
+                # there is sending them nowhere. FDA supersedes this grant and
+                # is the pane the app's own nudge and Settings card already
+                # open (`render_fda_settings_card`), so the words match an
+                # affordance the user can actually find.
+                detail = (
+                    f"Microsoft {app_name} did not respond, which usually means "
+                    f"macOS is waiting on permission to open files in this folder. "
+                    f"Turn on Canvas Downloader under System Settings → Privacy & "
+                    f"Security → Full Disk Access (or in the app's Settings → macOS "
+                    f"permissions), then run again."
                 )
             elif category == 'app_missing':
                 detail = f"Microsoft {app_name} is not installed or could not be launched."
@@ -2400,6 +2476,10 @@ def reset_office_priming() -> None:
     # new run with the old run's answer - the very thing being fixed.
     with _office_observe_lock:
         _office_preexisting.clear()
+    # Per-run, exactly like _office_preexisting above it: a run that got
+    # staging must not inherit the previous run's 'unstaged' verdict and
+    # then explain an ordinary timeout as a permission problem.
+    _office_unstaged.clear()
 
 
 def office_contract_from_folder(folder, base_contract: dict) -> dict:
