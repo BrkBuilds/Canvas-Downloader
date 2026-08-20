@@ -268,6 +268,41 @@ WHAT WAS FIXED is the audit's own expectation, which produced 6 spurious CRITICA
 **Notes**:   
 > Not observed in the latest run.
 
+RE-CONFIRMED on macOS 26.6.1 on 2026-08-20 (run 20260820_143238_macos-26-v2.0.2).
+Identical to macOS 15, so this is a stable property of the platform and not a
+15-only quirk:
+
+    target mode           0o444
+    open(target, 'wb') -> PermissionError: Permission denied
+    os.replace(tmp, target) -> SUCCEEDED, content replaced
+
+Control for the RULE itself, which the original entry asserted but did not
+measure: the same replace into a mode-555 DIRECTORY raises PermissionError. So
+the rename really is authorised by the directory and not by the target's mode.
+The structural claim also still holds - grep for os.access / W_OK / S_IWUSR /
+S_IWRITE across sync/execution.py, sync/analysis.py, core/canvas_logic.py and
+core/sync_manager.py returns NOTHING.
+
+NEW DETAIL, and it sharpens the cost statement: the target's mode does not
+merely fail to protect it, it is ERASED - 0o444 before, **0o644 after**, because
+the replacement file's mode wins. So the user's "do not touch this" marker is
+destroyed by the first sync that updates the file, and nothing tells them, so
+they cannot know to re-apply it. Still not data loss (this path is a CLEAN
+update, and an edited file is protected by the separate md5-based
+`_NewVersion(reason='edited')`), but the lost intent is permanent rather than
+per-run.
+
+DECISION UNCHANGED - still deliberately not fixed, for the reasons already
+stated: a proactive W_OK probe would be a new decision point on every file of
+every sync, to honour a flag almost nobody sets, whose failure mode (forking an
+UNEDITED file into a _NewVersion sibling that is then re-offered on every later
+sync) is worse than the current behaviour. Considered and also declined this
+round: re-applying the old mode after a successful replace. It is cheap and
+only touches the replace-existing path, but it half-honours the intent - the
+flag survives while the content changes underneath it - which reads as more
+confusing than the present honest-but-silent behaviour, and it does not address
+the actual complaint.
+
 ---
 
 ### Deleting a multi-GB Whisper model is one unconfirmed click, while the CUDA libraries on the same page use a deliberate schedule-plus-undo flow
