@@ -214,3 +214,138 @@ def test_every_source_consuming_converter_is_registered(runner, name):
     src = DOWNLOAD if name == "download" else SYNC
     assert f"_attempts.append(({runner}" in src, \
         f"{runner} is missing from the {name} flow's retry set"
+
+
+# ---------------------------------------------------------------------------
+# A phase that ABORTED on a FATAL condition must not be retried
+# ---------------------------------------------------------------------------
+#
+# Measured in the PACKAGED app on macOS 26.6.1 (2026-08-20) with Automation for
+# Microsoft Word genuinely DENIED - the first time that state has ever been
+# driven on a Mac. One `.doc` produced:
+#
+#     [AppleScript] Word failed (permission): ... Not authorised to send Apple
+#                   events to Microsoft Word. (-1743)
+#     Klyngevejledning_1_Program_2023.doc  Conversion failed - macOS blocked ...
+#     macOS blocked Canvas Downloader ...  skipping remaining 0 Word file(s)
+#     [AppleScript] Word failed (permission): ...            <- the RETRY
+#     Klyngevejledning_1_Program_2023.doc  Conversion failed - macOS blocked ...
+#     macOS blocked Canvas Downloader ...  skipping remaining 0 Word file(s)
+#     Klyngevejledning_1_Program_2023.doc  Conversion failed twice
+#
+# i.e. 3 per-file errors and **2 aborts for ONE file**, corroborated from a
+# different oracle by the health record's `failures={'osascript_permission': 2}`.
+#
+# The retry is right for a locked destination and wrong here. `permission` and
+# `app_missing` are in FATAL_CATEGORIES precisely because they "will identically
+# doom every remaining file in the phase", so a second attempt cannot succeed -
+# it only emits the one actionable message twice, defeating the purpose of
+# `_abort_applescript_phase`, and then labels the file "Conversion failed twice",
+# which blames the document for a machine-wide permission state.
+
+import converters.post_processing as pp  # noqa: E402
+
+
+class _UIAborted(_UI):
+    def __init__(self, phases=(), fail_count=0):
+        super().__init__(fail_count=fail_count)
+        self.aborted_phases = set(phases)
+
+
+def _named(name, sink):
+    """A stand-in runner carrying the __name__ the phase map keys on."""
+    def _runner(items, ui):
+        sink.append(name)
+    _runner.__name__ = name
+    return _runner
+
+
+def test_the_aborted_phase_is_not_retried(tmp_path):
+    src = tmp_path / "Lecture.doc"
+    src.write_bytes(b"legacy")           # still present == it failed
+    calls = []
+    ui = _UIAborted(phases={"Word"})
+    retry_failed_conversions([(_named("run_word_conversion", calls), [_item(src)])], ui)
+    assert calls == [], (
+        "the Word phase aborted on a fatal condition and was retried anyway - "
+        "the user gets the actionable permission message twice and the file is "
+        "labelled 'Conversion failed twice'")
+
+
+def test_an_unaffected_phase_is_STILL_retried(tmp_path):
+    """The skip is per phase. A Word denial says nothing about other runners.
+
+    This is the half that makes the fix safe: `permission` is granted per
+    (client, target app), and most runners use no AppleScript at all.
+    """
+    src = tmp_path / "page.html"
+    src.write_bytes(b"<p>x</p>")
+    calls = []
+    ui = _UIAborted(phases={"Word"})
+    retry_failed_conversions([(_named("run_html_conversion", calls), [_item(src)])], ui)
+    assert calls == ["run_html_conversion"], (
+        "an unrelated phase stopped being retried because a DIFFERENT phase "
+        "aborted - the skip must be per phase, not global")
+
+
+def test_excel_is_not_skipped_when_only_word_was_denied(tmp_path):
+    src = tmp_path / "Book.xls"
+    src.write_bytes(b"xls")
+    calls = []
+    ui = _UIAborted(phases={"Word"})
+    retry_failed_conversions([(_named("run_excel_conversion", calls), [_item(src)])], ui)
+    assert calls == ["run_excel_conversion"], (
+        "Automation is granted per (client, target app), so a Word denial is "
+        "not evidence about Excel")
+
+
+def test_the_phase_still_retries_when_nothing_aborted(tmp_path):
+    src = tmp_path / "Lecture.doc"
+    src.write_bytes(b"legacy")
+    calls = []
+    retry_failed_conversions([(_named("run_word_conversion", calls), [_item(src)])],
+                             _UIAborted(phases=()))
+    assert calls == ["run_word_conversion"], (
+        "the ordinary transient-failure retry was lost")
+
+
+def test_a_bridge_without_the_field_still_retries(tmp_path):
+    """Never let bookkeeping break a caller that predates the field."""
+    src = tmp_path / "Lecture.doc"
+    src.write_bytes(b"legacy")
+    calls = []
+    retry_failed_conversions([(_named("run_word_conversion", calls), [_item(src)])],
+                             _UI())          # no aborted_phases attribute at all
+    assert calls == ["run_word_conversion"]
+
+
+def test_the_abort_records_its_phase_on_the_bridge():
+    ui = _UIAborted()
+    pp._abort_applescript_phase(ui, "macOS blocked ...", 0, "Word")
+    assert "Word" in ui.aborted_phases, (
+        "the abort is the one place that knows WHICH phase died and why; if it "
+        "does not record that, the retry cannot decline")
+
+
+def test_the_abort_survives_a_bridge_that_cannot_record():
+    """A stand-in bridge must not be broken by the bookkeeping."""
+    ui = _UI()                                # no aborted_phases
+    pp._abort_applescript_phase(ui, "macOS blocked ...", 2, "Excel")
+    assert ui.pp_failure_count == 2, "the abort's real work stopped happening"
+
+
+def test_every_abort_label_is_in_the_phase_map():
+    """A new Office phase must appear in both places or the skip silently lapses."""
+    import ast, re
+    labels = set(re.findall(r'_abort_applescript_phase\([^)]*?"([A-Za-z]+)"\)', DOWNLOAD))
+    assert labels, "no _abort_applescript_phase call sites found - anchor moved"
+    assert labels <= set(pp._RUNNER_PHASE.values()), (
+        f"these phases abort but are not in _RUNNER_PHASE, so their retry is "
+        f"never skipped: {labels - set(pp._RUNNER_PHASE.values())}")
+
+
+def test_the_phase_map_names_real_runners():
+    for fn_name in pp._RUNNER_PHASE:
+        assert hasattr(pp, fn_name), (
+            f"_RUNNER_PHASE names {fn_name!r}, which does not exist - the map "
+            f"keys on __name__, so a rename makes the skip silently stop working")

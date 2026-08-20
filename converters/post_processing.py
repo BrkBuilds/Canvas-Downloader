@@ -93,6 +93,11 @@ class UIBridge:
     _eta_task: str = ''
     _eta: Any = None
     generated_sidecar_paths: list = field(default_factory=list)  # _Data.txt paths for UI ledger injection
+    # Phases that ABORTED on a FATAL AppleScript category (Automation denied,
+    # Office not installed). Written by `_abort_applescript_phase`, read by
+    # `retry_failed_conversions` - see its docstring for why a retry there is
+    # not merely wasted but actively contradicts the abort.
+    aborted_phases: set = field(default_factory=set)
 
 
 # ─────────────────────────────────────────────────────
@@ -425,6 +430,16 @@ def _locked_sibling(src: Path) -> Path | None:
     return None
 
 
+#: Runner function name -> the phase label its `_abort_applescript_phase` call
+#: uses. Written here rather than derived, because the label is what the ABORT
+#: already carries and deriving it twice is how the two would drift apart.
+_RUNNER_PHASE = {
+    "run_word_conversion": "Word",
+    "run_excel_conversion": "Excel",
+    "run_pptx_conversion": "PowerPoint",
+}
+
+
 def retry_failed_conversions(attempts: list, ui: UIBridge) -> list:
     """One retry pass over conversions whose source is still on disk.
 
@@ -441,7 +456,40 @@ def retry_failed_conversions(attempts: list, ui: UIBridge) -> list:
     ``attempts`` is ``[(runner, items), ...]`` in the order they first ran; each
     ``items`` is the runner's own ``[(path, sm, ctx), ...]``. Returns the items
     that failed both times.
+
+    A phase that ABORTED for a FATAL reason is skipped, and that is not an
+    optimisation - retrying it directly contradicts the abort. `permission`
+    (Automation denied) and `app_missing` are in `FATAL_CATEGORIES` precisely
+    because they "will identically doom every remaining file in the phase", so
+    the second attempt cannot succeed; what it does instead is emit the one
+    actionable message a SECOND time - defeating the whole point of
+    `_abort_applescript_phase` - and then label the file "Conversion failed
+    twice", which blames the document for a machine-wide permission state.
+
+    Measured in the PACKAGED app on macOS 26.6.1 with Automation for Microsoft
+    Word genuinely denied (2026-08-20): 3 per-file errors and 2 aborts for ONE
+    `.doc`, corroborated independently by the health record's
+    `failures={'osascript_permission': 2}`.
+
+    The skip is per PHASE, not global: a Word denial says nothing about the
+    HTML-to-Markdown runner, which uses no AppleScript at all, and `permission`
+    is granted per (client, target app) so it says nothing about Excel either.
+    Only the phase that actually aborted stands down.
     """
+    _aborted = getattr(ui, "aborted_phases", None) or set()
+
+    def _phase_aborted(runner) -> bool:
+        return _RUNNER_PHASE.get(getattr(runner, "__name__", "")) in _aborted
+
+    for runner, items in attempts:
+        if _phase_aborted(runner) and items:
+            logger.info("Not retrying %d %s file(s): the phase aborted on a "
+                        "fatal condition (%s), which a second attempt cannot "
+                        "change.", len(items),
+                        _RUNNER_PHASE.get(getattr(runner, "__name__", "")),
+                        ", ".join(sorted(_aborted)))
+    attempts = [(r, items) for r, items in attempts if not _phase_aborted(r)]
+
     pending = [(runner, [it for it in items if _still_present(it)])
                for runner, items in attempts]
     pending = [(r, items) for r, items in pending if items]
@@ -604,9 +652,22 @@ def _applescript_last_error() -> tuple[str, str | None]:
 
 
 def _abort_applescript_phase(ui: UIBridge, fatal_msg: str, remaining: int, phase_label: str) -> None:
-    """Log a single actionable message and mark the remaining files as skipped."""
+    """Log a single actionable message and mark the remaining files as skipped.
+
+    Records *phase_label* on the bridge so the retry pass can decline to run
+    this phase again. Measured on macOS 26.6.1 with Automation for Word really
+    denied: without it the retry re-ran the phase, the actionable message was
+    emitted TWICE, and the file ended up labelled "Conversion failed twice" -
+    which blames the document for a machine-wide permission state.
+    """
     if remaining > 0:
         ui.pp_failure_count += remaining
+    try:
+        ui.aborted_phases.add(phase_label)
+    except AttributeError:
+        # A caller passing a stand-in bridge (tests, sync's own UI shim) must
+        # never be broken by bookkeeping - the retry simply stays as it was.
+        pass
     _emit(ui, 'error', fatal_msg, detail=f"skipping remaining {remaining} {phase_label} file(s)")
 
 
