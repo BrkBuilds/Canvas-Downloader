@@ -648,9 +648,25 @@ def _classify_stderr(err_msg: str) -> str:
     Genuine absence still lands in ``app_missing``: ``-10810`` (launch failed),
     ``-10814`` (kLSApplicationNotFoundErr) and the "can't be found" wordings.
     """
-    low = err_msg.lower()
-    if '-1743' in err_msg or 'not authorized to send apple events' in low:
+    # Normalise the apostrophe ONCE rather than spelling every clause twice.
+    # macOS writes a TYPOGRAPHIC apostrophe (U+2019) and the clauses below were
+    # written with the ASCII one, so they matched nothing. That was already
+    # learned here for "isn't running" - which is why that one line carries both
+    # forms - and the same fix was never applied to its neighbours. Measured on
+    # macOS 26.6.1: a missing app really says `Can’t get application "X". (-1728)`.
+    low = err_msg.lower().replace('\u2019', "'").replace('\u2018', "'")
+    # 'authorised' as well as 'authorized': this machine's macOS emits the
+    # BRITISH spelling, so the American-only clause never fired and the whole
+    # verdict rested on the -1743 code beside it.
+    if ('-1743' in err_msg
+            or 'not authorized to send apple events' in low
+            or 'not authorised to send apple events' in low):
         return 'permission'
+    # NOTE the numeric list does NOT include -1728. That is errAENoSuchObject,
+    # which our own scripts also raise for an absent DOCUMENT (`can't get active
+    # document`); mapping it wholesale would abort a phase with "Office is not
+    # installed" on a machine where it plainly is. The wording clause below
+    # separates the two exactly, now that it can match at all.
     if (
         '-10810' in err_msg or '-10814' in err_msg
         or "application can't be found" in low
@@ -658,7 +674,7 @@ def _classify_stderr(err_msg: str) -> str:
         or 'unable to find application' in low
     ):
         return 'app_missing'
-    if '-600' in err_msg or "isn't running" in low or "isn’t running" in low:
+    if '-600' in err_msg or "isn't running" in low:
         return 'app_crashed'
     return 'other'
 

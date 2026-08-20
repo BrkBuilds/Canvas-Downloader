@@ -225,3 +225,114 @@ def test_a_permission_denial_is_not_retried():
     assert ok is False
     assert calls == 1
     assert AB.get_last_error()[0] == "permission"
+
+
+# ---------------------------------------------------------------------------
+# The wording clauses are LOCALE-FRAGILE, and three of the four were dead
+# ---------------------------------------------------------------------------
+#
+# Measured on macOS 26.6.1 (2026-08-20) by making osascript actually fail:
+#
+#     Can’t get application "NoSuchApp12345XYZ". (-1728)
+#     Not authorised to send Apple events to System Events. (-1743)
+#
+# Two independent ways the clauses missed, both the SAME class this file already
+# documents for ``isn't running`` - a fix that landed on one clause and not its
+# neighbours:
+#
+# 1. macOS writes a TYPOGRAPHIC apostrophe (U+2019). ``can't get application``
+#    and ``application can't be found`` were written with the ASCII one, so they
+#    matched nothing. ``isn't running`` was given both forms in 2026-08-11; its
+#    siblings were not.
+# 2. This machine's macOS emits the BRITISH spelling, "auth**oris**ed". The
+#    clause only knew the American one.
+#
+# The permission verdict survived on its ``-1743`` companion. **app_missing did
+# not**: there is no numeric companion for -1728, so a genuinely absent Office
+# app classified as ``other`` - not fatal - and a user without Office got three
+# generic per-file errors followed by the systemic message telling them to
+# "Quit Microsoft Word and run again", about an app they do not have.
+#
+# The remedy normalises the apostrophe ONCE instead of spelling every clause
+# twice, because the next clause added would otherwise inherit the same bug.
+
+_REAL_MISSING_APP = 'execution error: Can’t get application "NoSuchApp12345XYZ". (-1728)'
+_REAL_DENIED = ('execution error: Not authorised to send Apple events to '
+                'System Events. (-1743)')
+
+
+@pytest.mark.parametrize("msg", [
+    _REAL_MISSING_APP,
+    'syntax error: Can’t get application id "com.nonexistent.app". (-1728)',
+    # the same message with no error number at all - the case the wording
+    # clause is the ONLY defence for
+    'execution error: Can’t get application "Microsoft Word".',
+])
+def test_a_missing_app_is_app_missing_despite_the_typographic_apostrophe(msg):
+    assert AB._classify_stderr(msg) == "app_missing", (
+        "macOS writes a typographic apostrophe, so an ASCII-only clause never "
+        "fires. There is no numeric companion for -1728, so this fell through "
+        "to 'other' and the phase never aborted for an uninstalled Office.")
+
+
+def test_app_missing_is_fatal_so_the_phase_stops_asking():
+    assert AB._classify_stderr(_REAL_MISSING_APP) in AB.FATAL_CATEGORIES
+
+
+@pytest.mark.parametrize("msg", [
+    _REAL_DENIED,
+    # British and American, each WITHOUT the error number, so the wording is
+    # the only thing that can decide
+    'execution error: Not authorised to send Apple events to Microsoft Word.',
+    'execution error: Not authorized to send Apple events to Microsoft Word.',
+])
+def test_a_denial_is_permission_in_either_spelling(msg):
+    assert AB._classify_stderr(msg) == "permission", (
+        "this machine's macOS says 'authorised'; the clause knew only "
+        "'authorized', leaving the verdict resting on the -1743 code")
+
+
+@pytest.mark.parametrize("msg", [
+    "execution error: Microsoft Word isn’t running.",
+    "execution error: Microsoft Word isn't running.",
+])
+def test_both_apostrophes_still_reach_app_crashed(msg):
+    """The clause that WAS fixed must survive the shared normalisation."""
+    assert AB._classify_stderr(msg) == "app_crashed"
+
+
+@pytest.mark.parametrize("msg,why", [
+    ('execution error: Can’t get active document. (-1728)',
+     "our own scripts raise -1728 for an absent DOCUMENT"),
+    ('execution error: Can’t get window 1 of application "Microsoft Word". (-1728)',
+     "-1728 about some other object of a perfectly present app"),
+])
+def test_minus_1728_alone_must_not_mean_the_app_is_missing(msg, why):
+    """Why -1728 is deliberately NOT in the numeric list.
+
+    Mapping the code wholesale would abort a phase with "Office is not
+    installed" on a machine where it plainly is - a fatal, and the wrong one.
+    The wording separates the two exactly, which is the whole reason the
+    apostrophe had to be fixed rather than the number added.
+    """
+    assert AB._classify_stderr(msg) != "app_missing", why
+
+
+def test_the_apostrophe_is_normalised_once_not_per_clause():
+    """A new clause must not have to remember the typographic form.
+
+    Spelling each clause twice is what produced this defect: ``isn't running``
+    carried both forms while its neighbours carried one.
+    """
+    import inspect
+    import re
+    src = inspect.getsource(AB._classify_stderr)
+    body = src.split('"""')[-1]
+    # Blank COMMENTS before scanning - the same rule verify_architecture.py
+    # applies, and for the same reason: documenting a trap must never trip the
+    # check that polices it. The escape used by the normalisation itself is
+    # written \u2019, so it survives this strip on purpose.
+    body = re.sub(r"#.*", "", body)
+    assert "’" not in body, (
+        "a clause still spells the typographic apostrophe inline; normalise it "
+        "in one place instead so the next clause added cannot miss it")
