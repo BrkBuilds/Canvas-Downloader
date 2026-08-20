@@ -125,3 +125,69 @@ def test_degenerate_inputs_yield_untitled(sanitize, bad):
 
 def test_plain_name_passes_through(sanitize):
     assert sanitize("Lecture 3 - Dynamics.pdf") == "Lecture 3 - Dynamics.pdf"
+
+
+# ── The length cap is in CHARACTERS; the filesystem limit is in UTF-16 UNITS ──
+#
+# Measured on APFS, macOS 26.6.1 (2026-08-20), by writing real files: a
+# component may hold at most **255 UTF-16 code units**. Not bytes and not Python
+# characters - both readings are wrong, and the repo carried one of each:
+#
+#     255 x "a"      255 units,  255 bytes  -> OK
+#     255 x "ae"     255 units,  510 bytes  -> OK      (so not a byte limit)
+#     127 x emoji    254 units,  508 bytes  -> OK
+#     128 x emoji    256 units,  512 bytes  -> ENAMETOOLONG
+#     253 x "ae" + 1 emoji   255 units      -> OK
+#     254 x "ae" + 1 emoji   256 units      -> ENAMETOOLONG
+#
+# An astral character (emoji, rarer CJK extensions, older historic scripts) is a
+# SURROGATE PAIR - two units for one Python character - so the ratio between the
+# cap and the limit is 2:1 in the worst case. NTFS counts UTF-16 units too, so
+# this is not a macOS quirk to guard on one platform.
+#
+# Today the margin is comfortable but not obvious: 120 characters of emoji is
+# 240 units, measured at 236 with the suffix inside the cap, against a ceiling of
+# 255. Raising max_length to anything over 127 would make an all-astral Canvas
+# filename illegal on both platforms - and it would fail as ENAMETOOLONG at
+# download time, i.e. as a missing file, which is the direction this repo's
+# conventions treat as unrecoverable.
+
+_UTF16_COMPONENT_LIMIT = 255
+
+
+def _utf16_units(s: str) -> int:
+    return len(s.encode("utf-16-le")) // 2
+
+
+def test_the_default_cap_cannot_exceed_the_filesystem_component_limit():
+    """The cap counts characters; the filesystem counts UTF-16 units."""
+    import inspect
+    default = inspect.signature(CanvasManager._sanitize_filename) \
+        .parameters["max_length"].default
+    worst_case_units = default * 2          # every character an astral pair
+    assert worst_case_units <= _UTF16_COMPONENT_LIMIT, (
+        f"max_length={default} characters can produce {worst_case_units} UTF-16 "
+        f"units, over the {_UTF16_COMPONENT_LIMIT}-unit component limit on both "
+        f"APFS and NTFS. An all-emoji Canvas filename would then fail as "
+        f"ENAMETOOLONG at download time - a missing file, not a visible error. "
+        f"Cap out at {_UTF16_COMPONENT_LIMIT // 2} characters.")
+
+
+@pytest.mark.parametrize("label,ch", [
+    ("emoji (surrogate pair)", "\U0001F600"),
+    ("astral CJK extension B", "\U00020000"),
+    ("Danish ae-ligature", "æ"),
+    ("BMP CJK", "漢"),
+    ("ascii", "L"),
+])
+def test_no_input_makes_the_sanitiser_emit_an_illegal_component(sanitize, label, ch):
+    out = sanitize(ch * 400 + ".pdf")
+    assert _utf16_units(out) <= _UTF16_COMPONENT_LIMIT, (
+        f"{label}: sanitised to {_utf16_units(out)} UTF-16 units, which no "
+        f"filesystem this app targets will accept")
+
+
+def test_an_explicit_max_length_is_also_bound_by_the_unit_limit(sanitize):
+    """Callers may pass max_length; the same arithmetic applies to them."""
+    out = sanitize("\U0001F600" * 400 + ".pdf", max_length=127)
+    assert _utf16_units(out) <= _UTF16_COMPONENT_LIMIT
