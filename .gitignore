@@ -95,3 +95,6 @@ ENV/
 
 # VS Code Remote-SSH server payload, if it ever lands inside the tree.
 .vscode-server/
+
+# The macOS Office Automation permission record (runtime state, machine-specific)
+macos_permission_setup.json
