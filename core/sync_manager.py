@@ -54,6 +54,35 @@ def _match_key(name: str) -> str:
     return _FS_UNSAFE_RE.sub('', robust_filename_normalize(name))
 
 
+def _is_locked_error(exc: BaseException) -> bool:
+    """Is this sqlite error a LOCK, i.e. worth retrying?
+
+    One predicate, because there were two and one was strictly narrower. The
+    same question was asked at twelve sites in this file, nine as
+    ``_is_locked_error(e)`` and three as ``'database is locked' in
+    str(e)`` - and SQLite has TWO lock messages:
+
+        SQLITE_BUSY    "database is locked"
+        SQLITE_LOCKED  "database table is locked"
+
+    so the narrow spelling misses the second, and the three sites that used it
+    are the ones that RE-RAISE rather than retry ("Aborting to prevent data
+    loss"). It was also case-sensitive, for no reason.
+
+    **Not a live defect today, and that is measured, not assumed**: this app
+    opens one short-lived connection per operation and uses no shared cache, so
+    a contended write raises SQLITE_BUSY - reproduced, `database is locked`.
+    SQLITE_LOCKED is a shared-cache condition and `cache=shared` appears
+    nowhere. The divergence is fixed because a rule spelled two ways is one that
+    some caller is already following an old version of, not because anything is
+    broken.
+
+    Retry POLICY is deliberately left alone - the sites differ on how many
+    attempts they allow, and that is a real per-call-site decision.
+    """
+    return 'locked' in str(exc).lower()
+
+
 def _path_key(p) -> str:
     """Canonical key for comparing a MANIFEST path against an ``os.walk`` path.
 
@@ -664,7 +693,7 @@ class SyncManager:
                         row = cursor.fetchone()
                     break
                 except sqlite3.OperationalError as e:
-                    if 'locked' in str(e).lower() and attempt < 2:
+                    if _is_locked_error(e) and attempt < 2:
                         time.sleep(0.5)
                         continue
                     raise
@@ -700,7 +729,7 @@ class SyncManager:
                         row = cursor.fetchone()
                     break
                 except sqlite3.OperationalError as e:
-                    if 'locked' in str(e).lower() and attempt < 2:
+                    if _is_locked_error(e) and attempt < 2:
                         time.sleep(0.5)
                         continue
                     raise
@@ -743,7 +772,7 @@ class SyncManager:
                         conn.commit()
                     break
                 except sqlite3.OperationalError as e:
-                    if 'locked' in str(e).lower() and attempt < 2:
+                    if _is_locked_error(e) and attempt < 2:
                         time.sleep(0.5)
                         continue
                     raise
@@ -766,7 +795,7 @@ class SyncManager:
                         row = cursor.fetchone()
                         return row[0] if row else None
                 except sqlite3.OperationalError as e:
-                    if 'locked' in str(e).lower() and attempt < 2:
+                    if _is_locked_error(e) and attempt < 2:
                         time.sleep(0.5)
                         continue
                     raise
@@ -1037,7 +1066,7 @@ class SyncManager:
                         }
                 break  # Success
             except sqlite3.OperationalError as e:
-                if 'database is locked' in str(e) and attempt < max_retries - 1:
+                if _is_locked_error(e) and attempt < max_retries - 1:
                     logger.warning(f"Database locked, retrying load_manifest... ({attempt + 1}/{max_retries})")
                     time.sleep(0.5)
                 else:
@@ -1112,7 +1141,7 @@ class SyncManager:
                     
                 return True
             except sqlite3.OperationalError as e:
-                if 'database is locked' in str(e) and attempt < max_retries - 1:
+                if _is_locked_error(e) and attempt < max_retries - 1:
                     logger.warning(f"Database locked, retrying save_manifest... ({attempt + 1}/{max_retries})")
                     time.sleep(0.5)
                 else:
@@ -2054,7 +2083,7 @@ class SyncManager:
                     conn.commit()
                 return True
             except sqlite3.OperationalError as e:
-                if 'locked' in str(e).lower() and attempt < 2:
+                if _is_locked_error(e) and attempt < 2:
                     time.sleep(0.5)
                     continue
                 logger.warning(f"Error saving metadata '{key}': {e}")
@@ -2178,7 +2207,7 @@ class SyncManager:
                     conn.commit()
                 return len(pending)
             except sqlite3.OperationalError as e:
-                if 'locked' in str(e).lower() and attempt < 2:
+                if _is_locked_error(e) and attempt < 2:
                     time.sleep(0.5)
                     continue
                 logger.warning(f"backfill_baseline_md5 DB write failed: {e}")
@@ -2292,7 +2321,7 @@ class SyncManager:
                         conn.commit()
                     return True
                 except sqlite3.OperationalError as e:
-                    if 'locked' in str(e).lower() and attempt < 2:
+                    if _is_locked_error(e) and attempt < 2:
                         import time as _t
                         _t.sleep(0.3 * (attempt + 1))
                         continue
@@ -2334,7 +2363,7 @@ class SyncManager:
                     conn.commit()
                 return True
             except sqlite3.OperationalError as e:
-                if 'locked' in str(e).lower() and attempt < 2:
+                if _is_locked_error(e) and attempt < 2:
                     time.sleep(0.3 * (attempt + 1))
                     continue
                 logger.warning(f"ignore_panopto failed ({video_id}): {e}")
@@ -2360,7 +2389,7 @@ class SyncManager:
                     conn.commit()
                 return True
             except sqlite3.OperationalError as e:
-                if 'locked' in str(e).lower() and attempt < 2:
+                if _is_locked_error(e) and attempt < 2:
                     time.sleep(0.3 * (attempt + 1))
                     continue
                 logger.warning(f"bulk_restore_panopto failed: {e}")
@@ -2616,7 +2645,7 @@ class SyncManager:
 
                 return True
             except sqlite3.OperationalError as e:
-                if 'database is locked' in str(e) and attempt < max_retries - 1:
+                if _is_locked_error(e) and attempt < max_retries - 1:
                     time.sleep(0.5)
                 else:
                     # Never silent: this row is how the folder remembers it has the
@@ -2688,7 +2717,7 @@ class SyncManager:
                 logger.info(f"Updated manifest entry {canvas_file_id} to new file: {new_file_path}")
                 return True
             except sqlite3.OperationalError as e:
-                if 'database is locked' in str(e) and attempt < max_retries - 1:
+                if _is_locked_error(e) and attempt < max_retries - 1:
                     time.sleep(0.5)
                 else:
                     logger.warning(f"Error updating converted file in DB: {e}")
@@ -2831,7 +2860,7 @@ class SyncManager:
                 success = True
                 break
             except sqlite3.OperationalError as e:
-                if 'locked' in str(e).lower() and attempt < 2:
+                if _is_locked_error(e) and attempt < 2:
                     time.sleep(0.5)
                     continue
                 logger.warning(f"Error ignoring file {canvas_file_id}: {e}")
@@ -2870,7 +2899,7 @@ class SyncManager:
                 success = True
                 break
             except sqlite3.OperationalError as e:
-                if 'locked' in str(e).lower() and attempt < 2:
+                if _is_locked_error(e) and attempt < 2:
                     time.sleep(0.5)
                     continue
                 logger.warning(f"Error restoring file {canvas_file_id}: {e}")
@@ -2899,7 +2928,7 @@ class SyncManager:
                     conn.commit()
                 return True
             except sqlite3.OperationalError as e:
-                if 'locked' in str(e).lower() and attempt < 2:
+                if _is_locked_error(e) and attempt < 2:
                     time.sleep(0.5)
                     continue
                 logger.warning(f"delete_manifest_rows failed: {e}")
@@ -2942,7 +2971,7 @@ class SyncManager:
                 success = True
                 break
             except sqlite3.OperationalError as e:
-                if 'locked' in str(e).lower() and attempt < 2:
+                if _is_locked_error(e) and attempt < 2:
                     time.sleep(0.5)
                     continue
                 logger.warning(f"Error bulk ignoring files: {e}")
@@ -2970,7 +2999,7 @@ class SyncManager:
                 success = True
                 break
             except sqlite3.OperationalError as e:
-                if 'locked' in str(e).lower() and attempt < 2:
+                if _is_locked_error(e) and attempt < 2:
                     time.sleep(0.5)
                     continue
                 logger.warning(f"Error bulk restoring files: {e}")
