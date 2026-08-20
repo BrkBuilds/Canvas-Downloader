@@ -101,10 +101,15 @@ looks like it is being hit. **None of that is the product.**
 
 Two independent failures land on the same symptom, and both bit in one session:
 
-1. **The session** (above). Fix it at the root - start tmux from a Terminal
-   inside the graphical session, so every pane inherits Aqua. If you are already
-   mid-session, `scripts/mac_aqua.py` hands one command to Terminal.app (which
-   Launch Services starts in Aqua) and every child inherits it, including a
+1. **The session** (above). Fix it at the root: work in a shell that was born
+   inside the graphical session. Since 2026-08-20 the standing workflow does
+   that by construction - **VS Code running on the Mac's own desktop, reached
+   over NoMachine** - because Launch Services starts it in Aqua and its
+   integrated terminal inherits that. The older answer, a tmux server started
+   from a Terminal on the desktop and attached from SSH, achieves the same
+   thing and is still valid as a fallback. If you are already mid-session,
+   `scripts/mac_aqua.py` hands one command to Terminal.app (which Launch
+   Services also starts in Aqua) and every child inherits it, including a
    long-lived Streamlit:
 
    ```bash
@@ -203,6 +208,14 @@ Terminal.app. Measured minutes apart, same machine, same user, same display:
 
 So granting Terminal.app does nothing for the SSH shell. **Take visual shots
 through the bridge**, or grant Screen Recording to the real responsible process.
+
+**In the standing workflow that responsible process is Visual Studio Code**,
+because the agent runs in the terminal of a VS Code launched from the Mac's own
+Dock. So the Screen Recording grant goes to **VS Code, not Terminal** - Part 3
+of `MAC_AUDIT_GUIDE.md` puts it in the setup checklist for exactly this reason.
+Verify it rather than assume it: `python3 scripts/mac_eyes.py eyesight`, and
+treat a WARN from the doctor's "screenshots can render window content" check as
+"hand every visual question to the operator", never as evidence about the app.
 
 **The failure points the wrong way.** A blank capture is indistinguishable from
 a blank app, and "the UI is blank in WKWebView" is precisely the failure phase

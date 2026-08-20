@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 # Bare macOS -> ready to run a live audit, in one command.
 #
-#   curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_audit_bootstrap.sh | bash
-# or, once the repo is cloned:
-#   ./scripts/mac_audit_bootstrap.sh
+#   ./scripts/mac_audit_bootstrap.sh          <- normal case, repo already cloned
+# or, before the clone exists:
+#   curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_audit_bootstrap.sh -o ~/boot.sh
+#   bash ~/boot.sh
+#
+# NEVER pipe a setup script into bash. Piped, the script's own text is on stdin,
+# and any step that READS stdin - brew install does - swallows the remainder of
+# the file; bash then hits EOF and exits 0. It fails as a clean, silent, partial
+# install. See the header of mac_first_contact.sh for the measured instance.
 #
 # Written to be run TWICE - once per macOS install (15, then 26). Every step is
 # idempotent and skips instantly if already done, so the second run is minutes,
@@ -282,9 +288,12 @@ if command -v claude >/dev/null 2>&1; then
   ok "already installed ($(claude --version 2>/dev/null | head -1))"
 else
   info "installing ..."
-  curl -fsSL https://claude.ai/install.sh | bash >/dev/null 2>&1 \
+  # Downloaded, then run - never piped, for the reason in this file's header.
+  (curl -fsSL https://claude.ai/install.sh -o /tmp/claude_install.sh \
+      && bash /tmp/claude_install.sh) >/dev/null 2>&1 \
     || (command -v npm >/dev/null 2>&1 && npm install -g @anthropic-ai/claude-code >/dev/null 2>&1) \
     || warn "Automatic install failed - see https://docs.claude.com/claude-code for the current installer."
+  rm -f /tmp/claude_install.sh
   command -v claude >/dev/null 2>&1 && ok "installed" || warn "claude not on PATH yet (open a new shell)"
 fi
 

@@ -1,11 +1,20 @@
 #!/usr/bin/env bash
-# Set up a bare rented Mac. ONE command, typed in the VNC console, ~30-45 min
-# mostly unattended. This is the ONLY thing you do in VNC.
+# Set up a bare rented Mac. TWO commands, over SSH from your own PC, ~30-45 min
+# mostly unattended.
 #
-#   curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_first_contact.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_first_contact.sh -o ~/fc.sh
+#   bash ~/fc.sh
 #
-# HOW TO TYPE IT: in the Scaleway VNC window press Cmd+Space, type "Terminal",
-# press Return. Paste the line above (Cmd+V) and press Return. That is it.
+# DOWNLOAD IT, THEN RUN IT. NEVER piped into bash. Piped, the script's own text
+# is on stdin and "brew install" READS stdin: it swallows the rest of the file,
+# bash hits EOF and exits 0. Measured 2026-08-20 - it stopped dead at the
+# toolchain step having printed no error and no [!!], so VS Code, NoMachine and
+# Office never installed, and the operator then debugged a NoMachine
+# "connection refused" that was really a script which had quietly ended twenty
+# minutes earlier. It fails in the most misleading way available: a clean exit.
+#
+# HOW TO RUN IT: from Windows PowerShell (or any terminal), "ssh m1@<mac-ip>"
+# using the address on the Scaleway console, then paste the two lines above.
 #
 # It installs, in dependency order:
 #   SSH on / sleep + auto-lock off      so you can leave VNC immediately
@@ -138,18 +147,23 @@ if [ -x "$CODE_BIN" ]; then
 fi
 
 # ────────────────────────────────────────────── 6. a fast remote desktop
-step "NoMachine (optional remote desktop)"
+step "NoMachine (the desktop you will actually work in)"
 cat <<'EOF'
-      You will mostly NOT need a desktop - VS Code Remote-SSH from Windows
-      gives you the repo, an editor and a Mac terminal with no lag. A desktop
-      is needed only to look at the packaged app rendering in WKWebView and to
-      press TCC buttons.
+      THIS IS THE WORKFLOW, not an optional extra. You run VS Code ON the Mac,
+      inside the NoMachine window, with Claude Code in its terminal.
+
+      It is also the technically better arrangement, not merely a preference:
+      a VS Code launched from the Mac's own Dock is a child of the console
+      session, so its terminal is in Aqua by construction. The Keychain works,
+      TCC prompts appear in front of you, and none of the tmux-over-SSH
+      gymnastics at the end of this script applies.
 
       VNC is slow to macOS structurally: Apple's Screen Sharing server speaks
       VNC, but the good compression lives in Apple's own client extensions, so
       third-party clients fall back to near-raw framebuffers. Changing VNC
       CLIENT barely helps; changing PROTOCOL does.
-        NoMachine     free, NX + H.264 - the best free option
+        NoMachine     free, NX + H.264 - what you work in, port 4000
+        VNC           only to grant NoMachine its permissions, then drop it
         Parsec        DO NOT - macOS is client-only, it cannot host
 EOF
 if [ -d "/Applications/NoMachine.app" ]; then
@@ -199,11 +213,51 @@ ELAPSED=$(( ($(date +%s) - T0) / 60 ))
 step "Done in ~${ELAPSED} min"
 cat <<EOF
 
-  THREE THINGS STILL NEED THIS SCREEN. Do them now, while you are here:
+  NEXT, IN THIS ORDER. This is the whole workflow and it is the only one that
+  has worked end to end. Do not improvise around it.
 
-    1. Open Word (Cmd+Space, "Word"). Sign in with Microsoft 365. Close it.
-    2. System Settings > Privacy & Security > Full Disk Access > + > Terminal
-    3. Start the long-lived session ON THIS DESKTOP:
+    1. VNC IN AND ANSWER THE PROMPTS - any VNC client, from your own PC:
+
+           ${IP}::59010
+           (TigerVNC's host::port syntax. The VNC port is on the Scaleway
+            console, and TigerVNC handles Apple's ARD auth fine.)
+
+       Click Allow on every dialog macOS raises, then grant NoMachine both of:
+           Privacy & Security > Screen & System Audio Recording > + > NoMachine
+           Privacy & Security > Accessibility                   > + > NoMachine
+       It can neither show nor control the screen without them, and neither can
+       be granted from a command line - that is the whole reason VNC is still
+       in this procedure at all.
+
+    2. START NOMACHINE:  host ${IP}   port 4000   protocol NX
+       Black desktop after granting?  sudo /etc/NX/nxserver --restart
+       Then drop VNC. Everything below happens in the NoMachine window.
+
+    3. SIGN IN TO THE APPS, on that desktop:
+         - Word (Cmd+Space, "Word") with Microsoft 365. Installing Office does
+           NOT license it, and a licence dialog makes the whole converter phase
+           read as broken.
+         - VS Code, and grant it BOTH:
+             Privacy & Security > Full Disk Access > + > Visual Studio Code
+             Privacy & Security > Screen & System Audio Recording > + > Visual Studio Code
+           Screen Recording is not optional here: TCC attributes a screenshot to
+           the RESPONSIBLE process, which in this workflow is VS Code, not
+           Terminal. Without it screencapture returns a bare desktop - and a
+           blank capture is indistinguishable from a blank app, which is how the
+           last run nearly filed a CRITICAL against a build rendering perfectly.
+
+    4. IN VS CODE'S TERMINAL, on the Mac:
+
+           git clone https://github.com/BrkBuilds/Canvas-Downloader.git ~/Canvas_Downloader
+           cd ~/Canvas_Downloader && ./scripts/mac_audit_bootstrap.sh
+           claude
+
+  You do NOT need tmux in this workflow: VS Code is a child of the console
+  session, so it is in Aqua already, and that session outlives a NoMachine
+  disconnect - VS Code and anything it started keep running.
+
+  ONLY IF YOU FALL BACK TO PLAIN SSH (VS Code Remote-SSH from Windows, or a
+  bare ssh), start the long-lived session ON THE DESKTOP first:
 
            tmux kill-server 2>/dev/null; cd ~ && tmux new -s audit
 
@@ -226,18 +280,10 @@ cat <<EOF
        "python3 scripts/mac_aqua.py check" saying "keychain usable: True",
        never on "launchctl managername", which reports Background even here.
 
-  THEN LEAVE VNC. From your Windows PC:
-
-    Option A - VS Code (recommended, this is your IDE):
-       Install "Remote - SSH" in VS Code on Windows, then
-       F1 > "Remote-SSH: Connect to Host" > ${USER_NAME}@${IP}
-       Open folder: /Users/${USER_NAME}/Canvas_Downloader
-       The editor is local, the files and terminal are the Mac's.
-
-    Option B - plain SSH:
-       ssh ${USER_NAME}@${IP}
-
-  Either way, first command:
+  Then, from ${USER_NAME}@${IP}, attach to it before running anything at all.
+  A command started outside that tmux is in the Background session and fails at
+  the Keychain, at Office automation and at every screenshot - each differently,
+  and none of them saying why:
 
        tmux attach -t audit
        git clone https://github.com/BrkBuilds/Canvas-Downloader.git ~/Canvas_Downloader

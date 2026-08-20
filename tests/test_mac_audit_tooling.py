@@ -36,9 +36,10 @@ def test_the_tooling_exists():
         assert p.is_file(), f"missing {p.relative_to(REPO)}"
 
 
-def test_first_contact_parses_and_does_the_four_things_that_matter():
-    """It is the ONLY thing typed in the slow VNC console, so it has to earn
-    that session: SSH on, no sleep, no auto-lock, and the connect instructions."""
+def test_first_contact_parses_and_does_the_things_that_matter():
+    """It is the one script run on a bare rented Mac, and its closing output is
+    the whole workflow, so it has to earn that: SSH on, no sleep, no auto-lock,
+    and instructions that actually reach a usable desktop."""
     import shutil
     bash = shutil.which("bash")
     if bash:
@@ -50,9 +51,17 @@ def test_first_contact_parses_and_does_the_four_things_that_matter():
         ("setremotelogin", "enable SSH - without it you are stuck in VNC"),
         ("pmset", "stop the machine sleeping mid-audit"),
         ("screensaver", "stop auto-lock blocking the Automation prompts"),
-        ("tmux new -s audit", "start the session from the DESKTOP"),
+        ("tmux new -s audit", "the SSH fallback session, born on the DESKTOP"),
         ("screencapture", "how to see the screen without a remote desktop"),
         ("Parsec", "warn that Parsec cannot host on macOS"),
+        # The workflow itself, settled 2026-08-20: VNC only to grant NoMachine
+        # its permissions, then NoMachine, then VS Code ON the Mac.
+        ("port 4000", "how to reach NoMachine, which IS the workflow"),
+        ("Accessibility", "NoMachine's second grant - without it you cannot "
+                          "control the desktop, only look at it"),
+        ("nxserver --restart", "the black-desktop recovery after granting"),
+        ("RESPONSIBLE", "that Screen Recording is attributed to VS Code, not "
+                        "Terminal - a blank capture reads as a blank app"),
     ):
         assert needle in text, f"first contact never covers: {why}"
 
@@ -104,6 +113,45 @@ def test_first_contact_says_office_still_needs_a_sign_in():
     the entire converter phase read as broken."""
     text = FIRST_CONTACT.read_text(encoding="utf-8")
     assert "does NOT license" in text or "does NOT licence" in text
+
+
+#: `curl ... | bash`, `| sh`, `| sudo bash` - any setup script fed to a shell
+#: through a pipe rather than downloaded first.
+_PIPED_INSTALL = re.compile(r"curl[^|\n]*\|\s*(?:sudo\s+)?(?:ba)?sh\b")
+
+
+def test_no_setup_script_is_documented_as_a_PIPED_invocation():
+    """A piped setup script TRUNCATES ITSELF, silently, and exits 0.
+
+    Piped, the script's own text is on stdin - and any step that reads stdin
+    consumes the remainder of the file. `brew install` does exactly that.
+    Bash then hits EOF and exits **0**, so there is no error, no non-zero
+    status and no `[!!]` line anywhere.
+
+    Measured 2026-08-20 on the Tahoe machine: the run stopped dead at the
+    toolchain step, so VS Code, NoMachine and Office never installed. The next
+    half hour went on debugging a NoMachine "connection refused" that was
+    really a setup script which had ended twenty minutes earlier. The operator
+    had by then been handed the piped form four separate times.
+
+    Download-then-run everywhere, and that includes the third-party installers
+    these scripts call: same shape, same failure.
+    """
+    # Guard on the guard - a detector that stops matching passes silently.
+    assert _PIPED_INSTALL.search("curl -fsSL https://x/y.sh | bash"), \
+        "the detector no longer detects the very form it exists to ban"
+    assert not _PIPED_INSTALL.search("curl -fsSL https://x/y.sh -o ~/y.sh"), \
+        "the detector flags the CORRECT form - it would ban the fix"
+
+    offenders = []
+    for path in (FIRST_CONTACT, BOOTSTRAP, *MAC_DOCS):
+        for n, line in enumerate(
+                path.read_text(encoding="utf-8").splitlines(), 1):
+            if _PIPED_INSTALL.search(line):
+                offenders.append(f"{path.name}:{n}: {line.strip()}")
+    assert not offenders, (
+        "a piped setup script truncates itself silently and exits 0:\n  "
+        + "\n  ".join(offenders))
 
 
 def test_mac_eyes_parses_and_exposes_its_subcommands():
