@@ -33,6 +33,22 @@ DOCS = Path(__file__).resolve().parent.parent / "docs"
 # mailto/tel, not a bare fragment.
 _LINK = re.compile(r'(?:href|src)="(?!https?:|mailto:|tel:|data:|#)([^"]+)"')
 
+# An HTML COMMENT is not markup, and `docs/releases.html` carries one that says
+# `THESE MUST STAY <a href="..."> ELEMENTS` - documenting the dead-button bug
+# where a <button> received a scripted .href and both downloads were silently
+# dead. Scanned raw, that explanatory `...` reads as a link to a file named
+# `...` and the page fails as broken while every real link resolves.
+#
+# Same rule, same reason, as `scripts/verify_architecture.py` Rules 6 and 8,
+# which blank comments before scanning so that documenting a hazard can never
+# trip the check that polices it.
+_COMMENT = re.compile(r"<!--.*?-->", re.DOTALL)
+
+
+def _markup(html: str) -> str:
+    """The page with its comments blanked, so only real markup is scanned."""
+    return _COMMENT.sub("", html)
+
 
 def _pages() -> list[Path]:
     pages = sorted(DOCS.glob("*.html"))
@@ -54,7 +70,7 @@ def _target(raw: str) -> Path:
 
 @pytest.mark.parametrize("page", _pages(), ids=lambda p: p.name)
 def test_every_internal_link_resolves(page: Path):
-    html = page.read_text(encoding="utf-8")
+    html = _markup(page.read_text(encoding="utf-8"))
     broken = []
     for raw in sorted(set(_LINK.findall(html))):
         target = _target(raw)
