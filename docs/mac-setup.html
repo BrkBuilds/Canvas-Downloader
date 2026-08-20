@@ -20,6 +20,31 @@
   <meta name="twitter:description" content="How to install Canvas Downloader on macOS - Apple Silicon, first-launch approval, and the one-time permissions, step by step." />
   <meta name="twitter:image" content="https://canvasdownloader.app/assets/og-card.png" />
   <meta name="twitter:image:alt" content="Canvas Downloader - download every file from all your Canvas courses at once" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Canvas Downloader",
+            "item": "https://canvasdownloader.app/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "macOS Setup",
+            "item": "https://canvasdownloader.app/mac-setup.html"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <meta name="theme-color" content="#0b0c14" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
   <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
@@ -842,7 +867,7 @@
                 <strong>Applications</strong> folder.</li>
               <li>Eject the DMG - the app now lives in your Applications folder and is ready to open.</li>
             </ol>
-            <video class="guide-video" src="assets/mac_inst_dmgToApplications.mp4" autoplay loop muted playsinline
+            <video class="guide-video" preload="none" data-src="assets/mac_inst_dmgToApplications.mp4" autoplay loop muted playsinline
               disablepictureinpicture></video>
             <p class="media-cap">Drag the icon onto the Applications folder, just like the clip above.</p>
           </div>
@@ -1177,6 +1202,9 @@
       <a href="guide.html">How It Works</a>
       <a href="engine.html">Under the Hood</a>
       <a href="releases.html">Downloads &amp; Releases</a>
+      <a href="how-to-download-all-canvas-files.html">Download All Files</a>
+      <a href="canvas-access-after-graduation.html">Before You Graduate</a>
+      <a href="download-panopto-lecture-recordings.html">Panopto Lectures</a>
       <a href="privacy.html">Privacy Policy</a>
         <a href="disclaimer.html">Disclaimer</a>
       <a href="win-setup.html">Windows Setup</a>
@@ -1254,6 +1282,48 @@
     });
   </script>
 
+  <script>
+    // The install video loads ONLY when the visitor approaches it.
+    //
+    // It sits inside <details class="full-guide">, which is CLOSED by default,
+    // so most visitors never see it and used to download all 934 KB of it
+    // anyway. Measured 2026-08-20: guide closed -> 0 media requests; open the
+    // disclosure -> the video loads and plays on its own.
+    //
+    // That closed <details> is why this looks broken if you test it wrong:
+    // scrollIntoView on an element inside a collapsed disclosure does nothing,
+    // the observer correctly reports it as not intersecting, and it stays
+    // deferred. That is right, not a bug. Opening the disclosure gives it
+    // layout and the observer fires immediately.
+    //
+    // preload="none" is NOT sufficient on its own: the browser ignores it while
+    // the autoplay attribute is present (measured on the homepage - still every
+    // request, no change). Withholding the src is what actually defers it.
+    //
+    // rootMargin gives it a 400px head start so it is ready when it is reached.
+    (function () {
+      var vids = document.querySelectorAll('video[data-src]');
+      if (!vids.length) return;
+      var load = function (v) {
+        if (!v.dataset.src) return;
+        v.src = v.dataset.src;
+        delete v.dataset.src;
+        v.load();
+      };
+      // No IntersectionObserver (very old WebKit): load everything rather than
+      // leave the page showing empty boxes. Slow beats broken.
+      if (!('IntersectionObserver' in window)) {
+        Array.prototype.forEach.call(vids, load);
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { load(e.target); io.unobserve(e.target); }
+        });
+      }, { rootMargin: '400px 0px' });
+      Array.prototype.forEach.call(vids, function (v) { io.observe(v); });
+    })();
+  </script>
 </body>
 
 </html>

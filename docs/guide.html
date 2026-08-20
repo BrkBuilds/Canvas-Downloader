@@ -19,6 +19,152 @@
   <meta name="twitter:description" content="Step-by-step guide: downloading, syncing, and converting your Canvas course files." />
   <meta name="twitter:image" content="https://canvasdownloader.app/assets/og-card.png" />
   <meta name="twitter:image:alt" content="Canvas Downloader - download every file from all your Canvas courses at once" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://canvasdownloader.app/#website",
+        "url": "https://canvasdownloader.app/",
+        "name": "Canvas Downloader",
+        "inLanguage": "en"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Canvas Downloader",
+            "item": "https://canvasdownloader.app/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "How It Works",
+            "item": "https://canvasdownloader.app/guide.html"
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://canvasdownloader.app/guide.html#faq",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@id": "https://canvasdownloader.app/#website"
+        },
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Can the app sync my courses automatically every day?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. On the Today page, pick your courses and switch on daily sync. The first time you open the app each day, it runs a Quick Sync of those courses by itself and lists the files that arrived today, per course. See The Today Page."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the difference between Download Mode and Sync Mode?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Download Mode fetches a complete copy of everything you asked for, every time - it doesn't check what it grabbed last time. Sync Mode compares your Course Folder against Canvas first and only fetches what's new or changed. Use Download Mode for a first-time copy; use Sync Mode to keep it current. Either way, a download does leave a memory behind: it writes the same small hidden database into the course folder, recording which file is which and the settings you picked. That's what lets you link the folder in Sync Mode later and have it pick up exactly where you left off, with the same layout and conversions."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the difference between Quick Download and Custom Download?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Quick Download uses one of five ready-made presets - pick a preset, choose a folder, and start. Custom Download gives you full control over every setting: which file types to include, which Canvas web content to save, and which AI conversions to run. Both use the same download engine and produce identical results for the same settings."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What happens to my edits if I sync an updated file?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Your edits are 100% safe. The app downloads the new Canvas version and saves it as filename_NewVersion alongside your original. Your annotated file is never overwritten."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why are some files unchecked by default?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The app protects your intentional actions. Files you've edited locally are unchecked to avoid cluttering your folder with _NewVersion files unless you explicitly ask. Files deleted locally are unchecked because your deletion is respected."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "If I uncheck a file, will it ask me again next time?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Unchecking means \"skip for today.\" The file is still pending sync and will show up on the review screen next time. To permanently skip it, use the Ignore icon or the \"Move deselected to Ignored\" button."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "I renamed or moved a file locally - will sync break?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. The app automatically detects renamed and moved files using content fingerprinting. You can rename and reorganize freely - no duplicates, no broken tracking."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Will a file show as updated if the teacher only changed its description?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. The app compares file content fingerprints, not just timestamps. If the actual file content hasn't changed, it stays in Up to Date - no phantom updates."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Will Sync re-download files I already have?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. The app scans your existing folder and automatically recognizes files you already have using a smart algorithm. They are marked as Up to Date - no wasted bandwidth."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "I moved my course folder to a different drive. Will sync still work?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Click the edit icon on the pair and re-select the folder at its new location. The hidden database lives inside the folder, so all sync history is preserved automatically."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "If I enable PowerPoint to PDF, does the original get deleted?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes - the original is replaced by the PDF. Same for Legacy Word to PDF, Excel to PDF, and Video to Audio."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What does Submissions (Results) save, and will my professor know?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It saves feedback and grades you received on your own submitted work - professor comments, grading scores, and your grade per assignment. This is your personal data. Your professor is not notified."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do the AI conversions work on all computers?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It depends. PowerPoint, Word, and Excel to PDF conversions require the matching Microsoft Office desktop app. Archives, Canvas pages, code files, web links, video-to-audio, and Excel data-text extraction work everywhere with no extra software."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <meta name="theme-color" content="#0b0c14" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
   <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
@@ -1613,6 +1759,9 @@
       <a href="engine.html">Under the Hood</a>
       <a href="win-setup.html">Windows Setup</a>
       <a href="mac-setup.html">macOS Setup</a>
+      <a href="how-to-download-all-canvas-files.html">Download All Files</a>
+      <a href="canvas-access-after-graduation.html">Before You Graduate</a>
+      <a href="download-panopto-lecture-recordings.html">Panopto Lectures</a>
       <a href="privacy.html">Privacy Policy</a>
         <a href="disclaimer.html">Disclaimer</a>
       <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span

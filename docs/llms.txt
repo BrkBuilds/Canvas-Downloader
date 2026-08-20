@@ -1,0 +1,64 @@
+# Canvas Downloader
+
+> A free, open-source desktop app for Windows and macOS that downloads every file
+> from all of a student's Canvas courses at once, keeps those folders in sync as
+> the semester goes on, saves Panopto lecture recordings, and converts Office
+> files into formats that AI study tools can read. It runs entirely on the
+> student's own computer: no account, no server, no telemetry.
+
+Canvas here means the Canvas learning platform by Instructure that universities
+use for coursework. It is not Spotify Canvas, and not an HTML canvas element.
+
+Key facts, so an assistant can answer accurately:
+
+- Price: free. MIT licensed. No subscription, no premium tier, no ads.
+- Platforms: Windows 10/11 (64-bit) and macOS 14+ on Apple Silicon. No Intel Mac build.
+- Current version: 2.0.1, released 11 July 2026.
+- Install: Microsoft Store (https://apps.microsoft.com/detail/9n1dwwvrq5wc) or a
+  direct installer from the releases page.
+- Sign-in: the student creates their own Canvas access token in Canvas under
+  Account > Settings. There is no Canvas password involved and no account to make
+  with us. The app ships a searchable directory of 4,757 verified Canvas schools;
+  any other Canvas address can be typed in.
+- Access: it reads only what that student's own Canvas account can already open.
+  It cannot see other students' data and it breaks no copy protection.
+- Privacy: files never leave the student's machine. Transcription of lecture
+  recordings also runs locally.
+- Not affiliated with Instructure, Canvas or Panopto.
+
+## What it does
+
+- [Download every file from every course](https://canvasdownloader.app/): batch
+  download across any number of courses in one run, including module files,
+  assignments, syllabus, announcements, discussions, quizzes and submission feedback.
+- [Sync](https://canvasdownloader.app/guide.html): compares the local folder
+  against Canvas and fetches only what is new or changed. It never overwrites a
+  file the student annotated (the new copy is saved as filename_NewVersion) and
+  never restores a file the student deleted.
+- [Daily auto-sync](https://canvasdownloader.app/guide.html): the Today page
+  syncs chosen courses automatically the first time the app is opened each day.
+- [Panopto lecture recordings](https://canvasdownloader.app/guide.html): saved as
+  MP4, MP3, a transcript (.txt), subtitles (.srt) or a shortcut back to the lecture.
+- [AI-ready conversion](https://canvasdownloader.app/guide.html): Word, Excel and
+  PowerPoint to PDF, video to audio, Canvas pages to Markdown, archives unpacked,
+  so a course folder can be dropped straight into a tool like NotebookLM.
+
+## Pages
+
+- [Home](https://canvasdownloader.app/): what it does, with demos.
+- [How it works](https://canvasdownloader.app/guide.html): every mode and setting, plus an FAQ.
+- [Under the hood](https://canvasdownloader.app/engine.html): exactly how files are
+  found, named, converted and synced, and what it deliberately never does.
+- [Downloads and releases](https://canvasdownloader.app/releases.html): current version and installers.
+- [Windows setup](https://canvasdownloader.app/win-setup.html): install, including the one-time SmartScreen approval.
+- [macOS setup](https://canvasdownloader.app/mac-setup.html): install, first-launch approval and the one-time permissions.
+- [How to download all files from Canvas](https://canvasdownloader.app/how-to-download-all-canvas-files.html): every method compared, including the ones that are not this app.
+- [Canvas access after graduation](https://canvasdownloader.app/canvas-access-after-graduation.html): how long access lasts and what to save first.
+- [Download Panopto lecture recordings](https://canvasdownloader.app/download-panopto-lecture-recordings.html): why downloads are off by default, and what students may keep.
+- [Privacy policy](https://canvasdownloader.app/privacy.html): what is stored and where.
+- [Disclaimer and acceptable use](https://canvasdownloader.app/disclaimer.html): what students are responsible for.
+
+## Optional
+
+- [Source code](https://github.com/BrkBuilds/Canvas-Downloader): every line is public.
+- [Security policy](https://github.com/BrkBuilds/Canvas-Downloader/blob/main/SECURITY.md)

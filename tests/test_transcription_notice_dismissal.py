@@ -359,15 +359,47 @@ def test_every_key_the_markup_uses_is_styled_in_global_css(prefix, selector):
         f"with no paint at all")
 
 
+def _every_stylesheet_source():
+    """Every place in the app that can carry a rule for these keys.
+
+    Scanning only ``global.css`` is what the first version of this file did, and
+    it had a hole: ``ui/sync_review.py`` carries an INLINE override keyed on the
+    full card key (``margin-top: -24px``, so the notice tucks under the metric
+    row above it on the review screen). A rename would have left that override
+    pointing at nothing, silently, with every test still green.
+    """
+    for css in sorted((REPO / "styles").glob("*.css")):
+        yield css.relative_to(REPO).as_posix(), css.read_text(encoding="utf-8")
+    for py in sorted(REPO.glob("*.py")) + sorted(REPO.glob("*/*.py")):
+        if py.parts[-2:][0] in ("tests", "scripts") or py.name.startswith("_mutate"):
+            continue
+        body = py.read_text(encoding="utf-8")
+        if "tx_setup_" in body:
+            yield py.relative_to(REPO).as_posix(), body
+
+
 def test_no_key_is_styled_that_the_markup_never_produces():
     """The other direction: a rule left behind after a rename is dead weight
-    that reads as coverage."""
+    that reads as coverage - and worse, an override elsewhere that no longer
+    binds is an unstyled element nobody notices."""
     import re
-    styled = {m.group(1) for s in _selectors(GLOBAL_CSS)
-              for m in re.finditer(r"st-key-(tx_setup_[a-z]+_)", s)}
-    assert styled == {p for p, _ in _BASE_RULES}, (
-        f"styles/global.css styles {styled}, the markup produces "
-        f"{ {p for p, _ in _BASE_RULES} }")
+    produced = {p for p, _ in _BASE_RULES}
+    for where, body in _every_stylesheet_source():
+        styled = {m.group(1) for m in re.finditer(r"st-key-(tx_setup_[a-z]+_)", body)}
+        orphans = styled - produced
+        assert not orphans, (
+            f"{where} styles {sorted(orphans)}, which shared/components.py "
+            f"never produces - those rules bind to nothing")
+
+
+def test_the_review_screens_inline_override_still_binds():
+    """ui/sync_review.py tucks the card under the metric row above it. It is
+    keyed on the FULL key, so it is the one rule a key rename breaks without
+    touching styles/."""
+    body = (REPO / "ui" / "sync_review.py").read_text(encoding="utf-8")
+    assert "st-key-tx_setup_card_sync_review_setup_tx" in body
+    assert 'key="sync_review_setup_tx"' in body, (
+        "the review call site's key no longer matches its own inline override")
 
 
 # ── 4. the toggles are callbacks ────────────────────────────────────────────
@@ -391,6 +423,10 @@ def test_dismiss_and_respawn_are_on_click_callbacks(render, monkeypatch):
     fake, _ = render(dismissible=True)
     relink = next(b for b in fake.buttons if b[1].startswith("tx_setup_relink_"))
     assert relink[2], "the re-spawn link must use on_click="
+    assert relink[3] is None, (
+        "no help= on the collapsed link either: a tooltip that fires whenever "
+        "the pointer passes the line the user just collapsed is the nagging "
+        "this change exists to stop")
     assert fake.reruns == 0
 
 

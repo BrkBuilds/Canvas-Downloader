@@ -16,7 +16,13 @@
 #endif
 #define AppPublisher   "Canvas Downloader"
 #define AppExeName     "Canvas Downloader.exe"
-#define AppURL         "https://github.com/birkls/canvas-downloader"
+#define AppURL         "https://canvasdownloader.app"
+; Three SEPARATE urls, not one with suffixes appended. AppURL used to be the
+; GitHub repo, so "{#AppURL}/issues" and "/releases" happened to resolve; once
+; AppURL became the website those became canvasdownloader.app/issues, which
+; does not exist. Each destination is now stated in full.
+#define AppSupportURL  "https://github.com/BrkBuilds/Canvas-Downloader/issues"
+#define AppUpdatesURL  "https://canvasdownloader.app/releases.html"
 #define SourceDir      "dist\Canvas Downloader"
 
 [Setup]
@@ -27,9 +33,9 @@ AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
-AppSupportURL={#AppURL}/issues
-AppUpdatesURL={#AppURL}/releases
-AppComments=Batch-download your Canvas LMS course materials to your computer.
+AppSupportURL={#AppSupportURL}
+AppUpdatesURL={#AppUpdatesURL}
+AppComments=Batch-download your Canvas course materials to your computer.
 
 ; Install location
 DefaultDirName={autopf}\{#AppName}

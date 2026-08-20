@@ -1020,14 +1020,28 @@ def _render_single_select_list(
 
         st.checkbox(base_name, key=chk_key, on_change=_on_toggle, args=(course.id,))
 
-    if dynamic_css:
-        if len(courses) > 0 and first_item_top_offset and first_item_top_offset != "0":
-            f_key = f"{namespace}_chk_{courses[0].id}"
-            dynamic_css.append(f"""
-            div.st-key-{f_key} {{ margin-top: {first_item_top_offset} !important; }}
-            """)
-        st.html(f'<style>{"".join(dynamic_css)}</style>')
-        st.html('<div style="padding-bottom: 1rem;"></div>')
+    # The first row's offset is computed OUTSIDE any dynamic_css guard, exactly
+    # like the multi-select twin's `boundary_css` above. It used to be appended
+    # inside `if dynamic_css:`, which made a layout constant depend on whether
+    # any course in the list happened to have a parenthetical code - so a list
+    # of code-less courses silently lost its -40px alignment against the rule
+    # above it. Same defect, same shape, in the twin the fix did not reach.
+    boundary_css = []
+    if len(courses) > 0 and first_item_top_offset and first_item_top_offset != "0":
+        f_key = f"{namespace}_chk_{courses[0].id}"
+        boundary_css.append(f"""
+        div.st-key-{f_key} {{ margin-top: {first_item_top_offset} !important; }}
+        """)
+
+    # Emitted UNCONDITIONALLY, for the reason spelled out on the multi-select
+    # twin: a style-only st.html goes to the event container, which is
+    # index-addressed, so a stylesheet that appears on some runs and not others
+    # slides every later one onto its neighbour's host (CLAUDE.md: "NEVER emit a
+    # <style> block CONDITIONALLY"). The old `if dynamic_css:` guarded BOTH this
+    # and the spacer below, so a list whose courses carry no code changed the
+    # page's host list AND its main-container element count at once.
+    st.html(f'<style>{"".join(dynamic_css + boundary_css)}</style>')
+    st.html('<div style="padding-bottom: 1rem;"></div>')
 
 def inject_scroll_anchor_bridge(namespace: str) -> None:
     """Hold the page's scroll position across a checkbox-driven fragment rerun.

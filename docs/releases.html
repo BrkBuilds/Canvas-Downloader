@@ -20,6 +20,42 @@
   <meta name="twitter:description" content="Download the latest Canvas Downloader for Windows and macOS. Every release, straight from GitHub." />
   <meta name="twitter:image" content="https://canvasdownloader.app/assets/og-card.png" />
   <meta name="twitter:image:alt" content="Canvas Downloader - download every file from all your Canvas courses at once" />
+  <!-- The SAME @id as the homepage node on purpose: one app entity, described
+       from two pages. Only release-specific facts live here. Update alongside
+       the visible version numbers below (see the maintenance block in <body>). -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://canvasdownloader.app/#app",
+        "name": "Canvas Downloader",
+        "url": "https://canvasdownloader.app/",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Windows 10, Windows 11, macOS 14 or later (Apple Silicon)",
+        "softwareVersion": "2.0.1",
+        "datePublished": "2026-07-11",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "downloadUrl": [
+          "https://github.com/BrkBuilds/Canvas-Downloader/releases/download/v2.0.1/Canvas_Downloader_v2.0.1_Windows.exe",
+          "https://github.com/BrkBuilds/Canvas-Downloader/releases/download/v2.0.1/Canvas_Downloader_v2.0.1_MacOS.dmg"
+        ],
+        "installUrl": "https://apps.microsoft.com/detail/9n1dwwvrq5wc",
+        "fileSize": "133.6 MB",
+        "releaseNotes": "https://github.com/BrkBuilds/Canvas-Downloader/releases/tag/v2.0.1"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Canvas Downloader", "item": "https://canvasdownloader.app/" },
+          { "@type": "ListItem", "position": 2, "name": "Downloads & Releases", "item": "https://canvasdownloader.app/releases.html" }
+        ]
+      }
+    ]
+  }
+  </script>
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
   <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
@@ -351,13 +387,31 @@
       line-height: 1.5;
     }
 
+    /* Version, size and release date as real text. A crawler that runs no
+       JavaScript reads this; so does a visitor deciding whether to spend the
+       bandwidth. Kept separate from .dl-subtitle so the release script has one
+       obvious line to edit per platform. */
+    .dl-meta {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--txt2);
+      margin-top: 14px;
+      margin-bottom: 0;
+    }
+
     /* ---- OS TOGGLE ---- */
     .os-toggle {
       text-align: center;
       margin-top: 18px;
     }
 
-    .os-toggle a {
+    /* Matches BOTH tags deliberately. This control was an <a href="#"> and
+       became a <button>, at which point "a" stopped matching and the button
+       fell back to the UA colour - black text on a black page, i.e. an
+       invisible control. A button does not inherit colour from body, so the
+       colour here is doing real work, not tidying. */
+    .os-toggle a,
+    .os-toggle button {
       display: inline-block;
       color: var(--txt3);
       font-size: 14px;
@@ -366,7 +420,8 @@
       transition: transform 0.2s, color 0.2s;
     }
 
-    .os-toggle a:hover {
+    .os-toggle a:hover,
+    .os-toggle button:hover {
       color: var(--txt);
       transform: scale(1.04);
     }
@@ -524,28 +579,73 @@
     <!-- LATEST -->
     <div class="section-title" id="latest-heading">Latest version</div>
 
-    <!-- Loading state -->
-    <div id="state-loading" class="state-msg">
-      <div class="spinner"></div>
-      Loading the latest release&hellip;
-    </div>
+    <!-- ══════════════════════════════════════════════════════════════════
+         UPDATING THIS PAGE FOR A NEW RELEASE  (read this before editing)
+         ══════════════════════════════════════════════════════════════════
 
-    <!-- Error / offline state -->
-    <div id="state-error" class="state-msg hidden">
-      Couldn't reach GitHub right now.
-      <br />
-      <a href="https://github.com/BrkBuilds/Canvas-Downloader/releases/latest" target="_blank"
-        rel="noopener">Open the releases page on GitHub &#8594;</a>
-    </div>
+         This page is STATIC-FIRST. Every version number, download link,
+         file size and date below is written into the HTML by hand. The
+         script at the bottom then re-reads the GitHub API and overwrites
+         those same values, so the page self-heals if this markup is a
+         release behind.
+
+         It is static-first for two reasons, and BOTH matter:
+           1. A crawler that does not run JavaScript used to see the words
+              "Loading the latest release..." and nothing else. This is the
+              highest-intent page on the site; it needs real text.
+           2. A visitor whose network blocks api.github.com used to get an
+              error message INSTEAD of the download. Now they get the
+              download, and the API call is a silent upgrade.
+
+         So: if the API call fails, do nothing. Never replace working
+         markup with an error state.
+
+         ── TO PUBLISH A NEW VERSION, EDIT EXACTLY THESE SIX THINGS ──
+
+         (A) The two version pills:  <span class="ver-pill" id="win-ver">
+             and id="mac-ver". Format is "v2.0.1" - leading v, no spaces.
+
+         (B) The two download hrefs: id="win-exe" and id="mac-dmg".
+             THESE MUST STAY <a href="..."> ELEMENTS. They were once
+             <button> and both downloads were silently dead for anyone who
+             clicked them, because the script assigns element.href and a
+             button has no href behaviour. If you ever need button styling,
+             style the anchor - do not change the tag.
+             Asset URLs look like:
+             https://github.com/BrkBuilds/Canvas-Downloader/releases/download/v<VER>/<ASSET>
+
+         (C) The size + date line in each card (class="dl-meta"). Take the
+             real byte size from the GitHub release asset and round to one
+             decimal in MB. Do not invent it.
+
+         (D) The "Previous versions" rows in #older-list: move the version
+             that was current into a new .rel-row at the TOP of that list,
+             copying the shape of the rows already there.
+
+         (E) The JSON-LD block in <head>: "softwareVersion", "downloadUrl",
+             "datePublished" and "fileSize".
+
+         (F) docs/sitemap.xml: bump <lastmod> for this URL.
+
+         ── THE VERSION HERE IS THE SHIPPED TAG, NOT version.py ──
+
+         version.py is deliberately kept AHEAD of every shipped tag (see
+         tests/test_version_leads_tags.py), because the update banner
+         compares the newest tag against the running build. The website
+         must advertise what a visitor can actually download, which is the
+         newest GitHub TAG. Those two numbers are not the same and must not
+         be made the same. tests/test_website_advertises_shipped_version.py
+         fails if this page drifts from the newest tag.
+         ══════════════════════════════════════════════════════════════════ -->
 
     <!-- Latest: Windows card -->
-    <div class="plat-card featured hidden" id="latest-win">
+    <div class="plat-card featured" id="latest-win">
       <div class="plat-head">
         <svg viewBox="0 0 24 24" fill="var(--cyan)">
           <path d="M2.5 2.5h8.5v8.5H2.5zM13 2.5h8.5v8.5H13zM2.5 13h8.5v8.5H2.5zM13 13h8.5v8.5H13z" />
         </svg>
         <div>
-          <div class="plat-name">Windows <span class="ver-pill" id="win-ver"></span></div>
+          <div class="plat-name">Windows <span class="ver-pill" id="win-ver">v2.0.1</span></div>
           <div class="plat-req">Windows 10/11 - 64-bit</div>
         </div>
       </div>
@@ -555,7 +655,7 @@
             rel="noopener noreferrer" class="store-badge">
             <img decoding="async" loading="lazy" src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft" />
           </a>
-          <button id="win-exe" type="button" class="btn-download btn-dl-ghost" style="background:none; border:none; padding:0; cursor:pointer; font:inherit;">
+          <a id="win-exe" class="btn-download btn-dl-ghost" href="https://github.com/BrkBuilds/Canvas-Downloader/releases/download/v2.0.1/Canvas_Downloader_v2.0.1_Windows.exe">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -563,27 +663,28 @@
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
             Download direct (.exe)
-          </button>
+          </a>
         </div>
+        <p class="dl-meta" id="win-meta">Version 2.0.1 &middot; 133.6 MB &middot; Released 11 July 2026</p>
         <p class="dl-subtitle">Both methods add a Start Menu icon and uninstall cleanly via Settings &rarr; Apps.
-          The <b>Microsoft Store version is easier to install</b> - no SmartScreen warning. About 140 MB to download.</p>
+          The <b>Microsoft Store version is easier to install</b> - no SmartScreen warning.</p>
       </div>
     </div>
 
     <!-- Latest: Mac card -->
-    <div class="plat-card featured hidden" id="latest-mac">
+    <div class="plat-card featured" id="latest-mac">
       <div class="plat-head">
         <svg viewBox="0 0 24 24" fill="var(--txt2)">
           <path
             d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
         </svg>
         <div>
-          <div class="plat-name">macOS <span class="ver-pill" id="mac-ver"></span></div>
+          <div class="plat-name">macOS <span class="ver-pill" id="mac-ver">v2.0.1</span></div>
           <div class="plat-req">Apple Silicon (M1 or later) &middot; macOS 14+</div>
         </div>
       </div>
       <div class="plat-body">
-        <button id="mac-dmg" type="button" class="btn-download btn-dl-primary" style="background:none; border:none; padding:0; cursor:pointer; font:inherit;">
+        <a id="mac-dmg" class="btn-download btn-dl-primary" href="https://github.com/BrkBuilds/Canvas-Downloader/releases/download/v2.0.1/Canvas_Downloader_v2.0.1_MacOS.dmg">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -591,8 +692,9 @@
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           Download for macOS (.dmg)
-        </button>
-        <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported. Needs macOS 14 (Sonoma) or newer. About 150 MB.
+        </a>
+        <p class="dl-meta" id="mac-meta">Version 2.0.1 &middot; 144.5 MB &middot; Released 11 July 2026</p>
+        <p class="dl-subtitle">Apple Silicon only - Intel Macs are not supported. Needs macOS 14 (Sonoma) or newer.
           First launch needs a one-time approval: see the <a href="mac-setup.html"
             style="color:var(--cyan);text-decoration:none;">setup guide</a>.</p>
       </div>
@@ -604,8 +706,32 @@
     </div>
 
     <!-- OLDER RELEASES -->
-    <div class="section-title hidden" id="older-heading">Previous versions</div>
-    <div id="older-list"></div>
+    <div class="section-title" id="older-heading">Previous versions</div>
+    <!-- Static rows are the crawlable + no-JS baseline. The script below
+         REPLACES this list wholesale when GitHub answers, so add a row here
+         when you publish and never worry about it duplicating. -->
+    <div id="older-list">
+      <div class="rel-row">
+        <div class="rel-meta">
+          <div class="rel-ver">v2.0.0 Canvas Downloader for MacOS (ARM64) M-chips</div>
+          <div class="rel-date">May 7, 2026</div>
+        </div>
+        <div class="rel-links">
+          <a class="rel-asset" href="https://github.com/BrkBuilds/Canvas-Downloader/releases/download/v2.0.0/Canvas_Downloader_v2.0.1_macOS.dmg"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>macOS (.dmg)</a>
+          <a class="rel-notes" href="https://github.com/BrkBuilds/Canvas-Downloader/releases/tag/v2.0.0" target="_blank" rel="noopener">Notes &#8599;</a>
+        </div>
+      </div>
+      <div class="rel-row">
+        <div class="rel-meta">
+          <div class="rel-ver">Canvas Downloader v1.0.0</div>
+          <div class="rel-date">Jan 17, 2026</div>
+        </div>
+        <div class="rel-links">
+          <a class="rel-asset" href="https://github.com/BrkBuilds/Canvas-Downloader/releases/download/v1.0.0/Canvas_Downloader.exe"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Windows (.exe)</a>
+          <a class="rel-notes" href="https://github.com/BrkBuilds/Canvas-Downloader/releases/tag/v1.0.0" target="_blank" rel="noopener">Notes &#8599;</a>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- FOOTER -->
@@ -614,6 +740,9 @@
       <a href="index.html">Homepage</a>
       <a href="guide.html">How It Works</a>
       <a href="engine.html">Under the Hood</a>
+      <a href="how-to-download-all-canvas-files.html">Download All Files</a>
+      <a href="canvas-access-after-graduation.html">Before You Graduate</a>
+      <a href="download-panopto-lecture-recordings.html">Panopto Lectures</a>
       <a href="privacy.html">Privacy Policy</a>
         <a href="disclaimer.html">Disclaimer</a>
       <a href="win-setup.html">Windows Setup</a>
@@ -632,8 +761,9 @@
 
       // ---- DOM refs ----
       const el = id => document.getElementById(id);
-      const loadingEl = el('state-loading');
-      const errorEl = el('state-error');
+      // #state-loading and #state-error were deleted when this page became
+      // static-first: there is nothing to load into and nothing to fall back
+      // to, because the correct content is already in the HTML.
       const winCard = el('latest-win');
       const macCard = el('latest-mac');
       const osToggle = el('os-toggle');
@@ -752,7 +882,8 @@
           frag.appendChild(row);
         });
 
-        olderList.appendChild(frag);
+        // Replace, never append: the static baseline rows are already here.
+        olderList.replaceChildren(frag);
       }
 
       function makeAsset(href, label) {
@@ -767,10 +898,10 @@
         return a;
       }
 
-      function showError() {
-        loadingEl.classList.add('hidden');
-        errorEl.classList.remove('hidden');
-      }
+      // A failed API call is not an error the visitor needs to see. The
+      // markup already shows the shipped release, so the only correct
+      // response is to leave it alone.
+      function showError() { /* keep the static content */ }
 
       toggleBtn.addEventListener('click', e => {
         e.preventDefault();
@@ -784,7 +915,6 @@
           const visible = (data || []).filter(r => !r.draft);
           if (!visible.length) { showError(); return; }
 
-          loadingEl.classList.add('hidden');
           const { winRel, macRel } = renderLatest(visible);
           renderOlder(visible.filter(r => r !== winRel && r !== macRel));
         })

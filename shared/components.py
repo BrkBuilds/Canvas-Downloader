@@ -3833,10 +3833,14 @@ def render_transcription_setup_notice(wants_transcription: bool, *, key: str,
 
     if _collapsed:
         with st.container(key=_link_key):
+            # No help= here, for the same two reasons as the close button: it
+            # wraps the button in a stTooltipHoverTarget, and a tooltip that
+            # fires every time the pointer passes the one line the user just
+            # collapsed is the nagging this whole change exists to stop. The
+            # label already says what it is.
             st.button("Transcripts & Subtitles are not set up yet",
                       key=f"tx_setup_relink_{key}",
-                      on_click=_spawn_tx_setup_card,
-                      help="Show the setup notice again.")
+                      on_click=_spawn_tx_setup_card)
             pad_slot_children(1, _TX_NOTICE_SLOT_CHILDREN)
     else:
         def _notice_body() -> None:
