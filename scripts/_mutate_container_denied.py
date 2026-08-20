@@ -37,8 +37,18 @@ TEST_TARGET = TESTS
 CONTAINER_DENIED_MUTANTS = [
     ("the fallback stops recording itself (back to a bare -1712)",
      AB,
-     "            _office_unstaged.add(app_name)\n",
-     "            pass\n"),
+     "        _office_unstaged.add(app_name)\n",
+     "        pass\n"),
+
+    ("the record moves BACK to one branch, missing the route a denial takes",
+     AB,
+     "    if sys.platform == 'darwin':\n        _office_unstaged.add(app_name)\n",
+     "    if sys.platform == 'darwin' and False:\n        _office_unstaged.add(app_name)\n"),
+
+    ("the copy-failure fallback is logged at debug again, i.e. invisibly",
+     AB,
+     "        logger.warning(f\"[AppleScript] container staging unavailable ({e}); \"\n",
+     "        logger.debug(f\"[AppleScript] container staging unavailable ({e}); \"\n"),
 
     ("the category stops being fatal - back to ~4 minutes PER FILE",
      AB,

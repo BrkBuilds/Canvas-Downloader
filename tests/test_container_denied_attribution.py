@@ -141,12 +141,21 @@ def test_the_category_is_FATAL_so_the_phase_aborts_once():
 # --------------------------------------------------------------------------
 
 def test_the_fallback_records_itself():
-    """`office_container_stage` is the one place that knows staging was lost."""
+    """Taking the no-container path is what makes a later timeout explicable.
+
+    Asserted on ``_direct_passthrough``, which is where BOTH routes into the
+    fallback converge - see
+    ``test_the_record_lives_at_the_shared_boundary_not_at_one_branch`` for why
+    that distinction is not cosmetic. This test originally required the record
+    inside ``office_container_stage`` and therefore passed while the packaged
+    app was still misreporting, because a denied grant takes the branch that
+    version did not instrument.
+    """
     import ast
     src = (REPO / "engine" / "applescript_bridge.py").read_text(encoding="utf-8")
     tree = ast.parse(src)
     fn = next(n for n in ast.walk(tree)
-              if isinstance(n, ast.FunctionDef) and n.name == "office_container_stage")
+              if isinstance(n, ast.FunctionDef) and n.name == "_direct_passthrough")
     adds = [n for n in ast.walk(fn)
             if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
             and n.func.attr == "add"
@@ -267,3 +276,83 @@ def test_the_refined_category_is_what_reaches_the_message():
     assert assigned, (
         "attribute_office_failure is called but its result is discarded - the "
         "message branch below would still see the unrefined category")
+
+
+# --------------------------------------------------------------------------
+# BOTH routes into the fallback must count
+# --------------------------------------------------------------------------
+#
+# The first version of this fix recorded the fallback at ONE of its two entry
+# points - `stage_root is None` - and the packaged app went on reporting a bare
+# -1712, because a DENIED app-data grant takes the OTHER one. The container
+# directory still exists and still lists; what fails is the `mkdir`/`copy2`
+# INTO it. Only a live re-run in the bundle exposed that; every unit test passed.
+#
+# So the record belongs in `_direct_passthrough`, which is what both routes
+# converge on, and a third route added later gets it for free.
+
+def test_the_record_lives_at_the_shared_boundary_not_at_one_branch():
+    import ast
+    src = (REPO / "engine" / "applescript_bridge.py").read_text(encoding="utf-8")
+    tree = ast.parse(src)
+
+    def adds_in(fn_name):
+        fn = next((n for n in ast.walk(tree)
+                   if isinstance(n, ast.FunctionDef) and n.name == fn_name), None)
+        assert fn is not None, f"{fn_name} is gone"
+        return [n for n in ast.walk(fn)
+                if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                and n.func.attr == "add" and isinstance(n.func.value, ast.Name)
+                and n.func.value.id == "_office_unstaged"]
+
+    assert adds_in("_direct_passthrough"), (
+        "_direct_passthrough no longer records the fallback. It is the ONE place "
+        "both routes converge, and recording at a branch instead is what let a "
+        "denied app-data grant keep reporting a bare -1712 in the packaged app")
+    assert not adds_in("office_container_stage"), (
+        "office_container_stage records it too - two places to keep in step, "
+        "which is the shape that produced the original miss")
+
+
+def test_every_route_into_the_fallback_goes_through_direct_passthrough():
+    """Count the routes, so a new one cannot quietly skip the record."""
+    import ast
+    src = (REPO / "engine" / "applescript_bridge.py").read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == "office_container_stage")
+    yields = [n for n in ast.walk(fn) if isinstance(n, ast.YieldFrom)]
+    assert len(yields) >= 2, (
+        "office_container_stage used to have TWO fallbacks - container missing, "
+        "and the staging copy failing. If that changed, re-check that every one "
+        "still reaches _direct_passthrough")
+    for y in yields:
+        assert (isinstance(y.value, ast.Call)
+                and isinstance(y.value.func, ast.Name)
+                and y.value.func.id == "_direct_passthrough"), (
+            "a fallback bypasses _direct_passthrough, so it does not record "
+            "itself and its timeouts will be misreported")
+
+
+def test_the_staging_failure_is_logged_where_it_can_be_READ():
+    """debug level is invisible: a real run with debug mode ON had 0 DEBUG lines.
+
+    This is the only line that explains why conversions are about to fail, and
+    at `logger.debug` neither a user nor this audit could ever see it.
+    """
+    import ast
+    src = (REPO / "engine" / "applescript_bridge.py").read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == "office_container_stage")
+    levels = {
+        n.func.attr for n in ast.walk(fn)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+        and isinstance(n.func.value, ast.Name) and n.func.value.id == "logger"
+        and any("staging unavailable" in getattr(a, "value", "")
+                for a in ast.walk(n) if isinstance(a, ast.Constant)
+                and isinstance(a.value, str))
+    }
+    assert levels and "debug" not in levels, (
+        f"the staging-unavailable line is logged at {levels or 'nowhere'}; the "
+        f"app's debug log captures INFO and above, so debug means invisible")
