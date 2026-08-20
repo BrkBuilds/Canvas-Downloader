@@ -8,10 +8,20 @@ next person the same argument twice.
 
 ## 1. Who the user is
 
-A university student who uses Canvas for coursework, most likely in the United
-States. Measured, not assumed: the app's own verified institution directory
-holds **1,330 institutions with a known country in the US against 9 in
-Denmark**, plus 3,199 `.instructure.com` tenants that are predominantly US.
+A university student who uses Canvas for coursework, in an English-speaking
+country, and **not predominantly American**. Measured from the Microsoft Store
+dashboard on 2026-08-20, by installs: Philippines 82, United States 79,
+Australia 70, South Africa 62, India 55, Nigeria 27, United Kingdom 24, across
+15 pages of countries.
+
+**This corrects an earlier reading, and the correction matters.** This section
+used to say "most likely in the United States", measured from the app's own
+institution directory (1,330 US institutions against 9 Danish). That directory
+measures where Canvas *tenants* are, not where *users* are. The US is about 10%
+of installs. Copy or examples that assume an American student are speaking to
+one visitor in ten. English first is untouched and if anything stronger, since
+every country on that list is English-speaking. Full table and the engineering
+consequence in [FINDINGS.md](FINDINGS.md).
 
 They are not a system administrator, not an instructor, and not a developer.
 They arrive at one of four moments:
@@ -129,6 +139,31 @@ accepted: the funnel below the click is invisible. If this changes,
 
 ### English first, no localisation
 Settled on the institution-count measurement above.
+
+### Publish usage, never opinion, until there is an opinion to publish
+Settled 2026-08-21. The Store has 0 ratings and 0 reviews after 750 installs, so
+the site says "used by", carries no `aggregateRating` markup, and states no
+claim about how anyone feels about the product. Enforced by
+`tests/test_website_social_proof.py`. Revisit when the in-app rate prompt exists
+and real reviews follow.
+
+### Every published number is rounded down
+Settled 2026-08-21. The site has no analytics and no build step, so nothing can
+recompute a figure at render time. Rounding down is what keeps a hand-written
+number true: the published figures are LIFETIME CUMULATIVE totals, so they can
+only go up, and a rounded-down one can therefore only ever understate.
+
+**No as-of date on a lifetime figure.** That was proposed, and removed by the
+product owner: a date on a number that cannot become false is decoration. The
+dating rule still applies to any WINDOWED figure ("in the last 6 months"), which
+is what it was written for.
+
+### Say what is true; do not narrate what is missing
+Settled 2026-08-21. An early draft of `llms.txt` noted that the Store has no
+reviews yet. Removed, because an assistant latches on to a fact like that and
+builds a story from it, and the story it tends to build is that the product is
+unvetted and should not be downloaded. Omission is both true and safer. There is
+a test for this, because the instinct to disclose is strong.
 
 ### Do not add width and height to the site's images
 Measured CLS is 0.0057 desktop and 0.0013 mobile against a 0.1 threshold. Two

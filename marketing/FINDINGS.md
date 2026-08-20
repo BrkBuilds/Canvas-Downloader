@@ -11,6 +11,262 @@ lives in [STRATEGY.md](STRATEGY.md) as well.
 
 ---
 
+## FIXED: the site had no social proof, while the Store had the only traction
+
+**Status: fixed 2026-08-21.** `docs/index.html` and `docs/llms.txt`.
+
+Three tags sit between the hero and the "Hi, I'm Birk" card: **800+ downloads**,
+**used by students in 100 countries**, and **free and open source**. The same
+facts are in `llms.txt`, which is where an assistant reads them.
+
+**Measured 2026-08-20 from the Microsoft Store Partner Center dashboard**, plus
+two live API checks:
+
+| | |
+|---|---|
+| Page views | 14.26K |
+| Installs | 750 tile / **767 funnel "Successful installs"** / 764 in the geographical spread |
+| Install success rate | **99.21%** (6 failures; the 62 user aborts are excluded) |
+| User-initiated uninstalls | 6, i.e. 0.8% of installs |
+| Conversion | 5.26% |
+| Countries | **exactly 100**, 764 installs attributed. PH 82, US 79, AU 70, ZA 62, IN 55, NG 27, GB 24, NZ 23, BR 22, then a long tail: 46 countries have 1 or 2 |
+| GitHub release assets, all tags | **44 downloads** (16 + 14 + 3 + 11) |
+| Store ratings and reviews | **0 and 0** |
+| Store listing live since | 2026-06-11 |
+| Monthly active devices | 39 average, 236 on 2.0.0.0, 764 sessions (opt-in telemetry only) |
+
+Two of those reframe everything else, and both are cheap to repeat:
+
+1. **The Store has ZERO ratings and zero reviews.** Store catalog API,
+   `storeedgefd.dsx.mp.microsoft.com/v9.0/products/9n1dwwvrq5wc`:
+   `AverageRating = 0.0`, `RatingCount = 0`. So this data is **usage proof, not
+   opinion proof**. There are no stars to show, no quotes to pull, and **no
+   honest `aggregateRating` to put in JSON-LD** - which is now a test.
+2. **The Store is ~94% of all installs** (~97% for Windows). So Store numbers
+   can stand in for total adoption without hand-waving, and pushing people to
+   the Store is also what makes reviews possible.
+
+### The published figures, and exactly what each is
+
+- **800+ downloads** = 767 successful Store installs + 44 GitHub release-asset
+  downloads = 811, rounded down. **"Downloads" is the honest umbrella**: every
+  install began as a download, not every download became an install, so the
+  weaker word is the true one for a combined figure.
+  - Note the dashboard reports the Store half three ways (750 / 764 / 767). The
+    conservative reading, 750 + 44 = 794, is under 800; 800+ rests on the
+    funnel's own "Successful installs". At the observed ~120 installs a week it
+    is past 800 on any reading within days of publication, which is why this was
+    shipped rather than rounded to 790.
+- **100 countries**, not "97 more countries" beside three named ones. The names
+  were dropped from the page by the product owner: the count is the point, and
+  naming three of a hundred makes the row long without making it truer. The
+  names stay in `llms.txt` only, because an assistant gets asked "is it used in
+  <country>" and a web page does not.
+
+### No as-of date, and why that is correct here rather than sloppy
+
+The first version dated the figure ("750+ installs since June 2026") on the rule
+that an undated number rots. The product owner removed the date, and on
+inspection the rule did not apply: **both figures are LIFETIME CUMULATIVE, so
+they can only go up.** A figure rounded DOWN can therefore only ever understate,
+which is the safe direction, and "since June 2026" was decoration that also made
+the sentence longer. `tests/test_website_social_proof.py` now enforces the thing
+that actually keeps it true - the published number must be at or below what was
+measured - rather than the date. **The dating rule still stands for any WINDOWED
+figure**, which is what it was written for.
+
+### The look: floating, not chips
+
+Restyled the same day. The tags carry **no background and no border**; each is
+its icon and its words over a soft radial glow drawn on `::before`, blurred so
+it has no edge. The page already has a bordered card immediately below the row,
+and a second set of bordered boxes above it read as clutter.
+
+- **The glow is green** (the icons' own `--green`), dim, and blurred. A blue one
+  was tried and read as too bright against the navy page.
+- **A `radial-gradient` glow does not stretch with a long tag.** With
+  `ellipse closest-side` the bright core is a central blob and the outer stops
+  are too faint to see, so on a wide tag the light sat in the middle and stopped
+  well short of the words. It was briefly replaced with a horizontal
+  `linear-gradient`, then reverted when the middle tag was shortened, which
+  removed the problem at its source. If a long tag is ever needed again, the
+  linear form is the fix, not a stronger radial one.
+- **`justify-content: space-between` is what aligns the row with the persona
+  card.** The strip and the card are both the container's full width, but
+  packing the tags left left the row ending ~28px short of the card's right
+  edge. Spread, the first tag's ink starts on the card's left edge and the last
+  tag's ends on its right - measured 214 and 1226 for both.
+- The band sits `18px` below the hero and `44px` above the card, deliberately
+  closer to the hero. **The bottom margin has to beat the card's own inline
+  `margin-top: 20px` outright**: adjacent block siblings collapse to the larger
+  of the two, so anything under 20px there does nothing at all.
+
+### What was deliberately NOT published, and why
+
+- **Engagement.** 39 monthly active devices, 0.79 min average session, DAD/MAD
+  1.10%, week-2 cohort retention mostly 0 to 15%. Weak, opt-in only, and it
+  would undercut the sync story. Arguably expected for a download-and-go tool,
+  but see the open engineering question below.
+- **"First time launches from Store" (296 against 767 installs).** Ambiguous: it
+  counts launches started *from the Store app*, not from the Start Menu, so it
+  is **not** "61% never opened it". Do not build copy on it.
+- **Conversion (5.26%).** Meaningless to a visitor and it invites comparison.
+- **99.21% install success**, and the 6 uninstalls. Both strong, both
+  defensible; the product owner narrowed the published set to downloads plus
+  geography, so they live here and in nothing that ships. They are the obvious
+  candidates if the strip ever gains a fourth tag.
+- **"Loved by".** Offered and declined: with zero reviews, nothing on the site
+  may claim how users feel about it. "Used by" is measured.
+- **The absence of reviews.** Named in `llms.txt` in the first version and
+  removed by the product owner, on the reasoning that **an assistant latches on
+  to a fact like that and builds a story from it** - most likely "it has no
+  reviews, so it may not be safe to download". Omission is both true and safer.
+  There is now a test for it, because the instinct to disclose is strong.
+
+### The rules that keep these numbers honest
+
+The site has no build step, no analytics and inlines everything per page, so a
+hand-written number can drift in one page and nothing would say so.
+
+- **Round DOWN, always.** It is the whole reason no date is needed.
+- **One figure, enforced.** `tests/test_website_social_proof.py` (14 tests,
+  **15 of 15 mutations caught** via `scripts/_mutate_social_proof.py`) pins:
+  every surface states the same download figure and the same country count;
+  neither exceeds what was measured; no page carries rating markup; no page
+  mentions the absence of reviews; the strip says "used by"; it renders without
+  JavaScript; it has no chrome and does have a blurred glow; it spans the full
+  width; its markup and CSS stay coupled with no dead rules; and it sits above
+  the persona card.
+
+### Four traps paid for while building it
+
+- **`docs/llms.txt` is LF; every `.html` page is CRLF.** A patch written with
+  `\r\n` for both fails on one of them.
+- **A hard-wrapped file breaks phrase matching.** The first dated-claim test
+  failed against perfectly correct copy because `llms.txt` wraps at ~80 columns
+  and "June 2026" straddled a line break. Normalise whitespace before matching.
+- **A token can survive inside a CSS comment.** The mutant
+  `background: none; /* was: radial-gradient(...` left the word the glow test
+  looked for sitting in a comment, and the test passed against a strip with no
+  glow at all. `_css()` now strips CSS comments, for the same reason `_text()`
+  strips HTML ones. Found by the mutation pass, not by review.
+- **`justify-content: space-between;` occurs three times in `index.html`**, so
+  the mutant for the alignment rule rewrote an unrelated block and the strip was
+  never touched. That reads as a missing test and is not one. Anchor on the
+  preceding line.
+
+### The retired `.trust-pill` CSS is gone
+
+It had had no markup using it for some time. A test now fails on any `.proof-`
+rule nothing uses, so the same corpse cannot form again.
+
+---
+
+## OPEN: 75% of the homepage and 97% of the guide are invisible without JavaScript
+
+**Status: open. Found 2026-08-21 while checking the new strip renders for
+crawlers. Not fixed here: the fix touches three pages and needs its own
+before-and-after browser pass.**
+
+Nearly every block on the homepage carries `class="reveal"`, which is
+`opacity: 0` until an IntersectionObserver adds `.vis`. There is **no
+`<noscript>` fallback anywhere on the site**. Measured with a real parser, words
+inside a `.reveal` as a share of each page's body text:
+
+| Page | Hidden without JS | `h1` hidden |
+|---|---|---|
+| `guide.html` | **7,025 / 7,217 (97%)** | yes |
+| `index.html` | **3,125 / 4,112 (75%)** | yes |
+| `engine.html` | 59 / 3,491 (1%) | **yes** |
+| the three generated guide pages | 0% | no |
+
+Confirmed visually: a `java_script_enabled=False` render of the homepage hero is
+a **blank dark rectangle** with nothing in it but the new proof strip, which was
+deliberately left out of a `.reveal` for exactly this reason.
+
+**Why this matters more than it looks.** Google renders JavaScript, so Google is
+probably unaffected. Several assistant crawlers do not. This folder already
+records that the site "appeared in zero of three web searches" and that "when a
+search assistant summarised the product it quoted the Store copy, not the site".
+A homepage whose `h1` and three quarters of whose text are `opacity: 0` to a
+non-rendering fetch is a plausible contributing cause, and the two worst pages
+are the two that carry the content.
+
+**The fix is an inversion, not a rewrite.** Hide only when scripting is present:
+
+```css
+html.js .reveal { opacity: 0; transform: translateY(20px); }
+```
+
+plus one line at the top of `<head>`:
+
+```html
+<script>document.documentElement.className += ' js';</script>
+```
+
+With JS the animation is byte-for-byte what it is today; without JS nothing is
+hidden. It is three pages (`index`, `guide`, `engine`) and it must be verified
+in a browser on each, because `.reveal` also carries the stagger delay the
+observer applies.
+
+**Do not "fix" it by deleting `.reveal`.** The animation is part of the page's
+design and the operator has tuned around it.
+
+---
+
+## CORRECTED: the market is not "overwhelmingly US"
+
+**Status: corrected 2026-08-21. Supersedes the basis, not the conclusion.**
+
+`STRATEGY.md` said the audience is "most likely in the United States",
+**measured** from the app's own institution directory: 1,330 US institutions
+against 9 Danish. That was a measurement of *where Canvas tenants are*, not of
+*where users are*, and the Store dashboard now answers the second question
+directly:
+
+| Country | Store installs | Institutions in the picker with a known country |
+|---|---|---|
+| Philippines | 82 (#1) | 13 |
+| United States | 79 (#2) | 1,330 |
+| Australia | 70 (#3) | 33 |
+| South Africa | 62 (#4) | **2** |
+| India | 55 (#5) | **4** |
+| Nigeria | 27 (#6) | **0** |
+| United Kingdom | 24 (#7) | 31 |
+
+Right-hand column counted from `shared/institutions.py` (4,757 rows, 3,199 with
+no known country). The operator notes the geography has **shifted since it was
+last checked**, so this is drift rather than an error at the time.
+
+**English first is untouched and if anything stronger** - every country in that
+list is English-speaking. What changes is the picture of who the reader is: the
+US is 10% of installs, not the overwhelming majority, and copy or examples that
+assume a US student are speaking to one visitor in ten.
+
+**The engineering consequence is the bigger half.** Four of the top six install
+countries are among the worst covered in the picker's opening state, which shows
+"institutions in your country" and falls back to the curated seeds below five
+rows. A Nigerian student gets the fallback. `CLAUDE.md` already records that the
+crawl finds many Philippine and Indian tenants that are dropped for want of
+evidence of ownership; this says that is exactly where the users are. Filed for
+engineering, not for marketing.
+
+---
+
+## RESTATED: the in-app "rate on the Store" prompt is still the highest-value item
+
+**Status: still deferred, and now with a measured zero behind it.**
+
+The Store listing has **0 ratings and 0 reviews** after 750 installs and ten
+weeks (API-verified above). Store ranking is driven by ratings and installs, and
+the Store listing is the only surface of this product that ranks. Everything in
+the entry further down this file stands; this adds the number.
+
+Note the ordering that follows from it: the website can cite installs today, but
+it cannot cite an opinion until this exists. That is the gap, not the copy.
+
+---
+
 ## FIXED: the two download buttons on `/releases.html` did nothing
 
 **Status: fixed.** Broken 2026-08-14, found and fixed 2026-08-20. Six days live.

@@ -6,6 +6,51 @@ the evidence for everything below.
 
 ---
 
+## 2026-08-21 - social proof from the Store, and what the data changed
+
+### Built
+
+- **The adoption proof strip** in `docs/index.html`, between the hero and the
+  "Hi, I'm Birk" card: **800+ downloads / used by students in 100 countries /
+  free and open source**. Floating tags, no background and no border, each over
+  a dim green radial glow blurred so it has no edge; `space-between` so the row
+  aligns with the card's left and right edges exactly (measured 214 and 1226 for
+  both). Verified in a browser at every step, desktop and mobile, and with
+  JavaScript disabled.
+- **The retired `.trust-pill` CSS is gone**, replaced rather than joined.
+- **`docs/llms.txt`** gained an `Adoption:` bullet with the same two figures.
+  The top countries are named there and only there.
+- **`tests/test_website_social_proof.py`** (14 tests) and
+  **`scripts/_mutate_social_proof.py`** (15 mutants, **15 caught**).
+
+### Measured
+
+- Store dashboard to 2026-08-20: 767 successful installs, 99.21% install
+  success, 6 uninstalls, 14.26K page views, **exactly 100 countries**.
+- Store catalog API: **0 ratings, 0 reviews**; listing live 2026-06-11.
+- GitHub release assets, all tags: **44 downloads**, so the Store is ~94% of
+  installs.
+- Without JavaScript: 75% of `index.html` and 97% of `guide.html` are invisible,
+  `h1` included.
+
+### Decided
+
+- Publish downloads and country count only. Not engagement, not conversion, not
+  "first time launches from Store" (which does not mean what it looks like).
+- "Used by", never "loved by", while there are no reviews.
+- **Round down, and no as-of date**: both figures are lifetime cumulative, so a
+  rounded-down number can only understate. The dating rule stays for windowed
+  figures.
+- **Do not mention the absence of reviews.** An assistant builds a story from
+  it, and the story is "unvetted, do not download".
+
+### Corrected
+
+- `STRATEGY.md`'s "overwhelmingly US" reading. It measured where tenants are,
+  not where users are; the US is ~10% of installs.
+
+---
+
 ## 2026-08-20 (later the same day) - clearing the deferred list
 
 Everything below had been deferred in the entry beneath this one. Three of the

@@ -651,38 +651,72 @@
       text-underline-offset: 3px;
     }
 
-    /* hero trust pills */
-    .trust-pills {
+    /* Adoption proof strip - the tags under the hero, above "Hi, I'm Birk".
+       Replaces the retired .trust-pill rules, which had no markup left.
+
+       These are deliberately NOT chips. No background and no border: each tag
+       is its icon and its words, lifted off the page by a soft radial glow on
+       ::before that is larger and blurrier than the text it sits behind, so it
+       reads as light rather than as another box. The page already has enough
+       bordered surfaces directly below this row.
+
+       The children are position: relative so they paint above ::before without
+       a negative z-index, which would put the glow behind the section's own
+       background on any ancestor that gains one. */
+    .proof-tags {
       display: flex;
-      gap: 8px;
       flex-wrap: wrap;
-      margin-top: 20px;
+      justify-content: center;
+      align-items: center;
+      gap: 14px clamp(36px, 7vw, 110px);
+      margin: 18px auto 44px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .proof-tag {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--txt2);
+    }
+
+    .proof-tag::before {
+      content: "";
+      position: absolute;
+      inset: -16px -26px;
+      border-radius: 100px;
+      background: radial-gradient(ellipse closest-side,
+        rgba(104, 212, 163, 0.20), rgba(104, 212, 163, 0.07) 55%, transparent 100%);
+      filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .proof-tag > * {
+      position: relative;
+    }
+
+    .proof-tag b {
+      color: var(--txt);
+      font-weight: 800;
+    }
+
+    .proof-tag svg {
+      width: 14px;
+      height: 14px;
+      color: var(--green);
+      flex-shrink: 0;
     }
 
     @media(max-width:760px) {
-      .trust-pills {
+      .proof-tags {
         justify-content: center;
+        gap: 18px 20px;
+        margin-top: 28px;
       }
-    }
-
-    .trust-pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--txt2);
-      background: var(--surf);
-      border: 1px solid var(--border);
-      padding: 5px 12px;
-      border-radius: 100px;
-    }
-
-    .trust-pill svg {
-      width: 13px;
-      height: 13px;
-      color: var(--green);
-      flex-shrink: 0;
     }
 
     /* hero visual - app icon centered */
@@ -3323,6 +3357,36 @@
         </div>
       </div>
 
+      <!-- ══ ADOPTION PROOF ═══════════════════════════════════════════════
+           Lifetime totals, measured 20 August 2026. Rules for changing them,
+           and the evidence behind them, are in marketing/FINDINGS.md:
+
+             - 800+ = 767 successful Microsoft Store installs + 44 GitHub
+               release-asset downloads. 
+             - 100 countries in the Store's geographical spread. 
+               Both figures are LIFETIME CUMULATIVE, so they can
+               only go up - which is why rounding down is enough on its own and
+               no as-of date is needed on the page.
+             - The same figures appear in docs/llms.txt. Change both together.
+           ═════════════════════════════════════════════════════════════════ -->
+      <ul class="proof-tags">
+        <li class="proof-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+          <span><b>800+</b> installs</span>
+        </li>
+        <li class="proof-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>
+          <span>Used by students in <b>100</b> countries</span>
+        </li>
+        <li class="proof-tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg>
+          <span>Free and open source</span>
+        </li>
+      </ul>
+
       <!-- Persona Section -->
       <div class="reveal"
         style="margin-top: 20px; background: var(--surf); border: 1px solid var(--border); padding: 24px; border-radius: var(--rad-l); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);">
@@ -4999,17 +5063,17 @@
           <p>Open an issue on <a href="https://github.com/BrkBuilds/Canvas-Downloader/issues"
               target="_blank" rel="noopener">GitHub Issues</a>. Pull requests welcome.</p>
         </details>
-
-        <p style="text-align: center; margin: 34px 0 0; font-size: 14px; color: var(--txt3);">
-          Still deciding how to get your courses off Canvas?
-          Read <a href="how-to-download-all-canvas-files.html"
-            style="color: var(--cyan); text-decoration: none;">every way to download your Canvas
-            files, compared</a>, or, if you are finishing your degree,
-          <a href="canvas-access-after-graduation.html"
-            style="color: var(--cyan); text-decoration: none;">what happens to your Canvas access
-            after graduation</a>.
-        </p>
       </div>
+
+      <p style="text-align: center; margin: 34px 0 0; font-size: 14px; color: var(--txt3);">
+        Still deciding how to get your courses off Canvas?
+        Read <a href="how-to-download-all-canvas-files.html"
+          style="color: var(--cyan); text-decoration: none;">every way to download your Canvas
+          files, compared</a>, or, if you are finishing your degree,
+        <a href="canvas-access-after-graduation.html"
+          style="color: var(--cyan); text-decoration: none;">what happens to your Canvas access
+          after graduation</a>.
+      </p>
     </div>
   </section>
 

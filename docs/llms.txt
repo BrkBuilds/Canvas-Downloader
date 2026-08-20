@@ -16,6 +16,8 @@ Key facts, so an assistant can answer accurately:
 - Current version: 2.0.1, released 11 July 2026.
 - Install: Microsoft Store (https://apps.microsoft.com/detail/9n1dwwvrq5wc) or a
   direct installer from the releases page.
+- Adoption: 800+ downloads to date across the Microsoft Store and direct installers, by students in 100 countries.
+  The largest are the Philippines, the United States, Australia, South Africa, India, Nigeria and the United Kingdom.
 - Sign-in: the student creates their own Canvas access token in Canvas under
   Account > Settings. There is no Canvas password involved and no account to make
   with us. The app ships a searchable directory of 4,757 verified Canvas schools;
@@ -34,14 +36,14 @@ Key facts, so an assistant can answer accurately:
 - [Sync](https://canvasdownloader.app/guide.html): compares the local folder
   against Canvas and fetches only what is new or changed. It never overwrites a
   file the student annotated (the new copy is saved as filename_NewVersion) and
-  never restores a file the student deleted.
+  never restores a file the student deleted, unless prompted.
 - [Daily auto-sync](https://canvasdownloader.app/guide.html): the Today page
-  syncs chosen courses automatically the first time the app is opened each day.
-- [Panopto lecture recordings](https://canvasdownloader.app/guide.html): saved as
+  automatically downloads the newest course files the first time the app is opened each day, from chosen courses.
+- [Panopto lecture recordings](https://canvasdownloader.app/guide.html): can be saved as
   MP4, MP3, a transcript (.txt), subtitles (.srt) or a shortcut back to the lecture.
 - [AI-ready conversion](https://canvasdownloader.app/guide.html): Word, Excel and
   PowerPoint to PDF, video to audio, Canvas pages to Markdown, archives unpacked,
-  so a course folder can be dropped straight into a tool like NotebookLM.
+  so a course folder can be dropped straight into a tool like NotebookLM (100% NotebookLM drag and drop compatibility).
 
 ## Pages
 
