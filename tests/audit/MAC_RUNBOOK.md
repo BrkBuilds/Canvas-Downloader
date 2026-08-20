@@ -1556,3 +1556,61 @@ undescribable documents stayed. `quit saving no` clears them; the app's own
 session that checking the call convention before filing turned a "finding" back
 into a harness error; the other two were `_path_key` on a relative path and
 `quit_idle_office_apps` from a fresh interpreter.
+
+## The two second-look items, closed (2026-08-20, late)
+
+### A. The PACKAGED app CAN convert Office files — proven
+
+Every successful conversion before this ran under the venv, i.e. the EDITOR's
+TCC identity; the bundle's own identity had only ever been observed DENIED. Now
+driven with **Allow** on both prompts:
+
+    PDF: 184,741 bytes  magic=%PDF-     .doc: consumed     staged dirs: 0
+    Post-processing ran: [word]         Word: correctly quit (it was ours)
+
+The subsystem that deletes the user's original works end to end under
+`com.canvasdownloader.app`. "Errors: 2" on that run are Canvas-side LOCKED
+FILES ("The teacher has locked this file on Canvas") - honest reporting, not
+conversion failures.
+
+### B. A DENIED powerbox prompt — a real defect, now fixed
+
+`fp:f6924f2b9dbc`. Denying *"would like to access data from other apps"* cost
+**~4 minutes for one file** and reported only `AppleEvent timed out (-1712)`
+then "Conversion failed twice". Mechanism proven from Word's own open document,
+which held the ORIGINAL path rather than a staged `src_*` one. Fixed and
+verified in the rebuilt bundle; see the register.
+
+### The methodology lessons, which cost more than the fixes
+
+**Drive the packaged app over HTTP.** It serves Streamlit on 8501 and Streamlit
+runs the script in the SERVER process, so a Playwright session there executes
+inside the bundle - its children, its TCC identity. Import `TOGGLES`,
+`CARD_FOR` and `IS_ON_JS` from `tests/audit/harness/flows.py`; do not restate
+them.
+
+**Give the driver a LOGIN step.** A rebuilt bundle has a new ad-hoc signature,
+which raises the keychain prompt; DENY it and session restore fails, so a
+driver that assumes a restored session times out on a locator. Read the token
+from the keyring in the driver instead of depending on a human click - that
+cost two full runs here.
+
+**A denied keychain prompt costs ~90 SECONDS of bare "Connecting…".**
+`_KEYRING_TIMEOUT` is 90 s on macOS (the 5 s `_KEYRING_PROBE_TIMEOUT` is only
+`store_token`'s optimisation read), and `restore_saved_session` runs on the
+script thread during INIT - so the Streamlit script does not finish and the
+frontend shows its own "Connecting…". Confirmed with `sample <pid>`: the whole
+sample sits in `SecItemCopyMatching`. It RECOVERS - it is a stall, not a hang -
+but the user is shown nothing that explains it, and the prompt fires on every
+app UPDATE, because the signature changes. Recorded, not fixed: shortening the
+timeout would break the legitimate case where the user is typing their keychain
+password.
+
+**`pgrep -x UserNotificationCenter` is NOT a dialog detector** - the process
+lingers, so it reports a prompt long after one was answered. It produced 39
+false "prompt up" lines in one wait loop here. Use `mac_eyes dialogs`, which
+checks for an actual window.
+
+**Levels: the debug log captures INFO and above.** A real run with debug mode ON
+contains ZERO `[DEBUG]` lines. Anything logged at debug is invisible to the
+user AND to this audit - the absence of a debug line is never evidence.
