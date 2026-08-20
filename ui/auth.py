@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import sys
+import threading
 from html import escape as _he
 
 import streamlit as st
@@ -205,6 +206,197 @@ def _safe_keyring_delete(service: str, username: str) -> bool:
     except Exception as e:
         logger.warning(f"Keyring delete_password failed: {e}")
         return False
+
+
+# ---------------------------------------------------------------------------
+# macOS Keychain: the ACL prompt must never block the first paint
+# ---------------------------------------------------------------------------
+# `keyring`'s macOS backend calls SecItemCopyMatching with NO UI-suppression
+# flag, so when the item's ACL does not trust the running binary that call
+# BLOCKS on a GUI prompt. restore_saved_session() runs on the Streamlit SCRIPT
+# THREAD during init, before anything renders - so the whole window is dead for
+# as long as the prompt is up (measured on macOS 26.6.1, packaged app: the boot
+# overlay shows "Connecting..." for its 30s cap and then the window is
+# COMPLETELY EMPTY until the user answers or the 90s watchdog fires).
+#
+# It fires on every app UPDATE, not once: the bundle is ad-hoc signed
+# (TeamIdentifier not set), and BOTH halves of a keychain item's access control
+# key on the code signature - the trusted-application list and, since 10.11, the
+# PARTITION LIST. Measured, so the obvious escapes are closed rather than
+# assumed:
+#   * `security add-generic-password -A` (trusted-app list = <null>) STILL
+#     prompts, because the partition list says `apple-tool:`.
+#   * The app cannot silently repair its own ACL after the user allows: the
+#     delete half of delete+add needs authorisation we do not have and fails
+#     -25244. (It fails SAFELY - the item survives - which is why the repair is
+#     attempted UI-suppressed or not at all.)
+#
+# So the prompt is unavoidable while the app is ad-hoc signed. What is fixable
+# is that it costs the user a dead window, and that is what these two helpers
+# are for: probe WITHOUT letting macOS prompt (4ms on success, ~9ms when a
+# prompt would be needed - both measured), then raise the prompt off the script
+# thread while the login screen explains it.
+#
+# Codes, not prose - these are stable API constants, so matching them is not the
+# locale-fragile predicate this codebase has been bitten by:
+#   -25293 errSecAuthFailed             (ad-hoc-signed caller; needs the prompt)
+#   -25308 errSecInteractionNotAllowed  (we suppressed UI and UI was required)
+#   -25300 errSecItemNotFound           (no saved token - NOT a prompt)
+#      -128 errSecUserCanceled          (the user pressed Deny)
+_KEYCHAIN_PROMPT_STATUSES = ('-25293', '-25308')
+_KEYCHAIN_DENIED_STATUSES = ('-128',)
+
+# SecKeychainSetUserInteractionAllowed is PROCESS-GLOBAL, so a suppressed probe
+# would silently suppress any concurrent keychain call too. This lock makes the
+# suppressed window exclusive; callers never BLOCK on it (see below).
+_keychain_ui_lock = threading.Lock()
+
+
+def _set_keychain_ui_allowed(allowed: bool) -> bool:
+    """Toggle macOS keychain UI. Returns False if the call is unavailable."""
+    if sys.platform != 'darwin':
+        return False
+    try:
+        import ctypes
+        from ctypes.util import find_library
+        _sec = ctypes.CDLL(find_library('Security'))
+        fn = _sec.SecKeychainSetUserInteractionAllowed
+        fn.restype = ctypes.c_int32
+        fn.argtypes = (ctypes.c_ubyte,)
+        return fn(1 if allowed else 0) == 0
+    except Exception as e:                                         # noqa: BLE001
+        logger.warning("Could not toggle keychain UI (%s); "
+                       "falling back to an interactive read.", e)
+        return False
+
+
+def keyring_get_without_prompting(service: str, username: str) -> tuple[str | None, bool]:
+    """``(token_or_None, needs_prompt)`` - read the keyring, never prompting.
+
+    On every platform but macOS this is the ordinary watchdogged read and
+    *needs_prompt* is always False, so Windows behaviour is untouched.
+
+    On macOS the read runs with keychain UI suppressed, which turns "macOS would
+    put a modal in front of the user" from an unbounded block into an error we
+    can see in milliseconds. ``needs_prompt=True`` means exactly that and
+    nothing else - a missing item, a locked-out backend or any other failure
+    answers ``(None, False)``, because prompting cannot fix those.
+    """
+    if sys.platform != 'darwin':
+        return (_safe_keyring_get(service, username), False)
+
+    # An unlock is already in flight (the thread below holds this lock for as
+    # long as the prompt is up). We do not wait for it - we already know the
+    # answer, and waiting is the blocking this function exists to remove.
+    if not _keychain_ui_lock.acquire(blocking=False):
+        return (None, True)
+    try:
+        if not _set_keychain_ui_allowed(False):
+            # Cannot suppress - do not gamble the first paint on a read that
+            # might prompt. Report it as needing one; the unlock thread will
+            # perform the real read off the script thread.
+            return (None, True)
+        try:
+            import keyring
+            return (_run_keyring_op(keyring.get_password, service, username,
+                                    timeout=_KEYRING_PROBE_TIMEOUT), False)
+        except TimeoutError:
+            logger.warning("Suppressed keychain read did not answer in %.0fs.",
+                           _KEYRING_PROBE_TIMEOUT)
+            return (None, False)
+        except Exception as e:                                     # noqa: BLE001
+            text = str(e)
+            if any(code in text for code in _KEYCHAIN_PROMPT_STATUSES):
+                logger.info("Saved sign-in needs a Keychain prompt "
+                            "(the app signature changed since it was saved).")
+                return (None, True)
+            logger.warning("Keychain read failed without prompting: %s", e)
+            return (None, False)
+        finally:
+            _set_keychain_ui_allowed(True)
+    finally:
+        _keychain_ui_lock.release()
+
+
+# Single-flight interactive unlock. Process-global rather than session state on
+# purpose: it is driven by a background thread, which has no ScriptRunContext -
+# the same reason core/course_cache.py and core/cancellation.py keep their state
+# here. States: idle | running | ok | denied | error.
+_kc_unlock: dict = {'state': 'idle', 'token': '', 'key': ''}
+_kc_unlock_lock = threading.Lock()
+
+
+def begin_keychain_unlock(service: str, username: str) -> None:
+    """Raise the Keychain prompt on a DAEMON THREAD. Idempotent per account.
+
+    Called from the login screen AFTER it has emitted its explanation, so the
+    prompt lands on a painted, self-explaining page instead of an empty window.
+    Nothing waits on this thread: if the user never answers, the login form
+    below the notice still works.
+    """
+    key = f"{service}\x00{username}"
+    with _kc_unlock_lock:
+        if _kc_unlock['state'] == 'running' and _kc_unlock['key'] == key:
+            return
+        if _kc_unlock['state'] in ('ok', 'denied', 'error') and _kc_unlock['key'] == key:
+            return
+        _kc_unlock.update({'state': 'running', 'token': '', 'key': key})
+
+    def _worker():
+        import keyring
+        # Take the SAME lock the suppressed probe uses, so a probe can never
+        # switch UI off underneath this read and turn the prompt into an error.
+        with _keychain_ui_lock:
+            _set_keychain_ui_allowed(True)
+            try:
+                token = keyring.get_password(service, username) or ''
+                state, err = ('ok', '') if token else ('error', 'no token stored')
+            except Exception as e:                                 # noqa: BLE001
+                text = str(e)
+                if any(code in text for code in _KEYCHAIN_DENIED_STATUSES):
+                    state, token, err = 'denied', '', ''
+                else:
+                    state, token, err = 'error', '', text
+        if err:
+            logger.warning("Keychain unlock failed: %s", err)
+        with _kc_unlock_lock:
+            if _kc_unlock['key'] == key:
+                _kc_unlock.update({'state': state, 'token': token})
+
+    threading.Thread(target=_worker, daemon=True, name="keychain-unlock").start()
+
+
+def keychain_unlock_status() -> str:
+    """One of ``idle`` / ``running`` / ``ok`` / ``denied`` / ``error``."""
+    with _kc_unlock_lock:
+        return _kc_unlock['state']
+
+
+def unlocked_token() -> str:
+    """A resolved unlock's token (empty if there is none). Does NOT consume it.
+
+    The first version consumed it, on hygiene grounds, and that was wrong -
+    found by driving the real app, not by the tests. The unlock state is
+    process-global (a background thread has no ScriptRunContext) while
+    ``keychain_unlock_pending`` is per SESSION, so a SECOND Streamlit session in
+    the same process - a reload, or a second window - would set pending, find the
+    unlock already 'ok', receive an EMPTY token because session one had taken it,
+    and land on the login page with no notice and no explanation. Observed
+    exactly that.
+
+    Keeping the value costs nothing: it is already in the Keychain and in the
+    first session's ``api_token``. ``reset_keychain_unlock`` clears it whenever
+    the credential it refers to is dropped.
+    """
+    with _kc_unlock_lock:
+        return _kc_unlock['token'] if _kc_unlock['state'] == 'ok' else ''
+
+
+def reset_keychain_unlock() -> None:
+    """Forget any unlock state - used by logout and by force_reauth."""
+    with _kc_unlock_lock:
+        _kc_unlock.update({'state': 'idle', 'token': '', 'key': ''})
+
 
 def read_config_for_update() -> tuple[dict, bool]:
     """``(config, may_write)`` for a read-modify-write of the settings file.
@@ -574,6 +766,13 @@ def force_reauth(reason: str = "") -> None:
         pass
     st.session_state['api_token'] = ''
     st.session_state['is_authenticated'] = False
+    # The credential this refers to has just been deleted, so any cached
+    # Keychain-unlock verdict is now about nothing. Left standing, a previous
+    # 'denied' would make begin_keychain_unlock a no-op for the rest of the
+    # process and the notice would advertise a prompt that never appears.
+    reset_keychain_unlock()
+    st.session_state.pop('keychain_unlock_pending', None)
+    st.session_state.pop('keychain_unlock_failed', None)
     # Re-arm the course selector's cold-boot spinner: the next fetch after a
     # reconnect is a genuine first load with nothing on screen to preserve.
     st.session_state.pop('_dl_courses_loaded_once', None)
@@ -793,11 +992,24 @@ def restore_saved_session() -> None:
                             st.session_state['download_path'] = saved_default
 
                     loaded_token = ''
-                    # Unified keyring load for all platforms with watchdog and fallback
+                    # Unified keyring load for all platforms with watchdog and fallback.
+                    #
+                    # This read is on the SCRIPT THREAD, before a single element
+                    # has rendered, so it must never be allowed to block: on
+                    # macOS an untrusted ACL turns it into a modal prompt and the
+                    # window stays empty for as long as it is up. The probe below
+                    # cannot prompt (see keyring_get_without_prompting); when it
+                    # reports that a prompt IS required we leave the token empty
+                    # and let the login screen raise it, explained, off this
+                    # thread. Windows takes the same path it always did.
                     try:
                         keyring_user = st.session_state['api_url'] or 'default'
-                        loaded_token = _safe_keyring_get(KEYRING_SERVICE, keyring_user) or ''
-                        if not loaded_token:
+                        loaded_token, _needs_prompt = keyring_get_without_prompting(
+                            KEYRING_SERVICE, keyring_user)
+                        loaded_token = loaded_token or ''
+                        if _needs_prompt:
+                            st.session_state['keychain_unlock_pending'] = True
+                        if not loaded_token and not _needs_prompt:
                             # Try fallback storage
                             loaded_token = _load_fallback_token(keyring_user) or ''
                     except Exception as _kr_err:
@@ -842,48 +1054,214 @@ def restore_saved_session() -> None:
                     st.session_state['api_token'] = loaded_token
 
                     if st.session_state['api_token']:
-                        cm = CanvasManager(st.session_state['api_token'], st.session_state['api_url'])
-                        valid, msg = cm.validate_token()
-                        if valid:
-                            st.session_state['is_authenticated'] = True
-                            st.session_state['user_name'] = msg.split(": ", 1)[1] if ": " in msg else msg
-                            # No st.rerun() here: this runs during session init,
-                            # so the SAME run goes on to render the signed-in
-                            # page. The rerun this replaced was a whole wasted
-                            # script run against a blank window.
-                        else:
-                            # The saved token could not be CONFIRMED this launch.
-                            # Only a genuine AUTH rejection (expired/revoked/401)
-                            # should drop the user to the login page - that is the
-                            # one case a fresh token actually fixes. Everything
-                            # else is a TRANSIENT reachability failure (offline,
-                            # captive-portal wifi, a cross-continent timeout, a
-                            # corporate/university TLS intercept, or Canvas being
-                            # momentarily down) - none of which the user can fix
-                            # by re-pasting the same token, and all of which would
-                            # otherwise strand a valid, previously-verified
-                            # session behind a blip. So restore OPTIMISTICALLY:
-                            # trust the token (it validated on a prior launch),
-                            # and let the first real Canvas call be the arbiter -
-                            # a truly dead token surfaces there as an auth error
-                            # and is routed to the clean reconnect flow
-                            # (force_reauth), while a still-offline launch gets a
-                            # calm, retryable "couldn't reach Canvas" screen
-                            # instead of a red traceback. This is the single most
-                            # important robustness property of the login path for
-                            # users on unreliable or high-latency networks.
-                            from core.canvas_logic import is_auth_error
-                            if is_auth_error(msg):
-                                logger.info("Saved token rejected (auth error) - "
-                                            "routing to login for a fresh token.")
-                            else:
-                                st.session_state['is_authenticated'] = True
-                                logger.info(
-                                    "Saved session restored optimistically; the "
-                                    "token could not be confirmed this launch due "
-                                    "to a non-auth (network) error: %s", msg)
+                        _adopt_restored_token(st.session_state['api_token'])
             except Exception:
                 logger.warning("Saved session could not be restored", exc_info=True)
+
+
+def _adopt_restored_token(token: str) -> None:
+    """Validate a token recovered from the credential store and sign in.
+
+    Extracted so the two ways a saved token can arrive - the ordinary
+    non-prompting read during init, and a macOS Keychain unlock that resolved
+    later - reach EXACTLY the same verdict. Writing this decision twice is how
+    the two would come to disagree about what a network blip means.
+    """
+    st.session_state['api_token'] = token
+    cm = CanvasManager(token, st.session_state.get('api_url', ''))
+    valid, msg = cm.validate_token()
+    if valid:
+        st.session_state['is_authenticated'] = True
+        st.session_state['user_name'] = msg.split(": ", 1)[1] if ": " in msg else msg
+        # No st.rerun() here: this runs during session init,
+        # so the SAME run goes on to render the signed-in
+        # page. The rerun this replaced was a whole wasted
+        # script run against a blank window.
+        return
+    # The saved token could not be CONFIRMED this launch.
+    # Only a genuine AUTH rejection (expired/revoked/401)
+    # should drop the user to the login page - that is the
+    # one case a fresh token actually fixes. Everything
+    # else is a TRANSIENT reachability failure (offline,
+    # captive-portal wifi, a cross-continent timeout, a
+    # corporate/university TLS intercept, or Canvas being
+    # momentarily down) - none of which the user can fix
+    # by re-pasting the same token, and all of which would
+    # otherwise strand a valid, previously-verified
+    # session behind a blip. So restore OPTIMISTICALLY:
+    # trust the token (it validated on a prior launch),
+    # and let the first real Canvas call be the arbiter -
+    # a truly dead token surfaces there as an auth error
+    # and is routed to the clean reconnect flow
+    # (force_reauth), while a still-offline launch gets a
+    # calm, retryable "couldn't reach Canvas" screen
+    # instead of a red traceback. This is the single most
+    # important robustness property of the login path for
+    # users on unreliable or high-latency networks.
+    from core.canvas_logic import is_auth_error
+    if is_auth_error(msg):
+        logger.info("Saved token rejected (auth error) - "
+                    "routing to login for a fresh token.")
+    else:
+        st.session_state['is_authenticated'] = True
+        logger.info(
+            "Saved session restored optimistically; the "
+            "token could not be confirmed this launch due "
+            "to a non-auth (network) error: %s", msg)
+
+
+def adopt_pending_keychain_unlock() -> bool:
+    """Finish a sign-in whose Keychain prompt the user has now answered.
+
+    Called once per rerun from ``app.py`` right after ``restore_saved_session``.
+    It is the ONLY thing that turns a resolved background unlock into a signed-in
+    session, and it is deliberately a separate pass rather than re-entering
+    ``restore_saved_session`` - that function adopts the config's settings and
+    must stay once-per-session.
+
+    Returns True when it signed the user in, so the caller can decide whether the
+    rest of the run still needs the login page.
+    """
+    if not st.session_state.get('keychain_unlock_pending'):
+        return False
+    if st.session_state.get('is_authenticated'):
+        st.session_state['keychain_unlock_pending'] = False
+        return False
+    status = keychain_unlock_status()
+    if status == 'running' or status == 'idle':
+        return False
+    if status != 'ok':
+        # Denied, or the store failed. Stop waiting: the login screen owns the
+        # explanation from here, and the token field below it still works.
+        st.session_state['keychain_unlock_pending'] = False
+        st.session_state['keychain_unlock_failed'] = status
+        return False
+    token = unlocked_token()
+    st.session_state['keychain_unlock_pending'] = False
+    if not token:
+        return False
+    try:
+        _adopt_restored_token(token)
+    except Exception:
+        logger.warning("Could not adopt the unlocked Keychain token", exc_info=True)
+        return False
+    return bool(st.session_state.get('is_authenticated'))
+
+
+_KC_LOCK_SVG = (
+    "<svg viewBox='0 0 24 24' width='18' height='18' fill='none' stroke='currentColor' "
+    "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>"
+    "<rect x='3' y='11' width='18' height='11' rx='2' ry='2'/>"
+    "<path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>"
+)
+
+
+def _kc_notice_html(state: str) -> str:
+    """Markup for the Keychain notice. ONE element, every state.
+
+    Every character here is a literal - no Canvas data, no user data, nothing
+    interpolated - which is what makes the raw-HTML render safe by construction
+    rather than by an escaping call someone could later drop.
+
+    The copy is doing real work, so it is worth saying what each line is for.
+    A student who has just updated the app meets a system dialog claiming an app
+    wants their "confidential information" and demanding their Mac password; the
+    honest default reaction is to refuse. So the notice (a) says WE caused it and
+    nothing is lost, (b) says the password goes to macOS and not to us, (c) names
+    the exact button, and (d) offers a way out that still works. Point (c) is not
+    a nicety: MEASURED on macOS 26.6.1, plain "Allow" leaves the item's ACL
+    untouched, so the prompt returns on EVERY launch, while "Always Allow"
+    updates it and the prompt does not come back until the next update.
+    """
+    if state == 'checking':
+        return (
+            "<div class='kc-notice kc-notice-quiet'>"
+            f"<div class='kc-head'>{_KC_LOCK_SVG}"
+            "<span>Checking your saved sign-in…</span>"
+            "<span class='kc-spin'></span></div></div>"
+        )
+    if state == 'denied':
+        return (
+            "<div class='kc-notice'>"
+            f"<div class='kc-head'>{_KC_LOCK_SVG}"
+            "<span>Your saved sign-in stayed locked</span></div>"
+            "<div class='kc-body'>macOS kept your saved Canvas login locked, so it "
+            "wasn't used. <b>Nothing is lost</b> - it is still in your Keychain.</div>"
+            "<ul class='kc-steps'>"
+            "<li>To use it: quit Canvas Downloader, open it again, and choose "
+            "<b>Always Allow</b>.</li>"
+            "<li>Or paste a Canvas access token below to carry on right now.</li>"
+            "</ul></div>"
+        )
+    if state == 'error':
+        return (
+            "<div class='kc-notice'>"
+            f"<div class='kc-head'>{_KC_LOCK_SVG}"
+            "<span>Couldn't read your saved sign-in</span></div>"
+            "<div class='kc-body'>macOS did not hand over your saved Canvas login "
+            "this time. Paste a token below to continue - your saved one is "
+            "untouched, and the next launch will try again.</div></div>"
+        )
+    # 'waiting' - the prompt is on screen right now.
+    return (
+        "<div class='kc-notice'>"
+        f"<div class='kc-head'>{_KC_LOCK_SVG}"
+        "<span>macOS is asking permission - this is expected</span></div>"
+        "<div class='kc-body'>Canvas Downloader was updated, so macOS sees a new "
+        "version and is asking whether it may reuse the Canvas login you already "
+        "saved. <b>You have not been logged out and nothing is lost.</b></div>"
+        "<ul class='kc-steps'>"
+        "<li>In the macOS dialog, type your <b>Mac login password</b> - it goes "
+        "to macOS, never to Canvas Downloader.</li>"
+        "<li>Click <b>Always Allow</b>. Plain <i>Allow</i> works only once, and "
+        "macOS will ask you again every time you open the app.</li>"
+        "<li>Would rather not? Click <b>Deny</b> and paste a Canvas token below "
+        "instead - everything still works.</li>"
+        "</ul>"
+        "<div class='kc-foot'><span class='kc-spin'></span>"
+        "Waiting for your answer - this screen continues on its own.</div></div>"
+    )
+
+
+@st.fragment(run_every=1.0)
+def _kc_unlock_poll() -> None:
+    """Poll the background unlock while the prompt is up.
+
+    A fragment, so the wait costs one small rerun a second instead of holding the
+    script thread. It emits EXACTLY ONE element in every state it renders, and
+    deliberately writes nothing to the event container - no style-only st.html,
+    no st.toast - because a fragment rerun rewinds that container's write index
+    and an extra write there would land on a neighbouring stylesheet's host.
+    """
+    status = keychain_unlock_status()
+    if status in ('ok', 'denied', 'error'):
+        # Terminal: hand back to a full run, where adopt_pending_keychain_unlock
+        # either signs the user in or records why it could not.
+        st.rerun(scope="app")
+    st.markdown(_kc_notice_html('waiting' if status == 'running' else 'checking'),
+                unsafe_allow_html=True)
+
+
+def render_keychain_unlock_notice() -> None:
+    """Explain the macOS Keychain prompt, above the login form.
+
+    Renders nothing at all off macOS, and nothing on macOS unless a saved token
+    genuinely could not be read without prompting - so the ordinary login screen
+    is untouched.
+    """
+    pending = bool(st.session_state.get('keychain_unlock_pending'))
+    failed = st.session_state.get('keychain_unlock_failed') or ''
+    if not pending and not failed:
+        return
+    # One keyed slot holding exactly one child in either branch, so the elements
+    # BELOW it never shift when the notice changes state - Streamlit reconciles
+    # by position and hands a block the children of whatever sat at its index.
+    with st.container(key="kc_unlock_slot"):
+        if pending:
+            _kc_unlock_poll()
+        else:
+            st.markdown(_kc_notice_html('denied' if failed == 'denied' else 'error'),
+                        unsafe_allow_html=True)
 
 
 def render_login_page(fetch_courses_fn):
@@ -2089,6 +2467,50 @@ def render_login_page(fetch_courses_fn):
     div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state="info"] { color: #8a99ad !important; }
     div[class*="st-key-login_card_wrapper"] .cd-url-status[data-state="warn"] { color: #fbbf24 !important; }
     div[class*="st-key-login_card_wrapper"] .cd-url-status b { font-weight: 700 !important; }
+
+    /* The macOS Keychain-unlock notice. Lives in this UNCONDITIONAL stylesheet
+       on purpose: the notice itself renders only in one branch, and a style
+       block emitted conditionally shifts every later style host by one (they
+       reconcile by index), which is a documented way to strip a neighbouring
+       component of its CSS for a frame. */
+    div[class*="st-key-kc_unlock_slot"] { gap: 0 !important; }
+    .kc-notice {
+        background: rgba(56, 130, 246, 0.10);
+        border: 1px solid rgba(56, 130, 246, 0.35);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+    }
+    .kc-notice-quiet {
+        background: rgba(148, 163, 184, 0.08);
+        border-color: rgba(148, 163, 184, 0.28);
+    }
+    .kc-head {
+        display: flex; align-items: center; gap: 9px;
+        color: #cfe0ff; font-weight: 700; font-size: 0.95rem;
+    }
+    .kc-notice-quiet .kc-head { color: #cbd5e1; font-weight: 600; }
+    .kc-head svg { flex-shrink: 0; }
+    .kc-body {
+        color: #dbe6f5; font-size: 0.88rem; line-height: 1.55; margin-top: 8px;
+    }
+    .kc-steps {
+        margin: 8px 0 0 0; padding-left: 18px;
+        color: #dbe6f5; font-size: 0.86rem; line-height: 1.55;
+    }
+    .kc-steps li { margin: 4px 0; }
+    .kc-steps b, .kc-body b { color: #ffffff; font-weight: 700; }
+    .kc-foot {
+        display: flex; align-items: center; gap: 8px;
+        margin-top: 10px; color: #9fb3d0; font-size: 0.82rem;
+    }
+    .kc-spin {
+        width: 13px; height: 13px; flex-shrink: 0;
+        border: 2px solid rgba(159, 179, 208, 0.30);
+        border-top-color: #9fb3d0; border-radius: 50%;
+        display: inline-block; animation: kc-spin 0.9s linear infinite;
+    }
+    @keyframes kc-spin { to { transform: rotate(360deg); } }
     </style>""")
 
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -2137,6 +2559,11 @@ def render_login_page(fetch_courses_fn):
         _reauth_mode = bool(_reauth_reason) and bool(_saved_url)
 
         with st.container(key="login_card_wrapper"):
+            # macOS only: says why the Keychain dialog is on screen and which
+            # button to press. Above everything else in the card, because it is
+            # the answer to "why am I looking at a login screen at all".
+            render_keychain_unlock_notice()
+
             if _reauth_mode:
                 # Prominent, self-contained reconnect header (replaces the title
                 # + form heading). Both interpolations are HTML-escaped via _he.
@@ -2685,6 +3112,17 @@ def render_login_page(fetch_courses_fn):
     # Every handler in the script is guarded on the picker actually being on
     # the page, so in reauth mode it simply finds nothing and does nothing.
     institution_picker.inject_bridge()
+
+    # LAST THING ON THE PAGE, and the position is the whole point: this raises
+    # the macOS Keychain prompt, and the script run ends on the next line - so
+    # the explanation above has already been emitted and the window paints
+    # before the system dialog can land on top of it. Starting it any earlier
+    # risks the prompt appearing over a window that is still empty, which is the
+    # exact experience this change exists to remove. Idempotent per account, so
+    # the once-a-second poll above cannot spawn a second prompt.
+    if st.session_state.get('keychain_unlock_pending'):
+        begin_keychain_unlock(KEYRING_SERVICE,
+                              st.session_state.get('api_url') or 'default')
 
 
 # ─── Private helpers ────────────────────────────────────────────────────
@@ -4162,6 +4600,12 @@ content: 'Unavailable while running' !important;
                 st.session_state['api_token'] = ""
                 st.session_state['token_loaded'] = False
                 st.session_state['user_name'] = ''
+                # Same reason as force_reauth: the credential this verdict was
+                # about no longer exists, and a stale one would suppress the
+                # next genuine unlock for the rest of the process.
+                reset_keychain_unlock()
+                st.session_state.pop('keychain_unlock_pending', None)
+                st.session_state.pop('keychain_unlock_failed', None)
                 st.session_state['step'] = 1
                 st.session_state['current_mode'] = 'download'
                 # Re-arm the course selector's cold-boot spinner - the next
