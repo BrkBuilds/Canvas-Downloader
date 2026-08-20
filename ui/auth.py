@@ -2740,58 +2740,80 @@ def _render_authenticated_nav_top():
             f"data-screen='{_screen}' data-busy='{'1' if _locked else '0'}' "
             f"style='display:none;position:absolute;pointer-events:none'></span>")
 
-    # Active-state CSS is dynamic (depends on session state) - inject separately
-    if mode in ['download', 'sync', 'panopto', 'today']:
-        active_key = f"st-key-nav_btn_{mode}"
-        st.html(f"""<style>
-        section[data-testid="stSidebar"] div.{active_key} button {{ background-color: rgba(255, 255, 255, 0.10) !important; }}
-        section[data-testid="stSidebar"] div.{active_key} button p {{ color: #ffffff !important; font-weight: 600 !important; }}
-        section[data-testid="stSidebar"] div.{active_key} button p::before,
-        section[data-testid="stSidebar"] div.{active_key} button:hover p::before {{ filter: brightness(0) invert(1) !important; }}
-        section[data-testid="stSidebar"] div.{active_key} button:hover {{ background-color: rgba(255, 255, 255, 0.10) !important; cursor: default !important; }}
-        section[data-testid="stSidebar"] div.{active_key} button:hover p {{ color: #ffffff !important; }}
-        </style>""")
+    # Active-state CSS is dynamic (depends on session state) - inject separately.
+    #
+    # Unconditional, like the run-lock block below, and for the same reason: the
+    # guard was self-gating. Every rule keys off `st-key-nav_btn_{mode}`, so for
+    # a mode with no such button the whole block matches nothing and paints
+    # nothing - while emitting it only on some runs moved the EVENT container's
+    # index boundaries, and the sidebar renders BEFORE the main page, so those
+    # boundaries sit ahead of every main-page stylesheet.
+    active_key = f"st-key-nav_btn_{mode}"
+    st.html(f"""<style>
+    section[data-testid="stSidebar"] div.{active_key} button {{ background-color: rgba(255, 255, 255, 0.10) !important; }}
+    section[data-testid="stSidebar"] div.{active_key} button p {{ color: #ffffff !important; font-weight: 600 !important; }}
+    section[data-testid="stSidebar"] div.{active_key} button p::before,
+    section[data-testid="stSidebar"] div.{active_key} button:hover p::before {{ filter: brightness(0) invert(1) !important; }}
+    section[data-testid="stSidebar"] div.{active_key} button:hover {{ background-color: rgba(255, 255, 255, 0.10) !important; cursor: default !important; }}
+    section[data-testid="stSidebar"] div.{active_key} button:hover p {{ color: #ffffff !important; }}
+    </style>""")
 
-    # Disabled-state CSS (only while a run is in progress): dim the inactive nav
-    # buttons and kill their hover feedback so it's visually clear they can't be
-    # used mid-run. The CURRENT (running) mode's button is excluded from the
-    # dimming so it keeps its highlight - "you are here, and it's running".
-    if _locked:
-        st.html(f"""<style>
-        /* No `opacity` here: global.css's single `button[disabled]` recipe
-           (brightness/saturate) paints these, and an opacity on top multiplies
-           with it. The old `:not(.st-key-nav_btn_MODE)` exclusion is expressed
-           the other way round now - see the running-mode rule below, which
-           cancels the shared filter so that one button keeps its highlight.
-           (It previously only set `opacity: 1`, which did NOT undo the shared
-           filter, so the "you are here, and it's running" button was dimmed
-           anyway - the exclusion had been silently broken.) */
-        section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled {{
-            cursor: not-allowed !important;
-        }}
-        section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled:hover {{
-            background-color: transparent !important;
-        }}
-        section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled:hover p {{
-            color: #9ca3af !important;
-        }}
-        section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled:hover p::before {{
-            filter: brightness(0) invert(0.65) !important;
-        }}
-        /* The running mode keeps its highlight (never dimmed) but shows a plain cursor. */
-        section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled {{
-            filter: none !important; opacity: 1 !important; cursor: default !important;
-        }}
-        section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled:hover {{
-            background-color: rgba(255, 255, 255, 0.10) !important;
-        }}
-        section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled:hover p {{
-            color: #ffffff !important;
-        }}
-        section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled:hover p::before {{
-            filter: brightness(0) invert(1) !important;
-        }}
-        </style>""")
+    # Disabled-state CSS: dim the inactive nav buttons and kill their hover
+    # feedback so it's visually clear they can't be used mid-run. The CURRENT
+    # (running) mode's button is excluded from the dimming so it keeps its
+    # highlight - "you are here, and it's running".
+    #
+    # EMITTED UNCONDITIONALLY, and the `if _locked:` that used to wrap it must
+    # not come back. Every rule below is scoped to `button:disabled`, and these
+    # buttons are disabled exactly when `_locked` - so the guard changed nothing
+    # about what the page LOOKS like, and cost an index shift instead. A
+    # style-only st.html goes to the EVENT root container, one ordered
+    # index-addressed list, and the sidebar renders BEFORE the main page, so
+    # this host sits ahead of every main-page stylesheet in it.
+    #
+    # Measured 2026-08-20 by sampling that list per animation frame across a
+    # real Analyze on the sync page: at rest the list was 5 hosts with the
+    # page's 277KB main stylesheet at index 2; 242ms after the click index 2
+    # had been REWRITTEN with this block and the 277KB sheet was gone from the
+    # list entirely, while indices 3 and 4 still held the PREVIOUS screen's
+    # stylesheets - the mis-styled window lasted 46ms. Emitting it always makes
+    # the list invariant across run start and end, and costs nothing: a
+    # style-only st.html takes no flex slot.
+    st.html(f"""<style>
+    /* No `opacity` here: global.css's single `button[disabled]` recipe
+       (brightness/saturate) paints these, and an opacity on top multiplies
+       with it. The old `:not(.st-key-nav_btn_MODE)` exclusion is expressed
+       the other way round now - see the running-mode rule below, which
+       cancels the shared filter so that one button keeps its highlight.
+       (It previously only set `opacity: 1`, which did NOT undo the shared
+       filter, so the "you are here, and it's running" button was dimmed
+       anyway - the exclusion had been silently broken.) */
+    section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled {{
+        cursor: not-allowed !important;
+    }}
+    section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled:hover {{
+        background-color: transparent !important;
+    }}
+    section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled:hover p {{
+        color: #9ca3af !important;
+    }}
+    section[data-testid="stSidebar"] div[class*="st-key-nav_btn_"]:not([class*="logout"]) button:disabled:hover p::before {{
+        filter: brightness(0) invert(0.65) !important;
+    }}
+    /* The running mode keeps its highlight (never dimmed) but shows a plain cursor. */
+    section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled {{
+        filter: none !important; opacity: 1 !important; cursor: default !important;
+    }}
+    section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled:hover {{
+        background-color: rgba(255, 255, 255, 0.10) !important;
+    }}
+    section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled:hover p {{
+        color: #ffffff !important;
+    }}
+    section[data-testid="stSidebar"] div.st-key-nav_btn_{mode} button:disabled:hover p::before {{
+        filter: brightness(0) invert(1) !important;
+    }}
+    </style>""")
 
     # Download mode button - always navigates to download step 1.
     if st.button('Download Courses', use_container_width=True, key="nav_btn_download", disabled=_locked,
@@ -4106,21 +4128,26 @@ section[data-testid="stSidebar"] div[class*="st-key-user_info_row"] div.st-key-n
 </div>""")
             # Logout is locked mid-run too: clearing the token + resetting state
             # would orphan the background worker and abandon the live progress.
-            if _is_executing:
-                st.html("""<style>
+            #
+            # Unconditional for the same reason as the nav-lock block above, and
+            # the `if _is_executing:` must not come back: every rule is scoped
+            # to `button:disabled` and this button is disabled exactly when
+            # executing, so the guard only ever moved the event container's
+            # index boundaries around.
+            st.html("""<style>
 /* No `opacity`: global.css's single `button[disabled]` recipe paints this, and
    0.35 on top of brightness(0.5) left the glyph all but invisible. */
 section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled {
-    cursor: not-allowed !important;
+cursor: not-allowed !important;
 }
 section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled:hover {
-    background-color: transparent !important;
+background-color: transparent !important;
 }
 section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled:hover::before {
-    filter: brightness(0) invert(0.65) !important;
+filter: brightness(0) invert(0.65) !important;
 }
 section[data-testid="stSidebar"] div.st-key-nav_btn_logout button:disabled::after {
-    content: 'Unavailable while running' !important;
+content: 'Unavailable while running' !important;
 }
 </style>""")
             if st.button('\u200b', use_container_width=False, key="nav_btn_logout", disabled=_is_executing) and not _is_executing:

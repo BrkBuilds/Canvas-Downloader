@@ -1,0 +1,10 @@
+# Canvas Downloader - security contact (RFC 9116)
+# Full policy, scope and what is out of scope:
+# https://github.com/BrkBuilds/Canvas-Downloader/blob/main/SECURITY.md
+
+Contact: mailto:brkbuilds1@gmail.com
+Contact: https://github.com/BrkBuilds/Canvas-Downloader/security/advisories/new
+Expires: 2027-08-20T00:00:00.000Z
+Preferred-Languages: en, da
+Canonical: https://canvasdownloader.app/.well-known/security.txt
+Policy: https://github.com/BrkBuilds/Canvas-Downloader/blob/main/SECURITY.md

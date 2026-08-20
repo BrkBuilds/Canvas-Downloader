@@ -1,0 +1,333 @@
+"""Build the two search-facing guide pages from the site's own shell.
+
+WHY THIS SCRIPT EXISTS
+----------------------
+Every page under ``docs/`` inlines its own copy of the nav, the footer and a
+~6.5 KB stylesheet. That is fine for six hand-written pages and a liability for
+pages that are meant to keep being added: a new page written by hand drifts from
+the others the first time the nav changes, and the drift is invisible until
+somebody looks at two pages side by side.
+
+So these pages are COMPOSED from ``docs/win-setup.html`` - the smallest page on
+the site - which is the source of truth for the shell. Change the nav there and
+re-run this script; the guide pages follow.
+
+WHAT THESE PAGES ARE FOR
+------------------------
+Every existing page documents the PRODUCT. Nothing on the site answers the
+question a student actually types into Google. Measured 2026-08-20: for "how to
+download all files from Canvas at once" the results are university help desks
+(Stanford, Illinois, Clemson, Pitt, NCTC, UNT) and an Instructure Community
+thread, and all of them stop at the same place - Canvas can zip ONE course's
+Files tab, and nothing covers Pages, Assignments or multiple courses. The
+accepted answer in that community thread says so in as many words: "As for Pages
+and Assignments, I'm not sure of a quick way off the top of my head."
+
+That gap is the opportunity, and it is only an opportunity if the page is
+genuinely the most useful answer on the subject. So both pages lead with what
+Canvas can do by itself, describe the alternatives fairly including the ones
+that compete with this app, and mention the product where it is the honest
+answer and not before.
+
+VOCABULARY RULE
+---------------
+Students say "Canvas". They do not say "LMS" - it is administrator vocabulary
+and it reads as noise to the person this page is for. "Canvas LMS" appears only
+inside JSON-LD, where it disambiguates for machines and no student reads it.
+
+Run:  python scripts/build_guide_pages.py
+"""
+from __future__ import annotations
+
+import html
+import json
+import re
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parent.parent
+DOCS = REPO / "docs"
+SITE = "https://canvasdownloader.app/"
+OG = SITE + "assets/og-card.png"
+OG_ALT = ("Canvas Downloader - download every file from all your Canvas courses "
+          "at once")
+
+# ---------------------------------------------------------------- shell -----
+
+def _shell() -> tuple[str, str, str, str]:
+    """CSS, nav, footer and trailing script, lifted from win-setup.html."""
+    src = (DOCS / "win-setup.html").read_text(encoding="utf-8")
+    css = src[src.index("<style>"): src.index("</style>") + len("</style>")]
+    nav = src[src.index("  <!-- NAV -->"): src.index("</nav>") + len("</nav>")]
+    # win-setup.html marks "How to set up" as the current page. Lifting its nav
+    # verbatim told every visitor to a guide page that they were on the setup
+    # page - the cyan highlight is the only "you are here" signal the nav has.
+    # A guide page is not any of the nav's four destinations, so none is active.
+    nav = nav.replace('class="nav-link active"', 'class="nav-link"')
+    foot = src[src.index("  <footer>"): src.index("</footer>") + len("</footer>")]
+    tail = src[src.index("  <script>"): src.index("</body>")]
+    return css, nav, foot, tail
+
+
+# Extra rules for long-form prose. The shell's stylesheet is written for short
+# setup pages, so it has no article typography at all.
+ARTICLE_CSS = """
+    /* ---- ARTICLE (guide pages) ---- */
+    /* width: 100% is load-bearing, not tidying, and it is the ONLY thing that
+       fixes this - min-width: 0 was tried first and measured no different.
+
+       The shell makes <body> a COLUMN FLEX container, so .container is a flex
+       item and its width is the CROSS size. With width:auto that size is
+       resolved from content, and the comparison table declares min-width:640px,
+       so on a 390px phone the container came out 688px wide and the WHOLE PAGE
+       scrolled sideways (measured: 172 elements past the viewport edge).
+       A definite width stops the content-based sizing, the container lands at
+       342px, and .tbl-wrap's own overflow-x then does its job: the table scrolls
+       inside its box and the page does not. Verified at 390 / 768 / 1180. */
+    .container.wide { max-width: 800px; width: 100%; }
+    .art { text-align: left; padding-bottom: 20px; }
+    /* The shell h1 inherits body line-height 1.6, which is right for a
+       one-line setup title and far too airy for a two-line article title. */
+    .hero h1 { line-height: 1.12; }
+    .art h2 {
+      font-size: clamp(21px, 3vw, 27px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 46px 0 14px;
+      scroll-margin-top: 80px;
+    }
+    .art h3 { font-size: 17px; font-weight: 700; margin: 28px 0 8px; }
+    .art p { font-size: 15px; color: var(--txt2); margin: 0 0 14px; line-height: 1.75; }
+    .art li { font-size: 15px; color: var(--txt2); line-height: 1.75; margin-bottom: 7px; }
+    .art ul, .art ol { margin: 0 0 16px; padding-left: 22px; }
+    .art strong { color: var(--txt); font-weight: 700; }
+    .art a { color: var(--cyan); text-decoration: none; }
+    .art a:hover { text-decoration: underline; }
+    .art code {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 12.5px; background: var(--surf2); color: var(--txt);
+      border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px;
+    }
+    .lede { font-size: 17px !important; color: var(--txt) !important; }
+
+    /* Steps a reader follows with Canvas open in another tab. */
+    .steps { counter-reset: st; list-style: none; padding-left: 0; }
+    .steps > li {
+      counter-increment: st; position: relative;
+      padding-left: 38px; margin-bottom: 12px;
+    }
+    .steps > li::before {
+      content: counter(st);
+      position: absolute; left: 0; top: 1px;
+      width: 25px; height: 25px; border-radius: 50%;
+      background: rgba(56,189,248,0.1); color: var(--cyan);
+      border: 1px solid rgba(56,189,248,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12.5px; font-weight: 800;
+    }
+
+    .note {
+      border-left: 3px solid var(--cyan);
+      background: rgba(56,189,248,0.06);
+      border-radius: 0 var(--rad) var(--rad) 0;
+      padding: 15px 18px; margin: 0 0 20px;
+    }
+    .note p { margin: 0; font-size: 14px; }
+    .note.warn { border-left-color: #f59e0b; background: rgba(245,158,11,0.06); }
+    .note.good { border-left-color: var(--green); background: rgba(52,211,153,0.06); }
+
+    /* A wide table must scroll inside its own box, never the page. */
+    .tbl-wrap { overflow-x: auto; max-width: 100%; margin: 0 0 22px; -webkit-overflow-scrolling: touch; }
+    table.cmp { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13.5px; }
+    table.cmp th, table.cmp td {
+      border: 1px solid var(--border); padding: 10px 12px;
+      text-align: left; vertical-align: top; color: var(--txt2);
+    }
+    table.cmp th { background: var(--surf2); color: var(--txt); font-weight: 700; }
+    table.cmp td:first-child { color: var(--txt); font-weight: 600; }
+    .yes { color: var(--green); font-weight: 700; }
+    .no  { color: #f87171; font-weight: 700; }
+    .part { color: #fbbf24; font-weight: 700; }
+
+    details.faq {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 0; margin-bottom: 10px;
+    }
+    details.faq > summary {
+      cursor: pointer; padding: 15px 18px; font-size: 15px;
+      font-weight: 600; color: var(--txt); list-style: none;
+    }
+    details.faq > summary::-webkit-details-marker { display: none; }
+    details.faq > summary::after {
+      content: '+'; float: right; color: var(--txt3); font-weight: 700;
+    }
+    details.faq[open] > summary::after { content: '\\2212'; }
+    details.faq > div { padding: 0 18px 16px; }
+    details.faq p { font-size: 14px; margin: 0 0 10px; }
+
+    .cta-box {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-radius: var(--rad-l); padding: 24px; margin: 34px 0 10px;
+      text-align: center;
+    }
+    .cta-box h3 { margin: 0 0 8px; font-size: 18px; }
+    .cta-box p { margin: 0 0 16px; font-size: 14px; }
+    .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+    .toc {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 16px 20px; margin: 0 0 30px;
+    }
+    .toc p { margin: 0 0 8px; font-size: 12px; font-weight: 800;
+             letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3); }
+    .toc ol { margin: 0; padding-left: 20px; }
+    .toc li { margin-bottom: 4px; font-size: 14px; }
+"""
+
+
+def faq_markup(items: list[tuple[str, str]]) -> str:
+    out = []
+    for q, a in items:
+        out.append(
+            f'      <details class="faq">\n'
+            f'        <summary>{html.escape(q)}</summary>\n'
+            f'        <div><p>{a}</p></div>\n'
+            f'      </details>')
+    return "\n".join(out)
+
+
+def faq_schema(items: list[tuple[str, str]], page_url: str) -> dict:
+    """Answers are the VISIBLE text with tags stripped, never a rewrite.
+
+    Structured data that does not match what the page says is the one way this
+    markup can hurt rather than help.
+    """
+    def plain(a: str) -> str:
+        return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", "", a))).strip()
+    return {
+        "@type": "FAQPage",
+        "@id": page_url + "#faq",
+        "inLanguage": "en",
+        "isPartOf": {"@id": SITE + "#website"},
+        "mainEntity": [
+            {"@type": "Question", "name": q,
+             "acceptedAnswer": {"@type": "Answer", "text": plain(a)}}
+            for q, a in items],
+    }
+
+
+def build(slug: str, *, title: str, description: str, h1: str, lede: str,
+          crumb: str, body: str, faq: list[tuple[str, str]],
+          extra_nodes: list[dict], published: str, modified: str) -> Path:
+    css, nav, foot, tail = _shell()
+    url = SITE + slug
+    graph = [
+        # These two are REFERENCED by @id below (author, publisher, isPartOf).
+        # A bare {"@id": ...} pointing at a node that is not in the SAME page's
+        # graph resolves to nothing - Google reads the graph per page, not per
+        # site - so the article would validate as having an author with no name.
+        # Defining them here costs a few hundred bytes and makes every reference
+        # resolvable on its own page.
+        {"@type": "Person", "@id": SITE + "#author", "name": "BrkBuilds",
+         "url": "https://github.com/BrkBuilds",
+         "sameAs": ["https://github.com/BrkBuilds", "https://ko-fi.com/brkbuilds"]},
+        {"@type": "WebSite", "@id": SITE + "#website", "url": SITE,
+         "name": "Canvas Downloader", "inLanguage": "en"},
+        {"@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Canvas Downloader", "item": SITE},
+            {"@type": "ListItem", "position": 2, "name": crumb, "item": url}]},
+        {"@type": "Article", "@id": url + "#article", "headline": h1,
+         "description": description, "inLanguage": "en",
+         "datePublished": published, "dateModified": modified,
+         "author": {"@id": SITE + "#author"},
+         "publisher": {"@id": SITE + "#author"},
+         "mainEntityOfPage": url,
+         "image": OG},
+        faq_schema(faq, url),
+        *extra_nodes,
+    ]
+    ld = json.dumps({"@context": "https://schema.org", "@graph": graph},
+                    indent=2, ensure_ascii=False)
+    ld = "\n".join("  " + ln for ln in ld.splitlines())
+
+    e = html.escape
+    page = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{e(title)}</title>
+  <link rel="canonical" href="{url}" />
+  <meta property="og:url" content="{url}" />
+  <meta name="description" content="{e(description)}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="Canvas Downloader" />
+  <meta property="og:title" content="{e(title)}" />
+  <meta property="og:description" content="{e(description)}" />
+  <meta property="og:image" content="{OG}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="{e(OG_ALT)}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{e(title)}" />
+  <meta name="twitter:description" content="{e(description)}" />
+  <meta name="twitter:image" content="{OG}" />
+  <meta name="twitter:image:alt" content="{e(OG_ALT)}" />
+  <script type="application/ld+json">
+{ld}
+  </script>
+  <meta name="theme-color" content="#0b0c14" />
+  <link rel="icon" type="image/x-icon" href="icon.ico" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+{css[:-len("</style>")]}{ARTICLE_CSS}  </style>
+</head>
+<body>
+{nav}
+
+  <div class="hero">
+    <div class="container wide">
+      <h1>{h1}</h1>
+      <p class="sub">{lede}</p>
+    </div>
+  </div>
+
+  <div class="container wide">
+    <div class="art">
+{body}
+
+      <h2 id="faq">Common questions</h2>
+{faq_markup(faq)}
+    </div>
+  </div>
+
+{foot}
+
+{tail}</body>
+</html>
+"""
+    out = DOCS / slug
+    out.write_text(page, encoding="utf-8", newline="\r\n")
+    return out
+
+
+# --------------------------------------------------------------- content ----
+# Kept in this file rather than in HTML so the two pages cannot drift in
+# structure, and so a copy change is a diff of prose instead of a diff of markup.
+
+from guide_pages_content import PAGES  # noqa: E402  (content lives beside this)
+
+
+def main() -> None:
+    for spec in PAGES:
+        out = build(**spec)
+        text = re.sub(r"<[^>]+>", " ", re.sub(r"<script.*?</script>|<style.*?</style>",
+                                              "", out.read_text(encoding="utf-8"), flags=re.S))
+        print(f"  {out.name:44s} {len(text.split()):5d} words  "
+              f"{out.stat().st_size/1024:6.1f} KB")
+
+
+if __name__ == "__main__":
+    main()

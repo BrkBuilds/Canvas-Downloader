@@ -15,7 +15,7 @@
     content="Batch-download your Canvas courses. Smart sync, AI-ready conversion. Free." />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Canvas Downloader" />
-  <meta property="og:locale" content="en" />
+  <meta property="og:locale" content="en_US" />
   <!-- A 1200x630 card, not the square app icon. This product spreads by one
        student pasting the link into a group chat, a Discord server or a course
        forum - so the link preview IS the advert, and `summary` rendered it as a
@@ -33,6 +33,7 @@
     content="https://canvasdownloader.app/assets/og-card.png" />
   <meta name="twitter:image:alt"
     content="Canvas Downloader - download every file from all your Canvas courses at once" />
+  <meta name="theme-color" content="#0b0c14" />
   <link rel="icon" type="image/x-icon" href="icon.ico" />
   <link rel="apple-touch-icon" href="icon.png" />
   <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
@@ -2973,7 +2974,9 @@
         "applicationCategory": "EducationalApplication",
         "applicationSubCategory": "Course file downloader for Canvas LMS",
         "operatingSystem": "Windows 10, Windows 11, macOS 14 or later (Apple Silicon)",
-        "softwareVersion": "2.0.2",
+        "softwareVersion": "2.0.1",
+        "datePublished": "2026-07-11",
+        "softwareHelp": "https://canvasdownloader.app/guide.html",
         "description": "Download all files from every Canvas course at once. Canvas Downloader connects with your own Canvas access token, batch-downloads assignments, modules, pages, quizzes and lecture recordings, keeps the folders synced with one click, and converts Office files to PDF or text so they are ready for AI study tools. Runs entirely on your own computer with no server and no account.",
         "downloadUrl": "https://canvasdownloader.app/releases.html",
         "installUrl": "https://apps.microsoft.com/detail/9n1dwwvrq5wc",
@@ -2985,11 +2988,8 @@
           "price": "0",
           "priceCurrency": "USD"
         },
-        "author": {
-          "@type": "Person",
-          "name": "birkls",
-          "url": "https://github.com/birkls"
-        },
+        "author": { "@id": "https://canvasdownloader.app/#author" },
+        "publisher": { "@id": "https://canvasdownloader.app/#author" },
         "featureList": [
           "Batch-download every file from all Canvas courses at once",
           "One-click sync that fetches only new and updated course files",
@@ -2997,6 +2997,190 @@
           "Download Panopto lecture recordings and transcribe them offline",
           "Convert Word, Excel and PowerPoint to PDF or text for AI tools",
           "Runs locally with no account, no server and no telemetry"
+        ]
+      },
+      {
+        "@type": "Person",
+        "@id": "https://canvasdownloader.app/#author",
+        "name": "BrkBuilds",
+        "url": "https://github.com/BrkBuilds",
+        "sameAs": [
+          "https://github.com/BrkBuilds",
+          "https://ko-fi.com/brkbuilds"
+        ]
+      },
+      {
+        "@type": "VideoObject",
+        "@id": "https://canvasdownloader.app/#video-downloadallcourses-folders",
+        "name": "Download every file from all your Canvas courses at once",
+        "description": "Canvas Downloader pulling whole courses out of Canvas and laying them out as organised folders on a Windows PC.",
+        "thumbnailUrl": "https://canvasdownloader.app/assets/poster-DownloadAllCourses_Folders.jpg",
+        "contentUrl": "https://canvasdownloader.app/assets/DownloadAllCourses_Folders.mp4",
+        "encodingFormat": "video/mp4",
+        "width": 1800,
+        "height": 1440,
+        "duration": "PT12S",
+        "uploadDate": "2026-08-14",
+        "isFamilyFriendly": true,
+        "inLanguage": "en",
+        "publisher": {
+          "@id": "https://canvasdownloader.app/#author"
+        },
+        "about": {
+          "@id": "https://canvasdownloader.app/#app"
+        }
+      },
+      {
+        "@type": "VideoObject",
+        "@id": "https://canvasdownloader.app/#video-quick-sync-demo",
+        "name": "One-click sync: fetch only the new Canvas files",
+        "description": "Quick Sync comparing a local course folder against Canvas and downloading only what changed, then reporting what arrived.",
+        "thumbnailUrl": "https://canvasdownloader.app/assets/poster-Quick_Sync_Demo.jpg",
+        "contentUrl": "https://canvasdownloader.app/assets/Quick_Sync_Demo.mp4",
+        "encodingFormat": "video/mp4",
+        "width": 1920,
+        "height": 1080,
+        "duration": "PT29S",
+        "uploadDate": "2026-08-14",
+        "isFamilyFriendly": true,
+        "inLanguage": "en",
+        "publisher": {
+          "@id": "https://canvasdownloader.app/#author"
+        },
+        "about": {
+          "@id": "https://canvasdownloader.app/#app"
+        }
+      },
+      {
+        "@type": "VideoObject",
+        "@id": "https://canvasdownloader.app/#video-ai-optimization",
+        "name": "Convert a Canvas course into AI-ready study material",
+        "description": "Canvas Downloader converting PowerPoint, Word and Excel course files to PDF so a course folder can be used with AI study tools.",
+        "thumbnailUrl": "https://canvasdownloader.app/assets/poster-AI-Optimization.jpg",
+        "contentUrl": "https://canvasdownloader.app/assets/AI-Optimization.mp4",
+        "encodingFormat": "video/mp4",
+        "width": 1920,
+        "height": 1080,
+        "duration": "PT16S",
+        "uploadDate": "2026-08-14",
+        "isFamilyFriendly": true,
+        "inLanguage": "en",
+        "publisher": {
+          "@id": "https://canvasdownloader.app/#author"
+        },
+        "about": {
+          "@id": "https://canvasdownloader.app/#app"
+        }
+      },
+      {
+        "@type": "VideoObject",
+        "@id": "https://canvasdownloader.app/#video-sync-review-demo",
+        "name": "Review exactly what a Canvas sync will change",
+        "description": "The Sync Review screen showing new files, available updates and locally deleted files before anything is downloaded.",
+        "thumbnailUrl": "https://canvasdownloader.app/assets/poster-Sync_Review_Demo.jpg",
+        "contentUrl": "https://canvasdownloader.app/assets/Sync_Review_Demo.mp4",
+        "encodingFormat": "video/mp4",
+        "width": 1920,
+        "height": 1080,
+        "duration": "PT29S",
+        "uploadDate": "2026-08-14",
+        "isFamilyFriendly": true,
+        "inLanguage": "en",
+        "publisher": {
+          "@id": "https://canvasdownloader.app/#author"
+        },
+        "about": {
+          "@id": "https://canvasdownloader.app/#app"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://canvasdownloader.app/#faq",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@id": "https://canvasdownloader.app/#website"
+        },
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is this allowed by my university?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Canvas Downloader signs in as you, with a token you create, and only reaches files your account can already open. It uses the official Canvas API, the same one the Canvas mobile apps use, and breaks no copy protection of any kind. What it cannot do is know your institution's rules, so that part is on you: keep downloads for your own study and never redistribute course material."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is it really free? What's the catch?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Free with no catch. No subscription, no premium tier, no ads. It is an open-source project and every line of code is public on GitHub."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Will it work with my university's Canvas?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Canvas Downloader uses the standard Canvas REST API, which every Canvas institution runs. If you can log into Canvas at your university, it works. The app ships a searchable list of 4,757 verified institutions, and if yours is not listed you can paste your Canvas address instead."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need Python or anything else installed?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Python is bundled inside the executable. The only optional extra is the Microsoft Office desktop app (PowerPoint, Word, Excel), needed solely for the Office to PDF conversions. Everything else works with no extra software."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What happens when my professor updates a file?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "In Sync Mode the app detects the update. If you have not edited the file, it replaces it. If you have annotated it, the new version is saved as filename_NewVersion next to yours, so your work is never lost."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can it fetch new files automatically every day?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. On the Today page, pick the courses you care about and switch on daily sync. The first time you open the app each day it quietly syncs those courses by itself and shows you the files that arrived today, grouped per course."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can it download lecture recordings (Panopto)?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Canvas Downloader automatically finds Panopto lecture recordings linked in your courses and saves them in the course folder as video (MP4), audio (MP3), a written transcript (.txt), subtitles (.srt), or just a shortcut back to the lecture. Transcription runs entirely on your own computer and nothing is uploaded."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "The security warning scared me - is it safe?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. The warning appears because code-signing certificates cost 99 to 300 dollars a year and this is a solo project. The full source code is public on GitHub. Thousands of legitimate open-source apps show the same warning."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can it see other students' data?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Your Canvas Access Token only grants access to your own student account: courses you are enrolled in, files available to you, and your grades. There is no way to access other students' data through the student API."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Bug or feature request?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Open an issue on GitHub Issues. Pull requests are welcome."
+            }
+          }
         ]
       }
     ]
@@ -3251,7 +3435,7 @@
           </div>
           <div class="pillar-vis"
             style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
-            <video class="expandable-video" src="assets/DownloadAllCourses_Folders.mp4" autoplay loop muted playsinline
+            <video class="expandable-video" preload="none" poster="assets/poster-DownloadAllCourses_Folders.jpg" data-src="assets/DownloadAllCourses_Folders.mp4" autoplay loop muted playsinline
               style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
           </div>
         </div>
@@ -3395,7 +3579,7 @@
           </div>
           <div class="pillar-vis aligned-to-title"
             style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
-            <video class="expandable-video" src="assets/Quick_Sync_Demo.mp4" autoplay loop muted playsinline
+            <video class="expandable-video" preload="none" poster="assets/poster-Quick_Sync_Demo.jpg" data-src="assets/Quick_Sync_Demo.mp4" autoplay loop muted playsinline
               style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
           </div>
         </div>
@@ -3526,7 +3710,7 @@
           </div>
           <div class="pillar-vis aligned-to-title"
             style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
-            <video class="expandable-video" src="assets/AI-Optimization.mp4" autoplay loop muted playsinline
+            <video class="expandable-video" preload="none" poster="assets/poster-AI-Optimization.jpg" data-src="assets/AI-Optimization.mp4" autoplay loop muted playsinline
               style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
           </div>
         </div>
@@ -3634,7 +3818,7 @@
           </div>
           <div class="pillar-vis aligned-to-title"
             style="padding: 0; background: transparent; border: none; box-shadow: none; aspect-ratio: auto;">
-            <video class="expandable-video" src="assets/Sync_Review_Demo.mp4" autoplay loop muted playsinline
+            <video class="expandable-video" preload="none" poster="assets/poster-Sync_Review_Demo.jpg" data-src="assets/Sync_Review_Demo.mp4" autoplay loop muted playsinline
               style="width: 100%; border-radius: var(--rad-l); border: 1px solid var(--border); display: block; box-shadow: 0 16px 40px rgba(0,0,0,0.2);"></video>
           </div>
         </div>
@@ -4815,6 +4999,16 @@
           <p>Open an issue on <a href="https://github.com/BrkBuilds/Canvas-Downloader/issues"
               target="_blank" rel="noopener">GitHub Issues</a>. Pull requests welcome.</p>
         </details>
+
+        <p style="text-align: center; margin: 34px 0 0; font-size: 14px; color: var(--txt3);">
+          Still deciding how to get your courses off Canvas?
+          Read <a href="how-to-download-all-canvas-files.html"
+            style="color: var(--cyan); text-decoration: none;">every way to download your Canvas
+            files, compared</a>, or, if you are finishing your degree,
+          <a href="canvas-access-after-graduation.html"
+            style="color: var(--cyan); text-decoration: none;">what happens to your Canvas access
+            after graduation</a>.
+        </p>
       </div>
     </div>
   </section>
@@ -4838,7 +5032,10 @@
         <a href="engine.html">Under the Hood</a>
         <a href="win-setup.html">Windows Setup</a>
         <a href="mac-setup.html">macOS Setup</a>
-        <a href="privacy.html">Privacy Policy</a>
+        <a href="how-to-download-all-canvas-files.html">Download All Files</a>
+        <a href="canvas-access-after-graduation.html">Before You Graduate</a>
+      <a href="download-panopto-lecture-recordings.html">Panopto Lectures</a>
+      <a href="privacy.html">Privacy Policy</a>
         <a href="disclaimer.html">Disclaimer</a>
         <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
             style="color:#f97316;">&hearts;</span> Support the project</a>
@@ -5040,7 +5237,9 @@
         modalImage.style.display = 'none';
         modalImage.src = '';
         modalVideo.style.display = 'block';
-        modalVideo.src = v.src;
+        // v.src is empty until the observer above loads it. Reachable only
+        // in the gap where a click lands before the source is attached.
+        modalVideo.src = v.getAttribute('src') || v.dataset.src || '';
         modal.classList.add('active');
         modalVideo.play();
       });
@@ -5082,6 +5281,47 @@
       if (!/Mac/i.test(_plat) && !/Mac OS X/i.test(navigator.userAgent || '')) {
         document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
       }
+    })();
+  </script>
+  <script>
+    // Below-the-fold demo videos load ONLY when the visitor approaches them.
+    //
+    // Measured 2026-08-20 on a throttled mobile profile (390px, 4x CPU,
+    // 1.6 Mbps): the four .mp4 files were requested at positions 6-9, right
+    // behind the hero image, and 4.7 MB of video saturated the connection while
+    // the 178 KB hero image - which IS the Largest Contentful Paint element -
+    // waited behind them. LCP was 4364 ms locally and 5300 ms against the live
+    // site, i.e. Google's POOR band, on a page that is otherwise fast.
+    //
+    // preload="none" DOES NOT FIX THIS. It was measured first and the browser
+    // ignores it while the autoplay attribute is present: still four requests,
+    // LCP unchanged within noise. Withholding the src is what works.
+    //   base 4364 ms -> 2772 ms LCP, CLS 0.0218 -> 0.0013, 4 requests -> 0.
+    //
+    // rootMargin gives the video a 400px head start, so it is loaded and
+    // playing by the time it is actually on screen. The autoplay attribute is
+    // still on the element, so playback starts by itself once a source exists.
+    (function () {
+      var vids = document.querySelectorAll('video[data-src]');
+      if (!vids.length) return;
+      var load = function (v) {
+        if (!v.dataset.src) return;
+        v.src = v.dataset.src;
+        delete v.dataset.src;
+        v.load();
+      };
+      // No IntersectionObserver (very old WebKit): load everything rather than
+      // leave the page showing empty boxes. Slow beats broken.
+      if (!('IntersectionObserver' in window)) {
+        Array.prototype.forEach.call(vids, load);
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { load(e.target); io.unobserve(e.target); }
+        });
+      }, { rootMargin: '400px 0px' });
+      Array.prototype.forEach.call(vids, function (v) { io.observe(v); });
     })();
   </script>
 </body>

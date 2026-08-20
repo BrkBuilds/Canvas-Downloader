@@ -45,9 +45,9 @@ survive a machine change lives in the repository. Pull before starting.
    Save with the exact filenames, then run
    `python scripts/optimize_screenshots.py --apply` and uncomment the screenshot block
    in README.md. Decide first whether real CBS course names should be public.
-2. **Social preview image.** Currently the app icon at **1024x1024 square**, which
-   letterboxes or centre-crops on every social card. Replace with **1280x640** - one of
-   the eight Microsoft Store marketing images should crop cleanly.
+2. **Social preview image.** **Now unblocked**: `docs/assets/github-social-preview.png`
+   exists and is exactly **1280x640** (verified 2026-08-20). The GitHub API still reports
+   no custom Open Graph image, so it has not been uploaded yet.
    Settings, General, Social preview.
 3. ~~Description typo.~~ **DONE 2026-08-19** - verified live, 252 chars, no double space.
 
@@ -57,8 +57,14 @@ survive a machine change lives in the repository. Pull before starting.
 5. **Rebuild the Windows and macOS bundles.** Not urgent - the redirect covers the
    three compiled URLs - but new builds should point straight at the new address.
    Note `version.py` is at 2.0.2 while the latest tag is v2.0.1.
-6. Optional: pin the repository on the org profile, and give `BrkBuilds` a profile
+6. **Fix the release notes.** v2.0.1 carries five stale links, four of which are hard
+   404s (see "What DOES break" below). v2.0.0 and v1.0.0 carry redirecting ones. Exact
+   replacement text is in `marketing/PLAYBOOK.md` section 1b.
+7. Optional: pin the repository on the org profile, and give `BrkBuilds` a profile
    README via a `.github` repository.
+
+**Marketing, SEO and launch memory now lives in [`marketing/`](../marketing/README.md)** -
+findings register, settled decisions, the site runbook and the off-site playbook.
 
 ## On a new machine
 
@@ -140,6 +146,27 @@ move is broken.
 - **Old links keep working, permanently.** Verified against a real owner change: `facebook/jest`
   returns 301 then 200 on both `github.com` and `api.github.com`. Only you could ever break that
   redirect, by creating a new repo under the old name.
+
+### What DOES break, and step 6 cannot reach it
+
+Added 2026-08-20 after finding both of these live.
+
+- **The old GitHub PAGES host does NOT redirect.** The bullet above is true of
+  `github.com` and false of `<old-owner>.github.io`. A project Pages site simply stops existing
+  once the site moves to a custom domain. Measured:
+  `https://birkls.github.io/Canvas_LMS_batch_file_downloader/` returns a hard **404**.
+- **Release notes live on GitHub, not in the tree**, so `scripts/migrate_repo_urls.py` cannot
+  touch them. The v2.0.1 notes carried **five** stale links, four of them the `github.io` kind
+  above, including the headline "Website & guides" link at the top. That is the page anyone
+  clicking "Releases" lands on, and Google indexes it. **Edit every release's notes by hand
+  after a move.**
+- **The script matches two exact strings**, so a third spelling survives silently.
+  `Canvas_Downloader_Setup.iss` held `github.com/birkls/canvas-downloader` (old owner, lowercase
+  hyphenated repo), which is neither `<old-owner>/<old-repo>` nor a bare `<old-repo>`. It is the
+  publisher URL Windows shows in Apps & features.
+  `tests/test_no_stale_repo_urls.py` now scans for stale *links* of any spelling, and passes.
+- **Do not lean on the redirect indefinitely.** A released GitHub username can be claimed by
+  somebody else, at which point a URL baked into a shipped installer resolves to their account.
 - **Shipped v2.0.0 and v2.0.1 binaries keep checking for updates.** `ui/update_banner.py` calls the
   API through `requests.get`, which follows redirects by default. Users on old builds are fine.
 - **Search Console for `canvasdownloader.app` is unaffected.** It is a domain property verified by
