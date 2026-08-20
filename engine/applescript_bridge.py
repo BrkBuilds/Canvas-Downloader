@@ -200,6 +200,15 @@ def _product_is_real(staged_dst: Path) -> bool:
 def _direct_passthrough(src: Path, dst: Path, app_name: str):
     """The no-container path: Office writes straight to the real destination.
 
+    **Records the fallback here, and here ONLY**, because there are TWO ways to
+    reach it and the first version of this instrumented one of them - which is
+    the "a fix that lands on two of three sites" mistake this repo keeps
+    finding. The container can be missing (`_office_container_tmp` answers
+    None), or present-but-unusable, where the `mkdir`/`copy2` INTO it raises -
+    and a denied app-data grant takes the SECOND path, because the directory
+    still exists and lists. Verified live: the fix landed on the first branch
+    and the packaged app went on reporting a bare -1712.
+
     Nothing can be gated *before* the write here, so the most this can do is
     refuse to LEAVE a reject behind. The two cases are deliberately different:
 
@@ -215,6 +224,8 @@ def _direct_passthrough(src: Path, dst: Path, app_name: str):
     the shape non-macOS takes, though no converter reaches it there - Windows
     goes through `office_safe_path` and COM.
     """
+    if sys.platform == 'darwin':
+        _office_unstaged.add(app_name)
     existed = dst.exists()
     yield src, dst
     try:
@@ -268,11 +279,8 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
 
     stage_root = _office_container_tmp(app_name)
     if stage_root is None:
-        if sys.platform == 'darwin':
-            # Remember it, so a subsequent TIMEOUT can be attributed to the
-            # powerbox prompt instead of surfacing as a bare -1712 that names
-            # neither the cause nor a remedy. See `_office_unstaged`.
-            _office_unstaged.add(app_name)
+        # The fallback records itself inside _direct_passthrough - BOTH routes
+        # to it must count, and this one is not the route a denial takes.
         yield from _direct_passthrough(src, dst, app_name)
         return
 
@@ -351,7 +359,13 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
         work.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, staged_src)
     except Exception as e:
-        logger.debug(f"[AppleScript] container staging unavailable ({e}); using direct path")
+        # WARNING, not debug: the app's debug log captures INFO and above
+        # (measured - a real run with debug mode ON contained 0 DEBUG lines),
+        # so at debug level the ONE line explaining why conversions are about
+        # to fail could never be read by anyone, including this audit.
+        logger.warning(f"[AppleScript] container staging unavailable ({e}); "
+                       f"using direct path - Office will be asked to open a file "
+                       f"outside its container, which macOS may block")
         shutil.rmtree(work, ignore_errors=True)
         yield from _direct_passthrough(src, dst, app_name)
         return
