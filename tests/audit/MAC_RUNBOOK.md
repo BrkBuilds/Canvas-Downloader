@@ -1411,3 +1411,118 @@ the root - `_path_key(self.local_path / row['local_path'])` - and so must any
 test. A relative-path check silently measures nothing.
 
 Cleanup: `hdiutil detach /Volumes/NFDTest && rm /tmp/nfd.dmg`.
+
+## The packaged-app run that closed M1.3, M2.1, M2.2, M2.4 and M3.8 (2026-08-20)
+
+One real run of course 43660 inside `dist/Canvas Downloader.app` closed five
+runbook items at once. **The technique is the reusable part.**
+
+### Drive the PACKAGED app over HTTP, not with synthetic clicks
+
+The bundle serves Streamlit on `127.0.0.1:8501`, and Streamlit runs the script
+in the SERVER process. So a Playwright session pointed at that port executes
+inside the packaged app: its children are the app's children and its Apple
+events carry the app's TCC identity (`com.canvasdownloader.app`). That removes
+the whole CoreGraphics-clicking problem the earlier sessions fought.
+
+Two things make it work:
+
+* **Reuse the live-audit harness's knowledge, do not restate it.** Import
+  `TOGGLES`, `CARD_FOR` and `IS_ON_JS` from `tests/audit/harness/flows.py`. The
+  settings are `st.button`s whose state lives only in CSS, and the rule is
+  **"ON iff the border colour is CHROMATIC"** (`spread > 24 && alpha > 0.5`) -
+  not a list of hexes, which this project's colour policing would rot. Toggles
+  are addressed by KEY (`btn_convert_word`, `btn_pan_out_mp3`), never by text.
+  A driver written from scratch rediscovers all of this badly - measured.
+* **Each Playwright run is a FRESH Streamlit session**, so the app resets to
+  step 1 and everything must happen in one script.
+
+Traps paid for: a script named `select.py` shadows the stdlib `select` module
+and playwright dies on a circular import; the course checkbox is clipped out of
+the viewport by the list's scroll container, so use the app's own search to
+narrow it and click via JS (`el.click()` on a real checkbox DOES fire React's
+onChange); and the toggle labels contain a U+2B62 arrow that does not survive a
+heredoc, so match by key, not by text.
+
+### M1.3 CLOSED - Automation genuinely denied, in the real app
+
+The operator clicked **Don't Allow** on `"Canvas Downloader" wants access to
+control "Microsoft Word"` (the prompt carries the app's own purpose string from
+`NSAppleEventsUsageDescription`). Result:
+
+    [AppleScript] Word failed (permission): ... Not authorised to send Apple
+                  events to Microsoft Word. (-1743)
+    Klyngevejledning_1_Program_2023.doc  Conversion failed - macOS blocked
+                  Canvas Downloader from controlling Microsoft Word (Automation
+                  permission denied). Enable it in System Settings → Privacy &
+                  Security → Automation → Canvas Downloader.
+
+* classified `permission` -> FATAL -> abort, message names the exact Settings path
+* **the original `.doc` survived** (153,600 B) and **no stub PDF** was promoted
+* macOS really does emit the **BRITISH "authorised"**, confirming live the
+  wording the classifier fix added the same day
+
+It also exposed a defect - the abort was emitted TWICE because
+`retry_failed_conversions` retried a fatal phase. Fixed; see the register
+(`fp:6c1a2474d09e`).
+
+**Afterwards run `tccutil reset AppleEvents com.canvasdownloader.app`** (and
+`SystemPolicyAppData` for the powerbox), or the app is left denied.
+
+### M2.1 / M2.2 / M2.4 CLOSED
+
+    36 recordings discovered (38 LTI handshakes, all OK, source {'module': 36})
+    36 mp3 in ~55s through the bundled arm64 ffmpeg
+       (44100 Hz stereo 128 kb/s; 25:14, 10:52, 14:22 - real durations)
+    77 .webloc: 0 malformed, all with a valid URL
+       36 carry CanvasDownloaderSource=Panopto   41 are plain Canvas links
+       ALL 36 of ours are '<title> (Panopto).webloc'
+
+That last line is the documented Canvas-ExternalTool collision case firing **at
+scale on real data**: every Panopto lecture is also a module item, so Canvas's
+own link already owned the name and ours correctly took `(Panopto)` beside it
+instead of overwriting.
+
+**Finder really opens one**: `open <ours>.webloc` brought Safari forward on
+`login.microsoftonline.com` - "Sign in with your CBS e-mail address" - i.e. the
+shortcut reaches the real lecture behind institutional SSO.
+
+### M3.8 CLOSED - with a REAL media child
+
+Quitting mid-transcription (Quit Apple event, what Cmd-Q sends) with a live
+`Canvas_Downloader_Worker` at 577 MB RSS:
+
+    worker 42234                     -> reaped
+    leftovers (ps -axo, excl. self)  -> 0
+    SESSION END (clean) uptime=1128s peak_tree=1036.7MB
+    clean_exit: True
+    children: [{'pid': 42234, 'name': 'Canvas_Downloader_Worker', 'mb': 577.4}]
+
+So `_terminate_child_processes` works against a real media child, not just the
+WebKit teardown - the gap the earlier M3.8 pass explicitly left open.
+
+### Two observations, neither a defect
+
+* **A `.part` survives an app QUIT mid-transcription** (`<name>.txt.part`,
+  2,695 B). The 2026-08-09 sweep lives in the transcription phase's `finally`,
+  and a quit ends in `os._exit` without unwinding Python, so no `finally` can
+  run. It **self-heals**: the mp3 remains, so the recording is a task again on
+  the next Panopto run over that folder and the phase sweep removes it -
+  verified by calling `_clean_part_files` on that exact file (1 -> 0). There is
+  no clean fix at the shutdown boundary, which has no access to the session's
+  course folders.
+* **Quitting while a TCC prompt is pending records an UNCLEAN exit**
+  (`PREVIOUS SESSION DID NOT EXIT CLEANLY pid=33358 phase='running'`). The
+  same Quit Apple event records `clean_exit: True` when the app is responsive,
+  so this is the modal blocking the Cocoa run loop rather than a shutdown
+  defect. Not reproduced deliberately; recorded so the next session does not
+  read it as a regression.
+
+### The powerbox prompt re-arms EVERY PROCESS
+
+`"Canvas Downloader" would like to access data from other apps` appears once per
+app launch, and post-processing BLOCKS on it - measured, ~20 minutes of a run
+sitting at the Post-Processing header with the app at 0% CPU. That is the
+documented per-process re-arm, not a leak. Budget for it: every app restart
+costs one more click, so enable debug logging BEFORE the run rather than
+restarting to add it.
