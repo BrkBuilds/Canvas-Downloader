@@ -1614,3 +1614,71 @@ checks for an actual window.
 **Levels: the debug log captures INFO and above.** A real run with debug mode ON
 contains ZERO `[DEBUG]` lines. Anything logged at debug is invisible to the
 user AND to this audit - the absence of a debug line is never evidence.
+
+## Sweeping the PATTERN behind this session's defects (2026-08-20)
+
+Two defects the same day shared a shape, so the shape was swept rather than the
+instances. Recorded in full because most of it came back CLEAN, and a clean
+sweep is only worth doing once.
+
+### The pattern: a predicate that matches literal FOREIGN text
+
+`_classify_stderr` bet on American spelling and the ASCII apostrophe while
+macOS emits `"Not authorised"` and `Can’t`. **Every predicate in the app that
+decides behaviour by matching text another system produced** was enumerated
+(79 candidates; most were `'key' in some_dict` and were discarded).
+
+**One more live instance, fixed** (`fp:07f659093301`): the macOS folder picker
+tested `'User canceled'` while `osascript -e 'error number -128'` emits
+**`User cancelled.`** - British, two L's. Dead clause, carried by the `-128`
+beside it, deciding whether a cancel reads as a cancel; an unrecognised one
+makes `native_folder_multi_picker` fall back to opening a SECOND dialog at
+someone who just pressed Cancel.
+
+**Clean, and MEASURED rather than assumed** - do not re-investigate:
+
+| checked | result |
+|---|---|
+| `os.strerror` localisation on macOS | **not localised** - `'Permission denied'` under both `en_US.UTF-8` and `da_DK.UTF-8`, so OSError-text matching is safe here |
+| SQLite lock messages | fixed English in the C library, not localised |
+| Canvas-error predicates (`canvas_logic`, `components`) | already carry BOTH `authorized`/`authorised` |
+| `CERTIFICATE_VERIFY_FAILED`, `0x80040154`, AppleScript error numbers | structured tokens, not prose - not at risk |
+| `converters/pdf.py` `'Class not registered'` | Windows-only, has the `0x80040154` companion; unverifiable from here |
+
+### One divergence fixed, and it is NOT a live defect
+
+"Is this a SQLite lock?" was asked at **19 sites in one file, in two
+spellings** - `'locked' in str(e).lower()` and the strictly narrower,
+case-sensitive `'database is locked' in str(e)`, which misses SQLITE_LOCKED
+(`database table is locked`) and sat on the paths that RE-RAISE rather than
+retry.
+
+**Reachability was measured before any claim**: this app opens one short-lived
+connection per operation and uses no shared cache, so a contended write raises
+SQLITE_BUSY (reproduced: `database is locked`); SQLITE_LOCKED is a shared-cache
+condition and `cache=shared` appears nowhere. Unified into `_is_locked_error`
+anyway, because a rule spelled twice is one some caller is already following an
+old version of. **Retry POLICY deliberately untouched** - the sites differ on
+attempt counts for real reasons.
+
+### The other pattern: a signal logged where it cannot be READ
+
+`core/canvas_debug.py:208` drops anything below **INFO** for app loggers, so all
+**94** production `logger.debug` calls are invisible in the debug log - the
+absence of a debug line is never evidence, and I nearly concluded from one that
+a branch had not run.
+
+68 of them describe a failure or degradation. Triaged; the shape that matters is
+"the ONLY explanation for something the user asked for and did not get". Nearly
+all are best-effort cleanup, platform probes or cosmetic failures. The two worth
+naming:
+
+* **`office_container_stage`'s "container staging unavailable"** - genuinely the
+  only explanation for a conversion that is about to fail. **Raised to WARNING**
+  this session.
+* **`canvas_logic`'s "Quizzes/Rubrics not accessible"** - looks like the same
+  shape and is NOT: the outcome is recorded in `secondary_fetch_success`, which
+  `core/sync_manager.py:1829` consumes so a failed fetch is never mistaken for
+  "deleted on Canvas". Handled structurally; the log line is not load-bearing.
+  What a user does not get on the DOWNLOAD path is any message saying the
+  category was unavailable - a product decision, not a defect, and left alone.
