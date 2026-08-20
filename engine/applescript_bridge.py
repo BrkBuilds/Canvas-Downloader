@@ -1910,6 +1910,30 @@ def _idle_quit_script(app: str, collection: str,
     readable and behaved correctly throughout, which is exactly why this needed
     all three apps to surface.
 
+    **IT IS LOAD-DEPENDENT, AND THAT IS WHY A SMALL TEST PASSES VACUOUSLY.**
+    Re-measured on macOS 26.6.1 on 2026-08-20, same shape, counting the files
+    the phase converted before the properties were read:
+
+        2 files -> name/path/full name/saved ALL READ correctly
+        3 files -> ALL FAIL
+        4 files -> ALL FAIL
+        6 files -> ALL FAIL
+
+    Below three, the document check still works, so it catches a wrong gate
+    decision and nothing appears to be broken. A harness that converts one or
+    two files therefore CANNOT see this failure - the same structural blindness
+    that let D11 live while every harness in the repo passed, one variable
+    further in. `scripts/verify_office_end_to_end.py:MIN_ARMING_FILES` refuses
+    a below-threshold run for exactly this reason; the first 8(b) run of the
+    2026-08-20 session used `--files 2`, reported ALL GOOD, and proved nothing.
+
+    The negative control, run on that machine with no product code mutated:
+    this script with `undescribable_is_ours=True` - byte-for-byte what the
+    teardown emits for an app it believes it launched - sent after a 6-file
+    phase with the user's dirty document open returned `quit sent (1 open
+    doc(s), none user-owned)`, Word quit, and the document was closed. The
+    gate above is therefore the SOLE defence, not a belt-and-braces one.
+
     The cost of the safe default is an Office app left in the dock; the cost of
     the unsafe one is a student's unsaved essay. `pathKnown`/`savedKnown` make
     "we could not tell" expressible, which the old boolean pair could not say.

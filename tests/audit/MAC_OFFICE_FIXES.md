@@ -55,7 +55,13 @@ its distinctive strings.
    controls plus real-app runs, not another full sweep.
 4. **Intel Macs are not supported** — arm64-only, stated in the README. A
    documented product decision, not an oversight.
-5. **The 2026-08-13 quit-gate fix has NEVER RUN ON A MAC.** Added after this
+5. ~~**The 2026-08-13 quit-gate fix has NEVER RUN ON A MAC.**~~ **CLOSED
+   2026-08-20** on macOS 26.6.1 - all three Phase M1 step 8 checks pass against
+   the real applications, and the destructive half was re-measured and armed
+   while they ran. The gap text is kept below for the reasoning; see
+   "2026-08-20" at the end of this file for what was measured.
+
+   ORIGINAL TEXT: **The 2026-08-13 quit-gate fix has NEVER RUN ON A MAC.** Added after this
    session ended, from Windows. Three holes were found in the gate D9/D11 built
    — the run-start launcher never observed, the observation was per PROCESS
    rather than per RUN, and an unobserved app counted as ours — and all three
@@ -599,3 +605,76 @@ exclude them.
 **Four of the six defects triaged in this pass were in the checker, not the
 product.** That is the ratio the brief predicts, and the reason a red row is a
 question before it is a finding.
+
+
+---
+
+## 2026-08-20 — the quit gate finally ran on a Mac, and the destructive half is LOAD-DEPENDENT
+
+macOS 26.6.1 (Tahoe, M4 arm64), run `20260820_143238_macos-26-v2.0.2`. This
+closes known gap 5 and register entry `fp:989c128a238d`.
+
+### The gate itself: all three step 8 checks pass
+
+| check | verdict logged | outcome |
+|---|---|---|
+| 8(a) first run, permission record deleted | `quit sent (1 open doc(s), none user-owned)` x2 | 7/7 converted, both apps quit, Recents **4 -> 0** |
+| 8(b) two runs in ONE process, dirty Word doc opened between | `Word was already running before this run` -> `left alone (we did not launch it)` | Word alive, **document intact** |
+| 8(c) cancel, nothing ever observed | `left alone (we never drove it this run)` | Word alive, document intact |
+
+8(b) is the one the Mac was rented for. The two "left alone" reasons are
+distinct on real hardware, which is what separates "left alone because it was
+yours" from "left alone because we never looked" — and the second was the D11
+hole.
+
+### The half a Windows simulation cannot reach — and it has a THRESHOLD
+
+D9's 2026-08-12 claim (a conversion phase leaves Word's documents
+undescribable) reproduces. What nobody had recorded is that it depends on how
+many files the phase converted:
+
+    2 Word files -> name/path/full name/saved ALL READ correctly
+    3 files      -> name=[FAIL] path=[FAIL] full=[FAIL] saved=[FAIL]
+    4 files      -> ALL FAIL
+    6 files      -> ALL FAIL
+
+**Below three, the document check still works.** So a wrong gate decision is
+caught, nothing looks broken, and a harness that converts one or two files is
+structurally incapable of seeing the failure. That is the same blindness that
+let D11 live while every harness in this repo passed — one variable further in.
+
+### The negative control, with no product code mutated
+
+`_idle_quit_script("Microsoft Word", "documents", undescribable_is_ours=True)`
+— byte-for-byte what the teardown emits for an app it believes it launched —
+sent after a **6-file** phase with the user's dirty document open:
+
+    status: quit sent (1 open doc(s), none user-owned)
+    Word still running: False
+    docs open after: 0
+
+The document check is genuinely blind, so **the gate is the sole defence**, not
+a second layer. That is the strongest available argument for the 2026-08-13 fix
+and it could not be made from Windows.
+
+### The trap this session walked into, and the guard added for it
+
+The first 8(b) run used `--files 2` to save rented-machine time. It printed
+`VERDICT: ALL GOOD` — and proved nothing, because 2 is below the threshold and
+the destructive half was never armed. Re-run at `--files 4` it passes for the
+right reason. `verify_office_end_to_end.py` now carries `MIN_ARMING_FILES = 3`
+and **refuses** (rc 2) a below-threshold `--files` for `busy` and `two-runs`,
+naming why. A test that cannot fail is not a test.
+
+### Two probe defects worth not repeating
+
+* `repeat with d in documents` **inside** a `tell application` block dies with
+  `-1708 every document doesn't understand the "count" message`. The rule is
+  already written in `_idle_quit_script` ("the repeat loop lives OUTSIDE any
+  tell block") — read the product's idiom instead of inventing one.
+* Creating a `.pptx` by driving PowerPoint (`make new presentation` + `save`)
+  times out at `-1712` and eventually crashes it into Microsoft Error
+  Reporting: the save opens a panel that is hidden under `open -g -j`. Word
+  samples come from `textutil -convert doc` and Excel's from `openpyxl`;
+  there is no cheap PowerPoint equivalent, so drive that app from real
+  downloaded course files instead.

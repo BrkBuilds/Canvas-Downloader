@@ -88,6 +88,24 @@ APPS = {
 LEFT_OBSERVED = "left alone (we did not launch it)"
 LEFT_UNOBSERVED = "left alone (we never drove it this run)"
 
+# Word stops being able to describe its own documents only once a conversion
+# phase has handled ENOUGH files, and below that threshold the document check -
+# the defence a wrong gate decision has to defeat - still works. So a run under
+# it passes without testing anything.
+#
+# MEASURED on macOS 26.6.1 (Tahoe, M4) on 2026-08-20, a real conversion phase
+# with the user's dirty document open, reading name/path/full name/saved after:
+#
+#     2 files -> all four READ correctly      (destructive half NOT armed)
+#     3 files -> name/path/full/saved ALL FAIL
+#     4 files -> ALL FAIL
+#     6 files -> ALL FAIL
+#
+# The first 8(b) run of that session used `--files 2` to save rented-machine
+# time and reported ALL GOOD while proving nothing. 3 is the measured floor;
+# the default matches it.
+MIN_ARMING_FILES = 3
+
 
 def _osa(script: str, timeout: float = 90) -> str:
     try:
@@ -509,13 +527,26 @@ def main() -> int:
     ap.add_argument("--state", choices=("cold", "busy", "two-runs", "cancel"),
                     default="cold")
     ap.add_argument("--apps", action="append", choices=sorted(APPS))
-    ap.add_argument("--files", type=int, default=3, help="per app")
+    ap.add_argument("--files", type=int, default=3,
+                    help=f"per app (>= {MIN_ARMING_FILES} for the states that "
+                         "depend on Word's documents becoming undescribable)")
     ap.add_argument("--forget-permissions", action="store_true",
                     help="delete the answered-Automation-prompts record first, "
                          "so this run is a FIRST run (step 8a). macOS will "
                          "re-ask - someone must be at the screen to click Allow.")
     a = ap.parse_args()
     apps = a.apps or ["Word", "Excel", "PowerPoint"]
+
+    # A below-threshold run of the states that depend on the destructive half
+    # reports ALL GOOD without ever arming it - measured 2026-08-20, see
+    # MIN_ARMING_FILES. Refuse rather than pass vacuously.
+    if a.state in ("busy", "two-runs") and a.files < MIN_ARMING_FILES:
+        print(f"--files {a.files} is below MIN_ARMING_FILES={MIN_ARMING_FILES}: "
+              f"Word's documents stay describable, so the document check still "
+              f"works and this state would pass without testing what it exists "
+              f"to test. Re-run with --files {MIN_ARMING_FILES} or more.",
+              file=sys.stderr)
+        return 2
 
     if a.state in ("two-runs", "cancel") and "Word" not in apps:
         # Both scenarios are about Word specifically: it is the app whose
