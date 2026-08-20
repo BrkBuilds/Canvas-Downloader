@@ -1124,3 +1124,69 @@ teardown check must run in the SAME process as the conversions.
 Second trap: `run_word_conversion` needs a real `SyncManager` in its file
 tuples. Passing `None` raises inside `_update_manifest_path` AFTER the source
 has already been deleted.
+
+## M2.3 / M1.5 / M1.6 - shortcuts, Office leak, Dock tiles (2026-08-20)
+
+### M2.3 - "compile widely, delete narrowly", proven on macOS
+
+`converters/url.py` reads BOTH shortcut formats and deletes only this
+platform's own. Driven live with a folder built by the real
+`shared.shortcuts.write_shortcut`, so the bytes on disk are the app's own
+format - a `.webloc` two-key plist (`URL` + `CanvasDownloaderSource`) and a
+`.url` whose marker sits in its own `[CanvasDownloader]` INI section, exactly as
+the module docstring specifies.
+
+| file | expected | result |
+|---|---|---|
+| plain `.webloc` | compiled **and deleted** | as expected |
+| plain `.webloc`, nested a folder deep | compiled and deleted | reached by `rglob` |
+| `Lecture 1 (Panopto).webloc` (our marker) | kept, never compiled | as expected |
+| `Lecture 2 (Panopto).url` (our marker, foreign format) | kept, never compiled | as expected |
+| plain `.url` written on WINDOWS | compiled but **KEPT** | as expected |
+| `file://` shortcut | kept, never compiled | as expected |
+
+**Idempotent over repeated runs**, which is the property the surviving foreign
+`.url` makes load-bearing: it is re-read on every pass, so a dedupe miss would
+grow `Compiled_External_Links.txt` for ever. Three passes -> nothing further
+deleted, **exactly one** occurrence of the Windows link, file size stable at
+394 bytes.
+
+### M1.5 - no Office leak
+
+After a real Word phase plus the in-process teardown,
+`pgrep "Microsoft (Word|Excel|PowerPoint)"` is **empty**. A plain
+`quit saving no` also lands cleanly. The leaked-`EXCEL.EXE` finding is a
+Windows shape; the Mac does not share it.
+
+### M1.6 - Dock recents
+
+**0 tiles of ours** after a phase that opened five staged `src_*` documents in
+Word (`defaults export com.apple.dock`, checking every tile array).
+
+Two things NOT to misread here. A `Microsoft Error Reporting` entry appears in
+`recent-apps` after you **`pkill`** a wedged Word - it is Microsoft's app, not a
+Canvas Downloader tile, and the app's own graceful teardown does not produce it.
+And Word being alive after a bare conversion script is the harness, not a leak:
+the teardown only runs if you call it, in the same process (see M1.3).
+
+### M1.3, second half - the Automation revoke is NOT PROVABLE mid-session
+
+Revoking Automation for Word in System Settings had **no effect** on a run
+already in flight: five genuinely convertible `.doc` files still converted in
+3.9 s, and a bare `osascript ... tell "Microsoft Word"` still succeeded. macOS
+caches the TCC decision in the RESPONSIBLE process, which here is the long-lived
+editor, so a mid-session revoke reaches nothing this agent can spawn. A probe
+against a never-used target (Calculator) did not prompt either, so this client
+already carries broad grants.
+
+Proving it needs a client with no cached decision - i.e. do it as the FIRST
+action after a fresh login, or from a Terminal whose grant is then cleared with
+`tccutil reset AppleEvents com.apple.Terminal`. Restarting the editor would kill
+the agent session.
+
+What that leaves unproven is narrow: whether macOS's real denial wording reaches
+`_classify_stderr`. The classification itself is unit-tested in BOTH directions
+(`tests/test_office_crash_is_not_missing.py`), and the abort it triggers is the
+SAME function the systemic path uses - which was verified live in M1.3's first
+half, one message and all remaining files skipped. So the untested step is a
+string match, not the machinery.
