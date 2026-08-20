@@ -838,3 +838,74 @@ it post requires driving a run to completion.
 
 Do not restate the banner claim as fact in either direction until someone
 measures it at the physical machine.
+
+
+---
+
+## WKWebView spot-check of what shipped AFTER the macOS 26 audit (2026-08-20)
+
+The 2026-08-11 run could not cover this: the dismissible transcription-setup
+notice (2026-08-19) and the conditional-`<style>` fixes (2026-08-20) did not
+exist yet. The second matters most here, because it changed **which style hosts
+exist and in what ORDER**, and both were verified only in Chrome over CDP. The
+shipped app renders in **WKWebView**.
+
+Built and ad-hoc signed on this machine (`--verify --deep --strict` rc=0,
+`apple-events` entitlement intact), launched with
+`open --env CANVAS_DL_CONFIG_DIR=...` pointed at a copy of the run's config so
+it restored a real session through its own code path.
+
+**All three targets render correctly.**
+
+* **Course list** - two-line rows, Favorites/All segmented toggle, the live
+  `0 of 14 selected` count (the one-cell grid with the hidden ghost sizer),
+  Select All / Clear Selection, search, and the sticky action bar with
+  Custom Download / OR / Quick Download.
+* **Sidebar** - nav with the active item lit, Settings, `Logged in as Birk`,
+  logout, `v2.0.2`, Support the project.
+* **Step tracker** - both flows correct (`Select Courses / Configure Download /
+  Analyzing / Downloading / Complete` and `Select Courses / Analyzing / Review
+  Changes / Download & Sync / Complete`).
+
+**The transcription notice's full cycle, which is the branch flip the
+conditional-`<style>` rule is about.** Driven with real clicks:
+
+    card (amber, 105px)  --click X-->  one-line link (~19px)  --click link-->  card
+
+Nothing below it was left behind at any step: the action row moved up and back,
+the card returned to the same geometry, and no stylesheet was lost - which is
+precisely the failure mode (a branch flip shifting every LATER stylesheet onto
+its neighbour's host) that the fix addresses. The `pad_slot_children` 2-child
+padding reconciles correctly in WebKit.
+
+**The dismissal persists and does not clobber the file.** After dismissing,
+`canvas_downloader_settings.json` gained `transcription_setup_notice_dismissed:
+true` with **all ten pre-existing keys intact** - an end-to-end confirmation of
+the settings co-ownership hardening in the packaged app, not just in unit tests.
+
+### Driving a WKWebView from the agent - what works
+
+* `osascript`/System Events needs **Accessibility**, which this app deliberately
+  never requests. Granting it to the terminal app is a decision for the
+  OPERATOR, and it does not take effect for already-running processes - the
+  grant landed but every `osascript` still returned `-25211` because VS Code
+  had not been restarted.
+* Even with access, `System Events ... click at {x,y}` returns **-25208** here.
+* What works is a **CoreGraphics event**: `CGWarpMouseCursorPosition` then
+  `CGEventCreateMouseEvent` down/up posted to `kCGHIDEventTap` (PyObjC's
+  `Quartz` is already available). A WKWebView has no AX tree to address
+  element-wise, so coordinates are the only handle - take a `screencapture`
+  first and read them off it. On this 1920x1080 display the capture maps 1:1.
+* `mac_eyes shot --window "Canvas Downloader"` matches by TITLE, and **VS Code's
+  own window title contains the same string**, so it silently captured the
+  editor. Activate the app by PID and take a full-desktop shot instead.
+
+### The Keychain prompt on a rebuild is real, and it BLOCKS
+
+Launching a freshly ad-hoc-signed bundle that reads the previous build's
+Keychain item raises *"Canvas Downloader wants to use your confidential
+information stored in 'CanvasDownloader'"*, with **Always Allow / Deny / Allow**
+and a password field. It blocks the app's session restore until answered, and
+macOS refuses synthetic clicks on it by design - screenshot it and ask the
+operator. This is the prompt `CLAUDE.md` predicts under "Keyring"; it is
+expected on a rebuild and does not affect a released build a user installs once.
