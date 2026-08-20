@@ -282,10 +282,12 @@ around it is not.**
 6. **Dock recents tiles.** `purge_stale_self_dock_tiles` exists because a
    conversion left a Dock tile pointing at a file the app had deleted. Look at
    the Dock after the phase.
-7. **Long paths.** `office_safe_path` shadows sources ≥240 chars. macOS allows
-   1024-char paths but only **255 bytes per component** — a *different* limit
-   from Windows, and one nothing has ever tested. Build a deep course folder
-   and convert inside it.
+7. **Long paths — SETTLED 2026-08-20, see the section below.** The premise
+   here was wrong twice over: `office_safe_path` is a documented **no-op off
+   Windows**, and the component limit is **255 UTF-16 code units**, not bytes
+   (measured — 510 bytes of `æ` is legal, 512 bytes of emoji is not). What
+   actually handles length on macOS is `office_container_stage`, which stages
+   every conversion under a short `src_<hex>` name. A 900-char path converts.
 8. **WHO THE APP BELONGS TO — the one thing on this list that has never run on
    a Mac** (added 2026-08-13). The quit gate decides whether to send
    `quit saving no` to an app that may hold a student's unsaved essay, and its
@@ -1190,3 +1192,52 @@ What that leaves unproven is narrow: whether macOS's real denial wording reaches
 SAME function the systemic path uses - which was verified live in M1.3's first
 half, one message and all remaining files skipped. So the untested step is a
 string match, not the machinery.
+
+## M1.7 - long paths, and the component limit is UTF-16 UNITS (2026-08-20)
+
+**The runbook's own premise was wrong, and so was `AUDIT_FINDINGS.md` - in
+opposite directions.** This file said "255 BYTES per component"; the findings
+register said "255 CHARACTERS, not bytes". Measured by writing real files on
+APFS, neither is right:
+
+| name | UTF-16 units | bytes | chars | result |
+|---|---|---|---|---|
+| 255 x `a` | 255 | 255 | 255 | OK |
+| 256 x `a` | 256 | 256 | 256 | ENAMETOOLONG |
+| 255 x `æ` | 255 | **510** | 255 | **OK** |
+| 127 x emoji | 254 | 508 | 127 | OK |
+| 128 x emoji | 256 | 512 | **128** | ENAMETOOLONG |
+| 253 x `æ` + 1 emoji | 255 | 510 | 254 | OK |
+| 254 x `æ` + 1 emoji | 256 | 512 | 255 | ENAMETOOLONG |
+
+The limit is **255 UTF-16 code units**. APFS stores names as UTF-16, and an
+astral character (emoji, CJK extension B, historic scripts) is a surrogate pair
+- two units for one Python character. NTFS counts the same way, so this is not a
+macOS quirk to guard on one platform.
+
+**Why it matters even though nothing is broken today.** The app's cap is
+expressed in CHARACTERS (`_sanitize_filename(..., max_length=120)`), the
+filesystem's in UNITS, and the worst-case ratio is 2:1. Measured worst output:
+**236 units** against a 255 ceiling - a margin of 19, about ten emoji. Raising
+the cap past **127** would make an all-astral Canvas filename illegal on both
+platforms, and it would fail as ENAMETOOLONG at download time, i.e. as a MISSING
+FILE rather than a visible error. Pinned by
+`tests/test_sanitize_filename.py` + `scripts/_mutate_filename_utf16_cap.py`
+(4/4 caught, including the plausible "raise it to 200 to preserve longer names").
+
+**`office_safe_path` does nothing here.** `shared/helpers.py` returns the
+pass-through branch on any non-Windows platform, by design and with a comment
+saying so - it exists for Win32 COM. macOS length is handled by
+`office_container_stage`, which stages EVERY conversion under a short
+`src_<hex>.<ext>` name regardless of the source's length.
+
+**Driven live, and it simply works:**
+
+    442-char path, 240-unit filename component  ->  converted in 1.6 s, real %PDF-
+    900-char path                               ->  converted in 0.9 s, real %PDF-
+
+both with the source removed and the PDF landing at the long destination. Going
+past ~900 needs more directory LEVELS, not a longer name - the two limits
+interact, since the component itself cannot exceed 255 units. Realistic worst
+case in this app is ~410 chars (root + course + module + file, each capped at
+120), so there is a wide margin.
