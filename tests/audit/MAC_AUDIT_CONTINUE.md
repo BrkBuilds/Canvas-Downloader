@@ -170,12 +170,26 @@ Ranked. The first is the one that would keep me up at night.
 6. **mp4** was deliberately left off (bandwidth); only the mp3 muxer path is
    proven. M2.4's video half is untested.
 
-7. **A LOCAL (non-remote) session** would settle whether the osascript
-   notification fallback can banner, which NoMachine confounds.
+7. **Notifications: mostly SETTLED 2026-08-21, and the earlier reading was
+   wrong.** The primary `UNUserNotificationCenter` path DOES work in the
+   packaged bundle and is attributed to **Canvas Downloader** - confirmed in the
+   usernoted delivery DB and visually in Notification Centre (app icon, correct
+   body). The osascript fallback is not being reached at all. Only "does a
+   BANNER flash" remains, confounded by the remote session, and it is not worth
+   another prompt storm. NOTE: `com.apple.ncprefs` is the WRONG oracle - the app
+   is absent from it even after delivering.
 
-8. **A genuinely FIRST-RUN machine.** This box now carries answered prompts, a
-   Whisper model, a keychain item and a populated config. Nobody has seen the
-   real first-launch sequence since those accumulated.
+8. ~~A genuinely FIRST-RUN machine.~~ **CLOSED 2026-08-21** - driven end to end
+   in the PACKAGED app after `tccutil reset` + an empty config dir (which is
+   enough, and avoids touching the Keychain). A CLEAN PASS on every axis: the
+   three Office Automation prompts batched **within 11 s** of Start, the
+   powerbox at +18 s, run complete at +30 s; 23 files, the one Office file
+   converted with its source consumed (proven by the manifest row
+   `04_Exercise.pptx -> Exercise 4/04_Exercise.pdf`), all three Office apps
+   quit, **0** entries left in Office Recents, **0** staging leftovers, and a
+   completion notification delivered under the app's OWN identity. The keychain
+   notice correctly did NOT render (a fresh install has no saved token). Method
+   and traps in `MAC_RUNBOOK.md`.
 
 ## Traps this session paid for
 

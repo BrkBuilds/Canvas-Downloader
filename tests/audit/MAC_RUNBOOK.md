@@ -1781,3 +1781,99 @@ prompt was answered or the 90 s watchdog fired.
 Caveat stated rather than glossed: 2.56 s is a WARM launch (the app had been
 running seconds earlier, so the bundle is in the page cache). A first launch
 after boot is slower and was not measured.
+
+## The genuine FIRST-RUN walkthrough - a clean pass (2026-08-21)
+
+The third session's list ended with "a genuinely FIRST-RUN machine" as the last
+unproven item: this box carried answered prompts, a keychain item and a
+populated config, so nobody had seen the real first-launch sequence since those
+accumulated. It has now been driven end to end in the PACKAGED app.
+
+**How the first-run state was reached without destroying anything.** Two axes,
+and only one of them needs care:
+
+    tccutil reset AppleEvents        com.canvasdownloader.app
+    tccutil reset SystemPolicyAppData com.canvasdownloader.app
+    CANVAS_DL_CONFIG_DIR=/tmp/firstrun   # empty dir - no settings, no
+                                         # macos_permission_setup.json
+
+A fresh config dir is enough for the APP's own first-run state, and it also
+avoids touching the Keychain: `restore_saved_session` finds no `api_url`, so the
+keyring account is `default`, so the real item (keyed on the real URL) is never
+read. Do NOT delete the real keychain item to force a first run - it is not
+necessary, and logging in afterwards will not recreate it if `store_token`'s
+skip-optimisation sees an unchanged value.
+
+**The sequence, measured.** Download started 01:40:28; the app batches every
+outstanding Office Automation prompt at run start rather than letting each one
+ambush a later conversion, and that is exactly what happened - TCC grant rows
+written at:
+
+| grant | time | gap from start |
+|---|---|---|
+| PowerPoint | 01:40:35 | +7 s |
+| Word | 01:40:37 | +9 s |
+| Excel | 01:40:39 | +11 s |
+| App Data (powerbox) | 01:40:46 | +18 s |
+| run complete | 01:40:58 | +30 s |
+
+The operator answered each as it appeared. **Everything downstream was clean:**
+
+* 23 files delivered, 20 PDFs, `.webloc` external link valid (`plutil` shows a
+  well-formed single-key plist pointing at the real course-catalogue URL);
+* the one Office file CONVERTED and its source consumed - proven by the manifest
+  row rather than inferred from the absence of a `.pptx`:
+  `04_Exercise.pptx -> Exercise 4/04_Exercise.pdf`;
+* all three Office apps **quit** (0 processes) - the per-run quit gate correctly
+  read them as ours;
+* **0** of our entries left in Office's Recents (`_count_canvas_recents()`), and
+  **0** leftovers in all three `~/Library/Containers/com.microsoft.*/Data/tmp/
+  CanvasDownloaderTmp` staging dirs;
+* a completion notification delivered (below).
+
+**The keychain notice correctly did NOT render** on the first-run login page -
+a fresh install has no saved token, so there is nothing to unlock. That negative
+control matters as much as the positive one: the fix stays entirely out of the
+way of a first-time user.
+
+### Notifications: delivery is CONFIRMED under the app's own identity
+
+The macOS 15 session could only establish that no banner painted, with "no
+measurement at all of WHY". There is now a positive fact, from the delivery
+database rather than from prefs:
+
+    ~/Library/Group Containers/group.com.apple.usernoted/db2/db
+    select a.identifier, datetime(r.delivered_date+978307200,'unixepoch','localtime')
+      from record r join app a on r.app_id = a.app_id ...
+
+    com.canvasdownloader.app | 2026-08-21 01:40:53      <- this run
+    com.canvasdownloader.app | 2026-08-20 22:55:24      <- previous session
+    com.canvasdownloader.app | 2026-08-20 22:15:53
+    ...
+
+So the PRIMARY `UNUserNotificationCenter` path works in the packaged bundle and
+is attributed to **Canvas Downloader**, not to Script Editor - the fallback
+chain is not being reached at all. The operator heard the chime, and then opened
+Notification Centre, which SETTLES it visually:
+
+    [Canvas Downloader icon]  Canvas Downloader              9m ago
+                              Download Complete
+                              Downloaded 22 files across 1 course.
+
+**The same screenshot carries its own control.** Two older entries sit directly
+below it - "Canvas Downloader / Statistik 2025" and a "PROBE item 2 banner test"
+- and both show a GENERIC SCRIPT icon rather than the app's. Those are the
+`osascript` fallback from earlier probing sessions, posted under Script Editor's
+identity. The icon is the tell, and it distinguishes the two paths at a glance:
+**app icon = the UN path; script icon = the fallback.** Anyone re-checking this
+should look at the icon before believing an entry proves the primary path.
+
+The only half still unmeasured is whether a BANNER flashes at the moment of
+delivery, as opposed to landing in Notification Centre - and that is confounded
+by the remote session and by Focus state. It is not worth another prompt storm:
+the user gets the chime AND a correctly-attributed Notification Centre entry.
+
+**`com.apple.ncprefs` is the WRONG ORACLE for this and cost me a wrong
+inference.** The app has no entry there even after delivering, so "not in
+ncprefs" is not evidence that nothing was posted. Use the usernoted delivery DB
+above, which answers the question directly.
