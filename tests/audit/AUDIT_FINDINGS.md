@@ -866,8 +866,45 @@ EQUIVALENT mutant. The mutation pass exposed a real gap in the tests first: a
 row that is MISSING and a row that EXISTS WITH AN EMPTY md5 take different
 branches, and only the second tells the guards apart.
 
-**Notes**: 
+**Notes**:
 
+NO HEAL PASS IS POSSIBLE - investigated 2026-08-20 at the product owner's
+request, before building anything. A row whose baseline was clobbered is
+INDISTINGUISHABLE from a legitimately clean one on every signal that survives:
+
+    signal                              clean      clobbered
+    original_md5 == md5(file on disk)   True       True
+    original_size == file size          True       True
+    file mtime vs downloaded_at         same       same
+    _classify_local_modification        'clean'    'clean'
+
+* Canvas exposes NO file hash - measured directly against the live API on
+  course 44428: no md5, etag, checksum or uuid on any file object. So there is
+  no external source of truth to re-derive a baseline from. (This also confirms
+  `record_downloaded_file`'s own docstring.)
+* `original_size` matches by construction: a size mismatch is exactly what
+  sends the download down the OVERWRITE branch instead of the skip branch, so
+  a clobbered row always has a matching size.
+* `downloaded_at` is rewritten by the offending re-record itself, which happens
+  AFTER the user's edit - destroying the one temporal signal that could have
+  ordered the two events.
+
+A migration would therefore have to GUESS, and the two guesses are not
+symmetric: "assume clean" changes nothing, while "assume clobbered" has nothing
+to restore the baseline TO - it could only mark rows unknown, which means every
+file is treated as modified and every future update forks into a `_NewVersion`
+sibling, for every user, for ever. That is far worse than the defect.
+
+RESIDUAL RISK, stated so the decision is on the record. Harm needs ALL of:
+(1) an in-place edit that preserved the file's EXACT byte size - most real
+edits (annotating a PDF, saving a docx/pptx, which are zips) change it;
+(2) a re-download of that course into the same folder afterwards;
+(3) Canvas later updating that same file; (4) the user accepting the update.
+The fix stops the affected population growing.
+
+DECISION: no migration, and no user-facing warning - it could not name the
+affected files (neither can the app), so it would alarm everyone who ever
+re-downloaded a course while being actionable for almost nobody.
 ---
 
 ### ~~Download finished with 1 unexplained error(s)~~
