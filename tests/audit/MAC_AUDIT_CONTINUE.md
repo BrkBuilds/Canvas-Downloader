@@ -15,15 +15,16 @@ Run: `_audit_runs/20260820_143238_macos-26-v2.0.2`. Branch `macos-audit-26`.
 |---|---|
 | OS / arch | macOS **26.6.1** Tahoe, M4 arm64 |
 | agent shell | Aqua (VS Code terminal), Keychain usable, Screen Recording + Automation granted |
-| Accessibility | granted to **Canvas Downloader** and **Visual Studio Code** this session (see Cleanup) |
+| Accessibility | granted to **Canvas Downloader** and **Visual Studio Code** (see Cleanup) |
+| Automation | the editor's **System Events** grant was toggled off and back on during M1.3 - if window queries start returning -1743, that is why |
 | Full Disk Access | absent, and that is the INTENDED state — the FDA nudge needs it ungranted |
 | `pyinstaller` | installed into `.venv` by hand — in neither `requirements.txt` nor the bootstrap |
 | bundle | built + ad-hoc signed at `dist/Canvas Downloader.app`, `--verify --deep --strict` rc=0 |
 | packaged app config | driven with `open --env CANVAS_DL_CONFIG_DIR=/tmp/pkgcfg "dist/Canvas Downloader.app"` |
 | iCloud | account signed in, iCloud Drive ON, ~5 GB free tier (see Cleanup) |
 | whisper model | **none** installed — which is what makes the transcription-setup notice render |
-| suite / audit | **3924 passed, 26 skipped**; architecture audit **0 violations** |
-| register | **138 total · 8 open · 75 fixed** |
+| suite / audit | **3951 passed, 26 skipped**; architecture audit **0 violations** |
+| register | **139 total · 8 open · 76 fixed** |
 
 Token: in the login Keychain under service `CanvasDownloader`, username
 `https://cbscanvas.instructure.com`. Readable from a plain venv python with
@@ -59,6 +60,43 @@ hostname and print it in the traceback. Always run Canvas scripts with
 
 ---
 
+## The fourth session (2026-08-20 evening) - 9 commits, all pushed
+
+Every runbook step the third session listed as "needs a Mac" has now been
+driven, except the two noted below. **One real product defect was found and
+fixed**; everything else came back clean, and three of my OWN checks were wrong
+before they were right - those corrections are the reusable part.
+
+| step | outcome |
+|---|---|
+| M2.5 transcription | CPU path, crash containment, cancel - all pass |
+| M2.6 model download + manager | pass, both global-switch states |
+| M1.3 conversion failure | pass; the Automation-revoke half is NOT provable mid-session |
+| M1.5 / M1.6 | pass, after correcting which store M1.6 reads |
+| M1.7 long paths | pass; the limit is **255 UTF-16 units**, correcting two docs |
+| M2.3 shortcuts | pass, including idempotence |
+| M3.3 / M3.4 / M3.8 | pass |
+
+**The defect** (register `fp:259a4ac3ac81`, fixed): an uninstalled Office app
+classified as `other`, not `app_missing`, so a user without Office got three
+generic errors and then advice to "quit Microsoft Word" - an app they do not
+have. Three of four wording clauses in `_classify_stderr` were locale-dead.
+Found sideways, because the operator's Automation toggle made macOS hand me its
+real denial string.
+
+**Three checks of mine that were wrong first** - read these before trusting a
+result in the same area:
+
+* M1.6 read the **Dock plist**; Office Recents is a different store entirely.
+  The operator caught it by opening Word.
+* A teardown or purge called from a **fresh interpreter** always reports "we
+  never drove it this run" and does nothing. Same process, always.
+* `pgrep -f <pattern>` **matches its own shell**, manufacturing fake orphans.
+
+Full detail for all of it is in `MAC_RUNBOOK.md`, in dated sections at the end.
+
+---
+
 ## What is LEFT
 
 **None of the 8 open register findings is macOS-specific.** They are Windows
@@ -66,26 +104,25 @@ hostname and print it in the traceback. Always run Canvas scripts with
 identical-size orphan pair, the Panopto-formats config gap, the model-delete UX,
 the read-only `os.replace` note). Investigate those OFF this machine.
 
-So "what needs a Mac" is the runbook steps never driven:
+So what still needs a Mac is short:
 
-* **M1.3** force a conversion failure — a password-protected `.doc`, and
-  revoking Automation for Word mid-run (must abort ONCE with one actionable
-  message, not one error per file).
-* **M1.5 / M1.6** Office leak check and Dock recents tiles after a real phase.
-* **M1.7** long paths — a deep course folder, `office_safe_path`'s ≥240-char
-  shadowing, against macOS's 255-BYTE-per-component limit.
-* **M2.3** `converters/url.py` must spare our `.webloc` while compiling foreign
-  shortcuts, and keep a Windows-written `.url`.
-* **M2.5** transcription on Apple silicon — the CPU path, the out-of-process
-  worker surviving a crash, and cancel mid-transcription leaving no `.part`.
-  **A model must be downloaded first**, which also clears the setup notice.
-* **M2.6** model download + the "Manage installed models" dialog.
-* **M3.3 / M3.4 / M3.8** argv drop, phantom instance, and quit → orphan reaping
-  in the PACKAGED app.
-* **M4.1** HFS+ / NFD — needs an HFS+ image (`mac_smoke.py --with-hfs` covers
-  part of it).
+* **M1.3's Automation revoke.** Revoking Word's Automation for the editor does
+  NOTHING to a session already running - macOS caches the TCC decision in the
+  responsible process. Five convertible `.doc` files still converted in 3.9 s.
+  Do it as the FIRST action after a fresh login, or from a Terminal whose grant
+  you then clear with `tccutil reset AppleEvents com.apple.Terminal`. What is
+  unproven is narrow - whether macOS's denial WORDING reaches the classifier -
+  and after this session's fix the classifier accepts both spellings anyway.
+* **A quit taken DURING a Panopto download or transcription.** M3.8 passed, but
+  with no ffmpeg or worker child alive, so `_terminate_child_processes` was
+  never exercised against a real media child - only the WebKit teardown.
+* **M2.1 / M2.2 / M2.4** - Panopto discovery, double-clicking a `.webloc` in
+  Finder, and mp3/mp4 through the bundled ffmpeg. Not on this session's list.
+* **M4.1 HFS+ / NFD** - needs an HFS+ image (`hdiutil`); `mac_smoke.py
+  --with-hfs` covers part of it.
 
----
+None of the register's 8 open findings is macOS-specific - they are Windows or
+cross-platform. Investigate those OFF this machine.
 
 ## Traps this session paid for
 
@@ -120,3 +157,8 @@ Nothing on a rented box survives reimaging, but these are the operator's:
    does not need it; it was granted so the agent could drive the WebView.
 3. Test folders under `/tmp/wkwebview_course`, `/tmp/pkgcfg` and
    `~/Library/Mobile Documents/com~apple~CloudDocs/CD*` are disposable.
+4. `/tmp/m2 m13 m17 m17c m17x m23 m26 m34` (this session, ~43 MB total,
+   mostly a generated lecture mp3) - disposable.
+5. The **small Whisper model** at `panopto_models/small` (464 MiB, gitignored).
+   Keep it if the next session does Panopto work; delete it to get the
+   transcription-setup notice back.
