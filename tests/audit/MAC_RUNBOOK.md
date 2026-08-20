@@ -1160,10 +1160,45 @@ After a real Word phase plus the in-process teardown,
 `quit saving no` also lands cleanly. The leaked-`EXCEL.EXE` finding is a
 Windows shape; the Mac does not share it.
 
-### M1.6 - Dock recents
+### M1.6 - Recents: TWO different stores, and the first check read the wrong one
 
-**0 tiles of ours** after a phase that opened five staged `src_*` documents in
-Word (`defaults export com.apple.dock`, checking every tile array).
+**CORRECTED the same day, by the operator noticing what the check could not.**
+The first pass reported "0 tiles of ours" from `defaults export com.apple.dock`
+and called M1.6 clean. Then the operator opened Word and found its start-screen
+Recents full of our staged `src_*` files.
+
+Both statements were true, because they are **different stores**:
+
+| store | holds | read with |
+|---|---|---|
+| Dock tiles | the Dock's own recent-apps / recent-documents | `defaults export com.apple.dock` (`mac_eyes dock`) |
+| **Office Recents** | what Word/Excel/PowerPoint show on their start screen | `~/Library/Group Containers/UBF8T346G9.Office/MicrosoftRegistrationDB.reg`, table `HKEY_CURRENT_USER` |
+
+`purge_stale_self_dock_tiles` is about the FIRST; the thing a user actually
+sees after a conversion phase is the SECOND. **Measure the Office registry**
+- `scripts/verify_office_end_to_end.py:_recents_ours()` already does, and it is
+the check to reuse.
+
+**The purge itself is correct, and it clears the BACKLOG.** Measured with 10 of
+our entries accumulated across the day's runs:
+
+    recents_ours_before: 10  ->  recents_ours_after: 0     VERDICT: ALL GOOD
+
+It matches on the marker (`CanvasDownloaderTmp`), so a single later run cleans
+everything left by earlier ones - the entries do not need the run that made
+them. The staged temp dirs are gone too, so those Recents rows point at files
+that no longer exist, which is exactly the condition the purge exists for.
+
+**Why the backlog existed at all - both reasons are harness, not product:**
+
+1. Ad-hoc conversion scripts that never call `quit_idle_office_apps()` leave
+   the entries, because the purge is part of the TEARDOWN.
+2. The purge **declines for a RUNNING app**, by design - an entry would be
+   resurrected from that app's in-memory list on exit. So with Word open
+   nothing is cleaned, and that is correct rather than a stall.
+
+Combined with the fresh-interpreter trap in M1.3, a purge check has THREE ways
+to report a false failure: wrong store, wrong process, app still running.
 
 Two things NOT to misread here. A `Microsoft Error Reporting` entry appears in
 `recent-apps` after you **`pkill`** a wedged Word - it is Microsoft's app, not a
