@@ -10,17 +10,26 @@ The agent's brief is `MAC_AUDIT_PROMPT.md`; what to test is `MAC_RUNBOOK.md`.
 
 ## How this works, in one paragraph
 
-You type **one command** in Scaleway's VNC console. It installs everything —
-Xcode tools, Homebrew, VS Code + extensions, Microsoft Office, Python, tmux —
-and takes 30-45 minutes mostly unattended. Then you leave VNC for good and work
-from **VS Code on your Windows PC connected over Remote-SSH**: the editor is
-local and instant, the files and terminal are the Mac's. The agent runs in that
-terminal, on the Mac, and can see the Mac's screen with `screencapture`. That
-is what removes the shuttling.
+You **SSH in from your own PC** and run one setup script. It installs
+everything (Xcode tools, Homebrew, VS Code + extensions, NoMachine, Microsoft
+Office, Python, tmux) in 30-45 minutes, mostly unattended. Then you VNC in
+**once**, to answer the consent prompts and grant NoMachine its two
+permissions. From then on you work on the Mac's own desktop through
+**NoMachine**: **VS Code running on the Mac**, with Claude Code in its
+terminal.
 
-**Three things need the Mac's own screen and cannot be automated:** signing in
-to Office (licensing), granting TCC permissions, and pressing the button on a
-consent prompt. Roughly 10 minutes total.
+**That last part is the workflow, and it is not merely a preference.** A VS
+Code launched from the Mac's Dock is a child of the console session, so its
+terminal is in **Aqua by construction**: the Keychain works, Office automation
+works, TCC prompts appear in front of you, and none of the tmux gymnastics in
+Part 4 applies. Remote-SSH from Windows puts you back in a *Background*
+session where all three fail, each differently and none of them saying why.
+Earlier versions of this guide recommended exactly that and it cost an
+afternoon.
+
+**What still needs a human at the screen:** answering consent prompts (macOS
+refuses synthetic clicks on them by design), signing in to Office, and granting
+Full Disk Access + Screen Recording. Roughly 10 minutes total.
 
 ---
 
@@ -44,10 +53,14 @@ git push
 
 ### 0.2 On your Windows PC
 
-- **VS Code** with the **Remote - SSH** extension. This is your IDE for the
-  whole day — install it now, not on the Mac.
+- A **VNC client**. TigerVNC is known to work against macOS's ARD auth. You
+  need it once, in Part 3, and only to grant NoMachine its permissions.
+- The **NoMachine client**. This is what you actually work in all day.
 - Your `mac_audit_secrets.env` (you have this).
 - Microsoft 365 credentials to hand.
+
+You do *not* need VS Code on Windows. The IDE runs on the Mac, and the setup
+script installs it there.
 
 ---
 
@@ -65,17 +78,29 @@ Note the VNC address/password and the SSH user/IP.
 
 ---
 
-# PART 2 — The one command (VNC, ~40 min)
+# PART 2 — The setup script (SSH, ~40 min)
 
-Connect with Scaleway's VNC console. It will be slow. You are here once.
-
-**Open a terminal:** press `Cmd+Space`, type `Terminal`, press `Return`.
-
-**Paste this and press Return** (paste is `Cmd+V`):
+No desktop needed for this. From Windows PowerShell, or any terminal:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_first_contact.sh | bash
+ssh m1@<mac-ip>
 ```
+
+Then, on the Mac:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_first_contact.sh -o ~/fc.sh
+bash ~/fc.sh
+```
+
+> **Download it, then run it. NEVER pipe it into bash.** Piped, the script's own
+> text is on stdin and `brew install` **reads stdin**: it swallows the rest of
+> the file, bash hits EOF and exits **0**. Measured 2026-08-20, it stopped dead
+> at the toolchain step having printed no error and no `[!!]`, so VS Code,
+> NoMachine and Office never installed. The next half hour went on debugging a
+> NoMachine "connection refused" that was really a script which had ended
+> silently twenty minutes earlier. It fails as a *clean exit*, which is the most
+> misleading way available.
 
 It asks for your password once at the start and then runs unattended. In order:
 
@@ -84,55 +109,72 @@ It asks for your password once at the start and then runs unattended. In order:
 | SSH on, sleep + auto-lock off | so you can leave VNC and the machine survives the day |
 | Xcode Command Line Tools | installed **headlessly** via `softwareupdate` where possible |
 | Homebrew | everything below depends on it |
-| **VS Code** + Claude Code, Python, Remote-SSH extensions | your IDE |
-| **NoMachine** | a fast remote desktop for the few visual checks |
+| **VS Code** + Claude Code, Python, Remote-SSH extensions | your IDE, run **on the Mac** |
+| **NoMachine** | the remote desktop you work in all day, port 4000 |
 | **Microsoft Office** (~2 GB) | downloaded and installed for you |
 | git, tmux, python@3.11, uv | the audit toolchain |
 
 Go and do something else for half an hour.
 
-### 2.1 When it finishes — three things, on this screen
+### 2.1 When it finishes
 
-1. **Open Word** (`Cmd+Space`, "Word") and **sign in** with Microsoft 365.
-   Installing Office does not licence it. Skip this and every conversion dies
-   at a licence dialog and the whole converter phase reads as broken.
-2. **Full Disk Access**: System Settings → Privacy & Security → Full Disk
-   Access → **+** → Terminal.
-3. **Start the session on this desktop:**
+Verify it reached the end rather than assuming it did. The failure mode above
+is silent, so this is not ceremony:
 
-   ```bash
-   tmux kill-server 2>/dev/null; cd ~ && tmux new -s audit
-   ```
+```bash
+ls -d "/Applications/Visual Studio Code.app" /Applications/NoMachine.app "/Applications/Microsoft Word.app"
+sudo lsof -nP -iTCP:4000 -sTCP:LISTEN
+```
 
-   > **The `kill-server` is load-bearing, not tidying.** A tmux *server* is one
-   > process per user socket, and `tmux new` joins the running one instead of
-   > starting another. So if anything has already opened a tmux over SSH that
-   > day — running the setup script, say — this command creates an Aqua-looking
-   > session *inside the Background server*, inherits Background, and every
-   > Keychain result is quietly false with nothing to see. The first tmux server
-   > of the day must be born here.
-
-   > This matters more than it looks. macOS gives an SSH login a *Background*
-   > launchd session with **no window server**: osascript cannot drive Word,
-   > Playwright cannot open a browser, TCC prompts cannot appear — each failing
-   > differently and none of them saying why. A tmux **server** keeps the
-   > session it was born in, so starting it here and attaching from SSH later
-   > is what makes the whole day work. It is also the only way the **Keychain**
-   > becomes reachable at all — see Part 4, and check it before you trust a
-   > single token result.
-
-Leave tmux running. **You are done with VNC.**
+Three paths and a listening `nxserver` means you are through.
 
 ---
 
-# PART 3 — Move to VS Code on Windows
+# PART 3 — VNC once, then NoMachine for the rest
 
-1. VS Code → `F1` → **Remote-SSH: Connect to Host** → `<user>@<mac-ip>`
-2. **File → Open Folder** → `/Users/<user>/Canvas_Downloader`
-   *(it does not exist yet — that is fine, do it after 3.2)*
-3. Open a terminal in VS Code (`` Ctrl+` ``). It is a shell **on the Mac**.
+### 3.1 VNC in and answer the prompts
 
-### 3.1 Bring the secrets over
+Any VNC client, from your own PC. **TigerVNC works** against macOS's ARD
+authentication, so there is nothing to shop for:
+
+```
+<mac-ip>::59010          # host::port; the VNC port is on the Scaleway console
+```
+
+Click **Allow** on every dialog macOS raises, then grant NoMachine both of:
+
+- Privacy & Security -> **Screen & System Audio Recording** -> **+** -> NoMachine
+- Privacy & Security -> **Accessibility** -> **+** -> NoMachine
+
+NoMachine can neither show nor control the screen without them, and **neither
+can be granted from a command line**: no `tccutil` grant exists, and
+`profiles install` for a PPPC payload needs MDM enrolment. That is the entire
+reason VNC is still in this procedure.
+
+### 3.2 Connect NoMachine
+
+Host `<mac-ip>`, port **4000**, protocol **NX**. If the desktop comes up black
+after granting, restart the server: `sudo /etc/NX/nxserver --restart`
+
+Then drop VNC. Everything below happens in the NoMachine window.
+
+### 3.3 Sign in to the apps, on that desktop
+
+1. **Word** (`Cmd+Space`, "Word"), signed in with Microsoft 365. Installing
+   Office does not licence it. Skip this and every conversion dies at a licence
+   dialog and the whole converter phase reads as broken.
+2. **VS Code**, granted **both**:
+   - Privacy & Security -> **Full Disk Access** -> **+** -> Visual Studio Code
+   - Privacy & Security -> **Screen & System Audio Recording** -> **+** -> Visual Studio Code
+
+> **The Screen Recording grant goes to VS Code, not Terminal, and it is not
+> optional.** TCC attributes a capture to the session's *responsible process*,
+> which in this workflow is VS Code. Without it `screencapture` returns a bare
+> desktop, and a blank capture is indistinguishable from a blank app: that is
+> precisely how the last run nearly filed a CRITICAL against the packaged app's
+> WKWebView rendering. `MAC_RUNBOOK.md` has the measured BLIND/capturable table.
+
+### 3.4 Bring the secrets over
 
 From a Windows terminal:
 
@@ -140,12 +182,11 @@ From a Windows terminal:
 scp mac_audit_secrets.env <user>@<mac-ip>:~/
 ```
 
-### 3.2 Clone and build the environment
+### 3.5 Clone and build the environment
 
-In the VS Code terminal:
+Open VS Code **on the Mac**, `` Ctrl+` `` for a terminal, and:
 
 ```bash
-tmux attach -t audit
 git clone https://github.com/BrkBuilds/Canvas-Downloader.git ~/Canvas_Downloader
 cd ~/Canvas_Downloader && ./scripts/mac_audit_bootstrap.sh
 git checkout -b macos-audit-26        # this run's fixes go here
@@ -156,11 +197,12 @@ Quartz, Playwright's Chromium, the settings file, the Keychain token (from your
 `.env`, with a no-prompt ACL so nothing asks for a password mid-run), and
 Claude Code.
 
-**Why `tmux attach` first:** so everything you start inherits the desktop's
-graphical session. VS Code's terminal is an SSH session; without attaching to
-that tmux you are back in the Background session and Office automation fails.
+**There is no `tmux attach` in this workflow.** That step existed only to drag
+an SSH shell back into the graphical session, and VS Code on the Mac is already
+in it. The console session also outlives a NoMachine disconnect, so VS Code and
+anything it started keep running when you close the window.
 
-### 3.3 Authenticate the agent
+### 3.6 Authenticate the agent
 
 ```bash
 claude
@@ -185,22 +227,26 @@ The doctor probes window-server access directly (screencapture, System Events,
 launching a GUI app). Do **not** gate on `launchctl managername == "Aqua"` -
 it reports `Background` on a Scaleway Mac even when everything works.
 
-**The Keychain is the exception to that, and it is the trap that cost the last
-run its time.** It is scoped to the security session, not the framebuffer, so a
-tmux born over SSH drives the whole GUI and still cannot create an item of its
-own (`errSecInteractionNotAllowed`, -25308). Every Keychain observation in the
-audit is then false rather than the product: the token save "fails", auto-login
-"does not restore", the 90 s watchdog looks like it is being hit.
+**The Keychain is the exception to that, and it is the trap that cost an
+earlier run its time.** It is scoped to the security session, not the
+framebuffer, so a shell that drives the whole GUI can still be unable to create
+an item of its own (`errSecInteractionNotAllowed`, -25308). Every Keychain
+observation in the audit is then false rather than the product: the token save
+"fails", auto-login "does not restore", the 90 s watchdog looks like it is
+being hit.
 
 ```bash
 python3 scripts/mac_aqua.py check       # session + Keychain, one line each
 ```
 
-`keychain usable: True` is the gate. If it is False, the root fix is to start
-tmux from a Terminal **on the desktop** (2.1 step 3) and re-attach. If you are
-already mid-session and do not want to lose it, route the command instead —
-Terminal.app is started by Launch Services inside Aqua and every child inherits
-it, a long-lived Streamlit included:
+`keychain usable: True` is the gate. **In the NoMachine workflow it should
+already be True**, because VS Code was launched from the Mac's own Dock and its
+terminal inherits the console session. If it is False, the likeliest cause is
+that you are running in a shell that arrived over SSH after all (a Remote-SSH
+window, or a `tmux` server that was born over SSH). Work in the Mac-side VS
+Code terminal instead. If you are mid-session and do not want to lose it, route
+the command instead: Terminal.app is started by Launch Services inside Aqua and
+every child inherits it, a long-lived Streamlit included:
 
 ```bash
 python3 scripts/mac_aqua.py run "python -m tests.audit app start"
@@ -339,12 +385,19 @@ Then **revoke the Canvas token**, destroy the instance, merge the branch.
 # The whole thing, as commands
 
 ```bash
-# ── VNC, once: Cmd+Space -> Terminal -> paste ───────────────────────
-curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_first_contact.sh | bash
-# then: sign into Word | Full Disk Access for Terminal | cd ~ && tmux new -s audit
+# ── 1. SSH from Windows PowerShell. NEVER pipe this into bash. ──────
+ssh m1@<mac-ip>
+curl -fsSL https://raw.githubusercontent.com/BrkBuilds/Canvas-Downloader/main/scripts/mac_first_contact.sh -o ~/fc.sh
+bash ~/fc.sh
 
-# ── VS Code Remote-SSH from Windows, everything after ───────────────
-tmux attach -t audit
+# ── 2. VNC once (<mac-ip>::59010): click Allow on everything, then ──
+#      Privacy & Security -> Screen Recording  -> + -> NoMachine
+#      Privacy & Security -> Accessibility     -> + -> NoMachine
+
+# ── 3. NoMachine: <mac-ip>, port 4000, protocol NX. Drop VNC. ───────
+#      Sign into Word (M365). Grant VS Code Full Disk Access AND
+#      Screen Recording. Then, in VS Code's terminal ON THE MAC:
+
 git clone https://github.com/BrkBuilds/Canvas-Downloader.git ~/Canvas_Downloader
 cd ~/Canvas_Downloader && ./scripts/mac_audit_bootstrap.sh
 

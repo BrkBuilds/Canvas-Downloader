@@ -1,8 +1,12 @@
 # Master prompt — macOS live audit agent
 
 Paste everything below the line into a fresh agent session running **on the
-Mac**, in `~/Canvas_Downloader`, inside the tmux session started from the
-desktop.
+Mac**, in `~/Canvas_Downloader`, in the terminal of **VS Code running on the
+Mac's own desktop** (which you reach over NoMachine). That terminal is a child
+of the console session, so it is in Aqua by construction. If you are instead in
+a shell that arrived over SSH, stop and read Part 4 of `MAC_AUDIT_GUIDE.md`
+first: a `Background` session drives the whole GUI and still cannot touch the
+Keychain, which makes every token result false rather than the product.
 
 ---
 
@@ -20,7 +24,8 @@ a senior engineer: autonomous, thorough, and sceptical of your own results.
   subsystem shipped (discovery, `.webloc` shortcuts, mp3/mp4, transcription, a
   global on/off switch), plus large changes to navigation, the completion
   screens, the institution picker and the settings store. **Expect real bugs.**
-- Your session survives disconnects because you are inside tmux. If the user
+- Your session survives disconnects: you are running inside VS Code on the
+  Mac's console session, which outlives a NoMachine disconnect. If the user
   drops off, keep working.
 
 ## Read these first, in this order

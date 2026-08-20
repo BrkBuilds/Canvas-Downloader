@@ -226,8 +226,10 @@ def main() -> int:
             print(f"keychain usable: {ok}  ({note})")
             if not ok:
                 print("\nThe Keychain is scoped to the security session, unlike the window")
-                print("server. Start tmux from a Terminal inside the graphical session, or")
-                print("route the app through:  python3 scripts/mac_aqua.py run '<cmd>'")
+                print("server. Work in a shell born inside the graphical session - normally")
+                print("VS Code running on the Mac's own desktop, over NoMachine. Fallbacks:")
+                print("a tmux server started from a Terminal on the desktop, or route one")
+                print("command through:  python3 scripts/mac_aqua.py run '<cmd>'")
         return 0 if ok else 1
 
     res = run(a.command, cwd=a.cwd, timeout=(a.timeout or 1e9),

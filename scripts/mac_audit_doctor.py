@@ -389,8 +389,11 @@ def check_keychain_session():
     else:
         ok, detail = False, f"{type(value).__name__}: {value}"[:200]
     add("Keychain usable from this session", ok, BLOCK, detail,
-        "Start tmux from a Terminal INSIDE the graphical session so every pane\n"
-        "      inherits Aqua, or route the app through\n"
+        "Work in a shell born INSIDE the graphical session. Normally that is\n"
+        "      the terminal of VS Code running on the Mac's own desktop (over\n"
+        "      NoMachine) - if you are here, you are probably in an SSH shell\n"
+        "      instead. Fallbacks: a tmux server started from a Terminal on the\n"
+        "      desktop, or route one command through\n"
         "      `python3 scripts/mac_aqua.py run '<cmd>'`. Check either with\n"
         "      `python3 scripts/mac_aqua.py check`.")
 
