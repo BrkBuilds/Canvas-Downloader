@@ -363,15 +363,18 @@ def test_every_notice_state_emits_exactly_one_element(state):
 
 
 def test_the_waiting_copy_carries_the_one_measured_instruction():
-    """MEASURED on macOS 26.6.1: plain 'Allow' leaves the item's ACL untouched,
-    so the prompt returns on EVERY launch; only 'Always Allow' updates it. A
-    rewrite that drops this sentence costs the user a prompt every single time
-    they open the app, and nothing else in the product would say so."""
+    """MEASURED on macOS 26.6.1, twice over, and BOTH halves belong in the copy:
+    plain 'Allow' leaves the item's ACL untouched so the prompt returns on EVERY
+    launch, and it also puts up a SECOND dialog immediately (observed by the
+    operator across three runs), while 'Always Allow' does neither. A rewrite
+    that drops this costs the user a prompt every single time they open the app,
+    and nothing else in the product would ever say so."""
     html = auth._kc_notice_html("waiting")
     assert "Always Allow" in html
-    assert re.search(r"<i>Allow</i>\s*works only once", html), \
+    assert re.search(r"Plain\s*<i>Allow</i>", html), \
         "the copy must warn that plain Allow is not enough"
-    assert "every time you open the app" in html
+    assert "second dialog" in html, "plain Allow costs an extra dialog right now"
+    assert "every time you open the app" in html, "...and one on every launch after"
 
 
 def test_the_waiting_copy_reassures_before_it_instructs():
