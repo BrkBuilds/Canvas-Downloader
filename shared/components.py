@@ -3403,6 +3403,47 @@ _DOT = ("<span style='display:inline-block;margin:0 7px;opacity:0.5;"
         f"color:{theme.TEXT_PRIMARY};'>&middot;</span>")
 
 
+def panopto_summary_has_outcome(summary: dict | None) -> bool:
+    """Did this run PRODUCE anything with Panopto that is worth a results card?
+
+    Extracted so it can be tested against the real decision rather than a copy.
+    Both test files import THIS; they used to mirror it, and a mirror passes
+    happily while the shipped guard is wrong - measured 2026-08-20, where
+    reverting the real guard failed only the source-text checks.
+
+    The rule is exactly "did the run produce something": downloaded,
+    transcribed, a shortcut, or an error worth reporting. Nothing else counts.
+
+    **Selecting is not producing**, and that clause is what this replaced.
+    Reported by the operator on the real completion screen (macOS 26.6.1, course
+    43660, 2026-08-20): a folder configured for txt/srt with no transcription
+    model selected 36 recordings, produced nothing, and rendered "36 processed /
+    0 DOWNLOADED / 0 TRANSCRIBED" - a success card made entirely of zeros.
+    Product owner's call the same day: hide it. "Hide until relevant."
+
+    **Already-up-to-date does not count either**, and that is the same rule, not
+    an exception to it: that card is a zero stat plus an "N already up to date"
+    subtitle, which is the very shape being suppressed. Note this leaves the
+    fallback summary in ``sync/execution.py`` (written when every recording is
+    current) with nothing to render - it is inert for this card by design now,
+    not accidentally.
+
+    Download mode additionally needs ``found > 0``: a run that found no
+    recordings has nothing to report even if some other counter is non-zero.
+    """
+    if not summary:
+        return False
+    produced = (int(summary.get('downloaded', 0) or 0)
+                or int(summary.get('transcribed', 0) or 0)
+                or int(summary.get('shortcuts', 0) or 0)
+                or int(summary.get('failed', 0) or 0))
+    if not produced:
+        return False
+    if 'uptodate' not in summary and int(summary.get('found', 0) or 0) <= 0:
+        return False
+    return True
+
+
 def render_panopto_summary(summary: dict | None) -> None:
     """Render a Panopto results card on the Download / Sync completion screens.
 
@@ -3435,14 +3476,9 @@ def render_panopto_summary(summary: dict | None) -> None:
     # recordings). Two panels describing the same event, one of them as a
     # success metric reading zero. Measured on course 43660 with a 5 MB limit:
     # 25 over-limit Canvas files + 36 over-limit recordings = the 61 reported.
-    _did_work = (int(summary.get('downloaded', 0) or 0)
-                 or int(summary.get('transcribed', 0) or 0)
-                 or int(summary.get('shortcuts', 0) or 0)
-                 or int(summary.get('failed', 0) or 0)
-                 or (selected if is_sync else 0))
-    if not _did_work:
-        return
-    if not is_sync and found <= 0:
+    # ONE decision, in one place - see `panopto_summary_has_outcome`, which is
+    # module-level so tests exercise the real thing instead of a copy.
+    if not panopto_summary_has_outcome(summary):
         return
 
     # Reuse the completion stat-card styling so this section matches the top
