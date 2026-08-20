@@ -1064,3 +1064,63 @@ natively raises macOS's own *"Python quit unexpectedly"* crash-reporter dialog
 (in a packaged build it would name `Canvas_Downloader_Worker`). The app is fine
 and handles it - but the OS announces it regardless, and nothing in-process can
 suppress ReportCrash. Do not read that dialog as the app crashing.
+
+## M1.3 - forcing a conversion failure, live against real Word (2026-08-20)
+
+The macOS delete gate (`pdf_looks_real` on the AppleScript branch) had only ever
+been driven by SIMULATION - `sys.platform` patched to darwin with the bridge
+stubbed to leave a 0-byte file. This is the first time real Word has been made
+to fail on a Mac and the folder inspected afterwards.
+
+**Setup that works, and why each file is there.** `textutil -convert doc` makes
+a genuine legacy `.doc` (the runbook's own trap note - do NOT try to build one
+by driving Word). Four unconvertible siblings, ordered AFTER the good one so a
+success resets the repeat counter first:
+
+| file | how | what Word does |
+|---|---|---|
+| `good.doc` | `textutil -convert doc` | converts - the CONTROL |
+| `garbage.doc` | 4 KB `/dev/urandom` | hangs, then `-1712` timeout |
+| `truncated.doc` | first 200 B of `good.doc` | modal, `-30001` |
+| `empty.doc` | 0 bytes | modal, `-30001` |
+| `pretend.doc` | plain text | never reached (skipped) |
+
+**Result - every property holds:**
+
+    success 1  failure 4        systemic_failure() -> ('Word', 3)
+    good.doc   GONE -> good.pdf (7890 B, real PDF)
+    garbage / truncated / empty / pretend  ALL UNCHANGED
+    stub PDFs in the folder: NONE
+
+So the source-survival gate works against real Office failures, and the product
+gate refused to promote every failed output. Reproduced twice, identically.
+
+**The abort is ONE message, and its diagnosis is TRUE.** Three per-file errors,
+then the phase ended with a single line:
+
+> Microsoft Word failed on 3 files in a row with the same error (...). It is
+> most likely waiting on a dialog and will not convert anything else this run.
+> Quit Microsoft Word and run again to convert the rest. - skipping remaining 1
+> Word file(s)
+
+That claim was checked against the screen rather than believed: System Events
+reported Word holding exactly one window, `subrole=AXDialog`, titled
+**"File Conversion - src_efb781.doc"** - the encoding picker. O2 and O3 agree.
+The staged name also confirms the `src_<6 hex>` unique-basename fix is live.
+
+**The teardown recovers a modal-wedged Word**: `quit_idle_office_apps()` in the
+same process quit it in **12 s** while it sat on that alert holding our staged
+document. So "run again" works with no user action - the instruction is
+redundant when Word was ours, and necessary when it was the user's, which is
+the direction that matters.
+
+**THE HARNESS TRAP THAT NEARLY BECAME A FINDING.** Calling
+`quit_idle_office_apps()` from a FRESH interpreter logs
+`Microsoft Word -> left alone (we never drove it this run)` and quits nothing -
+correctly, because `_office_preexisting` is process-local per-run state and a
+new process has observed nothing. That reads exactly like the gate failing. Any
+teardown check must run in the SAME process as the conversions.
+
+Second trap: `run_word_conversion` needs a real `SyncManager` in its file
+tuples. Passing `None` raises inside `_update_manifest_path` AFTER the source
+has already been deleted.
