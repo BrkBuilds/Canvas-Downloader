@@ -123,12 +123,55 @@ they are Windows (the two COM `EXCEL.EXE` leaks, `bridged_warning`) or
 cross-platform (the identical-size orphan pair, the Panopto-formats config gap,
 the model-delete UX, the read-only `os.replace` note).
 
-Two things a future Mac session could still do, both optional:
+### What is NOT proven - written down deliberately, because a closed list
+### of steps is not the same as a covered surface
 
-* **mp4** was deliberately left off (bandwidth); only the mp3 muxer path is
-  proven. M2.4's video half is untested.
-* **A LOCAL (non-remote) session** would settle whether the osascript
-  notification fallback can banner, which NoMachine confounds.
+Ranked. The first is the one that would keep me up at night.
+
+1. **The PACKAGED app has never successfully converted an Office file.** Every
+   successful conversion this session ran under the venv, i.e. under the
+   EDITOR's TCC identity. The bundle's own identity
+   (`com.canvasdownloader.app`) has only ever been observed **denied**
+   (M1.3) - 3 failures, 0 successes in its debug log. That matters more than
+   it sounds: this is the subsystem that DELETES the user's original, and the
+   bundle differs from the venv in sandbox, entitlements and container
+   access. To close it: `tccutil reset AppleEvents com.canvasdownloader.app`
+   has already been run, so the next packaged Office run prompts fresh -
+   click **Allow** and confirm a real `%PDF-` appears and the `.doc` is gone.
+
+2. **A DENIED powerbox prompt is an untested user state.** "Canvas Downloader
+   would like to access data from other apps" was only ever ALLOWED here. Its
+   wording is vague enough that a cautious student will decline, and what
+   `office_container_stage` then does - a clean error, or a confusing
+   file-access failure blamed on the document - is unknown.
+
+3. **The transcription phase never COMPLETED in the packaged app.** The worker
+   spawned correctly at `[1/36]` and was deliberately killed there for M3.8,
+   so no transcript was recorded to a manifest by the bundle. The frozen
+   worker itself IS proven (byte-identical output to dev, `routed_via=env`),
+   and so is the runner's spawn - only the tail of the chain is unseen.
+   The Panopto COMPLETION SCREEN was never reached either.
+
+4. **The `.part` self-heal is reasoned, not measured in situ.** Calling
+   `_clean_part_files` on the orphan removed it (1 -> 0), and the code shows
+   the recording would be a task again next run - but no second Panopto pass
+   was run to watch the sweep happen by itself.
+
+5. **"Quitting while a TCC prompt is pending records an unclean exit" was not
+   reproduced.** Seen once (`pid=33358 phase='running'`); the same Quit event
+   records `clean_exit: True` when the app is responsive. If it IS real, a
+   user who quits during a permission prompt gets a scary "PREVIOUS SESSION
+   DID NOT EXIT CLEANLY" on their next launch, which is worth knowing.
+
+6. **mp4** was deliberately left off (bandwidth); only the mp3 muxer path is
+   proven. M2.4's video half is untested.
+
+7. **A LOCAL (non-remote) session** would settle whether the osascript
+   notification fallback can banner, which NoMachine confounds.
+
+8. **A genuinely FIRST-RUN machine.** This box now carries answered prompts, a
+   Whisper model, a keychain item and a populated config. Nobody has seen the
+   real first-launch sequence since those accumulated.
 
 ## Traps this session paid for
 
