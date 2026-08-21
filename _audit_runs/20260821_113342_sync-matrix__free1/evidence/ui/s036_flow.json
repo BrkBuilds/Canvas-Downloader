@@ -1,0 +1,73 @@
+{
+  "name": "s036",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "complete",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 3,
+        "id": "sync",
+        "state": "active"
+      },
+      "dash": true,
+      "exceptions": 0,
+      "head": "Syncing...",
+      "tail": "ng\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIndføring i organisationers opbygning og funktion (LA)\n100%\nDOWNLOADED\n2.1 / 2.1 MB\nSPEED\n1.9 MB/s\nFILES\n3 / 3\nTIME REMAINING\n00:00\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx\nSvarark - Gode råd til projektet.docx\nEksempel - Gruppekontrakt.docx\n\nCancel Post-Processing",
+      "waited_s": 24.0
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s036_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "ok": true,
+    "landed_on": "complete",
+    "skipped": "the run finished during the analysis wait",
+    "capture": "s036_complete"
+  },
+  "trace": [
+    {
+      "t": "11:41:47",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "11:42:17",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "complete",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 3,
+          "id": "sync",
+          "state": "active"
+        },
+        "dash": true,
+        "exceptions": 0,
+        "head": "Syncing...",
+        "tail": "ng\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIndføring i organisationers opbygning og funktion (LA)\n100%\nDOWNLOADED\n2.1 / 2.1 MB\nSPEED\n1.9 MB/s\nFILES\n3 / 3\nTIME REMAINING\n00:00\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx\nSvarark - Gode råd til projektet.docx\nEksempel - Gruppekontrakt.docx\n\nCancel Post-Processing",
+        "waited_s": 24.0
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s036_after_analysis",
+      "ok": true
+    }
+  ]
+}

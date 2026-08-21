@@ -1,0 +1,146 @@
+{
+  "name": "s023",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "\nEdited locally\n2\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (2/4)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n4 files pending sync\n258 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 27.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s023_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_update_43660",
+      "cat_deleted_local_43660"
+    ],
+    "capture": "s023_review",
+    "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/evidence/screenshots/s023_review.png",
+    "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/evidence/ui/s023_review.json",
+    "textLen": 1242,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    }
+  ],
+  "confirm": {
+    "ok": true,
+    "skipped": "--no-confirm",
+    "capture": "s023_review_only"
+  },
+  "trace": [
+    {
+      "t": "11:38:40",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "11:39:12",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "\nEdited locally\n2\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (2/4)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n4 files pending sync\n258 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 27.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s023_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "11:39:13",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_43660",
+        "cat_deleted_local_43660"
+      ],
+      "capture": "s023_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/evidence/screenshots/s023_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/evidence/ui/s023_review.json",
+      "textLen": 1242,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "11:39:15",
+      "action": "select_category",
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "11:39:15",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    },
+    {
+      "t": "11:39:15",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_43660",
+        "cat_deleted_local_43660"
+      ],
+      "capture": "s023_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/evidence/screenshots/s023_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/evidence/ui/s023_review.json",
+      "textLen": 1242,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+
+=== audit app start 2026-08-21 14:20:51 port=8800 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8800
+  Network URL: http://62.210.193.82:8800
+  External URL: http://62.210.193.82:8800
+
+/Users/m1/Canvas_Downloader/.venv/lib/python3.11/site-packages/openpyxl/reader/drawings.py:67: UserWarning: wmf image format is not supported so the image is being dropped
+  warn(msg)
+/Users/m1/Canvas_Downloader/.venv/lib/python3.11/site-packages/openpyxl/worksheet/_reader.py:329: UserWarning: Unknown extension is not supported and will be removed
+  warn(msg)
+/Users/m1/Canvas_Downloader/.venv/lib/python3.11/site-packages/openpyxl/reader/drawings.py:33: UserWarning: DrawingML support is incomplete and limited to charts and images only. Shapes and drawings will be lost.
+  warn("DrawingML support is incomplete and limited to charts and images only. Shapes and drawings will be lost.")
+  Stopping...

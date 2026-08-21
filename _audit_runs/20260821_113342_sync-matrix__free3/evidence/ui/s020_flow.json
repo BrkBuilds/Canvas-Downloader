@@ -1,0 +1,73 @@
+{
+  "name": "s020",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "complete",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 3,
+        "id": "sync",
+        "state": "active"
+      },
+      "dash": true,
+      "exceptions": 0,
+      "head": "Syncing...",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\n\nPOST-PROCESSING\n\nConverting HTML Pages to Markdown\n0%\nCONVERTED\n0 / 2\nTYPE\nHTML → MD\nTIME REMAINING\n~00:01\nCONVERTING 2 HTML FILES TO MARKDOWN\nSkabelon til klyngevejledning 2.docx\nKlyngevejledning 1_grp 10.docx\nUge 13 pensum.html\nUge 6 pensum.html\n\nCancel Post-Processing",
+      "waited_s": 27.1
+    },
+    "panopto_notice": {
+      "shown": true,
+      "accepted": true
+    },
+    "capture": "s020_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "ok": true,
+    "landed_on": "complete",
+    "skipped": "the run finished during the analysis wait",
+    "capture": "s020_complete"
+  },
+  "trace": [
+    {
+      "t": "11:38:03",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "11:38:37",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "complete",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 3,
+          "id": "sync",
+          "state": "active"
+        },
+        "dash": true,
+        "exceptions": 0,
+        "head": "Syncing...",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\n\nPOST-PROCESSING\n\nConverting HTML Pages to Markdown\n0%\nCONVERTED\n0 / 2\nTYPE\nHTML → MD\nTIME REMAINING\n~00:01\nCONVERTING 2 HTML FILES TO MARKDOWN\nSkabelon til klyngevejledning 2.docx\nKlyngevejledning 1_grp 10.docx\nUge 13 pensum.html\nUge 6 pensum.html\n\nCancel Post-Processing",
+        "waited_s": 27.1
+      },
+      "panopto_notice": {
+        "shown": true,
+        "accepted": true
+      },
+      "capture": "s020_after_analysis",
+      "ok": true
+    }
+  ]
+}

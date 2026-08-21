@@ -1,0 +1,208 @@
+{
+  "name": "s029",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": " filetype\n\nDOCX (2/4)\n\nPPTX (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n6 files pending sync\n256 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 4 files",
+      "waited_s": 27.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s029_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_43660",
+      "cat_update_43660",
+      "cat_updmod_43660"
+    ],
+    "capture": "s029_review",
+    "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/screenshots/s029_review.png",
+    "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/ui/s029_review.json",
+    "textLen": 1660,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "\n\n​\n\n​\n\nOrganisationsprojekt - operationalisering af teori\nUdfaldsrum Beskrivelser.docx\n\n​\n\n​\n\nTema 4 Ledelse og strategi - beslutninger i organisationer\n Modified Files Protected (2)\nSaved next to your copy, which was left untouched\nEksempel - Gruppekontrakt_NewVersion.docx\n\n​\n\n​\n\nCourse folder\nSvarark - Gode råd til projektet_NewVersion.docx\n\n​\n\n​\n\nØvelser i uge 18\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 10.0
+    },
+    "capture": "s029_complete",
+    "ok": true,
+    "panopto_notice": {
+      "shown": false,
+      "moved_on": "page_nav_start_sync"
+    },
+    "dialog": {
+      "done": true,
+      "title": "​",
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "e\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nYou've modified your local copies of these files. They are unchecked by default to protect your edits. If you sync them, the new Canvas version will be saved alongside as _NewVersion — your edited copy is never touched.\n\nEksempel - Gruppekontrakt DOCX 13.9 KB\n\nSvarark - Gode råd til projektet DOCX 15.4 KB\n\nGo back\n\nSync & Download 6 files",
+      "waited_s": 0.0
+    }
+  },
+  "trace": [
+    {
+      "t": "13:26:31",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "13:27:03",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": " filetype\n\nDOCX (2/4)\n\nPPTX (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n6 files pending sync\n256 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 4 files",
+        "waited_s": 27.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s029_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "13:27:05",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43660",
+        "cat_update_43660",
+        "cat_updmod_43660"
+      ],
+      "capture": "s029_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/screenshots/s029_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/ui/s029_review.json",
+      "textLen": 1660,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "13:27:06",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "13:27:06",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43660",
+        "cat_update_43660",
+        "cat_updmod_43660"
+      ],
+      "capture": "s029_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/screenshots/s029_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/ui/s029_review.json",
+      "textLen": 1660,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "13:27:20",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "\n\n​\n\n​\n\nOrganisationsprojekt - operationalisering af teori\nUdfaldsrum Beskrivelser.docx\n\n​\n\n​\n\nTema 4 Ledelse og strategi - beslutninger i organisationer\n Modified Files Protected (2)\nSaved next to your copy, which was left untouched\nEksempel - Gruppekontrakt_NewVersion.docx\n\n​\n\n​\n\nCourse folder\nSvarark - Gode råd til projektet_NewVersion.docx\n\n​\n\n​\n\nØvelser i uge 18\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 10.0
+      },
+      "capture": "s029_complete",
+      "ok": true,
+      "panopto_notice": {
+        "shown": false,
+        "moved_on": "page_nav_start_sync"
+      },
+      "dialog": {
+        "done": true,
+        "title": "​",
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "e\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nYou've modified your local copies of these files. They are unchecked by default to protect your edits. If you sync them, the new Canvas version will be saved alongside as _NewVersion — your edited copy is never touched.\n\nEksempel - Gruppekontrakt DOCX 13.9 KB\n\nSvarark - Gode råd til projektet DOCX 15.4 KB\n\nGo back\n\nSync & Download 6 files",
+        "waited_s": 0.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "name": "m008_phase_scan",
+  "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__free4/evidence/screenshots/m008_phase_scan.png",
+  "captured": "2026-08-21 14:55:41",
+  "screen": {
+    "url": "http://127.0.0.1:8840/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Download Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_done_donesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nAll Up to Date\n\nNothing to download - all files are up to date!\n\nNo files were found - possible connection issue\n\nYour Canvas account connected successfully, but no files or modules were returned. This can happen when your Canvas Access Token is geo-restricted (accessing from a different country than usual), when a firewall or VPN is affecting the connection to your university's server, or during a temporary Canvas outage. Try again on your usual network.\n\n1 course is set up for Slides & PDFs, so its folder is not a complete copy of Canvas.\n\nGo to front page",
+    "textLen": 668
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "done",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "active",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": false,
+    "header": "",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": ""
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "course_id": 43667,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "BINT 1st semester (LA E25 BINTS1SEMU)",
+  "course_code": "BINTS1SEMU.LA_E25 (BINT 1st semester)",
+  "fetched_at": "2026-08-21T14:21:36",
+  "folders": {
+    "393445": {
+      "id": 393445,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {},
+  "modules": [
+    {
+      "id": 297524,
+      "name": "Course description including examination rules",
+      "position": 1,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1012348,
+          "type": "ExternalUrl",
+          "title": "Course description including examination rules",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2025-2026/BA-BINTS1SEMU.aspx",
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "ExternalUrl": 1
+  },
+  "module_file_ids": [],
+  "only_in_modules": [],
+  "only_in_files_tab": [],
+  "files_tab_restricted": false,
+  "assignments": [],
+  "quizzes": [],
+  "announcements": [],
+  "discussions": [],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_by_source": {
+    "announcement": [],
+    "assignment": [],
+    "discussion": [],
+    "syllabus": []
+  },
+  "inline_file_ids": [],
+  "embedded_only_file_ids": [],
+  "inline_only_file_ids": [],
+  "expected_file_ids": [],
+  "secondary_counts": {
+    "assignment": 0,
+    "quiz": 0,
+    "discussion": 0,
+    "announcement": 0,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "quizzes": "ResourceDoesNotExist: Not Found",
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 2.0
+}

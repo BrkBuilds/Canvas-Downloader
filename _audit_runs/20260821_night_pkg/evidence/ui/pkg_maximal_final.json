@@ -1,0 +1,79 @@
+{
+  "name": "pkg_maximal_final",
+  "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_night_pkg/evidence/screenshots/pkg_maximal_final.png",
+  "captured": "2026-08-21 04:57:51",
+  "screen": {
+    "url": "http://127.0.0.1:8501/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Download Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_done_donesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "dl_open_0",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n408\nFILES DOWNLOADED\n3.3\nGB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nPanopto Recordings\n·\n36 found across 1 course\n36\nDOWNLOADED\n36\nTRANSCRIBED\n36\nLINKS\nCannot Be Downloaded\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n408 FILES\nPDF\n121\nMD\n80\nWEBLOC\n41\nTXT\n38\nOTHER FILES\n128\n\nOpen Folder\n\nGo to front page",
+    "textLen": 481
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

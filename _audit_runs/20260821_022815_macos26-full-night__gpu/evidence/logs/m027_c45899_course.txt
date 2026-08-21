@@ -1,0 +1,1257 @@
+--- Download: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) (ID: 45899) Mode: modules ---
+==================================================
+[2026-08-21 05:42:45.875] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads
+[2026-08-21 05:42:45.875] Filter: study | Concurrency: 5 | Max file size: disabled | Estimated payload: 1214 MB
+[2026-08-21 05:42:45.875] Canvas Content: [syllabus, discussions, submissions] | isolate=no
+[2026-08-21 05:42:45.875] Post-processing: [zip, code, word, video]
+[2026-08-21 05:42:46.429] Processing Module: Course description including examination rules (ID: 309654)
+[2026-08-21 05:42:46.556] Found 1 items in module 'Course description including examination rules'
+[2026-08-21 05:42:46.556]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-21 05:42:46.556] Processing Module: Informationer (ID: 309655)
+[2026-08-21 05:42:46.682] Found 3 items in module 'Informationer'
+[2026-08-21 05:42:46.682]   - Item: Eloquent JavaScript bog: https://eloquentjavascript.net (bemærk: 4. udgave) (Type: SubHeader)
+[2026-08-21 05:42:46.682]   - Item: Bøger til foråret: se course readings (Type: SubHeader)
+[2026-08-21 05:42:46.683]   - Item: køb: Ben-Gan, I. (2023) T-SQL fundamentals . Fourth edition. Redmond ;; London :, Microsoft Press ; Pearson Education Inc. (Type: SubHeader)
+[2026-08-21 05:42:46.683] Processing Module: Andre ressourcer (ID: 313790)
+[2026-08-21 05:42:46.819] Found 1 items in module 'Andre ressourcer'
+[2026-08-21 05:42:46.819]   - Item: Trin-for-trin Guide til VS Code og konsollen.pdf (Type: File)
+[2026-08-21 05:42:46.949] Module file tracked: Trin-for-trin Guide til VS Code og konsollen.pdf (ID: 1598669)
+[2026-08-21 05:42:46.950] Processing Module: Obligatoriske afleveringer efterår 2025 (ID: 309657)
+[2026-08-21 05:42:47.133] Found 10 items in module 'Obligatoriske afleveringer efterår 2025'
+[2026-08-21 05:42:47.133]   - Item: Godkendelsesopgave 1 (Type: Assignment)
+[2026-08-21 05:42:47.133]   - Item: Godkendelsesopgave 1 vejl_løsn.js (Type: File)
+[2026-08-21 05:42:47.283] Module file tracked: g1 darts vejl_løsn.js (ID: 1670371)
+[2026-08-21 05:42:47.283]   - Item: Godkendelsesopgave 2 (Type: Assignment)
+[2026-08-21 05:42:47.283]   - Item: G2 vejl_løsn.js (Type: File)
+[2026-08-21 05:42:47.425] Module file tracked: gk2 vejl_løsn.js (ID: 1598721)
+[2026-08-21 05:42:47.426]   - Item: G2 fælles_feedback.pdf (Type: File)
+[2026-08-21 05:42:47.585] Module file tracked: g2_fælles_feedback.pdf (ID: 1687491)
+[2026-08-21 05:42:47.586]   - Item: Godkendelsesopgave 3 (Type: Assignment)
+[2026-08-21 05:42:47.586]   - Item: G3 opgave.bierOgBlomster analysevejledning.pdf (Type: File)
+[2026-08-21 05:42:47.721] Module file tracked: G3 opgave.bierOgBlomster analysevejledning.pdf (ID: 1692940)
+[2026-08-21 05:42:47.721]   - Item: Fælles feedback G3 v2.pdf (Type: File)
+[2026-08-21 05:42:47.863] Module file tracked: Fælles feedback G3 v2.pdf (ID: 1700523)
+[2026-08-21 05:42:47.863]   - Item: g3 opgave-bierOgBlomsterOO vejl.js (Type: File)
+[2026-08-21 05:42:47.998] Module file tracked: g3 opgave-bierOgBlomsterOO vejl.js (ID: 1700515)
+[2026-08-21 05:42:47.999]   - Item: G4  (Type: Quiz)
+[2026-08-21 05:42:47.999] Processing Module: Obligatoriske afleveringer forår 2026 (ID: 326739)
+[2026-08-21 05:42:48.144] Found 5 items in module 'Obligatoriske afleveringer forår 2026'
+[2026-08-21 05:42:48.145]   - Item: Godkendelsesopgave 5 (Type: Assignment)
+[2026-08-21 05:42:48.145]   - Item: g5_fælles_feedback.pdf (Type: File)
+[2026-08-21 05:42:48.300] Module file tracked: g5_fælles_feedback.pdf (ID: 1796825)
+[2026-08-21 05:42:48.300]   - Item: Godkendelsesopgave 6 (Type: Assignment)
+[2026-08-21 05:42:48.300]   - Item: Godkendelsesopgave 7 (Type: Assignment)
+[2026-08-21 05:42:48.301]   - Item: Godkendelsesopgave 8 - Quiz (Sidste frist for aflevering: onsdag 6. maj 23:59.) (Type: Quiz)
+[2026-08-21 05:42:48.301] Processing Module: Skriftlig Eksamen (ID: 322481)
+[2026-08-21 05:42:48.437] Found 7 items in module 'Skriftlig Eksamen'
+[2026-08-21 05:42:48.437]   - Item: Ordinær eksamen med vejledende løsning (Type: SubHeader)
+[2026-08-21 05:42:48.438]   - Item: eksamen 2025E ordinær.pdf (Type: File)
+[2026-08-21 05:42:48.571] Module file tracked: eksamen 2025E ordinær final.pdf (ID: 1736378)
+[2026-08-21 05:42:48.572]   - Item: eksamen 2025 ord vejledende.zip (Type: File)
+[2026-08-21 05:42:48.721] Module file tracked: eksamen 2025 ord vejledende.zip (ID: 1736379)
+[2026-08-21 05:42:48.722]   - Item: NB: feedback ordinær.pdf (Type: File)
+[2026-08-21 05:42:48.872] Module file tracked: feedback ordinær.pdf (ID: 1736380)
+[2026-08-21 05:42:48.872]   - Item: Re-eksamen med vejledende løsning (Type: SubHeader)
+[2026-08-21 05:42:48.872]   - Item: eksamen 2025E re-eksamen.pdf (Type: File)
+[2026-08-21 05:42:49.005] Module file tracked: eksamen 2025E re-eksamen.pdf (ID: 1770754)
+[2026-08-21 05:42:49.005]   - Item: eksamen 2025 re vejledende.zip (Type: File)
+[2026-08-21 05:42:49.155] Module file tracked: eksamen 2025 re vejledende.zip (ID: 1770755)
+[2026-08-21 05:42:49.155] Processing Module: Rapporteksamen (ID: 326738)
+[2026-08-21 05:42:49.309] Found 1 items in module 'Rapporteksamen'
+[2026-08-21 05:42:49.309]   - Item: Rapporteksamen 2026 - Ejendomsinvesterings-app.pdf (Type: File)
+[2026-08-21 05:42:49.439] Module file tracked: Eksamen 2026 rev_6.pdf (ID: 1771104)
+[2026-08-21 05:42:49.439] Processing Module: Kursus-evaluering (ID: 309656)
+[2026-08-21 05:42:49.579] Found 1 items in module 'Kursus-evaluering'
+[2026-08-21 05:42:49.580]   - Item: Kursusevaluering (Type: File)
+[2026-08-21 05:42:49.731] Module file tracked: PowerPoint to use in class_141223 (2).pptx (ID: 1815182)
+[2026-08-21 05:42:49.732] Processing Module: Uge 36: Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, data, værdier, typer og operatorer. (ID: 309658)
+[2026-08-21 05:42:50.104] Found 8 items in module 'Uge 36: Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, data, værdier, typer og operatorer.'
+[2026-08-21 05:42:50.104]   - Item: Feedback til Ole (lect1) (Type: ExternalUrl)
+[2026-08-21 05:42:50.104]   - Item: Læs: Eloquent JavaScript – kap 1  (Type: SubHeader)
+[2026-08-21 05:42:50.104]   - Item: Javascript practice quiz 1 (Type: Quiz)
+[2026-08-21 05:42:50.104]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:50.105]   - Item: forelæsning 1 25.pdf (Type: File)
+[2026-08-21 05:42:50.520] Module file tracked: forelæsning 1 25.pdf (ID: 1626276)
+[2026-08-21 05:42:50.521]   - Item: forelæsning 1 25.pptx (Type: File)
+[2026-08-21 05:42:51.062] Module file tracked: forelæsning 1 25.pptx (ID: 1626277)
+[2026-08-21 05:42:51.062]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:51.062]   - Item: øvelsessæt 1- Grundlæggende javascript 1.pdf (Type: File)
+[2026-08-21 05:42:51.395] Module file tracked: øvelsessæt 1- Grundlæggende javascript 1.pdf (ID: 1626486)
+[2026-08-21 05:42:51.395] Processing Module: Uge 37: Forelæsning 2. Programstruktur: udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser. (ID: 309659)
+[2026-08-21 05:42:51.703] Found 8 items in module 'Uge 37: Forelæsning 2. Programstruktur: udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser.'
+[2026-08-21 05:42:51.703]   - Item: Læs: Eloquent JavaScript – kap 2  (Type: SubHeader)
+[2026-08-21 05:42:51.704]   - Item: Javascript practice quiz 2 (Type: Quiz)
+[2026-08-21 05:42:51.704]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:51.704]   - Item: forelæsning 2 25.pdf (Type: File)
+[2026-08-21 05:42:51.927] Module file tracked: forelæsning 2 25.pdf (ID: 1632000)
+[2026-08-21 05:42:51.927]   - Item: forelæsning 2 25.pptx (Type: File)
+[2026-08-21 05:42:52.130] Module file tracked: forelæsning 2 25.pptx (ID: 1632001)
+[2026-08-21 05:42:52.130]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:52.130]   - Item: øvelsessæt 2- Program - Struktur - Algoritmer.pdf (Type: File)
+[2026-08-21 05:42:52.280] Module file tracked: øvelsessæt 2- Program - Struktur - Algoritmer.pdf (ID: 1632558)
+[2026-08-21 05:42:52.280]   - Item: Feedback til Ole (Type: ExternalUrl)
+[2026-08-21 05:42:52.280] Processing Module: Uge 38: Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak. (ID: 309660)
+[2026-08-21 05:42:52.455] Found 7 items in module 'Uge 38: Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak.'
+[2026-08-21 05:42:52.455]   - Item: Læs: Eloquent JavaScript – kap 3  (Type: SubHeader)
+[2026-08-21 05:42:52.455]   - Item: Javascript practice quiz 3 (Type: Quiz)
+[2026-08-21 05:42:52.455]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:52.455]   - Item: forelæsning 3 25.pdf (Type: File)
+[2026-08-21 05:42:52.643] Module file tracked: forelæsning 3 25.pdf (ID: 1637607)
+[2026-08-21 05:42:52.643]   - Item: forelæsning 3 25.pptx (Type: File)
+[2026-08-21 05:42:52.936] Module file tracked: forelæsning 3 25.pptx (ID: 1637608)
+[2026-08-21 05:42:52.936]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:52.937]   - Item: øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (Type: File)
+[2026-08-21 05:42:53.157] Module file tracked: øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (ID: 1637584)
+[2026-08-21 05:42:53.157] Processing Module: Uge 39: Forelæsning 4. Datastrukturer - Objekter og arrays. (ID: 309661)
+[2026-08-21 05:42:53.387] Found 7 items in module 'Uge 39: Forelæsning 4. Datastrukturer - Objekter og arrays.'
+[2026-08-21 05:42:53.387]   - Item: Læs: Eloquent JavaScript – kap 4  (Type: SubHeader)
+[2026-08-21 05:42:53.387]   - Item: Javascript practice quiz 4 (Type: Quiz)
+[2026-08-21 05:42:53.387]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:53.387]   - Item: forelæsning 4 25.pptx (Type: File)
+[2026-08-21 05:42:53.645] Module file tracked: forelæsning 4 25.pptx (ID: 1643465)
+[2026-08-21 05:42:53.645]   - Item: forelæsning 4 25.pdf (Type: File)
+[2026-08-21 05:42:53.938] Module file tracked: forelæsning 4 25.pdf (ID: 1643462)
+[2026-08-21 05:42:53.938]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:53.938]   - Item: øvelsessæt 4.pdf (Type: File)
+[2026-08-21 05:42:54.100] Module file tracked: øvelsessæt 4.pdf (ID: 1643483)
+[2026-08-21 05:42:54.101] Processing Module: Uge 40: Forelæsning 5. Højere-ordens funktioner og rekursion (ID: 309662)
+[2026-08-21 05:42:54.262] Found 9 items in module 'Uge 40: Forelæsning 5. Højere-ordens funktioner og rekursion'
+[2026-08-21 05:42:54.262]   - Item: Læs: Eloquent JavaScript – kap 5 (Type: SubHeader)
+[2026-08-21 05:42:54.262]   - Item: Læs: Eloquent JavaScript – kap 3 (afsnit om rekursion) (Type: SubHeader)
+[2026-08-21 05:42:54.263]   - Item: Javascript practice quiz 5 incl. recursion  (Type: Quiz)
+[2026-08-21 05:42:54.263]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:54.263]   - Item: forelæsning 5 25.pptx (Type: File)
+[2026-08-21 05:42:54.410] Module file tracked: forelæsning 5 25.pptx (ID: 1658577)
+[2026-08-21 05:42:54.411]   - Item: forelæsning 5 25.pdf (Type: File)
+[2026-08-21 05:42:54.574] Module file tracked: forelæsning 5 25.pdf (ID: 1658578)
+[2026-08-21 05:42:54.574]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:54.574]   - Item: øvelsessæt 5.pdf (Type: File)
+[2026-08-21 05:42:54.737] Module file tracked: øvelsessæt 5.pdf (ID: 1658625)
+[2026-08-21 05:42:54.738]   - Item: øvelsessæt 5 løsninger.pdf (Type: File)
+[2026-08-21 05:42:54.879] Module file tracked: øvelsessæt 5 løsninger.pdf (ID: 1658626)
+[2026-08-21 05:42:54.879] Processing Module: Uge 41: Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling. (ID: 309663)
+[2026-08-21 05:42:55.101] Found 10 items in module 'Uge 41: Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling.'
+[2026-08-21 05:42:55.102]   - Item: Læs: Eloquent JavaScript – kap 6 (Type: SubHeader)
+[2026-08-21 05:42:55.102]   - Item: Javascript practice quiz 6  (Type: Quiz)
+[2026-08-21 05:42:55.102]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:55.102]   - Item: forelæsning 6 25.pdf (Type: File)
+[2026-08-21 05:42:55.252] Module file tracked: forelæsning 6 25.pdf (ID: 1666624)
+[2026-08-21 05:42:55.253]   - Item: forelæsning 6 25.pptx (Type: File)
+[2026-08-21 05:42:55.398] Module file tracked: forelæsning 6 25.pptx (ID: 1666625)
+[2026-08-21 05:42:55.399]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:55.399]   - Item: øvelsessæt 6.pdf (Type: File)
+[2026-08-21 05:42:55.646] Module file tracked: øvelsessæt 6.pdf (ID: 1666626)
+[2026-08-21 05:42:55.647]   - Item: øvelsessæt 6 løsninger.pdf (Type: File)
+[2026-08-21 05:42:55.793] Module file tracked: øvelsessæt 6 løsninger.pdf (ID: 1666630)
+[2026-08-21 05:42:55.793]   - Item: 2022 - ordinær (Type: File)
+[2026-08-21 05:42:55.935] Module file tracked: 2022 ordinær.pdf (ID: 1598570)
+[2026-08-21 05:42:55.936]   - Item: eksamen 2023E ordinær.pdf (Type: File)
+[2026-08-21 05:42:56.085] Module file tracked: eksamen 2023E ordinær.pdf (ID: 1670338)
+[2026-08-21 05:42:56.085] Processing Module: Uge 42: Efterårsferie (ID: 309664)
+[2026-08-21 05:42:56.209] Found 0 items in module 'Uge 42: Efterårsferie'
+[2026-08-21 05:42:56.209] Processing Module: Uge 43: Forelæsning 7. Error-handling, Moduler (ID: 309665)
+[2026-08-21 05:42:56.412] Found 8 items in module 'Uge 43: Forelæsning 7. Error-handling, Moduler'
+[2026-08-21 05:42:56.412]   - Item: Læs: Eloquent JavaScript – kap 8, 10 (Type: SubHeader)
+[2026-08-21 05:42:56.412]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:56.412]   - Item: forelæsning 7 25.pdf (Type: File)
+[2026-08-21 05:42:56.695] Module file tracked: forelæsning 7 25.pdf (ID: 1677087)
+[2026-08-21 05:42:56.696]   - Item: forelæsning 7 25.pptx (Type: File)
+[2026-08-21 05:42:56.873] Module file tracked: forelæsning 7 25.pptx (ID: 1677089)
+[2026-08-21 05:42:56.873]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:56.873]   - Item: øvelsessæt 7.pdf (Type: File)
+[2026-08-21 05:42:57.093] Module file tracked: øvelsessæt 7.pdf (ID: 1677085)
+[2026-08-21 05:42:57.094]   - Item: øvelsessæt 7 løsninger.pdf (Type: File)
+[2026-08-21 05:42:57.262] Module file tracked: øvelsessæt 7 løsninger.pdf (ID: 1677090)
+[2026-08-21 05:42:57.263]   - Item: Øvelser - fredag d. 24/10 (Type: File)
+[2026-08-21 05:42:57.403] Module file tracked: Øvelse_u43.pdf (ID: 1679207)
+[2026-08-21 05:42:57.403] Processing Module: Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1 (ID: 309666)
+[2026-08-21 05:42:57.573] Found 8 items in module 'Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1'
+[2026-08-21 05:42:57.573]   - Item: Læs: Eloquent JavaScript – kap 13 (Type: SubHeader)
+[2026-08-21 05:42:57.573]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:57.573]   - Item: Forelæsning 8 - Intro til Web Teknologier.pdf (Type: File)
+[2026-08-21 05:42:57.720] Module file tracked: Forelæsning 8 - Intro til Web Teknologier.pdf (ID: 1682843)
+[2026-08-21 05:42:57.721]   - Item: Forelæsning 8 - Intro til Web Teknologier.pptx (Type: File)
+[2026-08-21 05:42:57.860] Module file tracked: Forelæsning 8 - Intro til Web Teknologier.pptx (ID: 1682844)
+[2026-08-21 05:42:57.860]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:57.860]   - Item: Hjælpeopgaver - fredag d. 31/10 (Type: File)
+[2026-08-21 05:42:58.002] Module file tracked: små_opgaver.pdf (ID: 1684203)
+[2026-08-21 05:42:58.003]   - Item: Minefelt.pdf (Type: File)
+[2026-08-21 05:42:58.137] Module file tracked: Minefelt.pdf (ID: 1684229)
+[2026-08-21 05:42:58.138]   - Item: minefeltVEJL.js (Type: File)
+[2026-08-21 05:42:58.279] Module file tracked: minefeltVEJL.js (ID: 1685205)
+[2026-08-21 05:42:58.279] Processing Module: Uge 45: Forelæsning 9. HTML 2 og CSS (ID: 309667)
+[2026-08-21 05:42:58.426] Found 7 items in module 'Uge 45: Forelæsning 9. HTML 2 og CSS'
+[2026-08-21 05:42:58.426]   - Item: Læs: Eloquent JavaScript – kap 14 og 18 (Type: SubHeader)
+[2026-08-21 05:42:58.426]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:58.427]   - Item: Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (Type: File)
+[2026-08-21 05:42:58.558] Module file tracked: Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (ID: 1688312)
+[2026-08-21 05:42:58.558]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:58.558]   - Item: Flexbox Froggy (Type: ExternalUrl)
+[2026-08-21 05:42:58.558]   - Item: CSS Diner (Type: ExternalUrl)
+[2026-08-21 05:42:58.558]   - Item: bondemand.pdf (Type: File)
+[2026-08-21 05:42:58.697] Module file tracked: bondemand.pdf (ID: 1690005)
+[2026-08-21 05:42:58.698] Processing Module: Uge 46: Forelæsning 10. Document Object Model (DOM) (ID: 309668)
+[2026-08-21 05:42:58.851] Found 7 items in module 'Uge 46: Forelæsning 10. Document Object Model (DOM)'
+[2026-08-21 05:42:58.851]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:58.851]   - Item: 2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (Type: File)
+[2026-08-21 05:42:58.976] Module file tracked: 2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (ID: 1692896)
+[2026-08-21 05:42:58.977]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:58.977]   - Item: opgave 102 - hints.html (Type: File)
+[2026-08-21 05:42:59.119] Module file tracked: hints.html (ID: 1692936)
+[2026-08-21 05:42:59.120]   - Item: styling_opgave102.css (Type: File)
+[2026-08-21 05:42:59.259] Module file tracked: styling_opgave102.css (ID: 1693079)
+[2026-08-21 05:42:59.259]   - Item: Eksamen 2023E Ordinær Klasse opgave.pdf (Type: File)
+[2026-08-21 05:42:59.394] Module file tracked: Eksamen 2023E Ordinær Klasse opgave.pdf (ID: 1694147)
+[2026-08-21 05:42:59.394]   - Item: Eksamen 2024E Ordinær Klasse opgave.pdf (Type: File)
+[2026-08-21 05:42:59.530] Module file tracked: Eksamen 2024E Ordinær Klasse opgave.pdf (ID: 1694158)
+[2026-08-21 05:42:59.530] Processing Module: Uge 47: Forelæsning 11. Asynkron programmering og event handling  (ID: 309669)
+[2026-08-21 05:42:59.682] Found 8 items in module 'Uge 47: Forelæsning 11. Asynkron programmering og event handling '
+[2026-08-21 05:42:59.683]   - Item: Læs: Eloquent JavaScript – kap 11+15 (Type: SubHeader)
+[2026-08-21 05:42:59.683]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:42:59.683]   - Item: Asynkronitet og Events.pdf (Type: File)
+[2026-08-21 05:42:59.812] Module file tracked: Asynkronitet og Events.pdf (ID: 1696759)
+[2026-08-21 05:42:59.812]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:42:59.812]   - Item: Øvelser_Kapitel11og15.md (Type: File)
+[2026-08-21 05:42:59.953] Module file tracked: Øvelser_Kapitel11og15.md (ID: 1696760)
+[2026-08-21 05:42:59.953]   - Item: Opgavesæt uge 47.pdf (Type: File)
+[2026-08-21 05:43:00.097] Module file tracked: Opgavesæt uge 47.pdf (ID: 1698072)
+[2026-08-21 05:43:00.098]   - Item: html terninger.pdf (Type: File)
+[2026-08-21 05:43:00.240] Module file tracked: html terninger.pdf (ID: 1598722)
+[2026-08-21 05:43:00.240]   - Item: Video gennemgang af terning opgaven (Type: File)
+[2026-08-21 05:43:00.379] Module file tracked: GK2 Samlet-1.mp4 (ID: 1698028)
+[2026-08-21 05:43:00.380] Processing Module: Uge 48: Forelæsning 12. Node.js og debugger samt eksamensforberedelse (ID: 309670)
+[2026-08-21 05:43:00.573] Found 10 items in module 'Uge 48: Forelæsning 12. Node.js og debugger samt eksamensforberedelse'
+[2026-08-21 05:43:00.573]   - Item: Læs: Eloquent JavaScript – kap 20  (Type: SubHeader)
+[2026-08-21 05:43:00.574]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:00.574]   - Item: NodeJs og Debugging.pdf (Type: File)
+[2026-08-21 05:43:00.703] Module file tracked: NodeJs og Debugging.pdf (ID: 1700490)
+[2026-08-21 05:43:00.703]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:00.704]   - Item: Debug - grades - 1.txt (Type: File)
+[2026-08-21 05:43:01.212] Module file tracked: Debug - grades - 1.txt (ID: 1700471)
+[2026-08-21 05:43:01.213]   - Item: Debug - Inventory - 1.txt (Type: File)
+[2026-08-21 05:43:01.581] Module file tracked: Debug - Inventory - 1.txt (ID: 1700478)
+[2026-08-21 05:43:01.581]   - Item: Debug - shop - 1.txt (Type: File)
+[2026-08-21 05:43:01.729] Module file tracked: Debug - shop - 1.txt (ID: 1700483)
+[2026-08-21 05:43:01.729]   - Item: Studietimers overblik - Opgave.pdf (Type: File)
+[2026-08-21 05:43:01.892] Module file tracked: Studietimers overblik - Opgave.pdf (ID: 1701809)
+[2026-08-21 05:43:01.892]   - Item: StudieTimerVejl.js (Type: File)
+[2026-08-21 05:43:02.038] Module file tracked: StudieTimerVejl.js (ID: 1702591)
+[2026-08-21 05:43:02.038]   - Item: JavaScript Objekter – Øvelser.pdf (Type: File)
+[2026-08-21 05:43:02.175] Module file tracked: JavaScript Objekter – Øvelser.pdf (ID: 1701948)
+[2026-08-21 05:43:02.176] Processing Module: Uge 49: Øvelser (ID: 319198)
+[2026-08-21 05:43:02.323] Found 3 items in module 'Uge 49: Øvelser'
+[2026-08-21 05:43:02.323]   - Item: Gavelisten - Opgave.pdf (Type: File)
+[2026-08-21 05:43:02.460] Module file tracked: Gavelisten - Opgave.pdf (ID: 1703058)
+[2026-08-21 05:43:02.460]   - Item: Juleværksted - Opgave.pdf (Type: File)
+[2026-08-21 05:43:02.724] Module file tracked: Juleværksted - Opgave.pdf (ID: 1703059)
+[2026-08-21 05:43:02.724]   - Item: Mus - Opgave.docx (Type: File)
+[2026-08-21 05:43:02.864] Module file tracked: Mus - Opgave.docx (ID: 1703063)
+[2026-08-21 05:43:02.864] Processing Module: Tidligere eksamenssæt (de fleste med vejledende løsninger) (ID: 309671)
+[2026-08-21 05:43:03.047] Found 4 items in module 'Tidligere eksamenssæt (de fleste med vejledende løsninger)'
+[2026-08-21 05:43:03.047]   - Item: Husk, at der også kan komme andre ting såsom switch-statements, loops igennem objekter, HTML osv. som ikke fremgår så ofte i tidligere eksamenssæt. (Type: SubHeader)
+[2026-08-21 05:43:03.047]   - Item: Eksamens arkiv.zip (Type: File)
+[2026-08-21 05:43:03.195] Module file tracked: Eksamens arkiv.zip (ID: 1692058)
+[2026-08-21 05:43:03.195]   - Item: Fiktiv Eksamensopgave.pdf (Type: File)
+[2026-08-21 05:43:03.345] Module file tracked: Fiktiv Eksamensopgave.pdf (ID: 1598591)
+[2026-08-21 05:43:03.345]   - Item: Fiktiv Eksamensopgave3.pdf (Type: File)
+[2026-08-21 05:43:03.509] Module file tracked: Fiktiv Eksamensopgave3.pdf (ID: 1598593)
+[2026-08-21 05:43:03.509] Processing Module: Uge 7: Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel) (ID: 323358)
+[2026-08-21 05:43:03.662] Found 12 items in module 'Uge 7: Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)'
+[2026-08-21 05:43:03.663]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 05:43:03.663]   - Item: UML @ Classroom : kap. 1,2,3,4 (Type: ExternalTool)
+[2026-08-21 05:43:03.663]   - Item: Kursorisk: (Type: SubHeader)
+[2026-08-21 05:43:03.663]   - Item: UML Diagram Types Guide: Class diagram (Type: ExternalTool)
+[2026-08-21 05:43:03.663]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:03.663]   - Item: Forelæsning13.pdf (Type: File)
+[2026-08-21 05:43:03.796] Module file tracked: Forelæsning13.pdf (ID: 1769713)
+[2026-08-21 05:43:03.796]   - Item: Forelæsning13.pptx (Type: File)
+[2026-08-21 05:43:03.932] Module file tracked: Forelæsning13.pptx (ID: 1769714)
+[2026-08-21 05:43:03.932]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:03.932]   - Item: UMLanalyseopgaver.pdf (Type: File)
+[2026-08-21 05:43:04.120] Module file tracked: UMLanalyseopgaver.pdf (ID: 1768580)
+[2026-08-21 05:43:04.120]   - Item: UMLcases.pdf (Type: File)
+[2026-08-21 05:43:04.284] Module file tracked: UMLcases.pdf (ID: 1768581)
+[2026-08-21 05:43:04.285]   - Item: exercises system modelling - solutions.pdf (Type: File)
+[2026-08-21 05:43:04.409] Module file tracked: exercises system modelling - solutions.pdf (ID: 1598710)
+[2026-08-21 05:43:04.409]   - Item: forelæsningsnoter 13 OO+UML.docx (Type: File)
+[2026-08-21 05:43:04.536] Module file tracked: forelæsningsnoter 13 OO UML.docx (ID: 1769666)
+[2026-08-21 05:43:04.536] Processing Module: Uge 8: Forelæsnigsfri (ID: 323360)
+[2026-08-21 05:43:04.687] Found 0 items in module 'Uge 8: Forelæsnigsfri'
+[2026-08-21 05:43:04.687] Processing Module: Uge 9: Forelæsning 14. Design, Arkitektur  (ID: 323359)
+[2026-08-21 05:43:04.839] Found 11 items in module 'Uge 9: Forelæsning 14. Design, Arkitektur '
+[2026-08-21 05:43:04.840]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 05:43:04.840]   - Item: UML @ Classroom : kap. 5, (6), 7  (Type: ExternalTool)
+[2026-08-21 05:43:04.840]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:04.840]   - Item: Forelæsning 14 OO+UML 2.pdf (Type: File)
+[2026-08-21 05:43:04.982] Module file tracked: Forelæsning 14 OO UML 2.pdf (ID: 1780749)
+[2026-08-21 05:43:04.982]   - Item: Forelæsning 14 OO+UML 2.pptx (Type: File)
+[2026-08-21 05:43:05.178] Module file tracked: Forelæsning 14 OO UML 2.pptx (ID: 1780750)
+[2026-08-21 05:43:05.179]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:05.179]   - Item: VRS_registrérKunde_vejl.pdf (Type: File)
+[2026-08-21 05:43:05.428] Module file tracked: VRS_registrérKunde_vejl.pdf (ID: 1780937)
+[2026-08-21 05:43:05.429]   - Item: opgave_bibliotekssystem.pdf (Type: File)
+[2026-08-21 05:43:05.588] Module file tracked: opgave_bibliotekssystem.pdf (ID: 1780752)
+[2026-08-21 05:43:05.589]   - Item: opgave_bibliotekssystem_vejl.pdf (Type: File)
+[2026-08-21 05:43:05.725] Module file tracked: opgave_bibliotekssystem_vejl.pdf (ID: 1780936)
+[2026-08-21 05:43:05.725]   - Item: Biblioteks_DSD_vejl.jpg (Type: File)
+[2026-08-21 05:43:05.879] Module file tracked: Biblioteks_DSD_vejl.jpg (ID: 1781875)
+[2026-08-21 05:43:05.879]   - Item: Biblioteks_SSD_vejl.jpg (Type: File)
+[2026-08-21 05:43:06.048] Module file tracked: Biblioteks_SSD_vejl.jpg (ID: 1781876)
+[2026-08-21 05:43:06.048] Processing Module: Uge 10: Forelæsning 15. Database 1 | Opsætning af database (ID: 323361)
+[2026-08-21 05:43:06.241] Found 12 items in module 'Uge 10: Forelæsning 15. Database 1 | Opsætning af database'
+[2026-08-21 05:43:06.242]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 05:43:06.242]   - Item: The Worlds of Database Systems. pp 1-13 (Type: ExternalTool)
+[2026-08-21 05:43:06.242]   - Item: The relational model of data. pp 15-65 (Type: ExternalTool)
+[2026-08-21 05:43:06.242]   - Item: Kursorisk: (Type: SubHeader)
+[2026-08-21 05:43:06.242]   - Item: Entity Relationship Modeling with UML (Type: ExternalTool)
+[2026-08-21 05:43:06.242]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:06.242]   - Item: Forelæsning 15 DB1.pdf (Type: File)
+[2026-08-21 05:43:06.387] Module file tracked: Forelæsning 15 DB1_x.pdf (ID: 1784973)
+[2026-08-21 05:43:06.387]   - Item: Forelæsning 15 DB1.pptx (Type: File)
+[2026-08-21 05:43:06.546] Module file tracked: Forelæsning 15 DB1_x.pptx (ID: 1784974)
+[2026-08-21 05:43:06.547]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:06.547]   - Item: Lecture 15 Database Design Exercises solutions.pdf (Type: File)
+[2026-08-21 05:43:06.683] Module file tracked: Lecture 15 Database Design Exercises solutions NY.pdf (ID: 1784717)
+[2026-08-21 05:43:06.684]   - Item: Lecture 15 Database Design Exercises.pdf (Type: File)
+[2026-08-21 05:43:06.820] Module file tracked: Lecture 15 Database Design Exercises.pdf (ID: 1784716)
+[2026-08-21 05:43:06.820]   - Item: Guide til opsætning af database-2026.pdf (Type: File)
+[2026-08-21 05:43:06.948] Module file tracked: Guide til opsætning af database-2026.pdf (ID: 1784715)
+[2026-08-21 05:43:06.948] Processing Module: Uge 11: Forelæsning 16. Database 2 | Datamodifikation (ID: 323362)
+[2026-08-21 05:43:07.093] Found 6 items in module 'Uge 11: Forelæsning 16. Database 2 | Datamodifikation'
+[2026-08-21 05:43:07.093]   - Item: T-SQL fundamentals kap. 1, 2, 8 (Type: ExternalTool)
+[2026-08-21 05:43:07.093]   - Item: Forelæsning 16 - DB2.pptx (Type: File)
+[2026-08-21 05:43:07.233] Module file tracked: Forelæsning 16 - DB2.pptx (ID: 1789277)
+[2026-08-21 05:43:07.234]   - Item: Forelæsning 16 - DB2.pdf (Type: File)
+[2026-08-21 05:43:07.362] Module file tracked: Forelæsning 16 - DB2.pdf (ID: 1789278)
+[2026-08-21 05:43:07.363]   - Item: løbeklub SQL.pdf (Type: File)
+[2026-08-21 05:43:07.491] Module file tracked: løbeklub SQL.pdf (ID: 1789978)
+[2026-08-21 05:43:07.492]   - Item: Lecture 16 ER-RM exercises (solutions).pdf (Type: File)
+[2026-08-21 05:43:07.639] Module file tracked: Lecture 16 svar øvelse.pdf (ID: 1789237)
+[2026-08-21 05:43:07.640]   - Item: Lecture 16 ER-RM Exercises.pdf (Type: File)
+[2026-08-21 05:43:07.766] Module file tracked: Lecture 16 ER-RM Exercises.pdf (ID: 1789236)
+[2026-08-21 05:43:07.767] Processing Module: Uge 12: Forelæsning 17. Database 3 | Join og set operatorer (ID: 323363)
+[2026-08-21 05:43:07.997] Found 13 items in module 'Uge 12: Forelæsning 17. Database 3 | Join og set operatorer'
+[2026-08-21 05:43:07.997]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 05:43:07.998]   - Item: T-SQL fundamentals kap. 3, 6 (Type: ExternalTool)
+[2026-08-21 05:43:07.998]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:07.998]   - Item: Forelæsning 17 - DB3.pdf (Type: File)
+[2026-08-21 05:43:08.187] Module file tracked: Forelæsning 17 - DB3.pdf (ID: 1793427)
+[2026-08-21 05:43:08.187]   - Item: Forelæsning 17 - DB3.pptx (Type: File)
+[2026-08-21 05:43:08.318] Module file tracked: Forelæsning 17 - DB3.pptx (ID: 1793428)
+[2026-08-21 05:43:08.318]   - Item: EKSTRA: DB-kapitelnoter-øvelser-løsninger.zip (Type: File)
+[2026-08-21 05:43:08.481] Module file tracked: DB-kapitelnoter-øvelser-løsninger.zip (ID: 1793434)
+[2026-08-21 05:43:08.481]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:08.482]   - Item: Create_ILearn_tables.sql (Type: File)
+[2026-08-21 05:43:08.762] Module file tracked: Create_ILearn_tables.sql (ID: 1789210)
+[2026-08-21 05:43:08.762]   - Item: Insert_ILearn_data.sql (Type: File)
+[2026-08-21 05:43:08.922] Module file tracked: Insert_ILearn_data.sql (ID: 1598646)
+[2026-08-21 05:43:08.922]   - Item: Forelæsning 17 ILearn SQL Exercises.pdf (Type: File)
+[2026-08-21 05:43:09.052] Module file tracked: Forelæsning 17 ILearn SQL Exercises.pdf (ID: 1793429)
+[2026-08-21 05:43:09.052]   - Item: Forelæsning 17 ILearn SQL Solutions.sql (Type: File)
+[2026-08-21 05:43:09.183] Module file tracked: Forelæsning 17 ILearn SQL Solutions.sql (ID: 1793556)
+[2026-08-21 05:43:09.184]   - Item: SQL-Opgave.pdf (Type: File)
+[2026-08-21 05:43:09.345] Module file tracked: SQL-Opgave.pdf (ID: 1794805)
+[2026-08-21 05:43:09.345]   - Item: SQL Opgave Vejl.sql (Type: File)
+[2026-08-21 05:43:09.487] Module file tracked: SQL Opgave Vejl.sql (ID: 1794807)
+[2026-08-21 05:43:09.487] Processing Module: Uge 13: Forelæsning 18. Webserver & APIer (ID: 323364)
+[2026-08-21 05:43:09.652] Found 9 items in module 'Uge 13: Forelæsning 18. Webserver & APIer'
+[2026-08-21 05:43:09.652]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 05:43:09.652]   - Item: Express_Nodejs Introduction, mozilla.org (Type: ExternalTool)
+[2026-08-21 05:43:09.652]   - Item: Hello world example - ExpressJs (Type: ExternalTool)
+[2026-08-21 05:43:09.653]   - Item: Node.js - Express Framework (Type: ExternalTool)
+[2026-08-21 05:43:09.653]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:09.653]   - Item: Forelæsning 18 - Webserver og API.pptx (Type: File)
+[2026-08-21 05:43:09.800] Module file tracked: Forelæsning 18 - Webserver og API.pptx (ID: 1797870)
+[2026-08-21 05:43:09.800]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:09.800]   - Item: Webserver-opgave.pdf (Type: File)
+[2026-08-21 05:43:09.929] Module file tracked: Webserver-opgave.pdf (ID: 1799465)
+[2026-08-21 05:43:09.929]   - Item: Webserver-Opgave-Vejl.zip (Type: File)
+[2026-08-21 05:43:10.064] Module file tracked: Webserver-Opgave-Vejl.zip (ID: 1799926)
+[2026-08-21 05:43:10.064] Processing Module: Uge 14: Forelæsnigsfri (Påske) (ID: 323366)
+[2026-08-21 05:43:10.185] Found 0 items in module 'Uge 14: Forelæsnigsfri (Påske)'
+[2026-08-21 05:43:10.186] Processing Module: Uge 15: Forelæsning 19. Webserver & Databaser (ID: 323365)
+[2026-08-21 05:43:10.327] Found 5 items in module 'Uge 15: Forelæsning 19. Webserver & Databaser'
+[2026-08-21 05:43:10.327]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 05:43:10.328]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:10.328]   - Item: Forelæsning 19 - Webserver og Databaser.pptx (Type: File)
+[2026-08-21 05:43:10.495] Module file tracked: Forelæsning 19 - Webserver og Databaser.pptx (ID: 1805046)
+[2026-08-21 05:43:10.495]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:10.495]   - Item: Forelæsning 19.zip (Type: File)
+[2026-08-21 05:43:10.631] Module file tracked: Forelæsning 19.zip (ID: 1805047)
+[2026-08-21 05:43:10.631] Processing Module: Uge 16: Forelæsning 20. Små systemer 1 | Testing - Teori og praksis (ID: 323368)
+[2026-08-21 05:43:10.840] Found 6 items in module 'Uge 16: Forelæsning 20. Små systemer 1 | Testing - Teori og praksis'
+[2026-08-21 05:43:10.840]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 05:43:10.840]   - Item: Certified Tester Foundation Level (CTFL) v4.0 (Type: ExternalTool)
+[2026-08-21 05:43:10.841]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:10.841]   - Item: Uge 16 - Testing - Teori og praksis.pdf (Type: File)
+[2026-08-21 05:43:10.975] Module file tracked: Uge 16 - Testing - Teori og praksis.pdf (ID: 1807958)
+[2026-08-21 05:43:10.975]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:10.976]   - Item: Uge 16 - Jest.zip (Type: File)
+[2026-08-21 05:43:11.137] Module file tracked: Uge 16 - Jest.zip (ID: 1808151)
+[2026-08-21 05:43:11.137] Processing Module: Uge 18: Forelæsning 21. Små systemer 2 | Security 101, (authentification, authorization, audit) (ID: 323369)
+[2026-08-21 05:43:11.270] Found 4 items in module 'Uge 18: Forelæsning 21. Små systemer 2 | Security 101, (authentification, authorization, audit)'
+[2026-08-21 05:43:11.270]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 05:43:11.270]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:11.270]   - Item: Forelæsning 21 - Cloud & Security 101.pptx (Type: File)
+[2026-08-21 05:43:11.403] Module file tracked: Forelæsning 22 - Cloud & Security 101.pptx (ID: 1814657)
+[2026-08-21 05:43:11.403]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:11.403] Processing Module: uge 19: Forelæsning 22. Små systemer 3 | Arkitektur, Backend, MVC + fullstack (ID: 323367)
+[2026-08-21 05:43:11.538] Found 4 items in module 'uge 19: Forelæsning 22. Små systemer 3 | Arkitektur, Backend, MVC + fullstack'
+[2026-08-21 05:43:11.539]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 05:43:11.539]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:11.539]   - Item: Uge 19 - System Arkitektur - 3 tier, Backend, MVC + fullstack.pdf (Type: File)
+[2026-08-21 05:43:11.671] Module file tracked: Uge 19 - System Arkitektur - 3 tier, Backend, MVC   fullstack.pdf (ID: 1817698)
+[2026-08-21 05:43:11.671]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:11.672] Processing Module: Uge 20: Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse. (ID: 323371)
+[2026-08-21 05:43:11.808] Found 6 items in module 'Uge 20: Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse.'
+[2026-08-21 05:43:11.808]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 05:43:11.809]   - Item: Kursusbeskrivelse og eksamensregler (Type: ExternalUrl)
+[2026-08-21 05:43:11.809]   - Item: Slides (Type: SubHeader)
+[2026-08-21 05:43:11.809]   - Item: Forelæsning 23 - eksamensforberedelse.pptx (Type: File)
+[2026-08-21 05:43:11.955] Module file tracked: Forelæsning 23 - eksamensforberedelse.pptx (ID: 1823174)
+[2026-08-21 05:43:11.955]   - Item: Forelæsning 23 - eksamensforberedelse.pdf (Type: File)
+[2026-08-21 05:43:12.112] Module file tracked: Forelæsning 23 - eksamensforberedelse.pdf (ID: 1823208)
+[2026-08-21 05:43:12.112]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 05:43:12.120] Requesting URL: https://cbscanvas.instructure.com/files/1598669/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:12.121] Requesting URL: https://cbscanvas.instructure.com/files/1687491/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:12.121] Requesting URL: https://cbscanvas.instructure.com/files/1692940/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:12.122] Requesting URL: https://cbscanvas.instructure.com/files/1700523/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:12.122] Requesting URL: https://cbscanvas.instructure.com/files/1796825/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:13.383] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:13.396] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:13.396] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:13.401] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Obligatoriske afleveringer efterår 2025/g2_fælles_feedback.pdf (225849 bytes)
+[2026-08-21 05:43:13.410] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:13.411] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Andre ressourcer/Trin-for-trin Guide til VS Code og konsollen.pdf (150525 bytes)
+[2026-08-21 05:43:13.415] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Obligatoriske afleveringer forår 2026/g5_fælles_feedback.pdf (144594 bytes)
+[2026-08-21 05:43:13.415] Requesting URL: https://cbscanvas.instructure.com/files/1736378/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:13.419] Requesting URL: https://cbscanvas.instructure.com/files/1736380/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:13.426] Requesting URL: https://cbscanvas.instructure.com/files/1770754/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:13.429] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Obligatoriske afleveringer efterår 2025/G3 opgave.bierOgBlomster analysevejledning.pdf (265292 bytes)
+[2026-08-21 05:43:13.433] Requesting URL: https://cbscanvas.instructure.com/files/1771104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:13.647] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:13.657] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Obligatoriske afleveringer efterår 2025/Fælles feedback G3 v2.pdf (354538 bytes)
+[2026-08-21 05:43:13.659] Requesting URL: https://cbscanvas.instructure.com/files/1815182/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:13.978] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:13.985] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Skriftlig Eksamen/feedback ordinær.pdf (111925 bytes)
+[2026-08-21 05:43:13.992] Requesting URL: https://cbscanvas.instructure.com/files/1626276/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:14.047] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:14.050] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:14.061] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Rapporteksamen/Eksamen 2026 rev_6.pdf (263452 bytes)
+[2026-08-21 05:43:14.063] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Skriftlig Eksamen/eksamen 2025E ordinær final.pdf (655581 bytes)
+[2026-08-21 05:43:14.065] Requesting URL: https://cbscanvas.instructure.com/files/1626277/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:14.067] Requesting URL: https://cbscanvas.instructure.com/files/1626486/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:14.069] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:14.079] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Skriftlig Eksamen/eksamen 2025E re-eksamen.pdf (700836 bytes)
+[2026-08-21 05:43:14.082] Requesting URL: https://cbscanvas.instructure.com/files/1632000/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:14.269] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:14.291] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Kursus-evaluering/PowerPoint to use in class_141223 (2).pptx (1718878 bytes)
+[2026-08-21 05:43:14.293] Requesting URL: https://cbscanvas.instructure.com/files/1632001/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:14.600] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:14.635] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 36 Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, d/forelæsning 1 25.pdf (1593444 bytes)
+[2026-08-21 05:43:14.640] Requesting URL: https://cbscanvas.instructure.com/files/1632558/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:14.716] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:14.723] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 36 Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, d/øvelsessæt 1- Grundlæggende javascript 1.pdf (155545 bytes)
+[2026-08-21 05:43:14.725] Requesting URL: https://cbscanvas.instructure.com/files/1637607/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:14.813] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:14.829] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 37 Forelæsning 2. Programstruktur udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser/forelæsning 2 25.pdf (951046 bytes)
+[2026-08-21 05:43:14.832] Requesting URL: https://cbscanvas.instructure.com/files/1637608/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:14.887] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:15.086] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:15.148] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 36 Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, d/forelæsning 1 25.pptx (25963296 bytes)
+[2026-08-21 05:43:15.154] Requesting URL: https://cbscanvas.instructure.com/files/1637584/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:15.244] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:15.254] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 37 Forelæsning 2. Programstruktur udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser/øvelsessæt 2- Program - Struktur - Algoritmer.pdf (184026 bytes)
+[2026-08-21 05:43:15.260] Requesting URL: https://cbscanvas.instructure.com/files/1643465/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:15.327] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:15.355] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 38 Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak/forelæsning 3 25.pdf (797272 bytes)
+[2026-08-21 05:43:15.362] Requesting URL: https://cbscanvas.instructure.com/files/1643462/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:15.397] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 37 Forelæsning 2. Programstruktur udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser/forelæsning 2 25.pptx (27494979 bytes)
+[2026-08-21 05:43:15.402] Requesting URL: https://cbscanvas.instructure.com/files/1643483/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:15.594] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:15.729] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 38 Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak/forelæsning 3 25.pptx (14493933 bytes)
+[2026-08-21 05:43:15.732] Requesting URL: https://cbscanvas.instructure.com/files/1658577/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:15.834] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:15.840] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 38 Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak/øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (199331 bytes)
+[2026-08-21 05:43:15.843] Requesting URL: https://cbscanvas.instructure.com/files/1658578/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:16.020] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:16.038] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:16.068] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 39 Forelæsning 4. Datastrukturer - Objekter og arrays/forelæsning 4 25.pdf (1093469 bytes)
+[2026-08-21 05:43:16.074] Requesting URL: https://cbscanvas.instructure.com/files/1658625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:16.119] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:16.134] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 39 Forelæsning 4. Datastrukturer - Objekter og arrays/øvelsessæt 4.pdf (258644 bytes)
+[2026-08-21 05:43:16.139] Requesting URL: https://cbscanvas.instructure.com/files/1658626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:16.311] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 39 Forelæsning 4. Datastrukturer - Objekter og arrays/forelæsning 4 25.pptx (24744385 bytes)
+[2026-08-21 05:43:16.314] Requesting URL: https://cbscanvas.instructure.com/files/1666624/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:16.535] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:16.549] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion/forelæsning 5 25.pdf (772981 bytes)
+[2026-08-21 05:43:16.553] Requesting URL: https://cbscanvas.instructure.com/files/1666625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:16.644] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:16.653] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion/øvelsessæt 5.pdf (245920 bytes)
+[2026-08-21 05:43:16.656] Requesting URL: https://cbscanvas.instructure.com/files/1666626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:16.762] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:16.771] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion/øvelsessæt 5 løsninger.pdf (282049 bytes)
+[2026-08-21 05:43:16.774] Requesting URL: https://cbscanvas.instructure.com/files/1666630/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:16.847] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:16.872] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:16.907] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/forelæsning 6 25.pdf (1154888 bytes)
+[2026-08-21 05:43:16.914] Requesting URL: https://cbscanvas.instructure.com/files/1598570/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:17.059] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion/forelæsning 5 25.pptx (17174017 bytes)
+[2026-08-21 05:43:17.062] Requesting URL: https://cbscanvas.instructure.com/files/1670338/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:17.273] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:17.279] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:17.301] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/øvelsessæt 6.pdf (203755 bytes)
+[2026-08-21 05:43:17.306] Requesting URL: https://cbscanvas.instructure.com/files/1677087/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:17.436] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:17.451] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/øvelsessæt 6 løsninger.pdf (239167 bytes)
+[2026-08-21 05:43:17.457] Requesting URL: https://cbscanvas.instructure.com/files/1677089/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:17.485] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:17.500] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/2022 ordinær.pdf (203316 bytes)
+[2026-08-21 05:43:17.508] Requesting URL: https://cbscanvas.instructure.com/files/1677085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:17.693] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:17.708] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/eksamen 2023E ordinær.pdf (255500 bytes)
+[2026-08-21 05:43:17.713] Requesting URL: https://cbscanvas.instructure.com/files/1677090/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:17.727] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/forelæsning 6 25.pptx (39644299 bytes)
+[2026-08-21 05:43:17.730] Requesting URL: https://cbscanvas.instructure.com/files/1679207/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:17.885] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:17.900] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 43 Forelæsning 7. Error-handling, Moduler/forelæsning 7 25.pdf (982759 bytes)
+[2026-08-21 05:43:17.903] Requesting URL: https://cbscanvas.instructure.com/files/1682843/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:18.128] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:18.143] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 43 Forelæsning 7. Error-handling, Moduler/øvelsessæt 7.pdf (274244 bytes)
+[2026-08-21 05:43:18.146] Requesting URL: https://cbscanvas.instructure.com/files/1682844/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:18.164] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:18.306] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:18.306] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 43 Forelæsning 7. Error-handling, Moduler/forelæsning 7 25.pptx (13428202 bytes)
+[2026-08-21 05:43:18.313] Requesting URL: https://cbscanvas.instructure.com/files/1684203/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:18.314] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 43 Forelæsning 7. Error-handling, Moduler/øvelsessæt 7 løsninger.pdf (292720 bytes)
+[2026-08-21 05:43:18.317] Requesting URL: https://cbscanvas.instructure.com/files/1684229/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:18.321] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:18.364] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 43 Forelæsning 7. Error-handling, Moduler/Øvelse_u43.pdf (3962706 bytes)
+[2026-08-21 05:43:18.367] Requesting URL: https://cbscanvas.instructure.com/files/1688312/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:18.577] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:18.645] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/Forelæsning 8 - Intro til Web Teknologier.pdf (5854748 bytes)
+[2026-08-21 05:43:18.648] Requesting URL: https://cbscanvas.instructure.com/files/1690005/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:18.903] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:18.910] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:18.911] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/små_opgaver.pdf (164552 bytes)
+[2026-08-21 05:43:18.921] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:18.921] Requesting URL: https://cbscanvas.instructure.com/files/1692896/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:18.926] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/Minefelt.pdf (366149 bytes)
+[2026-08-21 05:43:18.937] Requesting URL: https://cbscanvas.instructure.com/files/1694147/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:19.088] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:19.295] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 45 Forelæsning 9. HTML 2 og CSS/Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (9440778 bytes)
+[2026-08-21 05:43:19.299] Requesting URL: https://cbscanvas.instructure.com/files/1694158/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:19.302] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/Forelæsning 8 - Intro til Web Teknologier.pptx (23173123 bytes)
+[2026-08-21 05:43:19.305] Requesting URL: https://cbscanvas.instructure.com/files/1696759/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:19.354] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:19.364] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 45 Forelæsning 9. HTML 2 og CSS/bondemand.pdf (380086 bytes)
+[2026-08-21 05:43:19.367] Requesting URL: https://cbscanvas.instructure.com/files/1698072/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:19.697] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:19.705] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 46 Forelæsning 10. Document Object Model (DOM)/Eksamen 2023E Ordinær Klasse opgave.pdf (54694 bytes)
+[2026-08-21 05:43:19.713] Requesting URL: https://cbscanvas.instructure.com/files/1598722/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:19.880] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:19.946] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:19.989] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 47 Forelæsning 11. Asynkron programmering og event handling/Asynkronitet og Events.pdf (1248126 bytes)
+[2026-08-21 05:43:19.996] Requesting URL: https://cbscanvas.instructure.com/files/1700490/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:20.002] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 46 Forelæsning 10. Document Object Model (DOM)/2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (9243144 bytes)
+[2026-08-21 05:43:20.005] Requesting URL: https://cbscanvas.instructure.com/files/1701809/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:20.065] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:20.072] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 46 Forelæsning 10. Document Object Model (DOM)/Eksamen 2024E Ordinær Klasse opgave.pdf (167555 bytes)
+[2026-08-21 05:43:20.075] Requesting URL: https://cbscanvas.instructure.com/files/1701948/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:20.100] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:20.108] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 47 Forelæsning 11. Asynkron programmering og event handling/Opgavesæt uge 47.pdf (148870 bytes)
+[2026-08-21 05:43:20.111] Requesting URL: https://cbscanvas.instructure.com/files/1703058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:20.270] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:20.276] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 47 Forelæsning 11. Asynkron programmering og event handling/html terninger.pdf (226046 bytes)
+[2026-08-21 05:43:20.279] Requesting URL: https://cbscanvas.instructure.com/files/1703059/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:20.560] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:20.565] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:20.577] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Studietimers overblik - Opgave.pdf (166800 bytes)
+[2026-08-21 05:43:20.582] Requesting URL: https://cbscanvas.instructure.com/files/1598591/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:20.585] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/NodeJs og Debugging.pdf (1226376 bytes)
+[2026-08-21 05:43:20.587] Requesting URL: https://cbscanvas.instructure.com/files/1598593/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:20.632] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:20.640] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/JavaScript Objekter – Øvelser.pdf (229478 bytes)
+[2026-08-21 05:43:20.643] Requesting URL: https://cbscanvas.instructure.com/files/1769713/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:20.711] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:20.719] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 49 Øvelser/Gavelisten - Opgave.pdf (125183 bytes)
+[2026-08-21 05:43:20.723] Requesting URL: https://cbscanvas.instructure.com/files/1769714/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:20.835] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:20.844] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 49 Øvelser/Juleværksted - Opgave.pdf (197615 bytes)
+[2026-08-21 05:43:20.848] Requesting URL: https://cbscanvas.instructure.com/files/1768580/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:21.180] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:21.189] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Tidligere eksamenssæt (de fleste med vejledende løsninger)/Fiktiv Eksamensopgave.pdf (43733 bytes)
+[2026-08-21 05:43:21.197] Requesting URL: https://cbscanvas.instructure.com/files/1768581/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:21.328] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:21.341] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Tidligere eksamenssæt (de fleste med vejledende løsninger)/Fiktiv Eksamensopgave3.pdf (141950 bytes)
+[2026-08-21 05:43:21.346] Requesting URL: https://cbscanvas.instructure.com/files/1598710/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:21.712] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:21.897] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:21.910] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/UMLcases.pdf (142648 bytes)
+[2026-08-21 05:43:21.916] Requesting URL: https://cbscanvas.instructure.com/files/1780749/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:21.997] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:22.020] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:22.040] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/Forelæsning13.pdf (1560239 bytes)
+[2026-08-21 05:43:22.040] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/exercises system modelling - solutions.pdf (182349 bytes)
+[2026-08-21 05:43:22.046] Requesting URL: https://cbscanvas.instructure.com/files/1780750/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:22.052] Requesting URL: https://cbscanvas.instructure.com/files/1780937/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:22.155] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:22.168] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/UMLanalyseopgaver.pdf (119412 bytes)
+[2026-08-21 05:43:22.175] Requesting URL: https://cbscanvas.instructure.com/files/1780752/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:22.482] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/Forelæsning13.pptx (51957778 bytes)
+[2026-08-21 05:43:22.485] Requesting URL: https://cbscanvas.instructure.com/files/1780936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:22.570] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:22.594] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 9 Forelæsning 14. Design, Arkitektur/Forelæsning 14 OO UML 2.pdf (1024966 bytes)
+[2026-08-21 05:43:22.597] Requesting URL: https://cbscanvas.instructure.com/files/1784973/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:22.661] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:22.670] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 9 Forelæsning 14. Design, Arkitektur/VRS_registrérKunde_vejl.pdf (197720 bytes)
+[2026-08-21 05:43:22.673] Requesting URL: https://cbscanvas.instructure.com/files/1784974/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:22.785] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:22.794] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 9 Forelæsning 14. Design, Arkitektur/opgave_bibliotekssystem.pdf (174680 bytes)
+[2026-08-21 05:43:22.798] Requesting URL: https://cbscanvas.instructure.com/files/1784717/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:22.805] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:22.978] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 9 Forelæsning 14. Design, Arkitektur/Forelæsning 14 OO UML 2.pptx (13151543 bytes)
+[2026-08-21 05:43:22.981] Requesting URL: https://cbscanvas.instructure.com/files/1784716/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:23.034] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:23.043] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 9 Forelæsning 14. Design, Arkitektur/opgave_bibliotekssystem_vejl.pdf (245890 bytes)
+[2026-08-21 05:43:23.046] Requesting URL: https://cbscanvas.instructure.com/files/1784715/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:23.148] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:23.177] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 10 Forelæsning 15. Database 1  Opsætning af database/Forelæsning 15 DB1_x.pdf (1692942 bytes)
+[2026-08-21 05:43:23.180] Requesting URL: https://cbscanvas.instructure.com/files/1789277/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:23.386] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:23.398] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 10 Forelæsning 15. Database 1  Opsætning af database/Lecture 15 Database Design Exercises solutions NY.pdf (138522 bytes)
+[2026-08-21 05:43:23.402] Requesting URL: https://cbscanvas.instructure.com/files/1789278/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:23.534] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:23.539] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 10 Forelæsning 15. Database 1  Opsætning af database/Lecture 15 Database Design Exercises.pdf (78871 bytes)
+[2026-08-21 05:43:23.544] Requesting URL: https://cbscanvas.instructure.com/files/1789978/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:23.585] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:23.653] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 10 Forelæsning 15. Database 1  Opsætning af database/Guide til opsætning af database-2026.pdf (4907315 bytes)
+[2026-08-21 05:43:23.657] Requesting URL: https://cbscanvas.instructure.com/files/1789237/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:23.703] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:23.922] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:24.102] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:24.127] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 11 Forelæsning 16. Database 2  Datamodifikation/løbeklub SQL.pdf (97930 bytes)
+[2026-08-21 05:43:24.141] Requesting URL: https://cbscanvas.instructure.com/files/1789236/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:24.175] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:24.249] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 11 Forelæsning 16. Database 2  Datamodifikation/Forelæsning 16 - DB2.pdf (1551149 bytes)
+[2026-08-21 05:43:24.262] Requesting URL: https://cbscanvas.instructure.com/files/1793427/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:24.276] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:24.319] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 11 Forelæsning 16. Database 2  Datamodifikation/Lecture 16 svar øvelse.pdf (670880 bytes)
+[2026-08-21 05:43:24.336] Requesting URL: https://cbscanvas.instructure.com/files/1793428/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:24.346] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 11 Forelæsning 16. Database 2  Datamodifikation/Forelæsning 16 - DB2.pptx (14136388 bytes)
+[2026-08-21 05:43:24.353] Requesting URL: https://cbscanvas.instructure.com/files/1793429/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:24.409] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 10 Forelæsning 15. Database 1  Opsætning af database/Forelæsning 15 DB1_x.pptx (34805489 bytes)
+[2026-08-21 05:43:24.413] Requesting URL: https://cbscanvas.instructure.com/files/1794805/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:24.811] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:24.839] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Forelæsning 17 - DB3.pdf (1038221 bytes)
+[2026-08-21 05:43:24.843] Requesting URL: https://cbscanvas.instructure.com/files/1797870/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:24.876] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:24.886] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 11 Forelæsning 16. Database 2  Datamodifikation/Lecture 16 ER-RM Exercises.pdf (186181 bytes)
+[2026-08-21 05:43:24.890] Requesting URL: https://cbscanvas.instructure.com/files/1799465/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:24.966] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:25.005] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:25.024] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Forelæsning 17 ILearn SQL Exercises.pdf (228477 bytes)
+[2026-08-21 05:43:25.031] Requesting URL: https://cbscanvas.instructure.com/files/1805046/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:25.031] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 12 Forelæsning 17. Database 3  Join og set operatorer/SQL-Opgave.pdf (4007174 bytes)
+[2026-08-21 05:43:25.035] Requesting URL: https://cbscanvas.instructure.com/files/1807958/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:25.064] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:25.084] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Forelæsning 17 - DB3.pptx (883058 bytes)
+[2026-08-21 05:43:25.088] Requesting URL: https://cbscanvas.instructure.com/files/1814657/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:25.434] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:25.517] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 13 Forelæsning 18. Webserver & APIer/Webserver-opgave.pdf (3970615 bytes)
+[2026-08-21 05:43:25.521] Requesting URL: https://cbscanvas.instructure.com/files/1817698/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:25.773] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:25.791] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:25.878] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis/Uge 16 - Testing - Teori og praksis.pdf (3126264 bytes)
+[2026-08-21 05:43:25.888] Requesting URL: https://cbscanvas.instructure.com/files/1823174/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:25.940] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:25.965] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 13 Forelæsning 18. Webserver & APIer/Forelæsning 18 - Webserver og API.pptx (9918524 bytes)
+[2026-08-21 05:43:25.971] Requesting URL: https://cbscanvas.instructure.com/files/1823208/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 05:43:26.044] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 15 Forelæsning 19. Webserver & Databaser/Forelæsning 19 - Webserver og Databaser.pptx (6406516 bytes)
+[2026-08-21 05:43:26.048] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:26.181] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:26.274] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 18 Forelæsning 21. Små systemer 2  Security 101, (authentification, authorization, audit)/Forelæsning 22 - Cloud & Security 101.pptx (11668334 bytes)
+[2026-08-21 05:43:26.300] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/uge 19 Forelæsning 22. Små systemer 3  Arkitektur, Backend, MVC   fullstack/Uge 19 - System Arkitektur - 3 tier, Backend, MVC   fullstack.pdf (4891900 bytes)
+[2026-08-21 05:43:26.593] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 05:43:26.631] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 05:43:26.641] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 20 Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse/Forelæsning 23 - eksamensforberedelse.pdf (2001367 bytes)
+[2026-08-21 05:43:26.826] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 20 Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse/Forelæsning 23 - eksamensforberedelse.pptx (11448039 bytes)
+[2026-08-21 05:43:26.829] --- Canvas Content Phase: [syllabus, discussions, submissions] ---
+[2026-08-21 05:43:26.830] === Starting Canvas Content Download ===
+[2026-08-21 05:43:26.832] Secondary: Fetching syllabus...
+[2026-08-21 05:43:26.961] Syllabus body is empty, skipping.
+[2026-08-21 05:43:26.962] Secondary: Fetching discussions...
+[2026-08-21 05:43:27.517] Saving discussion: Projektopgaven -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Discussion Projektopgaven.html
+[2026-08-21 05:43:27.656] Saving discussion: Generelle Spørgsmål / General Questions - 2. semester -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Discussion Generelle Spørgsmål  General Questions - 2. semester.html
+[2026-08-21 05:43:27.937] Saving discussion: Godkendelsesopgave 5 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Discussion Godkendelsesopgave 5.html
+[2026-08-21 05:43:28.207] Saving discussion: Eksamensregler -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Discussion Eksamensregler.html
+[2026-08-21 05:43:28.337] Saving discussion: Generelle Spørgsmål / General Questions - 1. semester -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Discussion Generelle Spørgsmål  General Questions - 1. semester.html
+[2026-08-21 05:43:28.344] Secondary: Fetching submission feedback...
+[2026-08-21 05:43:29.593] Secondary: bulk submissions fetch returned 15
+[2026-08-21 05:43:29.593] Secondary: 9 submission(s) carry feedback
+[2026-08-21 05:43:29.593] Saving submission: Javascript practice quiz 4 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback Javascript practice quiz 4.html
+[2026-08-21 05:43:29.599] Saving submission: Godkendelsesopgave 1 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback Godkendelsesopgave 1.html
+[2026-08-21 05:43:29.604] Saving submission: Javascript practice quiz 6 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback Javascript practice quiz 6.html
+[2026-08-21 05:43:29.608] Saving submission: Godkendelsesopgave 2 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback Godkendelsesopgave 2.html
+[2026-08-21 05:43:29.612] Saving submission: Godkendelsesopgave 3 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback Godkendelsesopgave 3.html
+[2026-08-21 05:43:29.616] Saving submission: G4 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback G4.html
+[2026-08-21 05:43:29.620] Saving submission: Godkendelsesopgave 5 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback Godkendelsesopgave 5.html
+[2026-08-21 05:43:29.624] Saving submission: Godkendelsesopgave 6 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback Godkendelsesopgave 6.html
+[2026-08-21 05:43:29.628] Saving submission: Godkendelsesopgave 7 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback Godkendelsesopgave 7.html
+[2026-08-21 05:43:29.633] === Canvas Content Download Complete ===
+[2026-08-21 05:43:29.633] Starting Catch-All Phase for non-module files...
+[2026-08-21 05:43:29.743] Catch-All Phase Error: {"status":"unauthorized","errors":[{"message":"user not authorised to perform that action"}]}
+[2026-08-21 05:43:29.743] [WARNING] [core.canvas_logic] Files tab restricted for 'Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)' - skipping catch-all phase.
+[2026-08-21 05:43:29.746] --- Download Complete: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | 88 items | 401.4 MB downloaded ---
+
+==================================================
+--- Post-Processing: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) ---
+==================================================
+[2026-08-21 05:43:29.777] === Course Finished: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | Downloaded: 102 items | Errors: 0 ===
+[2026-08-21 05:43:29.777] Post-processing ran: [zip, code, word, video]
+[2026-08-21 05:43:29.824] [INFO] [panopto.runner] Panopto batch start (pid=73091): 2 target(s) | model=tiny device=cpu lang=auto | engine_ready=True (outputs + layout resolved per target)
+[2026-08-21 05:43:29.825] === Panopto transcription engine diagnostics ===
+  faster_whisper: 1.2.1 (import OK)
+  ctranslate2: 4.8.1 (import OK)
+  onnxruntime: 1.29.0 (import OK)
+  torch: not installed (fine - optional for inference)
+  backend_usable: YES
+================================================
+[2026-08-21 05:43:29.825] [INFO] [panopto.runner] Transcription engine: backend_usable=YES | torch=not installed (fine - optional for inference)
+[2026-08-21 05:43:29.825] [INFO] [panopto.runner] Transcription hardware: requested device=cpu | gpu_available=False gpu=None vram=NoneMB | cpu=10 cores | status=cpu_only_mac
+[2026-08-21 05:43:32.276] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b58f9a14-6513-4ba6-9d3a-b34600ba6f34 (via url)
+[2026-08-21 05:43:32.366] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f69a6d8f-d703-49cf-9da7-b34700839cae (via url)
+[2026-08-21 05:43:32.417] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=c8b8a8d1-6e4e-45aa-9dc4-b1d301238290 (via url)
+[2026-08-21 05:43:32.423] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=dfb98470-ada0-463e-9c41-b1e300cba127 (via url)
+[2026-08-21 05:43:32.608] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=11e7ba5a-0ada-4780-b250-b1a30098565d (via url)
+[2026-08-21 05:43:33.101] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=01913573-0a7a-4fdb-bcdb-b1a3008d199d (via url)
+[2026-08-21 05:43:34.368] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=5faa984d-d76e-4462-94a8-b35f00dfccb3 (via url)
+[2026-08-21 05:43:34.596] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2c2cbc41-5e08-4632-a907-b366014f267e (via url)
+[2026-08-21 05:43:34.732] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=1dba66ba-84e0-434c-81d5-b3660165409c (via url)
+[2026-08-21 05:43:34.844] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0074fde5-eba4-42a7-b226-b35f00c6be2c (via url)
+[2026-08-21 05:43:35.369] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=5ba76e8d-6421-4861-8883-b1a400ba9ccd (via url)
+[2026-08-21 05:43:36.033] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=d5bf4d12-bb2d-4787-a923-b1a400c0ec8a (via url)
+[2026-08-21 05:43:36.203] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f05d844b-c2c0-4acc-ae37-b1a8008b06bd (via url)
+[2026-08-21 05:43:36.340] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=4e7d90eb-226a-4678-aade-b1a8008f85bf (via url)
+[2026-08-21 05:43:36.584] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=4a698f87-388c-4e87-a9c2-b35f00b478cf (via url)
+[2026-08-21 05:43:36.847] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=862d36b0-e512-4b45-aa5c-b37f0125fd68 (via url)
+[2026-08-21 05:43:36.950] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0c1d61e1-5788-4c94-8c3e-b1a400d76e9a (via url)
+[2026-08-21 05:43:37.535] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0d78cddd-c122-444c-a358-b389015d0350 (via url)
+[2026-08-21 05:43:37.692] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=1bad9dbd-7c6f-4309-ba52-b1a400e4f565 (via url)
+[2026-08-21 05:43:38.124] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=914641ae-c022-43b3-aabd-b1a80085fb1c (via url)
+[2026-08-21 05:43:38.296] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=281aef18-7f56-48b2-803b-b3890162e755 (via url)
+[2026-08-21 05:43:38.396] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=ead91896-cf78-4d53-a88a-b1a80081e11b (via url)
+[2026-08-21 05:43:38.743] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=04652c96-a5cc-46ac-a087-b395008824e1 (via url)
+[2026-08-21 05:43:39.193] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=c7202c34-2dfb-48cc-8f4d-b39500b2cd9e (via url)
+[2026-08-21 05:43:39.403] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f5b07ec0-02dd-47ff-9ab6-b39e017157d0 (via url)
+[2026-08-21 05:43:39.759] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2e97ed4e-c381-496d-a1dd-b10b0155c62b (via url)
+[2026-08-21 05:43:39.809] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0e1a9ca1-13c0-41d7-a774-b39e01715e4a (via url)
+[2026-08-21 05:43:39.996] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=72399841-43f1-4e1b-999c-b10a016e41d4 (via url)
+[2026-08-21 05:43:40.038] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=06d68daf-238e-46ce-bc82-acd10160f141 (via url)
+[2026-08-21 05:43:40.463] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=25f87b63-5ecb-42d2-8386-b28c016b2c3f (via url)
+[2026-08-21 05:43:40.775] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=bec7eb89-fb15-480c-87ca-b28f014f1971 (via url)
+[2026-08-21 05:43:41.098] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=088298c4-fe8b-4f1b-81ed-b28f0152aeb0 (via url)
+[2026-08-21 05:43:41.151] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=a4070dbb-3a80-4fb3-841e-b29f0174dcae (via url)
+[2026-08-21 05:43:41.241] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2da3eec0-a094-417b-9200-ace001763a64 (via url)
+[2026-08-21 05:43:41.377] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b8c36f0d-6656-4969-88ae-b1350151c84f (via url)
+[2026-08-21 05:43:41.795] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=dfee0c49-93c7-4d20-a1a7-ace7015fa08f (via url)
+[2026-08-21 05:43:41.951] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - vidensproduktion' launch-resolves to 72399841-43f1-4e1b-999c-b10a016e41d4 - ignoring embedded stale id(s): 7f8ea4fc-a256-4bc0-8fcf-b10a01796155
+[2026-08-21 05:43:41.954] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - vidensproduktion' launch-resolves to 2e97ed4e-c381-496d-a1dd-b10b0155c62b - ignoring embedded stale id(s): a95f7ede-0fd8-498d-96da-b10b0162489f
+[2026-08-21 05:43:41.957] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - problemformulering' launch-resolves to 06d68daf-238e-46ce-bc82-acd10160f141 - ignoring embedded stale id(s): 7957ff53-56b3-4c87-9b3f-acd200a67a9e
+[2026-08-21 05:43:41.970] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation' launch-resolves to 2da3eec0-a094-417b-9200-ace001763a64 - ignoring embedded stale id(s): 5194533e-1be0-4932-9b9a-ace10170be66
+[2026-08-21 05:43:41.973] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - klargøring af data' launch-resolves to b8c36f0d-6656-4969-88ae-b1350151c84f - ignoring embedded stale id(s): d69d18c5-1cfc-4fdd-ab49-b135015f6470
+[2026-08-21 05:43:41.976] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data' launch-resolves to dfee0c49-93c7-4d20-a1a7-ace7015fa08f - ignoring embedded stale id(s): 91f06a70-924b-4a17-ac2a-ace800ce49a1
+[2026-08-21 05:43:44.565] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=none
+[2026-08-21 05:43:44.567] [INFO] [panopto.auth] Panopto LTI: no session id resolved - landed on https://cbs.cloud.panopto.eu/Panopto/Pages/Sessions/List.aspx | unfollowed form: ./List.aspx | body: 121853 chars, 0 candidate id(s) | folder: a7cbd921-586f-4bf5-8869-b338008ffda1 | auth: cookies[cbs.cloud.panopto.eu]=.ASPXAUTH,csrfToken,sandboxCookie | markers=none
+[2026-08-21 05:43:44.604] [INFO] [panopto.discovery] Panopto api/v1 folder listing unavailable for a7cbd921-586f-4bf5-8869-b338008ffda1 (status 401) - will fall back to Data.svc/GetSessions.
+[2026-08-21 05:43:44.723] [INFO] [panopto.discovery] Panopto GetSessions: folder a7cbd921-586f-4bf5-8869-b338008ffda1 reports 0 session(s) (page 0 returned 0).
+[2026-08-21 05:43:44.724] [INFO] [panopto.discovery] Panopto GetSessions raw 'd' node for a7cbd921-586f-4bf5-8869-b338008ffda1: {"__type": "SessionResults:#Panopto.Data.DB.WebUI", "Results": [], "TotalNumber": 0, "ArchivedCount": null, "BookmarkedSessionCount": null, "CanAddSubfolder": false, "ContainsArchivedDeliveries": false, "FolderType": 0, "InProgressSessionCount": null, "ParentFolderId": null, "ScheduledRecordingCount": null, "Subfolders": []}
+[2026-08-21 05:43:44.808] [INFO] [panopto.discovery] Panopto GetFolders failed for folder a7cbd921-586f-4bf5-8869-b338008ffda1: HTTP 500: <Fault xmlns="http://schemas.microsoft.com/ws/2005/05/envelope/none"><Code><Value>Sender</Value></Code><Reason><Text xml:lang="en-US">User unified\<CANVAS_USER> is not in role (FolderEnumerate).</Text></Reason></Fault>
+[2026-08-21 05:43:45.113] [INFO] [panopto.discovery] Panopto unscoped GetSessions probe -> TotalNumber=3086 (0 = the Panopto session holds NO content grants at all, i.e. the LTI cookie is effectively anonymous; >0 = auth works and the problem is folder-scoped)
+[2026-08-21 05:43:45.114] [INFO] [panopto.discovery] Panopto course-folder fallback: enumerated 0 session(s) in the course folder for course 43660 via a course-level launch (no content link required).
+[2026-08-21 05:43:47.332] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b58f9a14-6513-4ba6-9d3a-b34600ba6f34 (via url)
+[2026-08-21 05:43:47.333] [INFO] [panopto.runner] Panopto auth bootstrap attempt 1/36 via https://cbscanvas.instructure.com/api/v1/courses/43660/external_tools/sessionless_launch -> OK
+[2026-08-21 05:43:47.373] [INFO] [panopto.runner] Discovering Panopto recordings in 'Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)' (course id=45899)...
+[2026-08-21 05:43:48.327] [INFO] [panopto.discovery] Panopto discovery: skipped 12 non-Panopto ExternalTool item(s) in course 45899 (~12-24s of LTI handshakes avoided); 0 to resolve.
+[2026-08-21 05:43:50.323] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=none
+[2026-08-21 05:43:50.325] [INFO] [panopto.auth] Panopto LTI: no session id resolved - landed on https://cbs.cloud.panopto.eu/Panopto/Pages/Sessions/List.aspx | unfollowed form: ./List.aspx | body: 121853 chars, 0 candidate id(s) | folder: 277af69e-502a-4fbc-b0d8-b4a0011cc5c5 | auth: cookies[cbs.cloud.panopto.eu]=.ASPXAUTH,csrfToken,sandboxCookie | markers=none
+[2026-08-21 05:43:50.358] [INFO] [panopto.discovery] Panopto api/v1 folder listing unavailable for 277af69e-502a-4fbc-b0d8-b4a0011cc5c5 (status 401) - will fall back to Data.svc/GetSessions.
+[2026-08-21 05:43:50.487] [INFO] [panopto.discovery] Panopto GetSessions: folder 277af69e-502a-4fbc-b0d8-b4a0011cc5c5 reports 0 session(s) (page 0 returned 0).
+[2026-08-21 05:43:50.487] [INFO] [panopto.discovery] Panopto GetSessions raw 'd' node for 277af69e-502a-4fbc-b0d8-b4a0011cc5c5: {"__type": "SessionResults:#Panopto.Data.DB.WebUI", "Results": [], "TotalNumber": 0, "ArchivedCount": null, "BookmarkedSessionCount": null, "CanAddSubfolder": false, "ContainsArchivedDeliveries": false, "FolderType": 0, "InProgressSessionCount": null, "ParentFolderId": null, "ScheduledRecordingCount": null, "Subfolders": []}
+[2026-08-21 05:43:50.527] [INFO] [panopto.discovery] Panopto GetFolders failed for folder 277af69e-502a-4fbc-b0d8-b4a0011cc5c5: HTTP 500: <Fault xmlns="http://schemas.microsoft.com/ws/2005/05/envelope/none"><Code><Value>Sender</Value></Code><Reason><Text xml:lang="en-US">User unified\<CANVAS_USER> is not in role (FolderEnumerate).</Text></Reason></Fault>
+[2026-08-21 05:43:50.580] [INFO] [panopto.discovery] Panopto GetFolderInfo probe for 277af69e-502a-4fbc-b0d8-b4a0011cc5c5 -> name='Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)' sessions=? subfolders=?
+[2026-08-21 05:43:50.787] [INFO] [panopto.discovery] Panopto unscoped GetSessions probe -> TotalNumber=3086 (0 = the Panopto session holds NO content grants at all, i.e. the LTI cookie is effectively anonymous; >0 = auth works and the problem is folder-scoped)
+[2026-08-21 05:43:50.788] [INFO] [panopto.discovery] Panopto course-folder fallback: enumerated 0 session(s) in the course folder for course 45899 via a course-level launch (no content link required).
+[2026-08-21 05:43:52.428] [INFO] [panopto.runner] Discovered 0 recording(s) in 'Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)'
+[2026-08-21 05:43:52.440] [INFO] [panopto.runner] Discovery complete: 36 found across 1 course(s); planned 36 download(s) (36 video), 36 transcription(s), 0 shortcut(s), 0 skipped (already on disk).
+[2026-08-21 05:43:52.440] [INFO] [panopto.runner] Download phase: 36 recording(s) (36 video, 0 audio); 4 concurrent worker(s).
+[2026-08-21 05:43:53.738] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (18.3 MB in 1.0s)
+[2026-08-21 05:43:54.579] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (34.5 MB in 0.8s)
+[2026-08-21 05:43:54.949] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (49.4 MB in 2.3s)
+[2026-08-21 05:43:55.402] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (30.2 MB in 0.8s)
+[2026-08-21 05:43:55.531] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (72.8 MB in 3.0s)
+[2026-08-21 05:43:56.466] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (40.2 MB in 1.0s)
+[2026-08-21 05:43:56.856] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (51.5 MB in 1.3s)
+[2026-08-21 05:43:57.942] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (57.0 MB in 1.0s)
+[2026-08-21 05:43:58.777] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (42.5 MB in 0.8s)
+[2026-08-21 05:43:59.046] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (60.2 MB in 4.0s)
+[2026-08-21 05:43:59.065] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (76.4 MB in 2.5s)
+[2026-08-21 05:43:59.147] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (131.0 MB in 6.6s)
+[2026-08-21 05:43:59.345] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (19.2 MB in 0.5s)
+[2026-08-21 05:43:59.669] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (17.4 MB in 0.5s)
+[2026-08-21 05:43:59.976] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (25.4 MB in 0.8s)
+[2026-08-21 05:44:00.429] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (40.3 MB in 1.0s)
+[2026-08-21 05:44:00.493] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (35.8 MB in 0.8s)
+[2026-08-21 05:44:01.569] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (44.2 MB in 1.0s)
+[2026-08-21 05:44:02.263] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (57.4 MB in 1.8s)
+[2026-08-21 05:44:02.389] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (38.2 MB in 0.8s)
+[2026-08-21 05:44:02.685] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (39.6 MB in 3.6s)
+[2026-08-21 05:44:03.613] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (76.4 MB in 3.6s)
+[2026-08-21 05:44:04.032] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (45.6 MB in 1.3s)
+[2026-08-21 05:44:05.113] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (59.6 MB in 1.0s)
+[2026-08-21 05:44:06.205] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (69.3 MB in 1.0s)
+[2026-08-21 05:44:06.225] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (50.8 MB in 2.5s)
+[2026-08-21 05:44:07.865] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (91.1 MB in 1.5s)
+[2026-08-21 05:44:08.305] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (64.4 MB in 2.0s)
+[2026-08-21 05:44:08.531] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (136.4 MB in 6.1s)
+[2026-08-21 05:44:08.942] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (34.9 MB in 1.0s)
+[2026-08-21 05:44:09.143] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (39.5 MB in 0.8s)
+[2026-08-21 05:44:09.882] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (63.6 MB in 1.3s)
+[2026-08-21 05:44:10.799] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (83.6 MB in 1.8s)
+[2026-08-21 05:44:11.782] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (90.8 MB in 2.6s)
+[2026-08-21 05:44:11.948] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (91.6 MB in 9.6s)
+[2026-08-21 05:44:12.002] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (66.5 MB in 2.0s)
+[2026-08-21 05:44:12.009] [INFO] [panopto.runner] Transcription phase: 36 file(s) (model=tiny, device=cpu).
+[2026-08-21 05:44:12.014] [INFO] [panopto.runner] Transcribing [1/36] 'Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:44:12.019] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82364 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:45:34.839] [INFO] [panopto.transcribe] Transcribe worker (pid=82364, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82364 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 18:35.324
+[INFO] [faster_whisper] VAD filter removed 01:12.848 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 1.00
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=1115s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 188 segments, lang=da, 82.7s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82364 lang=da outputs=txt,srt
+[2026-08-21 05:45:34.839] [INFO] [panopto.transcribe] Transcribe worker (pid=82364) OK in 82.8s: txt, srt
+[2026-08-21 05:45:34.846] [INFO] [panopto.runner] Transcribing [2/36] 'Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:45:34.850] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82389 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:47:28.228] [INFO] [panopto.transcribe] Transcribe worker (pid=82389, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82389 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 25:15.892
+[INFO] [faster_whisper] VAD filter removed 01:03.184 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=1516s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 273 segments, lang=da, 113.3s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82389 lang=da outputs=txt,srt
+[2026-08-21 05:47:28.228] [INFO] [panopto.transcribe] Transcribe worker (pid=82389) OK in 113.4s: txt, srt
+[2026-08-21 05:47:28.235] [INFO] [panopto.runner] Transcribing [3/36] 'Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:47:28.239] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82418 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:48:09.932] [INFO] [panopto.transcribe] Transcribe worker (pid=82418, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82418 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 11:56.057
+[INFO] [faster_whisper] VAD filter removed 00:44.432 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.93
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=716s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 95 segments, lang=da, 41.6s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82418 lang=da outputs=txt,srt
+[2026-08-21 05:48:09.932] [INFO] [panopto.transcribe] Transcribe worker (pid=82418) OK in 41.7s: txt, srt
+[2026-08-21 05:48:09.944] [INFO] [panopto.runner] Transcribing [4/36] 'Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:48:09.948] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82436 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:48:32.641] [INFO] [panopto.transcribe] Transcribe worker (pid=82436, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82436 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 08:15.073
+[INFO] [faster_whisper] VAD filter removed 00:47.265 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.77
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=495s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 39 segments, lang=da, 22.6s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82436 lang=da outputs=txt,srt
+[2026-08-21 05:48:32.642] [INFO] [panopto.transcribe] Transcribe worker (pid=82436) OK in 22.7s: txt, srt
+[2026-08-21 05:48:32.649] [INFO] [panopto.runner] Transcribing [5/36] 'Forelæsningsvideo (1): formelle træk - organisationsformer' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:48:32.653] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82449 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:48:58.375] [INFO] [panopto.transcribe] Transcribe worker (pid=82449, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82449 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:26.614
+[INFO] [faster_whisper] VAD filter removed 01:07.830 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.89
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=627s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 80 segments, lang=da, 25.7s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82449 lang=da outputs=txt,srt
+[2026-08-21 05:48:58.375] [INFO] [panopto.transcribe] Transcribe worker (pid=82449) OK in 25.7s: txt, srt
+[2026-08-21 05:48:58.383] [INFO] [panopto.runner] Transcribing [6/36] 'Forelæsningsvideo (2): formelle træk - organisationsformer' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:48:58.387] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82467 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:49:25.505] [INFO] [panopto.transcribe] Transcribe worker (pid=82467, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82467 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:14.191
+[INFO] [faster_whisper] VAD filter removed 00:30.512 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.95
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=614s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 61 segments, lang=da, 27.1s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82467 lang=da outputs=txt,srt
+[2026-08-21 05:49:25.505] [INFO] [panopto.transcribe] Transcribe worker (pid=82467) OK in 27.1s: txt, srt
+[2026-08-21 05:49:25.512] [INFO] [panopto.runner] Transcribing [7/36] 'Forelæsningsvideo (1): Uformelletræk_organisationskultur' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:49:25.516] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82479 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:51:07.129] [INFO] [panopto.transcribe] Transcribe worker (pid=82479, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82479 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 13:42.938
+[INFO] [faster_whisper] VAD filter removed 00:09.914 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.73
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=823s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 119 segments, lang=da, 101.5s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82479 lang=da outputs=txt,srt
+[2026-08-21 05:51:07.130] [INFO] [panopto.transcribe] Transcribe worker (pid=82479) OK in 101.6s: txt, srt
+[2026-08-21 05:51:07.137] [INFO] [panopto.runner] Transcribing [8/36] 'Forelæsningsvideo (2): Uformelletræk_organisationskultur' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:51:07.141] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82505 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:52:15.319] [INFO] [panopto.transcribe] Transcribe worker (pid=82505, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82505 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 09:37.945
+[INFO] [faster_whisper] VAD filter removed 00:07.344 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.78
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=578s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 53 segments, lang=da, 68.1s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82505 lang=da outputs=txt,srt
+[2026-08-21 05:52:15.319] [INFO] [panopto.transcribe] Transcribe worker (pid=82505) OK in 68.2s: txt, srt
+[2026-08-21 05:52:15.327] [INFO] [panopto.runner] Transcribing [9/36] 'Video med respons på feedback og introduktion til et nyt initiativ i undervisningen' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:52:15.330] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82526 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:53:35.286] [INFO] [panopto.transcribe] Transcribe worker (pid=82526, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82526 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 13:23.155
+[INFO] [faster_whisper] VAD filter removed 00:15.056 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.92
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=803s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 152 segments, lang=da, 79.9s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82526 lang=da outputs=txt,srt
+[2026-08-21 05:53:35.286] [INFO] [panopto.transcribe] Transcribe worker (pid=82526) OK in 80.0s: txt, srt
+[2026-08-21 05:53:35.295] [INFO] [panopto.runner] Transcribing [10/36] 'Forelæsningsvideo 1 om Sensemaking' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:53:35.299] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82553 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:54:30.520] [INFO] [panopto.transcribe] Transcribe worker (pid=82553, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82553 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 15:20.996
+[INFO] [faster_whisper] VAD filter removed 00:16.016 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=921s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 122 segments, lang=da, 55.1s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82553 lang=da outputs=txt,srt
+[2026-08-21 05:54:30.521] [INFO] [panopto.transcribe] Transcribe worker (pid=82553) OK in 55.2s: txt, srt
+[2026-08-21 05:54:30.528] [INFO] [panopto.runner] Transcribing [11/36] 'Forelæsningsvideo 2 om Sensemaking' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:54:30.532] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82570 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:55:08.973] [INFO] [panopto.transcribe] Transcribe worker (pid=82570, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82570 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 11:35.020
+[INFO] [faster_whisper] VAD filter removed 00:17.520 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.92
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=695s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 121 segments, lang=da, 38.4s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82570 lang=da outputs=txt,srt
+[2026-08-21 05:55:08.973] [INFO] [panopto.transcribe] Transcribe worker (pid=82570) OK in 38.4s: txt, srt
+[2026-08-21 05:55:08.981] [INFO] [panopto.runner] Transcribing [12/36] 'Forelæsningsvideo (1): uformelle træk - magt i organisationer' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:55:08.984] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82579 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:55:48.300] [INFO] [panopto.transcribe] Transcribe worker (pid=82579, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82579 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 13:45.632
+[INFO] [faster_whisper] VAD filter removed 01:09.328 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.96
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=826s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 103 segments, lang=da, 39.2s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82579 lang=da outputs=txt,srt
+[2026-08-21 05:55:48.300] [INFO] [panopto.transcribe] Transcribe worker (pid=82579) OK in 39.3s: txt, srt
+[2026-08-21 05:55:48.307] [INFO] [panopto.runner] Transcribing [13/36] 'Forelæsningsvideo (2): uformelle træk - magt i organisationer' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:55:48.311] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82589 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:56:06.310] [INFO] [panopto.transcribe] Transcribe worker (pid=82589, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82589 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 07:27.472
+[INFO] [faster_whisper] VAD filter removed 00:26.384 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.44
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=447s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 54 segments, lang=da, 17.9s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82589 lang=da outputs=txt,srt
+[2026-08-21 05:56:06.310] [INFO] [panopto.transcribe] Transcribe worker (pid=82589) OK in 18.0s: txt, srt
+[2026-08-21 05:56:06.318] [INFO] [panopto.runner] Transcribing [14/36] 'Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:56:06.321] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82597 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:56:42.899] [INFO] [panopto.transcribe] Transcribe worker (pid=82597, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82597 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 13:06.019
+[INFO] [faster_whisper] VAD filter removed 00:29.136 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.97
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=786s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 121 segments, lang=da, 36.5s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82597 lang=da outputs=txt,srt
+[2026-08-21 05:56:42.899] [INFO] [panopto.transcribe] Transcribe worker (pid=82597) OK in 36.6s: txt, srt
+[2026-08-21 05:56:42.906] [INFO] [panopto.runner] Transcribing [15/36] 'Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:56:42.910] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82607 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:57:06.985] [INFO] [panopto.transcribe] Transcribe worker (pid=82607, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82607 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 08:15.909
+[INFO] [faster_whisper] VAD filter removed 00:20.453 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=496s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 72 segments, lang=da, 24.0s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82607 lang=da outputs=txt,srt
+[2026-08-21 05:57:06.985] [INFO] [panopto.transcribe] Transcribe worker (pid=82607) OK in 24.1s: txt, srt
+[2026-08-21 05:57:06.993] [INFO] [panopto.runner] Transcribing [16/36] 'Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:57:06.997] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82614 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:57:25.189] [INFO] [panopto.transcribe] Transcribe worker (pid=82614, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82614 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 06:53.153
+[INFO] [faster_whisper] VAD filter removed 00:02.000 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.96
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=413s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 62 segments, lang=da, 18.1s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82614 lang=da outputs=txt,srt
+[2026-08-21 05:57:25.190] [INFO] [panopto.transcribe] Transcribe worker (pid=82614) OK in 18.2s: txt, srt
+[2026-08-21 05:57:25.197] [INFO] [panopto.runner] Transcribing [17/36] 'Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:57:25.201] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82624 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:57:53.004] [INFO] [panopto.transcribe] Transcribe worker (pid=82624, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82624 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:41.683
+[INFO] [faster_whisper] VAD filter removed 00:42.688 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.91
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=642s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 75 segments, lang=da, 27.7s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82624 lang=da outputs=txt,srt
+[2026-08-21 05:57:53.004] [INFO] [panopto.transcribe] Transcribe worker (pid=82624) OK in 27.8s: txt, srt
+[2026-08-21 05:57:53.011] [INFO] [panopto.runner] Transcribing [18/36] 'Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:57:53.015] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82631 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:58:25.997] [INFO] [panopto.transcribe] Transcribe worker (pid=82631, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82631 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 09:30.956
+[INFO] [faster_whisper] VAD filter removed 00:30.683 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.69
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=571s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 82 segments, lang=da, 32.9s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82631 lang=da outputs=txt,srt
+[2026-08-21 05:58:25.997] [INFO] [panopto.transcribe] Transcribe worker (pid=82631) OK in 33.0s: txt, srt
+[2026-08-21 05:58:26.005] [INFO] [panopto.runner] Transcribing [19/36] 'Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:58:26.009] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82645 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 05:59:26.366] [INFO] [panopto.transcribe] Transcribe worker (pid=82645, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82645 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 15:04.022
+[INFO] [faster_whisper] VAD filter removed 00:23.360 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.88
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=904s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 97 segments, lang=da, 60.3s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82645 lang=da outputs=txt,srt
+[2026-08-21 05:59:26.366] [INFO] [panopto.transcribe] Transcribe worker (pid=82645) OK in 60.4s: txt, srt
+[2026-08-21 05:59:26.374] [INFO] [panopto.runner] Transcribing [20/36] 'Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2' (device=cpu, source=Recording.mp4)...
+[2026-08-21 05:59:26.377] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82671 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:00:14.974] [INFO] [panopto.transcribe] Transcribe worker (pid=82671, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82671 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:58.959
+[INFO] [faster_whisper] VAD filter removed 00:25.615 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.98
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=659s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 81 segments, lang=da, 48.5s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82671 lang=da outputs=txt,srt
+[2026-08-21 06:00:14.974] [INFO] [panopto.transcribe] Transcribe worker (pid=82671) OK in 48.6s: txt, srt
+[2026-08-21 06:00:14.982] [INFO] [panopto.runner] Transcribing [21/36] 'Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:00:14.986] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82684 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:00:48.183] [INFO] [panopto.transcribe] Transcribe worker (pid=82684, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82684 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 12:40.570
+[INFO] [faster_whisper] VAD filter removed 00:28.154 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=761s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 163 segments, lang=da, 33.1s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82684 lang=da outputs=txt,srt
+[2026-08-21 06:00:48.183] [INFO] [panopto.transcribe] Transcribe worker (pid=82684) OK in 33.2s: txt, srt
+[2026-08-21 06:00:48.191] [INFO] [panopto.runner] Transcribing [22/36] 'Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:00:48.195] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82693 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:01:29.042] [INFO] [panopto.transcribe] Transcribe worker (pid=82693, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82693 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 13:16.700
+[INFO] [faster_whisper] VAD filter removed 00:47.868 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=797s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 104 segments, lang=da, 40.8s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82693 lang=da outputs=txt,srt
+[2026-08-21 06:01:29.042] [INFO] [panopto.transcribe] Transcribe worker (pid=82693) OK in 40.9s: txt, srt
+[2026-08-21 06:01:29.050] [INFO] [panopto.runner] Transcribing [23/36] 'Forelæsningsvideo (1): Forandringsledelse' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:01:29.054] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82708 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:03:08.807] [INFO] [panopto.transcribe] Transcribe worker (pid=82708, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82708 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 18:20.788
+[INFO] [faster_whisper] VAD filter removed 00:29.460 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=1101s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 144 segments, lang=da, 99.7s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82708 lang=da outputs=txt,srt
+[2026-08-21 06:03:08.807] [INFO] [panopto.transcribe] Transcribe worker (pid=82708) OK in 99.8s: txt, srt
+[2026-08-21 06:03:08.814] [INFO] [panopto.runner] Transcribing [24/36] 'Forelæsningsvideo (2): Forandringsledelse' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:03:08.818] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82727 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:05:35.589] [INFO] [panopto.transcribe] Transcribe worker (pid=82727, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82727 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 26:30.381
+[INFO] [faster_whisper] VAD filter removed 00:24.397 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=1590s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 247 segments, lang=da, 146.7s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82727 lang=da outputs=txt,srt
+[2026-08-21 06:05:35.589] [INFO] [panopto.transcribe] Transcribe worker (pid=82727) OK in 146.8s: txt, srt
+[2026-08-21 06:05:35.596] [INFO] [panopto.runner] Transcribing [25/36] 'Forelæsningsvideo 1 Ledelse i organisationer 1' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:05:35.600] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82770 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:06:10.244] [INFO] [panopto.transcribe] Transcribe worker (pid=82770, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82770 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 09:27.472
+[INFO] [faster_whisper] VAD filter removed 00:20.464 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.92
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=567s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 76 segments, lang=da, 34.6s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82770 lang=da outputs=txt,srt
+[2026-08-21 06:06:10.244] [INFO] [panopto.transcribe] Transcribe worker (pid=82770) OK in 34.6s: txt, srt
+[2026-08-21 06:06:10.252] [INFO] [panopto.runner] Transcribing [26/36] 'Forelæsningsvideo 2 Ledelse i organisationer 2' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:06:10.255] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82783 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:06:44.160] [INFO] [panopto.transcribe] Transcribe worker (pid=82783, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82783 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:03.185
+[INFO] [faster_whisper] VAD filter removed 00:23.857 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.98
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=603s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 80 segments, lang=da, 33.8s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82783 lang=da outputs=txt,srt
+[2026-08-21 06:06:44.160] [INFO] [panopto.transcribe] Transcribe worker (pid=82783) OK in 33.9s: txt, srt
+[2026-08-21 06:06:44.168] [INFO] [panopto.runner] Transcribing [27/36] 'Forelæsningsvideo (1): organisationsprojekt - vidensproduktion' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:06:44.172] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82799 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:07:37.648] [INFO] [panopto.transcribe] Transcribe worker (pid=82799, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82799 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 18:56.942
+[INFO] [faster_whisper] VAD filter removed 01:26.478 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.96
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=1137s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 151 segments, lang=da, 53.4s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82799 lang=da outputs=txt,srt
+[2026-08-21 06:07:37.648] [INFO] [panopto.transcribe] Transcribe worker (pid=82799) OK in 53.5s: txt, srt
+[2026-08-21 06:07:37.655] [INFO] [panopto.runner] Transcribing [28/36] 'Forelæsningsvideo (2): organisationsprojekt - vidensproduktion' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:07:37.659] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82811 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:08:33.357] [INFO] [panopto.transcribe] Transcribe worker (pid=82811, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82811 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 20:06.857
+[INFO] [faster_whisper] VAD filter removed 01:19.657 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=1207s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 163 segments, lang=da, 55.6s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82811 lang=da outputs=txt,srt
+[2026-08-21 06:08:33.358] [INFO] [panopto.transcribe] Transcribe worker (pid=82811) OK in 55.7s: txt, srt
+[2026-08-21 06:08:33.365] [INFO] [panopto.runner] Transcribing [29/36] 'Forelæsningsvideo (1): organisationsprojekt - problemformulering' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:08:33.369] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82831 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:09:15.970] [INFO] [panopto.transcribe] Transcribe worker (pid=82831, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82831 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 12:00.910
+[INFO] [faster_whisper] VAD filter removed 00:49.262 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=721s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 97 segments, lang=da, 42.5s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82831 lang=da outputs=txt,srt
+[2026-08-21 06:09:15.970] [INFO] [panopto.transcribe] Transcribe worker (pid=82831) OK in 42.6s: txt, srt
+[2026-08-21 06:09:15.978] [INFO] [panopto.runner] Transcribing [30/36] 'Forelæsningsvideo (2): organisationsprojekt - problemformulering' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:09:15.981] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82850 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:10:23.459] [INFO] [panopto.transcribe] Transcribe worker (pid=82850, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82850 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 21:45.356
+[INFO] [faster_whisper] VAD filter removed 01:35.884 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 1.00
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=1305s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 170 segments, lang=da, 67.4s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82850 lang=da outputs=txt,srt
+[2026-08-21 06:10:23.459] [INFO] [panopto.transcribe] Transcribe worker (pid=82850) OK in 67.5s: txt, srt
+[2026-08-21 06:10:23.467] [INFO] [panopto.runner] Transcribing [31/36] 'Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:10:23.470] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82871 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:10:50.722] [INFO] [panopto.transcribe] Transcribe worker (pid=82871, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82871 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 08:02.162
+[INFO] [faster_whisper] VAD filter removed 00:29.618 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.94
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=482s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 58 segments, lang=da, 27.2s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82871 lang=da outputs=txt,srt
+[2026-08-21 06:10:50.722] [INFO] [panopto.transcribe] Transcribe worker (pid=82871) OK in 27.3s: txt, srt
+[2026-08-21 06:10:50.731] [INFO] [panopto.runner] Transcribing [32/36] 'Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:10:50.734] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82878 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:11:23.601] [INFO] [panopto.transcribe] Transcribe worker (pid=82878, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82878 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 09:37.736
+[INFO] [faster_whisper] VAD filter removed 00:29.744 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.97
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=578s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 72 segments, lang=da, 32.8s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82878 lang=da outputs=txt,srt
+[2026-08-21 06:11:23.601] [INFO] [panopto.transcribe] Transcribe worker (pid=82878) OK in 32.9s: txt, srt
+[2026-08-21 06:11:23.608] [INFO] [panopto.runner] Transcribing [33/36] 'Forelæsningsvideo (1): organisationsprojekt - operationalisering' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:11:23.612] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82893 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:12:06.317] [INFO] [panopto.transcribe] Transcribe worker (pid=82893, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82893 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 14:22.900
+[INFO] [faster_whisper] VAD filter removed 00:59.920 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 1.00
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=863s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 135 segments, lang=da, 42.6s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82893 lang=da outputs=txt,srt
+[2026-08-21 06:12:06.317] [INFO] [panopto.transcribe] Transcribe worker (pid=82893) OK in 42.7s: txt, srt
+[2026-08-21 06:12:06.325] [INFO] [panopto.runner] Transcribing [34/36] 'Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:12:06.328] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82904 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:12:57.194] [INFO] [panopto.transcribe] Transcribe worker (pid=82904, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82904 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 16:52.901
+[INFO] [faster_whisper] VAD filter removed 01:35.749 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 1.00
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=1013s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 127 segments, lang=da, 50.8s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82904 lang=da outputs=txt,srt
+[2026-08-21 06:12:57.194] [INFO] [panopto.transcribe] Transcribe worker (pid=82904) OK in 50.9s: txt, srt
+[2026-08-21 06:12:57.201] [INFO] [panopto.runner] Transcribing [35/36] 'Forelæsningsvideo (1): organisationsprojekt - klargøring af data' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:12:57.205] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82921 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:14:14.191] [INFO] [panopto.transcribe] Transcribe worker (pid=82921, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82921 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 25:14.823
+[INFO] [faster_whisper] VAD filter removed 02:13.415 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.98
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=1515s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 198 segments, lang=da, 76.9s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82921 lang=da outputs=txt,srt
+[2026-08-21 06:14:14.191] [INFO] [panopto.transcribe] Transcribe worker (pid=82921) OK in 77.0s: txt, srt
+[2026-08-21 06:14:14.198] [INFO] [panopto.runner] Transcribing [36/36] 'Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data' (device=cpu, source=Recording.mp4)...
+[2026-08-21 06:14:14.202] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=82948 device=cpu frozen=False file=Recording.mp4
+[2026-08-21 06:14:48.668] [INFO] [panopto.transcribe] Transcribe worker (pid=82948, Recording.mp4) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=82948 frozen=False routed_via=direct device=cpu want_txt=True want_srt=True file=Recording.mp4
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:52.899
+[INFO] [faster_whisper] VAD filter removed 00:41.808 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 1.00
+[INFO] [panopto.transcribe] Transcribing Recording.mp4: audio=653s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Recording.mp4: 68 segments, lang=da, 34.4s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=82948 lang=da outputs=txt,srt
+[2026-08-21 06:14:48.668] [INFO] [panopto.transcribe] Transcribe worker (pid=82948) OK in 34.5s: txt, srt
+[2026-08-21 06:14:48.726] [INFO] [panopto.runner] Panopto batch done: found=36 downloaded=36 transcribed=36 shortcuts=0 skipped=0 failed=0 courses=1

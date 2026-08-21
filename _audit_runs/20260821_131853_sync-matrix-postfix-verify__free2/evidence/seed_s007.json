@@ -1,0 +1,60 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free2/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T13:22:22",
+  "applied": [
+    {
+      "kind": "deleted_on_canvas",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "deleted_on_canvas": 2
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 264,
+    "files": 302
+  },
+  "fixtures": [
+    {
+      "label": "deleted-on-canvas:GhostFile_0_Eksempel - Gruppekontrakt.docx",
+      "kind": "deleted_on_canvas",
+      "path": "GhostFile_0_Eksempel - Gruppekontrakt.docx",
+      "expect_category": "deleted_on_canvas",
+      "expect_after": "unchanged",
+      "expect_path": "GhostFile_0_Eksempel - Gruppekontrakt.docx",
+      "match_name": "GhostFile_0_Eksempel - Gruppekontrakt.docx",
+      "why": "A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files.",
+      "canvas_file_id": 900000000,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-on-canvas:GhostFile_1_Svarark - Gode råd til projektet.docx",
+      "kind": "deleted_on_canvas",
+      "path": "Øvelser i uge 18/GhostFile_1_Svarark - Gode råd til projektet.docx",
+      "expect_category": "deleted_on_canvas",
+      "expect_after": "unchanged",
+      "expect_path": "Øvelser i uge 18/GhostFile_1_Svarark - Gode råd til projektet.docx",
+      "match_name": "GhostFile_1_Svarark - Gode råd til projektet.docx",
+      "why": "A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files.",
+      "canvas_file_id": 900000001,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

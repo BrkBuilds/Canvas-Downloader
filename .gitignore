@@ -76,8 +76,47 @@ fake_quick_sync_setup.py
 # frozen builds write it to the per-user config dir). Never committed.
 diagnostics/
 
-#audit
-_audit_runs/*
+# Audit runs: track the RESULT, never the course material.
+#
+# The findings, the reports and the per-row logs ARE the audit - they are what
+# a later session re-reads to adjudicate a finding, and losing them means the
+# work has to be redone on a rented machine. They are also small (~4 MB of
+# results, ~38 MB with logs across every run to date).
+#
+# What is excluded and why:
+#   downloads/        the student's actual Canvas course material - GBs of it,
+#                     and not ours to redistribute
+#   browser-profile/  Chrome profile: cookies and session state for a real
+#                     logged-in Canvas account. NEVER commit this.
+#   config/           the run's app config dir. No token today (checked), but
+#                     it is exactly where one lands if the keyring path fails,
+#                     so it stays out on principle rather than on inspection.
+#   disk_*.json       per-file inventories with md5s - 499 MB and regenerable
+#   evidence/rows/    harvested per-row folder copies - 33 MB, same reason
+#   screenshots/      130 MB of PNGs
+#   _snapshots/ _screens/   golden folders and UI renders, GBs, regenerable
+#
+# NOTE the trade: `matrix recheck` re-derives findings from disk_*.json, so a
+# historical run cannot be re-checked once its evidence is gone. The findings
+# and logs it already produced remain, which is what adjudication actually
+# needs.
+#
+# NOTE the `/*` forms below are deliberate. Git will not descend into an
+# EXCLUDED DIRECTORY, so a negation inside one can never re-include
+# anything - the same trap `.claude/*` documents. Excluding the CONTENTS
+# instead leaves the directory itself readable, so the two keepers below
+# work: the debug log, and the health log + session state.
+_audit_runs/**/downloads/*
+!_audit_runs/**/downloads/debug_log.txt
+_audit_runs/**/browser-profile/
+_audit_runs/**/config/*
+!_audit_runs/**/config/diagnostics/
+_audit_runs/**/evidence/rows/
+_audit_runs/**/evidence/screenshots/
+_audit_runs/**/disk_*.json
+_audit_runs/**/samples/
+_audit_runs/_snapshots/
+_audit_runs/_screens/
 # UI review renders (scripts/capture_completion_gallery.py). Regenerated on
 # demand and ~18 MB of PNGs - deliberately NOT under docs/, which is the
 # published website.

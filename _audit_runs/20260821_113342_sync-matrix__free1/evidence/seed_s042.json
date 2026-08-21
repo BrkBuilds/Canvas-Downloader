@@ -1,0 +1,112 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T11:42:51",
+  "applied": [
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    },
+    {
+      "kind": "readonly_target",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 4,
+  "expected_categories": {
+    "uptodate": 2,
+    "updated_clean": 2
+  },
+  "expected_untracked": [
+    "Eksempel - Gruppekontrakt - mine noter 0.docx",
+    "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+    "Øvelser i uge 16/Svarark - Gode råd til projektet.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet - mine noter 1.docx"
+  ],
+  "expected_missing_rows": [
+    "Eksempel - Gruppekontrakt.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [
+    "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+    "Øvelser i uge 16/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 260,
+    "files": 300
+  },
+  "fixtures": [
+    {
+      "label": "renamed-row-dropped:Eksempel - Gruppekontrakt - mine noter 0.docx",
+      "kind": "renamed_row_dropped",
+      "path": "Eksempel - Gruppekontrakt - mine noter 0.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Eksempel - Gruppekontrakt - mine noter 0.docx",
+      "match_name": "Eksempel - Gruppekontrakt.docx",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1560051,
+      "original_path": "Eksempel - Gruppekontrakt.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Svarark - Gode råd til projektet - mine noter 1.docx",
+      "kind": "renamed_row_dropped",
+      "path": "Øvelser i uge 18/Svarark - Gode råd til projektet - mine noter 1.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Øvelser i uge 18/Svarark - Gode råd til projektet - mine noter 1.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1560056,
+      "original_path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "readonly:Eksempel på gruppekontrakt.docx",
+      "kind": "readonly_target",
+      "path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "",
+      "expect_path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+      "match_name": "Eksempel på gruppekontrakt.docx",
+      "why": "A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error.",
+      "canvas_file_id": 1559916,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true,
+        "posix_no_fork": true
+      }
+    },
+    {
+      "label": "readonly:Svarark - Gode råd til projektet.docx",
+      "kind": "readonly_target",
+      "path": "Øvelser i uge 16/Svarark - Gode råd til projektet.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "",
+      "expect_path": "Øvelser i uge 16/Svarark - Gode råd til projektet.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error.",
+      "canvas_file_id": 1816004,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true,
+        "posix_no_fork": true
+      }
+    }
+  ]
+}

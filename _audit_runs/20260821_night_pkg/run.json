@@ -1,0 +1,6 @@
+{
+  "app": {
+    "port": 8501,
+    "packaged": true
+  }
+}

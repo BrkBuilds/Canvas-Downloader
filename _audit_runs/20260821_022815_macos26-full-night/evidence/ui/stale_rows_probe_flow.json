@@ -1,0 +1,96 @@
+{
+  "name": "stale_rows_probe",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "s available\n0\nEdited locally\n63\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOC (none)\n\nPPTM (none)\n\nPPTX (none)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n63 files pending sync\n199 files up to date\nkeyboard_arrow_right\n\nDeleted Locally\n\nGo back\n\nSync & Download 0 files",
+      "waited_s": 30.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "stale_rows_probe_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_deleted_local_43660"
+    ],
+    "capture": "stale_rows_probe_review",
+    "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night/evidence/screenshots/stale_rows_probe_review.png",
+    "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night/evidence/ui/stale_rows_probe_review.json",
+    "textLen": 4906,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "confirm": {
+    "ok": true,
+    "skipped": "--no-confirm",
+    "capture": "stale_rows_probe_review_only"
+  },
+  "trace": [
+    {
+      "t": "10:43:46",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "10:44:21",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "s available\n0\nEdited locally\n63\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOC (none)\n\nPPTM (none)\n\nPPTX (none)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n63 files pending sync\n199 files up to date\nkeyboard_arrow_right\n\nDeleted Locally\n\nGo back\n\nSync & Download 0 files",
+        "waited_s": 30.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "stale_rows_probe_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "10:44:22",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_deleted_local_43660"
+      ],
+      "capture": "stale_rows_probe_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night/evidence/screenshots/stale_rows_probe_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night/evidence/ui/stale_rows_probe_review.json",
+      "textLen": 4906,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+{
+  "name": "m007",
+  "course_ids": [
+    43667
+  ],
+  "config": {
+    "pan_master": false,
+    "pan_out_mp4": false,
+    "pan_out_txt": false,
+    "pan_out_srt": false,
+    "pan_out_mp3": false,
+    "pan_layout": "match",
+    "mode": "flat",
+    "file_filter": "all",
+    "secondary_isolated": false,
+    "max_file_size": null,
+    "convert_zip": false,
+    "convert_pptx": false,
+    "convert_word": false,
+    "convert_excel": false,
+    "convert_html": false,
+    "convert_code": false,
+    "convert_urls": false,
+    "convert_video": false,
+    "dl_assignments": false,
+    "dl_syllabus": false,
+    "dl_announcements": false,
+    "dl_discussions": false,
+    "dl_quizzes": false,
+    "dl_submissions": false
+  },
+  "select": {
+    "courses": [
+      43667
+    ],
+    "results": [
+      {
+        "course_id": 43667,
+        "ok": true
+      }
+    ]
+  },
+  "size_cap": {
+    "mb": null,
+    "toggle": {
+      "set": true,
+      "key": "temp_max_size_enabled",
+      "changed": false,
+      "checked": false
+    },
+    "dialog_closed": true,
+    "closed_with_escape": false,
+    "ok": true
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "all",
+      "mode": "flat",
+      "dl_assignments": false,
+      "dl_syllabus": false,
+      "dl_announcements": false,
+      "dl_discussions": false,
+      "dl_quizzes": false,
+      "dl_submissions": false,
+      "secondary_isolated": false
+    },
+    "failed": [],
+    "verified": {
+      "convert_zip": null,
+      "convert_pptx": null,
+      "convert_word": null,
+      "convert_excel": null,
+      "convert_html": null,
+      "convert_code": null,
+      "convert_urls": null,
+      "convert_video": null,
+      "dl_assignments": false,
+      "dl_syllabus": false,
+      "dl_announcements": false,
+      "dl_discussions": false,
+      "dl_quizzes": false,
+      "dl_submissions": false,
+      "pan_out_mp4": null,
+      "pan_out_mp3": null,
+      "pan_out_txt": null,
+      "pan_out_srt": null
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "m007_config",
+    "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_141849_macos26-dl-matrix-short__free3/evidence/screenshots/m007_config.png",
+    "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_141849_macos26-dl-matrix-short__free3/evidence/ui/m007_config.json",
+    "textLen": 964,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "m007",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n1\nFILE DOWNLOADED\n0\nMB DOWNLOADED\nFolders Updated\nBINT 1st semester (LA E25 BINTS1SEMU)\n1 FILE\nWEBLOC\n1\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 0.0
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "captures": [
+      "m007_phase_scan",
+      "m007_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "14:25:24",
+      "action": "select_courses",
+      "courses": [
+        43667
+      ],
+      "results": [
+        {
+          "course_id": 43667,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "14:25:26",
+      "action": "set_size_cap",
+      "mb": null,
+      "toggle": {
+        "set": true,
+        "key": "temp_max_size_enabled",
+        "changed": false,
+        "checked": false
+      },
+      "dialog_closed": true,
+      "closed_with_escape": false,
+      "ok": true
+    },
+    {
+      "t": "14:25:27",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "14:25:29",
+      "action": "expand_card",
+      "card": "toggle_card2",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "14:25:29",
+      "action": "set_toggle",
+      "key": "btn_dl_assignments",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "14:25:29",
+      "action": "set_toggle",
+      "key": "btn_dl_syllabus",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "14:25:29",
+      "action": "set_toggle",
+      "key": "btn_dl_announcements",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "14:25:29",
+      "action": "set_toggle",
+      "key": "btn_dl_discussions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "14:25:29",
+      "action": "set_toggle",
+      "key": "btn_dl_quizzes",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "14:25:29",
+      "action": "set_toggle",
+      "key": "btn_dl_submissions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "14:25:49",
+      "action": "configure",
+      "applied": {
+        "file_filter": "all",
+        "mode": "flat",
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": false,
+        "dl_discussions": false,
+        "dl_quizzes": false,
+        "dl_submissions": false,
+        "secondary_isolated": false
+      },
+      "failed": [],
+      "verified": {
+        "convert_zip": null,
+        "convert_pptx": null,
+        "convert_word": null,
+        "convert_excel": null,
+        "convert_html": null,
+        "convert_code": null,
+        "convert_urls": null,
+        "convert_video": null,
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": false,
+        "dl_discussions": false,
+        "dl_quizzes": false,
+        "dl_submissions": false,
+        "pan_out_mp4": null,
+        "pan_out_mp3": null,
+        "pan_out_txt": null,
+        "pan_out_srt": null
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "14:25:55",
+      "action": "confirm_and_run",
+      "name": "m007",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n1\nFILE DOWNLOADED\n0\nMB DOWNLOADED\nFolders Updated\nBINT 1st semester (LA E25 BINTS1SEMU)\n1 FILE\nWEBLOC\n1\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 0.0
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "captures": [
+        "m007_phase_scan",
+        "m007_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

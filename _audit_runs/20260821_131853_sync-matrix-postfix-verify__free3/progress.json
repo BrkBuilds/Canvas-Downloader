@@ -1,0 +1,373 @@
+{
+  "rows": [
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s002"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s002",
+      "seconds": 56.3
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s005"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s005",
+      "seconds": 46.4
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s008"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s008",
+      "seconds": 31.6
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s011"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s011",
+      "seconds": 34.5
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s014"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s014",
+      "seconds": 34.6
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s017"
+      },
+      "findings": 5,
+      "severities": {
+        "info": 5
+      },
+      "id": "s017",
+      "seconds": 38.4
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s020"
+      },
+      "findings": 4,
+      "severities": {
+        "info": 4
+      },
+      "id": "s020",
+      "seconds": 34.3
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s023"
+      },
+      "findings": 5,
+      "severities": {
+        "info": 5
+      },
+      "id": "s023",
+      "seconds": 35.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s026"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s026",
+      "seconds": 46.5
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s029"
+      },
+      "findings": 4,
+      "severities": {
+        "info": 4
+      },
+      "id": "s029",
+      "seconds": 52.4
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "sync",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s032"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s032",
+      "seconds": 40.9
+    },
+    {
+      "ok": false,
+      "reason": "snapshot restore did not verify",
+      "verify": {
+        "expected": 301,
+        "missing": [],
+        "missing_count": 0,
+        "size_mismatch": [],
+        "extra": [
+          "debug_log.txt"
+        ],
+        "extra_count": 1,
+        "ok": false
+      },
+      "id": "s035",
+      "seconds": 0.1
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s038"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s038",
+      "seconds": 32.7
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s041"
+      },
+      "findings": 4,
+      "severities": {
+        "info": 4
+      },
+      "id": "s041",
+      "seconds": 34.4
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/rows/s035"
+      },
+      "findings": 4,
+      "severities": {
+        "info": 4
+      },
+      "id": "s035",
+      "seconds": 38.5
+    }
+  ],
+  "current": "",
+  "updated": "2026-08-21T13:31:27"
+}

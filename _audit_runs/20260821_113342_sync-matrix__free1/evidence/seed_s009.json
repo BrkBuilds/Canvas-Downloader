@@ -1,0 +1,66 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T11:36:18",
+  "applied": [
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "uptodate": 2
+  },
+  "expected_untracked": [
+    "Eksempel - Gruppekontrakt - mine noter 0.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet - mine noter 1.docx"
+  ],
+  "expected_missing_rows": [
+    "Eksempel - Gruppekontrakt.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 260,
+    "files": 300
+  },
+  "fixtures": [
+    {
+      "label": "renamed-row-dropped:Eksempel - Gruppekontrakt - mine noter 0.docx",
+      "kind": "renamed_row_dropped",
+      "path": "Eksempel - Gruppekontrakt - mine noter 0.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Eksempel - Gruppekontrakt - mine noter 0.docx",
+      "match_name": "Eksempel - Gruppekontrakt.docx",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1560051,
+      "original_path": "Eksempel - Gruppekontrakt.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Svarark - Gode råd til projektet - mine noter 1.docx",
+      "kind": "renamed_row_dropped",
+      "path": "Øvelser i uge 18/Svarark - Gode råd til projektet - mine noter 1.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Øvelser i uge 18/Svarark - Gode råd til projektet - mine noter 1.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1560056,
+      "original_path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

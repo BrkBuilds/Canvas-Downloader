@@ -1,0 +1,19 @@
+--- Download: BINT 1st semester (LA E25 BINTS1SEMU) (ID: 43667) Mode: modules ---
+==================================================
+[2026-08-21 14:57:20.161] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__free2/downloads
+[2026-08-21 14:57:20.162] Filter: all | Concurrency: 5 | Max file size: 5 MB | Estimated payload: 0 MB
+[2026-08-21 14:57:20.162] Canvas Content: [none] | isolate=no
+[2026-08-21 14:57:20.162] Post-processing: [none]
+[2026-08-21 14:57:20.315] [INFO] [engine.applescript_bridge] [OfficeQuit] still running after 6s wait: Microsoft Excel
+[2026-08-21 14:57:20.321] Processing Module: Course description including examination rules (ID: 297524)
+[2026-08-21 14:57:20.452] Found 1 items in module 'Course description including examination rules'
+[2026-08-21 14:57:20.452]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-21 14:57:20.453] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTS1SEMU.aspx) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__free2/downloads/BINT 1st semester (LA E25 BINTS1SEMU)/Course description including examination rules/Course description including examination rules.webloc
+[2026-08-21 14:57:20.454] Starting Catch-All Phase for non-module files...
+[2026-08-21 14:57:20.606] No partial/non-module files found.
+[2026-08-21 14:57:20.606] --- Download Complete: BINT 1st semester (LA E25 BINTS1SEMU) | 1 items | 0.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: BINT 1st semester (LA E25 BINTS1SEMU) ---
+==================================================
+[2026-08-21 14:57:20.608] === Course Finished: BINT 1st semester (LA E25 BINTS1SEMU) | Downloaded: 1 items | Errors: 0 ===

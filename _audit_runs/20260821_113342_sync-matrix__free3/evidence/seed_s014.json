@@ -1,0 +1,70 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T11:36:50",
+  "applied": [
+    {
+      "kind": "long_path",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "uptodate": 2
+  },
+  "expected_untracked": [
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Eksempel - Gruppekontrakt.docx",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_missing_rows": [
+    "Eksempel - Gruppekontrakt.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 262,
+    "files": 300
+  },
+  "fixtures": [
+    {
+      "label": "longpath:Eksempel - Gruppekontrakt.docx",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Eksempel - Gruppekontrakt.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Eksempel - Gruppekontrakt.docx",
+      "match_name": "Eksempel - Gruppekontrakt.docx",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1560051,
+      "original_path": "Eksempel - Gruppekontrakt.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 354
+      }
+    },
+    {
+      "label": "longpath:Svarark - Gode råd til projektet.docx",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Svarark - Gode råd til projektet.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Svarark - Gode råd til projektet.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1560056,
+      "original_path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 361
+      }
+    }
+  ]
+}

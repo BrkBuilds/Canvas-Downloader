@@ -1,0 +1,109 @@
+{
+  "name": "s040",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "sync",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 3,
+        "id": "sync",
+        "state": "active"
+      },
+      "dash": true,
+      "exceptions": 0,
+      "head": "Syncing...",
+      "tail": "ed)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIndføring i organisationers opbygning og funktion (LA)\n100%\nDOWNLOADED\n4.2 / 4.2 MB\nSPEED\n5.0 MB/s\nFILES\n2 / 2\nTIME REMAINING\n00:00\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx\n\nCancel Post-Processing",
+      "waited_s": 24.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s040_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "ring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 FILES\nPDF\n2\nkeyboard_arrow_down\n\nFiles added\n\n New Files Added (2)\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf\n\n​\n\n​\n\nCourse folder\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf\n\n​\n\n​\n\nCourse folder\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 5.0
+    },
+    "capture": "s040_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "13:29:00",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "13:29:29",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "sync",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 3,
+          "id": "sync",
+          "state": "active"
+        },
+        "dash": true,
+        "exceptions": 0,
+        "head": "Syncing...",
+        "tail": "ed)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIndføring i organisationers opbygning og funktion (LA)\n100%\nDOWNLOADED\n4.2 / 4.2 MB\nSPEED\n5.0 MB/s\nFILES\n2 / 2\nTIME REMAINING\n00:00\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx\n\nCancel Post-Processing",
+        "waited_s": 24.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s040_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "13:29:35",
+      "action": "wait_terminal",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "ring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 FILES\nPDF\n2\nkeyboard_arrow_down\n\nFiles added\n\n New Files Added (2)\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf\n\n​\n\n​\n\nCourse folder\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf\n\n​\n\n​\n\nCourse folder\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 5.0
+      },
+      "capture": "s040_complete",
+      "ok": true
+    }
+  ]
+}

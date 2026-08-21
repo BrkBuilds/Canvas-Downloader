@@ -1,0 +1,1174 @@
+--- Debug Log Started: 2026-08-21 03:13:27.617684 ---
+[2026-08-21 03:13:27.618] === Session Environment ===
+  App: Canvas Downloader v2.0.2 | frozen=False | pid=63730
+  OS: Darwin 25.6.0 | macOS-26.6.1-arm64-arm-64bit | arch=arm64
+  Python: 3.11.16
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 2 course(s)
+===========================
+[2026-08-21 03:13:32.930] [INFO] [core.canvas_logic] Page-stub fallback: resolved 35 module Page item(s) by slug (Pages list restricted for course 43660)
+[2026-08-21 03:13:33.390] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 77 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43660.
+[2026-08-21 03:13:37.678] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 133 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 45899.
+[2026-08-21 03:13:37.711] [INFO] [engine.applescript_bridge] [OfficeQuit] PowerPoint was already running before this run - it will be left alone at the end
+[2026-08-21 03:13:37.731] [INFO] [engine.applescript_bridge] [OfficeQuit] Word was already running before this run - it will be left alone at the end
+[2026-08-21 03:13:37.750] [INFO] [engine.applescript_bridge] [OfficeQuit] Excel was already running before this run - it will be left alone at the end
+[2026-08-21 03:13:37.809] === Download Start: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | Course 1/2 ===
+[2026-08-21 03:13:37.809] Mode: flat | Filter: study
+[2026-08-21 03:13:37.810] Post-processing: [zip]
+[2026-08-21 03:13:37.810] Secondary content: [none]
+[2026-08-21 03:13:37.816] 
+==================================================
+--- Download: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) (ID: 43660) Mode: flat ---
+==================================================
+[2026-08-21 03:13:37.816] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads
+[2026-08-21 03:13:37.817] Filter: study | Concurrency: 5 | Max file size: disabled | Estimated payload: 1214 MB
+[2026-08-21 03:13:37.817] Canvas Content: [none] | isolate=no
+[2026-08-21 03:13:37.817] Post-processing: [zip]
+[2026-08-21 03:13:37.817] Starting Flat Download for Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+[2026-08-21 03:13:39.981] Requesting URL: https://cbscanvas.instructure.com/files/1560208/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:39.982] Requesting URL: https://cbscanvas.instructure.com/files/1559924/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:39.982] Requesting URL: https://cbscanvas.instructure.com/files/1559993/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:39.983] Requesting URL: https://cbscanvas.instructure.com/files/1560185/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:39.984] Requesting URL: https://cbscanvas.instructure.com/files/1560188/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:40.631] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:40.646] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:40.665] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:40.679] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:40.690] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:40.704] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/1999_Kotter_kap 2.pdf (1519044 bytes)
+[2026-08-21 03:13:40.705] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx (3139143 bytes)
+[2026-08-21 03:13:40.719] Requesting URL: https://cbscanvas.instructure.com/files/1560186/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:40.720] Requesting URL: https://cbscanvas.instructure.com/files/1559834/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:40.739] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/1999_Kotter_kap 1.pdf (1386490 bytes)
+[2026-08-21 03:13:40.742] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 37_2 Struktur_upload.pptx (2529047 bytes)
+[2026-08-21 03:13:40.747] Requesting URL: https://cbscanvas.instructure.com/files/1560061/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:40.751] Requesting URL: https://cbscanvas.instructure.com/files/1560177/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:40.761] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx (2964205 bytes)
+[2026-08-21 03:13:40.765] Requesting URL: https://cbscanvas.instructure.com/files/1560197/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:41.393] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:41.433] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx (2536110 bytes)
+[2026-08-21 03:13:41.435] Requesting URL: https://cbscanvas.instructure.com/files/1560205/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:41.437] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:41.467] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:41.473] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pptx (2373946 bytes)
+[2026-08-21 03:13:41.482] Requesting URL: https://cbscanvas.instructure.com/files/1560011/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:41.492] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx (2062268 bytes)
+[2026-08-21 03:13:41.495] Requesting URL: https://cbscanvas.instructure.com/files/1560012/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:41.615] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:41.635] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pptx (2004639 bytes)
+[2026-08-21 03:13:41.638] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:41.641] Requesting URL: https://cbscanvas.instructure.com/files/1560230/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:41.660] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pptx (1269599 bytes)
+[2026-08-21 03:13:41.663] Requesting URL: https://cbscanvas.instructure.com/files/1560070/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:41.968] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:41.992] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx (2223911 bytes)
+[2026-08-21 03:13:41.994] Requesting URL: https://cbscanvas.instructure.com/files/1560220/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:42.076] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:42.104] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:42.126] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx (4124409 bytes)
+[2026-08-21 03:13:42.131] Requesting URL: https://cbscanvas.instructure.com/files/1560227/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:42.137] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx (2223911 bytes)
+[2026-08-21 03:13:42.139] Requesting URL: https://cbscanvas.instructure.com/files/1560213/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:42.251] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:42.279] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:42.328] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx (2592801 bytes)
+[2026-08-21 03:13:42.332] Requesting URL: https://cbscanvas.instructure.com/files/1678067/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:42.612] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:42.652] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (2164141 bytes)
+[2026-08-21 03:13:42.657] Requesting URL: https://cbscanvas.instructure.com/files/1678065/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:42.760] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:42.780] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:42.831] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pptx (2162221 bytes)
+[2026-08-21 03:13:42.842] Requesting URL: https://cbscanvas.instructure.com/files/1678066/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:42.850] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (2164141 bytes)
+[2026-08-21 03:13:42.856] Requesting URL: https://cbscanvas.instructure.com/files/1766952/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:42.940] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:42.957] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf (425245 bytes)
+[2026-08-21 03:13:42.963] Requesting URL: https://cbscanvas.instructure.com/files/1669054/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:43.263] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:43.305] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx (2144525 bytes)
+[2026-08-21 03:13:43.312] Requesting URL: https://cbscanvas.instructure.com/files/1559936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:43.445] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:43.486] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:43.517] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025_Lektion uge 43_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf (788357 bytes)
+[2026-08-21 03:13:43.528] Requesting URL: https://cbscanvas.instructure.com/files/1693406/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:43.626] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx (9271293 bytes)
+[2026-08-21 03:13:43.628] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:43.633] Requesting URL: https://cbscanvas.instructure.com/files/1560154/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:43.652] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/251009_Kom og vær med_Til Stig N.pptx (674098 bytes)
+[2026-08-21 03:13:43.659] Requesting URL: https://cbscanvas.instructure.com/files/1667723/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:43.957] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:43.998] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Berlingske Case.pdf (851481 bytes)
+[2026-08-21 03:13:44.006] Requesting URL: https://cbscanvas.instructure.com/files/1747622/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:44.178] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:44.202] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Beslutninger - Uge 46 2025.pdf (618261 bytes)
+[2026-08-21 03:13:44.210] Requesting URL: https://cbscanvas.instructure.com/files/1560180/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:44.242] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:44.310] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:44.422] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Børnemøbler_ny version.pdf (7829231 bytes)
+[2026-08-21 03:13:44.431] Requesting URL: https://cbscanvas.instructure.com/files/1559921/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:44.762] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:44.784] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/E25_F26_HAIT_Organisationers opbygning.pdf (344619 bytes)
+[2026-08-21 03:13:44.796] Requesting URL: https://cbscanvas.instructure.com/files/1695726/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:44.856] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:44.880] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/F22_HAIT_Organisationers opbygning_2021-2022.pdf (411974 bytes)
+[2026-08-21 03:13:44.888] Requesting URL: https://cbscanvas.instructure.com/files/1694168/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:44.966] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/culture.experiences.pdf (32734939 bytes)
+[2026-08-21 03:13:44.973] Requesting URL: https://cbscanvas.instructure.com/files/1694170/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:45.053] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:45.065] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf (255792 bytes)
+[2026-08-21 03:13:45.071] Requesting URL: https://cbscanvas.instructure.com/files/1669058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:45.413] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:45.434] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Forandring - uge 47 2025.pdf (476521 bytes)
+[2026-08-21 03:13:45.442] Requesting URL: https://cbscanvas.instructure.com/files/1560171/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:45.469] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:45.549] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Forandring i organisationer_video1_upload_2025.pptx (3436721 bytes)
+[2026-08-21 03:13:45.556] Requesting URL: https://cbscanvas.instructure.com/files/1560172/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:45.556] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:45.656] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:45.683] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/From Algorithmic Management to Data-driven Labour Organising(27).pdf (448783 bytes)
+[2026-08-21 03:13:45.692] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Forandringsledelse slide del 2.pptx (6993536 bytes)
+[2026-08-21 03:13:45.695] Requesting URL: https://cbscanvas.instructure.com/files/1560191/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:45.703] Requesting URL: https://cbscanvas.instructure.com/files/1652721/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:46.040] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:46.102] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/GenAI in Danske Bank_opdateret.pdf (2329690 bytes)
+[2026-08-21 03:13:46.113] Requesting URL: https://cbscanvas.instructure.com/files/1560198/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:46.131] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:46.143] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/HA(it.)_grupper E2021.pdf (58570 bytes)
+[2026-08-21 03:13:46.150] Requesting URL: https://cbscanvas.instructure.com/files/1560199/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:46.292] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:46.365] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Hildebrandt-1.pdf (2961287 bytes)
+[2026-08-21 03:13:46.374] Requesting URL: https://cbscanvas.instructure.com/files/1560157/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:46.415] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:46.439] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/ind_org_Pensumoversigt_efterår2025.pdf (479504 bytes)
+[2026-08-21 03:13:46.445] Requesting URL: https://cbscanvas.instructure.com/files/1624231/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:46.690] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:46.738] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:46.779] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Individ og organisation_motivation & belønning 1_upload.pptx (3071148 bytes)
+[2026-08-21 03:13:46.790] Requesting URL: https://cbscanvas.instructure.com/files/1560072/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:46.877] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Individ og organisation_motivation & belønning 2_upload.pptx (5426548 bytes)
+[2026-08-21 03:13:46.884] Requesting URL: https://cbscanvas.instructure.com/files/1785191/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:46.942] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:46.958] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Industrialsupply.pdf (263664 bytes)
+[2026-08-21 03:13:46.964] Requesting URL: https://cbscanvas.instructure.com/files/1560064/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:47.238] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:47.301] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Intro_uge 36_2025_slides.pdf (2510931 bytes)
+[2026-08-21 03:13:47.310] Requesting URL: https://cbscanvas.instructure.com/files/1560100/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:47.479] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:47.496] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning - Upload.pptx (456931 bytes)
+[2026-08-21 03:13:47.504] Requesting URL: https://cbscanvas.instructure.com/files/1560145/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:47.521] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:47.539] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/ITDoesntMatter.pdf (206424 bytes)
+[2026-08-21 03:13:47.546] Requesting URL: https://cbscanvas.instructure.com/files/1559957/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:47.588] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:47.607] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1_grp 14.pdf (199844 bytes)
+[2026-08-21 03:13:47.612] Requesting URL: https://cbscanvas.instructure.com/files/1560065/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:47.892] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:47.913] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1_grp 15.pdf (550883 bytes)
+[2026-08-21 03:13:47.921] Requesting URL: https://cbscanvas.instructure.com/files/1811688/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:48.082] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pptx (470327606 bytes)
+[2026-08-21 03:13:48.086] Requesting URL: https://cbscanvas.instructure.com/files/1699643/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:48.096] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:48.100] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1_grp 25.pdf (83254 bytes)
+[2026-08-21 03:13:48.104] Requesting URL: https://cbscanvas.instructure.com/files/1805051/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:48.133] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:48.138] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning_1_Program_2022.pdf (92744 bytes)
+[2026-08-21 03:13:48.140] Requesting URL: https://cbscanvas.instructure.com/files/1559920/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:48.193] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:48.201] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning_1_Program_2024.pdf (91387 bytes)
+[2026-08-21 03:13:48.205] Requesting URL: https://cbscanvas.instructure.com/files/1748401/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:48.494] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:48.502] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning_2_Program_ 21 april 2026.pdf (245100 bytes)
+[2026-08-21 03:13:48.505] Requesting URL: https://cbscanvas.instructure.com/files/1559932/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:48.669] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:48.682] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:48.689] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Manual for eksamensprojekt 2021-2022_.pdf (223505 bytes)
+[2026-08-21 03:13:48.690] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Ledelse - uge 48.pdf (1017698 bytes)
+[2026-08-21 03:13:48.692] Requesting URL: https://cbscanvas.instructure.com/files/1687664/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:48.695] Requesting URL: https://cbscanvas.instructure.com/files/1693022/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:48.699] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:48.784] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Lektion_sammenfatning af faget_2026.pptx (7468138 bytes)
+[2026-08-21 03:13:48.787] Requesting URL: https://cbscanvas.instructure.com/files/1693023/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:48.965] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:48.974] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Manual for eksamensprojekt 2025-2026.pdf (205244 bytes)
+[2026-08-21 03:13:48.979] Requesting URL: https://cbscanvas.instructure.com/files/1560194/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:49.100] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:49.119] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Martin Thorborg tiltrækker nye ansatte ved at lokke_artikel okt 2023.pdf (939935 bytes)
+[2026-08-21 03:13:49.123] Requesting URL: https://cbscanvas.instructure.com/files/1559923/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:49.250] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:49.274] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Munster 2017_intro.pdf (1845812 bytes)
+[2026-08-21 03:13:49.277] Requesting URL: https://cbscanvas.instructure.com/files/1560068/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:49.310] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:49.321] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Motivationsfaktorer - uge 45 2025.pdf (677897 bytes)
+[2026-08-21 03:13:49.326] Requesting URL: https://cbscanvas.instructure.com/files/1560236/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:49.377] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:49.471] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Munster 2017_kap 1.pdf (8283864 bytes)
+[2026-08-21 03:13:49.474] Requesting URL: https://cbscanvas.instructure.com/files/1560235/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:49.564] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:49.581] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Oplæg på CBS - sendt.pdf (820945 bytes)
+[2026-08-21 03:13:49.585] Requesting URL: https://cbscanvas.instructure.com/files/1560067/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:49.717] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:49.753] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsformer - oversigtstabel - udfyldt.pptx (2707111 bytes)
+[2026-08-21 03:13:49.756] Requesting URL: https://cbscanvas.instructure.com/files/1559942/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:49.841] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 03:13:49.873] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_argumentation_2_upload.pptm (2502919 bytes)
+[2026-08-21 03:13:49.876] Requesting URL: https://cbscanvas.instructure.com/files/1560125/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:49.930] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:49.960] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_klargøring af data_eksempel_upload.pptx (2976950 bytes)
+[2026-08-21 03:13:49.963] Requesting URL: https://cbscanvas.instructure.com/files/1559949/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:50.026] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 03:13:50.054] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_klargøring af data_upload.pptm (2260832 bytes)
+[2026-08-21 03:13:50.058] Requesting URL: https://cbscanvas.instructure.com/files/1560069/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:50.145] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 03:13:50.182] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_operationalisering_upload_.pptm (2923133 bytes)
+[2026-08-21 03:13:50.185] Requesting URL: https://cbscanvas.instructure.com/files/1560071/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:50.295] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 03:13:50.326] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_operationalisering_upload.pptm (2910906 bytes)
+[2026-08-21 03:13:50.330] Requesting URL: https://cbscanvas.instructure.com/files/1560231/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:50.517] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 03:13:50.545] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_problemformulering_1-upload-1.pptm (2334476 bytes)
+[2026-08-21 03:13:50.549] Requesting URL: https://cbscanvas.instructure.com/files/1560232/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:50.621] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 03:13:50.628] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 03:13:50.633] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_problemformulering-2_upload.pptm (381152 bytes)
+[2026-08-21 03:13:50.639] Requesting URL: https://cbscanvas.instructure.com/files/1560128/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:50.659] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_problemformulering_1-upload.pptm (2332811 bytes)
+[2026-08-21 03:13:50.662] Requesting URL: https://cbscanvas.instructure.com/files/1628057/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:50.884] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 03:13:50.910] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_vidensproduktion_1_upload.pptm (2089677 bytes)
+[2026-08-21 03:13:50.913] Requesting URL: https://cbscanvas.instructure.com/files/1682693/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:50.954] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 03:13:50.990] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_vidensproduktion_1_2022-upload.pptm (2866372 bytes)
+[2026-08-21 03:13:50.993] Requesting URL: https://cbscanvas.instructure.com/files/1560038/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:51.122] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 03:13:51.135] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_vidensproduktion_2_upload.pptm (574524 bytes)
+[2026-08-21 03:13:51.143] Requesting URL: https://cbscanvas.instructure.com/files/1560225/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:51.195] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 03:13:51.210] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_vidensproduktion_2021-2_upload.pptm (688928 bytes)
+[2026-08-21 03:13:51.215] Requesting URL: https://cbscanvas.instructure.com/files/1783488/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:51.389] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:51.398] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse uge 37 - Organisationsdiagram.pdf (166332 bytes)
+[2026-08-21 03:13:51.403] Requesting URL: https://cbscanvas.instructure.com/files/1800485/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:51.497] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:51.513] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse uge 44 - Læring.pdf (1102902 bytes)
+[2026-08-21 03:13:51.517] Requesting URL: https://cbscanvas.instructure.com/files/1809393/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:51.649] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:51.783] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse_uge6_intro_2022_upload-1.pptx (9505024 bytes)
+[2026-08-21 03:13:51.785] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:51.789] Requesting URL: https://cbscanvas.instructure.com/files/1560057/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:51.855] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:51.977] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse_uge9_problemformulering_XB_UPLOAD.pptx (10586913 bytes)
+[2026-08-21 03:13:51.984] Requesting URL: https://cbscanvas.instructure.com/files/1624133/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:51.990] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:51.995] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse_uge9_problemformulering_XA_upload.pptx (5242154 bytes)
+[2026-08-21 03:13:52.005] Requesting URL: https://cbscanvas.instructure.com/files/1627150/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:52.121] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:52.142] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge13_analyse og tolkning_UPLOAD.pptx (9862479 bytes)
+[2026-08-21 03:13:52.160] Requesting URL: https://cbscanvas.instructure.com/files/1632239/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:52.272] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge16_klynge_upload.pptx (9819888 bytes)
+[2026-08-21 03:13:52.277] Requesting URL: https://cbscanvas.instructure.com/files/1560137/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:53.049] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:53.122] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge38_organisationsformer_upload.pptx (4938852 bytes)
+[2026-08-21 03:13:53.127] Requesting URL: https://cbscanvas.instructure.com/files/1643383/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:53.939] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:53.959] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge39_kultur_2025.pdf (674932 bytes)
+[2026-08-21 03:13:53.964] Requesting URL: https://cbscanvas.instructure.com/files/1644211/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:54.098] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:54.108] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge36B_mål_og_strategi_2025.pdf (620460 bytes)
+[2026-08-21 03:13:54.111] Requesting URL: https://cbscanvas.instructure.com/files/1659237/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:54.647] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:54.727] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge39_kultur_E2025 upload.pptx (6049153 bytes)
+[2026-08-21 03:13:54.731] Requesting URL: https://cbscanvas.instructure.com/files/1560136/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:54.741] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:54.863] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:54.882] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge39_sensemaking_2025.pdf (995647 bytes)
+[2026-08-21 03:13:54.888] Requesting URL: https://cbscanvas.instructure.com/files/1666882/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:55.002] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge18_eksamen og afslutning_opdateret_upload.pptx (5600677 bytes)
+[2026-08-21 03:13:55.006] Requesting URL: https://cbscanvas.instructure.com/files/1777888/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:55.310] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:55.441] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge40_perspektiver_på_kultur_til upload.pptx (9273085 bytes)
+[2026-08-21 03:13:55.444] Requesting URL: https://cbscanvas.instructure.com/files/1795567/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:55.517] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:55.560] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:55.578] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge37_struktur_2025.pdf (911692 bytes)
+[2026-08-21 03:13:55.584] Requesting URL: https://cbscanvas.instructure.com/files/1560003/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:55.585] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge41_magt_E25.pdf (452042 bytes)
+[2026-08-21 03:13:55.589] Requesting URL: https://cbscanvas.instructure.com/files/1560002/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:55.657] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:55.821] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides - Intro.pptx (11153240 bytes)
+[2026-08-21 03:13:55.825] Requesting URL: https://cbscanvas.instructure.com/files/1560085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:55.999] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:56.032] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:56.128] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:56.162] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:56.167] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge36_intro_2025.pptx (6142539 bytes)
+[2026-08-21 03:13:56.191] Requesting URL: https://cbscanvas.instructure.com/files/1639375/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:56.350] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides formelle træk - organisationsformer-1.pptx (5201848 bytes)
+[2026-08-21 03:13:56.356] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:56.365] Requesting URL: https://cbscanvas.instructure.com/files/1643073/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:56.366] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides - uge 12.pptx (9589368 bytes)
+[2026-08-21 03:13:56.375] Requesting URL: https://cbscanvas.instructure.com/files/1668216/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:56.376] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides formelle træk - organisationsformer.pptx (5201724 bytes)
+[2026-08-21 03:13:56.387] Requesting URL: https://cbscanvas.instructure.com/files/1655085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:56.436] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides_mål og strategi_XA-1.pptx (4199486 bytes)
+[2026-08-21 03:13:56.442] Requesting URL: https://cbscanvas.instructure.com/files/1668217/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:56.995] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:57.010] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:57.079] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking slides 1.pptx (2132067 bytes)
+[2026-08-21 03:13:57.091] Requesting URL: https://cbscanvas.instructure.com/files/1655086/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:57.161] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:57.192] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking slides 1.pdf (657718 bytes)
+[2026-08-21 03:13:57.203] Requesting URL: https://cbscanvas.instructure.com/files/1559930/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:57.208] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:57.213] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:57.223] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking slides 2.pdf (226136 bytes)
+[2026-08-21 03:13:57.237] Requesting URL: https://cbscanvas.instructure.com/files/1690411/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:57.369] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Schein 1994_uddrag.pdf (17628097 bytes)
+[2026-08-21 03:13:57.382] Requesting URL: https://cbscanvas.instructure.com/files/1698861/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:57.546] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking in org (weick 1995).pdf (16385390 bytes)
+[2026-08-21 03:13:57.551] Requesting URL: https://cbscanvas.instructure.com/files/1686104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:57.645] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:57.651] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking slides 2.pptx (119973 bytes)
+[2026-08-21 03:13:57.655] Requesting URL: https://cbscanvas.instructure.com/files/1698862/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:57.872] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:57.883] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:57.888] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Shook J. (2010) How to change a culture, lessons from nummi.pdf (575008 bytes)
+[2026-08-21 03:13:57.897] Requesting URL: https://cbscanvas.instructure.com/files/1686105/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:57.929] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides - Henrik Stenmann - Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf (2949489 bytes)
+[2026-08-21 03:13:57.932] Requesting URL: https://cbscanvas.instructure.com/files/1706588/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:57.989] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:58.023] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides (1) Ledelse i organisationer forelæsning 1.pptx (2069905 bytes)
+[2026-08-21 03:13:58.026] Requesting URL: https://cbscanvas.instructure.com/files/1640813/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:58.127] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:58.153] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides (1) Motivationsfaktorer forelæsning 1.pptx (1917653 bytes)
+[2026-08-21 03:13:58.157] Requesting URL: https://cbscanvas.instructure.com/files/1640814/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:58.241] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:58.272] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides (2) Ledelse i organisationer forelæsning 2.pptx (2085297 bytes)
+[2026-08-21 03:13:58.275] Requesting URL: https://cbscanvas.instructure.com/files/1620929/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:58.506] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:58.528] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:58.585] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides sidste forelæsning.pdf (3322092 bytes)
+[2026-08-21 03:13:58.588] Requesting URL: https://cbscanvas.instructure.com/files/1620930/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:58.714] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:58.766] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides (2) Motivationsfaktorer forelæsning 2.pptx (2965062 bytes)
+[2026-08-21 03:13:58.766] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides_kulturanalyse del 1_E25.pdf (1728964 bytes)
+[2026-08-21 03:13:58.769] Requesting URL: https://cbscanvas.instructure.com/files/1559928/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:58.773] Requesting URL: https://cbscanvas.instructure.com/files/1638534/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:58.846] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:58.865] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides_kulturanalyse del 2_E25.pdf (1028235 bytes)
+[2026-08-21 03:13:58.869] Requesting URL: https://cbscanvas.instructure.com/files/1785168/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:58.978] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:58.997] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides_mål og strategi_del 1_E25.pdf (1125604 bytes)
+[2026-08-21 03:13:59.000] Requesting URL: https://cbscanvas.instructure.com/files/1805700/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:59.325] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:59.334] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:59.359] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides_mål og strategi_del 2_E25.pdf (1475540 bytes)
+[2026-08-21 03:13:59.368] Requesting URL: https://cbscanvas.instructure.com/files/1677945/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:59.392] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Søstrene Grene.pdf (3028213 bytes)
+[2026-08-21 03:13:59.396] Requesting URL: https://cbscanvas.instructure.com/files/1560202/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:13:59.500] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:13:59.526] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:59.532] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Strategy in Danske Bank.pdf (2312708 bytes)
+[2026-08-21 03:13:59.612] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:13:59.720] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Uge 10 Undersøgelsesdesign UPLOAD.pptx (9260643 bytes)
+[2026-08-21 03:13:59.817] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Uge 15 - Formidling.pptx (9836664 bytes)
+[2026-08-21 03:13:59.980] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:00.053] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Uge45_motivation og belønning_upload.pptx (5478026 bytes)
+[2026-08-21 03:14:00.126] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:00.142] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Uge43_omgivelser_2025.pdf (664009 bytes)
+[2026-08-21 03:14:00.791] Fallback Scan: Module Kursusbeskrivelse og eksamensregler (found 3 items)
+[2026-08-21 03:14:00.792]   Fallback Item: Kursusbeskrivelse - ink. eksamensregler (Type: ExternalUrl)
+[2026-08-21 03:14:00.792]   Fallback Item: Helle Zinner Henriksens Kontortid (Type: Page)
+[2026-08-21 03:14:00.972] Fallback Scan: Module Opdateret Pensumoversigt inkl. Forår 2026 (found 4 items)
+[2026-08-21 03:14:00.973]   Fallback Item: Grupper til eksamensprojekt (Type: Page)
+[2026-08-21 03:14:00.973]   Fallback Item: Brug af AI i eksamensprojektet (Type: Page)
+[2026-08-21 03:14:01.114] Fallback Scan: Module Introduktion til organisationsteori (found 5 items)
+[2026-08-21 03:14:01.115]   Fallback Item: Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-08-21 03:14:01.257] Fallback Scan: Module Tema 1: Formelle træk - mål og strategi (found 6 items)
+[2026-08-21 03:14:01.257]   Fallback Item: Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-08-21 03:14:01.257]   Fallback Item: Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-08-21 03:14:01.258]   Fallback Item: Quiz: mål og strategi i organisationer (Type: Quiz)
+[2026-08-21 03:14:01.430] Fallback Scan: Module Tema 1: Formelle træk - organisationsstruktur (found 8 items)
+[2026-08-21 03:14:01.430]   Fallback Item: Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-08-21 03:14:01.430]   Fallback Item: Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-08-21 03:14:01.430]   Fallback Item: Quiz: Organisationsstruktur  (Type: Quiz)
+[2026-08-21 03:14:01.430]   Fallback Item: Upload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk (Type: Discussion)
+[2026-08-21 03:14:01.604] Fallback Scan: Module Tema 1: Formelle træk - organisationsformer (found 8 items)
+[2026-08-21 03:14:01.604]   Fallback Item: Forelæsningsvideo (1): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-08-21 03:14:01.604]   Fallback Item: Forelæsningsvideo (2): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-08-21 03:14:01.604]   Fallback Item: Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-08-21 03:14:01.604]   Fallback Item: Danske Bank investor præsentation (læs s. 3-10) (Type: ExternalUrl)
+[2026-08-21 03:14:01.792] Fallback Scan: Module Tema 2: Uformelle træk - organisationskultur (found 13 items)
+[2026-08-21 03:14:01.792]   Fallback Item: Forelæsningsvideo (1): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-08-21 03:14:01.793]   Fallback Item: Forelæsningsvideo (2): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-08-21 03:14:01.793]   Fallback Item: Quiz: organisationskultur (Type: Quiz)
+[2026-08-21 03:14:01.793]   Fallback Item: Video med respons på feedback og introduktion til et nyt initiativ i undervisningen (Type: ExternalTool)
+[2026-08-21 03:14:01.793]   Fallback Item: Spørgsmål til pensum i organisationskultur (Type: Discussion)
+[2026-08-21 03:14:01.793]   Fallback Item: Supplerende literatur (Type: SubHeader)
+[2026-08-21 03:14:01.969] Fallback Scan: Module Tema 2: Uformelle træk - sensemaking (found 11 items)
+[2026-08-21 03:14:01.969]   Fallback Item: Forelæsningsvideo 1 om Sensemaking (Type: ExternalTool)
+[2026-08-21 03:14:01.969]   Fallback Item: Sensemaking slides 1.pptx (Type: File)
+[2026-08-21 03:14:02.102]   Fallback Item: Forelæsningsvideo 2 om Sensemaking (Type: ExternalTool)
+[2026-08-21 03:14:02.102]   Fallback Item: Sensemaking slides 2.pptx (Type: File)
+[2026-08-21 03:14:02.230]   Fallback Item: Weick, K. E., Sutcliffe, K. M., & Obstfeld, D. (2005). Organizing and the Process of Sensemaking. Organization Science 16(4), 409–421. https://doi.org/10.1287/orsc.1050.0133 (kan også findes via. CBS libsearch) (Type: SubHeader)
+[2026-08-21 03:14:02.230]   Fallback Item: Supplerende literatur (Type: SubHeader)
+[2026-08-21 03:14:02.231]   Fallback Item: Spørgsmål til oplægsholder: Jens Christian Finnerup, Systematic (Type: Discussion)
+[2026-08-21 03:14:02.401] Fallback Scan: Module Tema 2: Uformelle træk - magt og konflikt (found 11 items)
+[2026-08-21 03:14:02.401]   Fallback Item: Forelæsningsvideo (1): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-08-21 03:14:02.402]   Fallback Item: Forelæsningsvideo (2): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-08-21 03:14:02.402]   Fallback Item: Quiz: magt og konflikt (Type: Quiz)
+[2026-08-21 03:14:02.402]   Fallback Item: Spørgsmål til pensum: magt i organisationer (Type: Discussion)
+[2026-08-21 03:14:02.535] Fallback Scan: Module Uge 42: Ingen undervisning (found 0 items)
+[2026-08-21 03:14:02.745] Fallback Scan: Module Tema 3: Individ, organisation og omverden - organisation og omgivelser (found 9 items)
+[2026-08-21 03:14:02.745]   Fallback Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-08-21 03:14:02.745]   Fallback Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-08-21 03:14:02.745]   Fallback Item: Quiz: omgivelser (Type: Quiz)
+[2026-08-21 03:14:02.745]   Fallback Item: Upload af besvarelse af Rigshospitalscase (Type: Discussion)
+[2026-08-21 03:14:02.745]   Fallback Item: Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 (Type: ExternalTool)
+[2026-08-21 03:14:02.926] Fallback Scan: Module Tema 3: Individ, organisation og omverden - læring i organisationer (found 7 items)
+[2026-08-21 03:14:02.927]   Fallback Item: Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-08-21 03:14:02.927]   Fallback Item: Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-08-21 03:14:02.927]   Fallback Item: Quiz: læring og innovation (Type: Quiz)
+[2026-08-21 03:14:03.086] Fallback Scan: Module Tema 3: Individ, organisation og omverden- motivationsfaktorer (found 7 items)
+[2026-08-21 03:14:03.086]   Fallback Item: Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 (Type: ExternalTool)
+[2026-08-21 03:14:03.086]   Fallback Item: Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 (Type: ExternalTool)
+[2026-08-21 03:14:03.086]   Fallback Item: Quiz: motivationsfaktorer i organisationer (Type: Quiz)
+[2026-08-21 03:14:03.253] Fallback Scan: Module Tema 4: Ledelse og strategi - beslutninger i organisationer (found 7 items)
+[2026-08-21 03:14:03.254]   Fallback Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-08-21 03:14:03.254]   Fallback Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-08-21 03:14:03.254]   Fallback Item: Quiz: Beslutninger i organisationer (Type: Quiz)
+[2026-08-21 03:14:03.443] Fallback Scan: Module Tema 4: Ledelse og strategi- forandringer i organisationer (found 13 items)
+[2026-08-21 03:14:03.443]   Fallback Item: Forelæsningsvideo (1): Forandringsledelse (Type: ExternalTool)
+[2026-08-21 03:14:03.443]   Fallback Item: Forelæsningsvideo (2): Forandringsledelse (Type: ExternalTool)
+[2026-08-21 03:14:03.443]   Fallback Item: Quiz: Forandring i organisationer (Type: Quiz)
+[2026-08-21 03:14:03.443]   Fallback Item: Rick Maurer - Introduction to Change (Type: File)
+[2026-08-21 03:14:03.601]   Fallback Item: Forberedelse til øvelstime (Type: SubHeader)
+[2026-08-21 03:14:03.775] Fallback Scan: Module Tema 4: Ledelse og strategi - ledelse i organisationer (found 8 items)
+[2026-08-21 03:14:03.775]   Fallback Item: Forelæsningsvideo 1 Ledelse i organisationer 1 (Type: ExternalTool)
+[2026-08-21 03:14:03.775]   Fallback Item: Forelæsningsvideo 2 Ledelse i organisationer 2 (Type: ExternalTool)
+[2026-08-21 03:14:03.775]   Fallback Item: Quiz: ledelse i organisationer (Type: Quiz)
+[2026-08-21 03:14:03.775]   Fallback Item: Oplæg: Saxo Merrild, Handyhand (Type: SubHeader)
+[2026-08-21 03:14:03.775]   Fallback Item: Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse (Type: ExternalUrl)
+[2026-08-21 03:14:03.902] Fallback Scan: Module Tema 4: Ledelse og strategi  - organisationsteori i et historisk perspektiv (found 1 items)
+[2026-08-21 03:14:04.047] Fallback Scan: Module Opsummering - hvad har vi lært? (found 3 items)
+[2026-08-21 03:14:04.048]   Fallback Item: Uge 6: pensum (Type: Page)
+[2026-08-21 03:14:04.048]   Fallback Item: Uge 6: mål med undervisningen (Type: Page)
+[2026-08-21 03:14:04.249] Fallback Scan: Module Organisationsprojekt - vidensproduktion (found 7 items)
+[2026-08-21 03:14:04.249]   Fallback Item: Uge 8: pensum (Type: Page)
+[2026-08-21 03:14:04.249]   Fallback Item: Uge 8: mål med undervisningen (Type: Page)
+[2026-08-21 03:14:04.249]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-08-21 03:14:04.249]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-08-21 03:14:04.409] Fallback Scan: Module Organisationsprojekt - problemformulering (found 8 items)
+[2026-08-21 03:14:04.409]   Fallback Item: Uge 9: pensum (Type: Page)
+[2026-08-21 03:14:04.410]   Fallback Item: Uge 9: mål med undervisningen (Type: Page)
+[2026-08-21 03:14:04.410]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-08-21 03:14:04.410]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-08-21 03:14:04.563] Fallback Scan: Module Organisationsprojekt - undersøgelsesdesign (found 7 items)
+[2026-08-21 03:14:04.563]   Fallback Item: Uge 10: pensum (Type: Page)
+[2026-08-21 03:14:04.564]   Fallback Item: Uge 10: mål med undervisningen (Type: Page)
+[2026-08-21 03:14:04.564]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign (Type: ExternalTool)
+[2026-08-21 03:14:04.564]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker (Type: ExternalTool)
+[2026-08-21 03:14:04.744] Fallback Scan: Module Klyngevejledning 1 (found 11 items)
+[2026-08-21 03:14:04.744]   Fallback Item: Uge 11: formål med klyngevejledningen (Type: Page)
+[2026-08-21 03:14:04.744]   Fallback Item: Filer til Klynge 1 (Type: Page)
+[2026-08-21 03:14:04.744]   Fallback Item: Filer til Klynge 2 (Type: Page)
+[2026-08-21 03:14:04.745]   Fallback Item: Filer til Klynge 3 (Type: Page)
+[2026-08-21 03:14:04.745]   Fallback Item: Filer til Klynge 4 (Type: Page)
+[2026-08-21 03:14:04.745]   Fallback Item: Filer til Klynge 5 (Type: Page)
+[2026-08-21 03:14:04.745]   Fallback Item: Filer til Klynge 6 (Type: Page)
+[2026-08-21 03:14:04.745]   Fallback Item: Filer til Klynge 7 (Type: Page)
+[2026-08-21 03:14:04.925] Fallback Scan: Module Organisationsprojekt - operationalisering af teori (found 9 items)
+[2026-08-21 03:14:04.926]   Fallback Item: Uge 12: pensum (Type: Page)
+[2026-08-21 03:14:04.926]   Fallback Item: Uge 12: mål med undervisningen (Type: Page)
+[2026-08-21 03:14:04.926]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - operationalisering (Type: ExternalTool)
+[2026-08-21 03:14:04.926]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation (Type: ExternalTool)
+[2026-08-21 03:14:04.926]   Fallback Item: Upload af besvarelse Interviewguide (husk at notér XA og XB) (Type: Discussion)
+[2026-08-21 03:14:05.095] Fallback Scan: Module Organisationsprojekt - klargøring af data til analyse (found 10 items)
+[2026-08-21 03:14:05.096]   Fallback Item: Uge 13: pensum (Type: Page)
+[2026-08-21 03:14:05.096]   Fallback Item: Uge 13: mål med undervisningen (Type: Page)
+[2026-08-21 03:14:05.096]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - klargøring af data (Type: ExternalTool)
+[2026-08-21 03:14:05.096]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data (Type: ExternalTool)
+[2026-08-21 03:14:05.390] Fallback Scan: Module Sammenfatning og evaluering af organisationsfaget (found 4 items)
+[2026-08-21 03:14:05.390]   Fallback Item: Uge 15: pensum (Type: Page)
+[2026-08-21 03:14:05.390]   Fallback Item: Uge 15: mål med undervisningen (Type: Page)
+[2026-08-21 03:14:05.649] Fallback Scan: Module Øvelser i uge 16 (found 3 items)
+[2026-08-21 03:14:05.650]   Fallback Item: Uge 16: mål med øvelserne (Type: Page)
+[2026-08-21 03:14:05.897] Fallback Scan: Module Klyngevejledning 2 (found 11 items)
+[2026-08-21 03:14:05.897]   Fallback Item: Uge 17: formål med klyngevejledningen (Type: Page)
+[2026-08-21 03:14:05.897]   Fallback Item: Filer til Klynge 1 (Type: Page)
+[2026-08-21 03:14:05.897]   Fallback Item: Filer til Klynge 2 (Type: Page)
+[2026-08-21 03:14:05.897]   Fallback Item: Filer til Klynge 3 (Type: Page)
+[2026-08-21 03:14:05.898]   Fallback Item: Filer til Klynge 4 (Type: Page)
+[2026-08-21 03:14:05.898]   Fallback Item: Filer til Klynge 5 (Type: Page)
+[2026-08-21 03:14:05.898]   Fallback Item: Filer til Klynge 6 (Type: Page)
+[2026-08-21 03:14:05.898]   Fallback Item: Filer til Klynge 7 (Type: Page)
+[2026-08-21 03:14:05.898]   Fallback Item: Filer til Klynge 8 (Type: Page)
+[2026-08-21 03:14:06.173] Fallback Scan: Module Øvelser i uge 18 (found 3 items)
+[2026-08-21 03:14:06.178] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 1 (1).pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-08-21 03:14:06.183] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 2 (1).pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-08-21 03:14:06.184] Requesting URL: https://cbscanvas.instructure.com/files/1559918/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:06.927] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:06.951] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Maurer_Introduction to Change.pdf (822315 bytes)
+[2026-08-21 03:14:06.955] Starting Catch-All Phase for non-module files...
+[2026-08-21 03:14:06.957] No partial/non-module files found.
+[2026-08-21 03:14:06.957] --- Download Complete: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | 118 items | 813.1 MB downloaded ---
+
+==================================================
+--- Post-Processing: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) ---
+==================================================
+[2026-08-21 03:14:06.990] === Course Finished: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | Downloaded: 118 items | Errors: 2 ===
+[2026-08-21 03:14:06.990] Post-processing ran: [zip]
+[2026-08-21 03:14:07.042] === Download Start: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | Course 2/2 ===
+[2026-08-21 03:14:07.042] Mode: flat | Filter: study
+[2026-08-21 03:14:07.042] Post-processing: [zip]
+[2026-08-21 03:14:07.042] Secondary content: [none]
+[2026-08-21 03:14:07.045] 
+==================================================
+--- Download: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) (ID: 45899) Mode: flat ---
+==================================================
+[2026-08-21 03:14:07.045] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads
+[2026-08-21 03:14:07.046] Filter: study | Concurrency: 5 | Max file size: disabled | Estimated payload: 1214 MB
+[2026-08-21 03:14:07.046] Canvas Content: [none] | isolate=no
+[2026-08-21 03:14:07.046] Post-processing: [zip]
+[2026-08-21 03:14:07.046] Starting Flat Download for Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+[2026-08-21 03:14:07.146] Files tab listing failed, falling back to module scan: {"status":"unauthorized","errors":[{"message":"user not authorised to perform that action"}]}
+[2026-08-21 03:14:07.866] Fallback Scan: Module Course description including examination rules (found 1 items)
+[2026-08-21 03:14:07.866]   Fallback Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-21 03:14:07.993] Fallback Scan: Module Informationer (found 3 items)
+[2026-08-21 03:14:07.993]   Fallback Item: Eloquent JavaScript bog: https://eloquentjavascript.net (bemærk: 4. udgave) (Type: SubHeader)
+[2026-08-21 03:14:07.993]   Fallback Item: Bøger til foråret: se course readings (Type: SubHeader)
+[2026-08-21 03:14:07.993]   Fallback Item: køb: Ben-Gan, I. (2023) T-SQL fundamentals . Fourth edition. Redmond ;; London :, Microsoft Press ; Pearson Education Inc. (Type: SubHeader)
+[2026-08-21 03:14:08.111] Fallback Scan: Module Andre ressourcer (found 1 items)
+[2026-08-21 03:14:08.112]   Fallback Item: Trin-for-trin Guide til VS Code og konsollen.pdf (Type: File)
+[2026-08-21 03:14:08.399] Fallback Scan: Module Obligatoriske afleveringer efterår 2025 (found 10 items)
+[2026-08-21 03:14:08.399]   Fallback Item: Godkendelsesopgave 1 (Type: Assignment)
+[2026-08-21 03:14:08.399]   Fallback Item: Godkendelsesopgave 1 vejl_løsn.js (Type: File)
+[2026-08-21 03:14:08.547]   Fallback Item: Godkendelsesopgave 2 (Type: Assignment)
+[2026-08-21 03:14:08.547]   Fallback Item: G2 vejl_løsn.js (Type: File)
+[2026-08-21 03:14:08.688]   Fallback Item: G2 fælles_feedback.pdf (Type: File)
+[2026-08-21 03:14:08.843]   Fallback Item: Godkendelsesopgave 3 (Type: Assignment)
+[2026-08-21 03:14:08.843]   Fallback Item: G3 opgave.bierOgBlomster analysevejledning.pdf (Type: File)
+[2026-08-21 03:14:08.986]   Fallback Item: Fælles feedback G3 v2.pdf (Type: File)
+[2026-08-21 03:14:09.139]   Fallback Item: g3 opgave-bierOgBlomsterOO vejl.js (Type: File)
+[2026-08-21 03:14:09.280]   Fallback Item: G4  (Type: Quiz)
+[2026-08-21 03:14:09.425] Fallback Scan: Module Obligatoriske afleveringer forår 2026 (found 5 items)
+[2026-08-21 03:14:09.426]   Fallback Item: Godkendelsesopgave 5 (Type: Assignment)
+[2026-08-21 03:14:09.426]   Fallback Item: g5_fælles_feedback.pdf (Type: File)
+[2026-08-21 03:14:09.561]   Fallback Item: Godkendelsesopgave 6 (Type: Assignment)
+[2026-08-21 03:14:09.561]   Fallback Item: Godkendelsesopgave 7 (Type: Assignment)
+[2026-08-21 03:14:09.561]   Fallback Item: Godkendelsesopgave 8 - Quiz (Sidste frist for aflevering: onsdag 6. maj 23:59.) (Type: Quiz)
+[2026-08-21 03:14:09.812] Fallback Scan: Module Skriftlig Eksamen (found 7 items)
+[2026-08-21 03:14:09.812]   Fallback Item: Ordinær eksamen med vejledende løsning (Type: SubHeader)
+[2026-08-21 03:14:09.812]   Fallback Item: eksamen 2025E ordinær.pdf (Type: File)
+[2026-08-21 03:14:09.944]   Fallback Item: eksamen 2025 ord vejledende.zip (Type: File)
+[2026-08-21 03:14:10.097]   Fallback Item: NB: feedback ordinær.pdf (Type: File)
+[2026-08-21 03:14:10.252]   Fallback Item: Re-eksamen med vejledende løsning (Type: SubHeader)
+[2026-08-21 03:14:10.253]   Fallback Item: eksamen 2025E re-eksamen.pdf (Type: File)
+[2026-08-21 03:14:10.448]   Fallback Item: eksamen 2025 re vejledende.zip (Type: File)
+[2026-08-21 03:14:10.883] Fallback Scan: Module Rapporteksamen (found 1 items)
+[2026-08-21 03:14:10.883]   Fallback Item: Rapporteksamen 2026 - Ejendomsinvesterings-app.pdf (Type: File)
+[2026-08-21 03:14:11.214] Fallback Scan: Module Kursus-evaluering (found 1 items)
+[2026-08-21 03:14:11.214]   Fallback Item: Kursusevaluering (Type: File)
+[2026-08-21 03:14:11.537] Fallback Scan: Module Uge 36: Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, data, værdier, typer og operatorer. (found 8 items)
+[2026-08-21 03:14:11.537]   Fallback Item: Feedback til Ole (lect1) (Type: ExternalUrl)
+[2026-08-21 03:14:11.537]   Fallback Item: Læs: Eloquent JavaScript – kap 1  (Type: SubHeader)
+[2026-08-21 03:14:11.538]   Fallback Item: Javascript practice quiz 1 (Type: Quiz)
+[2026-08-21 03:14:11.538]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:11.538]   Fallback Item: forelæsning 1 25.pdf (Type: File)
+[2026-08-21 03:14:11.719]   Fallback Item: forelæsning 1 25.pptx (Type: File)
+[2026-08-21 03:14:11.879]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:11.879]   Fallback Item: øvelsessæt 1- Grundlæggende javascript 1.pdf (Type: File)
+[2026-08-21 03:14:12.259] Fallback Scan: Module Uge 37: Forelæsning 2. Programstruktur: udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser. (found 8 items)
+[2026-08-21 03:14:12.260]   Fallback Item: Læs: Eloquent JavaScript – kap 2  (Type: SubHeader)
+[2026-08-21 03:14:12.260]   Fallback Item: Javascript practice quiz 2 (Type: Quiz)
+[2026-08-21 03:14:12.260]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:12.260]   Fallback Item: forelæsning 2 25.pdf (Type: File)
+[2026-08-21 03:14:12.393]   Fallback Item: forelæsning 2 25.pptx (Type: File)
+[2026-08-21 03:14:12.532]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:12.532]   Fallback Item: øvelsessæt 2- Program - Struktur - Algoritmer.pdf (Type: File)
+[2026-08-21 03:14:12.667]   Fallback Item: Feedback til Ole (Type: ExternalUrl)
+[2026-08-21 03:14:12.807] Fallback Scan: Module Uge 38: Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak. (found 7 items)
+[2026-08-21 03:14:12.807]   Fallback Item: Læs: Eloquent JavaScript – kap 3  (Type: SubHeader)
+[2026-08-21 03:14:12.807]   Fallback Item: Javascript practice quiz 3 (Type: Quiz)
+[2026-08-21 03:14:12.807]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:12.807]   Fallback Item: forelæsning 3 25.pdf (Type: File)
+[2026-08-21 03:14:12.946]   Fallback Item: forelæsning 3 25.pptx (Type: File)
+[2026-08-21 03:14:13.083]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:13.084]   Fallback Item: øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (Type: File)
+[2026-08-21 03:14:13.377] Fallback Scan: Module Uge 39: Forelæsning 4. Datastrukturer - Objekter og arrays. (found 7 items)
+[2026-08-21 03:14:13.378]   Fallback Item: Læs: Eloquent JavaScript – kap 4  (Type: SubHeader)
+[2026-08-21 03:14:13.378]   Fallback Item: Javascript practice quiz 4 (Type: Quiz)
+[2026-08-21 03:14:13.378]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:13.378]   Fallback Item: forelæsning 4 25.pptx (Type: File)
+[2026-08-21 03:14:13.521]   Fallback Item: forelæsning 4 25.pdf (Type: File)
+[2026-08-21 03:14:13.661]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:13.661]   Fallback Item: øvelsessæt 4.pdf (Type: File)
+[2026-08-21 03:14:13.978] Fallback Scan: Module Uge 40: Forelæsning 5. Højere-ordens funktioner og rekursion (found 9 items)
+[2026-08-21 03:14:13.978]   Fallback Item: Læs: Eloquent JavaScript – kap 5 (Type: SubHeader)
+[2026-08-21 03:14:13.979]   Fallback Item: Læs: Eloquent JavaScript – kap 3 (afsnit om rekursion) (Type: SubHeader)
+[2026-08-21 03:14:13.979]   Fallback Item: Javascript practice quiz 5 incl. recursion  (Type: Quiz)
+[2026-08-21 03:14:13.979]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:13.979]   Fallback Item: forelæsning 5 25.pptx (Type: File)
+[2026-08-21 03:14:14.131]   Fallback Item: forelæsning 5 25.pdf (Type: File)
+[2026-08-21 03:14:14.285]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:14.286]   Fallback Item: øvelsessæt 5.pdf (Type: File)
+[2026-08-21 03:14:14.425]   Fallback Item: øvelsessæt 5 løsninger.pdf (Type: File)
+[2026-08-21 03:14:14.704] Fallback Scan: Module Uge 41: Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling. (found 10 items)
+[2026-08-21 03:14:14.704]   Fallback Item: Læs: Eloquent JavaScript – kap 6 (Type: SubHeader)
+[2026-08-21 03:14:14.705]   Fallback Item: Javascript practice quiz 6  (Type: Quiz)
+[2026-08-21 03:14:14.705]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:14.705]   Fallback Item: forelæsning 6 25.pdf (Type: File)
+[2026-08-21 03:14:14.843]   Fallback Item: forelæsning 6 25.pptx (Type: File)
+[2026-08-21 03:14:14.989]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:14.989]   Fallback Item: øvelsessæt 6.pdf (Type: File)
+[2026-08-21 03:14:15.130]   Fallback Item: øvelsessæt 6 løsninger.pdf (Type: File)
+[2026-08-21 03:14:15.268]   Fallback Item: 2022 - ordinær (Type: File)
+[2026-08-21 03:14:15.420]   Fallback Item: eksamen 2023E ordinær.pdf (Type: File)
+[2026-08-21 03:14:15.688] Fallback Scan: Module Uge 42: Efterårsferie (found 0 items)
+[2026-08-21 03:14:15.847] Fallback Scan: Module Uge 43: Forelæsning 7. Error-handling, Moduler (found 8 items)
+[2026-08-21 03:14:15.847]   Fallback Item: Læs: Eloquent JavaScript – kap 8, 10 (Type: SubHeader)
+[2026-08-21 03:14:15.847]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:15.848]   Fallback Item: forelæsning 7 25.pdf (Type: File)
+[2026-08-21 03:14:16.055]   Fallback Item: forelæsning 7 25.pptx (Type: File)
+[2026-08-21 03:14:16.221]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:16.221]   Fallback Item: øvelsessæt 7.pdf (Type: File)
+[2026-08-21 03:14:16.363]   Fallback Item: øvelsessæt 7 løsninger.pdf (Type: File)
+[2026-08-21 03:14:16.497]   Fallback Item: Øvelser - fredag d. 24/10 (Type: File)
+[2026-08-21 03:14:16.789] Fallback Scan: Module Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1 (found 8 items)
+[2026-08-21 03:14:16.789]   Fallback Item: Læs: Eloquent JavaScript – kap 13 (Type: SubHeader)
+[2026-08-21 03:14:16.789]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:16.790]   Fallback Item: Forelæsning 8 - Intro til Web Teknologier.pdf (Type: File)
+[2026-08-21 03:14:16.935]   Fallback Item: Forelæsning 8 - Intro til Web Teknologier.pptx (Type: File)
+[2026-08-21 03:14:17.075]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:17.075]   Fallback Item: Hjælpeopgaver - fredag d. 31/10 (Type: File)
+[2026-08-21 03:14:17.265]   Fallback Item: Minefelt.pdf (Type: File)
+[2026-08-21 03:14:17.392]   Fallback Item: minefeltVEJL.js (Type: File)
+[2026-08-21 03:14:17.672] Fallback Scan: Module Uge 45: Forelæsning 9. HTML 2 og CSS (found 7 items)
+[2026-08-21 03:14:17.672]   Fallback Item: Læs: Eloquent JavaScript – kap 14 og 18 (Type: SubHeader)
+[2026-08-21 03:14:17.673]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:17.673]   Fallback Item: Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (Type: File)
+[2026-08-21 03:14:17.807]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:17.808]   Fallback Item: Flexbox Froggy (Type: ExternalUrl)
+[2026-08-21 03:14:17.808]   Fallback Item: CSS Diner (Type: ExternalUrl)
+[2026-08-21 03:14:17.808]   Fallback Item: bondemand.pdf (Type: File)
+[2026-08-21 03:14:18.084] Fallback Scan: Module Uge 46: Forelæsning 10. Document Object Model (DOM) (found 7 items)
+[2026-08-21 03:14:18.084]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:18.085]   Fallback Item: 2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (Type: File)
+[2026-08-21 03:14:18.223]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:18.223]   Fallback Item: opgave 102 - hints.html (Type: File)
+[2026-08-21 03:14:18.381]   Fallback Item: styling_opgave102.css (Type: File)
+[2026-08-21 03:14:18.518]   Fallback Item: Eksamen 2023E Ordinær Klasse opgave.pdf (Type: File)
+[2026-08-21 03:14:18.664]   Fallback Item: Eksamen 2024E Ordinær Klasse opgave.pdf (Type: File)
+[2026-08-21 03:14:18.949] Fallback Scan: Module Uge 47: Forelæsning 11. Asynkron programmering og event handling  (found 8 items)
+[2026-08-21 03:14:18.949]   Fallback Item: Læs: Eloquent JavaScript – kap 11+15 (Type: SubHeader)
+[2026-08-21 03:14:18.950]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:18.950]   Fallback Item: Asynkronitet og Events.pdf (Type: File)
+[2026-08-21 03:14:19.087]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:19.087]   Fallback Item: Øvelser_Kapitel11og15.md (Type: File)
+[2026-08-21 03:14:19.260]   Fallback Item: Opgavesæt uge 47.pdf (Type: File)
+[2026-08-21 03:14:19.405]   Fallback Item: html terninger.pdf (Type: File)
+[2026-08-21 03:14:19.557]   Fallback Item: Video gennemgang af terning opgaven (Type: File)
+[2026-08-21 03:14:19.849] Fallback Scan: Module Uge 48: Forelæsning 12. Node.js og debugger samt eksamensforberedelse (found 10 items)
+[2026-08-21 03:14:19.850]   Fallback Item: Læs: Eloquent JavaScript – kap 20  (Type: SubHeader)
+[2026-08-21 03:14:19.850]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:19.850]   Fallback Item: NodeJs og Debugging.pdf (Type: File)
+[2026-08-21 03:14:19.982]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:19.982]   Fallback Item: Debug - grades - 1.txt (Type: File)
+[2026-08-21 03:14:20.111]   Fallback Item: Debug - Inventory - 1.txt (Type: File)
+[2026-08-21 03:14:20.250]   Fallback Item: Debug - shop - 1.txt (Type: File)
+[2026-08-21 03:14:20.438]   Fallback Item: Studietimers overblik - Opgave.pdf (Type: File)
+[2026-08-21 03:14:20.566]   Fallback Item: StudieTimerVejl.js (Type: File)
+[2026-08-21 03:14:20.704]   Fallback Item: JavaScript Objekter – Øvelser.pdf (Type: File)
+[2026-08-21 03:14:21.055] Fallback Scan: Module Uge 49: Øvelser (found 3 items)
+[2026-08-21 03:14:21.055]   Fallback Item: Gavelisten - Opgave.pdf (Type: File)
+[2026-08-21 03:14:21.200]   Fallback Item: Juleværksted - Opgave.pdf (Type: File)
+[2026-08-21 03:14:21.336]   Fallback Item: Mus - Opgave.docx (Type: File)
+[2026-08-21 03:14:21.609] Fallback Scan: Module Tidligere eksamenssæt (de fleste med vejledende løsninger) (found 4 items)
+[2026-08-21 03:14:21.609]   Fallback Item: Husk, at der også kan komme andre ting såsom switch-statements, loops igennem objekter, HTML osv. som ikke fremgår så ofte i tidligere eksamenssæt. (Type: SubHeader)
+[2026-08-21 03:14:21.610]   Fallback Item: Eksamens arkiv.zip (Type: File)
+[2026-08-21 03:14:21.753]   Fallback Item: Fiktiv Eksamensopgave.pdf (Type: File)
+[2026-08-21 03:14:21.898]   Fallback Item: Fiktiv Eksamensopgave3.pdf (Type: File)
+[2026-08-21 03:14:22.204] Fallback Scan: Module Uge 7: Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel) (found 12 items)
+[2026-08-21 03:14:22.204]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:14:22.204]   Fallback Item: UML @ Classroom : kap. 1,2,3,4 (Type: ExternalTool)
+[2026-08-21 03:14:22.204]   Fallback Item: Kursorisk: (Type: SubHeader)
+[2026-08-21 03:14:22.205]   Fallback Item: UML Diagram Types Guide: Class diagram (Type: ExternalTool)
+[2026-08-21 03:14:22.205]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:22.205]   Fallback Item: Forelæsning13.pdf (Type: File)
+[2026-08-21 03:14:22.354]   Fallback Item: Forelæsning13.pptx (Type: File)
+[2026-08-21 03:14:22.498]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:22.498]   Fallback Item: UMLanalyseopgaver.pdf (Type: File)
+[2026-08-21 03:14:22.644]   Fallback Item: UMLcases.pdf (Type: File)
+[2026-08-21 03:14:22.776]   Fallback Item: exercises system modelling - solutions.pdf (Type: File)
+[2026-08-21 03:14:22.908]   Fallback Item: forelæsningsnoter 13 OO+UML.docx (Type: File)
+[2026-08-21 03:14:23.179] Fallback Scan: Module Uge 8: Forelæsnigsfri (found 0 items)
+[2026-08-21 03:14:23.335] Fallback Scan: Module Uge 9: Forelæsning 14. Design, Arkitektur  (found 11 items)
+[2026-08-21 03:14:23.335]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:14:23.335]   Fallback Item: UML @ Classroom : kap. 5, (6), 7  (Type: ExternalTool)
+[2026-08-21 03:14:23.335]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:23.335]   Fallback Item: Forelæsning 14 OO+UML 2.pdf (Type: File)
+[2026-08-21 03:14:23.478]   Fallback Item: Forelæsning 14 OO+UML 2.pptx (Type: File)
+[2026-08-21 03:14:23.635]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:23.635]   Fallback Item: VRS_registrérKunde_vejl.pdf (Type: File)
+[2026-08-21 03:14:23.776]   Fallback Item: opgave_bibliotekssystem.pdf (Type: File)
+[2026-08-21 03:14:23.910]   Fallback Item: opgave_bibliotekssystem_vejl.pdf (Type: File)
+[2026-08-21 03:14:24.227]   Fallback Item: Biblioteks_DSD_vejl.jpg (Type: File)
+[2026-08-21 03:14:24.378]   Fallback Item: Biblioteks_SSD_vejl.jpg (Type: File)
+[2026-08-21 03:14:24.688] Fallback Scan: Module Uge 10: Forelæsning 15. Database 1 | Opsætning af database (found 12 items)
+[2026-08-21 03:14:24.689]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:14:24.689]   Fallback Item: The Worlds of Database Systems. pp 1-13 (Type: ExternalTool)
+[2026-08-21 03:14:24.689]   Fallback Item: The relational model of data. pp 15-65 (Type: ExternalTool)
+[2026-08-21 03:14:24.689]   Fallback Item: Kursorisk: (Type: SubHeader)
+[2026-08-21 03:14:24.689]   Fallback Item: Entity Relationship Modeling with UML (Type: ExternalTool)
+[2026-08-21 03:14:24.689]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:24.689]   Fallback Item: Forelæsning 15 DB1.pdf (Type: File)
+[2026-08-21 03:14:24.845]   Fallback Item: Forelæsning 15 DB1.pptx (Type: File)
+[2026-08-21 03:14:25.041]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:25.042]   Fallback Item: Lecture 15 Database Design Exercises solutions.pdf (Type: File)
+[2026-08-21 03:14:25.193]   Fallback Item: Lecture 15 Database Design Exercises.pdf (Type: File)
+[2026-08-21 03:14:25.371]   Fallback Item: Guide til opsætning af database-2026.pdf (Type: File)
+[2026-08-21 03:14:25.686] Fallback Scan: Module Uge 11: Forelæsning 16. Database 2 | Datamodifikation (found 6 items)
+[2026-08-21 03:14:25.686]   Fallback Item: T-SQL fundamentals kap. 1, 2, 8 (Type: ExternalTool)
+[2026-08-21 03:14:25.687]   Fallback Item: Forelæsning 16 - DB2.pptx (Type: File)
+[2026-08-21 03:14:25.844]   Fallback Item: Forelæsning 16 - DB2.pdf (Type: File)
+[2026-08-21 03:14:26.042]   Fallback Item: løbeklub SQL.pdf (Type: File)
+[2026-08-21 03:14:26.207]   Fallback Item: Lecture 16 ER-RM exercises (solutions).pdf (Type: File)
+[2026-08-21 03:14:26.346]   Fallback Item: Lecture 16 ER-RM Exercises.pdf (Type: File)
+[2026-08-21 03:14:26.657] Fallback Scan: Module Uge 12: Forelæsning 17. Database 3 | Join og set operatorer (found 13 items)
+[2026-08-21 03:14:26.657]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:14:26.658]   Fallback Item: T-SQL fundamentals kap. 3, 6 (Type: ExternalTool)
+[2026-08-21 03:14:26.658]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:26.658]   Fallback Item: Forelæsning 17 - DB3.pdf (Type: File)
+[2026-08-21 03:14:26.804]   Fallback Item: Forelæsning 17 - DB3.pptx (Type: File)
+[2026-08-21 03:14:26.944]   Fallback Item: EKSTRA: DB-kapitelnoter-øvelser-løsninger.zip (Type: File)
+[2026-08-21 03:14:27.152]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:27.152]   Fallback Item: Create_ILearn_tables.sql (Type: File)
+[2026-08-21 03:14:27.329]   Fallback Item: Insert_ILearn_data.sql (Type: File)
+[2026-08-21 03:14:27.629]   Fallback Item: Forelæsning 17 ILearn SQL Exercises.pdf (Type: File)
+[2026-08-21 03:14:27.781]   Fallback Item: Forelæsning 17 ILearn SQL Solutions.sql (Type: File)
+[2026-08-21 03:14:27.918]   Fallback Item: SQL-Opgave.pdf (Type: File)
+[2026-08-21 03:14:28.063]   Fallback Item: SQL Opgave Vejl.sql (Type: File)
+[2026-08-21 03:14:28.366] Fallback Scan: Module Uge 13: Forelæsning 18. Webserver & APIer (found 9 items)
+[2026-08-21 03:14:28.367]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:14:28.367]   Fallback Item: Express_Nodejs Introduction, mozilla.org (Type: ExternalTool)
+[2026-08-21 03:14:28.367]   Fallback Item: Hello world example - ExpressJs (Type: ExternalTool)
+[2026-08-21 03:14:28.367]   Fallback Item: Node.js - Express Framework (Type: ExternalTool)
+[2026-08-21 03:14:28.368]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:28.368]   Fallback Item: Forelæsning 18 - Webserver og API.pptx (Type: File)
+[2026-08-21 03:14:28.502]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:28.502]   Fallback Item: Webserver-opgave.pdf (Type: File)
+[2026-08-21 03:14:28.702]   Fallback Item: Webserver-Opgave-Vejl.zip (Type: File)
+[2026-08-21 03:14:29.074] Fallback Scan: Module Uge 14: Forelæsnigsfri (Påske) (found 0 items)
+[2026-08-21 03:14:29.220] Fallback Scan: Module Uge 15: Forelæsning 19. Webserver & Databaser (found 5 items)
+[2026-08-21 03:14:29.220]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:14:29.220]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:29.220]   Fallback Item: Forelæsning 19 - Webserver og Databaser.pptx (Type: File)
+[2026-08-21 03:14:30.083]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:30.084]   Fallback Item: Forelæsning 19.zip (Type: File)
+[2026-08-21 03:14:30.812] Fallback Scan: Module Uge 16: Forelæsning 20. Små systemer 1 | Testing - Teori og praksis (found 6 items)
+[2026-08-21 03:14:30.813]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:14:30.813]   Fallback Item: Certified Tester Foundation Level (CTFL) v4.0 (Type: ExternalTool)
+[2026-08-21 03:14:30.813]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:30.813]   Fallback Item: Uge 16 - Testing - Teori og praksis.pdf (Type: File)
+[2026-08-21 03:14:31.009]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:31.009]   Fallback Item: Uge 16 - Jest.zip (Type: File)
+[2026-08-21 03:14:31.354] Fallback Scan: Module Uge 18: Forelæsning 21. Små systemer 2 | Security 101, (authentification, authorization, audit) (found 4 items)
+[2026-08-21 03:14:31.354]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:14:31.355]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:31.355]   Fallback Item: Forelæsning 21 - Cloud & Security 101.pptx (Type: File)
+[2026-08-21 03:14:31.526]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:31.691] Fallback Scan: Module uge 19: Forelæsning 22. Små systemer 3 | Arkitektur, Backend, MVC + fullstack (found 4 items)
+[2026-08-21 03:14:31.691]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:14:31.691]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:31.691]   Fallback Item: Uge 19 - System Arkitektur - 3 tier, Backend, MVC + fullstack.pdf (Type: File)
+[2026-08-21 03:14:31.870]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:32.019] Fallback Scan: Module Uge 20: Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse. (found 6 items)
+[2026-08-21 03:14:32.019]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:14:32.019]   Fallback Item: Kursusbeskrivelse og eksamensregler (Type: ExternalUrl)
+[2026-08-21 03:14:32.019]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:14:32.019]   Fallback Item: Forelæsning 23 - eksamensforberedelse.pptx (Type: File)
+[2026-08-21 03:14:32.195]   Fallback Item: Forelæsning 23 - eksamensforberedelse.pdf (Type: File)
+[2026-08-21 03:14:32.342]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:14:32.348] Requesting URL: https://cbscanvas.instructure.com/files/1598669/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:32.348] Requesting URL: https://cbscanvas.instructure.com/files/1687491/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:32.349] Requesting URL: https://cbscanvas.instructure.com/files/1692940/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:32.350] Requesting URL: https://cbscanvas.instructure.com/files/1700523/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:32.350] Requesting URL: https://cbscanvas.instructure.com/files/1796825/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:33.007] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:33.021] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Fælles feedback G3 v2.pdf (354538 bytes)
+[2026-08-21 03:14:33.027] Requesting URL: https://cbscanvas.instructure.com/files/1736378/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:33.028] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:33.033] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:33.033] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/g5_fælles_feedback.pdf (144594 bytes)
+[2026-08-21 03:14:33.037] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Trin-for-trin Guide til VS Code og konsollen.pdf (150525 bytes)
+[2026-08-21 03:14:33.041] Requesting URL: https://cbscanvas.instructure.com/files/1736380/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:33.043] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:33.043] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:33.046] Requesting URL: https://cbscanvas.instructure.com/files/1770754/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:33.059] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/g2_fælles_feedback.pdf (225849 bytes)
+[2026-08-21 03:14:33.060] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/G3 opgave.bierOgBlomster analysevejledning.pdf (265292 bytes)
+[2026-08-21 03:14:33.063] Requesting URL: https://cbscanvas.instructure.com/files/1771104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:33.067] Requesting URL: https://cbscanvas.instructure.com/files/1815182/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:33.608] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:33.614] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/feedback ordinær.pdf (111925 bytes)
+[2026-08-21 03:14:33.620] Requesting URL: https://cbscanvas.instructure.com/files/1626276/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:33.627] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:33.643] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/eksamen 2025E re-eksamen.pdf (700836 bytes)
+[2026-08-21 03:14:33.648] Requesting URL: https://cbscanvas.instructure.com/files/1626277/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:33.649] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:33.655] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Eksamen 2026 rev_6.pdf (263452 bytes)
+[2026-08-21 03:14:33.660] Requesting URL: https://cbscanvas.instructure.com/files/1626486/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:33.667] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:33.683] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/eksamen 2025E ordinær final.pdf (655581 bytes)
+[2026-08-21 03:14:33.686] Requesting URL: https://cbscanvas.instructure.com/files/1632000/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:33.696] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:33.726] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/PowerPoint to use in class_141223 (2).pptx (1718878 bytes)
+[2026-08-21 03:14:33.730] Requesting URL: https://cbscanvas.instructure.com/files/1632001/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:34.225] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:34.226] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:34.253] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:34.258] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:34.282] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 1- Grundlæggende javascript 1.pdf (155545 bytes)
+[2026-08-21 03:14:34.309] Requesting URL: https://cbscanvas.instructure.com/files/1632558/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:34.315] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 1 25.pdf (1593444 bytes)
+[2026-08-21 03:14:34.319] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 2 25.pdf (951046 bytes)
+[2026-08-21 03:14:34.326] Requesting URL: https://cbscanvas.instructure.com/files/1637607/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:34.333] Requesting URL: https://cbscanvas.instructure.com/files/1637608/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:34.339] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:34.993] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:35.023] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 2- Program - Struktur - Algoritmer.pdf (184026 bytes)
+[2026-08-21 03:14:35.039] Requesting URL: https://cbscanvas.instructure.com/files/1637584/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:35.057] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:35.071] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:35.103] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 1 25.pptx (25963296 bytes)
+[2026-08-21 03:14:35.129] Requesting URL: https://cbscanvas.instructure.com/files/1643465/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:35.135] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 3 25.pdf (797272 bytes)
+[2026-08-21 03:14:35.150] Requesting URL: https://cbscanvas.instructure.com/files/1643462/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:35.266] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 2 25.pptx (27494979 bytes)
+[2026-08-21 03:14:35.280] Requesting URL: https://cbscanvas.instructure.com/files/1643483/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:35.433] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 3 25.pptx (14493933 bytes)
+[2026-08-21 03:14:35.437] Requesting URL: https://cbscanvas.instructure.com/files/1658577/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:35.672] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:35.684] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (199331 bytes)
+[2026-08-21 03:14:35.690] Requesting URL: https://cbscanvas.instructure.com/files/1658578/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:35.761] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:35.887] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:35.931] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 4 25.pdf (1093469 bytes)
+[2026-08-21 03:14:35.942] Requesting URL: https://cbscanvas.instructure.com/files/1658625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:36.017] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:36.036] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 4.pdf (258644 bytes)
+[2026-08-21 03:14:36.054] Requesting URL: https://cbscanvas.instructure.com/files/1658626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:36.130] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:36.291] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:36.319] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 4 25.pptx (24744385 bytes)
+[2026-08-21 03:14:36.340] Requesting URL: https://cbscanvas.instructure.com/files/1666624/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:36.342] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 5 25.pdf (772981 bytes)
+[2026-08-21 03:14:36.357] Requesting URL: https://cbscanvas.instructure.com/files/1666625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:36.575] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 5 25.pptx (17174017 bytes)
+[2026-08-21 03:14:36.581] Requesting URL: https://cbscanvas.instructure.com/files/1666626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:36.618] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:36.628] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 5.pdf (245920 bytes)
+[2026-08-21 03:14:36.634] Requesting URL: https://cbscanvas.instructure.com/files/1666630/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:36.817] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:36.826] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 5 løsninger.pdf (282049 bytes)
+[2026-08-21 03:14:36.832] Requesting URL: https://cbscanvas.instructure.com/files/1598570/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:37.003] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:37.023] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:37.035] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 6 25.pdf (1154888 bytes)
+[2026-08-21 03:14:37.049] Requesting URL: https://cbscanvas.instructure.com/files/1670338/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:37.141] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:37.156] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 6.pdf (203755 bytes)
+[2026-08-21 03:14:37.168] Requesting URL: https://cbscanvas.instructure.com/files/1677087/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:37.210] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:37.229] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 6 løsninger.pdf (239167 bytes)
+[2026-08-21 03:14:37.242] Requesting URL: https://cbscanvas.instructure.com/files/1677089/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:37.468] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:37.484] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/2022 ordinær.pdf (203316 bytes)
+[2026-08-21 03:14:37.494] Requesting URL: https://cbscanvas.instructure.com/files/1677085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:37.759] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 6 25.pptx (39644299 bytes)
+[2026-08-21 03:14:37.764] Requesting URL: https://cbscanvas.instructure.com/files/1677090/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:37.869] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:37.884] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/eksamen 2023E ordinær.pdf (255500 bytes)
+[2026-08-21 03:14:37.890] Requesting URL: https://cbscanvas.instructure.com/files/1679207/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:38.098] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:38.296] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:38.345] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 7 25.pdf (982759 bytes)
+[2026-08-21 03:14:38.355] Requesting URL: https://cbscanvas.instructure.com/files/1682843/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:38.379] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 7 25.pptx (13428202 bytes)
+[2026-08-21 03:14:38.385] Requesting URL: https://cbscanvas.instructure.com/files/1682844/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:38.628] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:38.682] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:38.706] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 7 løsninger.pdf (292720 bytes)
+[2026-08-21 03:14:38.724] Requesting URL: https://cbscanvas.instructure.com/files/1684203/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:38.734] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Øvelse_u43.pdf (3962706 bytes)
+[2026-08-21 03:14:38.741] Requesting URL: https://cbscanvas.instructure.com/files/1684229/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:39.000] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:39.025] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:39.269] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 8 - Intro til Web Teknologier.pdf (5854748 bytes)
+[2026-08-21 03:14:39.283] Requesting URL: https://cbscanvas.instructure.com/files/1688312/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:39.353] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:39.381] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:39.382] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Minefelt.pdf (366149 bytes)
+[2026-08-21 03:14:39.386] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:39.397] Requesting URL: https://cbscanvas.instructure.com/files/1690005/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:39.416] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/små_opgaver.pdf (164552 bytes)
+[2026-08-21 03:14:39.420] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 7.pdf (274244 bytes)
+[2026-08-21 03:14:39.427] Requesting URL: https://cbscanvas.instructure.com/files/1692896/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:39.435] Requesting URL: https://cbscanvas.instructure.com/files/1694147/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:39.610] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 8 - Intro til Web Teknologier.pptx (23173123 bytes)
+[2026-08-21 03:14:39.616] Requesting URL: https://cbscanvas.instructure.com/files/1694158/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:39.880] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:40.002] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:40.030] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/bondemand.pdf (380086 bytes)
+[2026-08-21 03:14:40.037] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:40.046] Requesting URL: https://cbscanvas.instructure.com/files/1696759/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:40.066] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:40.091] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Eksamen 2023E Ordinær Klasse opgave.pdf (54694 bytes)
+[2026-08-21 03:14:40.114] Requesting URL: https://cbscanvas.instructure.com/files/1698072/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:40.119] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (9440778 bytes)
+[2026-08-21 03:14:40.132] Requesting URL: https://cbscanvas.instructure.com/files/1598722/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:40.264] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (9243144 bytes)
+[2026-08-21 03:14:40.273] Requesting URL: https://cbscanvas.instructure.com/files/1700490/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:40.361] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:40.369] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Eksamen 2024E Ordinær Klasse opgave.pdf (167555 bytes)
+[2026-08-21 03:14:40.374] Requesting URL: https://cbscanvas.instructure.com/files/1701809/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:40.713] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:40.723] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/html terninger.pdf (226046 bytes)
+[2026-08-21 03:14:40.728] Requesting URL: https://cbscanvas.instructure.com/files/1701948/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:40.729] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:40.735] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:40.738] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Opgavesæt uge 47.pdf (148870 bytes)
+[2026-08-21 03:14:40.749] Requesting URL: https://cbscanvas.instructure.com/files/1703058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:40.762] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Asynkronitet og Events.pdf (1248126 bytes)
+[2026-08-21 03:14:40.766] Requesting URL: https://cbscanvas.instructure.com/files/1703059/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:40.828] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:40.850] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/NodeJs og Debugging.pdf (1226376 bytes)
+[2026-08-21 03:14:40.856] Requesting URL: https://cbscanvas.instructure.com/files/1598591/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:40.934] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:40.946] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Studietimers overblik - Opgave.pdf (166800 bytes)
+[2026-08-21 03:14:40.951] Requesting URL: https://cbscanvas.instructure.com/files/1598593/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:41.317] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:41.331] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/JavaScript Objekter – Øvelser.pdf (229478 bytes)
+[2026-08-21 03:14:41.337] Requesting URL: https://cbscanvas.instructure.com/files/1769713/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:41.341] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:41.354] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Juleværksted - Opgave.pdf (197615 bytes)
+[2026-08-21 03:14:41.361] Requesting URL: https://cbscanvas.instructure.com/files/1769714/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:41.375] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:41.388] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Gavelisten - Opgave.pdf (125183 bytes)
+[2026-08-21 03:14:41.395] Requesting URL: https://cbscanvas.instructure.com/files/1768580/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:41.406] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:41.410] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Fiktiv Eksamensopgave.pdf (43733 bytes)
+[2026-08-21 03:14:41.416] Requesting URL: https://cbscanvas.instructure.com/files/1768581/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:41.650] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:41.665] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Fiktiv Eksamensopgave3.pdf (141950 bytes)
+[2026-08-21 03:14:41.670] Requesting URL: https://cbscanvas.instructure.com/files/1598710/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:41.906] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:41.911] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:41.972] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:41.982] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:41.983] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning13.pdf (1560239 bytes)
+[2026-08-21 03:14:41.999] Requesting URL: https://cbscanvas.instructure.com/files/1780749/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:42.004] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/UMLanalyseopgaver.pdf (119412 bytes)
+[2026-08-21 03:14:42.011] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/UMLcases.pdf (142648 bytes)
+[2026-08-21 03:14:42.020] Requesting URL: https://cbscanvas.instructure.com/files/1780750/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:42.030] Requesting URL: https://cbscanvas.instructure.com/files/1780937/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:42.270] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:42.293] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/exercises system modelling - solutions.pdf (182349 bytes)
+[2026-08-21 03:14:42.308] Requesting URL: https://cbscanvas.instructure.com/files/1780752/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:42.631] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:42.681] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 14 OO UML 2.pdf (1024966 bytes)
+[2026-08-21 03:14:42.701] Requesting URL: https://cbscanvas.instructure.com/files/1780936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:42.824] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:42.851] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:42.884] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/VRS_registrérKunde_vejl.pdf (197720 bytes)
+[2026-08-21 03:14:42.909] Requesting URL: https://cbscanvas.instructure.com/files/1784973/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:42.916] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:42.949] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/opgave_bibliotekssystem.pdf (174680 bytes)
+[2026-08-21 03:14:42.974] Requesting URL: https://cbscanvas.instructure.com/files/1784974/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:43.356] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning13.pptx (51957778 bytes)
+[2026-08-21 03:14:43.357] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 14 OO UML 2.pptx (13151543 bytes)
+[2026-08-21 03:14:43.361] Requesting URL: https://cbscanvas.instructure.com/files/1784717/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:43.367] Requesting URL: https://cbscanvas.instructure.com/files/1784716/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:43.416] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:43.429] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/opgave_bibliotekssystem_vejl.pdf (245890 bytes)
+[2026-08-21 03:14:43.433] Requesting URL: https://cbscanvas.instructure.com/files/1784715/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:43.624] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:43.701] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:43.778] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 15 DB1_x.pdf (1692942 bytes)
+[2026-08-21 03:14:43.792] Requesting URL: https://cbscanvas.instructure.com/files/1789277/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:43.925] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:43.945] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Lecture 15 Database Design Exercises.pdf (78871 bytes)
+[2026-08-21 03:14:43.960] Requesting URL: https://cbscanvas.instructure.com/files/1789278/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:43.968] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:43.987] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Lecture 15 Database Design Exercises solutions NY.pdf (138522 bytes)
+[2026-08-21 03:14:43.998] Requesting URL: https://cbscanvas.instructure.com/files/1789978/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:44.019] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:44.224] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Guide til opsætning af database-2026.pdf (4907315 bytes)
+[2026-08-21 03:14:44.239] Requesting URL: https://cbscanvas.instructure.com/files/1789237/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:44.415] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:44.510] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 15 DB1_x.pptx (34805489 bytes)
+[2026-08-21 03:14:44.528] Requesting URL: https://cbscanvas.instructure.com/files/1789236/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:44.623] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:44.703] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 16 - DB2.pdf (1551149 bytes)
+[2026-08-21 03:14:44.720] Requesting URL: https://cbscanvas.instructure.com/files/1793427/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:44.728] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:44.749] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/løbeklub SQL.pdf (97930 bytes)
+[2026-08-21 03:14:44.783] Requesting URL: https://cbscanvas.instructure.com/files/1793428/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:44.857] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 16 - DB2.pptx (14136388 bytes)
+[2026-08-21 03:14:44.864] Requesting URL: https://cbscanvas.instructure.com/files/1793429/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:44.877] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:44.901] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Lecture 16 svar øvelse.pdf (670880 bytes)
+[2026-08-21 03:14:44.905] Requesting URL: https://cbscanvas.instructure.com/files/1794805/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:45.150] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:45.165] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Lecture 16 ER-RM Exercises.pdf (186181 bytes)
+[2026-08-21 03:14:45.171] Requesting URL: https://cbscanvas.instructure.com/files/1797870/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:45.337] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:45.338] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:45.384] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 17 - DB3.pptx (883058 bytes)
+[2026-08-21 03:14:45.389] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 17 - DB3.pdf (1038221 bytes)
+[2026-08-21 03:14:45.395] Requesting URL: https://cbscanvas.instructure.com/files/1799465/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:45.401] Requesting URL: https://cbscanvas.instructure.com/files/1805046/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:45.443] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:45.459] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 17 ILearn SQL Exercises.pdf (228477 bytes)
+[2026-08-21 03:14:45.464] Requesting URL: https://cbscanvas.instructure.com/files/1807958/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:45.468] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:45.569] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/SQL-Opgave.pdf (4007174 bytes)
+[2026-08-21 03:14:45.576] Requesting URL: https://cbscanvas.instructure.com/files/1814657/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:45.807] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:46.001] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:46.053] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:46.065] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 18 - Webserver og API.pptx (9918524 bytes)
+[2026-08-21 03:14:46.070] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:46.096] Requesting URL: https://cbscanvas.instructure.com/files/1817698/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:46.173] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:46.234] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Webserver-opgave.pdf (3970615 bytes)
+[2026-08-21 03:14:46.266] Requesting URL: https://cbscanvas.instructure.com/files/1823174/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:46.301] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 16 - Testing - Teori og praksis.pdf (3126264 bytes)
+[2026-08-21 03:14:46.328] Requesting URL: https://cbscanvas.instructure.com/files/1823208/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:14:46.429] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 19 - Webserver og Databaser.pptx (6406516 bytes)
+[2026-08-21 03:14:46.630] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 22 - Cloud & Security 101.pptx (11668334 bytes)
+[2026-08-21 03:14:46.794] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:46.866] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:14:46.938] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:14:46.951] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 19 - System Arkitektur - 3 tier, Backend, MVC   fullstack.pdf (4891900 bytes)
+[2026-08-21 03:14:47.050] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 23 - eksamensforberedelse.pdf (2001367 bytes)
+[2026-08-21 03:14:47.213] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 23 - eksamensforberedelse.pptx (11448039 bytes)
+[2026-08-21 03:14:47.219] Starting Catch-All Phase for non-module files...
+[2026-08-21 03:14:47.222] No partial/non-module files found.
+[2026-08-21 03:14:47.223] --- Download Complete: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | 88 items | 401.4 MB downloaded ---
+
+==================================================
+--- Post-Processing: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) ---
+==================================================
+[2026-08-21 03:14:47.251] === Course Finished: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | Downloaded: 88 items | Errors: 0 ===
+[2026-08-21 03:14:47.251] Post-processing ran: [zip]
+[2026-08-21 03:14:47.335] [INFO] [panopto.runner] Panopto batch start (pid=63730): 2 target(s) | model=small device=cpu lang=auto | engine_ready=True (outputs + layout resolved per target)
+[2026-08-21 03:14:47.340] [INFO] [panopto.runner] Discovering Panopto recordings in 'Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' (course id=43660)...
+[2026-08-21 03:14:49.728] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=11e7ba5a-0ada-4780-b250-b1a30098565d (via url)
+[2026-08-21 03:14:49.729] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b58f9a14-6513-4ba6-9d3a-b34600ba6f34 (via url)
+[2026-08-21 03:14:49.773] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=dfb98470-ada0-463e-9c41-b1e300cba127 (via url)
+[2026-08-21 03:14:49.795] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f69a6d8f-d703-49cf-9da7-b34700839cae (via url)
+[2026-08-21 03:14:49.833] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=01913573-0a7a-4fdb-bcdb-b1a3008d199d (via url)
+[2026-08-21 03:14:49.855] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=c8b8a8d1-6e4e-45aa-9dc4-b1d301238290 (via url)
+[2026-08-21 03:14:51.077] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0074fde5-eba4-42a7-b226-b35f00c6be2c (via url)
+[2026-08-21 03:14:51.179] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=4a698f87-388c-4e87-a9c2-b35f00b478cf (via url)
+[2026-08-21 03:14:51.249] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=5faa984d-d76e-4462-94a8-b35f00dfccb3 (via url)
+[2026-08-21 03:14:51.255] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=1dba66ba-84e0-434c-81d5-b3660165409c (via url)
+[2026-08-21 03:14:51.433] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2c2cbc41-5e08-4632-a907-b366014f267e (via url)
+[2026-08-21 03:14:51.574] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=5ba76e8d-6421-4861-8883-b1a400ba9ccd (via url)
+[2026-08-21 03:14:52.534] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f05d844b-c2c0-4acc-ae37-b1a8008b06bd (via url)
+[2026-08-21 03:14:52.670] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=d5bf4d12-bb2d-4787-a923-b1a400c0ec8a (via url)
+[2026-08-21 03:14:52.712] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=4e7d90eb-226a-4678-aade-b1a8008f85bf (via url)
+[2026-08-21 03:14:52.777] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=862d36b0-e512-4b45-aa5c-b37f0125fd68 (via url)
+[2026-08-21 03:14:52.943] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=1bad9dbd-7c6f-4309-ba52-b1a400e4f565 (via url)
+[2026-08-21 03:14:53.112] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0c1d61e1-5788-4c94-8c3e-b1a400d76e9a (via url)
+[2026-08-21 03:14:54.026] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0d78cddd-c122-444c-a358-b389015d0350 (via url)
+[2026-08-21 03:14:54.046] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=281aef18-7f56-48b2-803b-b3890162e755 (via url)
+[2026-08-21 03:14:54.272] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=ead91896-cf78-4d53-a88a-b1a80081e11b (via url)
+[2026-08-21 03:14:54.380] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=914641ae-c022-43b3-aabd-b1a80085fb1c (via url)
+[2026-08-21 03:14:54.588] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=04652c96-a5cc-46ac-a087-b395008824e1 (via url)
+[2026-08-21 03:14:54.721] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=c7202c34-2dfb-48cc-8f4d-b39500b2cd9e (via url)
+[2026-08-21 03:14:55.484] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f5b07ec0-02dd-47ff-9ab6-b39e017157d0 (via url)
+[2026-08-21 03:14:55.603] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0e1a9ca1-13c0-41d7-a774-b39e01715e4a (via url)
+[2026-08-21 03:14:55.777] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=72399841-43f1-4e1b-999c-b10a016e41d4 (via url)
+[2026-08-21 03:14:55.797] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2e97ed4e-c381-496d-a1dd-b10b0155c62b (via url)
+[2026-08-21 03:14:56.038] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=06d68daf-238e-46ce-bc82-acd10160f141 (via url)
+[2026-08-21 03:14:56.163] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=25f87b63-5ecb-42d2-8386-b28c016b2c3f (via url)
+[2026-08-21 03:14:56.992] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=bec7eb89-fb15-480c-87ca-b28f014f1971 (via url)
+[2026-08-21 03:14:57.052] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=088298c4-fe8b-4f1b-81ed-b28f0152aeb0 (via url)
+[2026-08-21 03:14:57.106] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=a4070dbb-3a80-4fb3-841e-b29f0174dcae (via url)
+[2026-08-21 03:14:57.336] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b8c36f0d-6656-4969-88ae-b1350151c84f (via url)
+[2026-08-21 03:14:57.441] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=dfee0c49-93c7-4d20-a1a7-ace7015fa08f (via url)
+[2026-08-21 03:14:57.465] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2da3eec0-a094-417b-9200-ace001763a64 (via url)
+[2026-08-21 03:14:57.652] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - vidensproduktion' launch-resolves to 72399841-43f1-4e1b-999c-b10a016e41d4 - ignoring embedded stale id(s): 7f8ea4fc-a256-4bc0-8fcf-b10a01796155
+[2026-08-21 03:14:57.656] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - vidensproduktion' launch-resolves to 2e97ed4e-c381-496d-a1dd-b10b0155c62b - ignoring embedded stale id(s): a95f7ede-0fd8-498d-96da-b10b0162489f
+[2026-08-21 03:14:57.660] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - problemformulering' launch-resolves to 06d68daf-238e-46ce-bc82-acd10160f141 - ignoring embedded stale id(s): 7957ff53-56b3-4c87-9b3f-acd200a67a9e
+[2026-08-21 03:14:57.682] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation' launch-resolves to 2da3eec0-a094-417b-9200-ace001763a64 - ignoring embedded stale id(s): 5194533e-1be0-4932-9b9a-ace10170be66
+[2026-08-21 03:14:57.686] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - klargøring af data' launch-resolves to b8c36f0d-6656-4969-88ae-b1350151c84f - ignoring embedded stale id(s): d69d18c5-1cfc-4fdd-ab49-b135015f6470
+[2026-08-21 03:14:57.690] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data' launch-resolves to dfee0c49-93c7-4d20-a1a7-ace7015fa08f - ignoring embedded stale id(s): 91f06a70-924b-4a17-ac2a-ace800ce49a1
+[2026-08-21 03:14:59.669] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=none
+[2026-08-21 03:14:59.671] [INFO] [panopto.auth] Panopto LTI: no session id resolved - landed on https://cbs.cloud.panopto.eu/Panopto/Pages/Sessions/List.aspx | unfollowed form: ./List.aspx | body: 121853 chars, 0 candidate id(s) | folder: a7cbd921-586f-4bf5-8869-b338008ffda1 | auth: cookies[cbs.cloud.panopto.eu]=.ASPXAUTH,csrfToken,sandboxCookie | markers=none
+[2026-08-21 03:14:59.707] [INFO] [panopto.discovery] Panopto api/v1 folder listing unavailable for a7cbd921-586f-4bf5-8869-b338008ffda1 (status 401) - will fall back to Data.svc/GetSessions.
+[2026-08-21 03:14:59.880] [INFO] [panopto.discovery] Panopto GetSessions: folder a7cbd921-586f-4bf5-8869-b338008ffda1 reports 0 session(s) (page 0 returned 0).
+[2026-08-21 03:14:59.880] [INFO] [panopto.discovery] Panopto GetSessions raw 'd' node for a7cbd921-586f-4bf5-8869-b338008ffda1: {"__type": "SessionResults:#Panopto.Data.DB.WebUI", "Results": [], "TotalNumber": 0, "ArchivedCount": null, "BookmarkedSessionCount": null, "CanAddSubfolder": false, "ContainsArchivedDeliveries": false, "FolderType": 0, "InProgressSessionCount": null, "ParentFolderId": null, "ScheduledRecordingCount": null, "Subfolders": []}
+[2026-08-21 03:14:59.920] [INFO] [panopto.discovery] Panopto GetFolders failed for folder a7cbd921-586f-4bf5-8869-b338008ffda1: HTTP 500: <Fault xmlns="http://schemas.microsoft.com/ws/2005/05/envelope/none"><Code><Value>Sender</Value></Code><Reason><Text xml:lang="en-US">User unified\<CANVAS_USER> is not in role (FolderEnumerate).</Text></Reason></Fault>
+[2026-08-21 03:14:59.996] [INFO] [panopto.discovery] Panopto GetFolderInfo probe for a7cbd921-586f-4bf5-8869-b338008ffda1 -> name='Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' sessions=? subfolders=?
+[2026-08-21 03:15:00.218] [INFO] [panopto.discovery] Panopto unscoped GetSessions probe -> TotalNumber=3086 (0 = the Panopto session holds NO content grants at all, i.e. the LTI cookie is effectively anonymous; >0 = auth works and the problem is folder-scoped)
+[2026-08-21 03:15:00.218] [INFO] [panopto.discovery] Panopto course-folder fallback: enumerated 0 session(s) in the course folder for course 43660 via a course-level launch (no content link required).
+[2026-08-21 03:15:01.302] [INFO] [panopto.runner] Discovered 36 recording(s) in 'Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' by source {'module': 36}
+[2026-08-21 03:15:02.677] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b58f9a14-6513-4ba6-9d3a-b34600ba6f34 (via url)
+[2026-08-21 03:15:02.677] [INFO] [panopto.runner] Panopto auth bootstrap attempt 1/36 via https://cbscanvas.instructure.com/api/v1/courses/43660/external_tools/sessionless_launch -> OK
+[2026-08-21 03:15:02.701] [INFO] [panopto.runner] Discovering Panopto recordings in 'Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)' (course id=45899)...
+[2026-08-21 03:15:04.400] [INFO] [panopto.discovery] Panopto discovery: skipped 12 non-Panopto ExternalTool item(s) in course 45899 (~12-24s of LTI handshakes avoided); 0 to resolve.
+[2026-08-21 03:15:06.428] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=none
+[2026-08-21 03:15:06.429] [INFO] [panopto.auth] Panopto LTI: no session id resolved - landed on https://cbs.cloud.panopto.eu/Panopto/Pages/Sessions/List.aspx | unfollowed form: ./List.aspx | body: 121853 chars, 0 candidate id(s) | folder: 277af69e-502a-4fbc-b0d8-b4a0011cc5c5 | auth: cookies[cbs.cloud.panopto.eu]=.ASPXAUTH,csrfToken,sandboxCookie | markers=none
+[2026-08-21 03:15:06.461] [INFO] [panopto.discovery] Panopto api/v1 folder listing unavailable for 277af69e-502a-4fbc-b0d8-b4a0011cc5c5 (status 401) - will fall back to Data.svc/GetSessions.
+[2026-08-21 03:15:06.683] [INFO] [panopto.discovery] Panopto GetSessions: folder 277af69e-502a-4fbc-b0d8-b4a0011cc5c5 reports 0 session(s) (page 0 returned 0).
+[2026-08-21 03:15:06.684] [INFO] [panopto.discovery] Panopto GetSessions raw 'd' node for 277af69e-502a-4fbc-b0d8-b4a0011cc5c5: {"__type": "SessionResults:#Panopto.Data.DB.WebUI", "Results": [], "TotalNumber": 0, "ArchivedCount": null, "BookmarkedSessionCount": null, "CanAddSubfolder": false, "ContainsArchivedDeliveries": false, "FolderType": 0, "InProgressSessionCount": null, "ParentFolderId": null, "ScheduledRecordingCount": null, "Subfolders": []}
+[2026-08-21 03:15:06.732] [INFO] [panopto.discovery] Panopto GetFolders failed for folder 277af69e-502a-4fbc-b0d8-b4a0011cc5c5: HTTP 500: <Fault xmlns="http://schemas.microsoft.com/ws/2005/05/envelope/none"><Code><Value>Sender</Value></Code><Reason><Text xml:lang="en-US">User unified\<CANVAS_USER> is not in role (FolderEnumerate).</Text></Reason></Fault>
+[2026-08-21 03:15:06.779] [INFO] [panopto.discovery] Panopto GetFolderInfo probe for 277af69e-502a-4fbc-b0d8-b4a0011cc5c5 -> name='Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)' sessions=? subfolders=?
+[2026-08-21 03:15:06.994] [INFO] [panopto.discovery] Panopto unscoped GetSessions probe -> TotalNumber=3086 (0 = the Panopto session holds NO content grants at all, i.e. the LTI cookie is effectively anonymous; >0 = auth works and the problem is folder-scoped)
+[2026-08-21 03:15:06.994] [INFO] [panopto.discovery] Panopto course-folder fallback: enumerated 0 session(s) in the course folder for course 45899 via a course-level launch (no content link required).
+[2026-08-21 03:15:08.817] [INFO] [panopto.runner] Discovered 0 recording(s) in 'Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)'
+[2026-08-21 03:15:08.825] [INFO] [panopto.runner] Discovery complete: 36 found across 1 course(s); planned 36 download(s) (0 video), 0 transcription(s), 0 shortcut(s), 0 skipped (already on disk).
+[2026-08-21 03:15:08.825] [INFO] [panopto.runner] Download phase: 36 recording(s) (0 video, 36 audio); 4 concurrent worker(s).
+[2026-08-21 03:15:14.958] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (7.6 MB in 4.4s)
+[2026-08-21 03:15:16.392] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (10.9 MB in 6.1s)
+[2026-08-21 03:15:19.484] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (17.0 MB in 10.0s)
+[2026-08-21 03:15:20.163] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (9.6 MB in 4.9s)
+[2026-08-21 03:15:21.639] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (9.4 MB in 4.9s)
+[2026-08-21 03:15:23.478] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (23.1 MB in 13.5s)
+[2026-08-21 03:15:25.986] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (8.8 MB in 5.4s)
+[2026-08-21 03:15:27.634] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (12.6 MB in 7.6s)
+[2026-08-21 03:15:29.758] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (12.3 MB in 7.7s)
+[2026-08-21 03:15:31.745] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (14.1 MB in 7.9s)
+[2026-08-21 03:15:32.045] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (10.6 MB in 5.6s)
+[2026-08-21 03:15:33.928] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (6.8 MB in 3.8s)
+[2026-08-21 03:15:34.625] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (12.6 MB in 6.6s)
+[2026-08-21 03:15:36.669] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (7.6 MB in 4.4s)
+[2026-08-21 03:15:37.679] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (6.3 MB in 3.3s)
+[2026-08-21 03:15:38.420] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (12.0 MB in 6.4s)
+[2026-08-21 03:15:40.084] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (9.8 MB in 5.1s)
+[2026-08-21 03:15:41.674] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (8.7 MB in 4.6s)
+[2026-08-21 03:15:44.769] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (10.1 MB in 5.9s)
+[2026-08-21 03:15:45.561] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (13.8 MB in 7.4s)
+[2026-08-21 03:15:47.139] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (11.6 MB in 6.6s)
+[2026-08-21 03:15:49.492] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (12.2 MB in 7.4s)
+[2026-08-21 03:15:53.270] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (8.7 MB in 5.6s)
+[2026-08-21 03:15:55.743] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (9.2 MB in 5.9s)
+[2026-08-21 03:15:57.683] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (16.8 MB in 12.3s)
+[2026-08-21 03:16:02.847] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (24.3 MB in 16.9s)
+[2026-08-21 03:16:04.607] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (17.3 MB in 11.0s)
+[2026-08-21 03:16:05.270] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (11.0 MB in 7.2s)
+[2026-08-21 03:16:07.966] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (18.4 MB in 11.8s)
+[2026-08-21 03:16:09.656] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (7.4 MB in 4.4s)
+[2026-08-21 03:16:10.849] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (8.8 MB in 5.1s)
+[2026-08-21 03:16:15.783] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (19.9 MB in 12.5s)
+[2026-08-21 03:16:16.849] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (13.2 MB in 8.4s)
+[2026-08-21 03:16:19.607] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (15.5 MB in 9.5s)
+[2026-08-21 03:16:21.910] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (10.0 MB in 5.6s)
+[2026-08-21 03:16:24.298] [INFO] [panopto.stream] Panopto downloaded Recording.mp3 (23.1 MB in 13.1s)
+[2026-08-21 03:16:24.336] [INFO] [panopto.runner] Panopto batch done: found=36 downloaded=36 transcribed=0 shortcuts=0 skipped=0 failed=0 courses=1
+[2026-08-21 03:16:25.016] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft PowerPoint -> left alone (we did not launch it)
+[2026-08-21 03:16:25.016] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft Word -> left alone (we did not launch it)
+[2026-08-21 03:16:25.016] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft Excel -> left alone (we did not launch it)

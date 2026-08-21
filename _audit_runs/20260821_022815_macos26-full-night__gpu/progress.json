@@ -1,0 +1,320 @@
+{
+  "rows": [
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 6,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m001_c43660"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 8,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m001_c45899"
+          }
+        }
+      ],
+      "findings": 14,
+      "drift": [],
+      "severities": {
+        "info": 13,
+        "medium": 1
+      },
+      "id": "m001",
+      "seconds": 3560.2
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m003"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "info": 5
+      },
+      "id": "m003",
+      "seconds": 2841.3
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m004"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "info": 5
+      },
+      "id": "m004",
+      "seconds": 1974.9
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m025_c43660"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m025_c45899"
+          }
+        }
+      ],
+      "findings": 7,
+      "drift": [],
+      "severities": {
+        "info": 7
+      },
+      "id": "m025",
+      "seconds": 228.7
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m026"
+          }
+        }
+      ],
+      "findings": 4,
+      "drift": [],
+      "severities": {
+        "info": 4
+      },
+      "id": "m026",
+      "seconds": 132.5
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m027_c45899"
+          }
+        },
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m027_c43660"
+          }
+        }
+      ],
+      "findings": 7,
+      "drift": [],
+      "severities": {
+        "info": 7
+      },
+      "id": "m027",
+      "seconds": 2009.5
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m029"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m029",
+      "seconds": 2006.7
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m030_c43660"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m030_c45899"
+          }
+        }
+      ],
+      "findings": 9,
+      "drift": [],
+      "severities": {
+        "info": 9
+      },
+      "id": "m030",
+      "seconds": 2231.8
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/evidence/rows/m033"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m033",
+      "seconds": 1983.9
+    }
+  ],
+  "current": "",
+  "updated": "2026-08-21T07:58:37"
+}

@@ -1,0 +1,1 @@
+{"pid": 14468, "clean_exit": false, "phase": "done", "peak_self_mb": 0.0, "peak_tree_mb": 0.0, "children": [], "failures": {"osascript_other": 7}, "webview_runtime": "", "uptime_s": 5653, "env": {"app": "2.0.2", "frozen": false, "packaged": false, "os": "macOS 26.6.1", "build": "26.6.1", "arch": "arm64", "python": "3.11.16", "ram_gb": 16.0, "cpus": 10}}

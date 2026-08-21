@@ -1,0 +1,22 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T13:28:59",
+  "applied": [],
+  "skipped": {},
+  "fixture_count": 0,
+  "expected_categories": {},
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 262,
+    "files": 300
+  },
+  "fixtures": []
+}

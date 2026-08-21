@@ -1,0 +1,73 @@
+{
+  "name": "s033",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "complete",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "nually.\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 FILES\nDOCX\n2\nkeyboard_arrow_down\n\nFiles added\n\n Updates Overwritten (2)\nYour unedited local copies were replaced with the newer versions\nEksempel på gruppekontrakt.docx\n\n​\n\n​\n\nIntroduktion til organisationsteori\nSvarark - Gode råd til projektet.docx\n\n​\n\n​\n\nØvelser i uge 16\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 27.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s033_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "ok": true,
+    "landed_on": "complete",
+    "skipped": "the run finished during the analysis wait",
+    "capture": "s033_complete"
+  },
+  "trace": [
+    {
+      "t": "11:41:12",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "11:41:44",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "complete",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "nually.\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 FILES\nDOCX\n2\nkeyboard_arrow_down\n\nFiles added\n\n Updates Overwritten (2)\nYour unedited local copies were replaced with the newer versions\nEksempel på gruppekontrakt.docx\n\n​\n\n​\n\nIntroduktion til organisationsteori\nSvarark - Gode råd til projektet.docx\n\n​\n\n​\n\nØvelser i uge 16\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 27.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s033_after_analysis",
+      "ok": true
+    }
+  ]
+}

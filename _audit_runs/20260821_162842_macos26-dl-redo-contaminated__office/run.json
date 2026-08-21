@@ -1,0 +1,12 @@
+{
+  "run_id": "20260821_162842_macos26-dl-redo-contaminated__office",
+  "label": "lane:office",
+  "parent": "20260821_162842_macos26-dl-redo-contaminated",
+  "lane": "office",
+  "created": "2026-08-21T16:28:52",
+  "app": {},
+  "ports_used": [
+    8900
+  ],
+  "browser": {}
+}

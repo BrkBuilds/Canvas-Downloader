@@ -1,0 +1,100 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T13:25:57",
+  "applied": [
+    {
+      "kind": "new_secondary",
+      "count": 2
+    },
+    {
+      "kind": "renamed_ambiguous",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 4,
+  "expected_categories": {
+    "new": 4
+  },
+  "expected_untracked": [
+    "zz flertydig 0.pdf",
+    "zz flertydig 1.pdf"
+  ],
+  "expected_missing_rows": [
+    "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf",
+    "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 258,
+    "files": 298
+  },
+  "fixtures": [
+    {
+      "label": "new-secondary:Page Uge 6 pensum.md",
+      "kind": "new_secondary",
+      "path": "Opsummering - hvad har vi lært/Page Uge 6 pensum.md",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Opsummering - hvad har vi lært/Page Uge 6 pensum.md",
+      "match_name": "Page Uge 6 pensum.md",
+      "why": "Canvas Content entity (module_item) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -248382,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new-secondary:Page Uge 13 pensum.md",
+      "kind": "new_secondary",
+      "path": "Organisationsprojekt - klargøring af data til analyse/Page Uge 13 pensum.md",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Organisationsprojekt - klargøring af data til analyse/Page Uge 13 pensum.md",
+      "match_name": "Page Uge 13 pensum.md",
+      "why": "Canvas Content entity (module_item) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -248349,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-ambiguous:zz flertydig 0.pdf",
+      "kind": "renamed_ambiguous",
+      "path": "zz flertydig 0.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf",
+      "match_name": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf",
+      "why": "Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.",
+      "canvas_file_id": 1560011,
+      "original_path": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-ambiguous:zz flertydig 1.pdf",
+      "kind": "renamed_ambiguous",
+      "path": "zz flertydig 1.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf",
+      "match_name": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf",
+      "why": "Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.",
+      "canvas_file_id": 1560205,
+      "original_path": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

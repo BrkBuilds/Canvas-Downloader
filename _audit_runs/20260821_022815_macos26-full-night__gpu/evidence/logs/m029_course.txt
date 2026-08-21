@@ -1,0 +1,1126 @@
+--- Download: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) (ID: 43660) Mode: flat ---
+==================================================
+[2026-08-21 06:15:22.400] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads
+[2026-08-21 06:15:22.400] Filter: study | Concurrency: 5 | Max file size: disabled | Estimated payload: 813 MB
+[2026-08-21 06:15:22.400] Canvas Content: [announcements, discussions] | isolate=no
+[2026-08-21 06:15:22.400] Post-processing: [pptx, urls, word, video]
+[2026-08-21 06:15:22.400] --- Canvas Content Phase: [announcements, discussions] ---
+[2026-08-21 06:15:22.400] === Starting Canvas Content Download ===
+[2026-08-21 06:15:22.400] Secondary: Fetching announcements...
+[2026-08-21 06:15:23.291] Saving announcement: 2026-06-14 - Eksamen -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2026-06-14 - Eksamen.html
+[2026-08-21 06:15:23.430] Saving announcement: 2026-04-08 - Læringsmål og referencer  -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2026-04-08 - Læringsmål og referencer.html
+[2026-08-21 06:15:23.549] Saving announcement: 2026-02-20 - Vedr. citater på andre sprog i den skriftlige opgave -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2026-02-20 - Vedr. citater på andre sprog i den skriftlige opgave.html
+[2026-08-21 06:15:23.675] Saving announcement: 2025-12-02 - Sidste forelæsning for i år -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-12-02 - Sidste forelæsning for i år.html
+[2026-08-21 06:15:23.804] Saving announcement: 2025-11-18 - Oplæg til næste gang: Saxo fra Handy Hand -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-11-18 - Oplæg til næste gang Saxo fra Handy Hand.html
+[2026-08-21 06:15:24.029] Saving announcement: 2025-11-03 - Forelæsning, slides og quiz om motivation klar -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-11-03 - Forelæsning, slides og quiz om motivation klar.html
+[2026-08-21 06:15:24.194] Saving announcement: 2025-10-31 - EU konference om unges velfærd, geopolitik og EU som energi union -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-10-31 - EU konference om unges velfærd, geopolitik og EU som energi union.html
+[2026-08-21 06:15:24.322] Saving announcement: 2025-10-21 - Aflysning af kontortid - 21 oktober -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-10-21 - Aflysning af kontortid - 21 oktober.html
+[2026-08-21 06:15:24.452] Saving announcement: 2025-10-20 - Forelæsningsvideoer, slides, quiz og case uploaded  -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-10-20 - Forelæsningsvideoer, slides, quiz og case uploaded.html
+[2026-08-21 06:15:24.662] Saving announcement: 2025-10-09 - Invitation til deltagelse i forskningsprojekt og supplerende materiale til temaet om magt -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-10-09 - Invitation til deltagelse i forskningsprojekt og supplerende materiale til temaet om magt.html
+[2026-08-21 06:15:24.814] Saving announcement: 2025-09-26 - Opfølgning på øvelsestime -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-09-26 - Opfølgning på øvelsestime.html
+[2026-08-21 06:15:24.958] Saving announcement: 2025-09-23 - Respons på feedback og nyt initiativ til øvelsestimerne -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-09-23 - Respons på feedback og nyt initiativ til øvelsestimerne.html
+[2026-08-21 06:15:25.166] Saving announcement: 2025-09-08 - Materiale klar på Canvas til øvelser torsdag morgen i organisationsfaget -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-09-08 - Materiale klar på Canvas til øvelser torsdag morgen i organisationsfaget.html
+[2026-08-21 06:15:25.312] Saving announcement: 2025-09-04 - Opsamling på øvelsestime: Mål og Strategi -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-09-04 - Opsamling på øvelsestime Mål og Strategi.html
+[2026-08-21 06:15:25.468] Saving announcement: 2025-09-01 - Tak for første forelæsning og øvelsestime -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-09-01 - Tak for første forelæsning og øvelsestime.html
+[2026-08-21 06:15:25.625] Saving announcement: 2025-08-27 - Velkommen til organisationsfaget -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Announcement 2025-08-27 - Velkommen til organisationsfaget.html
+[2026-08-21 06:15:25.630] Secondary: Fetching discussions...
+[2026-08-21 06:15:26.977] Saving discussion: Spørgsmål til pensum: magt i organisationer -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Discussion Spørgsmål til pensum magt i organisationer.html
+[2026-08-21 06:15:27.114] Saving discussion: Spørgsmål til oplægsholder: Jens Christian Finnerup, Systematic -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Discussion Spørgsmål til oplægsholder Jens Christian Finnerup, Systematic.html
+[2026-08-21 06:15:27.249] Saving discussion: Spørgsmål til pensum i organisationskultur -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Discussion Spørgsmål til pensum i organisationskultur.html
+[2026-08-21 06:15:30.768] Saving discussion: Upload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Discussion Upload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk.html
+[2026-08-21 06:15:32.934] Saving discussion: Upload af besvarelse af Rigshospitalscase -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Discussion Upload af besvarelse af Rigshospitalscase.html
+[2026-08-21 06:15:33.998] Saving discussion: Upload af besvarelse Interviewguide (husk at notér XA og XB) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Discussion Upload af besvarelse Interviewguide (husk at notér XA og XB).html
+[2026-08-21 06:15:34.005] === Canvas Content Download Complete ===
+[2026-08-21 06:15:34.005] Starting Flat Download for Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+[2026-08-21 06:15:37.056] Requesting URL: https://cbscanvas.instructure.com/files/1560208/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:37.057] Requesting URL: https://cbscanvas.instructure.com/files/1559924/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:37.057] Requesting URL: https://cbscanvas.instructure.com/files/1559993/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:37.057] Requesting URL: https://cbscanvas.instructure.com/files/1560185/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:37.057] Requesting URL: https://cbscanvas.instructure.com/files/1560188/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:38.962] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:38.964] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:38.975] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:38.999] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:39.002] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/1999_Kotter_kap 1.pdf (1386490 bytes)
+[2026-08-21 06:15:39.010] Requesting URL: https://cbscanvas.instructure.com/files/1560186/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:39.016] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:39.047] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/1999_Kotter_kap 2.pdf (1519044 bytes)
+[2026-08-21 06:15:39.050] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx (2964205 bytes)
+[2026-08-21 06:15:39.050] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx (3139143 bytes)
+[2026-08-21 06:15:39.052] Requesting URL: https://cbscanvas.instructure.com/files/1559834/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:39.054] Requesting URL: https://cbscanvas.instructure.com/files/1560061/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:39.056] Requesting URL: https://cbscanvas.instructure.com/files/1560177/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:39.062] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 37_2 Struktur_upload.pptx (2529047 bytes)
+[2026-08-21 06:15:39.064] Requesting URL: https://cbscanvas.instructure.com/files/1560197/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:39.747] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:39.771] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pptx (2004639 bytes)
+[2026-08-21 06:15:39.773] Requesting URL: https://cbscanvas.instructure.com/files/1560205/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:39.829] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:39.844] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:39.868] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx (2062268 bytes)
+[2026-08-21 06:15:39.871] Requesting URL: https://cbscanvas.instructure.com/files/1560011/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:39.876] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pptx (2373946 bytes)
+[2026-08-21 06:15:39.877] Requesting URL: https://cbscanvas.instructure.com/files/1560012/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:39.885] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:39.916] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx (2536110 bytes)
+[2026-08-21 06:15:39.920] Requesting URL: https://cbscanvas.instructure.com/files/1560230/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:39.975] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:39.988] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pptx (1269599 bytes)
+[2026-08-21 06:15:39.990] Requesting URL: https://cbscanvas.instructure.com/files/1560070/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:40.484] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:40.518] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx (2223911 bytes)
+[2026-08-21 06:15:40.521] Requesting URL: https://cbscanvas.instructure.com/files/1560220/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:40.591] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:40.630] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx (4124409 bytes)
+[2026-08-21 06:15:40.632] Requesting URL: https://cbscanvas.instructure.com/files/1560227/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:40.675] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:40.694] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:40.697] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx (2223911 bytes)
+[2026-08-21 06:15:40.700] Requesting URL: https://cbscanvas.instructure.com/files/1560213/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:40.725] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx (2592801 bytes)
+[2026-08-21 06:15:40.727] Requesting URL: https://cbscanvas.instructure.com/files/1678067/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:40.816] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:41.308] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:41.343] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (2164141 bytes)
+[2026-08-21 06:15:41.347] Requesting URL: https://cbscanvas.instructure.com/files/1678065/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:41.382] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:41.394] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:41.437] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pptx (2162221 bytes)
+[2026-08-21 06:15:41.442] Requesting URL: https://cbscanvas.instructure.com/files/1678066/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:41.448] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (2164141 bytes)
+[2026-08-21 06:15:41.451] Requesting URL: https://cbscanvas.instructure.com/files/1766952/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:41.531] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:41.542] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf (425245 bytes)
+[2026-08-21 06:15:41.545] Requesting URL: https://cbscanvas.instructure.com/files/1669054/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:42.150] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:42.192] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx (2144525 bytes)
+[2026-08-21 06:15:42.196] Requesting URL: https://cbscanvas.instructure.com/files/1559936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:42.233] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:42.251] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025_Lektion uge 43_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf (788357 bytes)
+[2026-08-21 06:15:42.254] Requesting URL: https://cbscanvas.instructure.com/files/1693406/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:42.281] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:42.320] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:42.343] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/251009_Kom og vær med_Til Stig N.pptx (674098 bytes)
+[2026-08-21 06:15:42.347] Requesting URL: https://cbscanvas.instructure.com/files/1560154/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:42.460] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx (9271293 bytes)
+[2026-08-21 06:15:42.465] Requesting URL: https://cbscanvas.instructure.com/files/1667723/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:42.942] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:42.961] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Berlingske Case.pdf (851481 bytes)
+[2026-08-21 06:15:42.964] Requesting URL: https://cbscanvas.instructure.com/files/1747622/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:43.013] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:43.027] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Beslutninger - Uge 46 2025.pdf (618261 bytes)
+[2026-08-21 06:15:43.031] Requesting URL: https://cbscanvas.instructure.com/files/1560180/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:43.124] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:43.289] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Børnemøbler_ny version.pdf (7829231 bytes)
+[2026-08-21 06:15:43.293] Requesting URL: https://cbscanvas.instructure.com/files/1559921/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:43.332] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:43.919] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/culture.experiences.pdf (32734939 bytes)
+[2026-08-21 06:15:43.922] Requesting URL: https://cbscanvas.instructure.com/files/1695726/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:44.098] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:44.111] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/F22_HAIT_Organisationers opbygning_2021-2022.pdf (411974 bytes)
+[2026-08-21 06:15:44.114] Requesting URL: https://cbscanvas.instructure.com/files/1694168/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:44.637] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:44.647] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/E25_F26_HAIT_Organisationers opbygning.pdf (344619 bytes)
+[2026-08-21 06:15:44.651] Requesting URL: https://cbscanvas.instructure.com/files/1694170/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:44.870] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:44.886] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Forandring - uge 47 2025.pdf (476521 bytes)
+[2026-08-21 06:15:44.890] Requesting URL: https://cbscanvas.instructure.com/files/1669058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:44.994] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:45.067] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Forandring i organisationer_video1_upload_2025.pptx (3436721 bytes)
+[2026-08-21 06:15:45.071] Requesting URL: https://cbscanvas.instructure.com/files/1560171/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:45.418] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pptx (470327606 bytes)
+[2026-08-21 06:15:45.420] Requesting URL: https://cbscanvas.instructure.com/files/1560172/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:45.485] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:45.550] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Forandringsledelse slide del 2.pptx (6993536 bytes)
+[2026-08-21 06:15:45.552] Requesting URL: https://cbscanvas.instructure.com/files/1560191/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:45.698] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:45.704] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/From Algorithmic Management to Data-driven Labour Organising(27).pdf (448783 bytes)
+[2026-08-21 06:15:45.706] Requesting URL: https://cbscanvas.instructure.com/files/1652721/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:46.143] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:46.147] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/HA(it.)_grupper E2021.pdf (58570 bytes)
+[2026-08-21 06:15:46.151] Requesting URL: https://cbscanvas.instructure.com/files/1560198/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:46.168] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:46.201] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/GenAI in Danske Bank_opdateret.pdf (2329690 bytes)
+[2026-08-21 06:15:46.203] Requesting URL: https://cbscanvas.instructure.com/files/1560199/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:46.322] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:46.351] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Hildebrandt-1.pdf (2961287 bytes)
+[2026-08-21 06:15:46.353] Requesting URL: https://cbscanvas.instructure.com/files/1560157/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:46.409] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:46.417] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/ind_org_Pensumoversigt_efterår2025.pdf (479504 bytes)
+[2026-08-21 06:15:46.418] Requesting URL: https://cbscanvas.instructure.com/files/1624231/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:46.798] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:46.807] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf (255792 bytes)
+[2026-08-21 06:15:46.813] Requesting URL: https://cbscanvas.instructure.com/files/1560072/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:46.884] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:46.927] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Individ og organisation_motivation & belønning 1_upload.pptx (3071148 bytes)
+[2026-08-21 06:15:46.929] Requesting URL: https://cbscanvas.instructure.com/files/1785191/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:46.937] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:46.994] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Individ og organisation_motivation & belønning 2_upload.pptx (5426548 bytes)
+[2026-08-21 06:15:46.997] Requesting URL: https://cbscanvas.instructure.com/files/1560064/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:46.998] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:47.022] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Intro_uge 36_2025_slides.pdf (2510931 bytes)
+[2026-08-21 06:15:47.024] Requesting URL: https://cbscanvas.instructure.com/files/1560100/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:47.029] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:47.035] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Industrialsupply.pdf (263664 bytes)
+[2026-08-21 06:15:47.036] Requesting URL: https://cbscanvas.instructure.com/files/1560145/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:47.424] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:47.432] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/ITDoesntMatter.pdf (206424 bytes)
+[2026-08-21 06:15:47.438] Requesting URL: https://cbscanvas.instructure.com/files/1559957/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:47.645] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:47.661] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning - Upload.pptx (456931 bytes)
+[2026-08-21 06:15:47.664] Requesting URL: https://cbscanvas.instructure.com/files/1560065/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:47.679] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:47.683] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1_grp 14.pdf (199844 bytes)
+[2026-08-21 06:15:47.685] Requesting URL: https://cbscanvas.instructure.com/files/1811688/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:47.721] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:47.729] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1_grp 15.pdf (550883 bytes)
+[2026-08-21 06:15:47.731] Requesting URL: https://cbscanvas.instructure.com/files/1699643/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:47.762] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:47.765] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1_grp 25.pdf (83254 bytes)
+[2026-08-21 06:15:47.767] Requesting URL: https://cbscanvas.instructure.com/files/1805051/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:48.104] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:48.109] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning_1_Program_2022.pdf (92744 bytes)
+[2026-08-21 06:15:48.115] Requesting URL: https://cbscanvas.instructure.com/files/1559920/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:48.427] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:48.433] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning_1_Program_2024.pdf (91387 bytes)
+[2026-08-21 06:15:48.438] Requesting URL: https://cbscanvas.instructure.com/files/1748401/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:48.457] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:48.464] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning_2_Program_ 21 april 2026.pdf (245100 bytes)
+[2026-08-21 06:15:48.467] Requesting URL: https://cbscanvas.instructure.com/files/1559932/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:48.472] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:48.485] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Ledelse - uge 48.pdf (1017698 bytes)
+[2026-08-21 06:15:48.487] Requesting URL: https://cbscanvas.instructure.com/files/1687664/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:48.498] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:48.564] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Lektion_sammenfatning af faget_2026.pptx (7468138 bytes)
+[2026-08-21 06:15:48.567] Requesting URL: https://cbscanvas.instructure.com/files/1693022/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:48.828] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:48.833] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Manual for eksamensprojekt 2021-2022_.pdf (223505 bytes)
+[2026-08-21 06:15:48.836] Requesting URL: https://cbscanvas.instructure.com/files/1693023/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:49.031] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:49.041] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Manual for eksamensprojekt 2025-2026.pdf (205244 bytes)
+[2026-08-21 06:15:49.045] Requesting URL: https://cbscanvas.instructure.com/files/1560194/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:49.191] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:49.209] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Martin Thorborg tiltrækker nye ansatte ved at lokke_artikel okt 2023.pdf (939935 bytes)
+[2026-08-21 06:15:49.212] Requesting URL: https://cbscanvas.instructure.com/files/1559923/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:49.288] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:49.299] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Motivationsfaktorer - uge 45 2025.pdf (677897 bytes)
+[2026-08-21 06:15:49.301] Requesting URL: https://cbscanvas.instructure.com/files/1560068/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:49.383] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:49.403] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Munster 2017_intro.pdf (1845812 bytes)
+[2026-08-21 06:15:49.405] Requesting URL: https://cbscanvas.instructure.com/files/1560236/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:49.542] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:49.617] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Munster 2017_kap 1.pdf (8283864 bytes)
+[2026-08-21 06:15:49.620] Requesting URL: https://cbscanvas.instructure.com/files/1560235/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:49.742] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:49.754] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Oplæg på CBS - sendt.pdf (820945 bytes)
+[2026-08-21 06:15:49.756] Requesting URL: https://cbscanvas.instructure.com/files/1560067/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:49.895] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:49.922] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsformer - oversigtstabel - udfyldt.pptx (2707111 bytes)
+[2026-08-21 06:15:49.924] Requesting URL: https://cbscanvas.instructure.com/files/1559942/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:50.157] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 06:15:50.169] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:50.206] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_argumentation_2_upload.pptm (2502919 bytes)
+[2026-08-21 06:15:50.209] Requesting URL: https://cbscanvas.instructure.com/files/1560125/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:50.211] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_klargøring af data_eksempel_upload.pptx (2976950 bytes)
+[2026-08-21 06:15:50.213] Requesting URL: https://cbscanvas.instructure.com/files/1559949/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:50.374] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 06:15:50.408] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_klargøring af data_upload.pptm (2260832 bytes)
+[2026-08-21 06:15:50.410] Requesting URL: https://cbscanvas.instructure.com/files/1560069/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:50.454] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 06:15:50.484] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_operationalisering_upload_.pptm (2923133 bytes)
+[2026-08-21 06:15:50.487] Requesting URL: https://cbscanvas.instructure.com/files/1560071/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:50.609] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 06:15:50.638] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_operationalisering_upload.pptm (2910906 bytes)
+[2026-08-21 06:15:50.640] Requesting URL: https://cbscanvas.instructure.com/files/1560231/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:50.903] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 06:15:50.943] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_problemformulering_1-upload-1.pptm (2334476 bytes)
+[2026-08-21 06:15:50.946] Requesting URL: https://cbscanvas.instructure.com/files/1560232/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:51.006] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 06:15:51.031] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_problemformulering_1-upload.pptm (2332811 bytes)
+[2026-08-21 06:15:51.033] Requesting URL: https://cbscanvas.instructure.com/files/1560128/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:51.113] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 06:15:51.121] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_problemformulering-2_upload.pptm (381152 bytes)
+[2026-08-21 06:15:51.123] Requesting URL: https://cbscanvas.instructure.com/files/1628057/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:51.177] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 06:15:51.206] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_vidensproduktion_1_2022-upload.pptm (2866372 bytes)
+[2026-08-21 06:15:51.208] Requesting URL: https://cbscanvas.instructure.com/files/1682693/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:51.324] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 06:15:51.345] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_vidensproduktion_1_upload.pptm (2089677 bytes)
+[2026-08-21 06:15:51.347] Requesting URL: https://cbscanvas.instructure.com/files/1560038/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:51.627] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 06:15:51.646] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_vidensproduktion_2_upload.pptm (574524 bytes)
+[2026-08-21 06:15:51.651] Requesting URL: https://cbscanvas.instructure.com/files/1560225/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:51.704] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:51.711] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse uge 37 - Organisationsdiagram.pdf (166332 bytes)
+[2026-08-21 06:15:51.713] Requesting URL: https://cbscanvas.instructure.com/files/1783488/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:51.733] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 06:15:51.745] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_vidensproduktion_2021-2_upload.pptm (688928 bytes)
+[2026-08-21 06:15:51.747] Requesting URL: https://cbscanvas.instructure.com/files/1800485/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:51.960] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:51.982] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse uge 44 - Læring.pdf (1102902 bytes)
+[2026-08-21 06:15:51.985] Requesting URL: https://cbscanvas.instructure.com/files/1809393/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:52.062] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:52.148] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse_uge6_intro_2022_upload-1.pptx (9505024 bytes)
+[2026-08-21 06:15:52.150] Requesting URL: https://cbscanvas.instructure.com/files/1560057/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:52.404] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:52.425] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:52.493] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse_uge9_problemformulering_XA_upload.pptx (5242154 bytes)
+[2026-08-21 06:15:52.497] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:52.497] Requesting URL: https://cbscanvas.instructure.com/files/1624133/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:52.605] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse_uge9_problemformulering_XB_UPLOAD.pptx (10586913 bytes)
+[2026-08-21 06:15:52.608] Requesting URL: https://cbscanvas.instructure.com/files/1627150/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:52.640] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge13_analyse og tolkning_UPLOAD.pptx (9862479 bytes)
+[2026-08-21 06:15:52.642] Requesting URL: https://cbscanvas.instructure.com/files/1632239/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:52.765] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:52.854] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge16_klynge_upload.pptx (9819888 bytes)
+[2026-08-21 06:15:52.856] Requesting URL: https://cbscanvas.instructure.com/files/1560137/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:52.875] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:52.927] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge18_eksamen og afslutning_opdateret_upload.pptx (5600677 bytes)
+[2026-08-21 06:15:52.930] Requesting URL: https://cbscanvas.instructure.com/files/1643383/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:53.097] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:53.158] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge36_intro_2025.pptx (6142539 bytes)
+[2026-08-21 06:15:53.160] Requesting URL: https://cbscanvas.instructure.com/files/1644211/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:53.198] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:53.210] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge36B_mål_og_strategi_2025.pdf (620460 bytes)
+[2026-08-21 06:15:53.212] Requesting URL: https://cbscanvas.instructure.com/files/1659237/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:53.239] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:53.252] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge37_struktur_2025.pdf (911692 bytes)
+[2026-08-21 06:15:53.254] Requesting URL: https://cbscanvas.instructure.com/files/1560136/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:53.488] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:53.500] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge39_kultur_2025.pdf (674932 bytes)
+[2026-08-21 06:15:53.504] Requesting URL: https://cbscanvas.instructure.com/files/1666882/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:53.516] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:53.565] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge38_organisationsformer_upload.pptx (4938852 bytes)
+[2026-08-21 06:15:53.567] Requesting URL: https://cbscanvas.instructure.com/files/1777888/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:53.751] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:53.799] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:53.818] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge39_kultur_E2025 upload.pptx (6049153 bytes)
+[2026-08-21 06:15:53.819] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge39_sensemaking_2025.pdf (995647 bytes)
+[2026-08-21 06:15:53.821] Requesting URL: https://cbscanvas.instructure.com/files/1795567/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:53.823] Requesting URL: https://cbscanvas.instructure.com/files/1560003/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:53.963] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:54.046] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge40_perspektiver_på_kultur_til upload.pptx (9273085 bytes)
+[2026-08-21 06:15:54.049] Requesting URL: https://cbscanvas.instructure.com/files/1560002/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:54.184] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:54.195] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge41_magt_E25.pdf (452042 bytes)
+[2026-08-21 06:15:54.198] Requesting URL: https://cbscanvas.instructure.com/files/1560085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:54.316] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:54.420] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides - Intro.pptx (11153240 bytes)
+[2026-08-21 06:15:54.423] Requesting URL: https://cbscanvas.instructure.com/files/1639375/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:54.528] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:54.588] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides formelle træk - organisationsformer-1.pptx (5201848 bytes)
+[2026-08-21 06:15:54.591] Requesting URL: https://cbscanvas.instructure.com/files/1643073/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:54.703] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:54.800] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides - uge 12.pptx (9589368 bytes)
+[2026-08-21 06:15:54.802] Requesting URL: https://cbscanvas.instructure.com/files/1668216/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:54.834] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:54.886] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides formelle træk - organisationsformer.pptx (5201724 bytes)
+[2026-08-21 06:15:54.889] Requesting URL: https://cbscanvas.instructure.com/files/1655085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:55.004] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:55.043] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides_mål og strategi_XA-1.pptx (4199486 bytes)
+[2026-08-21 06:15:55.046] Requesting URL: https://cbscanvas.instructure.com/files/1668217/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:55.243] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:55.302] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:55.490] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking in org (weick 1995).pdf (16385390 bytes)
+[2026-08-21 06:15:55.496] Requesting URL: https://cbscanvas.instructure.com/files/1655086/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:55.515] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:55.536] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking slides 1.pdf (657718 bytes)
+[2026-08-21 06:15:55.540] Requesting URL: https://cbscanvas.instructure.com/files/1559930/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:55.558] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Schein 1994_uddrag.pdf (17628097 bytes)
+[2026-08-21 06:15:55.561] Requesting URL: https://cbscanvas.instructure.com/files/1690411/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:55.709] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:55.715] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking slides 2.pdf (226136 bytes)
+[2026-08-21 06:15:55.715] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:55.719] Requesting URL: https://cbscanvas.instructure.com/files/1698861/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:55.739] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking slides 1.pptx (2132067 bytes)
+[2026-08-21 06:15:55.741] Requesting URL: https://cbscanvas.instructure.com/files/1686104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:56.174] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:56.187] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking slides 2.pptx (119973 bytes)
+[2026-08-21 06:15:56.191] Requesting URL: https://cbscanvas.instructure.com/files/1698862/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:56.287] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:56.302] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:56.325] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Shook J. (2010) How to change a culture, lessons from nummi.pdf (575008 bytes)
+[2026-08-21 06:15:56.327] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides - Henrik Stenmann - Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf (2949489 bytes)
+[2026-08-21 06:15:56.329] Requesting URL: https://cbscanvas.instructure.com/files/1686105/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:56.332] Requesting URL: https://cbscanvas.instructure.com/files/1706588/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:56.442] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:56.466] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides (1) Ledelse i organisationer forelæsning 1.pptx (2069905 bytes)
+[2026-08-21 06:15:56.468] Requesting URL: https://cbscanvas.instructure.com/files/1640813/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:56.485] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:56.506] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides (1) Motivationsfaktorer forelæsning 1.pptx (1917653 bytes)
+[2026-08-21 06:15:56.509] Requesting URL: https://cbscanvas.instructure.com/files/1640814/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:56.913] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:56.958] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides (2) Ledelse i organisationer forelæsning 2.pptx (2085297 bytes)
+[2026-08-21 06:15:56.961] Requesting URL: https://cbscanvas.instructure.com/files/1620929/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:57.084] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:57.114] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:57.116] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:57.146] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides_kulturanalyse del 2_E25.pdf (1028235 bytes)
+[2026-08-21 06:15:57.152] Requesting URL: https://cbscanvas.instructure.com/files/1620930/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:57.166] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides sidste forelæsning.pdf (3322092 bytes)
+[2026-08-21 06:15:57.170] Requesting URL: https://cbscanvas.instructure.com/files/1559928/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:57.290] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:57.327] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides_kulturanalyse del 1_E25.pdf (1728964 bytes)
+[2026-08-21 06:15:57.333] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides (2) Motivationsfaktorer forelæsning 2.pptx (2965062 bytes)
+[2026-08-21 06:15:57.333] Requesting URL: https://cbscanvas.instructure.com/files/1638534/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:57.336] Requesting URL: https://cbscanvas.instructure.com/files/1785168/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:57.638] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:57.663] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides_mål og strategi_del 1_E25.pdf (1125604 bytes)
+[2026-08-21 06:15:57.665] Requesting URL: https://cbscanvas.instructure.com/files/1805700/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:57.923] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:57.930] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:57.960] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Slides_mål og strategi_del 2_E25.pdf (1475540 bytes)
+[2026-08-21 06:15:57.967] Requesting URL: https://cbscanvas.instructure.com/files/1677945/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:57.971] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Strategy in Danske Bank.pdf (2312708 bytes)
+[2026-08-21 06:15:57.975] Requesting URL: https://cbscanvas.instructure.com/files/1560202/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:15:58.093] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:58.125] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Søstrene Grene.pdf (3028213 bytes)
+[2026-08-21 06:15:58.127] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:58.232] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Uge 10 Undersøgelsesdesign UPLOAD.pptx (9260643 bytes)
+[2026-08-21 06:15:58.356] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:58.446] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Uge 15 - Formidling.pptx (9836664 bytes)
+[2026-08-21 06:15:58.719] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:15:58.733] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 06:15:58.748] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Uge43_omgivelser_2025.pdf (664009 bytes)
+[2026-08-21 06:15:58.804] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Uge45_motivation og belønning_upload.pptx (5478026 bytes)
+[2026-08-21 06:15:59.514] Fallback Scan: Module Kursusbeskrivelse og eksamensregler (found 3 items)
+[2026-08-21 06:15:59.514]   Fallback Item: Kursusbeskrivelse - ink. eksamensregler (Type: ExternalUrl)
+[2026-08-21 06:15:59.514]   Fallback Item: Helle Zinner Henriksens Kontortid (Type: Page)
+[2026-08-21 06:15:59.760] Fallback Scan: Module Opdateret Pensumoversigt inkl. Forår 2026 (found 4 items)
+[2026-08-21 06:15:59.760]   Fallback Item: Grupper til eksamensprojekt (Type: Page)
+[2026-08-21 06:15:59.760]   Fallback Item: Brug af AI i eksamensprojektet (Type: Page)
+[2026-08-21 06:15:59.982] Fallback Scan: Module Introduktion til organisationsteori (found 5 items)
+[2026-08-21 06:15:59.982]   Fallback Item: Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-08-21 06:16:00.344] Fallback Scan: Module Tema 1: Formelle træk - mål og strategi (found 6 items)
+[2026-08-21 06:16:00.345]   Fallback Item: Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-08-21 06:16:00.345]   Fallback Item: Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-08-21 06:16:00.345]   Fallback Item: Quiz: mål og strategi i organisationer (Type: Quiz)
+[2026-08-21 06:16:00.610] Fallback Scan: Module Tema 1: Formelle træk - organisationsstruktur (found 8 items)
+[2026-08-21 06:16:00.610]   Fallback Item: Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-08-21 06:16:00.611]   Fallback Item: Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-08-21 06:16:00.611]   Fallback Item: Quiz: Organisationsstruktur  (Type: Quiz)
+[2026-08-21 06:16:00.611]   Fallback Item: Upload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk (Type: Discussion)
+[2026-08-21 06:16:00.779] Fallback Scan: Module Tema 1: Formelle træk - organisationsformer (found 8 items)
+[2026-08-21 06:16:00.779]   Fallback Item: Forelæsningsvideo (1): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-08-21 06:16:00.779]   Fallback Item: Forelæsningsvideo (2): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-08-21 06:16:00.779]   Fallback Item: Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-08-21 06:16:00.779]   Fallback Item: Danske Bank investor præsentation (læs s. 3-10) (Type: ExternalUrl)
+[2026-08-21 06:16:01.038] Fallback Scan: Module Tema 2: Uformelle træk - organisationskultur (found 13 items)
+[2026-08-21 06:16:01.038]   Fallback Item: Forelæsningsvideo (1): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-08-21 06:16:01.038]   Fallback Item: Forelæsningsvideo (2): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-08-21 06:16:01.038]   Fallback Item: Quiz: organisationskultur (Type: Quiz)
+[2026-08-21 06:16:01.038]   Fallback Item: Video med respons på feedback og introduktion til et nyt initiativ i undervisningen (Type: ExternalTool)
+[2026-08-21 06:16:01.038]   Fallback Item: Spørgsmål til pensum i organisationskultur (Type: Discussion)
+[2026-08-21 06:16:01.039]   Fallback Item: Supplerende literatur (Type: SubHeader)
+[2026-08-21 06:16:01.280] Fallback Scan: Module Tema 2: Uformelle træk - sensemaking (found 11 items)
+[2026-08-21 06:16:01.281]   Fallback Item: Forelæsningsvideo 1 om Sensemaking (Type: ExternalTool)
+[2026-08-21 06:16:01.281]   Fallback Item: Sensemaking slides 1.pptx (Type: File)
+[2026-08-21 06:16:01.465]   Fallback Item: Forelæsningsvideo 2 om Sensemaking (Type: ExternalTool)
+[2026-08-21 06:16:01.465]   Fallback Item: Sensemaking slides 2.pptx (Type: File)
+[2026-08-21 06:16:01.604]   Fallback Item: Weick, K. E., Sutcliffe, K. M., & Obstfeld, D. (2005). Organizing and the Process of Sensemaking. Organization Science 16(4), 409–421. https://doi.org/10.1287/orsc.1050.0133 (kan også findes via. CBS libsearch) (Type: SubHeader)
+[2026-08-21 06:16:01.604]   Fallback Item: Supplerende literatur (Type: SubHeader)
+[2026-08-21 06:16:01.604]   Fallback Item: Spørgsmål til oplægsholder: Jens Christian Finnerup, Systematic (Type: Discussion)
+[2026-08-21 06:16:01.826] Fallback Scan: Module Tema 2: Uformelle træk - magt og konflikt (found 11 items)
+[2026-08-21 06:16:01.826]   Fallback Item: Forelæsningsvideo (1): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-08-21 06:16:01.827]   Fallback Item: Forelæsningsvideo (2): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-08-21 06:16:01.827]   Fallback Item: Quiz: magt og konflikt (Type: Quiz)
+[2026-08-21 06:16:01.827]   Fallback Item: Spørgsmål til pensum: magt i organisationer (Type: Discussion)
+[2026-08-21 06:16:01.985] Fallback Scan: Module Uge 42: Ingen undervisning (found 0 items)
+[2026-08-21 06:16:02.203] Fallback Scan: Module Tema 3: Individ, organisation og omverden - organisation og omgivelser (found 9 items)
+[2026-08-21 06:16:02.203]   Fallback Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-08-21 06:16:02.203]   Fallback Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-08-21 06:16:02.204]   Fallback Item: Quiz: omgivelser (Type: Quiz)
+[2026-08-21 06:16:02.204]   Fallback Item: Upload af besvarelse af Rigshospitalscase (Type: Discussion)
+[2026-08-21 06:16:02.204]   Fallback Item: Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 (Type: ExternalTool)
+[2026-08-21 06:16:02.422] Fallback Scan: Module Tema 3: Individ, organisation og omverden - læring i organisationer (found 7 items)
+[2026-08-21 06:16:02.423]   Fallback Item: Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-08-21 06:16:02.423]   Fallback Item: Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-08-21 06:16:02.423]   Fallback Item: Quiz: læring og innovation (Type: Quiz)
+[2026-08-21 06:16:02.611] Fallback Scan: Module Tema 3: Individ, organisation og omverden- motivationsfaktorer (found 7 items)
+[2026-08-21 06:16:02.612]   Fallback Item: Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 (Type: ExternalTool)
+[2026-08-21 06:16:02.612]   Fallback Item: Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 (Type: ExternalTool)
+[2026-08-21 06:16:02.612]   Fallback Item: Quiz: motivationsfaktorer i organisationer (Type: Quiz)
+[2026-08-21 06:16:02.793] Fallback Scan: Module Tema 4: Ledelse og strategi - beslutninger i organisationer (found 7 items)
+[2026-08-21 06:16:02.793]   Fallback Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-08-21 06:16:02.794]   Fallback Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-08-21 06:16:02.794]   Fallback Item: Quiz: Beslutninger i organisationer (Type: Quiz)
+[2026-08-21 06:16:02.992] Fallback Scan: Module Tema 4: Ledelse og strategi- forandringer i organisationer (found 13 items)
+[2026-08-21 06:16:02.992]   Fallback Item: Forelæsningsvideo (1): Forandringsledelse (Type: ExternalTool)
+[2026-08-21 06:16:02.992]   Fallback Item: Forelæsningsvideo (2): Forandringsledelse (Type: ExternalTool)
+[2026-08-21 06:16:02.992]   Fallback Item: Quiz: Forandring i organisationer (Type: Quiz)
+[2026-08-21 06:16:02.992]   Fallback Item: Rick Maurer - Introduction to Change (Type: File)
+[2026-08-21 06:16:03.149]   Fallback Item: Forberedelse til øvelstime (Type: SubHeader)
+[2026-08-21 06:16:03.318] Fallback Scan: Module Tema 4: Ledelse og strategi - ledelse i organisationer (found 8 items)
+[2026-08-21 06:16:03.318]   Fallback Item: Forelæsningsvideo 1 Ledelse i organisationer 1 (Type: ExternalTool)
+[2026-08-21 06:16:03.319]   Fallback Item: Forelæsningsvideo 2 Ledelse i organisationer 2 (Type: ExternalTool)
+[2026-08-21 06:16:03.319]   Fallback Item: Quiz: ledelse i organisationer (Type: Quiz)
+[2026-08-21 06:16:03.319]   Fallback Item: Oplæg: Saxo Merrild, Handyhand (Type: SubHeader)
+[2026-08-21 06:16:03.319]   Fallback Item: Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse (Type: ExternalUrl)
+[2026-08-21 06:16:03.441] Fallback Scan: Module Tema 4: Ledelse og strategi  - organisationsteori i et historisk perspektiv (found 1 items)
+[2026-08-21 06:16:03.601] Fallback Scan: Module Opsummering - hvad har vi lært? (found 3 items)
+[2026-08-21 06:16:03.601]   Fallback Item: Uge 6: pensum (Type: Page)
+[2026-08-21 06:16:03.601]   Fallback Item: Uge 6: mål med undervisningen (Type: Page)
+[2026-08-21 06:16:03.805] Fallback Scan: Module Organisationsprojekt - vidensproduktion (found 7 items)
+[2026-08-21 06:16:03.806]   Fallback Item: Uge 8: pensum (Type: Page)
+[2026-08-21 06:16:03.806]   Fallback Item: Uge 8: mål med undervisningen (Type: Page)
+[2026-08-21 06:16:03.806]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-08-21 06:16:03.806]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-08-21 06:16:03.982] Fallback Scan: Module Organisationsprojekt - problemformulering (found 8 items)
+[2026-08-21 06:16:03.983]   Fallback Item: Uge 9: pensum (Type: Page)
+[2026-08-21 06:16:03.983]   Fallback Item: Uge 9: mål med undervisningen (Type: Page)
+[2026-08-21 06:16:03.983]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-08-21 06:16:03.983]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-08-21 06:16:04.207] Fallback Scan: Module Organisationsprojekt - undersøgelsesdesign (found 7 items)
+[2026-08-21 06:16:04.207]   Fallback Item: Uge 10: pensum (Type: Page)
+[2026-08-21 06:16:04.208]   Fallback Item: Uge 10: mål med undervisningen (Type: Page)
+[2026-08-21 06:16:04.208]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign (Type: ExternalTool)
+[2026-08-21 06:16:04.208]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker (Type: ExternalTool)
+[2026-08-21 06:16:04.597] Fallback Scan: Module Klyngevejledning 1 (found 11 items)
+[2026-08-21 06:16:04.597]   Fallback Item: Uge 11: formål med klyngevejledningen (Type: Page)
+[2026-08-21 06:16:04.597]   Fallback Item: Filer til Klynge 1 (Type: Page)
+[2026-08-21 06:16:04.597]   Fallback Item: Filer til Klynge 2 (Type: Page)
+[2026-08-21 06:16:04.598]   Fallback Item: Filer til Klynge 3 (Type: Page)
+[2026-08-21 06:16:04.598]   Fallback Item: Filer til Klynge 4 (Type: Page)
+[2026-08-21 06:16:04.598]   Fallback Item: Filer til Klynge 5 (Type: Page)
+[2026-08-21 06:16:04.598]   Fallback Item: Filer til Klynge 6 (Type: Page)
+[2026-08-21 06:16:04.598]   Fallback Item: Filer til Klynge 7 (Type: Page)
+[2026-08-21 06:16:05.003] Fallback Scan: Module Organisationsprojekt - operationalisering af teori (found 9 items)
+[2026-08-21 06:16:05.003]   Fallback Item: Uge 12: pensum (Type: Page)
+[2026-08-21 06:16:05.004]   Fallback Item: Uge 12: mål med undervisningen (Type: Page)
+[2026-08-21 06:16:05.004]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - operationalisering (Type: ExternalTool)
+[2026-08-21 06:16:05.004]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation (Type: ExternalTool)
+[2026-08-21 06:16:05.004]   Fallback Item: Upload af besvarelse Interviewguide (husk at notér XA og XB) (Type: Discussion)
+[2026-08-21 06:16:05.278] Fallback Scan: Module Organisationsprojekt - klargøring af data til analyse (found 10 items)
+[2026-08-21 06:16:05.278]   Fallback Item: Uge 13: pensum (Type: Page)
+[2026-08-21 06:16:05.279]   Fallback Item: Uge 13: mål med undervisningen (Type: Page)
+[2026-08-21 06:16:05.279]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - klargøring af data (Type: ExternalTool)
+[2026-08-21 06:16:05.279]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data (Type: ExternalTool)
+[2026-08-21 06:16:05.534] Fallback Scan: Module Sammenfatning og evaluering af organisationsfaget (found 4 items)
+[2026-08-21 06:16:05.534]   Fallback Item: Uge 15: pensum (Type: Page)
+[2026-08-21 06:16:05.534]   Fallback Item: Uge 15: mål med undervisningen (Type: Page)
+[2026-08-21 06:16:05.724] Fallback Scan: Module Øvelser i uge 16 (found 3 items)
+[2026-08-21 06:16:05.724]   Fallback Item: Uge 16: mål med øvelserne (Type: Page)
+[2026-08-21 06:16:05.929] Fallback Scan: Module Klyngevejledning 2 (found 11 items)
+[2026-08-21 06:16:05.930]   Fallback Item: Uge 17: formål med klyngevejledningen (Type: Page)
+[2026-08-21 06:16:05.930]   Fallback Item: Filer til Klynge 1 (Type: Page)
+[2026-08-21 06:16:05.930]   Fallback Item: Filer til Klynge 2 (Type: Page)
+[2026-08-21 06:16:05.930]   Fallback Item: Filer til Klynge 3 (Type: Page)
+[2026-08-21 06:16:05.930]   Fallback Item: Filer til Klynge 4 (Type: Page)
+[2026-08-21 06:16:05.930]   Fallback Item: Filer til Klynge 5 (Type: Page)
+[2026-08-21 06:16:05.930]   Fallback Item: Filer til Klynge 6 (Type: Page)
+[2026-08-21 06:16:05.930]   Fallback Item: Filer til Klynge 7 (Type: Page)
+[2026-08-21 06:16:05.930]   Fallback Item: Filer til Klynge 8 (Type: Page)
+[2026-08-21 06:16:06.114] Fallback Scan: Module Øvelser i uge 18 (found 3 items)
+[2026-08-21 06:16:06.118] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 1 (1).pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-08-21 06:16:06.122] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 2 (1).pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-08-21 06:16:06.123] Requesting URL: https://cbscanvas.instructure.com/files/1559918/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 06:16:06.891] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 06:16:07.041] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Maurer_Introduction to Change.pdf (822315 bytes)
+[2026-08-21 06:16:07.044] Starting Catch-All Phase for non-module files...
+[2026-08-21 06:16:07.045] No partial/non-module files found.
+[2026-08-21 06:16:07.045] --- Download Complete: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | 118 items | 813.1 MB downloaded ---
+
+==================================================
+--- Post-Processing: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) ---
+==================================================
+[2026-08-21 06:16:09.099] [INFO] [core.sync_manager] Updated manifest entry 1560068 to new file: Organisationsprojekt_argumentation_2_upload.pdf
+[2026-08-21 06:16:09.701] [INFO] [core.sync_manager] Updated manifest entry 1669054 to new file: 251009_Kom og vær med_Til Stig N.pdf
+[2026-08-21 06:16:10.490] [INFO] [core.sync_manager] Updated manifest entry 1560205 to new file: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf
+[2026-08-21 06:16:11.105] [INFO] [core.sync_manager] Updated manifest entry 1560061 to new file: 2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pdf
+[2026-08-21 06:16:11.965] [INFO] [core.sync_manager] Updated manifest entry 1694170 to new file: Forandringsledelse slide del 2.pdf
+[2026-08-21 06:16:12.681] [INFO] [core.sync_manager] Updated manifest entry 1560125 to new file: Organisationsprojekt_problemformulering_1-upload-1.pdf
+[2026-08-21 06:16:13.411] [INFO] [core.sync_manager] Updated manifest entry 1560231 to new file: Organisationsprojekt_vidensproduktion_1_upload.pdf
+[2026-08-21 06:16:14.298] [INFO] [core.sync_manager] Updated manifest entry 1560198 to new file: Individ og organisation_motivation & belønning 1_upload.pdf
+[2026-08-21 06:16:15.048] [INFO] [core.sync_manager] Updated manifest entry 1560220 to new file: 2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pdf
+[2026-08-21 06:16:15.830] [INFO] [core.sync_manager] Updated manifest entry 1560057 to new file: Øvelser_uge18_eksamen og afslutning_opdateret_upload.pdf
+[2026-08-21 06:16:16.923] [INFO] [core.sync_manager] Updated manifest entry 1560038 to new file: Øvelse_uge6_intro_2022_upload-1.pdf
+[2026-08-21 06:16:17.774] [INFO] [core.sync_manager] Updated manifest entry 1809393 to new file: Øvelser_uge16_klynge_upload.pdf
+[2026-08-21 06:16:18.390] [INFO] [core.sync_manager] Updated manifest entry 1560085 to new file: Øvelsesslides_mål og strategi_XA-1.pdf
+[2026-08-21 06:16:19.102] [INFO] [core.sync_manager] Updated manifest entry 1560069 to new file: Organisationsprojekt_problemformulering-2_upload.pdf
+[2026-08-21 06:16:19.820] [INFO] [core.sync_manager] Updated manifest entry 1560011 to new file: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf
+[2026-08-21 06:16:21.914] [INFO] [core.sync_manager] Updated manifest entry 1766952 to new file: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pdf
+[2026-08-21 06:16:22.832] [INFO] [core.sync_manager] Updated manifest entry 1795567 to new file: Øvelsesslides - uge 12.pdf
+[2026-08-21 06:16:23.621] [INFO] [core.sync_manager] Updated manifest entry 1698861 to new file: Slides (1) Ledelse i organisationer forelæsning 1.pdf
+[2026-08-21 06:16:24.409] [INFO] [core.sync_manager] Updated manifest entry 1560128 to new file: Organisationsprojekt_vidensproduktion_2021-2_upload.pdf
+[2026-08-21 06:16:25.127] [INFO] [core.sync_manager] Updated manifest entry 1560002 to new file: Øvelsesslides formelle træk - organisationsformer.pdf
+[2026-08-21 06:16:25.996] [INFO] [core.sync_manager] Updated manifest entry 1560188 to new file: 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pdf
+[2026-08-21 06:16:26.663] [INFO] [core.sync_manager] Updated manifest entry 1698862 to new file: Slides (2) Ledelse i organisationer forelæsning 2.pdf
+[2026-08-21 06:16:27.378] [INFO] [core.sync_manager] Updated manifest entry 1560227 to new file: 2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pdf
+[2026-08-21 06:16:28.047] [INFO] [core.sync_manager] Updated manifest entry 1560202 to new file: Uge45_motivation og belønning_upload.pdf
+[2026-08-21 06:16:28.786] [INFO] [core.sync_manager] Updated manifest entry 1655085 to new file: Sensemaking slides 1 (1).pdf
+[2026-08-21 06:16:29.506] [INFO] [core.sync_manager] Updated manifest entry 1560003 to new file: Øvelsesslides formelle træk - organisationsformer-1.pdf
+[2026-08-21 06:16:30.318] [INFO] [core.sync_manager] Updated manifest entry 1686105 to new file: Slides (2) Motivationsfaktorer forelæsning 2.pdf
+[2026-08-21 06:16:31.165] [INFO] [core.sync_manager] Updated manifest entry 1560186 to new file: 2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pdf
+[2026-08-21 06:16:32.017] [INFO] [core.sync_manager] Updated manifest entry 1560199 to new file: Individ og organisation_motivation & belønning 2_upload.pdf
+[2026-08-21 06:16:32.857] [INFO] [core.sync_manager] Updated manifest entry 1560232 to new file: Organisationsprojekt_vidensproduktion_2_upload.pdf
+[2026-08-21 06:16:33.745] [INFO] [core.sync_manager] Updated manifest entry 1559834 to new file: 2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pdf
+[2026-08-21 06:16:34.717] [INFO] [core.sync_manager] Updated manifest entry 1800485 to new file: Øvelser_uge13_analyse og tolkning_UPLOAD.pdf
+[2026-08-21 06:16:36.074] [INFO] [core.sync_manager] Updated manifest entry 1686104 to new file: Slides (1) Motivationsfaktorer forelæsning 1.pdf
+[2026-08-21 06:16:36.861] [INFO] [core.sync_manager] Updated manifest entry 1559942 to new file: Organisationsprojekt_operationalisering_upload.pdf
+[2026-08-21 06:16:37.593] [INFO] [core.sync_manager] Updated manifest entry 1559949 to new file: Organisationsprojekt_problemformulering_1-upload.pdf
+[2026-08-21 06:16:38.408] [INFO] [core.sync_manager] Updated manifest entry 1560071 to new file: Organisationsprojekt_vidensproduktion_1_2022-upload.pdf
+[2026-08-21 06:16:39.276] [INFO] [core.sync_manager] Updated manifest entry 1624133 to new file: Øvelser_uge36_intro_2025.pdf
+[2026-08-21 06:16:40.298] [INFO] [core.sync_manager] Updated manifest entry 1783488 to new file: Øvelse_uge9_problemformulering_XB_UPLOAD.pdf
+[2026-08-21 06:16:42.043] [INFO] [core.sync_manager] Updated manifest entry 1785168 to new file: Uge 10 Undersøgelsesdesign UPLOAD.pdf
+[2026-08-21 06:16:42.868] [INFO] [core.sync_manager] Updated manifest entry 1678065 to new file: 2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 (1).pdf
+[2026-08-21 06:16:43.614] [INFO] [core.sync_manager] Updated manifest entry 1560197 to new file: 2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pdf
+[2026-08-21 06:16:44.609] [INFO] [core.sync_manager] Updated manifest entry 1559993 to new file: 2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pdf
+[2026-08-21 06:16:45.405] [INFO] [core.sync_manager] Updated manifest entry 1560012 to new file: 2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pdf
+[2026-08-21 06:16:46.240] [INFO] [core.sync_manager] Updated manifest entry 1560185 to new file: 2024_Lektion uge 37_2 Struktur_upload.pdf
+[2026-08-21 06:16:47.109] [INFO] [core.sync_manager] Updated manifest entry 1560177 to new file: 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pdf
+[2026-08-21 06:16:47.954] [INFO] [core.sync_manager] Updated manifest entry 1560067 to new file: Organisationsprojekt_operationalisering_upload_.pdf
+[2026-08-21 06:16:48.666] [INFO] [core.sync_manager] Updated manifest entry 1644211 to new file: Øvelser_uge39_kultur_E2025 upload.pdf
+[2026-08-21 06:16:49.271] [INFO] [core.sync_manager] Updated manifest entry 1655086 to new file: Sensemaking slides 2 (1).pdf
+[2026-08-21 06:16:50.489] [INFO] [core.sync_manager] Updated manifest entry 1559923 to new file: Organisationsformer - oversigtstabel - udfyldt.pdf
+[2026-08-21 06:16:51.405] [INFO] [core.sync_manager] Updated manifest entry 1560230 to new file: 2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pdf
+[2026-08-21 06:16:52.503] [INFO] [core.sync_manager] Updated manifest entry 1777888 to new file: Øvelsesslides - Intro.pdf
+[2026-08-21 06:16:53.491] [INFO] [core.sync_manager] Updated manifest entry 1560137 to new file: Øvelser_uge38_organisationsformer_upload.pdf
+[2026-08-21 06:16:54.119] [INFO] [core.sync_manager] Updated manifest entry 1785191 to new file: Klyngevejledning - Upload.pdf
+[2026-08-21 06:16:55.386] [INFO] [core.sync_manager] Updated manifest entry 1694168 to new file: Forandring i organisationer_video1_upload_2025.pdf
+[2026-08-21 06:16:56.197] [INFO] [core.sync_manager] Updated manifest entry 1560225 to new file: Øvelse_uge9_problemformulering_XA_upload.pdf
+[2026-08-21 06:16:57.189] [INFO] [core.sync_manager] Updated manifest entry 1560235 to new file: Organisationsprojekt_klargøring af data_upload.pdf
+[2026-08-21 06:16:58.078] [INFO] [core.sync_manager] Updated manifest entry 1805700 to new file: Uge 15 - Formidling.pdf
+[2026-08-21 06:16:59.513] [INFO] [core.sync_manager] Updated manifest entry 1805051 to new file: Lektion_sammenfatning af faget_2026.pdf
+[2026-08-21 06:17:00.284] [INFO] [core.sync_manager] Updated manifest entry 1560213 to new file: 2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pdf
+[2026-08-21 06:17:01.325] [INFO] [core.sync_manager] Updated manifest entry 1560136 to new file: Øvelser_uge40_perspektiver_på_kultur_til upload.pdf
+[2026-08-21 06:17:02.305] [INFO] [core.sync_manager] Updated manifest entry 1560236 to new file: Organisationsprojekt_klargøring af data_eksempel_upload.pdf
+[2026-08-21 06:17:03.424] [INFO] [core.sync_manager] Updated manifest entry 1560070 to new file: 2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pdf
+[2026-08-21 06:17:03.507] === Course Finished: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | Downloaded: 140 items | Errors: 2 ===
+[2026-08-21 06:17:03.507] Post-processing ran: [pptx, urls, word, video]
+[2026-08-21 06:17:03.564] [INFO] [panopto.runner] Panopto batch start (pid=73091): 1 target(s) | model=tiny device=cpu lang=auto | engine_ready=True (outputs + layout resolved per target)
+[2026-08-21 06:17:03.565] === Panopto transcription engine diagnostics ===
+  faster_whisper: 1.2.1 (import OK)
+  ctranslate2: 4.8.1 (import OK)
+  onnxruntime: 1.29.0 (import OK)
+  torch: not installed (fine - optional for inference)
+  backend_usable: YES
+================================================
+[2026-08-21 06:17:03.565] [INFO] [panopto.runner] Transcription engine: backend_usable=YES | torch=not installed (fine - optional for inference)
+[2026-08-21 06:17:03.565] [INFO] [panopto.runner] Transcription hardware: requested device=cpu | gpu_available=False gpu=None vram=NoneMB | cpu=10 cores | status=cpu_only_mac
+[2026-08-21 06:17:03.569] [INFO] [panopto.runner] Discovering Panopto recordings in 'Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' (course id=43660)...
+[2026-08-21 06:17:07.198] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=01913573-0a7a-4fdb-bcdb-b1a3008d199d (via url)
+[2026-08-21 06:17:07.204] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=dfb98470-ada0-463e-9c41-b1e300cba127 (via url)
+[2026-08-21 06:17:07.278] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f69a6d8f-d703-49cf-9da7-b34700839cae (via url)
+[2026-08-21 06:17:07.281] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=11e7ba5a-0ada-4780-b250-b1a30098565d (via url)
+[2026-08-21 06:17:07.296] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=c8b8a8d1-6e4e-45aa-9dc4-b1d301238290 (via url)
+[2026-08-21 06:17:07.344] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b58f9a14-6513-4ba6-9d3a-b34600ba6f34 (via url)
+[2026-08-21 06:17:08.719] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=5faa984d-d76e-4462-94a8-b35f00dfccb3 (via url)
+[2026-08-21 06:17:08.958] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=1dba66ba-84e0-434c-81d5-b3660165409c (via url)
+[2026-08-21 06:17:09.390] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=5ba76e8d-6421-4861-8883-b1a400ba9ccd (via url)
+[2026-08-21 06:17:09.440] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2c2cbc41-5e08-4632-a907-b366014f267e (via url)
+[2026-08-21 06:17:09.554] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0074fde5-eba4-42a7-b226-b35f00c6be2c (via url)
+[2026-08-21 06:17:09.781] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=4a698f87-388c-4e87-a9c2-b35f00b478cf (via url)
+[2026-08-21 06:17:10.845] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f05d844b-c2c0-4acc-ae37-b1a8008b06bd (via url)
+[2026-08-21 06:17:11.069] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=862d36b0-e512-4b45-aa5c-b37f0125fd68 (via url)
+[2026-08-21 06:17:11.091] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=d5bf4d12-bb2d-4787-a923-b1a400c0ec8a (via url)
+[2026-08-21 06:17:11.394] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0c1d61e1-5788-4c94-8c3e-b1a400d76e9a (via url)
+[2026-08-21 06:17:11.579] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=1bad9dbd-7c6f-4309-ba52-b1a400e4f565 (via url)
+[2026-08-21 06:17:12.042] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=4e7d90eb-226a-4678-aade-b1a8008f85bf (via url)
+[2026-08-21 06:17:13.479] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=914641ae-c022-43b3-aabd-b1a80085fb1c (via url)
+[2026-08-21 06:17:13.765] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=c7202c34-2dfb-48cc-8f4d-b39500b2cd9e (via url)
+[2026-08-21 06:17:14.116] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=ead91896-cf78-4d53-a88a-b1a80081e11b (via url)
+[2026-08-21 06:17:14.141] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=281aef18-7f56-48b2-803b-b3890162e755 (via url)
+[2026-08-21 06:17:14.462] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=04652c96-a5cc-46ac-a087-b395008824e1 (via url)
+[2026-08-21 06:17:14.468] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0d78cddd-c122-444c-a358-b389015d0350 (via url)
+[2026-08-21 06:17:14.790] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f5b07ec0-02dd-47ff-9ab6-b39e017157d0 (via url)
+[2026-08-21 06:17:15.113] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0e1a9ca1-13c0-41d7-a774-b39e01715e4a (via url)
+[2026-08-21 06:17:15.562] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=72399841-43f1-4e1b-999c-b10a016e41d4 (via url)
+[2026-08-21 06:17:15.613] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2e97ed4e-c381-496d-a1dd-b10b0155c62b (via url)
+[2026-08-21 06:17:16.001] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=06d68daf-238e-46ce-bc82-acd10160f141 (via url)
+[2026-08-21 06:17:16.012] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=25f87b63-5ecb-42d2-8386-b28c016b2c3f (via url)
+[2026-08-21 06:17:16.290] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=bec7eb89-fb15-480c-87ca-b28f014f1971 (via url)
+[2026-08-21 06:17:16.612] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=088298c4-fe8b-4f1b-81ed-b28f0152aeb0 (via url)
+[2026-08-21 06:17:17.098] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2da3eec0-a094-417b-9200-ace001763a64 (via url)
+[2026-08-21 06:17:17.287] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=a4070dbb-3a80-4fb3-841e-b29f0174dcae (via url)
+[2026-08-21 06:17:17.531] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b8c36f0d-6656-4969-88ae-b1350151c84f (via url)
+[2026-08-21 06:17:17.678] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=dfee0c49-93c7-4d20-a1a7-ace7015fa08f (via url)
+[2026-08-21 06:17:17.829] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - vidensproduktion' launch-resolves to 72399841-43f1-4e1b-999c-b10a016e41d4 - ignoring embedded stale id(s): 7f8ea4fc-a256-4bc0-8fcf-b10a01796155
+[2026-08-21 06:17:17.831] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - vidensproduktion' launch-resolves to 2e97ed4e-c381-496d-a1dd-b10b0155c62b - ignoring embedded stale id(s): a95f7ede-0fd8-498d-96da-b10b0162489f
+[2026-08-21 06:17:17.834] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - problemformulering' launch-resolves to 06d68daf-238e-46ce-bc82-acd10160f141 - ignoring embedded stale id(s): 7957ff53-56b3-4c87-9b3f-acd200a67a9e
+[2026-08-21 06:17:17.849] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation' launch-resolves to 2da3eec0-a094-417b-9200-ace001763a64 - ignoring embedded stale id(s): 5194533e-1be0-4932-9b9a-ace10170be66
+[2026-08-21 06:17:17.851] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - klargøring af data' launch-resolves to b8c36f0d-6656-4969-88ae-b1350151c84f - ignoring embedded stale id(s): d69d18c5-1cfc-4fdd-ab49-b135015f6470
+[2026-08-21 06:17:17.854] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data' launch-resolves to dfee0c49-93c7-4d20-a1a7-ace7015fa08f - ignoring embedded stale id(s): 91f06a70-924b-4a17-ac2a-ace800ce49a1
+[2026-08-21 06:17:20.021] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=none
+[2026-08-21 06:17:20.023] [INFO] [panopto.auth] Panopto LTI: no session id resolved - landed on https://cbs.cloud.panopto.eu/Panopto/Pages/Sessions/List.aspx | unfollowed form: ./List.aspx | body: 121853 chars, 0 candidate id(s) | folder: a7cbd921-586f-4bf5-8869-b338008ffda1 | auth: cookies[cbs.cloud.panopto.eu]=.ASPXAUTH,csrfToken,sandboxCookie | markers=none
+[2026-08-21 06:17:20.060] [INFO] [panopto.discovery] Panopto api/v1 folder listing unavailable for a7cbd921-586f-4bf5-8869-b338008ffda1 (status 401) - will fall back to Data.svc/GetSessions.
+[2026-08-21 06:17:20.201] [INFO] [panopto.discovery] Panopto GetSessions: folder a7cbd921-586f-4bf5-8869-b338008ffda1 reports 0 session(s) (page 0 returned 0).
+[2026-08-21 06:17:20.202] [INFO] [panopto.discovery] Panopto GetSessions raw 'd' node for a7cbd921-586f-4bf5-8869-b338008ffda1: {"__type": "SessionResults:#Panopto.Data.DB.WebUI", "Results": [], "TotalNumber": 0, "ArchivedCount": null, "BookmarkedSessionCount": null, "CanAddSubfolder": false, "ContainsArchivedDeliveries": false, "FolderType": 0, "InProgressSessionCount": null, "ParentFolderId": null, "ScheduledRecordingCount": null, "Subfolders": []}
+[2026-08-21 06:17:20.241] [INFO] [panopto.discovery] Panopto GetFolders failed for folder a7cbd921-586f-4bf5-8869-b338008ffda1: HTTP 500: <Fault xmlns="http://schemas.microsoft.com/ws/2005/05/envelope/none"><Code><Value>Sender</Value></Code><Reason><Text xml:lang="en-US">User unified\<CANVAS_USER> is not in role (FolderEnumerate).</Text></Reason></Fault>
+[2026-08-21 06:17:20.292] [INFO] [panopto.discovery] Panopto GetFolderInfo probe for a7cbd921-586f-4bf5-8869-b338008ffda1 -> name='Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' sessions=? subfolders=?
+[2026-08-21 06:17:20.460] [INFO] [panopto.discovery] Panopto unscoped GetSessions probe -> TotalNumber=3086 (0 = the Panopto session holds NO content grants at all, i.e. the LTI cookie is effectively anonymous; >0 = auth works and the problem is folder-scoped)
+[2026-08-21 06:17:20.461] [INFO] [panopto.discovery] Panopto course-folder fallback: enumerated 0 session(s) in the course folder for course 43660 via a course-level launch (no content link required).
+[2026-08-21 06:17:21.384] [INFO] [panopto.runner] Discovered 36 recording(s) in 'Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' by source {'module': 36}
+[2026-08-21 06:17:23.380] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b58f9a14-6513-4ba6-9d3a-b34600ba6f34 (via url)
+[2026-08-21 06:17:23.380] [INFO] [panopto.runner] Panopto auth bootstrap attempt 1/36 via https://cbscanvas.instructure.com/api/v1/courses/43660/external_tools/sessionless_launch -> OK
+[2026-08-21 06:17:23.407] [INFO] [panopto.runner] Discovery complete: 36 found across 1 course(s); planned 36 download(s) (0 video), 36 transcription(s), 0 shortcut(s), 0 skipped (already on disk).
+[2026-08-21 06:17:23.407] [INFO] [panopto.runner] Download phase: 36 recording(s) (0 video, 36 audio); 4 concurrent worker(s).
+[2026-08-21 06:17:27.959] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) formelle træk - organisationsstruktur 2025 37.mp3 (7.6 MB in 3.1s)
+[2026-08-21 06:17:28.653] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) formelle træk - organisationsstruktur 2025 37.mp3 (10.9 MB in 4.1s)
+[2026-08-21 06:17:30.734] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.mp3 (17.0 MB in 6.9s)
+[2026-08-21 06:17:31.919] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) formelle træk - organisationsformer.mp3 (9.6 MB in 3.6s)
+[2026-08-21 06:17:32.573] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) formelle træk - organisationsformer.mp3 (9.4 MB in 3.6s)
+[2026-08-21 06:17:33.431] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.mp3 (23.1 MB in 9.1s)
+[2026-08-21 06:17:36.259] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) Uformelletræk_organisationskultur.mp3 (8.8 MB in 3.8s)
+[2026-08-21 06:17:36.594] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) Uformelletræk_organisationskultur.mp3 (12.6 MB in 5.3s)
+[2026-08-21 06:17:38.515] [INFO] [panopto.stream] Panopto downloaded Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3 (12.3 MB in 5.3s)
+[2026-08-21 06:17:39.264] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo 1 om Sensemaking.mp3 (14.1 MB in 5.4s)
+[2026-08-21 06:17:41.153] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo 2 om Sensemaking.mp3 (10.6 MB in 4.1s)
+[2026-08-21 06:17:41.441] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3 (6.8 MB in 2.6s)
+[2026-08-21 06:17:42.198] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3 (12.6 MB in 4.6s)
+[2026-08-21 06:17:43.874] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3 (12.0 MB in 4.3s)
+[2026-08-21 06:17:44.318] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3 (7.6 MB in 2.8s)
+[2026-08-21 06:17:44.502] [INFO] [panopto.stream] Panopto downloaded Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3 (6.3 MB in 2.5s)
+[2026-08-21 06:17:46.099] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3 (9.8 MB in 3.6s)
+[2026-08-21 06:17:47.644] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3 (8.7 MB in 3.3s)
+[2026-08-21 06:17:49.409] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3 (10.1 MB in 4.1s)
+[2026-08-21 06:17:50.196] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3 (13.8 MB in 5.4s)
+[2026-08-21 06:17:50.772] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3 (11.6 MB in 4.3s)
+[2026-08-21 06:17:52.558] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3 (12.2 MB in 4.6s)
+[2026-08-21 06:17:55.730] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo 1 Ledelse i organisationer 1.mp3 (8.7 MB in 3.6s)
+[2026-08-21 06:17:56.578] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo 2 Ledelse i organisationer 2.mp3 (9.2 MB in 3.6s)
+[2026-08-21 06:17:58.376] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) Forandringsledelse.mp3 (16.8 MB in 7.1s)
+[2026-08-21 06:18:02.191] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) Forandringsledelse.mp3 (24.3 MB in 10.5s)
+[2026-08-21 06:18:03.249] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) organisationsprojekt - vidensproduktion.mp3 (17.3 MB in 7.2s)
+[2026-08-21 06:18:03.307] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) organisationsprojekt - problemformulering.mp3 (11.0 MB in 4.6s)
+[2026-08-21 06:18:04.585] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) organisationsprojekt - vidensproduktion.mp3 (18.4 MB in 7.4s)
+[2026-08-21 06:18:06.465] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) organisationsprojekt - Undersøgelsesdesign.mp3 (7.4 MB in 2.8s)
+[2026-08-21 06:18:07.405] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) organisationsprojekt - Dataindsamlingsteknikker.mp3 (8.8 MB in 3.3s)
+[2026-08-21 06:18:10.711] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) organisationsprojekt - operationalisering.mp3 (13.2 MB in 5.6s)
+[2026-08-21 06:18:10.778] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) organisationsprojekt - problemformulering.mp3 (19.9 MB in 8.2s)
+[2026-08-21 06:18:13.146] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.mp3 (15.5 MB in 6.3s)
+[2026-08-21 06:18:14.992] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.mp3 (10.0 MB in 3.8s)
+[2026-08-21 06:18:16.975] [INFO] [panopto.stream] Panopto downloaded Forelæsningsvideo (1) organisationsprojekt - klargøring af data.mp3 (23.1 MB in 9.2s)
+[2026-08-21 06:18:16.991] [INFO] [panopto.runner] Transcription phase: 36 file(s) (model=tiny, device=cpu).
+[2026-08-21 06:18:17.003] [INFO] [panopto.runner] Transcribing [1/36] 'Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer' (device=cpu, source=Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.mp3)...
+[2026-08-21 06:18:17.008] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83236 device=cpu frozen=False file=Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.mp3
+[2026-08-21 06:19:19.718] [INFO] [panopto.transcribe] Transcribe worker (pid=83236, Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83236 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 18:35.324
+[INFO] [faster_whisper] VAD filter removed 01:12.848 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 1.00
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.mp3: audio=1115s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.mp3: 200 segments, lang=da, 62.6s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83236 lang=da outputs=txt
+[2026-08-21 06:19:19.719] [INFO] [panopto.transcribe] Transcribe worker (pid=83236) OK in 62.7s: txt
+[2026-08-21 06:19:19.728] [INFO] [panopto.runner] Transcribing [2/36] 'Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer' (device=cpu, source=Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.mp3)...
+[2026-08-21 06:19:19.731] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83255 device=cpu frozen=False file=Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.mp3
+[2026-08-21 06:21:16.630] [INFO] [panopto.transcribe] Transcribe worker (pid=83255, Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83255 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 25:15.892
+[INFO] [faster_whisper] VAD filter removed 01:03.152 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.mp3: audio=1516s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.mp3: 375 segments, lang=da, 116.8s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83255 lang=da outputs=txt
+[2026-08-21 06:21:16.630] [INFO] [panopto.transcribe] Transcribe worker (pid=83255) OK in 116.9s: txt
+[2026-08-21 06:21:16.637] [INFO] [panopto.runner] Transcribing [3/36] 'Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37' (device=cpu, source=Forelæsningsvideo (1) formelle træk - organisationsstruktur 2025 37.mp3)...
+[2026-08-21 06:21:16.640] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83298 device=cpu frozen=False file=Forelæsningsvideo (1) formelle træk - organisationsstruktur 2025 37.mp3
+[2026-08-21 06:22:04.128] [INFO] [panopto.transcribe] Transcribe worker (pid=83298, Forelæsningsvideo (1) formelle træk - organisationsstruktur 2025 37.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83298 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) formelle træk - organisationsstruktur 2025 37.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 11:56.057
+[INFO] [faster_whisper] VAD filter removed 00:44.368 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.90
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) formelle træk - organisationsstruktur 2025 37.mp3: audio=716s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) formelle træk - organisationsstruktur 2025 37.mp3: 94 segments, lang=da, 47.4s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83298 lang=da outputs=txt
+[2026-08-21 06:22:04.128] [INFO] [panopto.transcribe] Transcribe worker (pid=83298) OK in 47.5s: txt
+[2026-08-21 06:22:04.135] [INFO] [panopto.runner] Transcribing [4/36] 'Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37' (device=cpu, source=Forelæsningsvideo (2) formelle træk - organisationsstruktur 2025 37.mp3)...
+[2026-08-21 06:22:04.139] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83312 device=cpu frozen=False file=Forelæsningsvideo (2) formelle træk - organisationsstruktur 2025 37.mp3
+[2026-08-21 06:22:25.666] [INFO] [panopto.transcribe] Transcribe worker (pid=83312, Forelæsningsvideo (2) formelle træk - organisationsstruktur 2025 37.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83312 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) formelle træk - organisationsstruktur 2025 37.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 08:15.073
+[INFO] [faster_whisper] VAD filter removed 00:47.265 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.82
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) formelle træk - organisationsstruktur 2025 37.mp3: audio=495s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) formelle træk - organisationsstruktur 2025 37.mp3: 97 segments, lang=da, 21.5s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83312 lang=da outputs=txt
+[2026-08-21 06:22:25.666] [INFO] [panopto.transcribe] Transcribe worker (pid=83312) OK in 21.5s: txt
+[2026-08-21 06:22:25.673] [INFO] [panopto.runner] Transcribing [5/36] 'Forelæsningsvideo (1): formelle træk - organisationsformer' (device=cpu, source=Forelæsningsvideo (1) formelle træk - organisationsformer.mp3)...
+[2026-08-21 06:22:25.677] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83333 device=cpu frozen=False file=Forelæsningsvideo (1) formelle træk - organisationsformer.mp3
+[2026-08-21 06:22:53.265] [INFO] [panopto.transcribe] Transcribe worker (pid=83333, Forelæsningsvideo (1) formelle træk - organisationsformer.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83333 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) formelle træk - organisationsformer.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:26.614
+[INFO] [faster_whisper] VAD filter removed 01:07.926 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.92
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) formelle træk - organisationsformer.mp3: audio=627s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) formelle træk - organisationsformer.mp3: 73 segments, lang=da, 27.5s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83333 lang=da outputs=txt
+[2026-08-21 06:22:53.265] [INFO] [panopto.transcribe] Transcribe worker (pid=83333) OK in 27.6s: txt
+[2026-08-21 06:22:53.272] [INFO] [panopto.runner] Transcribing [6/36] 'Forelæsningsvideo (2): formelle træk - organisationsformer' (device=cpu, source=Forelæsningsvideo (2) formelle træk - organisationsformer.mp3)...
+[2026-08-21 06:22:53.276] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83340 device=cpu frozen=False file=Forelæsningsvideo (2) formelle træk - organisationsformer.mp3
+[2026-08-21 06:23:21.315] [INFO] [panopto.transcribe] Transcribe worker (pid=83340, Forelæsningsvideo (2) formelle træk - organisationsformer.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83340 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) formelle træk - organisationsformer.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:14.191
+[INFO] [faster_whisper] VAD filter removed 00:30.512 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.97
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) formelle træk - organisationsformer.mp3: audio=614s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) formelle træk - organisationsformer.mp3: 64 segments, lang=da, 28.0s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83340 lang=da outputs=txt
+[2026-08-21 06:23:21.315] [INFO] [panopto.transcribe] Transcribe worker (pid=83340) OK in 28.0s: txt
+[2026-08-21 06:23:21.322] [INFO] [panopto.runner] Transcribing [7/36] 'Forelæsningsvideo (1): Uformelletræk_organisationskultur' (device=cpu, source=Forelæsningsvideo (1) Uformelletræk_organisationskultur.mp3)...
+[2026-08-21 06:23:21.326] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83355 device=cpu frozen=False file=Forelæsningsvideo (1) Uformelletræk_organisationskultur.mp3
+[2026-08-21 06:24:55.749] [INFO] [panopto.transcribe] Transcribe worker (pid=83355, Forelæsningsvideo (1) Uformelletræk_organisationskultur.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83355 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) Uformelletræk_organisationskultur.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 13:42.938
+[INFO] [faster_whisper] VAD filter removed 00:09.978 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.75
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) Uformelletræk_organisationskultur.mp3: audio=823s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) Uformelletræk_organisationskultur.mp3: 93 segments, lang=da, 94.4s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83355 lang=da outputs=txt
+[2026-08-21 06:24:55.749] [INFO] [panopto.transcribe] Transcribe worker (pid=83355) OK in 94.4s: txt
+[2026-08-21 06:24:55.756] [INFO] [panopto.runner] Transcribing [8/36] 'Forelæsningsvideo (2): Uformelletræk_organisationskultur' (device=cpu, source=Forelæsningsvideo (2) Uformelletræk_organisationskultur.mp3)...
+[2026-08-21 06:24:55.759] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83389 device=cpu frozen=False file=Forelæsningsvideo (2) Uformelletræk_organisationskultur.mp3
+[2026-08-21 06:25:50.750] [INFO] [panopto.transcribe] Transcribe worker (pid=83389, Forelæsningsvideo (2) Uformelletræk_organisationskultur.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83389 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) Uformelletræk_organisationskultur.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 09:37.945
+[INFO] [faster_whisper] VAD filter removed 00:07.344 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.76
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) Uformelletræk_organisationskultur.mp3: audio=578s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) Uformelletræk_organisationskultur.mp3: 173 segments, lang=da, 54.9s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83389 lang=da outputs=txt
+[2026-08-21 06:25:50.750] [INFO] [panopto.transcribe] Transcribe worker (pid=83389) OK in 55.0s: txt
+[2026-08-21 06:25:50.757] [INFO] [panopto.runner] Transcribing [9/36] 'Video med respons på feedback og introduktion til et nyt initiativ i undervisningen' (device=cpu, source=Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3)...
+[2026-08-21 06:25:50.761] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83414 device=cpu frozen=False file=Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3
+[2026-08-21 06:27:00.602] [INFO] [panopto.transcribe] Transcribe worker (pid=83414, Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83414 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 13:23.155
+[INFO] [faster_whisper] VAD filter removed 00:15.056 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.89
+[INFO] [panopto.transcribe] Transcribing Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3: audio=803s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3: 155 segments, lang=da, 69.8s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83414 lang=da outputs=txt
+[2026-08-21 06:27:00.602] [INFO] [panopto.transcribe] Transcribe worker (pid=83414) OK in 69.8s: txt
+[2026-08-21 06:27:00.610] [INFO] [panopto.runner] Transcribing [10/36] 'Forelæsningsvideo 1 om Sensemaking' (device=cpu, source=Forelæsningsvideo 1 om Sensemaking.mp3)...
+[2026-08-21 06:27:00.614] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83428 device=cpu frozen=False file=Forelæsningsvideo 1 om Sensemaking.mp3
+[2026-08-21 06:27:54.208] [INFO] [panopto.transcribe] Transcribe worker (pid=83428, Forelæsningsvideo 1 om Sensemaking.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83428 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo 1 om Sensemaking.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 15:20.996
+[INFO] [faster_whisper] VAD filter removed 00:16.016 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo 1 om Sensemaking.mp3: audio=921s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo 1 om Sensemaking.mp3: 101 segments, lang=da, 53.5s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83428 lang=da outputs=txt
+[2026-08-21 06:27:54.208] [INFO] [panopto.transcribe] Transcribe worker (pid=83428) OK in 53.6s: txt
+[2026-08-21 06:27:54.215] [INFO] [panopto.runner] Transcribing [11/36] 'Forelæsningsvideo 2 om Sensemaking' (device=cpu, source=Forelæsningsvideo 2 om Sensemaking.mp3)...
+[2026-08-21 06:27:54.219] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83451 device=cpu frozen=False file=Forelæsningsvideo 2 om Sensemaking.mp3
+[2026-08-21 06:28:33.197] [INFO] [panopto.transcribe] Transcribe worker (pid=83451, Forelæsningsvideo 2 om Sensemaking.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83451 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo 2 om Sensemaking.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 11:35.020
+[INFO] [faster_whisper] VAD filter removed 00:17.520 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.94
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo 2 om Sensemaking.mp3: audio=695s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo 2 om Sensemaking.mp3: 62 segments, lang=da, 38.9s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83451 lang=da outputs=txt
+[2026-08-21 06:28:33.197] [INFO] [panopto.transcribe] Transcribe worker (pid=83451) OK in 39.0s: txt
+[2026-08-21 06:28:33.204] [INFO] [panopto.runner] Transcribing [12/36] 'Forelæsningsvideo (1): uformelle træk - magt i organisationer' (device=cpu, source=Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3)...
+[2026-08-21 06:28:33.208] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83464 device=cpu frozen=False file=Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3
+[2026-08-21 06:29:09.395] [INFO] [panopto.transcribe] Transcribe worker (pid=83464, Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83464 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 13:45.632
+[INFO] [faster_whisper] VAD filter removed 01:09.392 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.96
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3: audio=826s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3: 113 segments, lang=da, 36.1s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83464 lang=da outputs=txt
+[2026-08-21 06:29:09.395] [INFO] [panopto.transcribe] Transcribe worker (pid=83464) OK in 36.2s: txt
+[2026-08-21 06:29:09.402] [INFO] [panopto.runner] Transcribing [13/36] 'Forelæsningsvideo (2): uformelle træk - magt i organisationer' (device=cpu, source=Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3)...
+[2026-08-21 06:29:09.405] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83471 device=cpu frozen=False file=Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3
+[2026-08-21 06:29:28.865] [INFO] [panopto.transcribe] Transcribe worker (pid=83471, Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83471 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 07:27.472
+[INFO] [faster_whisper] VAD filter removed 00:26.384 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.42
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3: audio=447s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3: 43 segments, lang=da, 19.4s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83471 lang=da outputs=txt
+[2026-08-21 06:29:28.865] [INFO] [panopto.transcribe] Transcribe worker (pid=83471) OK in 19.5s: txt
+[2026-08-21 06:29:28.872] [INFO] [panopto.runner] Transcribing [14/36] 'Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025' (device=cpu, source=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3)...
+[2026-08-21 06:29:28.876] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83484 device=cpu frozen=False file=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3
+[2026-08-21 06:30:08.027] [INFO] [panopto.transcribe] Transcribe worker (pid=83484, Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83484 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 13:06.019
+[INFO] [faster_whisper] VAD filter removed 00:29.104 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.96
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3: audio=786s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3: 103 segments, lang=da, 39.1s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83484 lang=da outputs=txt
+[2026-08-21 06:30:08.027] [INFO] [panopto.transcribe] Transcribe worker (pid=83484) OK in 39.2s: txt
+[2026-08-21 06:30:08.034] [INFO] [panopto.runner] Transcribing [15/36] 'Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025' (device=cpu, source=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3)...
+[2026-08-21 06:30:08.038] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83502 device=cpu frozen=False file=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3
+[2026-08-21 06:30:32.230] [INFO] [panopto.transcribe] Transcribe worker (pid=83502, Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83502 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 08:15.909
+[INFO] [faster_whisper] VAD filter removed 00:20.389 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3: audio=496s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3: 67 segments, lang=da, 24.1s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83502 lang=da outputs=txt
+[2026-08-21 06:30:32.230] [INFO] [panopto.transcribe] Transcribe worker (pid=83502) OK in 24.2s: txt
+[2026-08-21 06:30:32.237] [INFO] [panopto.runner] Transcribing [16/36] 'Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09' (device=cpu, source=Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3)...
+[2026-08-21 06:30:32.241] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83514 device=cpu frozen=False file=Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3
+[2026-08-21 06:30:51.282] [INFO] [panopto.transcribe] Transcribe worker (pid=83514, Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83514 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 06:53.153
+[INFO] [faster_whisper] VAD filter removed 00:01.968 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.93
+[INFO] [panopto.transcribe] Transcribing Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3: audio=413s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3: 42 segments, lang=da, 19.0s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83514 lang=da outputs=txt
+[2026-08-21 06:30:51.282] [INFO] [panopto.transcribe] Transcribe worker (pid=83514) OK in 19.0s: txt
+[2026-08-21 06:30:51.289] [INFO] [panopto.runner] Transcribing [17/36] 'Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025' (device=cpu, source=Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3)...
+[2026-08-21 06:30:51.293] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83521 device=cpu frozen=False file=Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3
+[2026-08-21 06:31:20.050] [INFO] [panopto.transcribe] Transcribe worker (pid=83521, Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83521 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:41.683
+[INFO] [faster_whisper] VAD filter removed 00:42.720 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.91
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3: audio=642s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3: 83 segments, lang=da, 28.7s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83521 lang=da outputs=txt
+[2026-08-21 06:31:20.051] [INFO] [panopto.transcribe] Transcribe worker (pid=83521) OK in 28.8s: txt
+[2026-08-21 06:31:20.058] [INFO] [panopto.runner] Transcribing [18/36] 'Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025' (device=cpu, source=Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3)...
+[2026-08-21 06:31:20.061] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83533 device=cpu frozen=False file=Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3
+[2026-08-21 06:31:46.831] [INFO] [panopto.transcribe] Transcribe worker (pid=83533, Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83533 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 09:30.956
+[INFO] [faster_whisper] VAD filter removed 00:30.683 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.65
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3: audio=571s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3: 93 segments, lang=da, 26.7s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83533 lang=da outputs=txt
+[2026-08-21 06:31:46.831] [INFO] [panopto.transcribe] Transcribe worker (pid=83533) OK in 26.8s: txt
+[2026-08-21 06:31:46.838] [INFO] [panopto.runner] Transcribing [19/36] 'Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1' (device=cpu, source=Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3)...
+[2026-08-21 06:31:46.842] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83537 device=cpu frozen=False file=Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3
+[2026-08-21 06:32:37.977] [INFO] [panopto.transcribe] Transcribe worker (pid=83537, Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83537 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 15:04.022
+[INFO] [faster_whisper] VAD filter removed 00:23.360 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.92
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3: audio=904s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3: 100 segments, lang=da, 51.1s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83537 lang=da outputs=txt
+[2026-08-21 06:32:37.977] [INFO] [panopto.transcribe] Transcribe worker (pid=83537) OK in 51.1s: txt
+[2026-08-21 06:32:37.985] [INFO] [panopto.runner] Transcribing [20/36] 'Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2' (device=cpu, source=Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3)...
+[2026-08-21 06:32:37.989] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83557 device=cpu frozen=False file=Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3
+[2026-08-21 06:33:26.102] [INFO] [panopto.transcribe] Transcribe worker (pid=83557, Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83557 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:58.959
+[INFO] [faster_whisper] VAD filter removed 00:25.615 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.97
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3: audio=659s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3: 78 segments, lang=da, 48.0s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83557 lang=da outputs=txt
+[2026-08-21 06:33:26.102] [INFO] [panopto.transcribe] Transcribe worker (pid=83557) OK in 48.1s: txt
+[2026-08-21 06:33:26.110] [INFO] [panopto.runner] Transcribing [21/36] 'Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025' (device=cpu, source=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3)...
+[2026-08-21 06:33:26.113] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83571 device=cpu frozen=False file=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3
+[2026-08-21 06:34:02.604] [INFO] [panopto.transcribe] Transcribe worker (pid=83571, Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83571 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 12:40.570
+[INFO] [faster_whisper] VAD filter removed 00:28.186 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3: audio=761s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3: 93 segments, lang=da, 36.4s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83571 lang=da outputs=txt
+[2026-08-21 06:34:02.605] [INFO] [panopto.transcribe] Transcribe worker (pid=83571) OK in 36.5s: txt
+[2026-08-21 06:34:02.612] [INFO] [panopto.runner] Transcribing [22/36] 'Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025' (device=cpu, source=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3)...
+[2026-08-21 06:34:02.616] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83578 device=cpu frozen=False file=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3
+[2026-08-21 06:34:40.610] [INFO] [panopto.transcribe] Transcribe worker (pid=83578, Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83578 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 13:16.700
+[INFO] [faster_whisper] VAD filter removed 00:47.836 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.98
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3: audio=797s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3: 107 segments, lang=da, 37.9s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83578 lang=da outputs=txt
+[2026-08-21 06:34:40.610] [INFO] [panopto.transcribe] Transcribe worker (pid=83578) OK in 38.0s: txt
+[2026-08-21 06:34:40.617] [INFO] [panopto.runner] Transcribing [23/36] 'Forelæsningsvideo (1): Forandringsledelse' (device=cpu, source=Forelæsningsvideo (1) Forandringsledelse.mp3)...
+[2026-08-21 06:34:40.621] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83600 device=cpu frozen=False file=Forelæsningsvideo (1) Forandringsledelse.mp3
+[2026-08-21 06:36:13.131] [INFO] [panopto.transcribe] Transcribe worker (pid=83600, Forelæsningsvideo (1) Forandringsledelse.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83600 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) Forandringsledelse.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 18:20.788
+[INFO] [faster_whisper] VAD filter removed 00:29.460 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) Forandringsledelse.mp3: audio=1101s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) Forandringsledelse.mp3: 150 segments, lang=da, 92.4s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83600 lang=da outputs=txt
+[2026-08-21 06:36:13.131] [INFO] [panopto.transcribe] Transcribe worker (pid=83600) OK in 92.5s: txt
+[2026-08-21 06:36:13.138] [INFO] [panopto.runner] Transcribing [24/36] 'Forelæsningsvideo (2): Forandringsledelse' (device=cpu, source=Forelæsningsvideo (2) Forandringsledelse.mp3)...
+[2026-08-21 06:36:13.142] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83625 device=cpu frozen=False file=Forelæsningsvideo (2) Forandringsledelse.mp3
+[2026-08-21 06:39:02.620] [INFO] [panopto.transcribe] Transcribe worker (pid=83625, Forelæsningsvideo (2) Forandringsledelse.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83625 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) Forandringsledelse.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 26:30.381
+[INFO] [faster_whisper] VAD filter removed 00:24.365 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) Forandringsledelse.mp3: audio=1590s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) Forandringsledelse.mp3: 224 segments, lang=da, 169.4s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83625 lang=da outputs=txt
+[2026-08-21 06:39:02.620] [INFO] [panopto.transcribe] Transcribe worker (pid=83625) OK in 169.5s: txt
+[2026-08-21 06:39:02.627] [INFO] [panopto.runner] Transcribing [25/36] 'Forelæsningsvideo 1 Ledelse i organisationer 1' (device=cpu, source=Forelæsningsvideo 1 Ledelse i organisationer 1.mp3)...
+[2026-08-21 06:39:02.631] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83673 device=cpu frozen=False file=Forelæsningsvideo 1 Ledelse i organisationer 1.mp3
+[2026-08-21 06:39:41.447] [INFO] [panopto.transcribe] Transcribe worker (pid=83673, Forelæsningsvideo 1 Ledelse i organisationer 1.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83673 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo 1 Ledelse i organisationer 1.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 09:27.472
+[INFO] [faster_whisper] VAD filter removed 00:20.464 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.94
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo 1 Ledelse i organisationer 1.mp3: audio=567s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo 1 Ledelse i organisationer 1.mp3: 74 segments, lang=da, 38.7s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83673 lang=da outputs=txt
+[2026-08-21 06:39:41.448] [INFO] [panopto.transcribe] Transcribe worker (pid=83673) OK in 38.8s: txt
+[2026-08-21 06:39:41.455] [INFO] [panopto.runner] Transcribing [26/36] 'Forelæsningsvideo 2 Ledelse i organisationer 2' (device=cpu, source=Forelæsningsvideo 2 Ledelse i organisationer 2.mp3)...
+[2026-08-21 06:39:41.458] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83691 device=cpu frozen=False file=Forelæsningsvideo 2 Ledelse i organisationer 2.mp3
+[2026-08-21 06:40:19.381] [INFO] [panopto.transcribe] Transcribe worker (pid=83691, Forelæsningsvideo 2 Ledelse i organisationer 2.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83691 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo 2 Ledelse i organisationer 2.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:03.185
+[INFO] [faster_whisper] VAD filter removed 00:23.857 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.98
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo 2 Ledelse i organisationer 2.mp3: audio=603s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo 2 Ledelse i organisationer 2.mp3: 73 segments, lang=da, 37.9s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83691 lang=da outputs=txt
+[2026-08-21 06:40:19.381] [INFO] [panopto.transcribe] Transcribe worker (pid=83691) OK in 37.9s: txt
+[2026-08-21 06:40:19.389] [INFO] [panopto.runner] Transcribing [27/36] 'Forelæsningsvideo (1): organisationsprojekt - vidensproduktion' (device=cpu, source=Forelæsningsvideo (1) organisationsprojekt - vidensproduktion.mp3)...
+[2026-08-21 06:40:19.392] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83702 device=cpu frozen=False file=Forelæsningsvideo (1) organisationsprojekt - vidensproduktion.mp3
+[2026-08-21 06:41:14.417] [INFO] [panopto.transcribe] Transcribe worker (pid=83702, Forelæsningsvideo (1) organisationsprojekt - vidensproduktion.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83702 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) organisationsprojekt - vidensproduktion.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 18:56.942
+[INFO] [faster_whisper] VAD filter removed 01:26.446 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.95
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) organisationsprojekt - vidensproduktion.mp3: audio=1137s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) organisationsprojekt - vidensproduktion.mp3: 152 segments, lang=da, 55.0s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83702 lang=da outputs=txt
+[2026-08-21 06:41:14.417] [INFO] [panopto.transcribe] Transcribe worker (pid=83702) OK in 55.0s: txt
+[2026-08-21 06:41:14.424] [INFO] [panopto.runner] Transcribing [28/36] 'Forelæsningsvideo (2): organisationsprojekt - vidensproduktion' (device=cpu, source=Forelæsningsvideo (2) organisationsprojekt - vidensproduktion.mp3)...
+[2026-08-21 06:41:14.428] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83723 device=cpu frozen=False file=Forelæsningsvideo (2) organisationsprojekt - vidensproduktion.mp3
+[2026-08-21 06:42:10.931] [INFO] [panopto.transcribe] Transcribe worker (pid=83723, Forelæsningsvideo (2) organisationsprojekt - vidensproduktion.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83723 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) organisationsprojekt - vidensproduktion.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 20:06.857
+[INFO] [faster_whisper] VAD filter removed 01:19.689 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) organisationsprojekt - vidensproduktion.mp3: audio=1207s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) organisationsprojekt - vidensproduktion.mp3: 158 segments, lang=da, 56.4s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83723 lang=da outputs=txt
+[2026-08-21 06:42:10.931] [INFO] [panopto.transcribe] Transcribe worker (pid=83723) OK in 56.5s: txt
+[2026-08-21 06:42:10.938] [INFO] [panopto.runner] Transcribing [29/36] 'Forelæsningsvideo (1): organisationsprojekt - problemformulering' (device=cpu, source=Forelæsningsvideo (1) organisationsprojekt - problemformulering.mp3)...
+[2026-08-21 06:42:10.941] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83736 device=cpu frozen=False file=Forelæsningsvideo (1) organisationsprojekt - problemformulering.mp3
+[2026-08-21 06:42:50.364] [INFO] [panopto.transcribe] Transcribe worker (pid=83736, Forelæsningsvideo (1) organisationsprojekt - problemformulering.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83736 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) organisationsprojekt - problemformulering.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 12:00.910
+[INFO] [faster_whisper] VAD filter removed 00:49.422 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) organisationsprojekt - problemformulering.mp3: audio=721s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) organisationsprojekt - problemformulering.mp3: 94 segments, lang=da, 39.4s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83736 lang=da outputs=txt
+[2026-08-21 06:42:50.364] [INFO] [panopto.transcribe] Transcribe worker (pid=83736) OK in 39.4s: txt
+[2026-08-21 06:42:50.371] [INFO] [panopto.runner] Transcribing [30/36] 'Forelæsningsvideo (2): organisationsprojekt - problemformulering' (device=cpu, source=Forelæsningsvideo (2) organisationsprojekt - problemformulering.mp3)...
+[2026-08-21 06:42:50.375] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83754 device=cpu frozen=False file=Forelæsningsvideo (2) organisationsprojekt - problemformulering.mp3
+[2026-08-21 06:43:58.248] [INFO] [panopto.transcribe] Transcribe worker (pid=83754, Forelæsningsvideo (2) organisationsprojekt - problemformulering.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83754 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) organisationsprojekt - problemformulering.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 21:45.356
+[INFO] [faster_whisper] VAD filter removed 01:35.884 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 1.00
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) organisationsprojekt - problemformulering.mp3: audio=1305s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) organisationsprojekt - problemformulering.mp3: 164 segments, lang=da, 67.8s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83754 lang=da outputs=txt
+[2026-08-21 06:43:58.249] [INFO] [panopto.transcribe] Transcribe worker (pid=83754) OK in 67.9s: txt
+[2026-08-21 06:43:58.256] [INFO] [panopto.runner] Transcribing [31/36] 'Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign' (device=cpu, source=Forelæsningsvideo (1) organisationsprojekt - Undersøgelsesdesign.mp3)...
+[2026-08-21 06:43:58.259] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83779 device=cpu frozen=False file=Forelæsningsvideo (1) organisationsprojekt - Undersøgelsesdesign.mp3
+[2026-08-21 06:44:20.573] [INFO] [panopto.transcribe] Transcribe worker (pid=83779, Forelæsningsvideo (1) organisationsprojekt - Undersøgelsesdesign.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83779 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) organisationsprojekt - Undersøgelsesdesign.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 08:02.162
+[INFO] [faster_whisper] VAD filter removed 00:29.618 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.92
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) organisationsprojekt - Undersøgelsesdesign.mp3: audio=482s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) organisationsprojekt - Undersøgelsesdesign.mp3: 67 segments, lang=da, 22.2s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83779 lang=da outputs=txt
+[2026-08-21 06:44:20.573] [INFO] [panopto.transcribe] Transcribe worker (pid=83779) OK in 22.3s: txt
+[2026-08-21 06:44:20.580] [INFO] [panopto.runner] Transcribing [32/36] 'Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker' (device=cpu, source=Forelæsningsvideo (2) organisationsprojekt - Dataindsamlingsteknikker.mp3)...
+[2026-08-21 06:44:20.584] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83791 device=cpu frozen=False file=Forelæsningsvideo (2) organisationsprojekt - Dataindsamlingsteknikker.mp3
+[2026-08-21 06:44:54.342] [INFO] [panopto.transcribe] Transcribe worker (pid=83791, Forelæsningsvideo (2) organisationsprojekt - Dataindsamlingsteknikker.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83791 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) organisationsprojekt - Dataindsamlingsteknikker.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 09:37.736
+[INFO] [faster_whisper] VAD filter removed 00:29.744 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.97
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) organisationsprojekt - Dataindsamlingsteknikker.mp3: audio=578s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) organisationsprojekt - Dataindsamlingsteknikker.mp3: 73 segments, lang=da, 33.7s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83791 lang=da outputs=txt
+[2026-08-21 06:44:54.342] [INFO] [panopto.transcribe] Transcribe worker (pid=83791) OK in 33.8s: txt
+[2026-08-21 06:44:54.349] [INFO] [panopto.runner] Transcribing [33/36] 'Forelæsningsvideo (1): organisationsprojekt - operationalisering' (device=cpu, source=Forelæsningsvideo (1) organisationsprojekt - operationalisering.mp3)...
+[2026-08-21 06:44:54.352] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83798 device=cpu frozen=False file=Forelæsningsvideo (1) organisationsprojekt - operationalisering.mp3
+[2026-08-21 06:45:38.164] [INFO] [panopto.transcribe] Transcribe worker (pid=83798, Forelæsningsvideo (1) organisationsprojekt - operationalisering.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83798 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) organisationsprojekt - operationalisering.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 14:22.900
+[INFO] [faster_whisper] VAD filter removed 00:59.952 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 1.00
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) organisationsprojekt - operationalisering.mp3: audio=863s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) organisationsprojekt - operationalisering.mp3: 165 segments, lang=da, 43.7s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83798 lang=da outputs=txt
+[2026-08-21 06:45:38.164] [INFO] [panopto.transcribe] Transcribe worker (pid=83798) OK in 43.8s: txt
+[2026-08-21 06:45:38.171] [INFO] [panopto.runner] Transcribing [34/36] 'Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation' (device=cpu, source=Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.mp3)...
+[2026-08-21 06:45:38.174] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83813 device=cpu frozen=False file=Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.mp3
+[2026-08-21 06:46:30.527] [INFO] [panopto.transcribe] Transcribe worker (pid=83813, Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83813 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 16:52.901
+[INFO] [faster_whisper] VAD filter removed 01:35.749 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 1.00
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.mp3: audio=1013s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.mp3: 130 segments, lang=da, 52.3s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83813 lang=da outputs=txt
+[2026-08-21 06:46:30.527] [INFO] [panopto.transcribe] Transcribe worker (pid=83813) OK in 52.4s: txt
+[2026-08-21 06:46:30.535] [INFO] [panopto.runner] Transcribing [35/36] 'Forelæsningsvideo (1): organisationsprojekt - klargøring af data' (device=cpu, source=Forelæsningsvideo (1) organisationsprojekt - klargøring af data.mp3)...
+[2026-08-21 06:46:30.538] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83838 device=cpu frozen=False file=Forelæsningsvideo (1) organisationsprojekt - klargøring af data.mp3
+[2026-08-21 06:47:44.191] [INFO] [panopto.transcribe] Transcribe worker (pid=83838, Forelæsningsvideo (1) organisationsprojekt - klargøring af data.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83838 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (1) organisationsprojekt - klargøring af data.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 25:14.823
+[INFO] [faster_whisper] VAD filter removed 02:13.383 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.97
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) organisationsprojekt - klargøring af data.mp3: audio=1515s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) organisationsprojekt - klargøring af data.mp3: 199 segments, lang=da, 73.6s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83838 lang=da outputs=txt
+[2026-08-21 06:47:44.192] [INFO] [panopto.transcribe] Transcribe worker (pid=83838) OK in 73.7s: txt
+[2026-08-21 06:47:44.198] [INFO] [panopto.runner] Transcribing [36/36] 'Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data' (device=cpu, source=Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.mp3)...
+[2026-08-21 06:47:44.202] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=83861 device=cpu frozen=False file=Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.mp3
+[2026-08-21 06:48:18.988] [INFO] [panopto.transcribe] Transcribe worker (pid=83861, Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=83861 frozen=False routed_via=direct device=cpu want_txt=True want_srt=False file=Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.mp3
+[INFO] [panopto.transcribe] Loaded transcription model (cpu, int8) in 0.1s from /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/config/panopto_models/tiny
+[INFO] [faster_whisper] Processing audio with duration 10:52.899
+[INFO] [faster_whisper] VAD filter removed 00:41.840 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 1.00
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.mp3: audio=653s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.mp3: 78 segments, lang=da, 34.7s -> txt
+[INFO] [panopto.transcribe_worker] worker done: pid=83861 lang=da outputs=txt
+[2026-08-21 06:48:18.989] [INFO] [panopto.transcribe] Transcribe worker (pid=83861) OK in 34.8s: txt
+[2026-08-21 06:48:19.029] [INFO] [panopto.runner] Panopto batch done: found=36 downloaded=36 transcribed=36 shortcuts=0 skipped=0 failed=0 courses=1

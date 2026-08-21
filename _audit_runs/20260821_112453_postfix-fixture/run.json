@@ -1,0 +1,28 @@
+{
+  "run_id": "20260821_112453_postfix-fixture",
+  "label": "postfix-fixture",
+  "created": "2026-08-21T11:24:53",
+  "repo_root": "/Users/m1/Canvas_Downloader",
+  "steps": [],
+  "app": {},
+  "ports_used": [
+    8792
+  ],
+  "browser": {},
+  "scope": [
+    {
+      "name": "postfix",
+      "flow": "download",
+      "course": "43660",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "postfix_conv",
+      "flow": "download",
+      "course": "43660",
+      "config": "{\"file_filter\": \"all\", \"mode\": \"modules\", \"secondary_isolated\": false, \"convert_pptx\": true, \"convert_word\": true, \"convert_excel\": true, \"convert_html\": true, \"convert_code\": true, \"convert_zip\": true, \"convert_urls\": false, \"convert_video\": false, \"dl_assignments\": true, \"dl_announcements\": true, ",
+      "result": "ok"
+    }
+  ]
+}

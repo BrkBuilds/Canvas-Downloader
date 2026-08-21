@@ -1,0 +1,107 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T13:32:56",
+  "applied": [
+    {
+      "kind": "edited_update",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 4,
+  "expected_categories": {
+    "updated_modified": 2,
+    "uptodate": 2
+  },
+  "expected_untracked": [
+    "Introduktion til organisationsteori/Eksempel på gruppekontrakt - mine noter 0.docx",
+    "Øvelser i uge 16/Svarark - Gode råd til projektet - mine noter 1.docx"
+  ],
+  "expected_missing_rows": [
+    "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+    "Øvelser i uge 16/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_md5_drift": [
+    "Eksempel - Gruppekontrakt.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_size_drift": [
+    "Eksempel - Gruppekontrakt.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 260,
+    "files": 300
+  },
+  "fixtures": [
+    {
+      "label": "edited-update:Eksempel - Gruppekontrakt.docx",
+      "kind": "edited_update",
+      "path": "Eksempel - Gruppekontrakt.docx",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Eksempel - Gruppekontrakt.docx",
+      "match_name": "Eksempel - Gruppekontrakt.docx",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1560051,
+      "original_path": "",
+      "edited_md5": "0f2ac1d01fa29a8ceb85ecb4f50d2dd4",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:Svarark - Gode råd til projektet.docx",
+      "kind": "edited_update",
+      "path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1560056,
+      "original_path": "",
+      "edited_md5": "dccca983779db91d2584bce3a2786421",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Eksempel på gruppekontrakt - mine noter 0.docx",
+      "kind": "renamed_row_dropped",
+      "path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt - mine noter 0.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt - mine noter 0.docx",
+      "match_name": "Eksempel på gruppekontrakt.docx",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1559916,
+      "original_path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Svarark - Gode råd til projektet - mine noter 1.docx",
+      "kind": "renamed_row_dropped",
+      "path": "Øvelser i uge 16/Svarark - Gode råd til projektet - mine noter 1.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Øvelser i uge 16/Svarark - Gode råd til projektet - mine noter 1.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1816004,
+      "original_path": "Øvelser i uge 16/Svarark - Gode råd til projektet.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

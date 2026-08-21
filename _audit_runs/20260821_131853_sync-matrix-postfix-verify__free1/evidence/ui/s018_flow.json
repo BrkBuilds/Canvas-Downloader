@@ -1,0 +1,109 @@
+{
+  "name": "s018",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "sync",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 3,
+        "id": "sync",
+        "state": "active"
+      },
+      "dash": true,
+      "exceptions": 0,
+      "head": "Syncing...",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIndføring i organisationers opbygning og funktion (LA)\n0%\nDOWNLOADED\n0.0 / 4.3 MB\nSPEED\n0.0 MB/s\nFILES\n0 / 7\nTIME REMAINING\n~00:03\nDOWNLOADING\nUdfaldsrum Beskrivelser.docx\nWaiting for files…\n\nCancel Sync",
+      "waited_s": 24.1
+    },
+    "panopto_notice": {
+      "shown": true,
+      "accepted": true
+    },
+    "capture": "s018_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "uppekontrakt.docx\n\n​\n\n​\n\nIntroduktion til organisationsteori\n Updates Overwritten (3)\nYour unedited local copies were replaced with the newer versions\nUdfaldsrum Beskrivelser.docx\n\n​\n\n​\n\nTema 4 Ledelse og strategi - beslutninger i organisationer\nSvarark - Gode råd til projektet.docx\n\n​\n\n​\n\nØvelser i uge 16\nSvarark - Gode råd til projektet.docx\n\n​\n\n​\n\nØvelser i uge 18\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 5.0
+    },
+    "capture": "s018_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "13:24:30",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "13:25:02",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "sync",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 3,
+          "id": "sync",
+          "state": "active"
+        },
+        "dash": true,
+        "exceptions": 0,
+        "head": "Syncing...",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIndføring i organisationers opbygning og funktion (LA)\n0%\nDOWNLOADED\n0.0 / 4.3 MB\nSPEED\n0.0 MB/s\nFILES\n0 / 7\nTIME REMAINING\n~00:03\nDOWNLOADING\nUdfaldsrum Beskrivelser.docx\nWaiting for files…\n\nCancel Sync",
+        "waited_s": 24.1
+      },
+      "panopto_notice": {
+        "shown": true,
+        "accepted": true
+      },
+      "capture": "s018_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "13:25:08",
+      "action": "wait_terminal",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "uppekontrakt.docx\n\n​\n\n​\n\nIntroduktion til organisationsteori\n Updates Overwritten (3)\nYour unedited local copies were replaced with the newer versions\nUdfaldsrum Beskrivelser.docx\n\n​\n\n​\n\nTema 4 Ledelse og strategi - beslutninger i organisationer\nSvarark - Gode råd til projektet.docx\n\n​\n\n​\n\nØvelser i uge 16\nSvarark - Gode råd til projektet.docx\n\n​\n\n​\n\nØvelser i uge 18\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 5.0
+      },
+      "capture": "s018_complete",
+      "ok": true
+    }
+  ]
+}

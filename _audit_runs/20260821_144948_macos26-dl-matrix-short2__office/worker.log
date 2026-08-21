@@ -1,0 +1,824 @@
+
+=== lane office start 2026-08-21 14:50:46 ===
+Task was destroyed but it is pending!
+task: <Task cancelling name='Task-3' coro=<Connection.run.<locals>.init() running at /Users/m1/Canvas_Downloader/.venv/lib/python3.11/site-packages/playwright/_impl/_connection.py:344> wait_for=<Future finished result=None>>
+Future exception was never retrieved
+future: <Future finished exception=TargetClosedError('Target page, context or browser has been closed')>
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+{
+  "ok": 19,
+  "lane": "office",
+  "run_id": "20260821_144948_macos26-dl-matrix-short2__office",
+  "jobs": 19,
+  "failed": [],
+  "results": [
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43665,
+      "course_ids": [
+        43665
+      ],
+      "courses": [
+        {
+          "course_id": 43665,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m012"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m012",
+      "seconds": 118.9
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m013"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "info": 5
+      },
+      "id": "m013",
+      "seconds": 127.9
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43665,
+      "course_ids": [
+        43665
+      ],
+      "courses": [
+        {
+          "course_id": 43665,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+          "findings": 7,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m014"
+          }
+        }
+      ],
+      "findings": 7,
+      "drift": [],
+      "severities": {
+        "high": 4,
+        "info": 3
+      },
+      "id": "m014",
+      "seconds": 158.6
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 15,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m025_c43660"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 7,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m025_c45899"
+          }
+        }
+      ],
+      "findings": 22,
+      "drift": [],
+      "severities": {
+        "high": 10,
+        "info": 7,
+        "medium": 5
+      },
+      "id": "m025",
+      "seconds": 296.2
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m026"
+          }
+        }
+      ],
+      "findings": 4,
+      "drift": [],
+      "severities": {
+        "info": 4
+      },
+      "id": "m026",
+      "seconds": 155.5
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m027_c45899"
+          }
+        },
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m027_c43660"
+          }
+        }
+      ],
+      "findings": 7,
+      "drift": [],
+      "severities": {
+        "info": 7
+      },
+      "id": "m027",
+      "seconds": 183.9
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 7,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m028_c45899"
+          }
+        },
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m028_c43660"
+          }
+        }
+      ],
+      "findings": 10,
+      "drift": [],
+      "severities": {
+        "info": 10
+      },
+      "id": "m028",
+      "seconds": 181.2
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m029"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m029",
+      "seconds": 198.7
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m030_c43660"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m030_c45899"
+          }
+        }
+      ],
+      "findings": 10,
+      "drift": [],
+      "severities": {
+        "info": 10
+      },
+      "id": "m030",
+      "seconds": 354.5
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 6,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m032_c43660"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 6,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m032_c45899"
+          }
+        }
+      ],
+      "findings": 12,
+      "drift": [],
+      "severities": {
+        "info": 12
+      },
+      "id": "m032",
+      "seconds": 263.9
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m033"
+          }
+        }
+      ],
+      "findings": 4,
+      "drift": [],
+      "severities": {
+        "info": 4
+      },
+      "id": "m033",
+      "seconds": 152.5
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        43665
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 2,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m039_c45899"
+          }
+        },
+        {
+          "course_id": 43665,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+          "findings": 2,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m039_c43665"
+          }
+        }
+      ],
+      "findings": 4,
+      "drift": [],
+      "severities": {
+        "info": 4
+      },
+      "id": "m039",
+      "seconds": 116.7
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43665,
+      "course_ids": [
+        43665
+      ],
+      "courses": [
+        {
+          "course_id": 43665,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+          "findings": 2,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m041"
+          }
+        }
+      ],
+      "findings": 2,
+      "drift": [],
+      "severities": {
+        "info": 2
+      },
+      "id": "m041",
+      "seconds": 68.6
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m042_c43660"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 7,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m042_c45899"
+          }
+        }
+      ],
+      "findings": 12,
+      "drift": [],
+      "severities": {
+        "info": 12
+      },
+      "id": "m042",
+      "seconds": 252.0
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m044_c43660"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m044_c45899"
+          }
+        }
+      ],
+      "findings": 9,
+      "drift": [],
+      "severities": {
+        "info": 9
+      },
+      "id": "m044",
+      "seconds": 223.2
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43665,
+      "course_ids": [
+        43665,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43665,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m048_c43665"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m048_c45899"
+          }
+        }
+      ],
+      "findings": 6,
+      "drift": [],
+      "severities": {
+        "info": 6
+      },
+      "id": "m048",
+      "seconds": 185.7
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43665,
+      "course_ids": [
+        43665,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43665,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m049_c43665"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m049_c45899"
+          }
+        }
+      ],
+      "findings": 8,
+      "drift": [],
+      "severities": {
+        "info": 8
+      },
+      "id": "m049",
+      "seconds": 184.4
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m050"
+          }
+        }
+      ],
+      "findings": 4,
+      "drift": [],
+      "severities": {
+        "info": 4
+      },
+      "id": "m050",
+      "seconds": 158.0
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660,
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m001_c43660"
+          }
+        },
+        {
+          "course_id": 45899,
+          "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 8,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/rows/m001_c45899"
+          }
+        }
+      ],
+      "findings": 13,
+      "drift": [],
+      "severities": {
+        "info": 13
+      },
+      "id": "m001",
+      "seconds": 2289.2
+    }
+  ]
+}
+
+=== lane office start 2026-08-21 16:27:25 ===
+{
+  "ok": 19,
+  "lane": "office",
+  "run_id": "20260821_144948_macos26-dl-matrix-short2__office",
+  "jobs": 19,
+  "failed": [],
+  "results": [
+    {
+      "id": "m012",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m013",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m014",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m025",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m026",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m027",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m028",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m029",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m030",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m032",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m033",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m039",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m041",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m042",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m044",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m048",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m049",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m050",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "m001",
+      "ok": true,
+      "skipped": "already done"
+    }
+  ]
+}
+Task was destroyed but it is pending!
+task: <Task cancelling name='Task-3' coro=<Connection.run.<locals>.init() running at /Users/m1/Canvas_Downloader/.venv/lib/python3.11/site-packages/playwright/_impl/_connection.py:344> wait_for=<Future finished result=None>>
+Future exception was never retrieved
+future: <Future finished exception=TargetClosedError('Target page, context or browser has been closed')>
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed

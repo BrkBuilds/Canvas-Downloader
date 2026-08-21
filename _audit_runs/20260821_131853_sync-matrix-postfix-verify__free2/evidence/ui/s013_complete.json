@@ -1,0 +1,161 @@
+{
+  "name": "s013_complete",
+  "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free2/evidence/screenshots/s013_complete.png",
+  "captured": "2026-08-21 13:24:19",
+  "screen": {
+    "url": "http://127.0.0.1:8810/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Sync Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_done_donesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_done_donesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_updated_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_updated_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_updated_1",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_updated_1",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_complete_open_0",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page_sync_complete",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [
+      {
+        "key": "sync_complete_fc_0",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nFiles added"
+      }
+    ],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync Success\n1\nCOURSE UPDATED\n2\nFILES DOWNLOADED\n29.3\nKB DOWNLOADED\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 FILES\nDOCX\n2\nkeyboard_arrow_down\n\nFiles added\n\n Updates Overwritten (2)\nYour unedited local copies were replaced with the newer versions\nEksempel - Gruppekontrakt.docx\n\n​\n\n​\n\nCourse folder\nSvarark - Gode råd til projektet.docx\n\n​\n\n​\n\nØvelser i uge 18\n\nOpen Folder\n\nGo to front page",
+    "textLen": 537
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "done",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "done",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "active",
+      "label": "5. Complete"
+    }
+  ],
+  "completion": {
+    "folderCards": [
+      {
+        "key": "sync_complete_fc_0",
+        "text": "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | 2 FILES | DOCX | 2 | keyboard_arrow_down | Files added |  Updates Overwritten (2) | Your unedited local copies were replaced with the newer versions | Eksempel - Gruppekontrakt.docx | ​ | ​ | Course folder | Svarark - Gode råd til projektet.docx | ​ | ​ | Øvelser i uge 18 | Open Folder"
+      }
+    ],
+    "dashboardInsideCard": false,
+    "strayDashboard": false,
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync Success\n1\nCOURSE UPDATED\n2\nFILES DOWNLOADED\n29.3\nKB DOWNLOADED\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 FILES\nDOCX\n2\nkeyboard_arrow_down\n\nFiles added\n\n Updates Overwritten (2)\nYour unedited local copies were replaced with the newer versions\nEksempel - Gruppekontrakt.docx\n\n​\n\n​\n\nCourse folder\nSvarark - Gode råd til projektet.docx\n\n​\n\n​\n\nØvelser i uge 18\n\nOpen Folder\n\nGo to front page"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

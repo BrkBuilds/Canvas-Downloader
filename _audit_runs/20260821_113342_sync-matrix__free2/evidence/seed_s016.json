@@ -1,0 +1,64 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free2/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T11:37:48",
+  "applied": [
+    {
+      "kind": "partial_artifact",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {},
+  "expected_untracked": [
+    "interrupted download.pdf.part",
+    "recording.part.mp4"
+  ],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [
+    "interrupted download.pdf.part",
+    "recording.part.mp4"
+  ],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 262,
+    "files": 300
+  },
+  "fixtures": [
+    {
+      "label": "partial:interrupted download.pdf.part",
+      "kind": "partial_artifact",
+      "path": "interrupted download.pdf.part",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "interrupted download.pdf.part",
+      "match_name": "interrupted download.pdf.part",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "partial:recording.part.mp4",
+      "kind": "partial_artifact",
+      "path": "recording.part.mp4",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "recording.part.mp4",
+      "match_name": "recording.part.mp4",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

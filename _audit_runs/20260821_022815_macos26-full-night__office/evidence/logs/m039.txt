@@ -1,0 +1,1115 @@
+--- Debug Log Started: 2026-08-21 02:46:58.733395 ---
+[2026-08-21 02:46:58.733] === Session Environment ===
+  App: Canvas Downloader v2.0.2 | frozen=False | pid=63729
+  OS: Darwin 25.6.0 | macOS-26.6.1-arm64-arm-64bit | arch=arm64
+  Python: 3.11.16
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 2 course(s)
+===========================
+[2026-08-21 02:47:02.769] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 133 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 45899.
+[2026-08-21 02:47:06.435] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 123 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43665.
+[2026-08-21 02:47:06.469] [INFO] [engine.applescript_bridge] [OfficeQuit] PowerPoint was already running before this run - it will be left alone at the end
+[2026-08-21 02:47:06.495] [INFO] [engine.applescript_bridge] [OfficeQuit] Word was already running before this run - it will be left alone at the end
+[2026-08-21 02:47:06.523] [INFO] [engine.applescript_bridge] [OfficeQuit] Excel was already running before this run - it will be left alone at the end
+[2026-08-21 02:47:06.570] [INFO] [engine.applescript_bridge] [Setup] App Data container arming finished in 0.0s
+[2026-08-21 02:47:06.583] === Download Start: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | Course 1/2 ===
+[2026-08-21 02:47:06.583] Mode: modules | Filter: study
+[2026-08-21 02:47:06.583] Post-processing: [zip, code, video, excel]
+[2026-08-21 02:47:06.583] Secondary content: [none]
+[2026-08-21 02:47:06.587] 
+==================================================
+--- Download: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) (ID: 45899) Mode: modules ---
+==================================================
+[2026-08-21 02:47:06.587] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads
+[2026-08-21 02:47:06.587] Filter: study | Concurrency: 5 | Max file size: disabled | Estimated payload: 421 MB
+[2026-08-21 02:47:06.587] Canvas Content: [none] | isolate=no
+[2026-08-21 02:47:06.587] Post-processing: [zip, code, video, excel]
+[2026-08-21 02:47:07.175] Processing Module: Course description including examination rules (ID: 309654)
+[2026-08-21 02:47:07.323] Found 1 items in module 'Course description including examination rules'
+[2026-08-21 02:47:07.323]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-21 02:47:07.324] Processing Module: Informationer (ID: 309655)
+[2026-08-21 02:47:07.443] Found 3 items in module 'Informationer'
+[2026-08-21 02:47:07.443]   - Item: Eloquent JavaScript bog: https://eloquentjavascript.net (bemærk: 4. udgave) (Type: SubHeader)
+[2026-08-21 02:47:07.443]   - Item: Bøger til foråret: se course readings (Type: SubHeader)
+[2026-08-21 02:47:07.443]   - Item: køb: Ben-Gan, I. (2023) T-SQL fundamentals . Fourth edition. Redmond ;; London :, Microsoft Press ; Pearson Education Inc. (Type: SubHeader)
+[2026-08-21 02:47:07.443] Processing Module: Andre ressourcer (ID: 313790)
+[2026-08-21 02:47:07.573] Found 1 items in module 'Andre ressourcer'
+[2026-08-21 02:47:07.573]   - Item: Trin-for-trin Guide til VS Code og konsollen.pdf (Type: File)
+[2026-08-21 02:47:07.705] Module file tracked: Trin-for-trin Guide til VS Code og konsollen.pdf (ID: 1598669)
+[2026-08-21 02:47:07.705] Processing Module: Obligatoriske afleveringer efterår 2025 (ID: 309657)
+[2026-08-21 02:47:07.866] Found 10 items in module 'Obligatoriske afleveringer efterår 2025'
+[2026-08-21 02:47:07.866]   - Item: Godkendelsesopgave 1 (Type: Assignment)
+[2026-08-21 02:47:07.866]   - Item: Godkendelsesopgave 1 vejl_løsn.js (Type: File)
+[2026-08-21 02:47:07.994] Module file tracked: g1 darts vejl_løsn.js (ID: 1670371)
+[2026-08-21 02:47:07.994]   - Item: Godkendelsesopgave 2 (Type: Assignment)
+[2026-08-21 02:47:07.994]   - Item: G2 vejl_løsn.js (Type: File)
+[2026-08-21 02:47:08.123] Module file tracked: gk2 vejl_løsn.js (ID: 1598721)
+[2026-08-21 02:47:08.123]   - Item: G2 fælles_feedback.pdf (Type: File)
+[2026-08-21 02:47:08.261] Module file tracked: g2_fælles_feedback.pdf (ID: 1687491)
+[2026-08-21 02:47:08.262]   - Item: Godkendelsesopgave 3 (Type: Assignment)
+[2026-08-21 02:47:08.262]   - Item: G3 opgave.bierOgBlomster analysevejledning.pdf (Type: File)
+[2026-08-21 02:47:08.396] Module file tracked: G3 opgave.bierOgBlomster analysevejledning.pdf (ID: 1692940)
+[2026-08-21 02:47:08.396]   - Item: Fælles feedback G3 v2.pdf (Type: File)
+[2026-08-21 02:47:08.536] Module file tracked: Fælles feedback G3 v2.pdf (ID: 1700523)
+[2026-08-21 02:47:08.537]   - Item: g3 opgave-bierOgBlomsterOO vejl.js (Type: File)
+[2026-08-21 02:47:08.676] Module file tracked: g3 opgave-bierOgBlomsterOO vejl.js (ID: 1700515)
+[2026-08-21 02:47:08.676]   - Item: G4  (Type: Quiz)
+[2026-08-21 02:47:08.676] Processing Module: Obligatoriske afleveringer forår 2026 (ID: 326739)
+[2026-08-21 02:47:08.814] Found 5 items in module 'Obligatoriske afleveringer forår 2026'
+[2026-08-21 02:47:08.815]   - Item: Godkendelsesopgave 5 (Type: Assignment)
+[2026-08-21 02:47:08.815]   - Item: g5_fælles_feedback.pdf (Type: File)
+[2026-08-21 02:47:08.957] Module file tracked: g5_fælles_feedback.pdf (ID: 1796825)
+[2026-08-21 02:47:08.958]   - Item: Godkendelsesopgave 6 (Type: Assignment)
+[2026-08-21 02:47:08.958]   - Item: Godkendelsesopgave 7 (Type: Assignment)
+[2026-08-21 02:47:08.958]   - Item: Godkendelsesopgave 8 - Quiz (Sidste frist for aflevering: onsdag 6. maj 23:59.) (Type: Quiz)
+[2026-08-21 02:47:08.958] Processing Module: Skriftlig Eksamen (ID: 322481)
+[2026-08-21 02:47:09.099] Found 7 items in module 'Skriftlig Eksamen'
+[2026-08-21 02:47:09.099]   - Item: Ordinær eksamen med vejledende løsning (Type: SubHeader)
+[2026-08-21 02:47:09.099]   - Item: eksamen 2025E ordinær.pdf (Type: File)
+[2026-08-21 02:47:09.246] Module file tracked: eksamen 2025E ordinær final.pdf (ID: 1736378)
+[2026-08-21 02:47:09.247]   - Item: eksamen 2025 ord vejledende.zip (Type: File)
+[2026-08-21 02:47:09.378] Module file tracked: eksamen 2025 ord vejledende.zip (ID: 1736379)
+[2026-08-21 02:47:09.378]   - Item: NB: feedback ordinær.pdf (Type: File)
+[2026-08-21 02:47:09.524] Module file tracked: feedback ordinær.pdf (ID: 1736380)
+[2026-08-21 02:47:09.525]   - Item: Re-eksamen med vejledende løsning (Type: SubHeader)
+[2026-08-21 02:47:09.525]   - Item: eksamen 2025E re-eksamen.pdf (Type: File)
+[2026-08-21 02:47:09.667] Module file tracked: eksamen 2025E re-eksamen.pdf (ID: 1770754)
+[2026-08-21 02:47:09.667]   - Item: eksamen 2025 re vejledende.zip (Type: File)
+[2026-08-21 02:47:09.810] Module file tracked: eksamen 2025 re vejledende.zip (ID: 1770755)
+[2026-08-21 02:47:09.811] Processing Module: Rapporteksamen (ID: 326738)
+[2026-08-21 02:47:09.949] Found 1 items in module 'Rapporteksamen'
+[2026-08-21 02:47:09.949]   - Item: Rapporteksamen 2026 - Ejendomsinvesterings-app.pdf (Type: File)
+[2026-08-21 02:47:10.154] Module file tracked: Eksamen 2026 rev_6.pdf (ID: 1771104)
+[2026-08-21 02:47:10.154] Processing Module: Kursus-evaluering (ID: 309656)
+[2026-08-21 02:47:10.281] Found 1 items in module 'Kursus-evaluering'
+[2026-08-21 02:47:10.281]   - Item: Kursusevaluering (Type: File)
+[2026-08-21 02:47:10.413] Module file tracked: PowerPoint to use in class_141223 (2).pptx (ID: 1815182)
+[2026-08-21 02:47:10.413] Processing Module: Uge 36: Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, data, værdier, typer og operatorer. (ID: 309658)
+[2026-08-21 02:47:10.544] Found 8 items in module 'Uge 36: Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, data, værdier, typer og operatorer.'
+[2026-08-21 02:47:10.545]   - Item: Feedback til Ole (lect1) (Type: ExternalUrl)
+[2026-08-21 02:47:10.545]   - Item: Læs: Eloquent JavaScript – kap 1  (Type: SubHeader)
+[2026-08-21 02:47:10.545]   - Item: Javascript practice quiz 1 (Type: Quiz)
+[2026-08-21 02:47:10.545]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:10.545]   - Item: forelæsning 1 25.pdf (Type: File)
+[2026-08-21 02:47:10.681] Module file tracked: forelæsning 1 25.pdf (ID: 1626276)
+[2026-08-21 02:47:10.681]   - Item: forelæsning 1 25.pptx (Type: File)
+[2026-08-21 02:47:10.823] Module file tracked: forelæsning 1 25.pptx (ID: 1626277)
+[2026-08-21 02:47:10.823]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:10.823]   - Item: øvelsessæt 1- Grundlæggende javascript 1.pdf (Type: File)
+[2026-08-21 02:47:10.961] Module file tracked: øvelsessæt 1- Grundlæggende javascript 1.pdf (ID: 1626486)
+[2026-08-21 02:47:10.961] Processing Module: Uge 37: Forelæsning 2. Programstruktur: udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser. (ID: 309659)
+[2026-08-21 02:47:11.111] Found 8 items in module 'Uge 37: Forelæsning 2. Programstruktur: udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser.'
+[2026-08-21 02:47:11.111]   - Item: Læs: Eloquent JavaScript – kap 2  (Type: SubHeader)
+[2026-08-21 02:47:11.111]   - Item: Javascript practice quiz 2 (Type: Quiz)
+[2026-08-21 02:47:11.111]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:11.111]   - Item: forelæsning 2 25.pdf (Type: File)
+[2026-08-21 02:47:11.251] Module file tracked: forelæsning 2 25.pdf (ID: 1632000)
+[2026-08-21 02:47:11.251]   - Item: forelæsning 2 25.pptx (Type: File)
+[2026-08-21 02:47:11.386] Module file tracked: forelæsning 2 25.pptx (ID: 1632001)
+[2026-08-21 02:47:11.386]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:11.386]   - Item: øvelsessæt 2- Program - Struktur - Algoritmer.pdf (Type: File)
+[2026-08-21 02:47:11.510] Module file tracked: øvelsessæt 2- Program - Struktur - Algoritmer.pdf (ID: 1632558)
+[2026-08-21 02:47:11.511]   - Item: Feedback til Ole (Type: ExternalUrl)
+[2026-08-21 02:47:11.511] Processing Module: Uge 38: Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak. (ID: 309660)
+[2026-08-21 02:47:11.645] Found 7 items in module 'Uge 38: Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak.'
+[2026-08-21 02:47:11.645]   - Item: Læs: Eloquent JavaScript – kap 3  (Type: SubHeader)
+[2026-08-21 02:47:11.645]   - Item: Javascript practice quiz 3 (Type: Quiz)
+[2026-08-21 02:47:11.645]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:11.645]   - Item: forelæsning 3 25.pdf (Type: File)
+[2026-08-21 02:47:11.910] Module file tracked: forelæsning 3 25.pdf (ID: 1637607)
+[2026-08-21 02:47:11.910]   - Item: forelæsning 3 25.pptx (Type: File)
+[2026-08-21 02:47:12.137] Module file tracked: forelæsning 3 25.pptx (ID: 1637608)
+[2026-08-21 02:47:12.137]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:12.137]   - Item: øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (Type: File)
+[2026-08-21 02:47:12.271] Module file tracked: øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (ID: 1637584)
+[2026-08-21 02:47:12.272] Processing Module: Uge 39: Forelæsning 4. Datastrukturer - Objekter og arrays. (ID: 309661)
+[2026-08-21 02:47:12.435] Found 7 items in module 'Uge 39: Forelæsning 4. Datastrukturer - Objekter og arrays.'
+[2026-08-21 02:47:12.435]   - Item: Læs: Eloquent JavaScript – kap 4  (Type: SubHeader)
+[2026-08-21 02:47:12.436]   - Item: Javascript practice quiz 4 (Type: Quiz)
+[2026-08-21 02:47:12.436]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:12.436]   - Item: forelæsning 4 25.pptx (Type: File)
+[2026-08-21 02:47:12.563] Module file tracked: forelæsning 4 25.pptx (ID: 1643465)
+[2026-08-21 02:47:12.563]   - Item: forelæsning 4 25.pdf (Type: File)
+[2026-08-21 02:47:12.690] Module file tracked: forelæsning 4 25.pdf (ID: 1643462)
+[2026-08-21 02:47:12.690]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:12.690]   - Item: øvelsessæt 4.pdf (Type: File)
+[2026-08-21 02:47:12.835] Module file tracked: øvelsessæt 4.pdf (ID: 1643483)
+[2026-08-21 02:47:12.836] Processing Module: Uge 40: Forelæsning 5. Højere-ordens funktioner og rekursion (ID: 309662)
+[2026-08-21 02:47:12.998] Found 9 items in module 'Uge 40: Forelæsning 5. Højere-ordens funktioner og rekursion'
+[2026-08-21 02:47:12.998]   - Item: Læs: Eloquent JavaScript – kap 5 (Type: SubHeader)
+[2026-08-21 02:47:12.999]   - Item: Læs: Eloquent JavaScript – kap 3 (afsnit om rekursion) (Type: SubHeader)
+[2026-08-21 02:47:12.999]   - Item: Javascript practice quiz 5 incl. recursion  (Type: Quiz)
+[2026-08-21 02:47:12.999]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:12.999]   - Item: forelæsning 5 25.pptx (Type: File)
+[2026-08-21 02:47:13.135] Module file tracked: forelæsning 5 25.pptx (ID: 1658577)
+[2026-08-21 02:47:13.136]   - Item: forelæsning 5 25.pdf (Type: File)
+[2026-08-21 02:47:13.433] Module file tracked: forelæsning 5 25.pdf (ID: 1658578)
+[2026-08-21 02:47:13.433]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:13.433]   - Item: øvelsessæt 5.pdf (Type: File)
+[2026-08-21 02:47:13.567] Module file tracked: øvelsessæt 5.pdf (ID: 1658625)
+[2026-08-21 02:47:13.567]   - Item: øvelsessæt 5 løsninger.pdf (Type: File)
+[2026-08-21 02:47:13.712] Module file tracked: øvelsessæt 5 løsninger.pdf (ID: 1658626)
+[2026-08-21 02:47:13.712] Processing Module: Uge 41: Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling. (ID: 309663)
+[2026-08-21 02:47:13.854] Found 10 items in module 'Uge 41: Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling.'
+[2026-08-21 02:47:13.854]   - Item: Læs: Eloquent JavaScript – kap 6 (Type: SubHeader)
+[2026-08-21 02:47:13.854]   - Item: Javascript practice quiz 6  (Type: Quiz)
+[2026-08-21 02:47:13.854]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:13.854]   - Item: forelæsning 6 25.pdf (Type: File)
+[2026-08-21 02:47:13.994] Module file tracked: forelæsning 6 25.pdf (ID: 1666624)
+[2026-08-21 02:47:13.994]   - Item: forelæsning 6 25.pptx (Type: File)
+[2026-08-21 02:47:14.137] Module file tracked: forelæsning 6 25.pptx (ID: 1666625)
+[2026-08-21 02:47:14.137]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:14.137]   - Item: øvelsessæt 6.pdf (Type: File)
+[2026-08-21 02:47:14.275] Module file tracked: øvelsessæt 6.pdf (ID: 1666626)
+[2026-08-21 02:47:14.275]   - Item: øvelsessæt 6 løsninger.pdf (Type: File)
+[2026-08-21 02:47:14.433] Module file tracked: øvelsessæt 6 løsninger.pdf (ID: 1666630)
+[2026-08-21 02:47:14.434]   - Item: 2022 - ordinær (Type: File)
+[2026-08-21 02:47:14.570] Module file tracked: 2022 ordinær.pdf (ID: 1598570)
+[2026-08-21 02:47:14.570]   - Item: eksamen 2023E ordinær.pdf (Type: File)
+[2026-08-21 02:47:14.703] Module file tracked: eksamen 2023E ordinær.pdf (ID: 1670338)
+[2026-08-21 02:47:14.703] Processing Module: Uge 42: Efterårsferie (ID: 309664)
+[2026-08-21 02:47:14.872] Found 0 items in module 'Uge 42: Efterårsferie'
+[2026-08-21 02:47:14.872] Processing Module: Uge 43: Forelæsning 7. Error-handling, Moduler (ID: 309665)
+[2026-08-21 02:47:15.010] Found 8 items in module 'Uge 43: Forelæsning 7. Error-handling, Moduler'
+[2026-08-21 02:47:15.011]   - Item: Læs: Eloquent JavaScript – kap 8, 10 (Type: SubHeader)
+[2026-08-21 02:47:15.011]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:15.012]   - Item: forelæsning 7 25.pdf (Type: File)
+[2026-08-21 02:47:15.174] Module file tracked: forelæsning 7 25.pdf (ID: 1677087)
+[2026-08-21 02:47:15.174]   - Item: forelæsning 7 25.pptx (Type: File)
+[2026-08-21 02:47:15.343] Module file tracked: forelæsning 7 25.pptx (ID: 1677089)
+[2026-08-21 02:47:15.343]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:15.344]   - Item: øvelsessæt 7.pdf (Type: File)
+[2026-08-21 02:47:15.482] Module file tracked: øvelsessæt 7.pdf (ID: 1677085)
+[2026-08-21 02:47:15.482]   - Item: øvelsessæt 7 løsninger.pdf (Type: File)
+[2026-08-21 02:47:15.632] Module file tracked: øvelsessæt 7 løsninger.pdf (ID: 1677090)
+[2026-08-21 02:47:15.633]   - Item: Øvelser - fredag d. 24/10 (Type: File)
+[2026-08-21 02:47:15.798] Module file tracked: Øvelse_u43.pdf (ID: 1679207)
+[2026-08-21 02:47:15.798] Processing Module: Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1 (ID: 309666)
+[2026-08-21 02:47:15.947] Found 8 items in module 'Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1'
+[2026-08-21 02:47:15.947]   - Item: Læs: Eloquent JavaScript – kap 13 (Type: SubHeader)
+[2026-08-21 02:47:15.947]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:15.948]   - Item: Forelæsning 8 - Intro til Web Teknologier.pdf (Type: File)
+[2026-08-21 02:47:16.096] Module file tracked: Forelæsning 8 - Intro til Web Teknologier.pdf (ID: 1682843)
+[2026-08-21 02:47:16.096]   - Item: Forelæsning 8 - Intro til Web Teknologier.pptx (Type: File)
+[2026-08-21 02:47:16.246] Module file tracked: Forelæsning 8 - Intro til Web Teknologier.pptx (ID: 1682844)
+[2026-08-21 02:47:16.246]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:16.246]   - Item: Hjælpeopgaver - fredag d. 31/10 (Type: File)
+[2026-08-21 02:47:16.382] Module file tracked: små_opgaver.pdf (ID: 1684203)
+[2026-08-21 02:47:16.383]   - Item: Minefelt.pdf (Type: File)
+[2026-08-21 02:47:16.518] Module file tracked: Minefelt.pdf (ID: 1684229)
+[2026-08-21 02:47:16.518]   - Item: minefeltVEJL.js (Type: File)
+[2026-08-21 02:47:16.659] Module file tracked: minefeltVEJL.js (ID: 1685205)
+[2026-08-21 02:47:16.659] Processing Module: Uge 45: Forelæsning 9. HTML 2 og CSS (ID: 309667)
+[2026-08-21 02:47:16.801] Found 7 items in module 'Uge 45: Forelæsning 9. HTML 2 og CSS'
+[2026-08-21 02:47:16.801]   - Item: Læs: Eloquent JavaScript – kap 14 og 18 (Type: SubHeader)
+[2026-08-21 02:47:16.801]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:16.801]   - Item: Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (Type: File)
+[2026-08-21 02:47:16.961] Module file tracked: Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (ID: 1688312)
+[2026-08-21 02:47:16.961]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:16.961]   - Item: Flexbox Froggy (Type: ExternalUrl)
+[2026-08-21 02:47:16.961]   - Item: CSS Diner (Type: ExternalUrl)
+[2026-08-21 02:47:16.961]   - Item: bondemand.pdf (Type: File)
+[2026-08-21 02:47:17.102] Module file tracked: bondemand.pdf (ID: 1690005)
+[2026-08-21 02:47:17.102] Processing Module: Uge 46: Forelæsning 10. Document Object Model (DOM) (ID: 309668)
+[2026-08-21 02:47:17.251] Found 7 items in module 'Uge 46: Forelæsning 10. Document Object Model (DOM)'
+[2026-08-21 02:47:17.251]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:17.251]   - Item: 2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (Type: File)
+[2026-08-21 02:47:17.384] Module file tracked: 2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (ID: 1692896)
+[2026-08-21 02:47:17.384]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:17.384]   - Item: opgave 102 - hints.html (Type: File)
+[2026-08-21 02:47:17.544] Module file tracked: hints.html (ID: 1692936)
+[2026-08-21 02:47:17.544]   - Item: styling_opgave102.css (Type: File)
+[2026-08-21 02:47:17.713] Module file tracked: styling_opgave102.css (ID: 1693079)
+[2026-08-21 02:47:17.713]   - Item: Eksamen 2023E Ordinær Klasse opgave.pdf (Type: File)
+[2026-08-21 02:47:17.865] Module file tracked: Eksamen 2023E Ordinær Klasse opgave.pdf (ID: 1694147)
+[2026-08-21 02:47:17.865]   - Item: Eksamen 2024E Ordinær Klasse opgave.pdf (Type: File)
+[2026-08-21 02:47:17.997] Module file tracked: Eksamen 2024E Ordinær Klasse opgave.pdf (ID: 1694158)
+[2026-08-21 02:47:17.997] Processing Module: Uge 47: Forelæsning 11. Asynkron programmering og event handling  (ID: 309669)
+[2026-08-21 02:47:18.141] Found 8 items in module 'Uge 47: Forelæsning 11. Asynkron programmering og event handling '
+[2026-08-21 02:47:18.142]   - Item: Læs: Eloquent JavaScript – kap 11+15 (Type: SubHeader)
+[2026-08-21 02:47:18.142]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:18.142]   - Item: Asynkronitet og Events.pdf (Type: File)
+[2026-08-21 02:47:18.273] Module file tracked: Asynkronitet og Events.pdf (ID: 1696759)
+[2026-08-21 02:47:18.273]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:18.274]   - Item: Øvelser_Kapitel11og15.md (Type: File)
+[2026-08-21 02:47:18.402] Module file tracked: Øvelser_Kapitel11og15.md (ID: 1696760)
+[2026-08-21 02:47:18.402]   - Item: Opgavesæt uge 47.pdf (Type: File)
+[2026-08-21 02:47:18.552] Module file tracked: Opgavesæt uge 47.pdf (ID: 1698072)
+[2026-08-21 02:47:18.552]   - Item: html terninger.pdf (Type: File)
+[2026-08-21 02:47:18.687] Module file tracked: html terninger.pdf (ID: 1598722)
+[2026-08-21 02:47:18.687]   - Item: Video gennemgang af terning opgaven (Type: File)
+[2026-08-21 02:47:18.820] Module file tracked: GK2 Samlet-1.mp4 (ID: 1698028)
+[2026-08-21 02:47:18.820] Processing Module: Uge 48: Forelæsning 12. Node.js og debugger samt eksamensforberedelse (ID: 309670)
+[2026-08-21 02:47:18.969] Found 10 items in module 'Uge 48: Forelæsning 12. Node.js og debugger samt eksamensforberedelse'
+[2026-08-21 02:47:18.969]   - Item: Læs: Eloquent JavaScript – kap 20  (Type: SubHeader)
+[2026-08-21 02:47:18.969]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:18.969]   - Item: NodeJs og Debugging.pdf (Type: File)
+[2026-08-21 02:47:19.108] Module file tracked: NodeJs og Debugging.pdf (ID: 1700490)
+[2026-08-21 02:47:19.108]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:19.108]   - Item: Debug - grades - 1.txt (Type: File)
+[2026-08-21 02:47:19.240] Module file tracked: Debug - grades - 1.txt (ID: 1700471)
+[2026-08-21 02:47:19.241]   - Item: Debug - Inventory - 1.txt (Type: File)
+[2026-08-21 02:47:19.433] Module file tracked: Debug - Inventory - 1.txt (ID: 1700478)
+[2026-08-21 02:47:19.433]   - Item: Debug - shop - 1.txt (Type: File)
+[2026-08-21 02:47:19.570] Module file tracked: Debug - shop - 1.txt (ID: 1700483)
+[2026-08-21 02:47:19.570]   - Item: Studietimers overblik - Opgave.pdf (Type: File)
+[2026-08-21 02:47:19.712] Module file tracked: Studietimers overblik - Opgave.pdf (ID: 1701809)
+[2026-08-21 02:47:19.712]   - Item: StudieTimerVejl.js (Type: File)
+[2026-08-21 02:47:19.845] Module file tracked: StudieTimerVejl.js (ID: 1702591)
+[2026-08-21 02:47:19.846]   - Item: JavaScript Objekter – Øvelser.pdf (Type: File)
+[2026-08-21 02:47:20.032] Module file tracked: JavaScript Objekter – Øvelser.pdf (ID: 1701948)
+[2026-08-21 02:47:20.032] Processing Module: Uge 49: Øvelser (ID: 319198)
+[2026-08-21 02:47:20.158] Found 3 items in module 'Uge 49: Øvelser'
+[2026-08-21 02:47:20.158]   - Item: Gavelisten - Opgave.pdf (Type: File)
+[2026-08-21 02:47:20.309] Module file tracked: Gavelisten - Opgave.pdf (ID: 1703058)
+[2026-08-21 02:47:20.309]   - Item: Juleværksted - Opgave.pdf (Type: File)
+[2026-08-21 02:47:20.463] Module file tracked: Juleværksted - Opgave.pdf (ID: 1703059)
+[2026-08-21 02:47:20.463]   - Item: Mus - Opgave.docx (Type: File)
+[2026-08-21 02:47:20.606] Module file tracked: Mus - Opgave.docx (ID: 1703063)
+[2026-08-21 02:47:20.606] Processing Module: Tidligere eksamenssæt (de fleste med vejledende løsninger) (ID: 309671)
+[2026-08-21 02:47:20.750] Found 4 items in module 'Tidligere eksamenssæt (de fleste med vejledende løsninger)'
+[2026-08-21 02:47:20.750]   - Item: Husk, at der også kan komme andre ting såsom switch-statements, loops igennem objekter, HTML osv. som ikke fremgår så ofte i tidligere eksamenssæt. (Type: SubHeader)
+[2026-08-21 02:47:20.750]   - Item: Eksamens arkiv.zip (Type: File)
+[2026-08-21 02:47:20.879] Module file tracked: Eksamens arkiv.zip (ID: 1692058)
+[2026-08-21 02:47:20.879]   - Item: Fiktiv Eksamensopgave.pdf (Type: File)
+[2026-08-21 02:47:21.051] Module file tracked: Fiktiv Eksamensopgave.pdf (ID: 1598591)
+[2026-08-21 02:47:21.051]   - Item: Fiktiv Eksamensopgave3.pdf (Type: File)
+[2026-08-21 02:47:21.205] Module file tracked: Fiktiv Eksamensopgave3.pdf (ID: 1598593)
+[2026-08-21 02:47:21.206] Processing Module: Uge 7: Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel) (ID: 323358)
+[2026-08-21 02:47:21.369] Found 12 items in module 'Uge 7: Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)'
+[2026-08-21 02:47:21.369]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 02:47:21.369]   - Item: UML @ Classroom : kap. 1,2,3,4 (Type: ExternalTool)
+[2026-08-21 02:47:21.369]   - Item: Kursorisk: (Type: SubHeader)
+[2026-08-21 02:47:21.369]   - Item: UML Diagram Types Guide: Class diagram (Type: ExternalTool)
+[2026-08-21 02:47:21.369]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:21.369]   - Item: Forelæsning13.pdf (Type: File)
+[2026-08-21 02:47:21.506] Module file tracked: Forelæsning13.pdf (ID: 1769713)
+[2026-08-21 02:47:21.507]   - Item: Forelæsning13.pptx (Type: File)
+[2026-08-21 02:47:21.651] Module file tracked: Forelæsning13.pptx (ID: 1769714)
+[2026-08-21 02:47:21.651]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:21.651]   - Item: UMLanalyseopgaver.pdf (Type: File)
+[2026-08-21 02:47:21.803] Module file tracked: UMLanalyseopgaver.pdf (ID: 1768580)
+[2026-08-21 02:47:21.803]   - Item: UMLcases.pdf (Type: File)
+[2026-08-21 02:47:21.942] Module file tracked: UMLcases.pdf (ID: 1768581)
+[2026-08-21 02:47:21.942]   - Item: exercises system modelling - solutions.pdf (Type: File)
+[2026-08-21 02:47:22.076] Module file tracked: exercises system modelling - solutions.pdf (ID: 1598710)
+[2026-08-21 02:47:22.076]   - Item: forelæsningsnoter 13 OO+UML.docx (Type: File)
+[2026-08-21 02:47:22.213] Module file tracked: forelæsningsnoter 13 OO UML.docx (ID: 1769666)
+[2026-08-21 02:47:22.213] Processing Module: Uge 8: Forelæsnigsfri (ID: 323360)
+[2026-08-21 02:47:22.334] Found 0 items in module 'Uge 8: Forelæsnigsfri'
+[2026-08-21 02:47:22.334] Processing Module: Uge 9: Forelæsning 14. Design, Arkitektur  (ID: 323359)
+[2026-08-21 02:47:22.502] Found 11 items in module 'Uge 9: Forelæsning 14. Design, Arkitektur '
+[2026-08-21 02:47:22.503]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 02:47:22.503]   - Item: UML @ Classroom : kap. 5, (6), 7  (Type: ExternalTool)
+[2026-08-21 02:47:22.503]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:22.504]   - Item: Forelæsning 14 OO+UML 2.pdf (Type: File)
+[2026-08-21 02:47:22.642] Module file tracked: Forelæsning 14 OO UML 2.pdf (ID: 1780749)
+[2026-08-21 02:47:22.643]   - Item: Forelæsning 14 OO+UML 2.pptx (Type: File)
+[2026-08-21 02:47:22.785] Module file tracked: Forelæsning 14 OO UML 2.pptx (ID: 1780750)
+[2026-08-21 02:47:22.785]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:22.785]   - Item: VRS_registrérKunde_vejl.pdf (Type: File)
+[2026-08-21 02:47:22.935] Module file tracked: VRS_registrérKunde_vejl.pdf (ID: 1780937)
+[2026-08-21 02:47:22.935]   - Item: opgave_bibliotekssystem.pdf (Type: File)
+[2026-08-21 02:47:23.070] Module file tracked: opgave_bibliotekssystem.pdf (ID: 1780752)
+[2026-08-21 02:47:23.070]   - Item: opgave_bibliotekssystem_vejl.pdf (Type: File)
+[2026-08-21 02:47:23.212] Module file tracked: opgave_bibliotekssystem_vejl.pdf (ID: 1780936)
+[2026-08-21 02:47:23.213]   - Item: Biblioteks_DSD_vejl.jpg (Type: File)
+[2026-08-21 02:47:23.357] Module file tracked: Biblioteks_DSD_vejl.jpg (ID: 1781875)
+[2026-08-21 02:47:23.358]   - Item: Biblioteks_SSD_vejl.jpg (Type: File)
+[2026-08-21 02:47:23.641] Module file tracked: Biblioteks_SSD_vejl.jpg (ID: 1781876)
+[2026-08-21 02:47:23.641] Processing Module: Uge 10: Forelæsning 15. Database 1 | Opsætning af database (ID: 323361)
+[2026-08-21 02:47:23.819] Found 12 items in module 'Uge 10: Forelæsning 15. Database 1 | Opsætning af database'
+[2026-08-21 02:47:23.819]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 02:47:23.819]   - Item: The Worlds of Database Systems. pp 1-13 (Type: ExternalTool)
+[2026-08-21 02:47:23.819]   - Item: The relational model of data. pp 15-65 (Type: ExternalTool)
+[2026-08-21 02:47:23.819]   - Item: Kursorisk: (Type: SubHeader)
+[2026-08-21 02:47:23.819]   - Item: Entity Relationship Modeling with UML (Type: ExternalTool)
+[2026-08-21 02:47:23.820]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:23.820]   - Item: Forelæsning 15 DB1.pdf (Type: File)
+[2026-08-21 02:47:24.075] Module file tracked: Forelæsning 15 DB1_x.pdf (ID: 1784973)
+[2026-08-21 02:47:24.075]   - Item: Forelæsning 15 DB1.pptx (Type: File)
+[2026-08-21 02:47:24.204] Module file tracked: Forelæsning 15 DB1_x.pptx (ID: 1784974)
+[2026-08-21 02:47:24.204]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:24.204]   - Item: Lecture 15 Database Design Exercises solutions.pdf (Type: File)
+[2026-08-21 02:47:24.321] Module file tracked: Lecture 15 Database Design Exercises solutions NY.pdf (ID: 1784717)
+[2026-08-21 02:47:24.322]   - Item: Lecture 15 Database Design Exercises.pdf (Type: File)
+[2026-08-21 02:47:24.512] Module file tracked: Lecture 15 Database Design Exercises.pdf (ID: 1784716)
+[2026-08-21 02:47:24.513]   - Item: Guide til opsætning af database-2026.pdf (Type: File)
+[2026-08-21 02:47:24.751] Module file tracked: Guide til opsætning af database-2026.pdf (ID: 1784715)
+[2026-08-21 02:47:24.752] Processing Module: Uge 11: Forelæsning 16. Database 2 | Datamodifikation (ID: 323362)
+[2026-08-21 02:47:24.909] Found 6 items in module 'Uge 11: Forelæsning 16. Database 2 | Datamodifikation'
+[2026-08-21 02:47:24.909]   - Item: T-SQL fundamentals kap. 1, 2, 8 (Type: ExternalTool)
+[2026-08-21 02:47:24.909]   - Item: Forelæsning 16 - DB2.pptx (Type: File)
+[2026-08-21 02:47:25.048] Module file tracked: Forelæsning 16 - DB2.pptx (ID: 1789277)
+[2026-08-21 02:47:25.049]   - Item: Forelæsning 16 - DB2.pdf (Type: File)
+[2026-08-21 02:47:25.190] Module file tracked: Forelæsning 16 - DB2.pdf (ID: 1789278)
+[2026-08-21 02:47:25.190]   - Item: løbeklub SQL.pdf (Type: File)
+[2026-08-21 02:47:25.323] Module file tracked: løbeklub SQL.pdf (ID: 1789978)
+[2026-08-21 02:47:25.323]   - Item: Lecture 16 ER-RM exercises (solutions).pdf (Type: File)
+[2026-08-21 02:47:25.471] Module file tracked: Lecture 16 svar øvelse.pdf (ID: 1789237)
+[2026-08-21 02:47:25.472]   - Item: Lecture 16 ER-RM Exercises.pdf (Type: File)
+[2026-08-21 02:47:25.609] Module file tracked: Lecture 16 ER-RM Exercises.pdf (ID: 1789236)
+[2026-08-21 02:47:25.610] Processing Module: Uge 12: Forelæsning 17. Database 3 | Join og set operatorer (ID: 323363)
+[2026-08-21 02:47:25.814] Found 13 items in module 'Uge 12: Forelæsning 17. Database 3 | Join og set operatorer'
+[2026-08-21 02:47:25.814]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 02:47:25.814]   - Item: T-SQL fundamentals kap. 3, 6 (Type: ExternalTool)
+[2026-08-21 02:47:25.814]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:25.814]   - Item: Forelæsning 17 - DB3.pdf (Type: File)
+[2026-08-21 02:47:25.968] Module file tracked: Forelæsning 17 - DB3.pdf (ID: 1793427)
+[2026-08-21 02:47:25.968]   - Item: Forelæsning 17 - DB3.pptx (Type: File)
+[2026-08-21 02:47:26.111] Module file tracked: Forelæsning 17 - DB3.pptx (ID: 1793428)
+[2026-08-21 02:47:26.112]   - Item: EKSTRA: DB-kapitelnoter-øvelser-løsninger.zip (Type: File)
+[2026-08-21 02:47:26.253] Module file tracked: DB-kapitelnoter-øvelser-løsninger.zip (ID: 1793434)
+[2026-08-21 02:47:26.253]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:26.253]   - Item: Create_ILearn_tables.sql (Type: File)
+[2026-08-21 02:47:26.398] Module file tracked: Create_ILearn_tables.sql (ID: 1789210)
+[2026-08-21 02:47:26.399]   - Item: Insert_ILearn_data.sql (Type: File)
+[2026-08-21 02:47:26.537] Module file tracked: Insert_ILearn_data.sql (ID: 1598646)
+[2026-08-21 02:47:26.537]   - Item: Forelæsning 17 ILearn SQL Exercises.pdf (Type: File)
+[2026-08-21 02:47:26.660] Module file tracked: Forelæsning 17 ILearn SQL Exercises.pdf (ID: 1793429)
+[2026-08-21 02:47:26.660]   - Item: Forelæsning 17 ILearn SQL Solutions.sql (Type: File)
+[2026-08-21 02:47:26.803] Module file tracked: Forelæsning 17 ILearn SQL Solutions.sql (ID: 1793556)
+[2026-08-21 02:47:26.803]   - Item: SQL-Opgave.pdf (Type: File)
+[2026-08-21 02:47:26.948] Module file tracked: SQL-Opgave.pdf (ID: 1794805)
+[2026-08-21 02:47:26.948]   - Item: SQL Opgave Vejl.sql (Type: File)
+[2026-08-21 02:47:27.082] Module file tracked: SQL Opgave Vejl.sql (ID: 1794807)
+[2026-08-21 02:47:27.083] Processing Module: Uge 13: Forelæsning 18. Webserver & APIer (ID: 323364)
+[2026-08-21 02:47:27.239] Found 9 items in module 'Uge 13: Forelæsning 18. Webserver & APIer'
+[2026-08-21 02:47:27.240]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 02:47:27.240]   - Item: Express_Nodejs Introduction, mozilla.org (Type: ExternalTool)
+[2026-08-21 02:47:27.240]   - Item: Hello world example - ExpressJs (Type: ExternalTool)
+[2026-08-21 02:47:27.240]   - Item: Node.js - Express Framework (Type: ExternalTool)
+[2026-08-21 02:47:27.240]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:27.240]   - Item: Forelæsning 18 - Webserver og API.pptx (Type: File)
+[2026-08-21 02:47:27.376] Module file tracked: Forelæsning 18 - Webserver og API.pptx (ID: 1797870)
+[2026-08-21 02:47:27.376]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:27.376]   - Item: Webserver-opgave.pdf (Type: File)
+[2026-08-21 02:47:27.500] Module file tracked: Webserver-opgave.pdf (ID: 1799465)
+[2026-08-21 02:47:27.501]   - Item: Webserver-Opgave-Vejl.zip (Type: File)
+[2026-08-21 02:47:27.635] Module file tracked: Webserver-Opgave-Vejl.zip (ID: 1799926)
+[2026-08-21 02:47:27.635] Processing Module: Uge 14: Forelæsnigsfri (Påske) (ID: 323366)
+[2026-08-21 02:47:27.764] Found 0 items in module 'Uge 14: Forelæsnigsfri (Påske)'
+[2026-08-21 02:47:27.765] Processing Module: Uge 15: Forelæsning 19. Webserver & Databaser (ID: 323365)
+[2026-08-21 02:47:27.903] Found 5 items in module 'Uge 15: Forelæsning 19. Webserver & Databaser'
+[2026-08-21 02:47:27.903]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 02:47:27.904]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:27.904]   - Item: Forelæsning 19 - Webserver og Databaser.pptx (Type: File)
+[2026-08-21 02:47:28.046] Module file tracked: Forelæsning 19 - Webserver og Databaser.pptx (ID: 1805046)
+[2026-08-21 02:47:28.047]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:28.047]   - Item: Forelæsning 19.zip (Type: File)
+[2026-08-21 02:47:28.176] Module file tracked: Forelæsning 19.zip (ID: 1805047)
+[2026-08-21 02:47:28.176] Processing Module: Uge 16: Forelæsning 20. Små systemer 1 | Testing - Teori og praksis (ID: 323368)
+[2026-08-21 02:47:28.322] Found 6 items in module 'Uge 16: Forelæsning 20. Små systemer 1 | Testing - Teori og praksis'
+[2026-08-21 02:47:28.323]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 02:47:28.323]   - Item: Certified Tester Foundation Level (CTFL) v4.0 (Type: ExternalTool)
+[2026-08-21 02:47:28.324]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:28.324]   - Item: Uge 16 - Testing - Teori og praksis.pdf (Type: File)
+[2026-08-21 02:47:28.470] Module file tracked: Uge 16 - Testing - Teori og praksis.pdf (ID: 1807958)
+[2026-08-21 02:47:28.471]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:28.471]   - Item: Uge 16 - Jest.zip (Type: File)
+[2026-08-21 02:47:28.612] Module file tracked: Uge 16 - Jest.zip (ID: 1808151)
+[2026-08-21 02:47:28.613] Processing Module: Uge 18: Forelæsning 21. Små systemer 2 | Security 101, (authentification, authorization, audit) (ID: 323369)
+[2026-08-21 02:47:28.750] Found 4 items in module 'Uge 18: Forelæsning 21. Små systemer 2 | Security 101, (authentification, authorization, audit)'
+[2026-08-21 02:47:28.750]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 02:47:28.750]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:28.750]   - Item: Forelæsning 21 - Cloud & Security 101.pptx (Type: File)
+[2026-08-21 02:47:28.891] Module file tracked: Forelæsning 22 - Cloud & Security 101.pptx (ID: 1814657)
+[2026-08-21 02:47:28.891]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:28.892] Processing Module: uge 19: Forelæsning 22. Små systemer 3 | Arkitektur, Backend, MVC + fullstack (ID: 323367)
+[2026-08-21 02:47:29.076] Found 4 items in module 'uge 19: Forelæsning 22. Små systemer 3 | Arkitektur, Backend, MVC + fullstack'
+[2026-08-21 02:47:29.076]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 02:47:29.076]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:29.076]   - Item: Uge 19 - System Arkitektur - 3 tier, Backend, MVC + fullstack.pdf (Type: File)
+[2026-08-21 02:47:29.213] Module file tracked: Uge 19 - System Arkitektur - 3 tier, Backend, MVC   fullstack.pdf (ID: 1817698)
+[2026-08-21 02:47:29.213]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:29.213] Processing Module: Uge 20: Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse. (ID: 323371)
+[2026-08-21 02:47:29.376] Found 6 items in module 'Uge 20: Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse.'
+[2026-08-21 02:47:29.376]   - Item: Læs:  (Type: SubHeader)
+[2026-08-21 02:47:29.376]   - Item: Kursusbeskrivelse og eksamensregler (Type: ExternalUrl)
+[2026-08-21 02:47:29.376]   - Item: Slides (Type: SubHeader)
+[2026-08-21 02:47:29.376]   - Item: Forelæsning 23 - eksamensforberedelse.pptx (Type: File)
+[2026-08-21 02:47:29.512] Module file tracked: Forelæsning 23 - eksamensforberedelse.pptx (ID: 1823174)
+[2026-08-21 02:47:29.512]   - Item: Forelæsning 23 - eksamensforberedelse.pdf (Type: File)
+[2026-08-21 02:47:29.639] Module file tracked: Forelæsning 23 - eksamensforberedelse.pdf (ID: 1823208)
+[2026-08-21 02:47:29.639]   - Item: Øvelser (Type: SubHeader)
+[2026-08-21 02:47:29.645] Requesting URL: https://cbscanvas.instructure.com/files/1598669/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:29.647] Requesting URL: https://cbscanvas.instructure.com/files/1687491/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:29.648] Requesting URL: https://cbscanvas.instructure.com/files/1692940/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:29.649] Requesting URL: https://cbscanvas.instructure.com/files/1700523/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:29.650] Requesting URL: https://cbscanvas.instructure.com/files/1796825/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:30.266] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:30.270] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Obligatoriske afleveringer efterår 2025/g2_fælles_feedback.pdf (225849 bytes)
+[2026-08-21 02:47:30.272] Requesting URL: https://cbscanvas.instructure.com/files/1736378/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:30.278] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:30.284] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Obligatoriske afleveringer forår 2026/g5_fælles_feedback.pdf (144594 bytes)
+[2026-08-21 02:47:30.287] Requesting URL: https://cbscanvas.instructure.com/files/1736380/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:30.288] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:30.294] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Obligatoriske afleveringer efterår 2025/Fælles feedback G3 v2.pdf (354538 bytes)
+[2026-08-21 02:47:30.296] Requesting URL: https://cbscanvas.instructure.com/files/1770754/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:30.341] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:30.345] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:30.349] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Obligatoriske afleveringer efterår 2025/G3 opgave.bierOgBlomster analysevejledning.pdf (265292 bytes)
+[2026-08-21 02:47:30.349] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Andre ressourcer/Trin-for-trin Guide til VS Code og konsollen.pdf (150525 bytes)
+[2026-08-21 02:47:30.351] Requesting URL: https://cbscanvas.instructure.com/files/1771104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:30.353] Requesting URL: https://cbscanvas.instructure.com/files/1815182/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:30.846] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:30.850] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Skriftlig Eksamen/feedback ordinær.pdf (111925 bytes)
+[2026-08-21 02:47:30.852] Requesting URL: https://cbscanvas.instructure.com/files/1626276/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:30.854] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:30.862] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Skriftlig Eksamen/eksamen 2025E ordinær final.pdf (655581 bytes)
+[2026-08-21 02:47:30.866] Requesting URL: https://cbscanvas.instructure.com/files/1626277/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:30.913] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:30.926] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Skriftlig Eksamen/eksamen 2025E re-eksamen.pdf (700836 bytes)
+[2026-08-21 02:47:30.930] Requesting URL: https://cbscanvas.instructure.com/files/1626486/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:30.976] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:30.995] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Kursus-evaluering/PowerPoint to use in class_141223 (2).pptx (1718878 bytes)
+[2026-08-21 02:47:30.997] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:31.001] Requesting URL: https://cbscanvas.instructure.com/files/1632000/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:31.004] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Rapporteksamen/Eksamen 2026 rev_6.pdf (263452 bytes)
+[2026-08-21 02:47:31.007] Requesting URL: https://cbscanvas.instructure.com/files/1632001/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:31.441] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:31.459] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 36 Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, d/forelæsning 1 25.pdf (1593444 bytes)
+[2026-08-21 02:47:31.461] Requesting URL: https://cbscanvas.instructure.com/files/1632558/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:31.465] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:31.506] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:31.510] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 36 Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, d/øvelsessæt 1- Grundlæggende javascript 1.pdf (155545 bytes)
+[2026-08-21 02:47:31.513] Requesting URL: https://cbscanvas.instructure.com/files/1637607/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:31.605] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:31.626] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 37 Forelæsning 2. Programstruktur udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser/forelæsning 2 25.pdf (951046 bytes)
+[2026-08-21 02:47:31.630] Requesting URL: https://cbscanvas.instructure.com/files/1637608/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:31.673] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:31.719] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 36 Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, d/forelæsning 1 25.pptx (25963296 bytes)
+[2026-08-21 02:47:31.725] Requesting URL: https://cbscanvas.instructure.com/files/1637584/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:31.934] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 37 Forelæsning 2. Programstruktur udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser/forelæsning 2 25.pptx (27494979 bytes)
+[2026-08-21 02:47:31.936] Requesting URL: https://cbscanvas.instructure.com/files/1643465/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:32.091] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:32.095] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 37 Forelæsning 2. Programstruktur udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser/øvelsessæt 2- Program - Struktur - Algoritmer.pdf (184026 bytes)
+[2026-08-21 02:47:32.097] Requesting URL: https://cbscanvas.instructure.com/files/1643462/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:32.172] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:32.192] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 38 Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak/forelæsning 3 25.pdf (797272 bytes)
+[2026-08-21 02:47:32.196] Requesting URL: https://cbscanvas.instructure.com/files/1643483/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:32.241] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:32.342] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:32.352] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 38 Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak/øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (199331 bytes)
+[2026-08-21 02:47:32.357] Requesting URL: https://cbscanvas.instructure.com/files/1658577/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:32.370] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 38 Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak/forelæsning 3 25.pptx (14493933 bytes)
+[2026-08-21 02:47:32.372] Requesting URL: https://cbscanvas.instructure.com/files/1658578/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:32.556] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:32.689] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:32.744] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 39 Forelæsning 4. Datastrukturer - Objekter og arrays/forelæsning 4 25.pdf (1093469 bytes)
+[2026-08-21 02:47:32.751] Requesting URL: https://cbscanvas.instructure.com/files/1658625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:32.792] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:32.803] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 39 Forelæsning 4. Datastrukturer - Objekter og arrays/øvelsessæt 4.pdf (258644 bytes)
+[2026-08-21 02:47:32.808] Requesting URL: https://cbscanvas.instructure.com/files/1658626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:32.895] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 39 Forelæsning 4. Datastrukturer - Objekter og arrays/forelæsning 4 25.pptx (24744385 bytes)
+[2026-08-21 02:47:32.898] Requesting URL: https://cbscanvas.instructure.com/files/1666624/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:32.929] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:32.949] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion/forelæsning 5 25.pdf (772981 bytes)
+[2026-08-21 02:47:32.951] Requesting URL: https://cbscanvas.instructure.com/files/1666625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:32.990] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:33.155] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion/forelæsning 5 25.pptx (17174017 bytes)
+[2026-08-21 02:47:33.157] Requesting URL: https://cbscanvas.instructure.com/files/1666626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:33.361] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:33.367] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion/øvelsessæt 5.pdf (245920 bytes)
+[2026-08-21 02:47:33.369] Requesting URL: https://cbscanvas.instructure.com/files/1666630/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:33.418] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:33.425] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion/øvelsessæt 5 løsninger.pdf (282049 bytes)
+[2026-08-21 02:47:33.428] Requesting URL: https://cbscanvas.instructure.com/files/1598570/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:33.481] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:33.496] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/forelæsning 6 25.pdf (1154888 bytes)
+[2026-08-21 02:47:33.499] Requesting URL: https://cbscanvas.instructure.com/files/1670338/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:33.576] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:33.826] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:33.843] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/øvelsessæt 6.pdf (203755 bytes)
+[2026-08-21 02:47:33.851] Requesting URL: https://cbscanvas.instructure.com/files/1677087/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:33.908] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:33.918] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/øvelsessæt 6 løsninger.pdf (239167 bytes)
+[2026-08-21 02:47:33.926] Requesting URL: https://cbscanvas.instructure.com/files/1677089/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:33.983] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/forelæsning 6 25.pptx (39644299 bytes)
+[2026-08-21 02:47:33.987] Requesting URL: https://cbscanvas.instructure.com/files/1677085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:34.024] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:34.030] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/2022 ordinær.pdf (203316 bytes)
+[2026-08-21 02:47:34.032] Requesting URL: https://cbscanvas.instructure.com/files/1677090/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:34.082] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:34.088] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling/eksamen 2023E ordinær.pdf (255500 bytes)
+[2026-08-21 02:47:34.092] Requesting URL: https://cbscanvas.instructure.com/files/1679207/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:34.402] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:34.416] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 43 Forelæsning 7. Error-handling, Moduler/forelæsning 7 25.pdf (982759 bytes)
+[2026-08-21 02:47:34.420] Requesting URL: https://cbscanvas.instructure.com/files/1682843/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:34.470] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:34.529] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:34.550] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 43 Forelæsning 7. Error-handling, Moduler/øvelsessæt 7.pdf (274244 bytes)
+[2026-08-21 02:47:34.559] Requesting URL: https://cbscanvas.instructure.com/files/1682844/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:34.619] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:34.635] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 43 Forelæsning 7. Error-handling, Moduler/øvelsessæt 7 løsninger.pdf (292720 bytes)
+[2026-08-21 02:47:34.642] Requesting URL: https://cbscanvas.instructure.com/files/1684203/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:34.662] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 43 Forelæsning 7. Error-handling, Moduler/forelæsning 7 25.pptx (13428202 bytes)
+[2026-08-21 02:47:34.664] Requesting URL: https://cbscanvas.instructure.com/files/1684229/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:34.739] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:34.780] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 43 Forelæsning 7. Error-handling, Moduler/Øvelse_u43.pdf (3962706 bytes)
+[2026-08-21 02:47:34.784] Requesting URL: https://cbscanvas.instructure.com/files/1688312/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:34.996] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:35.056] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/Forelæsning 8 - Intro til Web Teknologier.pdf (5854748 bytes)
+[2026-08-21 02:47:35.060] Requesting URL: https://cbscanvas.instructure.com/files/1690005/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:35.147] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:35.197] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:35.209] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/små_opgaver.pdf (164552 bytes)
+[2026-08-21 02:47:35.211] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:35.218] Requesting URL: https://cbscanvas.instructure.com/files/1692896/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:35.234] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/Minefelt.pdf (366149 bytes)
+[2026-08-21 02:47:35.242] Requesting URL: https://cbscanvas.instructure.com/files/1694147/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:35.381] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:35.416] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/Forelæsning 8 - Intro til Web Teknologier.pptx (23173123 bytes)
+[2026-08-21 02:47:35.424] Requesting URL: https://cbscanvas.instructure.com/files/1694158/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:35.498] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 45 Forelæsning 9. HTML 2 og CSS/Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (9440778 bytes)
+[2026-08-21 02:47:35.505] Requesting URL: https://cbscanvas.instructure.com/files/1696759/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:35.714] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:35.723] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 45 Forelæsning 9. HTML 2 og CSS/bondemand.pdf (380086 bytes)
+[2026-08-21 02:47:35.727] Requesting URL: https://cbscanvas.instructure.com/files/1698072/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:35.827] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:35.936] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:35.946] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 46 Forelæsning 10. Document Object Model (DOM)/Eksamen 2023E Ordinær Klasse opgave.pdf (54694 bytes)
+[2026-08-21 02:47:35.947] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 46 Forelæsning 10. Document Object Model (DOM)/2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (9243144 bytes)
+[2026-08-21 02:47:35.950] Requesting URL: https://cbscanvas.instructure.com/files/1598722/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:35.953] Requesting URL: https://cbscanvas.instructure.com/files/1700490/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:36.008] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:36.013] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 46 Forelæsning 10. Document Object Model (DOM)/Eksamen 2024E Ordinær Klasse opgave.pdf (167555 bytes)
+[2026-08-21 02:47:36.017] Requesting URL: https://cbscanvas.instructure.com/files/1701809/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:36.162] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:36.182] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 47 Forelæsning 11. Asynkron programmering og event handling/Asynkronitet og Events.pdf (1248126 bytes)
+[2026-08-21 02:47:36.186] Requesting URL: https://cbscanvas.instructure.com/files/1701948/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:36.309] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:36.314] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 47 Forelæsning 11. Asynkron programmering og event handling/Opgavesæt uge 47.pdf (148870 bytes)
+[2026-08-21 02:47:36.319] Requesting URL: https://cbscanvas.instructure.com/files/1703058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:36.488] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:36.496] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 47 Forelæsning 11. Asynkron programmering og event handling/html terninger.pdf (226046 bytes)
+[2026-08-21 02:47:36.499] Requesting URL: https://cbscanvas.instructure.com/files/1703059/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:36.607] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:36.626] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/NodeJs og Debugging.pdf (1226376 bytes)
+[2026-08-21 02:47:36.630] Requesting URL: https://cbscanvas.instructure.com/files/1598591/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:36.656] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:36.661] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Studietimers overblik - Opgave.pdf (166800 bytes)
+[2026-08-21 02:47:36.663] Requesting URL: https://cbscanvas.instructure.com/files/1598593/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:36.810] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:36.820] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/JavaScript Objekter – Øvelser.pdf (229478 bytes)
+[2026-08-21 02:47:36.824] Requesting URL: https://cbscanvas.instructure.com/files/1769713/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:37.097] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:37.102] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 49 Øvelser/Gavelisten - Opgave.pdf (125183 bytes)
+[2026-08-21 02:47:37.106] Requesting URL: https://cbscanvas.instructure.com/files/1769714/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:37.206] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:37.210] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Tidligere eksamenssæt (de fleste med vejledende løsninger)/Fiktiv Eksamensopgave.pdf (43733 bytes)
+[2026-08-21 02:47:37.215] Requesting URL: https://cbscanvas.instructure.com/files/1768580/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:37.276] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:37.285] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Tidligere eksamenssæt (de fleste med vejledende løsninger)/Fiktiv Eksamensopgave3.pdf (141950 bytes)
+[2026-08-21 02:47:37.289] Requesting URL: https://cbscanvas.instructure.com/files/1768581/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:37.382] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:37.405] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/Forelæsning13.pdf (1560239 bytes)
+[2026-08-21 02:47:37.405] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:37.416] Requesting URL: https://cbscanvas.instructure.com/files/1598710/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:37.420] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 49 Øvelser/Juleværksted - Opgave.pdf (197615 bytes)
+[2026-08-21 02:47:37.425] Requesting URL: https://cbscanvas.instructure.com/files/1780749/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:37.669] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:37.792] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:37.805] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/UMLanalyseopgaver.pdf (119412 bytes)
+[2026-08-21 02:47:37.817] Requesting URL: https://cbscanvas.instructure.com/files/1780750/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:37.887] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:37.900] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/UMLcases.pdf (142648 bytes)
+[2026-08-21 02:47:37.912] Requesting URL: https://cbscanvas.instructure.com/files/1780937/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:38.001] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:38.001] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:38.024] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/exercises system modelling - solutions.pdf (182349 bytes)
+[2026-08-21 02:47:38.037] Requesting URL: https://cbscanvas.instructure.com/files/1780752/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:38.044] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 9 Forelæsning 14. Design, Arkitektur/Forelæsning 14 OO UML 2.pdf (1024966 bytes)
+[2026-08-21 02:47:38.053] Requesting URL: https://cbscanvas.instructure.com/files/1780936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:38.415] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:38.532] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:38.554] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 9 Forelæsning 14. Design, Arkitektur/VRS_registrérKunde_vejl.pdf (197720 bytes)
+[2026-08-21 02:47:38.559] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/Forelæsning13.pptx (51957778 bytes)
+[2026-08-21 02:47:38.567] Requesting URL: https://cbscanvas.instructure.com/files/1784973/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:38.576] Requesting URL: https://cbscanvas.instructure.com/files/1784974/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:38.649] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:38.661] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 9 Forelæsning 14. Design, Arkitektur/opgave_bibliotekssystem_vejl.pdf (245890 bytes)
+[2026-08-21 02:47:38.672] Requesting URL: https://cbscanvas.instructure.com/files/1784717/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:38.701] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 9 Forelæsning 14. Design, Arkitektur/Forelæsning 14 OO UML 2.pptx (13151543 bytes)
+[2026-08-21 02:47:38.707] Requesting URL: https://cbscanvas.instructure.com/files/1784716/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:38.829] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:38.838] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 9 Forelæsning 14. Design, Arkitektur/opgave_bibliotekssystem.pdf (174680 bytes)
+[2026-08-21 02:47:38.844] Requesting URL: https://cbscanvas.instructure.com/files/1784715/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:39.144] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:39.170] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 10 Forelæsning 15. Database 1  Opsætning af database/Forelæsning 15 DB1_x.pdf (1692942 bytes)
+[2026-08-21 02:47:39.176] Requesting URL: https://cbscanvas.instructure.com/files/1789277/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:39.217] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:39.284] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:39.296] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 10 Forelæsning 15. Database 1  Opsætning af database/Lecture 15 Database Design Exercises.pdf (78871 bytes)
+[2026-08-21 02:47:39.305] Requesting URL: https://cbscanvas.instructure.com/files/1789278/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:39.410] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:39.465] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:39.488] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 10 Forelæsning 15. Database 1  Opsætning af database/Lecture 15 Database Design Exercises solutions NY.pdf (138522 bytes)
+[2026-08-21 02:47:39.504] Requesting URL: https://cbscanvas.instructure.com/files/1789978/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:39.547] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 10 Forelæsning 15. Database 1  Opsætning af database/Guide til opsætning af database-2026.pdf (4907315 bytes)
+[2026-08-21 02:47:39.562] Requesting URL: https://cbscanvas.instructure.com/files/1789237/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:39.781] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 10 Forelæsning 15. Database 1  Opsætning af database/Forelæsning 15 DB1_x.pptx (34805489 bytes)
+[2026-08-21 02:47:39.786] Requesting URL: https://cbscanvas.instructure.com/files/1789236/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:39.802] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:39.944] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:39.989] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 11 Forelæsning 16. Database 2  Datamodifikation/Forelæsning 16 - DB2.pdf (1551149 bytes)
+[2026-08-21 02:47:39.999] Requesting URL: https://cbscanvas.instructure.com/files/1793427/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:40.030] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 11 Forelæsning 16. Database 2  Datamodifikation/Forelæsning 16 - DB2.pptx (14136388 bytes)
+[2026-08-21 02:47:40.033] Requesting URL: https://cbscanvas.instructure.com/files/1793428/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:40.096] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:40.101] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 11 Forelæsning 16. Database 2  Datamodifikation/løbeklub SQL.pdf (97930 bytes)
+[2026-08-21 02:47:40.105] Requesting URL: https://cbscanvas.instructure.com/files/1793429/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:40.149] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:40.167] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 11 Forelæsning 16. Database 2  Datamodifikation/Lecture 16 svar øvelse.pdf (670880 bytes)
+[2026-08-21 02:47:40.170] Requesting URL: https://cbscanvas.instructure.com/files/1794805/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:40.406] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:40.415] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 11 Forelæsning 16. Database 2  Datamodifikation/Lecture 16 ER-RM Exercises.pdf (186181 bytes)
+[2026-08-21 02:47:40.419] Requesting URL: https://cbscanvas.instructure.com/files/1797870/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:40.628] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:40.678] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:40.686] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Forelæsning 17 ILearn SQL Exercises.pdf (228477 bytes)
+[2026-08-21 02:47:40.691] Requesting URL: https://cbscanvas.instructure.com/files/1799465/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:40.702] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:40.719] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Forelæsning 17 - DB3.pdf (1038221 bytes)
+[2026-08-21 02:47:40.728] Requesting URL: https://cbscanvas.instructure.com/files/1805046/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:40.737] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:40.814] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 12 Forelæsning 17. Database 3  Join og set operatorer/SQL-Opgave.pdf (4007174 bytes)
+[2026-08-21 02:47:40.820] Requesting URL: https://cbscanvas.instructure.com/files/1807958/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:40.846] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Forelæsning 17 - DB3.pptx (883058 bytes)
+[2026-08-21 02:47:40.853] Requesting URL: https://cbscanvas.instructure.com/files/1814657/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:41.012] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:41.177] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 13 Forelæsning 18. Webserver & APIer/Forelæsning 18 - Webserver og API.pptx (9918524 bytes)
+[2026-08-21 02:47:41.181] Requesting URL: https://cbscanvas.instructure.com/files/1817698/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:41.380] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:41.391] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:41.443] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:41.478] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:41.535] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 13 Forelæsning 18. Webserver & APIer/Webserver-opgave.pdf (3970615 bytes)
+[2026-08-21 02:47:41.557] Requesting URL: https://cbscanvas.instructure.com/files/1823174/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:41.682] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 15 Forelæsning 19. Webserver & Databaser/Forelæsning 19 - Webserver og Databaser.pptx (6406516 bytes)
+[2026-08-21 02:47:41.687] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis/Uge 16 - Testing - Teori og praksis.pdf (3126264 bytes)
+[2026-08-21 02:47:41.695] Requesting URL: https://cbscanvas.instructure.com/files/1823208/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:47:41.803] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:41.817] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 18 Forelæsning 21. Små systemer 2  Security 101, (authentification, authorization, audit)/Forelæsning 22 - Cloud & Security 101.pptx (11668334 bytes)
+[2026-08-21 02:47:41.898] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/uge 19 Forelæsning 22. Små systemer 3  Arkitektur, Backend, MVC   fullstack/Uge 19 - System Arkitektur - 3 tier, Backend, MVC   fullstack.pdf (4891900 bytes)
+[2026-08-21 02:47:42.160] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:47:42.276] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:47:42.345] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 20 Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse/Forelæsning 23 - eksamensforberedelse.pdf (2001367 bytes)
+[2026-08-21 02:47:42.372] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 20 Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse/Forelæsning 23 - eksamensforberedelse.pptx (11448039 bytes)
+[2026-08-21 02:47:42.376] Starting Catch-All Phase for non-module files...
+[2026-08-21 02:47:42.479] Catch-All Phase Error: {"status":"unauthorized","errors":[{"message":"user not authorised to perform that action"}]}
+[2026-08-21 02:47:42.479] [WARNING] [core.canvas_logic] Files tab restricted for 'Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)' - skipping catch-all phase.
+[2026-08-21 02:47:42.481] --- Download Complete: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | 88 items | 401.4 MB downloaded ---
+
+==================================================
+--- Post-Processing: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) ---
+==================================================
+[2026-08-21 02:47:42.553] === Course Finished: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | Downloaded: 88 items | Errors: 0 ===
+[2026-08-21 02:47:42.553] Post-processing ran: [zip, code, video, excel]
+[2026-08-21 02:47:42.616] === Download Start: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) | Course 2/2 ===
+[2026-08-21 02:47:42.616] Mode: modules | Filter: study
+[2026-08-21 02:47:42.617] Post-processing: [zip, code, video, excel]
+[2026-08-21 02:47:42.617] Secondary content: [none]
+[2026-08-21 02:47:42.621] 
+==================================================
+--- Download: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) (ID: 43665) Mode: modules ---
+==================================================
+[2026-08-21 02:47:42.621] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads
+[2026-08-21 02:47:42.621] Filter: study | Concurrency: 5 | Max file size: disabled | Estimated payload: 421 MB
+[2026-08-21 02:47:42.621] Canvas Content: [none] | isolate=no
+[2026-08-21 02:47:42.621] Post-processing: [zip, code, video, excel]
+[2026-08-21 02:47:43.002] Processing Module: Course description including examination rules (ID: 297522)
+[2026-08-21 02:47:43.126] Found 2 items in module 'Course description including examination rules'
+[2026-08-21 02:47:43.126]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-21 02:47:43.126]   - Item: Undervisningsplan VØS (1) 1. semester E25.pdf (Type: File)
+[2026-08-21 02:47:43.289] Module file tracked: Undervisningsplan VØS (1) 1. semester E25.pdf (ID: 1568831)
+[2026-08-21 02:47:43.289] Processing Module: Test mm. (ID: 306033)
+[2026-08-21 02:47:43.418] Found 3 items in module 'Test mm.'
+[2026-08-21 02:47:43.419]   - Item: Introduktion til Managerial Economics (Type: Quiz)
+[2026-08-21 02:47:43.419]   - Item: https://cbstest.dk/app/ (Type: ExternalUrl)
+[2026-08-21 02:47:43.419]   - Item: VØS1matquiz-02.txt (Type: File)
+[2026-08-21 02:47:43.559] Module file tracked: VØS1matquiz-02.txt (ID: 1633225)
+[2026-08-21 02:47:43.559] Processing Module: Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel (ID: 306034)
+[2026-08-21 02:47:43.709] Found 4 items in module 'Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel'
+[2026-08-21 02:47:43.710]   - Item: opgavesæt.nr0 (pre-matematik).docx (Type: File)
+[2026-08-21 02:47:43.840] Module file tracked: opgavesæt.nr0 (pre-matematik).docx (ID: 1568616)
+[2026-08-21 02:47:43.840]   - Item: opgavesæt.nr0 (pre-matematik)- vejl..docx (Type: File)
+[2026-08-21 02:47:43.983] Module file tracked: opgavesæt.nr0 (pre-matematik)- vejl..docx (ID: 1568731)
+[2026-08-21 02:47:43.983]   - Item: Paraplyer - matematiske sammenhænge.docx (Type: File)
+[2026-08-21 02:47:44.134] Module file tracked: Paraplyer - matematiske sammenhænge.docx (ID: 1568712)
+[2026-08-21 02:47:44.135]   - Item: Hjælp til at udlede prisafsætningsfunktionen.pdf (Type: File)
+[2026-08-21 02:47:44.287] Module file tracked: Hjælp til at udlede prisafsætningsfunktionen.pdf (ID: 1568707)
+[2026-08-21 02:47:44.288] Processing Module: Module 1 - Uge 36 1xFO (LET belastning) (ID: 306035)
+[2026-08-21 02:47:44.416] Found 4 items in module 'Module 1 - Uge 36 1xFO (LET belastning)'
+[2026-08-21 02:47:44.417]   - Item: F1-A -intro-1.ppt (Type: File)
+[2026-08-21 02:47:44.550] Module file tracked: F1-A -intro-1.ppt (ID: 1568580)
+[2026-08-21 02:47:44.550]   - Item: F1-B . maksimeringsprincippet-1.pptx (Type: File)
+[2026-08-21 02:47:44.682] Module file tracked: F1-B . maksimeringsprincippet-1.pptx (ID: 1568667)
+[2026-08-21 02:47:44.683]   - Item: Miniøvelse - flycosts - opgaven.xlsx (Type: File)
+[2026-08-21 02:47:44.816] Module file tracked: Miniøvelse - flycosts - opgaven.xlsx (ID: 1568796)
+[2026-08-21 02:47:44.816]   - Item: Miniøvelse - flycosts - VL.xlsx (Type: File)
+[2026-08-21 02:47:44.960] Module file tracked: Miniøvelse - flycosts - VL.xlsx (ID: 1568721)
+[2026-08-21 02:47:44.961] Processing Module: Module 2 - Uge 37 2xFO, 1xØV (Middel belastning) (ID: 306036)
+[2026-08-21 02:47:45.127] Found 11 items in module 'Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)'
+[2026-08-21 02:47:45.128]   - Item: F1. Udbud-efterspørgsel.pptx (Type: File)
+[2026-08-21 02:47:45.257] Module file tracked: F1. Udbud-efterspørgsel.pptx (ID: 1568741)
+[2026-08-21 02:47:45.257]   - Item: F.2 Elasticitet.pptx (Type: File)
+[2026-08-21 02:47:45.385] Module file tracked: F.2 Elasticitet.pptx (ID: 1568780)
+[2026-08-21 02:47:45.385]   - Item: Elasticitet oversigt.jpg (Type: File)
+[2026-08-21 02:47:45.533] Module file tracked: Elasticitet oversigt.jpg (ID: 1568766)
+[2026-08-21 02:47:45.533]   - Item: Elasticitet tegning.jpg (Type: File)
+[2026-08-21 02:47:45.684] Module file tracked: Elasticitet tegning.jpg (ID: 1568736)
+[2026-08-21 02:47:45.684]   - Item: optimum.xlsx (Type: File)
+[2026-08-21 02:47:45.821] Module file tracked: optimium (1).xlsx (ID: 1568668)
+[2026-08-21 02:47:45.822]   - Item: Øvelse 1 (efterspørgselsteori) (Type: File)
+[2026-08-21 02:47:45.957] Module file tracked: opgavesæt nr.1(efterspørgselsteori).docx (ID: 1568621)
+[2026-08-21 02:47:45.958]   - Item: Øvelse 1 - VL (Type: File)
+[2026-08-21 02:47:46.105] Module file tracked: vejl opgavesæt nr. 1 (2).xlsx (ID: 1634428)
+[2026-08-21 02:47:46.105]   - Item: OmkostningerAfsætning - Ekstra - LØSNING.xlsx (Type: File)
+[2026-08-21 02:47:46.253] Module file tracked: OmkostningerAfsætning - Ekstra - LØSNING.xlsx (ID: 1568700)
+[2026-08-21 02:47:46.254]   - Item: OmkostningerAfsætning - Ekstra - OPGAVEN.xlsx (Type: File)
+[2026-08-21 02:47:46.413] Module file tracked: OmkostningerAfsætning - Ekstra - OPGAVEN.xlsx (ID: 1568792)
+[2026-08-21 02:47:46.413]   - Item: SimpelOptimeringogElasticitet-eksempel.xlsx (Type: File)
+[2026-08-21 02:47:46.634] Module file tracked: SimpelOptimeringogElasticitet-eksempel.xlsx (ID: 1632625)
+[2026-08-21 02:47:46.634]   - Item: SimpelOptimeringogElasticitet-eksempelVL.xlsx (Type: File)
+[2026-08-21 02:47:46.789] Module file tracked: SimpelOptimeringogElasticitet-eksempelVL.xlsx (ID: 1632626)
+[2026-08-21 02:47:46.789] Processing Module: Module 3 - Uge 38 2xFO, 1xØV (Svær belastning) (ID: 306037)
+[2026-08-21 02:47:46.942] Found 9 items in module 'Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)'
+[2026-08-21 02:47:46.942]   - Item: F3.Grundlæggende produktionstek -Nr1.ppt (Type: File)
+[2026-08-21 02:47:47.086] Module file tracked: F3.Grundlæggende produktionstek -Nr1.ppt (ID: 1568757)
+[2026-08-21 02:47:47.087]   - Item: F4. Isokvanter og MRTS-Nr2.pptx (Type: File)
+[2026-08-21 02:47:47.220] Module file tracked: F4. Isokvanter og MRTS-Nr2.pptx (ID: 1639544)
+[2026-08-21 02:47:47.220]   - Item: F6. isokostlinjen-nr.3.pptx (Type: File)
+[2026-08-21 02:47:47.361] Module file tracked: F6. isokostlinjen-nr.3.pptx (ID: 1568651)
+[2026-08-21 02:47:47.361]   - Item: Omkostningsminimering Nr.4.pptx (Type: File)
+[2026-08-21 02:47:47.492] Module file tracked: Omkostningsminimering Nr.4.pptx (ID: 1568641)
+[2026-08-21 02:47:47.492]   - Item: Øvelse 2 (Type: File)
+[2026-08-21 02:47:47.633] Module file tracked: Opgavesæt nr. 2.docx (ID: 1568633)
+[2026-08-21 02:47:47.633]   - Item: Øvelse 2 - VL.xlsx (Type: File)
+[2026-08-21 02:47:47.825] Module file tracked: Øvelse 2 - VL.xlsx (ID: 1568809)
+[2026-08-21 02:47:47.825]   - Item: DTR,DMR,DAR - Opgave.xlsx (Type: File)
+[2026-08-21 02:47:47.958] Module file tracked: DTR,DMR,DAR - Opgave.xlsx (ID: 1568710)
+[2026-08-21 02:47:47.958]   - Item: DTR,DMR,DAR - VL.xlsx (Type: File)
+[2026-08-21 02:47:48.091] Module file tracked: DTR,DMR,DAR - VL.xlsx (ID: 1568723)
+[2026-08-21 02:47:48.091]   - Item: Productionanalysis - Eksempel.xlsx (Type: File)
+[2026-08-21 02:47:48.241] Module file tracked: Productionanalysis - Eksempel.xlsx (ID: 1568795)
+[2026-08-21 02:47:48.242] Processing Module: Module 4 - Uge 39 2xFO, 1xØV (Svær belastning) (ID: 306038)
+[2026-08-21 02:47:48.388] Found 10 items in module 'Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)'
+[2026-08-21 02:47:48.389]   - Item: Skalaafkast 5.pptx (Type: File)
+[2026-08-21 02:47:48.525] Module file tracked: Skalaafkast nr.5.pptx (ID: 1568657)
+[2026-08-21 02:47:48.525]   - Item: Eksempel CobbDouglas - Optimering, Ekspansion, Omk.xlsx (Type: File)
+[2026-08-21 02:47:48.691] Module file tracked: Eksempel CobbDouglas - Optimering, Ekspansion, Omk.xlsx (ID: 1568804)
+[2026-08-21 02:47:48.691]   - Item: omkostning1.pptx (Type: File)
+[2026-08-21 02:47:48.813] Module file tracked: omkostning1.pptx (ID: 1568717)
+[2026-08-21 02:47:48.814]   - Item: omkostning2.pptx (Type: File)
+[2026-08-21 02:47:48.943] Module file tracked: omkostning2.pptx (ID: 1568777)
+[2026-08-21 02:47:48.943]   - Item: omkostning3.pptx (Type: File)
+[2026-08-21 02:47:49.084] Module file tracked: omkostning3.pptx (ID: 1568808)
+[2026-08-21 02:47:49.085]   - Item: Breakevenmodel.xlsm (Type: File)
+[2026-08-21 02:47:49.313] Module file tracked: Breakevenmodel.xlsm (ID: 1568782)
+[2026-08-21 02:47:49.313]   - Item: Øvelse 3 (Type: File)
+[2026-08-21 02:47:49.494] Module file tracked: Opgavesæt 3.docx (ID: 1568630)
+[2026-08-21 02:47:49.494]   - Item: Øvelse 3 - VL.xls (Type: File)
+[2026-08-21 02:47:49.635] Module file tracked: Øvelse 3 - VL.xls (ID: 1652883)
+[2026-08-21 02:47:49.635]   - Item: Øvelse 3 - VL spg 7.xlsx (Type: File)
+[2026-08-21 02:47:49.846] Module file tracked: Øvelse 3 - VL spg 7.xlsx (ID: 1652861)
+[2026-08-21 02:47:49.846]   - Item: Øvelse 3 - VL (WORD versionen, brug hellere excel versionen).docx (Type: File)
+[2026-08-21 02:47:49.971] Module file tracked: Opgavesæt 3 - VL (WORD versionen).docx (ID: 1568768)
+[2026-08-21 02:47:49.971] Processing Module: Module 5 - Uge 40 1xFO, 1xØV (Middel belastning) (ID: 306039)
+[2026-08-21 02:47:50.128] Found 10 items in module 'Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)'
+[2026-08-21 02:47:50.128]   - Item: Lineær programmering.pptx (Type: File)
+[2026-08-21 02:47:50.268] Module file tracked: Lineær programmering.pptx (ID: 1568805)
+[2026-08-21 02:47:50.268]   - Item: Øvelse forelæsningen - Opgaven formuleret i Word.docx (Type: File)
+[2026-08-21 02:47:50.407] Module file tracked: Øvelse forelæsningen - Opgaven formuleret i Word.docx (ID: 1568639)
+[2026-08-21 02:47:50.408]   - Item: Øvelse forelæsning - Opgaven formuleret i Excel.xlsx (Type: File)
+[2026-08-21 02:47:50.551] Module file tracked: Øvelse forelæsning - Opgaven formuleret i Excel.xlsx (ID: 1568800)
+[2026-08-21 02:47:50.551]   - Item: Øvelse forelæsning - Vejl løs.xlsx (Type: File)
+[2026-08-21 02:47:50.698] Module file tracked: Øvelse forelæsning - Vejl løs.xlsx (ID: 1568763)
+[2026-08-21 02:47:50.699]   - Item: LP eksempel - Opgaven.xlsx (Type: File)
+[2026-08-21 02:47:50.839] Module file tracked: LP eksempel - Opgaven.xlsx (ID: 1568779)
+[2026-08-21 02:47:50.840]   - Item: LP eksempel - VL.xlsx (Type: File)
+[2026-08-21 02:47:50.973] Module file tracked: LP eksempel - VL.xlsx (ID: 1568778)
+[2026-08-21 02:47:50.973]   - Item: Øvelse 4 (Type: File)
+[2026-08-21 02:47:51.145] Module file tracked: opgavesæt nr. 4.docx (ID: 1568640)
+[2026-08-21 02:47:51.145]   - Item: Øvelse 4 - VL.xlsx (Type: File)
+[2026-08-21 02:47:51.272] Module file tracked: Øvelse 4 - VL.xlsx (ID: 1568687)
+[2026-08-21 02:47:51.272]   - Item: Øvelse 4 - VL (Wordversionen).docx (Type: File)
+[2026-08-21 02:47:51.415] Module file tracked: Øvelse 4 - VL (Wordversionen).docx (ID: 1568772)
+[2026-08-21 02:47:51.415]   - Item: Linear Programming (note  ) (Type: File)
+[2026-08-21 02:47:51.558] Module file tracked: Linear Programming (note  ).pdf (ID: 1568784)
+[2026-08-21 02:47:51.558] Processing Module: Module 6 - Uge 41 1xFO, 1xØV (Middel belastning) (ID: 306040)
+[2026-08-21 02:47:51.688] Found 7 items in module 'Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)'
+[2026-08-21 02:47:51.688]   - Item: Opsummering.pptx (Type: File)
+[2026-08-21 02:47:51.827] Module file tracked: Opsummering.pptx (ID: 1568785)
+[2026-08-21 02:47:51.827]   - Item: Øvelse 5.docx (Type: File)
+[2026-08-21 02:47:51.956] Module file tracked: Øvelse 5.docx (ID: 1568810)
+[2026-08-21 02:47:51.956]   - Item: Øvelse 5 - VL (Type: File)
+[2026-08-21 02:47:52.122] Module file tracked: Opgavesæt 5 - VL (Excel).xlsx (ID: 1568811)
+[2026-08-21 02:47:52.122]   - Item: Øvelse 5 - VL (Wordversionen).docx (Type: File)
+[2026-08-21 02:47:52.253] Module file tracked: Opgavesæt 5 - VL (Wordversionen).docx (ID: 1568776)
+[2026-08-21 02:47:52.254]   - Item: Øvelse 5 - VL (Opgave 5).xlsx (Type: File)
+[2026-08-21 02:47:52.384] Module file tracked: Opgavesæt 5 - VL (Opgave 5).xlsx (ID: 1568694)
+[2026-08-21 02:47:52.384]   - Item: minitest.docx (Type: File)
+[2026-08-21 02:47:52.520] Module file tracked: minitest.docx (ID: 1568660)
+[2026-08-21 02:47:52.520]   - Item: minitest -VL.docx (Type: File)
+[2026-08-21 02:47:52.646] Module file tracked: minitest -VL.docx (ID: 1568761)
+[2026-08-21 02:47:52.646] Processing Module: Module 7 - Uge 43 1xFO, 1xØV (Let belastning) (ID: 306041)
+[2026-08-21 02:47:52.794] Found 4 items in module 'Module 7 - Uge 43 1xFO, 1xØV (Let belastning)'
+[2026-08-21 02:47:52.795]   - Item: FK.ppt (Type: File)
+[2026-08-21 02:47:52.945] Module file tracked: FK.ppt (ID: 1568647)
+[2026-08-21 02:47:52.945]   - Item: Øvelse 6 (Type: File)
+[2026-08-21 02:47:53.088] Module file tracked: øvesæt6-fk-1.docx (ID: 1568775)
+[2026-08-21 02:47:53.088]   - Item: Øvelse 6 - VL (Wordversion) (Type: File)
+[2026-08-21 02:47:53.224] Module file tracked: øveopgave6-vejl.docx (ID: 1568806)
+[2026-08-21 02:47:53.225]   - Item: Øvelse 6 - VL (xls version) (Type: File)
+[2026-08-21 02:47:53.361] Module file tracked: Opgavesæt 6-vejl.xlsx (ID: 1568807)
+[2026-08-21 02:47:53.361] Processing Module: Module 8 - Uge 44 1xFO, 1xØV (Middel belastning) (ID: 306042)
+[2026-08-21 02:47:53.494] Found 6 items in module 'Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)'
+[2026-08-21 02:47:53.494]   - Item: CS og PS.ppt (Type: File)
+[2026-08-21 02:47:53.635] Module file tracked: CS og PS.ppt (ID: 1568659)
+[2026-08-21 02:47:53.635]   - Item: opgave CS og PS.docx (Type: File)
+[2026-08-21 02:47:53.758] Module file tracked: opgave CS og PS.docx (ID: 1568625)
+[2026-08-21 02:47:53.759]   - Item: opgave CS og PS - med VL.docx (Type: File)
+[2026-08-21 02:47:53.900] Module file tracked: opgave CS og PS - med VL.docx (ID: 1568689)
+[2026-08-21 02:47:53.900]   - Item: CS og PS - VL.xlsx (Type: File)
+[2026-08-21 02:47:54.029] Module file tracked: CS og PS - VL.xlsx (ID: 1568693)
+[2026-08-21 02:47:54.029]   - Item: Øvelse 7.docx (Type: File)
+[2026-08-21 02:47:54.157] Module file tracked: Øvelse 7.docx (ID: 1568581)
+[2026-08-21 02:47:54.157]   - Item: Øvelse 7 VL.xlsx (Type: File)
+[2026-08-21 02:47:54.285] Module file tracked: Øvelse 7 VL.xlsx (ID: 1568652)
+[2026-08-21 02:47:54.285] Processing Module: Module 9 - Uge 45 1xFO, 1xØV (Middel belastning) (ID: 306043)
+[2026-08-21 02:47:54.428] Found 10 items in module 'Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)'
+[2026-08-21 02:47:54.429]   - Item: Kap.12 monopol.ppt (Type: File)
+[2026-08-21 02:47:54.563] Module file tracked: Kap.12 monopol.ppt (ID: 1568819)
+[2026-08-21 02:47:54.563]   - Item: Kap. 13a -ME monopolistisk konkurrence.ppt (Type: File)
+[2026-08-21 02:47:54.693] Module file tracked: Kap. 13a -ME monopolistisk konkurrence.ppt (ID: 1568767)
+[2026-08-21 02:47:54.693]   - Item: FO opgave A (Type: File)
+[2026-08-21 02:47:54.844] Module file tracked: ForelæsningsopgaveA.docx (ID: 1568769)
+[2026-08-21 02:47:54.844]   - Item: FO opgave A - VL (Type: File)
+[2026-08-21 02:47:54.972] Module file tracked: Losning FO-opgaveA.xlsx (ID: 1568696)
+[2026-08-21 02:47:54.972]   - Item: FO opgave B (Type: File)
+[2026-08-21 02:47:55.127] Module file tracked: FO-opgave.docx (ID: 1568786)
+[2026-08-21 02:47:55.128]   - Item: FO opgave B - VL (Type: File)
+[2026-08-21 02:47:55.262] Module file tracked: Losning-FO.Opgave.docx (ID: 1568817)
+[2026-08-21 02:47:55.263]   - Item: Monopolistisk konkurrence, effekt af markedsføring.xlsx (Type: File)
+[2026-08-21 02:47:55.402] Module file tracked: Monopolistisk konkurrence, effekt af markedsføring.xlsx (ID: 1568818)
+[2026-08-21 02:47:55.402]   - Item: Øvelse 8 (Type: File)
+[2026-08-21 02:47:55.540] Module file tracked: øvesæt nr. 8.docx (ID: 1568695)
+[2026-08-21 02:47:55.541]   - Item: Øvelse 8 - VL (opg6).docx (Type: File)
+[2026-08-21 02:47:55.682] Module file tracked: Øvelse 8 - VL (opg6).docx (ID: 1568697)
+[2026-08-21 02:47:55.682]   - Item: Øvelse 8 - VL (NY) (Type: File)
+[2026-08-21 02:47:55.827] Module file tracked: Vejl.-løsning-opg.sæt-8_NYESTE.xlsx (ID: 1568816)
+[2026-08-21 02:47:55.827] Processing Module: Module 10 - Uge 46 1xFO, 1xØV (Svær belastning) (ID: 306044)
+[2026-08-21 02:47:55.960] Found 6 items in module 'Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)'
+[2026-08-21 02:47:55.960]   - Item: Kap. 13b -ME oligopolmodeller.ppt (Type: File)
+[2026-08-21 02:47:56.096] Module file tracked: Kap. 13b -ME oligopolmodeller.ppt (ID: 1568656)
+[2026-08-21 02:47:56.097]   - Item: Optimeringsmodeller-samlet-kogebog v2.pptx (Type: File)
+[2026-08-21 02:47:56.232] Module file tracked: Optimeringsmodeller-samlet-kogebog v2.pptx (ID: 1568650)
+[2026-08-21 02:47:56.232]   - Item: Øvelse 9 (Type: File)
+[2026-08-21 02:47:56.373] Module file tracked: øvesæt nr. 9.docx (ID: 1568655)
+[2026-08-21 02:47:56.374]   - Item: Øvelse 9 - VL.xlsx (Type: File)
+[2026-08-21 02:47:56.506] Module file tracked: Øvelse 9 - VL.xlsx (ID: 1568783)
+[2026-08-21 02:47:56.506]   - Item: Øvelse 9 - VL (Wordversion) (Type: File)
+[2026-08-21 02:47:56.637] Module file tracked: øvesæt nr. 9 vejl. løsning.docx (ID: 1568781)
+[2026-08-21 02:47:56.637]   - Item: Oligopol (Knæk Afs) eksempel.xls (Type: File)
+[2026-08-21 02:47:56.782] Module file tracked: Oligopol (Knæk Afs) eksempel.xls (ID: 1568820)
+[2026-08-21 02:47:56.782] Processing Module: Module 11 - Uge 47 1xFO, 1xØV (Middel belastning) (ID: 306045)
+[2026-08-21 02:47:56.924] Found 5 items in module 'Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)'
+[2026-08-21 02:47:56.924]   - Item: Kap 15 Pricing strategies.ppt (Type: File)
+[2026-08-21 02:47:57.054] Module file tracked: Kap 15 Pricing strategies.ppt (ID: 1568661)
+[2026-08-21 02:47:57.054]   - Item: Priceleader-modellen-1.pptx (Type: File)
+[2026-08-21 02:47:57.174] Module file tracked: Priceleader-modellen-1.pptx (ID: 1568670)
+[2026-08-21 02:47:57.174]   - Item: Priceleader eksempel - TB.xlsx (Type: File)
+[2026-08-21 02:47:57.316] Module file tracked: Priceleader eksempel - TB.xlsx (ID: 1568703)
+[2026-08-21 02:47:57.316]   - Item: Øvelse 10 ufp.docx (Type: File)
+[2026-08-21 02:47:57.448] Module file tracked: Øvelse 10 ufp.docx (ID: 1568794)
+[2026-08-21 02:47:57.448]   - Item: øvesæt 10vejl_ufp.xlsx (Type: File)
+[2026-08-21 02:47:57.589] Module file tracked: øvesæt 10vejl_ufp.xlsx (ID: 1568793)
+[2026-08-21 02:47:57.589] Processing Module: Module 12 - Uge 48 1xFO, 1xØV (Svær belastning) (ID: 306046)
+[2026-08-21 02:47:57.732] Found 6 items in module 'Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)'
+[2026-08-21 02:47:57.733]   - Item: Kap.15 Pricing strategies nr.2.pptx (Type: File)
+[2026-08-21 02:47:57.867] Module file tracked: Kap.15 Pricing strategies nr.2.pptx (ID: 1699117)
+[2026-08-21 02:47:57.867]   - Item: Matematisk eksempel - til PPT.xlsx (Type: File)
+[2026-08-21 02:47:57.997] Module file tracked: Matematisk eksempel - til PPT.xlsx (ID: 1700137)
+[2026-08-21 02:47:57.997]   - Item: PrisDiffEks - TB.xlsx (Type: File)
+[2026-08-21 02:47:58.131] Module file tracked: PrisDiffEks - TB.xlsx (ID: 1568822)
+[2026-08-21 02:47:58.132]   - Item: øvesæt nr. 11.docx (Type: File)
+[2026-08-21 02:47:58.265] Module file tracked: øvesæt nr. 11.docx (ID: 1701729)
+[2026-08-21 02:47:58.266]   - Item: Øvelse 11 - VL  (1+4) (Type: File)
+[2026-08-21 02:47:58.411] Module file tracked: vejl sæt 11. (1 4).docx (ID: 1568664)
+[2026-08-21 02:47:58.411]   - Item: Øvelse 11 - VL (Type: File)
+[2026-08-21 02:47:58.546] Module file tracked: rettevejl. øvesæt 11_med vandretaddNYmed rettelse!!..xlsx (ID: 1568705)
+[2026-08-21 02:47:58.546] Processing Module: Ekstra træning (træning i gl. eksamensopgaver) (ID: 306047)
+[2026-08-21 02:47:58.799] Found 27 items in module 'Ekstra træning (træning i gl. eksamensopgaver)'
+[2026-08-21 02:47:58.799]   - Item: HAit reeksamen 2019 spg 1,2,4.docx (Type: File)
+[2026-08-21 02:47:58.938] Module file tracked: HAit reeksamen 2020.docx (ID: 1568801)
+[2026-08-21 02:47:58.939]   - Item: HAit reeksamen 2019 - VL.xlsx (Type: File)
+[2026-08-21 02:47:59.065] Module file tracked: HAit reeksamen 2020 - VL.xlsx (ID: 1568677)
+[2026-08-21 02:47:59.066]   - Item: Ekstra opgaver1.docx (ikke spg 4) (Type: File)
+[2026-08-21 02:47:59.201] Module file tracked: ekstra opgaver1.docx (ID: 1568678)
+[2026-08-21 02:47:59.202]   - Item: Ekstraopgaver 1 - VL.xlsx (Type: File)
+[2026-08-21 02:47:59.345] Module file tracked: ekstraopgave 1 - VL.xlsx (ID: 1568676)
+[2026-08-21 02:47:59.345]   - Item: HAit 2020 ORD opgave (VL findes ikke til denne opg.) (Type: File)
+[2026-08-21 02:47:59.493] Module file tracked: HAit 2020 ORD opgave.docx (ID: 1568790)
+[2026-08-21 02:47:59.493]   - Item: HAit reeksamen 2020 (1).docx (Type: File)
+[2026-08-21 02:47:59.638] Module file tracked: HAit reeksamen 2020 (1).docx (ID: 1568802)
+[2026-08-21 02:47:59.638]   - Item: HA.IT-reeksamen-2020-VL-NY.xlsx (Type: File)
+[2026-08-21 02:47:59.782] Module file tracked: HA.IT-reeksamen-2020-VL-NY.xlsx (ID: 1568789)
+[2026-08-21 02:47:59.782]   - Item: HA.IT-reeksamen-2020-VL-Endelig1.xlsx (Type: File)
+[2026-08-21 02:47:59.923] Module file tracked: HA.IT-reeksamen-2020-VL-Endelig1.xlsx (ID: 1568788)
+[2026-08-21 02:47:59.923]   - Item: HA-it (2021) - VØS1 ordinær (2timer).pdf (Type: File)
+[2026-08-21 02:48:00.064] Module file tracked: HA-it (2020-2021) - VØS1 ordinær.pdf (ID: 1568654)
+[2026-08-21 02:48:00.064]   - Item: HA(IT) (2021) - VØS1 ORD (2timer) - VL.xlsx (Type: File)
+[2026-08-21 02:48:00.198] Module file tracked: HA(IT) (2020-2021) - VØS1 ORD - VL.xlsx (ID: 1568787)
+[2026-08-21 02:48:00.198]   - Item: HA-it (2021)-VØS1 Reeksamen (2timer).pdf (Type: File)
+[2026-08-21 02:48:00.326] Module file tracked: HA-it (2020-2021)-Reeksamen.pdf (ID: 1568675)
+[2026-08-21 02:48:00.327]   - Item: HA(IT) (2021) - VØS1 REeksamen (2timer) - VL.xlsx (Type: File)
+[2026-08-21 02:48:00.465] Module file tracked: HA(IT) RE-eksamen 2020 - VL.xlsx (ID: 1568680)
+[2026-08-21 02:48:00.465]   - Item: HA-it (2022)-ordinær online-hjemme (2timer).pdf (Type: File)
+[2026-08-21 02:48:00.605] Module file tracked: HA-it (2022)-ordinær online-hjemme.pdf (ID: 1568791)
+[2026-08-21 02:48:00.605]   - Item: HA-it (2022)-ordinær online-hjemme (2timer) VL.xlsx (Type: File)
+[2026-08-21 02:48:00.746] Module file tracked: HA-it (2022)-ordinær online-hjemme VL.xlsx (ID: 1568579)
+[2026-08-21 02:48:00.746]   - Item: HA-it (2022)-ordinær Bilag1 online-hjemme (2timer) .xlsx (Type: File)
+[2026-08-21 02:48:00.911] Module file tracked: HA-it (2022)-ordinær Bilag1 online-hjemme.xlsx (ID: 1568666)
+[2026-08-21 02:48:00.911]   - Item: HA(IT) (2022) Reeksamen (2 timer) online.pdf (Type: File)
+[2026-08-21 02:48:01.157] Module file tracked: HA(IT) (2022) Reeksamen 2 timer online.pdf (ID: 1568681)
+[2026-08-21 02:48:01.158]   - Item: HA-it (2022)-REeksamen VL (2timers).xlsx (Type: File)
+[2026-08-21 02:48:01.395] Module file tracked: HA-it (2022)-RE-eksamen VL (2timers).xlsx (ID: 1568679)
+[2026-08-21 02:48:01.396]   - Item: HA(it) VØS1, Ordinær Skriftlig eksamen - Januar 2023.pdf (Type: File)
+[2026-08-21 02:48:01.559] Module file tracked: HA(it) VØS1, Ordinær Skriftlig eksamen - Januar 2023.pdf (ID: 1568690)
+[2026-08-21 02:48:01.559]   - Item: HAit VØS1 ORD 2023 VL.xlsx (Type: File)
+[2026-08-21 02:48:01.691] Module file tracked: HAit VØS1 2023 VL.xlsx (ID: 1568803)
+[2026-08-21 02:48:01.691]   - Item: HA(IT) 2023 VØS1 RE-Eksamen.pdf (Type: File)
+[2026-08-21 02:48:01.840] Module file tracked: HA(IT) 2023 VØS1 RE-Eksamen.pdf (ID: 1568691)
+[2026-08-21 02:48:01.840]   - Item: HAit VØS1 RE 2023 VL.xlsx (Type: File)
+[2026-08-21 02:48:01.973] Module file tracked: HAit VØS1 RE 2023 VL.xlsx (ID: 1568692)
+[2026-08-21 02:48:01.973]   - Item: Ord-Eksamen2024-opgave.pdf (Type: File)
+[2026-08-21 02:48:02.105] Module file tracked: Ord-Eksamen2024-opgave.pdf (ID: 1568815)
+[2026-08-21 02:48:02.106]   - Item: VL - Ord2024.xlsx (Type: File)
+[2026-08-21 02:48:02.265] Module file tracked: VL - Ord2024.xlsx (ID: 1568823)
+[2026-08-21 02:48:02.265]   - Item: RE-eksamen2024-opgave.pdf (Type: File)
+[2026-08-21 02:48:02.401] Module file tracked: RE-eksamen2024-opgave.pdf (ID: 1568813)
+[2026-08-21 02:48:02.401]   - Item: Re2024.xlsx (Type: File)
+[2026-08-21 02:48:02.626] Module file tracked: Re2024.xlsx (ID: 1568812)
+[2026-08-21 02:48:02.626]   - Item: Eksamen HA(it) VØS I - Emneoversigt.xlsx (Type: File)
+[2026-08-21 02:48:02.757] Module file tracked: Eksamen HA(it) VØS I - Emneoversigt.xlsx (ID: 1568706)
+[2026-08-21 02:48:02.757]   - Item: Oversigt over tidligere eksamensopgaver VØS1.pdf (Type: File)
+[2026-08-21 02:48:02.880] Module file tracked: Oversigt over tidligere eksamensopgaver VØS1.pdf (ID: 1568821)
+[2026-08-21 02:48:02.884] Requesting URL: https://cbscanvas.instructure.com/files/1568831/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:02.885] Requesting URL: https://cbscanvas.instructure.com/files/1568707/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:02.885] Requesting URL: https://cbscanvas.instructure.com/files/1568580/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:02.886] Requesting URL: https://cbscanvas.instructure.com/files/1568667/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:02.886] Requesting URL: https://cbscanvas.instructure.com/files/1568741/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:03.531] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:03.540] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:03.546] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel/Hjælp til at udlede prisafsætningsfunktionen.pdf (271859 bytes)
+[2026-08-21 02:48:03.557] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)/F1. Udbud-efterspørgsel.pptx (124690 bytes)
+[2026-08-21 02:48:03.584] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:03.585] Requesting URL: https://cbscanvas.instructure.com/files/1568780/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:03.598] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:03.603] Requesting URL: https://cbscanvas.instructure.com/files/1568757/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:03.612] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 1 - Uge 36 1xFO (LET belastning)/F1-B . maksimeringsprincippet-1.pptx (110994 bytes)
+[2026-08-21 02:48:03.617] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 02:48:03.625] Requesting URL: https://cbscanvas.instructure.com/files/1639544/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:03.626] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Course description including examination rules/Undervisningsplan VØS (1) 1. semester E25.pdf (597203 bytes)
+[2026-08-21 02:48:03.638] Requesting URL: https://cbscanvas.instructure.com/files/1568651/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:03.639] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 1 - Uge 36 1xFO (LET belastning)/F1-A -intro-1.ppt (552960 bytes)
+[2026-08-21 02:48:03.645] Requesting URL: https://cbscanvas.instructure.com/files/1568641/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:04.200] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 02:48:04.212] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)/F3.Grundlæggende produktionstek -Nr1.ppt (394752 bytes)
+[2026-08-21 02:48:04.219] Requesting URL: https://cbscanvas.instructure.com/files/1568657/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:04.220] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:04.224] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)/F6. isokostlinjen-nr.3.pptx (48593 bytes)
+[2026-08-21 02:48:04.237] Requesting URL: https://cbscanvas.instructure.com/files/1568717/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:04.264] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:04.269] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:04.270] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)/Omkostningsminimering Nr.4.pptx (93148 bytes)
+[2026-08-21 02:48:04.274] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)/F.2 Elasticitet.pptx (135516 bytes)
+[2026-08-21 02:48:04.277] Requesting URL: https://cbscanvas.instructure.com/files/1568777/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:04.282] Requesting URL: https://cbscanvas.instructure.com/files/1568808/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:04.296] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:04.301] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)/F4. Isokvanter og MRTS-Nr2.pptx (72782 bytes)
+[2026-08-21 02:48:04.307] Requesting URL: https://cbscanvas.instructure.com/files/1568805/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:04.800] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:04.805] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)/Skalaafkast nr.5.pptx (64581 bytes)
+[2026-08-21 02:48:04.811] Requesting URL: https://cbscanvas.instructure.com/files/1568784/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:04.839] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:04.844] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:04.845] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)/omkostning1.pptx (140992 bytes)
+[2026-08-21 02:48:04.859] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:04.861] Requesting URL: https://cbscanvas.instructure.com/files/1568785/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:04.867] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)/omkostning3.pptx (503548 bytes)
+[2026-08-21 02:48:04.877] Requesting URL: https://cbscanvas.instructure.com/files/1568647/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:04.877] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)/omkostning2.pptx (482278 bytes)
+[2026-08-21 02:48:04.883] Requesting URL: https://cbscanvas.instructure.com/files/1568659/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:04.900] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:04.937] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/Lineær programmering.pptx (1609985 bytes)
+[2026-08-21 02:48:04.944] Requesting URL: https://cbscanvas.instructure.com/files/1568819/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:05.443] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:05.485] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 02:48:05.486] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/Linear Programming (note  ).pdf (2437730 bytes)
+[2026-08-21 02:48:05.499] Requesting URL: https://cbscanvas.instructure.com/files/1568767/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:05.505] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 02:48:05.507] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 7 - Uge 43 1xFO, 1xØV (Let belastning)/FK.ppt (642560 bytes)
+[2026-08-21 02:48:05.507] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:05.521] Requesting URL: https://cbscanvas.instructure.com/files/1568656/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:05.529] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)/CS og PS.ppt (293376 bytes)
+[2026-08-21 02:48:05.532] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)/Opsummering.pptx (646211 bytes)
+[2026-08-21 02:48:05.537] Requesting URL: https://cbscanvas.instructure.com/files/1568650/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:05.542] Requesting URL: https://cbscanvas.instructure.com/files/1568661/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:05.579] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 02:48:05.593] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/Kap.12 monopol.ppt (523264 bytes)
+[2026-08-21 02:48:05.599] Requesting URL: https://cbscanvas.instructure.com/files/1568670/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:06.181] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 02:48:06.238] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 02:48:06.267] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:06.268] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)/Kap 15 Pricing strategies.ppt (361472 bytes)
+[2026-08-21 02:48:06.281] Requesting URL: https://cbscanvas.instructure.com/files/1699117/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:06.292] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)/Priceleader-modellen-1.pptx (238179 bytes)
+[2026-08-21 02:48:06.305] Requesting URL: https://cbscanvas.instructure.com/files/1568654/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:06.314] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/Kap. 13a -ME monopolistisk konkurrence.ppt (5718016 bytes)
+[2026-08-21 02:48:06.321] Requesting URL: https://cbscanvas.instructure.com/files/1568675/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:06.547] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 02:48:06.566] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/Kap. 13b -ME oligopolmodeller.ppt (646144 bytes)
+[2026-08-21 02:48:06.571] Requesting URL: https://cbscanvas.instructure.com/files/1568791/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:06.800] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:06.813] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/Optimeringsmodeller-samlet-kogebog v2.pptx (380031 bytes)
+[2026-08-21 02:48:06.818] Requesting URL: https://cbscanvas.instructure.com/files/1568681/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:06.946] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 02:48:06.952] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:06.964] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:06.965] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Ekstra træning (træning i gl. eksamensopgaver)/HA-it (2020-2021)-Reeksamen.pdf (122293 bytes)
+[2026-08-21 02:48:06.966] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)/Kap.15 Pricing strategies nr.2.pptx (112317 bytes)
+[2026-08-21 02:48:06.974] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Ekstra træning (træning i gl. eksamensopgaver)/HA-it (2020-2021) - VØS1 ordinær.pdf (146235 bytes)
+[2026-08-21 02:48:06.975] Requesting URL: https://cbscanvas.instructure.com/files/1568690/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:06.980] Requesting URL: https://cbscanvas.instructure.com/files/1568691/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:06.985] Requesting URL: https://cbscanvas.instructure.com/files/1568815/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:07.199] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:07.215] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Ekstra træning (træning i gl. eksamensopgaver)/HA-it (2022)-ordinær online-hjemme.pdf (518765 bytes)
+[2026-08-21 02:48:07.222] Requesting URL: https://cbscanvas.instructure.com/files/1568813/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:07.438] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:07.455] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Ekstra træning (træning i gl. eksamensopgaver)/HA(IT) (2022) Reeksamen 2 timer online.pdf (507761 bytes)
+[2026-08-21 02:48:07.461] Requesting URL: https://cbscanvas.instructure.com/files/1568821/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 02:48:07.529] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:07.547] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Ekstra træning (træning i gl. eksamensopgaver)/HA(it) VØS1, Ordinær Skriftlig eksamen - Januar 2023.pdf (487473 bytes)
+[2026-08-21 02:48:07.574] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:07.593] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:07.595] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Ekstra træning (træning i gl. eksamensopgaver)/HA(IT) 2023 VØS1 RE-Eksamen.pdf (613916 bytes)
+[2026-08-21 02:48:07.611] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Ekstra træning (træning i gl. eksamensopgaver)/Ord-Eksamen2024-opgave.pdf (534570 bytes)
+[2026-08-21 02:48:07.794] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:07.813] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Ekstra træning (træning i gl. eksamensopgaver)/RE-eksamen2024-opgave.pdf (490825 bytes)
+[2026-08-21 02:48:08.067] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 02:48:08.086] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Ekstra træning (træning i gl. eksamensopgaver)/Oversigt over tidligere eksamensopgaver VØS1.pdf (441229 bytes)
+[2026-08-21 02:48:08.091] Starting Catch-All Phase for non-module files...
+[2026-08-21 02:48:08.191] Catch-All Phase Error: {"status":"unauthorized","errors":[{"message":"user not authorised to perform that action"}]}
+[2026-08-21 02:48:08.191] [WARNING] [core.canvas_logic] Files tab restricted for 'Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)' - skipping catch-all phase.
+[2026-08-21 02:48:08.195] --- Download Complete: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) | 35 items | 20.1 MB downloaded ---
+
+==================================================
+--- Post-Processing: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) ---
+==================================================
+[2026-08-21 02:48:08.243] === Course Finished: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) | Downloaded: 35 items | Errors: 0 ===
+[2026-08-21 02:48:08.244] Post-processing ran: [zip, code, video, excel]
+[2026-08-21 02:48:09.017] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft PowerPoint -> left alone (we did not launch it)
+[2026-08-21 02:48:09.017] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft Word -> left alone (we did not launch it)
+[2026-08-21 02:48:09.018] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft Excel -> left alone (we did not launch it)

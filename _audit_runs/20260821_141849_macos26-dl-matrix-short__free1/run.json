@@ -1,0 +1,23 @@
+{
+  "run_id": "20260821_141849_macos26-dl-matrix-short__free1",
+  "label": "lane:free1",
+  "parent": "20260821_141849_macos26-dl-matrix-short",
+  "lane": "free1",
+  "created": "2026-08-21T14:20:31",
+  "app": {
+    "port": 8810,
+    "pid": 8967,
+    "url": "http://127.0.0.1:8810",
+    "log": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_141849_macos26-dl-matrix-short__free1/streamlit.log",
+    "started": 1787314854.4018931,
+    "verified_owner": false
+  },
+  "ports_used": [
+    8810
+  ],
+  "browser": {
+    "cdp_port": 9410,
+    "pid": 8993,
+    "headed": false
+  }
+}

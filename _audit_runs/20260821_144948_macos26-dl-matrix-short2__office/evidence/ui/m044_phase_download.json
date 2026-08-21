@@ -1,0 +1,120 @@
+{
+  "name": "m044_phase_download",
+  "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/screenshots/m044_phase_download.png",
+  "captured": "2026-08-21 15:35:33",
+  "screen": {
+    "url": "http://127.0.0.1:8800/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Downloading...",
+      "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_active_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cancel_download_btn",
+        "text": "Cancel Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownloading...\n\nDOWNLOADING COURSE 1/2\n\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n9%\nDOWNLOADED\n237.8 / 2195.9 MB\nSPEED\n39.2 MB/s\nFILES\n24 / 256\nTIME REMAINING\n06:55\nDOWNLOADING\nBørnemøbler_ny version.pdf\nBeslutninger - Uge 46 2025.pdf\nBerlingske Case.pdf\n2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx\n251009_Kom og vær med_Til Stig N.pptx\n2025_Lektion uge 43_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf\n2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx\n2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf\n2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx\n2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pptx\n2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx\n2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx\n2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx\n2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pptx\n2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pptx\n2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx\n2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx\n2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pptx\n1999_Kotter_kap 1.pdf\n2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx\n2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx\n1999_Kotter_kap 2.pdf\n2024_Lektion uge 37_2 Struktur_upload.pptx\n\nCancel Download",
+    "textLen": 1983
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "active",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": true,
+    "header": "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "DOWNLOADED | 239.1 / 2195.9 MB | SPEED | 39.3 MB/s | FILES | 24 / 256 | TIME REMAINING | 06:55",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": "DOWNLOADING COURSE 1/2\n\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n9%\nDOWNLOADED\n239.1 / 2195.9 MB\nSPEED\n39.3 MB/s\nFILES\n24 / 256\nTIME REMAINING\n06:55\nDOWNLOADING\nBørnemøbler_ny version.pdf\nBeslutninger - Uge 46 2025.pdf\nBerlingske Case.pdf\n2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx\n251009_Kom og vær med_Til Stig N.pptx\n2025_Lektion uge 43_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf\n2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx\n2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf\n2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx\n2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pptx\n2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx\n2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx\n2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx\n2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pptx\n2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pptx\n2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx\n2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx\n2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pptx\n1999_Kotter_kap 1.pdf\n2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx\n2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx\n1999_Kotter_kap 2.pdf\n2024_Lektion uge 37_2 Struktur_upload.pptx"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

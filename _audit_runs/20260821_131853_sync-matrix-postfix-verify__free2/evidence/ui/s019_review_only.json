@@ -1,0 +1,319 @@
+{
+  "name": "s019_review_only",
+  "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free2/evidence/screenshots/s019_review_only.png",
+  "captured": "2026-08-21 13:25:29",
+  "screen": {
+    "url": "http://127.0.0.1:8810/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Review Changes",
+      "Smart Select"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_active_idlesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_idle_idlesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_docx",
+        "text": "DOCX (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_select_all",
+        "text": "Select All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_deselect_all",
+        "text": "Deselect All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_upd_43660",
+        "text": "Select All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_upd_43660",
+        "text": "Deselect All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_upd_43660",
+        "text": "Move deselected files to Ignored (0)",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_43660_1559939",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_43660_1560149",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_updmod_43660",
+        "text": "Select All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_updmod_43660",
+        "text": "Deselect All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_updmod_43660",
+        "text": "Move deselected files to Ignored (0)",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_43660_1560051",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_43660_1560056",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_sync_review_back",
+        "text": "Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_sync_selected",
+        "text": "Sync & Download 4 files",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [
+      {
+        "key": "cat_update_43660",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nUpdates Available"
+      },
+      {
+        "key": "cat_updmod_43660",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nUpdates Available — You've Edited These"
+      },
+      {
+        "key": "cat_deleted_canvas_43660",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nDeleted on Canvas (Kept Locally)"
+      }
+    ],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n0\nNew files\n4\nUpdates available\n2\nEdited locally\n0\nDeleted locally\n2\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n4 files pending sync\n258 files up to date\nkeyboard_arrow_down\n\nUpdates Available\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nYour local copies haven't been edited, so they'll be replaced in place with the newer Canvas version.\n\nKlyngevejledning 1_grp 10 DOCX 34.8 KB\n\nSkabelon til klyngevejledning 2 DOCX 21.9 KB\n\nkeyboard_arrow_down\n\nUpdates Available — You've Edited These\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nYou've modified your local copies of these files. They are unchecked by default to protect your edits. If you sync them, the new Canvas version will be saved alongside as _NewVersion — your edited copy is never touched.\n\nEksempel - Gruppekontrakt DOCX 13.9 KB\n\nSvarark - Gode råd til projektet DOCX 15.4 KB\n\nkeyboard_arrow_down\n\nDeleted on Canvas (Kept Locally)\n\nThese files were deleted by the teacher on Canvas. They are preserved locally for your safety.\n\nGhostFile_0_Eksempel på gruppekontrakt\nDOCX\n15.9 KB\nGhostFile_1_Svarark - Gode råd til projektet\nDOCX\n16.5 KB\n\nGo back\n\nSync & Download 4 files",
+    "textLen": 1538
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "active",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "idle",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "review": {
+    "courses": [
+      {
+        "course_id": "43660",
+        "categories": {
+          "updated_clean": {
+            "label": "keyboard_arrow_down\n\nUpdates Available",
+            "badge": "  (2 / 2 selected)",
+            "open": true,
+            "rowCount": 2,
+            "rows": [
+              {
+                "rowKey": "sync_row_upd_43660_1559939",
+                "checked": true,
+                "name": "Klyngevejledning 1_grp 10",
+                "stem": "Klyngevejledning 1_grp 10",
+                "ext": "docx",
+                "lookalike": false,
+                "text": "Klyngevejledning 1_grp 10 DOCX 34.8 KB"
+              },
+              {
+                "rowKey": "sync_row_upd_43660_1560149",
+                "checked": true,
+                "name": "Skabelon til klyngevejledning 2",
+                "stem": "Skabelon til klyngevejledning 2",
+                "ext": "docx",
+                "lookalike": false,
+                "text": "Skabelon til klyngevejledning 2 DOCX 21.9 KB"
+              }
+            ]
+          },
+          "updated_modified": {
+            "label": "keyboard_arrow_down\n\nUpdates Available — You've Edited These",
+            "badge": "  (2 / 2 selected)",
+            "open": true,
+            "rowCount": 2,
+            "rows": [
+              {
+                "rowKey": "sync_row_updmod_43660_1560051",
+                "checked": true,
+                "name": "Eksempel - Gruppekontrakt",
+                "stem": "Eksempel - Gruppekontrakt",
+                "ext": "docx",
+                "lookalike": false,
+                "text": "Eksempel - Gruppekontrakt DOCX 13.9 KB"
+              },
+              {
+                "rowKey": "sync_row_updmod_43660_1560056",
+                "checked": true,
+                "name": "Svarark - Gode råd til projektet",
+                "stem": "Svarark - Gode råd til projektet",
+                "ext": "docx",
+                "lookalike": false,
+                "text": "Svarark - Gode råd til projektet DOCX 15.4 KB"
+              }
+            ]
+          },
+          "deleted_on_canvas": {
+            "label": "keyboard_arrow_down\n\nDeleted on Canvas (Kept Locally)",
+            "badge": "  (2) kept locally",
+            "open": true,
+            "rowCount": 2,
+            "rows": [
+              {
+                "rowKey": "",
+                "checked": null,
+                "name": "GhostFile_0_Eksempel på gruppekontrakt",
+                "stem": "GhostFile_0_Eksempel på gruppekontrakt",
+                "ext": "docx",
+                "lookalike": false,
+                "text": "GhostFile_0_Eksempel på gruppekontrakt DOCX 15.9 KB"
+              },
+              {
+                "rowKey": "",
+                "checked": null,
+                "name": "GhostFile_1_Svarark - Gode råd til projektet",
+                "stem": "GhostFile_1_Svarark - Gode råd til projektet",
+                "ext": "docx",
+                "lookalike": false,
+                "text": "GhostFile_1_Svarark - Gode råd til projektet DOCX 16.5 KB"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "summaryCards": [],
+    "seen": {
+      "categoryContainers": 3,
+      "syncRows": 4,
+      "ignoredRows": 0,
+      "expanders": 3
+    },
+    "pageText": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n0\nNew files\n4\nUpdates available\n2\nEdited locally\n0\nDeleted locally\n2\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n4 files pending sync\n258 files up to date\nkeyboard_arrow_down\n\nUpdates Available\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nYour local copies haven't been edited, so they'll be replaced in place with the newer Canvas version.\n\nKlyngevejledning 1_grp 10 DOCX 34.8 KB\n\nSkabelon til klyngevejledning 2 DOCX 21.9 KB\n\nkeyboard_arrow_down\n\nUpdates Available — You've Edited These\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nYou've modified your local copies of these files. They are unchecked by default to protect your edits. If you sync them, the new Canvas version will be saved alongside as _NewVersion — your edited copy is never touched.\n\nEksempel - Gruppekontrakt DOCX 13.9 KB\n\nSvarark - Gode råd til projektet DOCX 15.4 KB\n\nkeyboard_arrow_down\n\nDeleted on Canvas (Kept Locally)\n\nThese files were deleted by the teacher on Canvas. They are preserved locally for your safety.\n\nGhostFile_0_Eksempel på gruppekontrakt\nDOCX\n15.9 KB\nGhostFile_1_Svarark - Gode råd til projektet\nDOCX\n16.5 KB\n\nGo back\n\nSync & Download 4 files"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

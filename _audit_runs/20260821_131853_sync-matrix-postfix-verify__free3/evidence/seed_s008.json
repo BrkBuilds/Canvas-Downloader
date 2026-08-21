@@ -1,0 +1,66 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T13:22:14",
+  "applied": [
+    {
+      "kind": "renamed_row_intact",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "uptodate": 2
+  },
+  "expected_untracked": [
+    "zz mine noter 0.docx",
+    "Øvelser i uge 18/zz mine noter 1.docx"
+  ],
+  "expected_missing_rows": [
+    "Eksempel - Gruppekontrakt.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 262,
+    "files": 300
+  },
+  "fixtures": [
+    {
+      "label": "renamed-row-intact:zz mine noter 0.docx",
+      "kind": "renamed_row_intact",
+      "path": "zz mine noter 0.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "zz mine noter 0.docx",
+      "match_name": "Eksempel - Gruppekontrakt.docx",
+      "why": "Renamed on disk, bytes untouched, manifest row still present. heal_manifest Tier 2 (original_md5 + exact size, both computed locally) must relocate the row so the file reads UP TO DATE. Offering it as New would put a second copy of the same content in the folder under the Canvas name.",
+      "canvas_file_id": 1560051,
+      "original_path": "Eksempel - Gruppekontrakt.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-intact:zz mine noter 1.docx",
+      "kind": "renamed_row_intact",
+      "path": "Øvelser i uge 18/zz mine noter 1.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Øvelser i uge 18/zz mine noter 1.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "Renamed on disk, bytes untouched, manifest row still present. heal_manifest Tier 2 (original_md5 + exact size, both computed locally) must relocate the row so the file reads UP TO DATE. Offering it as New would put a second copy of the same content in the folder under the Canvas name.",
+      "canvas_file_id": 1560056,
+      "original_path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

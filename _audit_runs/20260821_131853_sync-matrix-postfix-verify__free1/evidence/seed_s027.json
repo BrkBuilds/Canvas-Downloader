@@ -1,0 +1,118 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T13:26:43",
+  "applied": [
+    {
+      "kind": "moved_deep",
+      "count": 2
+    },
+    {
+      "kind": "foreign_content",
+      "count": 3
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 5,
+  "expected_categories": {
+    "uptodate": 2
+  },
+  "expected_untracked": [
+    "Min egen mappe/gamle noter/tanker.txt",
+    "Min egen mappe/mine noter.docx",
+    "My Notes/semester 0/week 3/reading/Eksempel - Gruppekontrakt.docx",
+    "My Notes/semester 1/week 3/reading/Svarark - Gode råd til projektet.docx",
+    "eksamensplan 2026.pdf"
+  ],
+  "expected_missing_rows": [
+    "Eksempel - Gruppekontrakt.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 262,
+    "files": 303
+  },
+  "fixtures": [
+    {
+      "label": "moved-deep:Eksempel - Gruppekontrakt.docx",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 0/week 3/reading/Eksempel - Gruppekontrakt.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 0/week 3/reading/Eksempel - Gruppekontrakt.docx",
+      "match_name": "Eksempel - Gruppekontrakt.docx",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1560051,
+      "original_path": "Eksempel - Gruppekontrakt.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:Svarark - Gode råd til projektet.docx",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 1/week 3/reading/Svarark - Gode råd til projektet.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 1/week 3/reading/Svarark - Gode råd til projektet.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1560056,
+      "original_path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:mine noter.docx",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/mine noter.docx",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/mine noter.docx",
+      "match_name": "mine noter.docx",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:tanker.txt",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/gamle noter/tanker.txt",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/gamle noter/tanker.txt",
+      "match_name": "tanker.txt",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:eksamensplan 2026.pdf",
+      "kind": "foreign_content",
+      "path": "eksamensplan 2026.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "eksamensplan 2026.pdf",
+      "match_name": "eksamensplan 2026.pdf",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

@@ -1,0 +1,1010 @@
+--- Download: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) (ID: 43660) Mode: modules ---
+==================================================
+[2026-08-21 14:53:28.275] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads
+[2026-08-21 14:53:28.275] Filter: all | Concurrency: 5 | Max file size: disabled | Estimated payload: 849 MB
+[2026-08-21 14:53:28.275] Canvas Content: [none] | isolate=no
+[2026-08-21 14:53:28.275] Post-processing: [word]
+[2026-08-21 14:53:28.852] Processing Module: Kursusbeskrivelse og eksamensregler (ID: 305028)
+[2026-08-21 14:53:31.483] Found 3 items in module 'Kursusbeskrivelse og eksamensregler'
+[2026-08-21 14:53:31.484]   - Item: Kursusbeskrivelse - ink. eksamensregler (Type: ExternalUrl)
+[2026-08-21 14:53:31.484] Creating Link: Kursusbeskrivelse - ink. eksamensregler (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO1060U.aspx) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Kursusbeskrivelse og eksamensregler/Kursusbeskrivelse - ink. eksamensregler.webloc
+[2026-08-21 14:53:31.486]   - Item: Helle Zinner Henriksens Kontortid (Type: Page)
+[2026-08-21 14:53:31.682] Saving page: Helle Zinner Henriksens Kontortid -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Kursusbeskrivelse og eksamensregler/Page Helle Zinner Henriksens Kontortid.html
+[2026-08-21 14:53:31.684]   - Item: Pensumoversigt efterår2025.pdf (Type: File)
+[2026-08-21 14:53:31.825] Module file tracked: ind_org_Pensumoversigt_efterår2025.pdf (ID: 1652721)
+[2026-08-21 14:53:31.826] Processing Module: Opdateret Pensumoversigt inkl. Forår 2026 (ID: 323515)
+[2026-08-21 14:53:32.029] Found 4 items in module 'Opdateret Pensumoversigt inkl. Forår 2026'
+[2026-08-21 14:53:32.029]   - Item: E25_F26_HAIT_Organisationers opbygning.pdf (Type: File)
+[2026-08-21 14:53:32.215] Module file tracked: E25_F26_HAIT_Organisationers opbygning.pdf (ID: 1747622)
+[2026-08-21 14:53:32.215]   - Item: Manual for eksamensprojekt 2025-2026.pdf (Type: File)
+[2026-08-21 14:53:32.383] Module file tracked: Manual for eksamensprojekt 2025-2026.pdf (ID: 1748401)
+[2026-08-21 14:53:32.383]   - Item: Grupper til eksamensprojekt (Type: Page)
+[2026-08-21 14:53:32.597] Saving page: Grupper til eksamensprojekt -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Opdateret Pensumoversigt inkl. Forår 2026/Page Grupper til eksamensprojekt.html
+[2026-08-21 14:53:32.598]   - Item: Brug af AI i eksamensprojektet (Type: Page)
+[2026-08-21 14:53:32.827] Saving page: Brug af AI i eksamensprojektet -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Opdateret Pensumoversigt inkl. Forår 2026/Page Brug af AI i eksamensprojektet.html
+[2026-08-21 14:53:32.829] Processing Module: Introduktion til organisationsteori (ID: 305029)
+[2026-08-21 14:53:32.961] Found 5 items in module 'Introduktion til organisationsteori'
+[2026-08-21 14:53:32.961]   - Item: Carr, N.G. (2003). IT doesn’t matter, Harvard Business Review, May 2003, s. 5-12 (Type: File)
+[2026-08-21 14:53:33.113] Module file tracked: ITDoesntMatter.pdf (ID: 1560072)
+[2026-08-21 14:53:33.113]   - Item: Eksempel på gruppekontrakt (Type: File)
+[2026-08-21 14:53:33.249] Module file tracked: Eksempel på gruppekontrakt.docx (ID: 1559916)
+[2026-08-21 14:53:33.249]   - Item: Intro_uge 36_2025_slides.pdf (Type: File)
+[2026-08-21 14:53:33.408] Module file tracked: Intro_uge 36_2025_slides.pdf (ID: 1624231)
+[2026-08-21 14:53:33.408]   - Item: Øvelser_uge36_intro_2025.pptx (Type: File)
+[2026-08-21 14:53:33.564] Module file tracked: Øvelser_uge36_intro_2025.pptx (ID: 1624133)
+[2026-08-21 14:53:33.564]   - Item: Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-08-21 14:53:33.565] Creating Link: Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue) (https://www.computerworld.dk/art/226682/10-aar-efter-kontroversiel-artikel-er-it-stadig-ligegyldigt) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Introduktion til organisationsteori/Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue).webloc
+[2026-08-21 14:53:33.566] Processing Module: Tema 1: Formelle træk - mål og strategi (ID: 305030)
+[2026-08-21 14:53:33.809] Found 6 items in module 'Tema 1: Formelle træk - mål og strategi'
+[2026-08-21 14:53:33.809]   - Item: Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-08-21 14:53:33.810] Creating Link: Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1087340) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - mål og strategi/Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.webloc
+[2026-08-21 14:53:33.812]   - Item: Slides_mål og strategi_del 1_E25.pdf (Type: File)
+[2026-08-21 14:53:33.964] Module file tracked: Slides_mål og strategi_del 1_E25.pdf (ID: 1620929)
+[2026-08-21 14:53:33.964]   - Item: Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-08-21 14:53:33.965] Creating Link: Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1088123) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - mål og strategi/Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.webloc
+[2026-08-21 14:53:33.966]   - Item: Slides_mål og strategi_del 2_E25.pdf (Type: File)
+[2026-08-21 14:53:34.203] Module file tracked: Slides_mål og strategi_del 2_E25.pdf (ID: 1620930)
+[2026-08-21 14:53:34.203]   - Item: Quiz: mål og strategi i organisationer (Type: Quiz)
+[2026-08-21 14:53:34.203]   - Item: Øvelser_uge36B_mål_og_strategi_2025.pdf (Type: File)
+[2026-08-21 14:53:34.356] Module file tracked: Øvelser_uge36B_mål_og_strategi_2025.pdf (ID: 1627150)
+[2026-08-21 14:53:34.356] Processing Module: Tema 1: Formelle træk - organisationsstruktur (ID: 305031)
+[2026-08-21 14:53:34.533] Found 8 items in module 'Tema 1: Formelle træk - organisationsstruktur'
+[2026-08-21 14:53:34.534]   - Item: Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-08-21 14:53:34.535] Creating Link: Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052619) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsstruktur/Forelæsningsvideo (1) formelle træk - organisationsstruktur 2025 37.webloc
+[2026-08-21 14:53:34.537]   - Item: Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-08-21 14:53:34.538] Creating Link: Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052620) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsstruktur/Forelæsningsvideo (2) formelle træk - organisationsstruktur 2025 37.webloc
+[2026-08-21 14:53:34.539]   - Item: Quiz: Organisationsstruktur  (Type: Quiz)
+[2026-08-21 14:53:34.539]   - Item: Slides (1): formelle træk - organisationsstruktur 2025_37 (Type: File)
+[2026-08-21 14:53:34.689] Module file tracked: 2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx (ID: 1559993)
+[2026-08-21 14:53:34.689]   - Item: Slides (2): formelle træk - organisationsstruktur 2025_37 (Type: File)
+[2026-08-21 14:53:34.841] Module file tracked: 2024_Lektion uge 37_2 Struktur_upload.pptx (ID: 1560185)
+[2026-08-21 14:53:34.841]   - Item: Upload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk (Type: Discussion)
+[2026-08-21 14:53:34.842]   - Item: Øvelse uge 37 - Organisationsdiagram.pdf (Type: File)
+[2026-08-21 14:53:35.008] Module file tracked: Øvelse uge 37 - Organisationsdiagram.pdf (ID: 1628057)
+[2026-08-21 14:53:35.009]   - Item: Øvelser_uge37_struktur_2025.pdf (Type: File)
+[2026-08-21 14:53:35.152] Module file tracked: Øvelser_uge37_struktur_2025.pdf (ID: 1632239)
+[2026-08-21 14:53:35.154] Processing Module: Tema 1: Formelle træk - organisationsformer (ID: 305032)
+[2026-08-21 14:53:35.314] Found 8 items in module 'Tema 1: Formelle træk - organisationsformer'
+[2026-08-21 14:53:35.314]   - Item: Forelæsningsvideo (1): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-08-21 14:53:35.316] Creating Link: Forelæsningsvideo (1): formelle træk - organisationsformer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052628) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsformer/Forelæsningsvideo (1) formelle træk - organisationsformer.webloc
+[2026-08-21 14:53:35.317]   - Item: Forelæsningsvideo (2): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-08-21 14:53:35.318] Creating Link: Forelæsningsvideo (2): formelle træk - organisationsformer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052629) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsformer/Forelæsningsvideo (2) formelle træk - organisationsformer.webloc
+[2026-08-21 14:53:35.319]   - Item: Slides (1): formelle træk - organisationsformer_2025 (Type: File)
+[2026-08-21 14:53:35.452] Module file tracked: 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx (ID: 1560188)
+[2026-08-21 14:53:35.452]   - Item: Slides (2): formelle træk - organisationsformer_2025 (Type: File)
+[2026-08-21 14:53:35.592] Module file tracked: 2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pptx (ID: 1560186)
+[2026-08-21 14:53:35.592]   - Item: Resultat af øvelse: organisationsformer - oversigtstabel (Type: File)
+[2026-08-21 14:53:35.733] Module file tracked: Organisationsformer - oversigtstabel - udfyldt.pptx (ID: 1559923)
+[2026-08-21 14:53:35.733]   - Item: Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-08-21 14:53:35.734] Creating Link: Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue) (https://danskebank.com/about-us) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsformer/Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue).webloc
+[2026-08-21 14:53:35.735]   - Item: Danske Bank investor præsentation (læs s. 3-10) (Type: ExternalUrl)
+[2026-08-21 14:53:35.736] Creating Link: Danske Bank investor præsentation (læs s. 3-10) (https://danskebank.com/-/media/danske-bank-com/file-cloud/2025/2/investor-presentation---q4-2024.pdf) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsformer/Danske Bank investor præsentation (læs s. 3-10).webloc
+[2026-08-21 14:53:35.737]   - Item: Kristoffers Oplæg - Strategy in Danske Bank.pdf (Type: File)
+[2026-08-21 14:53:35.869] Module file tracked: Strategy in Danske Bank.pdf (ID: 1638534)
+[2026-08-21 14:53:35.870] Processing Module: Tema 2: Uformelle træk - organisationskultur (ID: 305033)
+[2026-08-21 14:53:36.055] Found 13 items in module 'Tema 2: Uformelle træk - organisationskultur'
+[2026-08-21 14:53:36.055]   - Item: Forelæsningsvideo (1): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-08-21 14:53:36.056] Creating Link: Forelæsningsvideo (1): Uformelletræk_organisationskultur (https://cbscanvas.instructure.com/courses/43660/modules/items/1102035) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - organisationskultur/Forelæsningsvideo (1) Uformelletræk_organisationskultur.webloc
+[2026-08-21 14:53:36.057]   - Item: Slides_kulturanalyse del 1_E25.pdf (Type: File)
+[2026-08-21 14:53:36.249] Module file tracked: Slides_kulturanalyse del 1_E25.pdf (ID: 1640813)
+[2026-08-21 14:53:36.249]   - Item: Forelæsningsvideo (2): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-08-21 14:53:36.250] Creating Link: Forelæsningsvideo (2): Uformelletræk_organisationskultur (https://cbscanvas.instructure.com/courses/43660/modules/items/1102050) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - organisationskultur/Forelæsningsvideo (2) Uformelletræk_organisationskultur.webloc
+[2026-08-21 14:53:36.251]   - Item: Slides_kulturanalyse del 2_E25.pdf (Type: File)
+[2026-08-21 14:53:36.395] Module file tracked: Slides_kulturanalyse del 2_E25.pdf (ID: 1640814)
+[2026-08-21 14:53:36.395]   - Item: Quiz: organisationskultur (Type: Quiz)
+[2026-08-21 14:53:36.395]   - Item: Video med respons på feedback og introduktion til et nyt initiativ i undervisningen (Type: ExternalTool)
+[2026-08-21 14:53:36.396] Creating Link: Video med respons på feedback og introduktion til et nyt initiativ i undervisningen (https://cbscanvas.instructure.com/courses/43660/modules/items/1103344) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - organisationskultur/Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.webloc
+[2026-08-21 14:53:36.398]   - Item: Øvelser_uge39_kultur_2025.pdf (Type: File)
+[2026-08-21 14:53:36.541] Module file tracked: Øvelser_uge39_kultur_2025.pdf (ID: 1643383)
+[2026-08-21 14:53:36.541]   - Item: Øvelser_uge39_kultur_E2025 upload.pptx (Type: File)
+[2026-08-21 14:53:36.689] Module file tracked: Øvelser_uge39_kultur_E2025 upload.pptx (ID: 1644211)
+[2026-08-21 14:53:36.690]   - Item: Martin Thorborg tiltrækker nye ansatte ved at lokke_artikel okt 2023 (Type: File)
+[2026-08-21 14:53:36.990] Module file tracked: Martin Thorborg tiltrækker nye ansatte ved at lokke_artikel okt 2023.pdf (ID: 1559932)
+[2026-08-21 14:53:36.990]   - Item: Case: Børnemøbler (Type: File)
+[2026-08-21 14:53:37.456] Module file tracked: Børnemøbler_ny version.pdf (ID: 1560154)
+[2026-08-21 14:53:37.456]   - Item: Spørgsmål til pensum i organisationskultur (Type: Discussion)
+[2026-08-21 14:53:37.456]   - Item: Supplerende literatur (Type: SubHeader)
+[2026-08-21 14:53:37.457]   - Item: Schein 1994_uddrag.pdf (Type: File)
+[2026-08-21 14:53:37.597] Module file tracked: Schein 1994_uddrag.pdf (ID: 1639375)
+[2026-08-21 14:53:37.598] Processing Module: Tema 2: Uformelle træk - sensemaking (ID: 305034)
+[2026-08-21 14:53:37.845] Found 11 items in module 'Tema 2: Uformelle træk - sensemaking'
+[2026-08-21 14:53:37.845]   - Item: Forelæsningsvideo 1 om Sensemaking (Type: ExternalTool)
+[2026-08-21 14:53:37.846] Creating Link: Forelæsningsvideo 1 om Sensemaking (https://cbscanvas.instructure.com/courses/43660/modules/items/1105837) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - sensemaking/Forelæsningsvideo 1 om Sensemaking.webloc
+[2026-08-21 14:53:37.848]   - Item: Sensemaking slides 1.pptx (Type: File)
+[2026-08-21 14:53:37.980] Module file tracked: Sensemaking slides 1.pptx (ID: 1658057)
+[2026-08-21 14:53:37.980]   - Item: Forelæsningsvideo 2 om Sensemaking (Type: ExternalTool)
+[2026-08-21 14:53:37.981] Creating Link: Forelæsningsvideo 2 om Sensemaking (https://cbscanvas.instructure.com/courses/43660/modules/items/1105840) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - sensemaking/Forelæsningsvideo 2 om Sensemaking.webloc
+[2026-08-21 14:53:37.983]   - Item: Sensemaking slides 2.pptx (Type: File)
+[2026-08-21 14:53:38.112] Module file tracked: Sensemaking slides 2.pptx (ID: 1658058)
+[2026-08-21 14:53:38.112]   - Item: Weick, K. E., Sutcliffe, K. M., & Obstfeld, D. (2005). Organizing and the Process of Sensemaking. Organization Science 16(4), 409–421. https://doi.org/10.1287/orsc.1050.0133 (kan også findes via. CBS libsearch) (Type: SubHeader)
+[2026-08-21 14:53:38.112]   - Item: Weick (1995) Sensemaking in organization kap. 2 (.pdf (Type: File)
+[2026-08-21 14:53:38.258] Module file tracked: Sensemaking in org (weick 1995).pdf (ID: 1643073)
+[2026-08-21 14:53:38.258]   - Item: Supplerende literatur (Type: SubHeader)
+[2026-08-21 14:53:38.258]   - Item: Øvelser_uge39_sensemaking_2025.pdf (Type: File)
+[2026-08-21 14:53:38.408] Module file tracked: Øvelser_uge39_sensemaking_2025.pdf (ID: 1659237)
+[2026-08-21 14:53:38.408]   - Item: Spørgsmål til oplægsholder: Jens Christian Finnerup, Systematic (Type: Discussion)
+[2026-08-21 14:53:38.408]   - Item: Sensemaking slides 1.pdf (Type: File)
+[2026-08-21 14:53:38.554] Module file tracked: Sensemaking slides 1.pdf (ID: 1668216)
+[2026-08-21 14:53:38.554]   - Item: Sensemaking slides 2.pdf (Type: File)
+[2026-08-21 14:53:38.705] Module file tracked: Sensemaking slides 2.pdf (ID: 1668217)
+[2026-08-21 14:53:38.705] Processing Module: Tema 2: Uformelle træk - magt og konflikt (ID: 305035)
+[2026-08-21 14:53:38.900] Found 11 items in module 'Tema 2: Uformelle træk - magt og konflikt'
+[2026-08-21 14:53:38.900]   - Item: Forelæsningsvideo (1): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-08-21 14:53:38.902] Creating Link: Forelæsningsvideo (1): uformelle træk - magt i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052657) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - magt og konflikt/Forelæsningsvideo (1) uformelle træk - magt i organisationer.webloc
+[2026-08-21 14:53:38.904]   - Item: Forelæsningsvideo (2): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-08-21 14:53:38.905] Creating Link: Forelæsningsvideo (2): uformelle træk - magt i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052658) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - magt og konflikt/Forelæsningsvideo (2) uformelle træk - magt i organisationer.webloc
+[2026-08-21 14:53:38.907]   - Item: Quiz: magt og konflikt (Type: Quiz)
+[2026-08-21 14:53:38.907]   - Item: Slides (1): uformelle træk - konflikt (Type: File)
+[2026-08-21 14:53:39.097] Module file tracked: 2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pptx (ID: 1559834)
+[2026-08-21 14:53:39.097]   - Item: Slides (2): uformelle træk - konflikt (Type: File)
+[2026-08-21 14:53:39.248] Module file tracked: 2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pptx (ID: 1560061)
+[2026-08-21 14:53:39.248]   - Item: Case genbesøg: Børnemøbler (Type: File)
+[2026-08-21 14:53:39.248]   Duplicate module link skipped (already saved in an earlier module): Case genbesøg: Børnemøbler
+[2026-08-21 14:53:39.248]   - Item: Spørgsmål til pensum: magt i organisationer (Type: Discussion)
+[2026-08-21 14:53:39.248]   - Item: Øvelser_uge41_magt_E25.pdf (Type: File)
+[2026-08-21 14:53:39.407] Module file tracked: Øvelser_uge41_magt_E25.pdf (ID: 1666882)
+[2026-08-21 14:53:39.407]   - Item: Jens Finnerup Systematik - culture.experiences.pdf (Type: File)
+[2026-08-21 14:53:39.608] Module file tracked: culture.experiences.pdf (ID: 1667723)
+[2026-08-21 14:53:39.608]   - Item: Invitation til deltagelse i forskningsprojekt / mulig case til forårsprojekt (Type: File)
+[2026-08-21 14:53:39.751] Module file tracked: 251009_Kom og vær med_Til Stig N.pptx (ID: 1669054)
+[2026-08-21 14:53:39.751]   - Item: From Algorithmic Management to Data-driven Labour Organising(27).pdf (Type: File)
+[2026-08-21 14:53:39.886] Module file tracked: From Algorithmic Management to Data-driven Labour Organising(27).pdf (ID: 1669058)
+[2026-08-21 14:53:39.887] Processing Module: Uge 42: Ingen undervisning (ID: 305036)
+[2026-08-21 14:53:40.017] Found 0 items in module 'Uge 42: Ingen undervisning'
+[2026-08-21 14:53:40.017] Processing Module: Tema 3: Individ, organisation og omverden - organisation og omgivelser (ID: 305040)
+[2026-08-21 14:53:40.217] Found 9 items in module 'Tema 3: Individ, organisation og omverden - organisation og omgivelser'
+[2026-08-21 14:53:40.217]   - Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-08-21 14:53:40.218] Creating Link: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052698) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - organisation og omgivelser/Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.webloc
+[2026-08-21 14:53:40.220]   - Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-08-21 14:53:40.221] Creating Link: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052699) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - organisation og omgivelser/Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.webloc
+[2026-08-21 14:53:40.222]   - Item: Slides (1) Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf (Type: File)
+[2026-08-21 14:53:40.364] Module file tracked: 2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf (ID: 1678067)
+[2026-08-21 14:53:40.364]   - Item: Slides (2)  Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf (Type: File)
+[2026-08-21 14:53:40.508] Module file tracked: 2025_Lektion uge 43_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf (ID: 1678066)
+[2026-08-21 14:53:40.509]   - Item: Quiz: omgivelser (Type: Quiz)
+[2026-08-21 14:53:40.509]   - Item: Case: Sundhedsdata på Rigshospitalet - Berlingske 2019 (Type: File)
+[2026-08-21 14:53:40.665] Module file tracked: Berlingske Case.pdf (ID: 1559936)
+[2026-08-21 14:53:40.665]   - Item: Upload af besvarelse af Rigshospitalscase (Type: Discussion)
+[2026-08-21 14:53:40.665]   - Item: Uge43_omgivelser_2025.pdf (Type: File)
+[2026-08-21 14:53:40.862] Module file tracked: Uge43_omgivelser_2025.pdf (ID: 1677945)
+[2026-08-21 14:53:40.862]   - Item: Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 (Type: ExternalTool)
+[2026-08-21 14:53:40.863] Creating Link: Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 (https://cbscanvas.instructure.com/courses/43660/modules/items/1117745) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - organisation og omgivelser/Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.webloc
+[2026-08-21 14:53:40.864] Processing Module: Tema 3: Individ, organisation og omverden - læring i organisationer (ID: 305037)
+[2026-08-21 14:53:41.033] Found 7 items in module 'Tema 3: Individ, organisation og omverden - læring i organisationer'
+[2026-08-21 14:53:41.034]   - Item: Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-08-21 14:53:41.035] Creating Link: Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052666) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - læring i organisationer/Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.webloc
+[2026-08-21 14:53:41.037]   - Item: Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-08-21 14:53:41.037] Creating Link: Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052667) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - læring i organisationer/Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.webloc
+[2026-08-21 14:53:41.038]   - Item: Slides (1): individ, organisation og omverden - læring & innovation_2025 (Type: File)
+[2026-08-21 14:53:41.376] Module file tracked: 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx (ID: 1560177)
+[2026-08-21 14:53:41.376]   - Item: Slides (2): individ, organisation og omverden - læring & innovation_2025 (Type: File)
+[2026-08-21 14:53:41.509] Module file tracked: 2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx (ID: 1560197)
+[2026-08-21 14:53:41.509]   - Item: Case: Shook J. (2010) How to change a culture, lessons from nummi (Type: File)
+[2026-08-21 14:53:41.651] Module file tracked: Shook J. (2010) How to change a culture, lessons from nummi.pdf (ID: 1559930)
+[2026-08-21 14:53:41.651]   - Item: Quiz: læring og innovation (Type: Quiz)
+[2026-08-21 14:53:41.652]   - Item: Øvelse uge 44 - Læring.pdf (Type: File)
+[2026-08-21 14:53:41.915] Module file tracked: Øvelse uge 44 - Læring.pdf (ID: 1682693)
+[2026-08-21 14:53:41.915] Processing Module: Tema 3: Individ, organisation og omverden- motivationsfaktorer (ID: 305038)
+[2026-08-21 14:53:42.078] Found 7 items in module 'Tema 3: Individ, organisation og omverden- motivationsfaktorer'
+[2026-08-21 14:53:42.078]   - Item: Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 (Type: ExternalTool)
+[2026-08-21 14:53:42.080] Creating Link: Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 (https://cbscanvas.instructure.com/courses/43660/modules/items/1121634) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden- motivationsfaktorer/Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.webloc
+[2026-08-21 14:53:42.082]   - Item: Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 (Type: ExternalTool)
+[2026-08-21 14:53:42.082] Creating Link: Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 (https://cbscanvas.instructure.com/courses/43660/modules/items/1121635) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden- motivationsfaktorer/Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.webloc
+[2026-08-21 14:53:42.083]   - Item: Slides (1) Motivationsfaktorer forelæsning 1.pptx (Type: File)
+[2026-08-21 14:53:42.230] Module file tracked: Slides (1) Motivationsfaktorer forelæsning 1.pptx (ID: 1686104)
+[2026-08-21 14:53:42.230]   - Item: Slides (2) Motivationsfaktorer forelæsning 2.pptx (Type: File)
+[2026-08-21 14:53:42.368] Module file tracked: Slides (2) Motivationsfaktorer forelæsning 2.pptx (ID: 1686105)
+[2026-08-21 14:53:42.368]   - Item: Quiz: motivationsfaktorer i organisationer (Type: Quiz)
+[2026-08-21 14:53:42.369]   - Item: Motivationsfaktorer - uge 45 2025.pdf (Type: File)
+[2026-08-21 14:53:42.581] Module file tracked: Motivationsfaktorer - uge 45 2025.pdf (ID: 1687664)
+[2026-08-21 14:53:42.582]   - Item: Slides - Henrik Stenmann - Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf (Type: File)
+[2026-08-21 14:53:42.721] Module file tracked: Slides - Henrik Stenmann - Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf (ID: 1690411)
+[2026-08-21 14:53:42.721] Processing Module: Tema 4: Ledelse og strategi - beslutninger i organisationer (ID: 305041)
+[2026-08-21 14:53:42.915] Found 7 items in module 'Tema 4: Ledelse og strategi - beslutninger i organisationer'
+[2026-08-21 14:53:42.916]   - Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-08-21 14:53:42.916] Creating Link: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052708) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - beslutninger i organisationer/Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.webloc
+[2026-08-21 14:53:42.918]   - Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-08-21 14:53:42.919] Creating Link: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052709) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - beslutninger i organisationer/Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.webloc
+[2026-08-21 14:53:42.920]   - Item: Slides (1): organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: File)
+[2026-08-21 14:53:43.058] Module file tracked: 2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx (ID: 1560230)
+[2026-08-21 14:53:43.058]   - Item: Slides (2): organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: File)
+[2026-08-21 14:53:43.192] Module file tracked: 2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pptx (ID: 1560070)
+[2026-08-21 14:53:43.192]   - Item: Quiz: Beslutninger i organisationer (Type: Quiz)
+[2026-08-21 14:53:43.193]   - Item: Beslutninger - Uge 46 2025.pdf (Type: File)
+[2026-08-21 14:53:43.341] Module file tracked: Beslutninger - Uge 46 2025.pdf (ID: 1693406)
+[2026-08-21 14:53:43.341]   - Item: Udfaldsrum beskrivelser (Type: File)
+[2026-08-21 14:53:43.482] Module file tracked: Udfaldsrum Beskrivelser.docx (ID: 1560193)
+[2026-08-21 14:53:43.483] Processing Module: Tema 4: Ledelse og strategi- forandringer i organisationer (ID: 305042)
+[2026-08-21 14:53:43.644] Found 13 items in module 'Tema 4: Ledelse og strategi- forandringer i organisationer'
+[2026-08-21 14:53:43.644]   - Item: Forelæsningsvideo (1): Forandringsledelse (Type: ExternalTool)
+[2026-08-21 14:53:43.645] Creating Link: Forelæsningsvideo (1): Forandringsledelse (https://cbscanvas.instructure.com/courses/43660/modules/items/1126004) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi- forandringer i organisationer/Forelæsningsvideo (1) Forandringsledelse.webloc
+[2026-08-21 14:53:43.647]   - Item: Forandringsledelse slide (1) (Type: File)
+[2026-08-21 14:53:43.797] Module file tracked: Forandring i organisationer_video1_upload_2025.pptx (ID: 1694168)
+[2026-08-21 14:53:43.798]   - Item: Forelæsningsvideo (2): Forandringsledelse (Type: ExternalTool)
+[2026-08-21 14:53:43.798] Creating Link: Forelæsningsvideo (2): Forandringsledelse (https://cbscanvas.instructure.com/courses/43660/modules/items/1126008) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi- forandringer i organisationer/Forelæsningsvideo (2) Forandringsledelse.webloc
+[2026-08-21 14:53:43.800]   - Item: Forandringsledelse slides (2) (Type: File)
+[2026-08-21 14:53:43.951] Module file tracked: Forandringsledelse slide del 2.pptx (ID: 1694170)
+[2026-08-21 14:53:43.951]   - Item: Quiz: Forandring i organisationer (Type: Quiz)
+[2026-08-21 14:53:43.951]   - Item: Forandring - uge 47 2025.pdf (Type: File)
+[2026-08-21 14:53:44.117] Module file tracked: Forandring - uge 47 2025.pdf (ID: 1695726)
+[2026-08-21 14:53:44.117]   - Item: Kotter, J.P. (1999). Ændring af organisationer: Hvorfor det mislykkes (kap 1) (Type: File)
+[2026-08-21 14:53:44.259] Module file tracked: 1999_Kotter_kap 1.pdf (ID: 1560208)
+[2026-08-21 14:53:44.259]   - Item: Kotter, J.P. (1999). Ændring af organisationer: Hvorfor det mislykkes (kap 2) (Type: File)
+[2026-08-21 14:53:44.431] Module file tracked: 1999_Kotter_kap 2.pdf (ID: 1559924)
+[2026-08-21 14:53:44.431]   - Item: Rick Maurer - Introduction to Change (Type: File)
+[2026-08-21 14:53:44.608] Module file tracked: Maurer_Introduction to Change.pdf (ID: 1559918)
+[2026-08-21 14:53:44.609]   - Item: Munster 2017_intro.pdf (Type: File)
+[2026-08-21 14:53:44.762] Module file tracked: Munster 2017_intro.pdf (ID: 1693022)
+[2026-08-21 14:53:44.762]   - Item: Munster 2017_kap 1.pdf (Type: File)
+[2026-08-21 14:53:44.904] Module file tracked: Munster 2017_kap 1.pdf (ID: 1693023)
+[2026-08-21 14:53:44.904]   - Item: Forberedelse til øvelstime (Type: SubHeader)
+[2026-08-21 14:53:44.904]   - Item: Case: børnemøbler (Type: File)
+[2026-08-21 14:53:44.904]   Duplicate module link skipped (already saved in an earlier module): Case: børnemøbler
+[2026-08-21 14:53:44.904] Processing Module: Tema 4: Ledelse og strategi - ledelse i organisationer (ID: 305043)
+[2026-08-21 14:53:45.061] Found 8 items in module 'Tema 4: Ledelse og strategi - ledelse i organisationer'
+[2026-08-21 14:53:45.061]   - Item: Forelæsningsvideo 1 Ledelse i organisationer 1 (Type: ExternalTool)
+[2026-08-21 14:53:45.062] Creating Link: Forelæsningsvideo 1 Ledelse i organisationer 1 (https://cbscanvas.instructure.com/courses/43660/modules/items/1128497) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - ledelse i organisationer/Forelæsningsvideo 1 Ledelse i organisationer 1.webloc
+[2026-08-21 14:53:45.064]   - Item: Forelæsningsvideo 2 Ledelse i organisationer 2 (Type: ExternalTool)
+[2026-08-21 14:53:45.065] Creating Link: Forelæsningsvideo 2 Ledelse i organisationer 2 (https://cbscanvas.instructure.com/courses/43660/modules/items/1128498) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - ledelse i organisationer/Forelæsningsvideo 2 Ledelse i organisationer 2.webloc
+[2026-08-21 14:53:45.066]   - Item: Quiz: ledelse i organisationer (Type: Quiz)
+[2026-08-21 14:53:45.067]   - Item: Slides (1) Ledelse i organisationer forelæsning 1.pptx (Type: File)
+[2026-08-21 14:53:45.214] Module file tracked: Slides (1) Ledelse i organisationer forelæsning 1.pptx (ID: 1698861)
+[2026-08-21 14:53:45.214]   - Item: Slides (2) Ledelse i organisationer forelæsning 2.pptx (Type: File)
+[2026-08-21 14:53:45.359] Module file tracked: Slides (2) Ledelse i organisationer forelæsning 2.pptx (ID: 1698862)
+[2026-08-21 14:53:45.359]   - Item: Oplæg: Saxo Merrild, Handyhand (Type: SubHeader)
+[2026-08-21 14:53:45.359]   - Item: Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse (Type: ExternalUrl)
+[2026-08-21 14:53:45.360] Creating Link: Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse (https://www.linkedin.com/in/saxo-merrild/recent-activity/all/) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - ledelse i organisationer/Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse.webloc
+[2026-08-21 14:53:45.362]   - Item: Ledelse - uge 48.pdf (Type: File)
+[2026-08-21 14:53:45.505] Module file tracked: Ledelse - uge 48.pdf (ID: 1699643)
+[2026-08-21 14:53:45.505] Processing Module: Tema 4: Ledelse og strategi  - organisationsteori i et historisk perspektiv (ID: 319566)
+[2026-08-21 14:53:45.664] Found 1 items in module 'Tema 4: Ledelse og strategi  - organisationsteori i et historisk perspektiv'
+[2026-08-21 14:53:45.664]   - Item: Slides sidste forelæsning.pdf (Type: File)
+[2026-08-21 14:53:45.817] Module file tracked: Slides sidste forelæsning.pdf (ID: 1706588)
+[2026-08-21 14:53:45.817] Processing Module: Opsummering - hvad har vi lært? (ID: 305045)
+[2026-08-21 14:53:45.990] Found 3 items in module 'Opsummering - hvad har vi lært?'
+[2026-08-21 14:53:45.991]   - Item: Uge 6: pensum (Type: Page)
+[2026-08-21 14:53:46.196] Saving page: Uge 6: pensum -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Opsummering - hvad har vi lært/Page Uge 6 pensum.html
+[2026-08-21 14:53:46.199]   - Item: Uge 6: mål med undervisningen (Type: Page)
+[2026-08-21 14:53:46.487] Saving page: Uge 6: mål med undervisningen -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Opsummering - hvad har vi lært/Page Uge 6 mål med undervisningen.html
+[2026-08-21 14:53:46.489]   - Item: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret (Type: File)
+[2026-08-21 14:53:46.634] Module file tracked: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx (ID: 1766952)
+[2026-08-21 14:53:46.634] Processing Module: Organisationsprojekt - vidensproduktion (ID: 305046)
+[2026-08-21 14:53:46.803] Found 7 items in module 'Organisationsprojekt - vidensproduktion'
+[2026-08-21 14:53:46.803]   - Item: Uge 8: pensum (Type: Page)
+[2026-08-21 14:53:47.042] Saving page: Uge 8: pensum -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - vidensproduktion/Page Uge 8 pensum.html
+[2026-08-21 14:53:47.044]   - Item: Uge 8: mål med undervisningen (Type: Page)
+[2026-08-21 14:53:47.339] Saving page: Uge 8: mål med undervisningen -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - vidensproduktion/Page Uge 8 mål med undervisningen.html
+[2026-08-21 14:53:47.342]   - Item: Forelæsningsvideo (1): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-08-21 14:53:47.343] Creating Link: Forelæsningsvideo (1): organisationsprojekt - vidensproduktion (https://cbscanvas.instructure.com/courses/43660/modules/items/1052745) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - vidensproduktion/Forelæsningsvideo (1) organisationsprojekt - vidensproduktion.webloc
+[2026-08-21 14:53:47.344]   - Item: Forelæsningsvideo (2): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-08-21 14:53:47.345] Creating Link: Forelæsningsvideo (2): organisationsprojekt - vidensproduktion (https://cbscanvas.instructure.com/courses/43660/modules/items/1052746) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - vidensproduktion/Forelæsningsvideo (2) organisationsprojekt - vidensproduktion.webloc
+[2026-08-21 14:53:47.346]   - Item: Slides (1): organisationsprojekt - vidensproduktion (Type: File)
+[2026-08-21 14:53:47.498] Module file tracked: Organisationsprojekt_vidensproduktion_1_upload.pptm (ID: 1560231)
+[2026-08-21 14:53:47.498]   - Item: Slides (2): organisationsprojekt - vidensproduktion (Type: File)
+[2026-08-21 14:53:47.659] Module file tracked: Organisationsprojekt_vidensproduktion_2_upload.pptm (ID: 1560232)
+[2026-08-21 14:53:47.659]   - Item: Øvelsesslides - Intro.pptx (Type: File)
+[2026-08-21 14:53:47.847] Module file tracked: Øvelsesslides - Intro.pptx (ID: 1777888)
+[2026-08-21 14:53:47.848] Processing Module: Organisationsprojekt - problemformulering (ID: 305047)
+[2026-08-21 14:53:48.028] Found 8 items in module 'Organisationsprojekt - problemformulering'
+[2026-08-21 14:53:48.029]   - Item: Uge 9: pensum (Type: Page)
+[2026-08-21 14:53:48.234] Saving page: Uge 9: pensum -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - problemformulering/Page Uge 9 pensum.html
+[2026-08-21 14:53:48.237]   - Item: Uge 9: mål med undervisningen (Type: Page)
+[2026-08-21 14:53:48.488] Saving page: Uge 9: mål med undervisningen -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - problemformulering/Page Uge 9 mål med undervisningen.html
+[2026-08-21 14:53:48.490]   - Item: Forelæsningsvideo (1): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-08-21 14:53:48.492] Creating Link: Forelæsningsvideo (1): organisationsprojekt - problemformulering (https://cbscanvas.instructure.com/courses/43660/modules/items/1052753) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - problemformulering/Forelæsningsvideo (1) organisationsprojekt - problemformulering.webloc
+[2026-08-21 14:53:48.494]   - Item: Forelæsningsvideo (2): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-08-21 14:53:48.496] Creating Link: Forelæsningsvideo (2): organisationsprojekt - problemformulering (https://cbscanvas.instructure.com/courses/43660/modules/items/1052754) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - problemformulering/Forelæsningsvideo (2) organisationsprojekt - problemformulering.webloc
+[2026-08-21 14:53:48.497]   - Item: Slides (1): organisationsprojekt - problemformulering (Type: File)
+[2026-08-21 14:53:48.633] Module file tracked: Organisationsprojekt_problemformulering_1-upload.pptm (ID: 1559949)
+[2026-08-21 14:53:48.633]   - Item: Slides (2): organisationsprojekt - problemformulering (Type: File)
+[2026-08-21 14:53:48.795] Module file tracked: Organisationsprojekt_problemformulering-2_upload.pptm (ID: 1560069)
+[2026-08-21 14:53:48.795]   - Item: Øvelsesslides XA: problemformulering (Type: File)
+[2026-08-21 14:53:48.933] Module file tracked: Øvelse_uge9_problemformulering_XA_upload.pptx (ID: 1560225)
+[2026-08-21 14:53:48.933]   - Item: Øvelsesslides XB: problemformulering (Type: File)
+[2026-08-21 14:53:49.076] Module file tracked: Øvelse_uge9_problemformulering_XB_UPLOAD.pptx (ID: 1783488)
+[2026-08-21 14:53:49.077] Processing Module: Organisationsprojekt - undersøgelsesdesign (ID: 305048)
+[2026-08-21 14:53:49.255] Found 7 items in module 'Organisationsprojekt - undersøgelsesdesign'
+[2026-08-21 14:53:49.255]   - Item: Uge 10: pensum (Type: Page)
+[2026-08-21 14:53:49.475] Saving page: Uge 10: pensum -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - undersøgelsesdesign/Page Uge 10 pensum.html
+[2026-08-21 14:53:49.477]   - Item: Uge 10: mål med undervisningen (Type: Page)
+[2026-08-21 14:53:49.778] Saving page: Uge 10: mål med undervisningen -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - undersøgelsesdesign/Page Uge 10 mål med undervisningen.html
+[2026-08-21 14:53:49.794]   - Item: Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign (Type: ExternalTool)
+[2026-08-21 14:53:49.795] Creating Link: Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign (https://cbscanvas.instructure.com/courses/43660/modules/items/1052762) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - undersøgelsesdesign/Forelæsningsvideo (1) organisationsprojekt - Undersøgelsesdesign.webloc
+[2026-08-21 14:53:49.798]   - Item: Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker (Type: ExternalTool)
+[2026-08-21 14:53:49.800] Creating Link: Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker (https://cbscanvas.instructure.com/courses/43660/modules/items/1052763) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - undersøgelsesdesign/Forelæsningsvideo (2) organisationsprojekt - Dataindsamlingsteknikker.webloc
+[2026-08-21 14:53:49.801]   - Item: Slides (1): organisationsprojekt - Undersøgelsesdesign (Type: File)
+[2026-08-21 14:53:50.018] Module file tracked: 2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pptx (ID: 1560227)
+[2026-08-21 14:53:50.018]   - Item: Slides (2): organisationsprojekt - Dataindsamlingsteknikker (Type: File)
+[2026-08-21 14:53:50.196] Module file tracked: 2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (ID: 1560220)
+[2026-08-21 14:53:50.196]   - Item: Øvelsesslides: Undersøgelsesdesign (Type: File)
+[2026-08-21 14:53:50.351] Module file tracked: Uge 10 Undersøgelsesdesign UPLOAD.pptx (ID: 1785168)
+[2026-08-21 14:53:50.351] Processing Module: Klyngevejledning 1 (ID: 305049)
+[2026-08-21 14:53:50.563] Found 11 items in module 'Klyngevejledning 1'
+[2026-08-21 14:53:50.563]   - Item: Uge 11: formål med klyngevejledningen (Type: Page)
+[2026-08-21 14:53:50.768] Saving page: Uge 11: formål med klyngevejledningen -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/Page Uge 11 formål med klyngevejledningen.html
+[2026-08-21 14:53:50.770]   - Item: Skabelon til klyngevejledning - UDFYLDT SKABELON UPLOADES I JERES GRUPPERUM (angiv venligst gruppenr i filnavnet) (Type: File)
+[2026-08-21 14:53:50.918] Module file tracked: SKABELON_KLYNGEVEJLEDNING_1_2025.docx (ID: 1560226)
+[2026-08-21 14:53:50.918]   - Item: KLYNGEVEJLEDNING: HVOR SKAL JEG UPLOADE SKABELONEN? (Type: File)
+[2026-08-21 14:53:51.070] Module file tracked: Klyngevejledning - Upload.pptx (ID: 1785191)
+[2026-08-21 14:53:51.070]   - Item: Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx (Type: File)
+[2026-08-21 14:53:51.204] Module file tracked: Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx (ID: 1790530)
+[2026-08-21 14:53:51.205]   - Item: Filer til Klynge 1 (Type: Page)
+[2026-08-21 14:53:51.451] Saving page: Filer til Klynge 1 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/Page Filer til Klynge 1.html
+[2026-08-21 14:53:51.454]   - Item: Filer til Klynge 2 (Type: Page)
+[2026-08-21 14:53:51.707] Saving page: Filer til Klynge 2 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/Page Filer til Klynge 2.html
+[2026-08-21 14:53:51.710]   - Item: Filer til Klynge 3 (Type: Page)
+[2026-08-21 14:53:51.953] Saving page: Filer til Klynge 3 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/Page Filer til Klynge 3.html
+[2026-08-21 14:53:51.956]   - Item: Filer til Klynge 4 (Type: Page)
+[2026-08-21 14:53:52.209] Saving page: Filer til Klynge 4 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/Page Filer til Klynge 4.html
+[2026-08-21 14:53:52.212]   - Item: Filer til Klynge 5 (Type: Page)
+[2026-08-21 14:53:52.471] Saving page: Filer til Klynge 5 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/Page Filer til Klynge 5.html
+[2026-08-21 14:53:52.476]   - Item: Filer til Klynge 6 (Type: Page)
+[2026-08-21 14:53:52.705] Saving page: Filer til Klynge 6 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/Page Filer til Klynge 6.html
+[2026-08-21 14:53:52.707]   - Item: Filer til Klynge 7 (Type: Page)
+[2026-08-21 14:53:52.944] Saving page: Filer til Klynge 7 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/Page Filer til Klynge 7.html
+[2026-08-21 14:53:52.947] Processing Module: Organisationsprojekt - operationalisering af teori (ID: 305050)
+[2026-08-21 14:53:53.151] Found 9 items in module 'Organisationsprojekt - operationalisering af teori'
+[2026-08-21 14:53:53.152]   - Item: Uge 12: pensum (Type: Page)
+[2026-08-21 14:53:53.354] Saving page: Uge 12: pensum -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - operationalisering af teori/Page Uge 12 pensum.html
+[2026-08-21 14:53:53.356]   - Item: Uge 12: mål med undervisningen (Type: Page)
+[2026-08-21 14:53:53.565] Saving page: Uge 12: mål med undervisningen -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - operationalisering af teori/Page Uge 12 mål med undervisningen.html
+[2026-08-21 14:53:53.568]   - Item: Forelæsningsvideo (1): organisationsprojekt - operationalisering (Type: ExternalTool)
+[2026-08-21 14:53:53.569] Creating Link: Forelæsningsvideo (1): organisationsprojekt - operationalisering (https://cbscanvas.instructure.com/courses/43660/modules/items/1052773) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - operationalisering af teori/Forelæsningsvideo (1) organisationsprojekt - operationalisering.webloc
+[2026-08-21 14:53:53.570]   - Item: Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation (Type: ExternalTool)
+[2026-08-21 14:53:53.572] Creating Link: Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation (https://cbscanvas.instructure.com/courses/43660/modules/items/1052774) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - operationalisering af teori/Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.webloc
+[2026-08-21 14:53:53.574]   - Item: Slides (1): organisationsprojekt_operationalisering (Type: File)
+[2026-08-21 14:53:53.739] Module file tracked: Organisationsprojekt_operationalisering_upload_.pptm (ID: 1560067)
+[2026-08-21 14:53:53.740]   - Item: Slides (2): organisationsprojekt - akademisk argumentation (Type: File)
+[2026-08-21 14:53:53.881] Module file tracked: Organisationsprojekt_argumentation_2_upload.pptm (ID: 1560068)
+[2026-08-21 14:53:53.881]   - Item: Observationsskema (Type: File)
+[2026-08-21 14:53:54.085] Module file tracked: Observationsskema.docx (ID: 1560219)
+[2026-08-21 14:53:54.087]   - Item: Upload af besvarelse Interviewguide (husk at notér XA og XB) (Type: Discussion)
+[2026-08-21 14:53:54.087]   - Item: Øvelsesslides - uge 12 (Type: File)
+[2026-08-21 14:53:54.247] Module file tracked: Øvelsesslides - uge 12.pptx (ID: 1795567)
+[2026-08-21 14:53:54.247] Processing Module: Organisationsprojekt - klargøring af data til analyse (ID: 305051)
+[2026-08-21 14:53:54.434] Found 10 items in module 'Organisationsprojekt - klargøring af data til analyse'
+[2026-08-21 14:53:54.434]   - Item: Uge 13: pensum (Type: Page)
+[2026-08-21 14:53:54.653] Saving page: Uge 13: pensum -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - klargøring af data til analyse/Page Uge 13 pensum.html
+[2026-08-21 14:53:54.656]   - Item: Uge 13: mål med undervisningen (Type: Page)
+[2026-08-21 14:53:54.938] Saving page: Uge 13: mål med undervisningen -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - klargøring af data til analyse/Page Uge 13 mål med undervisningen.html
+[2026-08-21 14:53:54.942]   - Item: Forelæsningsvideo (1): organisationsprojekt - klargøring af data (Type: ExternalTool)
+[2026-08-21 14:53:54.943] Creating Link: Forelæsningsvideo (1): organisationsprojekt - klargøring af data (https://cbscanvas.instructure.com/courses/43660/modules/items/1052783) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - klargøring af data til analyse/Forelæsningsvideo (1) organisationsprojekt - klargøring af data.webloc
+[2026-08-21 14:53:54.945]   - Item: Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data (Type: ExternalTool)
+[2026-08-21 14:53:54.946] Creating Link: Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data (https://cbscanvas.instructure.com/courses/43660/modules/items/1052784) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - klargøring af data til analyse/Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.webloc
+[2026-08-21 14:53:54.947]   - Item: Slides (1): organisationsprojekt - klargøring af data (Type: File)
+[2026-08-21 14:53:55.093] Module file tracked: Organisationsprojekt_klargøring af data_upload.pptm (ID: 1560235)
+[2026-08-21 14:53:55.093]   - Item: Slides (2): organisationsprojekt - klargøring af data (eksempel) (Type: File)
+[2026-08-21 14:53:55.234] Module file tracked: Organisationsprojekt_klargøring af data_eksempel_upload.pptx (ID: 1560236)
+[2026-08-21 14:53:55.234]   - Item: Kodning øvelse - interview transskribering (Type: File)
+[2026-08-21 14:53:55.379] Module file tracked: Kodning øvelse - interview transskribering.docx (ID: 1560228)
+[2026-08-21 14:53:55.379]   - Item: Kodning øvelse - kodning skabelon (Type: File)
+[2026-08-21 14:53:55.520] Module file tracked: Kodning øvelse - kodning skabelon.xlsx (ID: 1560161)
+[2026-08-21 14:53:55.520]   - Item: Kodning øvelse - UDFYLDT kodning tabel (struktureret) (Type: File)
+[2026-08-21 14:53:55.664] Module file tracked: Kodning øvelse - kodning tabel (struktureret).xlsx (ID: 1559952)
+[2026-08-21 14:53:55.665]   - Item: Øvelsesslides: analyse & tolkning (Type: File)
+[2026-08-21 14:53:55.801] Module file tracked: Øvelser_uge13_analyse og tolkning_UPLOAD.pptx (ID: 1800485)
+[2026-08-21 14:53:55.801] Processing Module: Sammenfatning og evaluering af organisationsfaget (ID: 305052)
+[2026-08-21 14:53:55.961] Found 4 items in module 'Sammenfatning og evaluering af organisationsfaget'
+[2026-08-21 14:53:55.961]   - Item: Uge 15: pensum (Type: Page)
+[2026-08-21 14:53:56.271] Saving page: Uge 15: pensum -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sammenfatning og evaluering af organisationsfaget/Page Uge 15 pensum.html
+[2026-08-21 14:53:56.274]   - Item: Uge 15: mål med undervisningen (Type: Page)
+[2026-08-21 14:53:56.474] Saving page: Uge 15: mål med undervisningen -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sammenfatning og evaluering af organisationsfaget/Page Uge 15 mål med undervisningen.html
+[2026-08-21 14:53:56.477]   - Item: Slides: Lektion_sammenfatning af faget (Type: File)
+[2026-08-21 14:53:56.617] Module file tracked: Lektion_sammenfatning af faget_2026.pptx (ID: 1805051)
+[2026-08-21 14:53:56.617]   - Item: Uge 15 - Formidling.pptx (Type: File)
+[2026-08-21 14:53:56.760] Module file tracked: Uge 15 - Formidling.pptx (ID: 1805700)
+[2026-08-21 14:53:56.760] Processing Module: Øvelser i uge 16 (ID: 305053)
+[2026-08-21 14:53:56.923] Found 3 items in module 'Øvelser i uge 16'
+[2026-08-21 14:53:56.923]   - Item: Uge 16: mål med øvelserne (Type: Page)
+[2026-08-21 14:53:57.133] Saving page: Uge 16: mål med øvelserne -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser i uge 16/Page Uge 16 mål med øvelserne.html
+[2026-08-21 14:53:57.136]   - Item: Øvelsesslides: ad hoc vejledning og forberedelse til klynge    (Type: File)
+[2026-08-21 14:53:57.283] Module file tracked: Øvelser_uge16_klynge_upload.pptx (ID: 1809393)
+[2026-08-21 14:53:57.283]   - Item: Svarark - Gode råd til projektet.docx (Type: File)
+[2026-08-21 14:53:57.428] Module file tracked: Svarark - Gode råd til projektet.docx (ID: 1816004)
+[2026-08-21 14:53:57.428] Processing Module: Klyngevejledning 2 (ID: 305054)
+[2026-08-21 14:53:57.635] Found 11 items in module 'Klyngevejledning 2'
+[2026-08-21 14:53:57.635]   - Item: Uge 17: formål med klyngevejledningen (Type: Page)
+[2026-08-21 14:53:57.864] Saving page: Uge 17: formål med klyngevejledningen -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Page Uge 17 formål med klyngevejledningen.html
+[2026-08-21 14:53:57.866]   - Item: Skabelon til klyngevejledning 2 (Type: File)
+[2026-08-21 14:53:58.005] Module file tracked: Skabelon til klyngevejledning 2.docx (ID: 1560149)
+[2026-08-21 14:53:58.006]   - Item: Klyngevejledning_2_Program_ 21 april 2026.pdf (Type: File)
+[2026-08-21 14:53:58.143] Module file tracked: Klyngevejledning_2_Program_ 21 april 2026.pdf (ID: 1811688)
+[2026-08-21 14:53:58.143]   - Item: Filer til Klynge 1 (Type: Page)
+[2026-08-21 14:53:58.415] Saving page: Filer til Klynge 1 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Page Filer til Klynge 1.html
+[2026-08-21 14:53:58.418]   - Item: Filer til Klynge 2 (Type: Page)
+[2026-08-21 14:53:58.867] Saving page: Filer til Klynge 2 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Page Filer til Klynge 2.html
+[2026-08-21 14:53:58.871]   - Item: Filer til Klynge 3 (Type: Page)
+[2026-08-21 14:53:59.160] Saving page: Filer til Klynge 3 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Page Filer til Klynge 3.html
+[2026-08-21 14:53:59.163]   - Item: Filer til Klynge 4 (Type: Page)
+[2026-08-21 14:53:59.403] Saving page: Filer til Klynge 4 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Page Filer til Klynge 4.html
+[2026-08-21 14:53:59.405]   - Item: Filer til Klynge 5 (Type: Page)
+[2026-08-21 14:53:59.695] Saving page: Filer til Klynge 5 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Page Filer til Klynge 5.html
+[2026-08-21 14:53:59.698]   - Item: Filer til Klynge 6 (Type: Page)
+[2026-08-21 14:53:59.976] Saving page: Filer til Klynge 6 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Page Filer til Klynge 6.html
+[2026-08-21 14:53:59.979]   - Item: Filer til Klynge 7 (Type: Page)
+[2026-08-21 14:54:00.235] Saving page: Filer til Klynge 7 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Page Filer til Klynge 7.html
+[2026-08-21 14:54:00.238]   - Item: Filer til Klynge 8 (Type: Page)
+[2026-08-21 14:54:00.488] Saving page: Filer til Klynge 8 -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Page Filer til Klynge 8.html
+[2026-08-21 14:54:00.491] Processing Module: Øvelser i uge 18 (ID: 305055)
+[2026-08-21 14:54:00.626] Found 3 items in module 'Øvelser i uge 18'
+[2026-08-21 14:54:00.626]   - Item: Svarark - Gode råd til projektet.docx (Type: File)
+[2026-08-21 14:54:00.772] Module file tracked: Svarark - Gode råd til projektet.docx (ID: 1560056)
+[2026-08-21 14:54:00.772]   - Item: Øvelsesslides: Afslutning 2025 (Type: File)
+[2026-08-21 14:54:00.914] Module file tracked: Øvelser_uge18_eksamen og afslutning_opdateret_upload.pptx (ID: 1560057)
+[2026-08-21 14:54:00.914]   - Item: Svarark - Gode råd til projektet.docx (Type: File)
+[2026-08-21 14:54:00.914]   Duplicate module link skipped (already saved in an earlier module): Svarark - Gode råd til projektet.docx
+[2026-08-21 14:54:00.918] Requesting URL: https://cbscanvas.instructure.com/files/1652721/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:00.919] Requesting URL: https://cbscanvas.instructure.com/files/1747622/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:00.919] Requesting URL: https://cbscanvas.instructure.com/files/1748401/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:00.920] Requesting URL: https://cbscanvas.instructure.com/files/1560072/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:00.920] Requesting URL: https://cbscanvas.instructure.com/files/1559916/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:00.921] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 1.pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-08-21 14:54:00.923] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 2.pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-08-21 14:54:01.601] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:01.604] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx (16288 bytes)
+[2026-08-21 14:54:01.605] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:01.607] Requesting URL: https://cbscanvas.instructure.com/files/1624231/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:01.612] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Opdateret Pensumoversigt inkl. Forår 2026/E25_F26_HAIT_Organisationers opbygning.pdf (344619 bytes)
+[2026-08-21 14:54:01.616] Requesting URL: https://cbscanvas.instructure.com/files/1624133/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:01.628] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:01.638] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Kursusbeskrivelse og eksamensregler/ind_org_Pensumoversigt_efterår2025.pdf (479504 bytes)
+[2026-08-21 14:54:01.640] Requesting URL: https://cbscanvas.instructure.com/files/1620929/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:01.652] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:01.662] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Opdateret Pensumoversigt inkl. Forår 2026/Manual for eksamensprojekt 2025-2026.pdf (205244 bytes)
+[2026-08-21 14:54:01.664] Requesting URL: https://cbscanvas.instructure.com/files/1620930/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:01.747] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:01.757] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Introduktion til organisationsteori/ITDoesntMatter.pdf (206424 bytes)
+[2026-08-21 14:54:01.760] Requesting URL: https://cbscanvas.instructure.com/files/1627150/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:02.212] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:02.246] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Introduktion til organisationsteori/Intro_uge 36_2025_slides.pdf (2510931 bytes)
+[2026-08-21 14:54:02.248] Requesting URL: https://cbscanvas.instructure.com/files/1559993/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:02.268] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:02.305] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:02.351] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:02.355] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - mål og strategi/Slides_mål og strategi_del 1_E25.pdf (1125604 bytes)
+[2026-08-21 14:54:02.361] Requesting URL: https://cbscanvas.instructure.com/files/1560185/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:02.381] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Introduktion til organisationsteori/Øvelser_uge36_intro_2025.pptx (6142539 bytes)
+[2026-08-21 14:54:02.386] Requesting URL: https://cbscanvas.instructure.com/files/1628057/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:02.395] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - mål og strategi/Slides_mål og strategi_del 2_E25.pdf (1475540 bytes)
+[2026-08-21 14:54:02.398] Requesting URL: https://cbscanvas.instructure.com/files/1632239/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:02.437] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:02.449] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - mål og strategi/Øvelser_uge36B_mål_og_strategi_2025.pdf (620460 bytes)
+[2026-08-21 14:54:02.452] Requesting URL: https://cbscanvas.instructure.com/files/1560188/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:02.847] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:02.910] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsstruktur/2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx (3139143 bytes)
+[2026-08-21 14:54:02.913] Requesting URL: https://cbscanvas.instructure.com/files/1560186/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:02.945] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:02.951] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsstruktur/Øvelse uge 37 - Organisationsdiagram.pdf (166332 bytes)
+[2026-08-21 14:54:02.954] Requesting URL: https://cbscanvas.instructure.com/files/1559923/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:02.991] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:03.068] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsstruktur/2024_Lektion uge 37_2 Struktur_upload.pptx (2529047 bytes)
+[2026-08-21 14:54:03.071] Requesting URL: https://cbscanvas.instructure.com/files/1638534/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:03.090] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:03.114] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsstruktur/Øvelser_uge37_struktur_2025.pdf (911692 bytes)
+[2026-08-21 14:54:03.117] Requesting URL: https://cbscanvas.instructure.com/files/1640813/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:03.145] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:03.200] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsformer/2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx (2964205 bytes)
+[2026-08-21 14:54:03.204] Requesting URL: https://cbscanvas.instructure.com/files/1640814/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:03.553] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:03.596] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:03.598] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsformer/2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pptx (2004639 bytes)
+[2026-08-21 14:54:03.604] Requesting URL: https://cbscanvas.instructure.com/files/1643383/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:03.634] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsformer/Organisationsformer - oversigtstabel - udfyldt.pptx (2707111 bytes)
+[2026-08-21 14:54:03.638] Requesting URL: https://cbscanvas.instructure.com/files/1644211/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:03.645] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:03.676] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 1 Formelle træk - organisationsformer/Strategy in Danske Bank.pdf (2312708 bytes)
+[2026-08-21 14:54:03.681] Requesting URL: https://cbscanvas.instructure.com/files/1559932/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:03.723] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:03.754] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - organisationskultur/Slides_kulturanalyse del 1_E25.pdf (1728964 bytes)
+[2026-08-21 14:54:03.758] Requesting URL: https://cbscanvas.instructure.com/files/1560154/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:03.812] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:03.834] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - organisationskultur/Slides_kulturanalyse del 2_E25.pdf (1028235 bytes)
+[2026-08-21 14:54:03.836] Requesting URL: https://cbscanvas.instructure.com/files/1639375/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:04.196] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:04.235] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:04.265] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - organisationskultur/Øvelser_uge39_kultur_2025.pdf (674932 bytes)
+[2026-08-21 14:54:04.271] Requesting URL: https://cbscanvas.instructure.com/files/1643073/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:04.290] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:04.332] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - organisationskultur/Martin Thorborg tiltrækker nye ansatte ved at lokke_artikel okt 2023.pdf (939935 bytes)
+[2026-08-21 14:54:04.334] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - organisationskultur/Øvelser_uge39_kultur_E2025 upload.pptx (6049153 bytes)
+[2026-08-21 14:54:04.338] Requesting URL: https://cbscanvas.instructure.com/files/1659237/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:04.341] Requesting URL: https://cbscanvas.instructure.com/files/1668216/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:04.392] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:04.486] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - organisationskultur/Børnemøbler_ny version.pdf (7829231 bytes)
+[2026-08-21 14:54:04.491] Requesting URL: https://cbscanvas.instructure.com/files/1668217/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:04.492] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:04.839] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - organisationskultur/Schein 1994_uddrag.pdf (17628097 bytes)
+[2026-08-21 14:54:04.847] Requesting URL: https://cbscanvas.instructure.com/files/1559834/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:04.915] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:05.061] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:05.064] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:05.110] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - sensemaking/Sensemaking slides 1.pdf (657718 bytes)
+[2026-08-21 14:54:05.111] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - sensemaking/Øvelser_uge39_sensemaking_2025.pdf (995647 bytes)
+[2026-08-21 14:54:05.115] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:05.124] Requesting URL: https://cbscanvas.instructure.com/files/1560061/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:05.124] Requesting URL: https://cbscanvas.instructure.com/files/1666882/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:05.138] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - sensemaking/Sensemaking slides 2.pdf (226136 bytes)
+[2026-08-21 14:54:05.180] Requesting URL: https://cbscanvas.instructure.com/files/1667723/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:05.368] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - sensemaking/Sensemaking in org (weick 1995).pdf (16385390 bytes)
+[2026-08-21 14:54:05.373] Requesting URL: https://cbscanvas.instructure.com/files/1669054/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:05.554] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:05.593] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - magt og konflikt/2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pptx (2373946 bytes)
+[2026-08-21 14:54:05.597] Requesting URL: https://cbscanvas.instructure.com/files/1669058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:05.790] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:05.805] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - magt og konflikt/Øvelser_uge41_magt_E25.pdf (452042 bytes)
+[2026-08-21 14:54:05.809] Requesting URL: https://cbscanvas.instructure.com/files/1678067/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:05.850] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:05.880] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:05.881] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - magt og konflikt/2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pptx (1269599 bytes)
+[2026-08-21 14:54:05.888] Requesting URL: https://cbscanvas.instructure.com/files/1678066/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:05.950] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:05.983] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - magt og konflikt/251009_Kom og vær med_Til Stig N.pptx (674098 bytes)
+[2026-08-21 14:54:05.995] Requesting URL: https://cbscanvas.instructure.com/files/1559936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:06.229] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:06.255] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - magt og konflikt/From Algorithmic Management to Data-driven Labour Organising(27).pdf (448783 bytes)
+[2026-08-21 14:54:06.274] Requesting URL: https://cbscanvas.instructure.com/files/1677945/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:06.456] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:06.498] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - organisation og omgivelser/2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf (425245 bytes)
+[2026-08-21 14:54:06.513] Requesting URL: https://cbscanvas.instructure.com/files/1560177/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:06.593] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:06.658] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:06.659] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - organisation og omgivelser/2025_Lektion uge 43_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf (788357 bytes)
+[2026-08-21 14:54:06.672] Requesting URL: https://cbscanvas.instructure.com/files/1560197/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:06.753] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - organisation og omgivelser/Berlingske Case.pdf (851481 bytes)
+[2026-08-21 14:54:06.754] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 2 Uformelle træk - magt og konflikt/culture.experiences.pdf (32734939 bytes)
+[2026-08-21 14:54:06.771] Requesting URL: https://cbscanvas.instructure.com/files/1559930/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:06.775] Requesting URL: https://cbscanvas.instructure.com/files/1682693/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:06.959] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:06.975] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - organisation og omgivelser/Uge43_omgivelser_2025.pdf (664009 bytes)
+[2026-08-21 14:54:06.977] Requesting URL: https://cbscanvas.instructure.com/files/1686104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:07.208] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:07.241] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:07.271] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - læring i organisationer/2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx (2536110 bytes)
+[2026-08-21 14:54:07.276] Requesting URL: https://cbscanvas.instructure.com/files/1686105/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:07.282] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - læring i organisationer/2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx (2062268 bytes)
+[2026-08-21 14:54:07.286] Requesting URL: https://cbscanvas.instructure.com/files/1687664/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:07.351] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:07.367] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - læring i organisationer/Shook J. (2010) How to change a culture, lessons from nummi.pdf (575008 bytes)
+[2026-08-21 14:54:07.370] Requesting URL: https://cbscanvas.instructure.com/files/1690411/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:07.376] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:07.398] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden - læring i organisationer/Øvelse uge 44 - Læring.pdf (1102902 bytes)
+[2026-08-21 14:54:07.403] Requesting URL: https://cbscanvas.instructure.com/files/1560230/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:07.611] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:07.647] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden- motivationsfaktorer/Slides (1) Motivationsfaktorer forelæsning 1.pptx (1917653 bytes)
+[2026-08-21 14:54:07.652] Requesting URL: https://cbscanvas.instructure.com/files/1560070/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:07.866] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:07.891] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden- motivationsfaktorer/Motivationsfaktorer - uge 45 2025.pdf (677897 bytes)
+[2026-08-21 14:54:07.896] Requesting URL: https://cbscanvas.instructure.com/files/1693406/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:07.992] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:07.998] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:08.005] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:08.161] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden- motivationsfaktorer/Slides (2) Motivationsfaktorer forelæsning 2.pptx (2965062 bytes)
+[2026-08-21 14:54:08.162] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - beslutninger i organisationer/2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx (2592801 bytes)
+[2026-08-21 14:54:08.176] Requesting URL: https://cbscanvas.instructure.com/files/1560193/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:08.176] Requesting URL: https://cbscanvas.instructure.com/files/1694168/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:08.176] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 3 Individ, organisation og omverden- motivationsfaktorer/Slides - Henrik Stenmann - Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf (2949489 bytes)
+[2026-08-21 14:54:08.179] Requesting URL: https://cbscanvas.instructure.com/files/1694170/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:08.360] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:08.696] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:08.733] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - beslutninger i organisationer/Beslutninger - Uge 46 2025.pdf (618261 bytes)
+[2026-08-21 14:54:08.742] Requesting URL: https://cbscanvas.instructure.com/files/1695726/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:08.819] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:08.851] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:08.860] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - beslutninger i organisationer/Udfaldsrum Beskrivelser.docx (17533 bytes)
+[2026-08-21 14:54:08.882] Requesting URL: https://cbscanvas.instructure.com/files/1560208/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:09.102] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:09.277] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi- forandringer i organisationer/Forandringsledelse slide del 2.pptx (6993536 bytes)
+[2026-08-21 14:54:09.293] Requesting URL: https://cbscanvas.instructure.com/files/1559924/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:09.379] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi- forandringer i organisationer/Forandring i organisationer_video1_upload_2025.pptx (3436721 bytes)
+[2026-08-21 14:54:09.397] Requesting URL: https://cbscanvas.instructure.com/files/1559918/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:09.581] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:09.581] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:09.638] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi- forandringer i organisationer/Forandring - uge 47 2025.pdf (476521 bytes)
+[2026-08-21 14:54:09.670] Requesting URL: https://cbscanvas.instructure.com/files/1693022/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:09.682] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi- forandringer i organisationer/1999_Kotter_kap 1.pdf (1386490 bytes)
+[2026-08-21 14:54:09.690] Requesting URL: https://cbscanvas.instructure.com/files/1693023/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:10.030] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:10.120] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:10.122] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi- forandringer i organisationer/1999_Kotter_kap 2.pdf (1519044 bytes)
+[2026-08-21 14:54:10.166] Requesting URL: https://cbscanvas.instructure.com/files/1698861/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:10.207] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi- forandringer i organisationer/Maurer_Introduction to Change.pdf (822315 bytes)
+[2026-08-21 14:54:10.227] Requesting URL: https://cbscanvas.instructure.com/files/1698862/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:10.373] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:10.384] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:10.611] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi- forandringer i organisationer/Munster 2017_intro.pdf (1845812 bytes)
+[2026-08-21 14:54:10.625] Requesting URL: https://cbscanvas.instructure.com/files/1699643/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:10.978] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi- forandringer i organisationer/Munster 2017_kap 1.pdf (8283864 bytes)
+[2026-08-21 14:54:10.987] Requesting URL: https://cbscanvas.instructure.com/files/1706588/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:11.007] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:11.128] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:11.134] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - ledelse i organisationer/Slides (1) Ledelse i organisationer forelæsning 1.pptx (2069905 bytes)
+[2026-08-21 14:54:11.149] Requesting URL: https://cbscanvas.instructure.com/files/1766952/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:11.249] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - ledelse i organisationer/Slides (2) Ledelse i organisationer forelæsning 2.pptx (2085297 bytes)
+[2026-08-21 14:54:11.263] Requesting URL: https://cbscanvas.instructure.com/files/1560231/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:11.445] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:11.503] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - ledelse i organisationer/Ledelse - uge 48.pdf (1017698 bytes)
+[2026-08-21 14:54:11.517] Requesting URL: https://cbscanvas.instructure.com/files/1560232/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:11.754] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:11.912] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi  - organisationsteori i et historisk perspektiv/Slides sidste forelæsning.pdf (3322092 bytes)
+[2026-08-21 14:54:11.947] Requesting URL: https://cbscanvas.instructure.com/files/1777888/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:12.227] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 14:54:12.248] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:12.286] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - vidensproduktion/Organisationsprojekt_vidensproduktion_2_upload.pptm (574524 bytes)
+[2026-08-21 14:54:12.304] Requesting URL: https://cbscanvas.instructure.com/files/1559949/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:12.488] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 14:54:12.634] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - vidensproduktion/Organisationsprojekt_vidensproduktion_1_upload.pptm (2089677 bytes)
+[2026-08-21 14:54:12.689] Requesting URL: https://cbscanvas.instructure.com/files/1560069/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:12.714] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:12.915] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Opsummering - hvad har vi lært/2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx (9271293 bytes)
+[2026-08-21 14:54:12.981] Requesting URL: https://cbscanvas.instructure.com/files/1560225/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:13.190] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 14:54:13.432] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - problemformulering/Organisationsprojekt_problemformulering_1-upload.pptm (2332811 bytes)
+[2026-08-21 14:54:13.490] Requesting URL: https://cbscanvas.instructure.com/files/1783488/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:13.513] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - vidensproduktion/Øvelsesslides - Intro.pptx (11153240 bytes)
+[2026-08-21 14:54:13.524] Requesting URL: https://cbscanvas.instructure.com/files/1560227/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:13.549] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 14:54:13.616] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - problemformulering/Organisationsprojekt_problemformulering-2_upload.pptm (381152 bytes)
+[2026-08-21 14:54:13.624] Requesting URL: https://cbscanvas.instructure.com/files/1560220/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:14.218] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:14.218] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:14.316] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:14.491] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:14.730] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - undersøgelsesdesign/2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pptx (2162221 bytes)
+[2026-08-21 14:54:14.763] Requesting URL: https://cbscanvas.instructure.com/files/1785168/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:14.800] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - problemformulering/Øvelse_uge9_problemformulering_XA_upload.pptx (5242154 bytes)
+[2026-08-21 14:54:14.821] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - undersøgelsesdesign/2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (2164141 bytes)
+[2026-08-21 14:54:14.863] Requesting URL: https://cbscanvas.instructure.com/files/1560226/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:14.875] Requesting URL: https://cbscanvas.instructure.com/files/1785191/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:15.087] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - problemformulering/Øvelse_uge9_problemformulering_XB_UPLOAD.pptx (10586913 bytes)
+[2026-08-21 14:54:15.115] Requesting URL: https://cbscanvas.instructure.com/files/1790530/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:15.602] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:15.625] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:15.674] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:15.684] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/Klyngevejledning - Upload.pptx (456931 bytes)
+[2026-08-21 14:54:15.747] Requesting URL: https://cbscanvas.instructure.com/files/1560067/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:15.749] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/SKABELON_KLYNGEVEJLEDNING_1_2025.docx (20549 bytes)
+[2026-08-21 14:54:15.765] Requesting URL: https://cbscanvas.instructure.com/files/1560068/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:15.952] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:15.988] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1/Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx (46311 bytes)
+[2026-08-21 14:54:16.009] Requesting URL: https://cbscanvas.instructure.com/files/1560219/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:16.217] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - undersøgelsesdesign/Uge 10 Undersøgelsesdesign UPLOAD.pptx (9260643 bytes)
+[2026-08-21 14:54:16.241] Requesting URL: https://cbscanvas.instructure.com/files/1795567/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:16.550] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 14:54:16.550] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 14:54:16.774] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - operationalisering af teori/Organisationsprojekt_argumentation_2_upload.pptm (2502919 bytes)
+[2026-08-21 14:54:16.780] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - operationalisering af teori/Organisationsprojekt_operationalisering_upload_.pptm (2923133 bytes)
+[2026-08-21 14:54:16.783] Requesting URL: https://cbscanvas.instructure.com/files/1560235/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:16.792] Requesting URL: https://cbscanvas.instructure.com/files/1560236/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:16.797] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:16.896] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - operationalisering af teori/Observationsskema.docx (17986 bytes)
+[2026-08-21 14:54:16.905] Requesting URL: https://cbscanvas.instructure.com/files/1560228/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:16.985] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:17.491] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-08-21 14:54:17.510] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:17.618] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - operationalisering af teori/Øvelsesslides - uge 12.pptx (9589368 bytes)
+[2026-08-21 14:54:17.645] Requesting URL: https://cbscanvas.instructure.com/files/1560161/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:17.684] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - klargøring af data til analyse/Organisationsprojekt_klargøring af data_upload.pptm (2260832 bytes)
+[2026-08-21 14:54:17.765] Requesting URL: https://cbscanvas.instructure.com/files/1559952/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:17.782] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:17.800] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - klargøring af data til analyse/Organisationsprojekt_klargøring af data_eksempel_upload.pptx (2976950 bytes)
+[2026-08-21 14:54:17.837] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - interview transskribering.docx (18220 bytes)
+[2026-08-21 14:54:17.847] Requesting URL: https://cbscanvas.instructure.com/files/1800485/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:17.859] Requesting URL: https://cbscanvas.instructure.com/files/1805051/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:18.358] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 14:54:18.405] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - kodning skabelon.xlsx (10973 bytes)
+[2026-08-21 14:54:18.412] Requesting URL: https://cbscanvas.instructure.com/files/1805700/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:18.474] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 14:54:18.494] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - kodning tabel (struktureret).xlsx (12625 bytes)
+[2026-08-21 14:54:18.507] Requesting URL: https://cbscanvas.instructure.com/files/1809393/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:18.540] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:18.609] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:19.239] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:19.410] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sammenfatning og evaluering af organisationsfaget/Lektion_sammenfatning af faget_2026.pptx (7468138 bytes)
+[2026-08-21 14:54:19.469] Requesting URL: https://cbscanvas.instructure.com/files/1816004/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:19.469] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:19.601] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt - klargøring af data til analyse/Øvelser_uge13_analyse og tolkning_UPLOAD.pptx (9862479 bytes)
+[2026-08-21 14:54:19.663] Requesting URL: https://cbscanvas.instructure.com/files/1560149/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:20.477] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:20.514] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser i uge 16/Svarark - Gode råd til projektet.docx (16881 bytes)
+[2026-08-21 14:54:20.607] Requesting URL: https://cbscanvas.instructure.com/files/1811688/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:20.642] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser i uge 16/Øvelser_uge16_klynge_upload.pptx (9819888 bytes)
+[2026-08-21 14:54:20.653] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sammenfatning og evaluering af organisationsfaget/Uge 15 - Formidling.pptx (9836664 bytes)
+[2026-08-21 14:54:20.668] Requesting URL: https://cbscanvas.instructure.com/files/1560056/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:20.675] Requesting URL: https://cbscanvas.instructure.com/files/1560057/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:20.819] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:20.853] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Skabelon til klyngevejledning 2.docx (22452 bytes)
+[2026-08-21 14:54:21.460] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:21.495] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:21.575] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser i uge 18/Svarark - Gode råd til projektet.docx (15814 bytes)
+[2026-08-21 14:54:21.623] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:21.723] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 2/Klyngevejledning_2_Program_ 21 april 2026.pdf (245100 bytes)
+[2026-08-21 14:54:22.024] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser i uge 18/Øvelser_uge18_eksamen og afslutning_opdateret_upload.pptx (5600677 bytes)
+[2026-08-21 14:54:27.749] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Tema 4 Ledelse og strategi - beslutninger i organisationer/2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pptx (470327606 bytes)
+[2026-08-21 14:54:27.761] Starting Catch-All Phase for non-module files...
+[2026-08-21 14:54:29.275] Catch-All skipping module file: 1999_Kotter_kap+1.pdf (ID: 1560208)
+[2026-08-21 14:54:29.275] Catch-All skipping module file: 1999_Kotter_kap+2.pdf (ID: 1559924)
+[2026-08-21 14:54:29.275] Catch-All skipping module file: 2024_Lektion+uge+37_1+Formelle+tr%C3%A6k+-+Struktur+_+upload.pptx (ID: 1559993)
+[2026-08-21 14:54:29.275] Catch-All skipping module file: 2024_Lektion+uge+37_2+Struktur_upload.pptx (ID: 1560185)
+[2026-08-21 14:54:29.275] Catch-All skipping module file: 2024_Lektion+uge+38_1+2024+Formelle+tr%C3%A6k+-+Struktur+3+upload.pptx (ID: 1560188)
+[2026-08-21 14:54:29.275] Catch-All skipping module file: 2024_Lektion+uge+38_2+Formelle+tr%C3%A6k+-+Struktur+4+Upload.pptx (ID: 1560186)
+[2026-08-21 14:54:29.275] Catch-All skipping module file: 2024_Lektion+uge+41_1+Uformelle+tr%C3%A6k+-+Magt+og+konflikt+-+upload.pptx (ID: 1559834)
+[2026-08-21 14:54:29.275] Catch-All skipping module file: 2024_Lektion+uge+41_2+Uformelle+tr%C3%A6k+-+Magt+og+konflikt+-+upload.pptx (ID: 1560061)
+[2026-08-21 14:54:29.275] Catch-All skipping module file: 2024_Lektion+uge+43_1+Individ+og+Organisation+-+Innovation+og+laering+1+upload.pptx (ID: 1560177)
+[2026-08-21 14:54:29.275] Catch-All skipping module file: 2024_Lektion+uge+43_2+Individ+og+Organisation+-+Innovation+og+laering+2upload.pptx (ID: 1560197)
+[2026-08-21 14:54:29.275] Catch-All found new file: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx (ID: 1560205)
+[2026-08-21 14:54:29.275] Catch-All found new file: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx (ID: 1560011)
+[2026-08-21 14:54:29.276] Catch-All found new file: 2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx (ID: 1560012)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: 2024_Lektion+uge+47_1+Organisationer+i+et+foranderligt+perspektiv+-+Beslutninger+-+1_upload.pptx (ID: 1560230)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: 2024_Lektion+uge+47_2+Organisationer+i+et+foranderligt+perspektiv+-+Beslutninger+-+2_upload.pptx (ID: 1560070)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: 2025+-+ny+unders%C3%B8gelsesdesign+og+dataindsamlingsteknikker+-+video+2_Upload.pptx (ID: 1560220)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: 2025+-+unders%C3%B8gelsesdesign+og+dataindsamlingsteknikker+-+video+1_upload+Ida.pptx (ID: 1560227)
+[2026-08-21 14:54:29.276] Catch-All found new file: 2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (ID: 1560213)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: 2025_Lektion+uge+43_1+Organisationer+i+et+foranderligt+perspektiv+-+Omgivelser+-+1.pdf (ID: 1678067)
+[2026-08-21 14:54:29.276] Catch-All found new file: 2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx (ID: 1678065)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: 2025_Lektion+uge+43_2+Organisationer+i+et+foranderligt+perspektiv+-+Omgivelser+-+2.pdf (ID: 1678066)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: 2026_Lektion+uge+6+-+opstart+pa%CC%8A+projektarbejde+og+overblik+over+semestret_publiceret.pptx (ID: 1766952)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: 251009_Kom+og+v%C3%A6r+med_Til+Stig+N.pptx (ID: 1669054)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: Berlingske+Case.pdf (ID: 1559936)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: Beslutninger+-+Uge+46+2025.pdf (ID: 1693406)
+[2026-08-21 14:54:29.276] Catch-All found new file: BM0128_CBS_SolbjergPlads-2806 (1)-1-2.jpg (ID: 1560103)
+[2026-08-21 14:54:29.276] Catch-All found new file: BM0128_CBS_SolbjergPlads-2806 (1)-1.jpg (ID: 1559838)
+[2026-08-21 14:54:29.276] Catch-All found new file: BM0128_CBS_SolbjergPlads-2806 (1).jpg (ID: 1560083)
+[2026-08-21 14:54:29.276] Catch-All skipping module file: B%C3%B8rnem%C3%B8bler_ny+version.pdf (ID: 1560154)
+[2026-08-21 14:54:29.276] Catch-All found new file: CBS_SolbjergPlads_ImageHeader-1-1.jpg (ID: 1560087)
+[2026-08-21 14:54:29.277] Catch-All found new file: CBS_SolbjergPlads_ImageHeader-1.jpg (ID: 1559837)
+[2026-08-21 14:54:29.277] Catch-All found new file: CBS_SolbjergPlads_ImageHeader.jpg (ID: 1560082)
+[2026-08-21 14:54:29.277] Catch-All found new file: COLOURBOX53981090-1.jpg (ID: 1559898)
+[2026-08-21 14:54:29.277] Catch-All found new file: COLOURBOX53981090.jpg (ID: 1559897)
+[2026-08-21 14:54:29.277] Catch-All found new file: Corporate hierarchy.jpg (ID: 1559867)
+[2026-08-21 14:54:29.277] Catch-All skipping module file: culture.experiences.pdf (ID: 1667723)
+[2026-08-21 14:54:29.277] Catch-All skipping module file: E25_F26_HAIT_Organisationers+opbygning.pdf (ID: 1747622)
+[2026-08-21 14:54:29.277] Catch-All found new file: Eksempel - Gruppekontrakt.docx (ID: 1560051)
+[2026-08-21 14:54:29.277] Catch-All skipping module file: Eksempel+p%C3%A5+gruppekontrakt.docx (ID: 1559916)
+[2026-08-21 14:54:29.277] Catch-All found new file: F22_HAIT_Organisationers opbygning_2021-2022.pdf (ID: 1560180)
+[2026-08-21 14:54:29.278] Catch-All found new file: F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf (ID: 1559921)
+[2026-08-21 14:54:29.278] Catch-All skipping module file: Forandring+-+uge+47+2025.pdf (ID: 1695726)
+[2026-08-21 14:54:29.278] Catch-All skipping module file: Forandring+i+organisationer_video1_upload_2025.pptx (ID: 1694168)
+[2026-08-21 14:54:29.278] Catch-All skipping module file: Forandringsledelse+slide+del+2.pptx (ID: 1694170)
+[2026-08-21 14:54:29.278] Catch-All skipping module file: From+Algorithmic+Management+to+Data-driven+Labour+Organising%2827%29.pdf (ID: 1669058)
+[2026-08-21 14:54:29.278] Catch-All found new file: GenAI in Danske Bank_opdateret.pdf (ID: 1560171)
+[2026-08-21 14:54:29.278] Catch-All found new file: HA(it.)_grupper E2021.pdf (ID: 1560172)
+[2026-08-21 14:54:29.278] Catch-All found new file: Hildebrandt-1.pdf (ID: 1560191)
+[2026-08-21 14:54:29.278] Catch-All skipping module file: ind_org_Pensumoversigt_efter%C3%A5r2025.pdf (ID: 1652721)
+[2026-08-21 14:54:29.278] Catch-All found new file: Individ og organisation_motivation & belønning 1_upload.pptx (ID: 1560198)
+[2026-08-21 14:54:29.278] Catch-All found new file: Individ og organisation_motivation & belønning 2_upload.pptx (ID: 1560199)
+[2026-08-21 14:54:29.278] Catch-All found new file: Industrialsupply.pdf (ID: 1560157)
+[2026-08-21 14:54:29.279] Catch-All skipping module file: Intro_uge+36_2025_slides.pdf (ID: 1624231)
+[2026-08-21 14:54:29.279] Catch-All skipping module file: ITDoesntMatter.pdf (ID: 1560072)
+[2026-08-21 14:54:29.279] Catch-All skipping module file: Klyngevejledning+-+Upload.pptx (ID: 1785191)
+[2026-08-21 14:54:29.279] Catch-All found new file: Klyngevejledning 1_grp 10.docx (ID: 1559939)
+[2026-08-21 14:54:29.279] Catch-All found new file: Klyngevejledning 1_grp 14.pdf (ID: 1560064)
+[2026-08-21 14:54:29.279] Catch-All found new file: Klyngevejledning 1_grp 15.pdf (ID: 1560100)
+[2026-08-21 14:54:29.279] Catch-All found new file: Klyngevejledning 1_grp 25.pdf (ID: 1560145)
+[2026-08-21 14:54:29.279] Catch-All skipping module file: Klyngevejledning_1_Program_+12+marts+2026+KLYNGE+3+OPDATERET.docx (ID: 1790530)
+[2026-08-21 14:54:29.279] Catch-All found new file: Klyngevejledning_1_Program_2022.pdf (ID: 1559957)
+[2026-08-21 14:54:29.279] Catch-All found new file: Klyngevejledning_1_Program_2023.doc (ID: 1560037)
+[2026-08-21 14:54:29.279] Catch-All found new file: Klyngevejledning_1_Program_2024.pdf (ID: 1560065)
+[2026-08-21 14:54:29.279] Catch-All skipping module file: Klyngevejledning_2_Program_+21+april+2026.pdf (ID: 1811688)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Kodning+%C3%B8velse+-+interview+transskribering.docx (ID: 1560228)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Kodning+%C3%B8velse+-+kodning+skabelon.xlsx (ID: 1560161)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Kodning+%C3%B8velse+-+kodning+tabel+%28struktureret%29.xlsx (ID: 1559952)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Ledelse+-+uge+48.pdf (ID: 1699643)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Lektion_sammenfatning+af+faget_2026.pptx (ID: 1805051)
+[2026-08-21 14:54:29.280] Catch-All found new file: Manual for eksamensprojekt 2021-2022_.pdf (ID: 1559920)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Manual+for+eksamensprojekt+2025-2026.pdf (ID: 1748401)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Martin+Thorborg+tiltr%C3%A6kker+nye+ansatte+ved+at+lokke_artikel+okt+2023.pdf (ID: 1559932)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Motivationsfaktorer+-+uge+45+2025.pdf (ID: 1687664)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Munster+2017_intro.pdf (ID: 1693022)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Munster+2017_kap+1.pdf (ID: 1693023)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Observationsskema.docx (ID: 1560219)
+[2026-08-21 14:54:29.280] Catch-All found new file: Oplæg på CBS - sendt.pdf (ID: 1560194)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Organisationsformer+-+oversigtstabel+-+udfyldt.pptx (ID: 1559923)
+[2026-08-21 14:54:29.280] Catch-All skipping module file: Organisationsprojekt_argumentation_2_upload.pptm (ID: 1560068)
+[2026-08-21 14:54:29.281] Catch-All skipping module file: Organisationsprojekt_klarg%C3%B8ring+af+data_eksempel_upload.pptx (ID: 1560236)
+[2026-08-21 14:54:29.281] Catch-All skipping module file: Organisationsprojekt_klarg%C3%B8ring+af+data_upload.pptm (ID: 1560235)
+[2026-08-21 14:54:29.281] Catch-All skipping module file: Organisationsprojekt_operationalisering_upload_.pptm (ID: 1560067)
+[2026-08-21 14:54:29.281] Catch-All found new file: Organisationsprojekt_operationalisering_upload.pptm (ID: 1559942)
+[2026-08-21 14:54:29.281] Catch-All found new file: Organisationsprojekt_problemformulering_1-upload-1.pptm (ID: 1560125)
+[2026-08-21 14:54:29.281] Catch-All skipping module file: Organisationsprojekt_problemformulering_1-upload.pptm (ID: 1559949)
+[2026-08-21 14:54:29.281] Catch-All skipping module file: Organisationsprojekt_problemformulering-2_upload.pptm (ID: 1560069)
+[2026-08-21 14:54:29.281] Catch-All found new file: Organisationsprojekt_vidensproduktion_1_2022-upload.pptm (ID: 1560071)
+[2026-08-21 14:54:29.281] Catch-All skipping module file: Organisationsprojekt_vidensproduktion_1_upload.pptm (ID: 1560231)
+[2026-08-21 14:54:29.281] Catch-All skipping module file: Organisationsprojekt_vidensproduktion_2_upload.pptm (ID: 1560232)
+[2026-08-21 14:54:29.281] Catch-All found new file: Organisationsprojekt_vidensproduktion_2021-2_upload.pptm (ID: 1560128)
+[2026-08-21 14:54:29.281] Catch-All skipping module file: %C3%98velse+uge+37+-+Organisationsdiagram.pdf (ID: 1628057)
+[2026-08-21 14:54:29.281] Catch-All skipping module file: %C3%98velse+uge+44+-+L%C3%A6ring.pdf (ID: 1682693)
+[2026-08-21 14:54:29.281] Catch-All found new file: Øvelse_uge6_intro_2022_upload-1.pptx (ID: 1560038)
+[2026-08-21 14:54:29.281] Catch-All skipping module file: %C3%98velse_uge9_problemformulering_XA_upload.pptx (ID: 1560225)
+[2026-08-21 14:54:29.282] Catch-All skipping module file: %C3%98velse_uge9_problemformulering_XB_UPLOAD.pptx (ID: 1783488)
+[2026-08-21 14:54:29.282] Catch-All skipping module file: %C3%98velser_uge13_analyse+og+tolkning_UPLOAD.pptx (ID: 1800485)
+[2026-08-21 14:54:29.282] Catch-All skipping module file: %C3%98velser_uge16_klynge_upload.pptx (ID: 1809393)
+[2026-08-21 14:54:29.282] Catch-All skipping module file: %C3%98velser_uge18_eksamen+og+afslutning_opdateret_upload.pptx (ID: 1560057)
+[2026-08-21 14:54:29.282] Catch-All skipping module file: %C3%98velser_uge36_intro_2025.pptx (ID: 1624133)
+[2026-08-21 14:54:29.282] Catch-All skipping module file: %C3%98velser_uge36B_m%C3%A5l_og_strategi_2025.pdf (ID: 1627150)
+[2026-08-21 14:54:29.958] Catch-All skipping module file: %C3%98velser_uge37_struktur_2025.pdf (ID: 1632239)
+[2026-08-21 14:54:29.958] Catch-All found new file: Øvelser_uge38_organisationsformer_upload.pptx (ID: 1560137)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: %C3%98velser_uge39_kultur_2025.pdf (ID: 1643383)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: %C3%98velser_uge39_kultur_E2025+upload.pptx (ID: 1644211)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: %C3%98velser_uge39_sensemaking_2025.pdf (ID: 1659237)
+[2026-08-21 14:54:29.959] Catch-All found new file: Øvelser_uge40_perspektiver_på_kultur_til upload.pptx (ID: 1560136)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: %C3%98velser_uge41_magt_E25.pdf (ID: 1666882)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: %C3%98velsesslides+-+Intro.pptx (ID: 1777888)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: %C3%98velsesslides+-+uge+12.pptx (ID: 1795567)
+[2026-08-21 14:54:29.959] Catch-All found new file: Øvelsesslides formelle træk - organisationsformer-1.pptx (ID: 1560003)
+[2026-08-21 14:54:29.959] Catch-All found new file: Øvelsesslides formelle træk - organisationsformer.pptx (ID: 1560002)
+[2026-08-21 14:54:29.959] Catch-All found new file: Øvelsesslides_mål og strategi_XA-1.pptx (ID: 1560085)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: Schein+1994_uddrag.pdf (ID: 1639375)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: Sensemaking+in+org+%28weick+1995%29.pdf (ID: 1643073)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: Sensemaking+slides+1.pdf (ID: 1668216)
+[2026-08-21 14:54:29.959] Catch-All found new file: Sensemaking slides 1.pptx (ID: 1655085)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: Sensemaking+slides+2.pdf (ID: 1668217)
+[2026-08-21 14:54:29.959] Catch-All found new file: Sensemaking slides 2.pptx (ID: 1655086)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: Shook+J.+%282010%29+How+to+change+a+culture%2C+lessons+from+nummi.pdf (ID: 1559930)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: Skabelon+til+klyngevejledning+2.docx (ID: 1560149)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: SKABELON_KLYNGEVEJLEDNING_1_2025.docx (ID: 1560226)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: Slides+-+Henrik+Stenmann+-+Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf (ID: 1690411)
+[2026-08-21 14:54:29.959] Catch-All skipping module file: Slides+%281%29+Ledelse+i+organisationer+forel%C3%A6sning+1.pptx (ID: 1698861)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Slides+%281%29+Motivationsfaktorer+forel%C3%A6sning+1.pptx (ID: 1686104)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Slides+%282%29+Ledelse+i+organisationer+forel%C3%A6sning+2.pptx (ID: 1698862)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Slides+%282%29+Motivationsfaktorer+forel%C3%A6sning+2.pptx (ID: 1686105)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Slides+sidste+forel%C3%A6sning.pdf (ID: 1706588)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Slides_kulturanalyse+del+1_E25.pdf (ID: 1640813)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Slides_kulturanalyse+del+2_E25.pdf (ID: 1640814)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Slides_m%C3%A5l+og+strategi_del+1_E25.pdf (ID: 1620929)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Slides_m%C3%A5l+og+strategi_del+2_E25.pdf (ID: 1620930)
+[2026-08-21 14:54:29.960] Catch-All found new file: Søstrene Grene.pdf (ID: 1559928)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Strategy+in+Danske+Bank.pdf (ID: 1638534)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Svarark+-+Gode+ra%CC%8Ad+til+projektet.docx (ID: 1560056)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Svarark+-+Gode+r%C3%A5d+til+projektet.docx (ID: 1816004)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Udfaldsrum+Beskrivelser.docx (ID: 1560193)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Uge+10+Unders%C3%B8gelsesdesign+UPLOAD.pptx (ID: 1785168)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Uge+15+-+Formidling.pptx (ID: 1805700)
+[2026-08-21 14:54:29.960] Catch-All skipping module file: Uge43_omgivelser_2025.pdf (ID: 1677945)
+[2026-08-21 14:54:29.960] Catch-All found new file: Uge45_motivation og belønning_upload.pptx (ID: 1560202)
+[2026-08-21 14:54:29.960] Downloading 46 catch-all files...
+[2026-08-21 14:54:29.961] Requesting URL: https://cbscanvas.instructure.com/files/1560205/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:29.962] Requesting URL: https://cbscanvas.instructure.com/files/1560011/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:29.962] Requesting URL: https://cbscanvas.instructure.com/files/1560012/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:29.963] Requesting URL: https://cbscanvas.instructure.com/files/1560213/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:29.963] Requesting URL: https://cbscanvas.instructure.com/files/1678065/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:30.533] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:30.550] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:30.572] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:30.572] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:30.596] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:30.703] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (2164141 bytes)
+[2026-08-21 14:54:30.704] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx (2144525 bytes)
+[2026-08-21 14:54:30.723] Requesting URL: https://cbscanvas.instructure.com/files/1560103/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:30.732] Requesting URL: https://cbscanvas.instructure.com/files/1559838/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:30.740] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx (2223911 bytes)
+[2026-08-21 14:54:30.748] Requesting URL: https://cbscanvas.instructure.com/files/1560083/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:30.944] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx (2223911 bytes)
+[2026-08-21 14:54:30.983] Requesting URL: https://cbscanvas.instructure.com/files/1560087/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:31.016] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx (4124409 bytes)
+[2026-08-21 14:54:31.041] Requesting URL: https://cbscanvas.instructure.com/files/1559837/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:31.422] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 14:54:31.443] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 14:54:31.458] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 14:54:31.504] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/BM0128_CBS_SolbjergPlads-2806 (1)-1-2.jpg (2113362 bytes)
+[2026-08-21 14:54:31.519] Requesting URL: https://cbscanvas.instructure.com/files/1560082/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:31.539] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/BM0128_CBS_SolbjergPlads-2806 (1).jpg (2113362 bytes)
+[2026-08-21 14:54:31.554] Requesting URL: https://cbscanvas.instructure.com/files/1559898/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:31.560] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/BM0128_CBS_SolbjergPlads-2806 (1)-1.jpg (2113362 bytes)
+[2026-08-21 14:54:31.564] Requesting URL: https://cbscanvas.instructure.com/files/1559897/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:31.565] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 14:54:31.718] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 14:54:31.736] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/CBS_SolbjergPlads_ImageHeader-1-1.jpg (2032529 bytes)
+[2026-08-21 14:54:31.753] Requesting URL: https://cbscanvas.instructure.com/files/1559867/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:31.811] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/CBS_SolbjergPlads_ImageHeader-1.jpg (2032529 bytes)
+[2026-08-21 14:54:31.819] Requesting URL: https://cbscanvas.instructure.com/files/1560051/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:32.181] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 14:54:32.237] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 14:54:32.331] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 14:54:32.332] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/CBS_SolbjergPlads_ImageHeader.jpg (2032529 bytes)
+[2026-08-21 14:54:32.353] Requesting URL: https://cbscanvas.instructure.com/files/1560180/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:32.365] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Corporate hierarchy.jpg (89214 bytes)
+[2026-08-21 14:54:32.378] Requesting URL: https://cbscanvas.instructure.com/files/1559921/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:32.395] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 14:54:32.464] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:32.570] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Eksempel - Gruppekontrakt.docx (14206 bytes)
+[2026-08-21 14:54:32.616] Requesting URL: https://cbscanvas.instructure.com/files/1560171/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:33.023] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/COLOURBOX53981090.jpg (12536976 bytes)
+[2026-08-21 14:54:33.044] Requesting URL: https://cbscanvas.instructure.com/files/1560172/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:33.254] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:33.295] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/COLOURBOX53981090-1.jpg (12536976 bytes)
+[2026-08-21 14:54:33.303] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/F22_HAIT_Organisationers opbygning_2021-2022.pdf (411974 bytes)
+[2026-08-21 14:54:33.319] Requesting URL: https://cbscanvas.instructure.com/files/1560191/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:33.332] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:33.333] Requesting URL: https://cbscanvas.instructure.com/files/1560198/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:33.336] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf (255792 bytes)
+[2026-08-21 14:54:33.343] Requesting URL: https://cbscanvas.instructure.com/files/1560199/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:33.494] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:33.602] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/GenAI in Danske Bank_opdateret.pdf (2329690 bytes)
+[2026-08-21 14:54:33.607] Requesting URL: https://cbscanvas.instructure.com/files/1560157/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:33.714] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:33.721] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/HA(it.)_grupper E2021.pdf (58570 bytes)
+[2026-08-21 14:54:33.727] Requesting URL: https://cbscanvas.instructure.com/files/1559939/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:33.931] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:33.932] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:33.983] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:34.129] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Individ og organisation_motivation & belønning 1_upload.pptx (3071148 bytes)
+[2026-08-21 14:54:34.129] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Hildebrandt-1.pdf (2961287 bytes)
+[2026-08-21 14:54:34.145] Requesting URL: https://cbscanvas.instructure.com/files/1560064/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:34.145] Requesting URL: https://cbscanvas.instructure.com/files/1560100/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:34.332] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 14:54:34.341] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Individ og organisation_motivation & belønning 2_upload.pptx (5426548 bytes)
+[2026-08-21 14:54:34.342] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1_grp 10.docx (35642 bytes)
+[2026-08-21 14:54:34.346] Requesting URL: https://cbscanvas.instructure.com/files/1560145/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:34.354] Requesting URL: https://cbscanvas.instructure.com/files/1559957/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:34.434] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:34.445] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Industrialsupply.pdf (263664 bytes)
+[2026-08-21 14:54:34.450] Requesting URL: https://cbscanvas.instructure.com/files/1560037/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:34.761] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:34.779] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:34.789] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1_grp 15.pdf (550883 bytes)
+[2026-08-21 14:54:34.797] Requesting URL: https://cbscanvas.instructure.com/files/1560065/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:34.798] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1_grp 14.pdf (199844 bytes)
+[2026-08-21 14:54:34.802] Requesting URL: https://cbscanvas.instructure.com/files/1559920/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:34.894] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:34.901] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning 1_grp 25.pdf (83254 bytes)
+[2026-08-21 14:54:34.905] Requesting URL: https://cbscanvas.instructure.com/files/1560194/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:35.027] Response Status: 200 Content-Type: application/msword
+[2026-08-21 14:54:35.043] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning_1_Program_2023.doc (153600 bytes)
+[2026-08-21 14:54:35.049] Requesting URL: https://cbscanvas.instructure.com/files/1559942/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:35.064] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:35.072] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning_1_Program_2022.pdf (92744 bytes)
+[2026-08-21 14:54:35.079] Requesting URL: https://cbscanvas.instructure.com/files/1560125/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:35.346] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:35.357] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Klyngevejledning_1_Program_2024.pdf (91387 bytes)
+[2026-08-21 14:54:35.361] Requesting URL: https://cbscanvas.instructure.com/files/1560071/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:35.386] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:35.400] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Manual for eksamensprojekt 2021-2022_.pdf (223505 bytes)
+[2026-08-21 14:54:35.406] Requesting URL: https://cbscanvas.instructure.com/files/1560128/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:35.484] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:35.515] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Oplæg på CBS - sendt.pdf (820945 bytes)
+[2026-08-21 14:54:35.520] Requesting URL: https://cbscanvas.instructure.com/files/1560038/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:35.607] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 14:54:35.670] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 14:54:35.687] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_operationalisering_upload.pptm (2910906 bytes)
+[2026-08-21 14:54:35.697] Requesting URL: https://cbscanvas.instructure.com/files/1560137/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:35.728] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_problemformulering_1-upload-1.pptm (2334476 bytes)
+[2026-08-21 14:54:35.739] Requesting URL: https://cbscanvas.instructure.com/files/1560136/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:36.003] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 14:54:36.028] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_vidensproduktion_2021-2_upload.pptm (688928 bytes)
+[2026-08-21 14:54:36.030] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-08-21 14:54:36.033] Requesting URL: https://cbscanvas.instructure.com/files/1560003/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:36.100] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Organisationsprojekt_vidensproduktion_1_2022-upload.pptm (2866372 bytes)
+[2026-08-21 14:54:36.104] Requesting URL: https://cbscanvas.instructure.com/files/1560002/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:36.126] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:36.356] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:36.429] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:36.495] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelse_uge6_intro_2022_upload-1.pptx (9505024 bytes)
+[2026-08-21 14:54:36.512] Requesting URL: https://cbscanvas.instructure.com/files/1560085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:36.671] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge38_organisationsformer_upload.pptx (4938852 bytes)
+[2026-08-21 14:54:36.682] Requesting URL: https://cbscanvas.instructure.com/files/1655085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:36.843] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:36.894] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelser_uge40_perspektiver_på_kultur_til upload.pptx (9273085 bytes)
+[2026-08-21 14:54:36.895] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:36.909] Requesting URL: https://cbscanvas.instructure.com/files/1655086/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:37.206] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:37.289] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides formelle træk - organisationsformer-1.pptx (5201848 bytes)
+[2026-08-21 14:54:37.309] Requesting URL: https://cbscanvas.instructure.com/files/1559928/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:37.425] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides formelle træk - organisationsformer.pptx (5201724 bytes)
+[2026-08-21 14:54:37.441] Requesting URL: https://cbscanvas.instructure.com/files/1560202/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 14:54:37.502] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Øvelsesslides_mål og strategi_XA-1.pptx (4199486 bytes)
+[2026-08-21 14:54:37.686] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:37.731] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:37.743] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking slides 1.pptx (2132067 bytes)
+[2026-08-21 14:54:37.743] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Sensemaking slides 2.pptx (119973 bytes)
+[2026-08-21 14:54:37.993] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 14:54:38.075] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 14:54:38.161] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Søstrene Grene.pdf (3028213 bytes)
+[2026-08-21 14:54:38.380] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/Uge45_motivation og belønning_upload.pptx (5478026 bytes)
+[2026-08-21 14:54:38.393] --- Download Complete: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | 217 items | 849.4 MB downloaded ---
+
+==================================================
+--- Post-Processing: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) ---
+==================================================
+[2026-08-21 14:54:41.992] [INFO] [core.sync_manager] Updated manifest entry 1560037 to new file: Klyngevejledning_1_Program_2023.pdf
+[2026-08-21 14:54:42.060] === Course Finished: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | Downloaded: 217 items | Errors: 2 ===
+[2026-08-21 14:54:42.061] Post-processing ran: [word]

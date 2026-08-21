@@ -1,0 +1,17 @@
+{
+  "parent": "20260821_162842_macos26-dl-redo-contaminated",
+  "lanes": [
+    {
+      "lane": "office",
+      "index": 0,
+      "serial": true,
+      "parent": "20260821_162842_macos26-dl-redo-contaminated",
+      "run_id": "20260821_162842_macos26-dl-redo-contaminated__office",
+      "app_port": 8900,
+      "cdp_port": 9500,
+      "headless": true,
+      "count": 5,
+      "spec": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_162842_macos26-dl-redo-contaminated__office/lane_spec.json"
+    }
+  ]
+}

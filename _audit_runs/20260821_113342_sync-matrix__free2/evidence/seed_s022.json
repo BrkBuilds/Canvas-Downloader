@@ -1,0 +1,223 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free2/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T11:38:58",
+  "applied": [
+    {
+      "kind": "clean_update",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    },
+    {
+      "kind": "moved_deep",
+      "count": 2
+    },
+    {
+      "kind": "long_path",
+      "count": 2
+    },
+    {
+      "kind": "partial_artifact",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 10,
+  "expected_categories": {
+    "uptodate": 6,
+    "updated_clean": 2
+  },
+  "expected_untracked": [
+    "Introduktion til organisationsteori/Eksempel på gruppekontrakt - mine noter 0.docx",
+    "My Notes/semester 0/week 3/reading/Udfaldsrum Beskrivelser.docx",
+    "My Notes/semester 1/week 3/reading/Observationsskema.docx",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Kodning øvelse - interview transskribering.docx",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+    "interrupted download.pdf.part",
+    "recording.part.mp4",
+    "Øvelser i uge 16/Svarark - Gode råd til projektet - mine noter 1.docx"
+  ],
+  "expected_missing_rows": [
+    "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+    "Klyngevejledning 1/SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+    "Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - interview transskribering.docx",
+    "Organisationsprojekt - operationalisering af teori/Observationsskema.docx",
+    "Tema 4 Ledelse og strategi - beslutninger i organisationer/Udfaldsrum Beskrivelser.docx",
+    "Øvelser i uge 16/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [
+    "Eksempel - Gruppekontrakt.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_partials": [
+    "interrupted download.pdf.part",
+    "recording.part.mp4"
+  ],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 260,
+    "files": 300
+  },
+  "fixtures": [
+    {
+      "label": "clean-update:Eksempel - Gruppekontrakt.docx",
+      "kind": "clean_update",
+      "path": "Eksempel - Gruppekontrakt.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Eksempel - Gruppekontrakt.docx",
+      "match_name": "Eksempel - Gruppekontrakt.docx",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1560051,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "clean-update:Svarark - Gode råd til projektet.docx",
+      "kind": "clean_update",
+      "path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1560056,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Eksempel på gruppekontrakt - mine noter 0.docx",
+      "kind": "renamed_row_dropped",
+      "path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt - mine noter 0.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt - mine noter 0.docx",
+      "match_name": "Eksempel på gruppekontrakt.docx",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1559916,
+      "original_path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Svarark - Gode råd til projektet - mine noter 1.docx",
+      "kind": "renamed_row_dropped",
+      "path": "Øvelser i uge 16/Svarark - Gode råd til projektet - mine noter 1.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Øvelser i uge 16/Svarark - Gode råd til projektet - mine noter 1.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1816004,
+      "original_path": "Øvelser i uge 16/Svarark - Gode råd til projektet.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:Udfaldsrum Beskrivelser.docx",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 0/week 3/reading/Udfaldsrum Beskrivelser.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 0/week 3/reading/Udfaldsrum Beskrivelser.docx",
+      "match_name": "Udfaldsrum Beskrivelser.docx",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1560193,
+      "original_path": "Tema 4 Ledelse og strategi - beslutninger i organisationer/Udfaldsrum Beskrivelser.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:Observationsskema.docx",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 1/week 3/reading/Observationsskema.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 1/week 3/reading/Observationsskema.docx",
+      "match_name": "Observationsskema.docx",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1560219,
+      "original_path": "Organisationsprojekt - operationalisering af teori/Observationsskema.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "longpath:Kodning øvelse - interview transskribering.docx",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Kodning øvelse - interview transskribering.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Kodning øvelse - interview transskribering.docx",
+      "match_name": "Kodning øvelse - interview transskribering.docx",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1560228,
+      "original_path": "Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - interview transskribering.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 371
+      }
+    },
+    {
+      "label": "longpath:SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+      "match_name": "SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1560226,
+      "original_path": "Klyngevejledning 1/SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 361
+      }
+    },
+    {
+      "label": "partial:interrupted download.pdf.part",
+      "kind": "partial_artifact",
+      "path": "interrupted download.pdf.part",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "interrupted download.pdf.part",
+      "match_name": "interrupted download.pdf.part",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "partial:recording.part.mp4",
+      "kind": "partial_artifact",
+      "path": "recording.part.mp4",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "recording.part.mp4",
+      "match_name": "recording.part.mp4",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

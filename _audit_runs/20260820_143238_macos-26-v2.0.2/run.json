@@ -1,0 +1,23 @@
+{
+  "run_id": "20260820_143238_macos-26-v2.0.2",
+  "label": "macos-26-v2.0.2",
+  "created": "2026-08-20T14:32:38",
+  "repo_root": "/Users/m1/Canvas_Downloader",
+  "steps": [],
+  "app": {
+    "port": 8790,
+    "pid": 16374,
+    "url": "http://127.0.0.1:8790",
+    "log": "/Users/m1/Canvas_Downloader/_audit_runs/20260820_143238_macos-26-v2.0.2/streamlit.log",
+    "started": 1787229162.241411,
+    "verified_owner": false
+  },
+  "ports_used": [
+    8790
+  ],
+  "browser": {
+    "cdp_port": 9333,
+    "pid": 16387,
+    "headed": true
+  }
+}

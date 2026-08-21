@@ -1,0 +1,73 @@
+{
+  "name": "s033",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "complete",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 3,
+        "id": "sync",
+        "state": "active"
+      },
+      "dash": true,
+      "exceptions": 0,
+      "head": "Syncing...",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIndføring i organisationers opbygning og funktion (LA)\n0%\nDOWNLOADED\n0.0 MB\nSPEED\n0.0 MB/s\nFILES\n0 / 2\nTIME REMAINING\n~00:01\nDOWNLOADING\nSvarark - Gode råd til projektet.docx\nWaiting for files…\n\nCancel Sync",
+      "waited_s": 24.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s033_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "ok": true,
+    "landed_on": "complete",
+    "skipped": "the run finished during the analysis wait",
+    "capture": "s033_complete"
+  },
+  "trace": [
+    {
+      "t": "13:27:49",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "13:28:19",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "complete",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 3,
+          "id": "sync",
+          "state": "active"
+        },
+        "dash": true,
+        "exceptions": 0,
+        "head": "Syncing...",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIndføring i organisationers opbygning og funktion (LA)\n0%\nDOWNLOADED\n0.0 MB\nSPEED\n0.0 MB/s\nFILES\n0 / 2\nTIME REMAINING\n~00:01\nDOWNLOADING\nSvarark - Gode råd til projektet.docx\nWaiting for files…\n\nCancel Sync",
+        "waited_s": 24.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s033_after_analysis",
+      "ok": true
+    }
+  ]
+}

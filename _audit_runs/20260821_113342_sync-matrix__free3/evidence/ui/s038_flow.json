@@ -1,0 +1,96 @@
+{
+  "name": "s038",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "you don't need.\n1\nNew files\n0\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPPTX (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n1 file pending sync\n260 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nGo back\n\nSync & Download 1 file",
+      "waited_s": 24.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s038_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_43660"
+    ],
+    "capture": "s038_review",
+    "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/evidence/screenshots/s038_review.png",
+    "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/evidence/ui/s038_review.json",
+    "textLen": 810,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "confirm": {
+    "ok": true,
+    "skipped": "--no-confirm",
+    "capture": "s038_review_only"
+  },
+  "trace": [
+    {
+      "t": "11:42:07",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "11:42:36",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "you don't need.\n1\nNew files\n0\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPPTX (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n1 file pending sync\n260 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nGo back\n\nSync & Download 1 file",
+        "waited_s": 24.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s038_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "11:42:37",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43660"
+      ],
+      "capture": "s038_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/evidence/screenshots/s038_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/evidence/ui/s038_review.json",
+      "textLen": 810,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

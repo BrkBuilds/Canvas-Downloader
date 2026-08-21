@@ -1,0 +1,573 @@
+
+=== lane free1 start 2026-08-21 13:20:26 ===
+Task was destroyed but it is pending!
+task: <Task cancelling name='Task-3' coro=<Connection.run.<locals>.init() running at /Users/m1/Canvas_Downloader/.venv/lib/python3.11/site-packages/playwright/_impl/_connection.py:344> wait_for=<Future finished result=None>>
+Future exception was never retrieved
+future: <Future finished exception=TargetClosedError('Target page, context or browser has been closed')>
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+{
+  "ok": 15,
+  "lane": "free1",
+  "run_id": "20260821_131853_sync-matrix-postfix-verify__free1",
+  "jobs": 15,
+  "failed": [],
+  "results": [
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s000"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s000",
+      "seconds": 47.3
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s003"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s003",
+      "seconds": 44.9
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s006"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s006",
+      "seconds": 46.2
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s009"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s009",
+      "seconds": 34.5
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s012"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s012",
+      "seconds": 31.6
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s015"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s015",
+      "seconds": 32.2
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "sync",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s018"
+      },
+      "findings": 5,
+      "severities": {
+        "info": 5
+      },
+      "id": "s018",
+      "seconds": 41.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s021"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s021",
+      "seconds": 47.7
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s024"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s024",
+      "seconds": 46.3
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s027"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s027",
+      "seconds": 31.7
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s030"
+      },
+      "findings": 4,
+      "severities": {
+        "info": 4
+      },
+      "id": "s030",
+      "seconds": 32.7
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s033"
+      },
+      "findings": 4,
+      "severities": {
+        "info": 4
+      },
+      "id": "s033",
+      "seconds": 32.5
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "sync",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s036"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s036",
+      "seconds": 39.1
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s039"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s039",
+      "seconds": 31.8
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43660,
+      "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/rows/s042"
+      },
+      "findings": 4,
+      "severities": {
+        "info": 4
+      },
+      "id": "s042",
+      "seconds": 32.2
+    }
+  ]
+}
+
+=== lane free1 start 2026-08-21 13:30:43 ===
+{
+  "ok": 15,
+  "lane": "free1",
+  "run_id": "20260821_131853_sync-matrix-postfix-verify__free1",
+  "jobs": 15,
+  "failed": [],
+  "results": [
+    {
+      "id": "s000",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s003",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s006",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s009",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s012",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s015",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s018",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s021",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s024",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s027",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s030",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s033",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s036",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s039",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s042",
+      "ok": true,
+      "skipped": "already done"
+    }
+  ]
+}
+Task was destroyed but it is pending!
+task: <Task cancelling name='Task-3' coro=<Connection.run.<locals>.init() running at /Users/m1/Canvas_Downloader/.venv/lib/python3.11/site-packages/playwright/_impl/_connection.py:344> wait_for=<Future finished result=None>>
+Future exception was never retrieved
+future: <Future finished exception=TargetClosedError('Target page, context or browser has been closed')>
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+
+=== lane free1 start 2026-08-21 13:31:42 ===
+{
+  "ok": 15,
+  "lane": "free1",
+  "run_id": "20260821_131853_sync-matrix-postfix-verify__free1",
+  "jobs": 15,
+  "failed": [],
+  "results": [
+    {
+      "id": "s000",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s003",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s006",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s009",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s012",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s015",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s018",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s021",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s024",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s027",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s030",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s033",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s036",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s039",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s042",
+      "ok": true,
+      "skipped": "already done"
+    }
+  ]
+}
+Task was destroyed but it is pending!
+task: <Task cancelling name='Task-3' coro=<Connection.run.<locals>.init() running at /Users/m1/Canvas_Downloader/.venv/lib/python3.11/site-packages/playwright/_impl/_connection.py:344> wait_for=<Future finished result=None>>
+Future exception was never retrieved
+future: <Future finished exception=TargetClosedError('Target page, context or browser has been closed')>
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed

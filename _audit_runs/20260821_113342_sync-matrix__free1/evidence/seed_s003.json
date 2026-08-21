@@ -1,0 +1,60 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free1/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T11:34:50",
+  "applied": [
+    {
+      "kind": "new_secondary",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "new": 2
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 260,
+    "files": 298
+  },
+  "fixtures": [
+    {
+      "label": "new-secondary:Page Uge 6 pensum.md",
+      "kind": "new_secondary",
+      "path": "Opsummering - hvad har vi lært/Page Uge 6 pensum.md",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Opsummering - hvad har vi lært/Page Uge 6 pensum.md",
+      "match_name": "Page Uge 6 pensum.md",
+      "why": "Canvas Content entity (module_item) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -248382,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new-secondary:Page Uge 13 pensum.md",
+      "kind": "new_secondary",
+      "path": "Organisationsprojekt - klargøring af data til analyse/Page Uge 13 pensum.md",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Organisationsprojekt - klargøring af data til analyse/Page Uge 13 pensum.md",
+      "match_name": "Page Uge 13 pensum.md",
+      "why": "Canvas Content entity (module_item) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -248349,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

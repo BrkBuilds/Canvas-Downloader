@@ -1,0 +1,13 @@
+
+=== audit app start 2026-08-21 11:33:56 port=8820 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8820
+  Network URL: http://62.210.193.82:8820
+  External URL: http://62.210.193.82:8820
+
+  Stopping...
+Debug logging failed: [Errno 2] No such file or directory: '/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/debug_log.txt'
+Debug logging failed: [Errno 2] No such file or directory: '/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/debug_log.txt'
+Debug logging failed: [Errno 2] No such file or directory: '/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/debug_log.txt'

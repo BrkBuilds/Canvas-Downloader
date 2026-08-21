@@ -1,0 +1,171 @@
+{
+  "name": "s010",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n2\nNew files\n0\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPPTX (all)\n\nSelect All\n\nDeselect All",
+      "waited_s": 24.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s010_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_43660"
+    ],
+    "capture": "s010_review",
+    "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free2/evidence/screenshots/s010_review.png",
+    "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free2/evidence/ui/s010_review.json",
+    "textLen": 917,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "ring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 FILES\nPDF\n2\nkeyboard_arrow_down\n\nFiles added\n\n New Files Added (2)\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf\n\n​\n\n​\n\nCourse folder\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf\n\n​\n\n​\n\nCourse folder\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 5.0
+    },
+    "capture": "s010_complete",
+    "ok": true,
+    "panopto_notice": {
+      "shown": false,
+      "moved_on": "page_nav_start_sync"
+    },
+    "dialog": {
+      "done": true,
+      "title": "​",
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "\nNew Files\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nBrand new files available on Canvas that you don't have locally yet.\n\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1 PPTX 2.1 MB\n\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload PPTX 2.1 MB\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 0.0
+    }
+  },
+  "trace": [
+    {
+      "t": "13:22:59",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "13:23:28",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n2\nNew files\n0\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPPTX (all)\n\nSelect All\n\nDeselect All",
+        "waited_s": 24.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s010_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "13:23:28",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43660"
+      ],
+      "capture": "s010_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free2/evidence/screenshots/s010_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free2/evidence/ui/s010_review.json",
+      "textLen": 917,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "13:23:37",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "ring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 FILES\nPDF\n2\nkeyboard_arrow_down\n\nFiles added\n\n New Files Added (2)\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf\n\n​\n\n​\n\nCourse folder\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf\n\n​\n\n​\n\nCourse folder\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 5.0
+      },
+      "capture": "s010_complete",
+      "ok": true,
+      "panopto_notice": {
+        "shown": false,
+        "moved_on": "page_nav_start_sync"
+      },
+      "dialog": {
+        "done": true,
+        "title": "​",
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "\nNew Files\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nBrand new files available on Canvas that you don't have locally yet.\n\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1 PPTX 2.1 MB\n\n2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload PPTX 2.1 MB\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 0.0
+      }
+    }
+  ]
+}

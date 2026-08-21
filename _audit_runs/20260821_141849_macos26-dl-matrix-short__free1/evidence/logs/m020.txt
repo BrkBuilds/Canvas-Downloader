@@ -1,0 +1,39 @@
+--- Debug Log Started: 2026-08-21 14:28:31.612634 ---
+[2026-08-21 14:28:31.612] === Session Environment ===
+  App: Canvas Downloader v2.0.2 | frozen=False | pid=8967
+  OS: Darwin 25.6.0 | macOS-26.6.1-arm64-arm-64bit | arch=arm64
+  Python: 3.11.16
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 1 course(s)
+===========================
+[2026-08-21 14:28:32.229] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 1 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43667.
+[2026-08-21 14:28:32.446] === Download Start: BINT 1st semester (LA E25 BINTS1SEMU) | Course 1/1 ===
+[2026-08-21 14:28:32.446] Mode: modules | Filter: all
+[2026-08-21 14:28:32.446] Post-processing: [none]
+[2026-08-21 14:28:32.446] Secondary content: [syllabus]
+[2026-08-21 14:28:32.449] 
+==================================================
+--- Download: BINT 1st semester (LA E25 BINTS1SEMU) (ID: 43667) Mode: modules ---
+==================================================
+[2026-08-21 14:28:32.449] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_141849_macos26-dl-matrix-short__free1/downloads
+[2026-08-21 14:28:32.449] Filter: all | Concurrency: 5 | Max file size: disabled | Estimated payload: 0 MB
+[2026-08-21 14:28:32.449] Canvas Content: [syllabus] | isolate=no
+[2026-08-21 14:28:32.449] Post-processing: [none]
+[2026-08-21 14:28:32.611] Processing Module: Course description including examination rules (ID: 297524)
+[2026-08-21 14:28:32.748] Found 1 items in module 'Course description including examination rules'
+[2026-08-21 14:28:32.749]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-21 14:28:32.750] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTS1SEMU.aspx) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_141849_macos26-dl-matrix-short__free1/downloads/BINT 1st semester (LA E25 BINTS1SEMU)/Course description including examination rules/Course description including examination rules.webloc
+[2026-08-21 14:28:32.751] --- Canvas Content Phase: [syllabus] ---
+[2026-08-21 14:28:32.751] === Starting Canvas Content Download ===
+[2026-08-21 14:28:32.751] Secondary: Fetching syllabus...
+[2026-08-21 14:28:32.886] Syllabus body is empty, skipping.
+[2026-08-21 14:28:32.886] === Canvas Content Download Complete ===
+[2026-08-21 14:28:32.887] Starting Catch-All Phase for non-module files...
+[2026-08-21 14:28:33.051] No partial/non-module files found.
+[2026-08-21 14:28:33.051] --- Download Complete: BINT 1st semester (LA E25 BINTS1SEMU) | 1 items | 0.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: BINT 1st semester (LA E25 BINTS1SEMU) ---
+==================================================
+[2026-08-21 14:28:33.054] === Course Finished: BINT 1st semester (LA E25 BINTS1SEMU) | Downloaded: 1 items | Errors: 0 ===
+[2026-08-21 14:28:34.332] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft Excel -> not running

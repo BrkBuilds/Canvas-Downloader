@@ -1,0 +1,32 @@
+--- Debug Log Started: 2026-08-21 14:55:37.743832 ---
+[2026-08-21 14:55:37.743] === Session Environment ===
+  App: Canvas Downloader v2.0.2 | frozen=False | pid=14466
+  OS: Darwin 25.6.0 | macOS-26.6.1-arm64-arm-64bit | arch=arm64
+  Python: 3.11.16
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 1 course(s)
+===========================
+[2026-08-21 14:55:38.469] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 1 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43667.
+[2026-08-21 14:55:38.531] === Download Start: BINT 1st semester (LA E25 BINTS1SEMU) | Course 1/1 ===
+[2026-08-21 14:55:38.532] Mode: modules | Filter: study
+[2026-08-21 14:55:38.532] Post-processing: [none]
+[2026-08-21 14:55:38.532] Secondary content: [none]
+[2026-08-21 14:55:38.534] 
+==================================================
+--- Download: BINT 1st semester (LA E25 BINTS1SEMU) (ID: 43667) Mode: modules ---
+==================================================
+[2026-08-21 14:55:38.534] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__free4/downloads
+[2026-08-21 14:55:38.534] Filter: study | Concurrency: 5 | Max file size: disabled | Estimated payload: 0 MB
+[2026-08-21 14:55:38.534] Canvas Content: [none] | isolate=no
+[2026-08-21 14:55:38.534] Post-processing: [none]
+[2026-08-21 14:55:38.702] Processing Module: Course description including examination rules (ID: 297524)
+[2026-08-21 14:55:38.817] Found 1 items in module 'Course description including examination rules'
+[2026-08-21 14:55:38.817]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-21 14:55:38.817] Starting Catch-All Phase for non-module files...
+[2026-08-21 14:55:38.975] No partial/non-module files found.
+[2026-08-21 14:55:38.975] --- Download Complete: BINT 1st semester (LA E25 BINTS1SEMU) | 0 items | 0.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: BINT 1st semester (LA E25 BINTS1SEMU) ---
+==================================================
+[2026-08-21 14:55:38.977] === Course Finished: BINT 1st semester (LA E25 BINTS1SEMU) | Downloaded: 0 items | Errors: 0 ===

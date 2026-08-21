@@ -1,0 +1,202 @@
+{
+  "name": "s006",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": " need.\n0\nNew files\n0\nUpdates available\n0\nEdited locally\n2\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (none)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 files pending sync\n260 files up to date\nkeyboard_arrow_right\n\nDeleted Locally\n\nGo back\n\nSync & Download 0 files",
+      "waited_s": 27.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s006_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_deleted_local_43660"
+    ],
+    "capture": "s006_review",
+    "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/screenshots/s006_review.png",
+    "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/ui/s006_review.json",
+    "textLen": 937,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "ILES DOWNLOADED\n29.3\nKB DOWNLOADED\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 FILES\nDOCX\n2\nkeyboard_arrow_down\n\nFiles added\n\n Locally-Deleted Files Restored (2)\nRe-downloaded because your local copy was missing\nEksempel - Gruppekontrakt.docx\n\n​\n\n​\n\nCourse folder\nSvarark - Gode råd til projektet.docx\n\n​\n\n​\n\nØvelser i uge 18\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 5.0
+    },
+    "capture": "s006_complete",
+    "ok": true,
+    "panopto_notice": {
+      "shown": false,
+      "moved_on": "page_nav_start_sync"
+    },
+    "dialog": {
+      "done": true,
+      "title": "​",
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "lect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nThese files are missing from your Course Folder. They are unchecked by default since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.\n\nEksempel - Gruppekontrakt DOCX 13.9 KB\n\nSvarark - Gode råd til projektet DOCX 15.4 KB\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 0.0
+    }
+  },
+  "trace": [
+    {
+      "t": "13:22:06",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "13:22:38",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": " need.\n0\nNew files\n0\nUpdates available\n0\nEdited locally\n2\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (none)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 files pending sync\n260 files up to date\nkeyboard_arrow_right\n\nDeleted Locally\n\nGo back\n\nSync & Download 0 files",
+        "waited_s": 27.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s006_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "13:22:38",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_deleted_local_43660"
+      ],
+      "capture": "s006_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/screenshots/s006_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/ui/s006_review.json",
+      "textLen": 938,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "13:22:40",
+      "action": "select_category",
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "13:22:40",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_deleted_local_43660"
+      ],
+      "capture": "s006_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/screenshots/s006_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free1/evidence/ui/s006_review.json",
+      "textLen": 937,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "13:22:49",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "ILES DOWNLOADED\n29.3\nKB DOWNLOADED\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n2 FILES\nDOCX\n2\nkeyboard_arrow_down\n\nFiles added\n\n Locally-Deleted Files Restored (2)\nRe-downloaded because your local copy was missing\nEksempel - Gruppekontrakt.docx\n\n​\n\n​\n\nCourse folder\nSvarark - Gode råd til projektet.docx\n\n​\n\n​\n\nØvelser i uge 18\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 5.0
+      },
+      "capture": "s006_complete",
+      "ok": true,
+      "panopto_notice": {
+        "shown": false,
+        "moved_on": "page_nav_start_sync"
+      },
+      "dialog": {
+        "done": true,
+        "title": "​",
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "lect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nThese files are missing from your Course Folder. They are unchecked by default since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.\n\nEksempel - Gruppekontrakt DOCX 13.9 KB\n\nSvarark - Gode råd til projektet DOCX 15.4 KB\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 0.0
+      }
+    }
+  ]
+}

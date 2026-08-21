@@ -1,0 +1,31 @@
+
+=== audit app start 2026-08-21 13:20:26 port=8810 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8810
+  Network URL: http://62.210.193.82:8810
+  External URL: http://62.210.193.82:8810
+
+  Stopping...
+Debug logging failed: [Errno 2] No such file or directory: '/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free2/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)/debug_log.txt'
+
+=== audit app start 2026-08-21 13:30:43 port=8810 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8810
+  Network URL: http://62.210.193.82:8810
+  External URL: http://62.210.193.82:8810
+
+  Stopping...
+
+=== audit app start 2026-08-21 13:31:42 port=8810 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8810
+  Network URL: http://62.210.193.82:8810
+  External URL: http://62.210.193.82:8810
+
+  Stopping...

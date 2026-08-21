@@ -1,0 +1,41 @@
+{
+  "parent": "20260821_022815_macos26-full-night",
+  "lanes": [
+    {
+      "lane": "office",
+      "index": 0,
+      "serial": true,
+      "parent": "20260821_022815_macos26-full-night",
+      "run_id": "20260821_022815_macos26-full-night__office",
+      "app_port": 8800,
+      "cdp_port": 9400,
+      "headless": true,
+      "count": 12,
+      "spec": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/lane_spec.json"
+    },
+    {
+      "lane": "gpu",
+      "index": 1,
+      "serial": true,
+      "parent": "20260821_022815_macos26-full-night",
+      "run_id": "20260821_022815_macos26-full-night__gpu",
+      "app_port": 8810,
+      "cdp_port": 9410,
+      "headless": true,
+      "count": 9,
+      "spec": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__gpu/lane_spec.json"
+    },
+    {
+      "lane": "free1",
+      "index": 2,
+      "serial": false,
+      "parent": "20260821_022815_macos26-full-night",
+      "run_id": "20260821_022815_macos26-full-night__free1",
+      "app_port": 8820,
+      "cdp_port": 9420,
+      "headless": true,
+      "count": 35,
+      "spec": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/lane_spec.json"
+    }
+  ]
+}

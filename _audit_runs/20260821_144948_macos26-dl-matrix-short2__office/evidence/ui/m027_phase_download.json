@@ -1,0 +1,120 @@
+{
+  "name": "m027_phase_download",
+  "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_144948_macos26-dl-matrix-short2__office/evidence/screenshots/m027_phase_download.png",
+  "captured": "2026-08-21 15:05:52",
+  "screen": {
+    "url": "http://127.0.0.1:8800/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Downloading...",
+      "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_active_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cancel_download_btn",
+        "text": "Cancel Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownloading...\n\nDOWNLOADING COURSE 1/2\n\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n5%\nDOWNLOADED\n17.9 / 1214.5 MB\nSPEED\n3.0 MB/s\nFILES\n12 / 207\nTIME REMAINING\n09:04\nDOWNLOADING\nUpload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk\nUpload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk\n2024_Lektion uge 37_2 Struktur_upload.pptx\n2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx\nØvelser_uge36_intro_2025.pptx\nSlides_mål og strategi_del 1_E25.pdf\nSlides_mål og strategi_del 2_E25.pdf\nØvelser_uge36B_mål_og_strategi_2025.pdf\nind_org_Pensumoversigt_efterår2025.pdf\nManual for eksamensprojekt 2025-2026.pdf\nIntro_uge 36_2025_slides.pdf\nE25_F26_HAIT_Organisationers opbygning.pdf\nITDoesntMatter.pdf\n\nCancel Download",
+    "textLen": 872
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "active",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": true,
+    "header": "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "DOWNLOADED | 17.9 / 1214.5 MB | SPEED | 3.0 MB/s | FILES | 12 / 207 | TIME REMAINING | 09:04",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": "DOWNLOADING COURSE 1/2\n\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n5%\nDOWNLOADED\n17.9 / 1214.5 MB\nSPEED\n3.0 MB/s\nFILES\n12 / 207\nTIME REMAINING\n09:04\nDOWNLOADING\nUpload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk\nUpload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk\n2024_Lektion uge 37_2 Struktur_upload.pptx\n2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx\nØvelser_uge36_intro_2025.pptx\nSlides_mål og strategi_del 1_E25.pdf\nSlides_mål og strategi_del 2_E25.pdf\nØvelser_uge36B_mål_og_strategi_2025.pdf\nind_org_Pensumoversigt_efterår2025.pdf\nManual for eksamensprojekt 2025-2026.pdf\nIntro_uge 36_2025_slides.pdf\nE25_F26_HAIT_Organisationers opbygning.pdf\nITDoesntMatter.pdf"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

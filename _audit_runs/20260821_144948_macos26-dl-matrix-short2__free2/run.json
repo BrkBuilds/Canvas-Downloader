@@ -1,0 +1,12 @@
+{
+  "run_id": "20260821_144948_macos26-dl-matrix-short2__free2",
+  "label": "lane:free2",
+  "parent": "20260821_144948_macos26-dl-matrix-short2",
+  "lane": "free2",
+  "created": "2026-08-21T14:50:41",
+  "app": {},
+  "ports_used": [
+    8820
+  ],
+  "browser": {}
+}

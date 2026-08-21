@@ -1,0 +1,21 @@
+{
+  "run_id": "20260821_022815_macos26-full-night",
+  "label": "macos26-full-night",
+  "created": "2026-08-21T02:28:15",
+  "repo_root": "/Users/m1/Canvas_Downloader",
+  "steps": [],
+  "app": {},
+  "ports_used": [
+    8791
+  ],
+  "browser": {},
+  "scope": [
+    {
+      "name": "stale_rows_probe",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    }
+  ]
+}

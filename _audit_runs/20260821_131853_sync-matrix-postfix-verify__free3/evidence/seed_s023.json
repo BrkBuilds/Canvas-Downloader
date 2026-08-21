@@ -1,0 +1,162 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-21T13:25:08",
+  "applied": [
+    {
+      "kind": "deleted_locally",
+      "count": 2
+    },
+    {
+      "kind": "readonly_target",
+      "count": 2
+    },
+    {
+      "kind": "foreign_content",
+      "count": 3
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 7,
+  "expected_categories": {
+    "deleted_locally": 2,
+    "updated_clean": 2
+  },
+  "expected_untracked": [
+    "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+    "Min egen mappe/gamle noter/tanker.txt",
+    "Min egen mappe/mine noter.docx",
+    "eksamensplan 2026.pdf",
+    "Øvelser i uge 16/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_missing_rows": [
+    "Eksempel - Gruppekontrakt.docx",
+    "Øvelser i uge 18/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [
+    "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+    "Øvelser i uge 16/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 262,
+    "files": 300
+  },
+  "after": {
+    "rows": 262,
+    "files": 301
+  },
+  "fixtures": [
+    {
+      "label": "deleted-locally:Eksempel - Gruppekontrakt.docx",
+      "kind": "deleted_locally",
+      "path": "Eksempel - Gruppekontrakt.docx",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Eksempel - Gruppekontrakt.docx",
+      "match_name": "Eksempel - Gruppekontrakt.docx",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1560051,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:Svarark - Gode råd til projektet.docx",
+      "kind": "deleted_locally",
+      "path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1560056,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "readonly:Eksempel på gruppekontrakt.docx",
+      "kind": "readonly_target",
+      "path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "",
+      "expect_path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+      "match_name": "Eksempel på gruppekontrakt.docx",
+      "why": "A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error.",
+      "canvas_file_id": 1559916,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true,
+        "posix_no_fork": true
+      }
+    },
+    {
+      "label": "readonly:Svarark - Gode råd til projektet.docx",
+      "kind": "readonly_target",
+      "path": "Øvelser i uge 16/Svarark - Gode råd til projektet.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "",
+      "expect_path": "Øvelser i uge 16/Svarark - Gode råd til projektet.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error.",
+      "canvas_file_id": 1816004,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true,
+        "posix_no_fork": true
+      }
+    },
+    {
+      "label": "foreign:mine noter.docx",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/mine noter.docx",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/mine noter.docx",
+      "match_name": "mine noter.docx",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:tanker.txt",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/gamle noter/tanker.txt",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/gamle noter/tanker.txt",
+      "match_name": "tanker.txt",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:eksamensplan 2026.pdf",
+      "kind": "foreign_content",
+      "path": "eksamensplan 2026.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "eksamensplan 2026.pdf",
+      "match_name": "eksamensplan 2026.pdf",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

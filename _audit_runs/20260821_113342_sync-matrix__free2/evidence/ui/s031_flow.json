@@ -1,0 +1,130 @@
+{
+  "name": "s031",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "cally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (none)\n\nPPTX (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n3 files pending sync\n258 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 1 file",
+      "waited_s": 24.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s031_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_43660",
+      "cat_updmod_43660"
+    ],
+    "capture": "s031_review",
+    "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free2/evidence/screenshots/s031_review.png",
+    "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free2/evidence/ui/s031_review.json",
+    "textLen": 1268,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "confirm": {
+    "ok": true,
+    "skipped": "--no-confirm",
+    "capture": "s031_review_only"
+  },
+  "trace": [
+    {
+      "t": "11:40:47",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "11:41:16",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "cally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (none)\n\nPPTX (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n3 files pending sync\n258 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 1 file",
+        "waited_s": 24.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s031_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "11:41:17",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43660",
+        "cat_updmod_43660"
+      ],
+      "capture": "s031_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free2/evidence/screenshots/s031_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free2/evidence/ui/s031_review.json",
+      "textLen": 1268,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "11:41:18",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "11:41:18",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43660",
+        "cat_updmod_43660"
+      ],
+      "capture": "s031_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free2/evidence/screenshots/s031_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_113342_sync-matrix__free2/evidence/ui/s031_review.json",
+      "textLen": 1268,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

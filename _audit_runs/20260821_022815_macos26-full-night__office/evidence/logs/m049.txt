@@ -1,0 +1,1238 @@
+--- Debug Log Started: 2026-08-21 03:03:06.667868 ---
+[2026-08-21 03:03:06.668] === Session Environment ===
+  App: Canvas Downloader v2.0.2 | frozen=False | pid=63729
+  OS: Darwin 25.6.0 | macOS-26.6.1-arm64-arm-64bit | arch=arm64
+  Python: 3.11.16
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 2 course(s)
+===========================
+[2026-08-21 03:03:14.929] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 133 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 45899.
+[2026-08-21 03:03:18.561] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 123 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43665.
+[2026-08-21 03:03:18.587] [INFO] [engine.applescript_bridge] [OfficeQuit] PowerPoint was already running before this run - it will be left alone at the end
+[2026-08-21 03:03:18.605] [INFO] [engine.applescript_bridge] [OfficeQuit] Word was already running before this run - it will be left alone at the end
+[2026-08-21 03:03:18.627] [INFO] [engine.applescript_bridge] [OfficeQuit] Excel was already running before this run - it will be left alone at the end
+[2026-08-21 03:03:18.689] [INFO] [engine.applescript_bridge] [Setup] App Data container arming finished in 0.1s
+[2026-08-21 03:03:18.709] === Download Start: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | Course 1/2 ===
+[2026-08-21 03:03:18.709] Mode: flat | Filter: all
+[2026-08-21 03:03:18.709] Post-processing: [zip, excel]
+[2026-08-21 03:03:18.710] Secondary content: [none]
+[2026-08-21 03:03:18.714] 
+==================================================
+--- Download: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) (ID: 45899) Mode: flat ---
+==================================================
+[2026-08-21 03:03:18.715] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads
+[2026-08-21 03:03:18.715] Filter: all | Concurrency: 5 | Max file size: disabled | Estimated payload: 1391 MB
+[2026-08-21 03:03:18.715] Canvas Content: [none] | isolate=no
+[2026-08-21 03:03:18.715] Post-processing: [zip, excel]
+[2026-08-21 03:03:18.716] Starting Flat Download for Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+[2026-08-21 03:03:18.822] Files tab listing failed, falling back to module scan: {"status":"unauthorized","errors":[{"message":"user not authorised to perform that action"}]}
+[2026-08-21 03:03:19.496] Fallback Scan: Module Course description including examination rules (found 1 items)
+[2026-08-21 03:03:19.496]   Fallback Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-21 03:03:19.497] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2024-2025/BA-BINTO1064U.aspx) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Course description including examination rules.webloc
+[2026-08-21 03:03:19.801] Fallback Scan: Module Informationer (found 3 items)
+[2026-08-21 03:03:19.801]   Fallback Item: Eloquent JavaScript bog: https://eloquentjavascript.net (bemærk: 4. udgave) (Type: SubHeader)
+[2026-08-21 03:03:19.801]   Fallback Item: Bøger til foråret: se course readings (Type: SubHeader)
+[2026-08-21 03:03:19.801]   Fallback Item: køb: Ben-Gan, I. (2023) T-SQL fundamentals . Fourth edition. Redmond ;; London :, Microsoft Press ; Pearson Education Inc. (Type: SubHeader)
+[2026-08-21 03:03:19.966] Fallback Scan: Module Andre ressourcer (found 1 items)
+[2026-08-21 03:03:19.966]   Fallback Item: Trin-for-trin Guide til VS Code og konsollen.pdf (Type: File)
+[2026-08-21 03:03:20.435] Fallback Scan: Module Obligatoriske afleveringer efterår 2025 (found 10 items)
+[2026-08-21 03:03:20.435]   Fallback Item: Godkendelsesopgave 1 (Type: Assignment)
+[2026-08-21 03:03:20.436]   Fallback Item: Godkendelsesopgave 1 vejl_løsn.js (Type: File)
+[2026-08-21 03:03:20.703]   Fallback Item: Godkendelsesopgave 2 (Type: Assignment)
+[2026-08-21 03:03:20.704]   Fallback Item: G2 vejl_løsn.js (Type: File)
+[2026-08-21 03:03:20.969]   Fallback Item: G2 fælles_feedback.pdf (Type: File)
+[2026-08-21 03:03:21.126]   Fallback Item: Godkendelsesopgave 3 (Type: Assignment)
+[2026-08-21 03:03:21.126]   Fallback Item: G3 opgave.bierOgBlomster analysevejledning.pdf (Type: File)
+[2026-08-21 03:03:21.258]   Fallback Item: Fælles feedback G3 v2.pdf (Type: File)
+[2026-08-21 03:03:21.397]   Fallback Item: g3 opgave-bierOgBlomsterOO vejl.js (Type: File)
+[2026-08-21 03:03:21.547]   Fallback Item: G4  (Type: Quiz)
+[2026-08-21 03:03:21.693] Fallback Scan: Module Obligatoriske afleveringer forår 2026 (found 5 items)
+[2026-08-21 03:03:21.693]   Fallback Item: Godkendelsesopgave 5 (Type: Assignment)
+[2026-08-21 03:03:21.693]   Fallback Item: g5_fælles_feedback.pdf (Type: File)
+[2026-08-21 03:03:21.821]   Fallback Item: Godkendelsesopgave 6 (Type: Assignment)
+[2026-08-21 03:03:21.821]   Fallback Item: Godkendelsesopgave 7 (Type: Assignment)
+[2026-08-21 03:03:21.821]   Fallback Item: Godkendelsesopgave 8 - Quiz (Sidste frist for aflevering: onsdag 6. maj 23:59.) (Type: Quiz)
+[2026-08-21 03:03:21.958] Fallback Scan: Module Skriftlig Eksamen (found 7 items)
+[2026-08-21 03:03:21.958]   Fallback Item: Ordinær eksamen med vejledende løsning (Type: SubHeader)
+[2026-08-21 03:03:21.958]   Fallback Item: eksamen 2025E ordinær.pdf (Type: File)
+[2026-08-21 03:03:22.090]   Fallback Item: eksamen 2025 ord vejledende.zip (Type: File)
+[2026-08-21 03:03:22.230]   Fallback Item: NB: feedback ordinær.pdf (Type: File)
+[2026-08-21 03:03:22.368]   Fallback Item: Re-eksamen med vejledende løsning (Type: SubHeader)
+[2026-08-21 03:03:22.369]   Fallback Item: eksamen 2025E re-eksamen.pdf (Type: File)
+[2026-08-21 03:03:22.520]   Fallback Item: eksamen 2025 re vejledende.zip (Type: File)
+[2026-08-21 03:03:22.788] Fallback Scan: Module Rapporteksamen (found 1 items)
+[2026-08-21 03:03:22.788]   Fallback Item: Rapporteksamen 2026 - Ejendomsinvesterings-app.pdf (Type: File)
+[2026-08-21 03:03:23.086] Fallback Scan: Module Kursus-evaluering (found 1 items)
+[2026-08-21 03:03:23.086]   Fallback Item: Kursusevaluering (Type: File)
+[2026-08-21 03:03:23.410] Fallback Scan: Module Uge 36: Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, data, værdier, typer og operatorer. (found 8 items)
+[2026-08-21 03:03:23.410]   Fallback Item: Feedback til Ole (lect1) (Type: ExternalUrl)
+[2026-08-21 03:03:23.411] Creating Link: Feedback til Ole (lect1) (https://app.sli.do/event/wQ4oH75RtvyKQDU862K3ny) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback til Ole (lect1).webloc
+[2026-08-21 03:03:23.413]   Fallback Item: Læs: Eloquent JavaScript – kap 1  (Type: SubHeader)
+[2026-08-21 03:03:23.414]   Fallback Item: Javascript practice quiz 1 (Type: Quiz)
+[2026-08-21 03:03:23.414]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:23.414]   Fallback Item: forelæsning 1 25.pdf (Type: File)
+[2026-08-21 03:03:23.560]   Fallback Item: forelæsning 1 25.pptx (Type: File)
+[2026-08-21 03:03:23.762]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:23.762]   Fallback Item: øvelsessæt 1- Grundlæggende javascript 1.pdf (Type: File)
+[2026-08-21 03:03:24.066] Fallback Scan: Module Uge 37: Forelæsning 2. Programstruktur: udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser. (found 8 items)
+[2026-08-21 03:03:24.066]   Fallback Item: Læs: Eloquent JavaScript – kap 2  (Type: SubHeader)
+[2026-08-21 03:03:24.067]   Fallback Item: Javascript practice quiz 2 (Type: Quiz)
+[2026-08-21 03:03:24.067]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:24.067]   Fallback Item: forelæsning 2 25.pdf (Type: File)
+[2026-08-21 03:03:24.210]   Fallback Item: forelæsning 2 25.pptx (Type: File)
+[2026-08-21 03:03:24.351]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:24.351]   Fallback Item: øvelsessæt 2- Program - Struktur - Algoritmer.pdf (Type: File)
+[2026-08-21 03:03:24.482]   Fallback Item: Feedback til Ole (Type: ExternalUrl)
+[2026-08-21 03:03:24.484] Creating Link: Feedback til Ole (https://app.sli.do/event/3sn9oZ5PHhhh19jrXt37y7) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Feedback til Ole.webloc
+[2026-08-21 03:03:24.621] Fallback Scan: Module Uge 38: Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak. (found 7 items)
+[2026-08-21 03:03:24.622]   Fallback Item: Læs: Eloquent JavaScript – kap 3  (Type: SubHeader)
+[2026-08-21 03:03:24.623]   Fallback Item: Javascript practice quiz 3 (Type: Quiz)
+[2026-08-21 03:03:24.623]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:24.623]   Fallback Item: forelæsning 3 25.pdf (Type: File)
+[2026-08-21 03:03:24.772]   Fallback Item: forelæsning 3 25.pptx (Type: File)
+[2026-08-21 03:03:24.913]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:24.913]   Fallback Item: øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (Type: File)
+[2026-08-21 03:03:25.229] Fallback Scan: Module Uge 39: Forelæsning 4. Datastrukturer - Objekter og arrays. (found 7 items)
+[2026-08-21 03:03:25.230]   Fallback Item: Læs: Eloquent JavaScript – kap 4  (Type: SubHeader)
+[2026-08-21 03:03:25.230]   Fallback Item: Javascript practice quiz 4 (Type: Quiz)
+[2026-08-21 03:03:25.230]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:25.230]   Fallback Item: forelæsning 4 25.pptx (Type: File)
+[2026-08-21 03:03:25.367]   Fallback Item: forelæsning 4 25.pdf (Type: File)
+[2026-08-21 03:03:25.504]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:25.504]   Fallback Item: øvelsessæt 4.pdf (Type: File)
+[2026-08-21 03:03:25.799] Fallback Scan: Module Uge 40: Forelæsning 5. Højere-ordens funktioner og rekursion (found 9 items)
+[2026-08-21 03:03:25.799]   Fallback Item: Læs: Eloquent JavaScript – kap 5 (Type: SubHeader)
+[2026-08-21 03:03:25.799]   Fallback Item: Læs: Eloquent JavaScript – kap 3 (afsnit om rekursion) (Type: SubHeader)
+[2026-08-21 03:03:25.799]   Fallback Item: Javascript practice quiz 5 incl. recursion  (Type: Quiz)
+[2026-08-21 03:03:25.799]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:25.799]   Fallback Item: forelæsning 5 25.pptx (Type: File)
+[2026-08-21 03:03:25.925]   Fallback Item: forelæsning 5 25.pdf (Type: File)
+[2026-08-21 03:03:26.055]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:26.055]   Fallback Item: øvelsessæt 5.pdf (Type: File)
+[2026-08-21 03:03:26.181]   Fallback Item: øvelsessæt 5 løsninger.pdf (Type: File)
+[2026-08-21 03:03:26.470] Fallback Scan: Module Uge 41: Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling. (found 10 items)
+[2026-08-21 03:03:26.471]   Fallback Item: Læs: Eloquent JavaScript – kap 6 (Type: SubHeader)
+[2026-08-21 03:03:26.471]   Fallback Item: Javascript practice quiz 6  (Type: Quiz)
+[2026-08-21 03:03:26.471]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:26.471]   Fallback Item: forelæsning 6 25.pdf (Type: File)
+[2026-08-21 03:03:26.610]   Fallback Item: forelæsning 6 25.pptx (Type: File)
+[2026-08-21 03:03:26.752]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:26.753]   Fallback Item: øvelsessæt 6.pdf (Type: File)
+[2026-08-21 03:03:26.877]   Fallback Item: øvelsessæt 6 løsninger.pdf (Type: File)
+[2026-08-21 03:03:27.014]   Fallback Item: 2022 - ordinær (Type: File)
+[2026-08-21 03:03:27.148]   Fallback Item: eksamen 2023E ordinær.pdf (Type: File)
+[2026-08-21 03:03:27.464] Fallback Scan: Module Uge 42: Efterårsferie (found 0 items)
+[2026-08-21 03:03:27.607] Fallback Scan: Module Uge 43: Forelæsning 7. Error-handling, Moduler (found 8 items)
+[2026-08-21 03:03:27.607]   Fallback Item: Læs: Eloquent JavaScript – kap 8, 10 (Type: SubHeader)
+[2026-08-21 03:03:27.608]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:27.608]   Fallback Item: forelæsning 7 25.pdf (Type: File)
+[2026-08-21 03:03:27.741]   Fallback Item: forelæsning 7 25.pptx (Type: File)
+[2026-08-21 03:03:27.876]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:27.876]   Fallback Item: øvelsessæt 7.pdf (Type: File)
+[2026-08-21 03:03:28.008]   Fallback Item: øvelsessæt 7 løsninger.pdf (Type: File)
+[2026-08-21 03:03:28.135]   Fallback Item: Øvelser - fredag d. 24/10 (Type: File)
+[2026-08-21 03:03:28.426] Fallback Scan: Module Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1 (found 8 items)
+[2026-08-21 03:03:28.426]   Fallback Item: Læs: Eloquent JavaScript – kap 13 (Type: SubHeader)
+[2026-08-21 03:03:28.426]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:28.427]   Fallback Item: Forelæsning 8 - Intro til Web Teknologier.pdf (Type: File)
+[2026-08-21 03:03:28.564]   Fallback Item: Forelæsning 8 - Intro til Web Teknologier.pptx (Type: File)
+[2026-08-21 03:03:28.702]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:28.703]   Fallback Item: Hjælpeopgaver - fredag d. 31/10 (Type: File)
+[2026-08-21 03:03:28.842]   Fallback Item: Minefelt.pdf (Type: File)
+[2026-08-21 03:03:28.974]   Fallback Item: minefeltVEJL.js (Type: File)
+[2026-08-21 03:03:29.328] Fallback Scan: Module Uge 45: Forelæsning 9. HTML 2 og CSS (found 7 items)
+[2026-08-21 03:03:29.328]   Fallback Item: Læs: Eloquent JavaScript – kap 14 og 18 (Type: SubHeader)
+[2026-08-21 03:03:29.328]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:29.328]   Fallback Item: Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (Type: File)
+[2026-08-21 03:03:29.458]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:29.458]   Fallback Item: Flexbox Froggy (Type: ExternalUrl)
+[2026-08-21 03:03:29.459] Creating Link: Flexbox Froggy (https://flexboxfroggy.com/#da) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Flexbox Froggy.webloc
+[2026-08-21 03:03:29.460]   Fallback Item: CSS Diner (Type: ExternalUrl)
+[2026-08-21 03:03:29.461] Creating Link: CSS Diner (https://flukeout.github.io/) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/CSS Diner.webloc
+[2026-08-21 03:03:29.462]   Fallback Item: bondemand.pdf (Type: File)
+[2026-08-21 03:03:29.756] Fallback Scan: Module Uge 46: Forelæsning 10. Document Object Model (DOM) (found 7 items)
+[2026-08-21 03:03:29.756]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:29.756]   Fallback Item: 2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (Type: File)
+[2026-08-21 03:03:29.902]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:29.902]   Fallback Item: opgave 102 - hints.html (Type: File)
+[2026-08-21 03:03:30.033]   Fallback Item: styling_opgave102.css (Type: File)
+[2026-08-21 03:03:30.193]   Fallback Item: Eksamen 2023E Ordinær Klasse opgave.pdf (Type: File)
+[2026-08-21 03:03:30.333]   Fallback Item: Eksamen 2024E Ordinær Klasse opgave.pdf (Type: File)
+[2026-08-21 03:03:30.600] Fallback Scan: Module Uge 47: Forelæsning 11. Asynkron programmering og event handling  (found 8 items)
+[2026-08-21 03:03:30.600]   Fallback Item: Læs: Eloquent JavaScript – kap 11+15 (Type: SubHeader)
+[2026-08-21 03:03:30.600]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:30.600]   Fallback Item: Asynkronitet og Events.pdf (Type: File)
+[2026-08-21 03:03:30.741]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:30.741]   Fallback Item: Øvelser_Kapitel11og15.md (Type: File)
+[2026-08-21 03:03:30.884]   Fallback Item: Opgavesæt uge 47.pdf (Type: File)
+[2026-08-21 03:03:31.021]   Fallback Item: html terninger.pdf (Type: File)
+[2026-08-21 03:03:31.147]   Fallback Item: Video gennemgang af terning opgaven (Type: File)
+[2026-08-21 03:03:31.415] Fallback Scan: Module Uge 48: Forelæsning 12. Node.js og debugger samt eksamensforberedelse (found 10 items)
+[2026-08-21 03:03:31.415]   Fallback Item: Læs: Eloquent JavaScript – kap 20  (Type: SubHeader)
+[2026-08-21 03:03:31.415]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:31.415]   Fallback Item: NodeJs og Debugging.pdf (Type: File)
+[2026-08-21 03:03:31.542]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:31.542]   Fallback Item: Debug - grades - 1.txt (Type: File)
+[2026-08-21 03:03:31.681]   Fallback Item: Debug - Inventory - 1.txt (Type: File)
+[2026-08-21 03:03:31.821]   Fallback Item: Debug - shop - 1.txt (Type: File)
+[2026-08-21 03:03:31.965]   Fallback Item: Studietimers overblik - Opgave.pdf (Type: File)
+[2026-08-21 03:03:32.112]   Fallback Item: StudieTimerVejl.js (Type: File)
+[2026-08-21 03:03:32.262]   Fallback Item: JavaScript Objekter – Øvelser.pdf (Type: File)
+[2026-08-21 03:03:32.534] Fallback Scan: Module Uge 49: Øvelser (found 3 items)
+[2026-08-21 03:03:32.534]   Fallback Item: Gavelisten - Opgave.pdf (Type: File)
+[2026-08-21 03:03:32.672]   Fallback Item: Juleværksted - Opgave.pdf (Type: File)
+[2026-08-21 03:03:32.811]   Fallback Item: Mus - Opgave.docx (Type: File)
+[2026-08-21 03:03:33.099] Fallback Scan: Module Tidligere eksamenssæt (de fleste med vejledende løsninger) (found 4 items)
+[2026-08-21 03:03:33.099]   Fallback Item: Husk, at der også kan komme andre ting såsom switch-statements, loops igennem objekter, HTML osv. som ikke fremgår så ofte i tidligere eksamenssæt. (Type: SubHeader)
+[2026-08-21 03:03:33.099]   Fallback Item: Eksamens arkiv.zip (Type: File)
+[2026-08-21 03:03:33.225]   Fallback Item: Fiktiv Eksamensopgave.pdf (Type: File)
+[2026-08-21 03:03:33.351]   Fallback Item: Fiktiv Eksamensopgave3.pdf (Type: File)
+[2026-08-21 03:03:33.642] Fallback Scan: Module Uge 7: Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel) (found 12 items)
+[2026-08-21 03:03:33.643]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:03:33.643]   Fallback Item: UML @ Classroom : kap. 1,2,3,4 (Type: ExternalTool)
+[2026-08-21 03:03:33.645] Creating Link: UML @ Classroom : kap. 1,2,3,4 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150025) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/UML @ Classroom  kap. 1,2,3,4.webloc
+[2026-08-21 03:03:33.648]   Fallback Item: Kursorisk: (Type: SubHeader)
+[2026-08-21 03:03:33.648]   Fallback Item: UML Diagram Types Guide: Class diagram (Type: ExternalTool)
+[2026-08-21 03:03:33.651] Creating Link: UML Diagram Types Guide: Class diagram (https://cbscanvas.instructure.com/courses/45899/modules/items/1150026) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/UML Diagram Types Guide Class diagram.webloc
+[2026-08-21 03:03:33.653]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:33.654]   Fallback Item: Forelæsning13.pdf (Type: File)
+[2026-08-21 03:03:33.781]   Fallback Item: Forelæsning13.pptx (Type: File)
+[2026-08-21 03:03:33.915]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:33.915]   Fallback Item: UMLanalyseopgaver.pdf (Type: File)
+[2026-08-21 03:03:34.040]   Fallback Item: UMLcases.pdf (Type: File)
+[2026-08-21 03:03:34.165]   Fallback Item: exercises system modelling - solutions.pdf (Type: File)
+[2026-08-21 03:03:34.301]   Fallback Item: forelæsningsnoter 13 OO+UML.docx (Type: File)
+[2026-08-21 03:03:34.558] Fallback Scan: Module Uge 8: Forelæsnigsfri (found 0 items)
+[2026-08-21 03:03:34.707] Fallback Scan: Module Uge 9: Forelæsning 14. Design, Arkitektur  (found 11 items)
+[2026-08-21 03:03:34.708]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:03:34.708]   Fallback Item: UML @ Classroom : kap. 5, (6), 7  (Type: ExternalTool)
+[2026-08-21 03:03:34.709] Creating Link: UML @ Classroom : kap. 5, (6), 7  (https://cbscanvas.instructure.com/courses/45899/modules/items/1150036) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/UML @ Classroom  kap. 5, (6), 7.webloc
+[2026-08-21 03:03:34.711]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:34.711]   Fallback Item: Forelæsning 14 OO+UML 2.pdf (Type: File)
+[2026-08-21 03:03:34.870]   Fallback Item: Forelæsning 14 OO+UML 2.pptx (Type: File)
+[2026-08-21 03:03:35.012]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:35.013]   Fallback Item: VRS_registrérKunde_vejl.pdf (Type: File)
+[2026-08-21 03:03:35.153]   Fallback Item: opgave_bibliotekssystem.pdf (Type: File)
+[2026-08-21 03:03:35.403]   Fallback Item: opgave_bibliotekssystem_vejl.pdf (Type: File)
+[2026-08-21 03:03:35.630]   Fallback Item: Biblioteks_DSD_vejl.jpg (Type: File)
+[2026-08-21 03:03:35.873]   Fallback Item: Biblioteks_SSD_vejl.jpg (Type: File)
+[2026-08-21 03:03:36.336] Fallback Scan: Module Uge 10: Forelæsning 15. Database 1 | Opsætning af database (found 12 items)
+[2026-08-21 03:03:36.337]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:03:36.338]   Fallback Item: The Worlds of Database Systems. pp 1-13 (Type: ExternalTool)
+[2026-08-21 03:03:36.339] Creating Link: The Worlds of Database Systems. pp 1-13 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150046) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/The Worlds of Database Systems. pp 1-13.webloc
+[2026-08-21 03:03:36.342]   Fallback Item: The relational model of data. pp 15-65 (Type: ExternalTool)
+[2026-08-21 03:03:36.343] Creating Link: The relational model of data. pp 15-65 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150047) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/The relational model of data. pp 15-65.webloc
+[2026-08-21 03:03:36.345]   Fallback Item: Kursorisk: (Type: SubHeader)
+[2026-08-21 03:03:36.345]   Fallback Item: Entity Relationship Modeling with UML (Type: ExternalTool)
+[2026-08-21 03:03:36.346] Creating Link: Entity Relationship Modeling with UML (https://cbscanvas.instructure.com/courses/45899/modules/items/1150048) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Entity Relationship Modeling with UML.webloc
+[2026-08-21 03:03:36.348]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:36.348]   Fallback Item: Forelæsning 15 DB1.pdf (Type: File)
+[2026-08-21 03:03:36.497]   Fallback Item: Forelæsning 15 DB1.pptx (Type: File)
+[2026-08-21 03:03:36.637]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:36.638]   Fallback Item: Lecture 15 Database Design Exercises solutions.pdf (Type: File)
+[2026-08-21 03:03:36.779]   Fallback Item: Lecture 15 Database Design Exercises.pdf (Type: File)
+[2026-08-21 03:03:36.934]   Fallback Item: Guide til opsætning af database-2026.pdf (Type: File)
+[2026-08-21 03:03:37.228] Fallback Scan: Module Uge 11: Forelæsning 16. Database 2 | Datamodifikation (found 6 items)
+[2026-08-21 03:03:37.228]   Fallback Item: T-SQL fundamentals kap. 1, 2, 8 (Type: ExternalTool)
+[2026-08-21 03:03:37.229] Creating Link: T-SQL fundamentals kap. 1, 2, 8 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150056) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/T-SQL fundamentals kap. 1, 2, 8.webloc
+[2026-08-21 03:03:37.232]   Fallback Item: Forelæsning 16 - DB2.pptx (Type: File)
+[2026-08-21 03:03:37.359]   Fallback Item: Forelæsning 16 - DB2.pdf (Type: File)
+[2026-08-21 03:03:37.497]   Fallback Item: løbeklub SQL.pdf (Type: File)
+[2026-08-21 03:03:37.652]   Fallback Item: Lecture 16 ER-RM exercises (solutions).pdf (Type: File)
+[2026-08-21 03:03:37.802]   Fallback Item: Lecture 16 ER-RM Exercises.pdf (Type: File)
+[2026-08-21 03:03:38.116] Fallback Scan: Module Uge 12: Forelæsning 17. Database 3 | Join og set operatorer (found 13 items)
+[2026-08-21 03:03:38.116]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:03:38.117]   Fallback Item: T-SQL fundamentals kap. 3, 6 (Type: ExternalTool)
+[2026-08-21 03:03:38.118] Creating Link: T-SQL fundamentals kap. 3, 6 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150065) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/T-SQL fundamentals kap. 3, 6.webloc
+[2026-08-21 03:03:38.120]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:38.120]   Fallback Item: Forelæsning 17 - DB3.pdf (Type: File)
+[2026-08-21 03:03:38.263]   Fallback Item: Forelæsning 17 - DB3.pptx (Type: File)
+[2026-08-21 03:03:38.400]   Fallback Item: EKSTRA: DB-kapitelnoter-øvelser-løsninger.zip (Type: File)
+[2026-08-21 03:03:38.558]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:38.559]   Fallback Item: Create_ILearn_tables.sql (Type: File)
+[2026-08-21 03:03:38.710]   Fallback Item: Insert_ILearn_data.sql (Type: File)
+[2026-08-21 03:03:38.848]   Fallback Item: Forelæsning 17 ILearn SQL Exercises.pdf (Type: File)
+[2026-08-21 03:03:38.993]   Fallback Item: Forelæsning 17 ILearn SQL Solutions.sql (Type: File)
+[2026-08-21 03:03:39.159]   Fallback Item: SQL-Opgave.pdf (Type: File)
+[2026-08-21 03:03:39.293]   Fallback Item: SQL Opgave Vejl.sql (Type: File)
+[2026-08-21 03:03:39.651] Fallback Scan: Module Uge 13: Forelæsning 18. Webserver & APIer (found 9 items)
+[2026-08-21 03:03:39.651]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:03:39.651]   Fallback Item: Express_Nodejs Introduction, mozilla.org (Type: ExternalTool)
+[2026-08-21 03:03:39.652] Creating Link: Express_Nodejs Introduction, mozilla.org (https://cbscanvas.instructure.com/courses/45899/modules/items/1150084) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Express_Nodejs Introduction, mozilla.org.webloc
+[2026-08-21 03:03:39.655]   Fallback Item: Hello world example - ExpressJs (Type: ExternalTool)
+[2026-08-21 03:03:39.656] Creating Link: Hello world example - ExpressJs (https://cbscanvas.instructure.com/courses/45899/modules/items/1150083) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Hello world example - ExpressJs.webloc
+[2026-08-21 03:03:39.658]   Fallback Item: Node.js - Express Framework (Type: ExternalTool)
+[2026-08-21 03:03:39.660] Creating Link: Node.js - Express Framework (https://cbscanvas.instructure.com/courses/45899/modules/items/1150085) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Node.js - Express Framework.webloc
+[2026-08-21 03:03:39.663]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:39.663]   Fallback Item: Forelæsning 18 - Webserver og API.pptx (Type: File)
+[2026-08-21 03:03:39.810]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:39.810]   Fallback Item: Webserver-opgave.pdf (Type: File)
+[2026-08-21 03:03:39.950]   Fallback Item: Webserver-Opgave-Vejl.zip (Type: File)
+[2026-08-21 03:03:40.223] Fallback Scan: Module Uge 14: Forelæsnigsfri (Påske) (found 0 items)
+[2026-08-21 03:03:40.382] Fallback Scan: Module Uge 15: Forelæsning 19. Webserver & Databaser (found 5 items)
+[2026-08-21 03:03:40.382]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:03:40.382]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:40.383]   Fallback Item: Forelæsning 19 - Webserver og Databaser.pptx (Type: File)
+[2026-08-21 03:03:40.518]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:40.518]   Fallback Item: Forelæsning 19.zip (Type: File)
+[2026-08-21 03:03:40.787] Fallback Scan: Module Uge 16: Forelæsning 20. Små systemer 1 | Testing - Teori og praksis (found 6 items)
+[2026-08-21 03:03:40.787]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:03:40.787]   Fallback Item: Certified Tester Foundation Level (CTFL) v4.0 (Type: ExternalTool)
+[2026-08-21 03:03:40.788] Creating Link: Certified Tester Foundation Level (CTFL) v4.0 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150088) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Certified Tester Foundation Level (CTFL) v4.0.webloc
+[2026-08-21 03:03:40.790]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:40.791]   Fallback Item: Uge 16 - Testing - Teori og praksis.pdf (Type: File)
+[2026-08-21 03:03:40.926]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:40.927]   Fallback Item: Uge 16 - Jest.zip (Type: File)
+[2026-08-21 03:03:41.208] Fallback Scan: Module Uge 18: Forelæsning 21. Små systemer 2 | Security 101, (authentification, authorization, audit) (found 4 items)
+[2026-08-21 03:03:41.208]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:03:41.208]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:41.208]   Fallback Item: Forelæsning 21 - Cloud & Security 101.pptx (Type: File)
+[2026-08-21 03:03:41.339]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:41.471] Fallback Scan: Module uge 19: Forelæsning 22. Små systemer 3 | Arkitektur, Backend, MVC + fullstack (found 4 items)
+[2026-08-21 03:03:41.471]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:03:41.471]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:41.471]   Fallback Item: Uge 19 - System Arkitektur - 3 tier, Backend, MVC + fullstack.pdf (Type: File)
+[2026-08-21 03:03:41.609]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:41.742] Fallback Scan: Module Uge 20: Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse. (found 6 items)
+[2026-08-21 03:03:41.742]   Fallback Item: Læs:  (Type: SubHeader)
+[2026-08-21 03:03:41.742]   Fallback Item: Kursusbeskrivelse og eksamensregler (Type: ExternalUrl)
+[2026-08-21 03:03:41.743] Creating Link: Kursusbeskrivelse og eksamensregler (https://kursuskatalog.cbs.dk/2024-2025/BA-BINTO1064U.aspx) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Kursusbeskrivelse og eksamensregler.webloc
+[2026-08-21 03:03:41.744]   Fallback Item: Slides (Type: SubHeader)
+[2026-08-21 03:03:41.745]   Fallback Item: Forelæsning 23 - eksamensforberedelse.pptx (Type: File)
+[2026-08-21 03:03:41.906]   Fallback Item: Forelæsning 23 - eksamensforberedelse.pdf (Type: File)
+[2026-08-21 03:03:42.046]   Fallback Item: Øvelser (Type: SubHeader)
+[2026-08-21 03:03:42.051] Requesting URL: https://cbscanvas.instructure.com/files/1598669/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:42.053] Requesting URL: https://cbscanvas.instructure.com/files/1670371/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:42.054] Requesting URL: https://cbscanvas.instructure.com/files/1598721/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:42.054] Requesting URL: https://cbscanvas.instructure.com/files/1687491/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:42.055] Requesting URL: https://cbscanvas.instructure.com/files/1692940/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:42.752] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:42.756] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:42.763] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/G3 opgave.bierOgBlomster analysevejledning.pdf (265292 bytes)
+[2026-08-21 03:03:42.763] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Trin-for-trin Guide til VS Code og konsollen.pdf (150525 bytes)
+[2026-08-21 03:03:42.766] Requesting URL: https://cbscanvas.instructure.com/files/1700523/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:42.769] Requesting URL: https://cbscanvas.instructure.com/files/1700515/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:42.770] Response Status: 200 Content-Type: text/javascript
+[2026-08-21 03:03:42.772] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/g1 darts vejl_løsn.js (1209 bytes)
+[2026-08-21 03:03:42.776] Requesting URL: https://cbscanvas.instructure.com/files/1796825/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:42.777] Response Status: 200 Content-Type: text/javascript
+[2026-08-21 03:03:42.778] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:42.783] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/gk2 vejl_løsn.js (1213 bytes)
+[2026-08-21 03:03:42.786] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/g2_fælles_feedback.pdf (225849 bytes)
+[2026-08-21 03:03:42.789] Requesting URL: https://cbscanvas.instructure.com/files/1736378/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:42.791] Requesting URL: https://cbscanvas.instructure.com/files/1736379/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:43.366] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:43.372] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/g5_fælles_feedback.pdf (144594 bytes)
+[2026-08-21 03:03:43.375] Requesting URL: https://cbscanvas.instructure.com/files/1736380/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:43.391] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:43.398] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Fælles feedback G3 v2.pdf (354538 bytes)
+[2026-08-21 03:03:43.402] Requesting URL: https://cbscanvas.instructure.com/files/1770754/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:43.407] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:43.420] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/eksamen 2025E ordinær final.pdf (655581 bytes)
+[2026-08-21 03:03:43.422] Requesting URL: https://cbscanvas.instructure.com/files/1770755/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:43.437] Response Status: 200 Content-Type: application/zip
+[2026-08-21 03:03:43.439] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/eksamen 2025 ord vejledende.zip (14542 bytes)
+[2026-08-21 03:03:43.443] Requesting URL: https://cbscanvas.instructure.com/files/1771104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:43.448] Response Status: 200 Content-Type: text/javascript
+[2026-08-21 03:03:43.451] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/g3 opgave-bierOgBlomsterOO vejl.js (7858 bytes)
+[2026-08-21 03:03:43.455] Requesting URL: https://cbscanvas.instructure.com/files/1815182/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:43.984] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:43.995] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/eksamen 2025E re-eksamen.pdf (700836 bytes)
+[2026-08-21 03:03:43.999] Requesting URL: https://cbscanvas.instructure.com/files/1626276/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:44.003] Response Status: 200 Content-Type: application/zip
+[2026-08-21 03:03:44.006] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/eksamen 2025 re vejledende.zip (13770 bytes)
+[2026-08-21 03:03:44.010] Requesting URL: https://cbscanvas.instructure.com/files/1626277/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:44.010] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:44.012] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/feedback ordinær.pdf (111925 bytes)
+[2026-08-21 03:03:44.016] Requesting URL: https://cbscanvas.instructure.com/files/1626486/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:44.017] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:44.021] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Eksamen 2026 rev_6.pdf (263452 bytes)
+[2026-08-21 03:03:44.026] Requesting URL: https://cbscanvas.instructure.com/files/1632000/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:44.043] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:44.064] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/PowerPoint to use in class_141223 (2).pptx (1718878 bytes)
+[2026-08-21 03:03:44.068] Requesting URL: https://cbscanvas.instructure.com/files/1632001/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:44.601] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:44.604] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 1- Grundlæggende javascript 1.pdf (155545 bytes)
+[2026-08-21 03:03:44.608] Requesting URL: https://cbscanvas.instructure.com/files/1632558/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:44.626] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:44.652] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:44.653] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 1 25.pdf (1593444 bytes)
+[2026-08-21 03:03:44.665] Requesting URL: https://cbscanvas.instructure.com/files/1637607/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:44.678] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 2 25.pdf (951046 bytes)
+[2026-08-21 03:03:44.683] Requesting URL: https://cbscanvas.instructure.com/files/1637608/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:44.685] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:44.711] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:45.311] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:45.323] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:45.367] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 3 25.pdf (797272 bytes)
+[2026-08-21 03:03:45.378] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 2 25.pptx (27494979 bytes)
+[2026-08-21 03:03:45.385] Requesting URL: https://cbscanvas.instructure.com/files/1637584/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:45.395] Requesting URL: https://cbscanvas.instructure.com/files/1643465/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:45.399] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:45.416] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 2- Program - Struktur - Algoritmer.pdf (184026 bytes)
+[2026-08-21 03:03:45.418] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 1 25.pptx (25963296 bytes)
+[2026-08-21 03:03:45.428] Requesting URL: https://cbscanvas.instructure.com/files/1643462/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:45.429] Requesting URL: https://cbscanvas.instructure.com/files/1643483/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:45.602] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 3 25.pptx (14493933 bytes)
+[2026-08-21 03:03:45.605] Requesting URL: https://cbscanvas.instructure.com/files/1658577/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:46.010] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:46.014] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:46.024] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (199331 bytes)
+[2026-08-21 03:03:46.030] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:46.035] Requesting URL: https://cbscanvas.instructure.com/files/1658578/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:46.044] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 4 25.pdf (1093469 bytes)
+[2026-08-21 03:03:46.053] Requesting URL: https://cbscanvas.instructure.com/files/1658625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:46.100] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:46.113] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 4.pdf (258644 bytes)
+[2026-08-21 03:03:46.122] Requesting URL: https://cbscanvas.instructure.com/files/1658626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:46.295] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:46.511] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 4 25.pptx (24744385 bytes)
+[2026-08-21 03:03:46.522] Requesting URL: https://cbscanvas.instructure.com/files/1666624/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:46.635] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 5 25.pptx (17174017 bytes)
+[2026-08-21 03:03:46.640] Requesting URL: https://cbscanvas.instructure.com/files/1666625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:46.721] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:46.734] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 5.pdf (245920 bytes)
+[2026-08-21 03:03:46.775] Requesting URL: https://cbscanvas.instructure.com/files/1666626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:46.847] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:46.866] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 5 25.pdf (772981 bytes)
+[2026-08-21 03:03:46.886] Requesting URL: https://cbscanvas.instructure.com/files/1666630/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:46.991] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:47.001] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 5 løsninger.pdf (282049 bytes)
+[2026-08-21 03:03:47.005] Requesting URL: https://cbscanvas.instructure.com/files/1598570/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:47.225] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:47.244] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 6 25.pdf (1154888 bytes)
+[2026-08-21 03:03:47.249] Requesting URL: https://cbscanvas.instructure.com/files/1670338/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:47.345] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:47.354] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 6.pdf (203755 bytes)
+[2026-08-21 03:03:47.358] Requesting URL: https://cbscanvas.instructure.com/files/1677087/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:47.399] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:47.603] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:47.616] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 6 løsninger.pdf (239167 bytes)
+[2026-08-21 03:03:47.627] Requesting URL: https://cbscanvas.instructure.com/files/1677089/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:47.719] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:47.733] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/2022 ordinær.pdf (203316 bytes)
+[2026-08-21 03:03:47.742] Requesting URL: https://cbscanvas.instructure.com/files/1677085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:47.894] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:47.913] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/eksamen 2023E ordinær.pdf (255500 bytes)
+[2026-08-21 03:03:47.924] Requesting URL: https://cbscanvas.instructure.com/files/1677090/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:47.985] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 6 25.pptx (39644299 bytes)
+[2026-08-21 03:03:47.986] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:47.990] Requesting URL: https://cbscanvas.instructure.com/files/1679207/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:48.006] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 7 25.pdf (982759 bytes)
+[2026-08-21 03:03:48.010] Requesting URL: https://cbscanvas.instructure.com/files/1682843/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:48.270] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:48.332] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:48.346] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 7.pdf (274244 bytes)
+[2026-08-21 03:03:48.357] Requesting URL: https://cbscanvas.instructure.com/files/1682844/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:48.467] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsning 7 25.pptx (13428202 bytes)
+[2026-08-21 03:03:48.471] Requesting URL: https://cbscanvas.instructure.com/files/1684203/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:48.600] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:48.612] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:48.659] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:48.693] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/øvelsessæt 7 løsninger.pdf (292720 bytes)
+[2026-08-21 03:03:48.708] Requesting URL: https://cbscanvas.instructure.com/files/1684229/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:48.716] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Øvelse_u43.pdf (3962706 bytes)
+[2026-08-21 03:03:48.727] Requesting URL: https://cbscanvas.instructure.com/files/1685205/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:48.752] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 8 - Intro til Web Teknologier.pdf (5854748 bytes)
+[2026-08-21 03:03:48.757] Requesting URL: https://cbscanvas.instructure.com/files/1688312/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:48.947] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:49.118] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:49.132] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/små_opgaver.pdf (164552 bytes)
+[2026-08-21 03:03:49.145] Requesting URL: https://cbscanvas.instructure.com/files/1690005/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:49.283] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 8 - Intro til Web Teknologier.pptx (23173123 bytes)
+[2026-08-21 03:03:49.287] Requesting URL: https://cbscanvas.instructure.com/files/1692896/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:49.310] Response Status: 200 Content-Type: text/javascript
+[2026-08-21 03:03:49.313] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/minefeltVEJL.js (787 bytes)
+[2026-08-21 03:03:49.318] Requesting URL: https://cbscanvas.instructure.com/files/1692936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:49.352] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:49.468] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:49.491] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Minefelt.pdf (366149 bytes)
+[2026-08-21 03:03:49.504] Requesting URL: https://cbscanvas.instructure.com/files/1693079/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:49.505] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (9440778 bytes)
+[2026-08-21 03:03:49.511] Requesting URL: https://cbscanvas.instructure.com/files/1694147/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:49.763] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:49.773] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/bondemand.pdf (380086 bytes)
+[2026-08-21 03:03:49.777] Requesting URL: https://cbscanvas.instructure.com/files/1694158/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:49.957] Response Status: 200 Content-Type: text/html
+[2026-08-21 03:03:49.962] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/hints.html (15176 bytes)
+[2026-08-21 03:03:49.968] Requesting URL: https://cbscanvas.instructure.com/files/1696759/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:50.043] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:50.149] Response Status: 200 Content-Type: text/css
+[2026-08-21 03:03:50.165] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/styling_opgave102.css (4063 bytes)
+[2026-08-21 03:03:50.171] Requesting URL: https://cbscanvas.instructure.com/files/1696760/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:50.185] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (9243144 bytes)
+[2026-08-21 03:03:50.191] Requesting URL: https://cbscanvas.instructure.com/files/1698072/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:50.331] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:50.335] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Eksamen 2023E Ordinær Klasse opgave.pdf (54694 bytes)
+[2026-08-21 03:03:50.338] Requesting URL: https://cbscanvas.instructure.com/files/1598722/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:50.354] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:50.365] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Eksamen 2024E Ordinær Klasse opgave.pdf (167555 bytes)
+[2026-08-21 03:03:50.369] Requesting URL: https://cbscanvas.instructure.com/files/1698028/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:50.596] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:50.614] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Asynkronitet og Events.pdf (1248126 bytes)
+[2026-08-21 03:03:50.618] Requesting URL: https://cbscanvas.instructure.com/files/1700490/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:50.742] Response Status: 200 Content-Type: text/markdown
+[2026-08-21 03:03:50.745] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Øvelser_Kapitel11og15.md (6374 bytes)
+[2026-08-21 03:03:50.748] Requesting URL: https://cbscanvas.instructure.com/files/1700471/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:50.778] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:50.787] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Opgavesæt uge 47.pdf (148870 bytes)
+[2026-08-21 03:03:50.791] Requesting URL: https://cbscanvas.instructure.com/files/1700478/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:50.910] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:50.918] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/html terninger.pdf (226046 bytes)
+[2026-08-21 03:03:50.922] Requesting URL: https://cbscanvas.instructure.com/files/1700483/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:51.205] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:51.223] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/NodeJs og Debugging.pdf (1226376 bytes)
+[2026-08-21 03:03:51.227] Requesting URL: https://cbscanvas.instructure.com/files/1701809/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:51.398] Response Status: 200 Content-Type: text/plain
+[2026-08-21 03:03:51.401] Response Status: 200 Content-Type: text/plain
+[2026-08-21 03:03:51.402] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Debug - Inventory - 1.txt (1464 bytes)
+[2026-08-21 03:03:51.405] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Debug - grades - 1.txt (990 bytes)
+[2026-08-21 03:03:51.408] Requesting URL: https://cbscanvas.instructure.com/files/1702591/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:51.411] Requesting URL: https://cbscanvas.instructure.com/files/1701948/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:51.462] Response Status: 200 Content-Type: video/mp4
+[2026-08-21 03:03:51.560] Response Status: 200 Content-Type: text/plain
+[2026-08-21 03:03:51.576] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Debug - shop - 1.txt (1415 bytes)
+[2026-08-21 03:03:51.589] Requesting URL: https://cbscanvas.instructure.com/files/1703058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:51.851] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:51.867] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Studietimers overblik - Opgave.pdf (166800 bytes)
+[2026-08-21 03:03:51.878] Requesting URL: https://cbscanvas.instructure.com/files/1703059/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:52.035] Response Status: 200 Content-Type: text/javascript
+[2026-08-21 03:03:52.050] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:52.050] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/StudieTimerVejl.js (4094 bytes)
+[2026-08-21 03:03:52.067] Requesting URL: https://cbscanvas.instructure.com/files/1703063/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:52.072] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/JavaScript Objekter – Øvelser.pdf (229478 bytes)
+[2026-08-21 03:03:52.084] Requesting URL: https://cbscanvas.instructure.com/files/1692058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:52.258] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:52.277] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Gavelisten - Opgave.pdf (125183 bytes)
+[2026-08-21 03:03:52.288] Requesting URL: https://cbscanvas.instructure.com/files/1598591/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:52.492] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:52.507] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Juleværksted - Opgave.pdf (197615 bytes)
+[2026-08-21 03:03:52.520] Requesting URL: https://cbscanvas.instructure.com/files/1598593/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:52.673] Response Status: 200 Content-Type: application/zip
+[2026-08-21 03:03:52.721] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:03:52.752] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Mus - Opgave.docx (205833 bytes)
+[2026-08-21 03:03:52.772] Requesting URL: https://cbscanvas.instructure.com/files/1769713/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:52.784] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Eksamens arkiv.zip (2918862 bytes)
+[2026-08-21 03:03:52.796] Requesting URL: https://cbscanvas.instructure.com/files/1769714/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:52.895] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:52.912] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Fiktiv Eksamensopgave.pdf (43733 bytes)
+[2026-08-21 03:03:52.926] Requesting URL: https://cbscanvas.instructure.com/files/1768580/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:53.172] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:53.189] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Fiktiv Eksamensopgave3.pdf (141950 bytes)
+[2026-08-21 03:03:53.204] Requesting URL: https://cbscanvas.instructure.com/files/1768581/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:53.440] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:53.471] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:53.570] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning13.pdf (1560239 bytes)
+[2026-08-21 03:03:53.592] Requesting URL: https://cbscanvas.instructure.com/files/1598710/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:53.715] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:53.745] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/UMLanalyseopgaver.pdf (119412 bytes)
+[2026-08-21 03:03:53.765] Requesting URL: https://cbscanvas.instructure.com/files/1769666/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:53.884] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:53.914] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/UMLcases.pdf (142648 bytes)
+[2026-08-21 03:03:53.933] Requesting URL: https://cbscanvas.instructure.com/files/1780749/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:54.267] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:54.297] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/exercises system modelling - solutions.pdf (182349 bytes)
+[2026-08-21 03:03:54.316] Requesting URL: https://cbscanvas.instructure.com/files/1780750/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:54.515] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:03:54.542] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/forelæsningsnoter 13 OO UML.docx (31244 bytes)
+[2026-08-21 03:03:54.562] Requesting URL: https://cbscanvas.instructure.com/files/1780937/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:54.667] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:54.740] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 14 OO UML 2.pdf (1024966 bytes)
+[2026-08-21 03:03:54.761] Requesting URL: https://cbscanvas.instructure.com/files/1780752/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:55.062] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:55.268] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:55.316] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/VRS_registrérKunde_vejl.pdf (197720 bytes)
+[2026-08-21 03:03:55.339] Requesting URL: https://cbscanvas.instructure.com/files/1780936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:55.394] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning13.pptx (51957778 bytes)
+[2026-08-21 03:03:55.412] Requesting URL: https://cbscanvas.instructure.com/files/1781875/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:55.593] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:55.628] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/opgave_bibliotekssystem.pdf (174680 bytes)
+[2026-08-21 03:03:55.651] Requesting URL: https://cbscanvas.instructure.com/files/1781876/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:55.679] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 14 OO UML 2.pptx (13151543 bytes)
+[2026-08-21 03:03:55.694] Requesting URL: https://cbscanvas.instructure.com/files/1784973/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:56.023] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:56.045] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/opgave_bibliotekssystem_vejl.pdf (245890 bytes)
+[2026-08-21 03:03:56.061] Requesting URL: https://cbscanvas.instructure.com/files/1784974/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:56.087] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 03:03:56.106] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Biblioteks_DSD_vejl.jpg (122731 bytes)
+[2026-08-21 03:03:56.120] Requesting URL: https://cbscanvas.instructure.com/files/1784717/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:56.245] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 03:03:56.264] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Biblioteks_SSD_vejl.jpg (32215 bytes)
+[2026-08-21 03:03:56.278] Requesting URL: https://cbscanvas.instructure.com/files/1784716/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:56.348] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:56.418] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 15 DB1_x.pdf (1692942 bytes)
+[2026-08-21 03:03:56.431] Requesting URL: https://cbscanvas.instructure.com/files/1784715/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:56.714] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:56.763] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:56.788] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Lecture 15 Database Design Exercises solutions NY.pdf (138522 bytes)
+[2026-08-21 03:03:56.804] Requesting URL: https://cbscanvas.instructure.com/files/1789277/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:56.888] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:56.914] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Lecture 15 Database Design Exercises.pdf (78871 bytes)
+[2026-08-21 03:03:56.931] Requesting URL: https://cbscanvas.instructure.com/files/1789278/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:57.049] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:57.286] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Guide til opsætning af database-2026.pdf (4907315 bytes)
+[2026-08-21 03:03:57.310] Requesting URL: https://cbscanvas.instructure.com/files/1789978/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:57.454] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:57.654] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:57.774] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 16 - DB2.pdf (1551149 bytes)
+[2026-08-21 03:03:57.802] Requesting URL: https://cbscanvas.instructure.com/files/1789237/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:58.064] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:58.105] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/løbeklub SQL.pdf (97930 bytes)
+[2026-08-21 03:03:58.128] Requesting URL: https://cbscanvas.instructure.com/files/1789236/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:58.172] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 15 DB1_x.pptx (34805489 bytes)
+[2026-08-21 03:03:58.180] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 16 - DB2.pptx (14136388 bytes)
+[2026-08-21 03:03:58.188] Requesting URL: https://cbscanvas.instructure.com/files/1793427/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:58.196] Requesting URL: https://cbscanvas.instructure.com/files/1793428/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:58.543] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:58.746] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:58.772] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Lecture 16 ER-RM Exercises.pdf (186181 bytes)
+[2026-08-21 03:03:58.773] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Lecture 16 svar øvelse.pdf (670880 bytes)
+[2026-08-21 03:03:58.786] Requesting URL: https://cbscanvas.instructure.com/files/1793434/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:58.794] Requesting URL: https://cbscanvas.instructure.com/files/1789210/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:58.821] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:03:58.853] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:58.864] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 17 - DB3.pptx (883058 bytes)
+[2026-08-21 03:03:58.885] Requesting URL: https://cbscanvas.instructure.com/files/1598646/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:58.901] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 17 - DB3.pdf (1038221 bytes)
+[2026-08-21 03:03:58.922] Requesting URL: https://cbscanvas.instructure.com/files/1793429/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:59.443] Response Status: 200 Content-Type: application/zip
+[2026-08-21 03:03:59.444] Response Status: 200 Content-Type: application/sql
+[2026-08-21 03:03:59.467] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Create_ILearn_tables.sql (3134 bytes)
+[2026-08-21 03:03:59.485] Requesting URL: https://cbscanvas.instructure.com/files/1793556/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:59.624] Response Status: 200 Content-Type: application/x-sql
+[2026-08-21 03:03:59.657] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Insert_ILearn_data.sql (17683 bytes)
+[2026-08-21 03:03:59.681] Requesting URL: https://cbscanvas.instructure.com/files/1794805/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:59.687] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:03:59.717] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 17 ILearn SQL Exercises.pdf (228477 bytes)
+[2026-08-21 03:03:59.737] Requesting URL: https://cbscanvas.instructure.com/files/1794807/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:03:59.985] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/DB-kapitelnoter-øvelser-løsninger.zip (13332356 bytes)
+[2026-08-21 03:04:00.001] Requesting URL: https://cbscanvas.instructure.com/files/1797870/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:00.185] Response Status: 200 Content-Type: application/sql
+[2026-08-21 03:04:00.203] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 17 ILearn SQL Solutions.sql (5520 bytes)
+[2026-08-21 03:04:00.219] Requesting URL: https://cbscanvas.instructure.com/files/1799465/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:00.369] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:04:00.508] Response Status: 200 Content-Type: application/sql
+[2026-08-21 03:04:00.537] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/SQL Opgave Vejl.sql (2554 bytes)
+[2026-08-21 03:04:00.540] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/SQL-Opgave.pdf (4007174 bytes)
+[2026-08-21 03:04:00.558] Requesting URL: https://cbscanvas.instructure.com/files/1799926/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:00.559] Requesting URL: https://cbscanvas.instructure.com/files/1805046/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:01.078] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:04:01.298] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:04:01.360] Response Status: 200 Content-Type: application/zip
+[2026-08-21 03:04:01.407] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Webserver-Opgave-Vejl.zip (2163 bytes)
+[2026-08-21 03:04:01.437] Requesting URL: https://cbscanvas.instructure.com/files/1805047/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:01.521] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Webserver-opgave.pdf (3970615 bytes)
+[2026-08-21 03:04:01.544] Requesting URL: https://cbscanvas.instructure.com/files/1807958/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:01.669] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 19 - Webserver og Databaser.pptx (6406516 bytes)
+[2026-08-21 03:04:01.685] Requesting URL: https://cbscanvas.instructure.com/files/1808151/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:01.698] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:04:02.164] Response Status: 200 Content-Type: application/zip
+[2026-08-21 03:04:02.188] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 18 - Webserver og API.pptx (9918524 bytes)
+[2026-08-21 03:04:02.211] Requesting URL: https://cbscanvas.instructure.com/files/1814657/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:02.308] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:04:02.519] Response Status: 200 Content-Type: application/zip
+[2026-08-21 03:04:02.558] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 16 - Testing - Teori og praksis.pdf (3126264 bytes)
+[2026-08-21 03:04:02.567] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 16 - Jest.zip (10482 bytes)
+[2026-08-21 03:04:02.582] Requesting URL: https://cbscanvas.instructure.com/files/1817698/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:02.598] Requesting URL: https://cbscanvas.instructure.com/files/1823174/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:03.064] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:04:03.327] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:04:03.477] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:04:03.985] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Uge 19 - System Arkitektur - 3 tier, Backend, MVC   fullstack.pdf (4891900 bytes)
+[2026-08-21 03:04:04.033] Requesting URL: https://cbscanvas.instructure.com/files/1823208/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:04.248] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 22 - Cloud & Security 101.pptx (11668334 bytes)
+[2026-08-21 03:04:04.535] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 19.zip (34749837 bytes)
+[2026-08-21 03:04:04.567] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 23 - eksamensforberedelse.pptx (11448039 bytes)
+[2026-08-21 03:04:04.892] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:04:05.004] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/Forelæsning 23 - eksamensforberedelse.pdf (2001367 bytes)
+[2026-08-21 03:04:17.301] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)/GK2 Samlet-1.mp4 (939534379 bytes)
+[2026-08-21 03:04:17.312] Starting Catch-All Phase for non-module files...
+[2026-08-21 03:04:17.317] No partial/non-module files found.
+[2026-08-21 03:04:17.317] --- Download Complete: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | 133 items | 1346.5 MB downloaded ---
+
+==================================================
+--- Post-Processing: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) ---
+==================================================
+[2026-08-21 03:04:30.298] === Course Finished: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | Downloaded: 133 items | Errors: 0 ===
+[2026-08-21 03:04:30.299] Post-processing ran: [zip, excel]
+[2026-08-21 03:04:30.394] === Download Start: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) | Course 2/2 ===
+[2026-08-21 03:04:30.394] Mode: flat | Filter: all
+[2026-08-21 03:04:30.395] Post-processing: [zip, excel]
+[2026-08-21 03:04:30.395] Secondary content: [none]
+[2026-08-21 03:04:30.407] 
+==================================================
+--- Download: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) (ID: 43665) Mode: flat ---
+==================================================
+[2026-08-21 03:04:30.407] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads
+[2026-08-21 03:04:30.407] Filter: all | Concurrency: 5 | Max file size: disabled | Estimated payload: 1391 MB
+[2026-08-21 03:04:30.408] Canvas Content: [none] | isolate=no
+[2026-08-21 03:04:30.408] Post-processing: [zip, excel]
+[2026-08-21 03:04:30.408] Starting Flat Download for Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+[2026-08-21 03:04:30.526] Files tab listing failed, falling back to module scan: {"status":"unauthorized","errors":[{"message":"user not authorised to perform that action"}]}
+[2026-08-21 03:04:31.415] Fallback Scan: Module Course description including examination rules (found 2 items)
+[2026-08-21 03:04:31.415]   Fallback Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-21 03:04:31.422] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO2063U.aspx) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Course description including examination rules.webloc
+[2026-08-21 03:04:31.428]   Fallback Item: Undervisningsplan VØS (1) 1. semester E25.pdf (Type: File)
+[2026-08-21 03:04:31.786] Fallback Scan: Module Test mm. (found 3 items)
+[2026-08-21 03:04:31.786]   Fallback Item: Introduktion til Managerial Economics (Type: Quiz)
+[2026-08-21 03:04:31.786]   Fallback Item: https://cbstest.dk/app/ (Type: ExternalUrl)
+[2026-08-21 03:04:31.789] Creating Link: https://cbstest.dk/app/ (https://cbstest.dk/app/) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/httpscbstest.dkapp.webloc
+[2026-08-21 03:04:31.793]   Fallback Item: VØS1matquiz-02.txt (Type: File)
+[2026-08-21 03:04:32.082] Fallback Scan: Module Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel (found 4 items)
+[2026-08-21 03:04:32.083]   Fallback Item: opgavesæt.nr0 (pre-matematik).docx (Type: File)
+[2026-08-21 03:04:32.233]   Fallback Item: opgavesæt.nr0 (pre-matematik)- vejl..docx (Type: File)
+[2026-08-21 03:04:32.390]   Fallback Item: Paraplyer - matematiske sammenhænge.docx (Type: File)
+[2026-08-21 03:04:32.567]   Fallback Item: Hjælp til at udlede prisafsætningsfunktionen.pdf (Type: File)
+[2026-08-21 03:04:32.852] Fallback Scan: Module Module 1 - Uge 36 1xFO (LET belastning) (found 4 items)
+[2026-08-21 03:04:32.852]   Fallback Item: F1-A -intro-1.ppt (Type: File)
+[2026-08-21 03:04:32.999]   Fallback Item: F1-B . maksimeringsprincippet-1.pptx (Type: File)
+[2026-08-21 03:04:33.139]   Fallback Item: Miniøvelse - flycosts - opgaven.xlsx (Type: File)
+[2026-08-21 03:04:33.330]   Fallback Item: Miniøvelse - flycosts - VL.xlsx (Type: File)
+[2026-08-21 03:04:33.661] Fallback Scan: Module Module 2 - Uge 37 2xFO, 1xØV (Middel belastning) (found 11 items)
+[2026-08-21 03:04:33.662]   Fallback Item: F1. Udbud-efterspørgsel.pptx (Type: File)
+[2026-08-21 03:04:33.813]   Fallback Item: F.2 Elasticitet.pptx (Type: File)
+[2026-08-21 03:04:33.971]   Fallback Item: Elasticitet oversigt.jpg (Type: File)
+[2026-08-21 03:04:34.114]   Fallback Item: Elasticitet tegning.jpg (Type: File)
+[2026-08-21 03:04:34.268]   Fallback Item: optimum.xlsx (Type: File)
+[2026-08-21 03:04:34.416]   Fallback Item: Øvelse 1 (efterspørgselsteori) (Type: File)
+[2026-08-21 03:04:34.555]   Fallback Item: Øvelse 1 - VL (Type: File)
+[2026-08-21 03:04:34.703]   Fallback Item: OmkostningerAfsætning - Ekstra - LØSNING.xlsx (Type: File)
+[2026-08-21 03:04:34.875]   Fallback Item: OmkostningerAfsætning - Ekstra - OPGAVEN.xlsx (Type: File)
+[2026-08-21 03:04:35.014]   Fallback Item: SimpelOptimeringogElasticitet-eksempel.xlsx (Type: File)
+[2026-08-21 03:04:35.161]   Fallback Item: SimpelOptimeringogElasticitet-eksempelVL.xlsx (Type: File)
+[2026-08-21 03:04:35.472] Fallback Scan: Module Module 3 - Uge 38 2xFO, 1xØV (Svær belastning) (found 9 items)
+[2026-08-21 03:04:35.473]   Fallback Item: F3.Grundlæggende produktionstek -Nr1.ppt (Type: File)
+[2026-08-21 03:04:35.613]   Fallback Item: F4. Isokvanter og MRTS-Nr2.pptx (Type: File)
+[2026-08-21 03:04:35.755]   Fallback Item: F6. isokostlinjen-nr.3.pptx (Type: File)
+[2026-08-21 03:04:35.890]   Fallback Item: Omkostningsminimering Nr.4.pptx (Type: File)
+[2026-08-21 03:04:36.037]   Fallback Item: Øvelse 2 (Type: File)
+[2026-08-21 03:04:36.178]   Fallback Item: Øvelse 2 - VL.xlsx (Type: File)
+[2026-08-21 03:04:36.321]   Fallback Item: DTR,DMR,DAR - Opgave.xlsx (Type: File)
+[2026-08-21 03:04:36.478]   Fallback Item: DTR,DMR,DAR - VL.xlsx (Type: File)
+[2026-08-21 03:04:36.625]   Fallback Item: Productionanalysis - Eksempel.xlsx (Type: File)
+[2026-08-21 03:04:36.954] Fallback Scan: Module Module 4 - Uge 39 2xFO, 1xØV (Svær belastning) (found 10 items)
+[2026-08-21 03:04:36.955]   Fallback Item: Skalaafkast 5.pptx (Type: File)
+[2026-08-21 03:04:37.210]   Fallback Item: Eksempel CobbDouglas - Optimering, Ekspansion, Omk.xlsx (Type: File)
+[2026-08-21 03:04:37.379]   Fallback Item: omkostning1.pptx (Type: File)
+[2026-08-21 03:04:37.522]   Fallback Item: omkostning2.pptx (Type: File)
+[2026-08-21 03:04:37.665]   Fallback Item: omkostning3.pptx (Type: File)
+[2026-08-21 03:04:37.805]   Fallback Item: Breakevenmodel.xlsm (Type: File)
+[2026-08-21 03:04:38.134]   Fallback Item: Øvelse 3 (Type: File)
+[2026-08-21 03:04:38.379]   Fallback Item: Øvelse 3 - VL.xls (Type: File)
+[2026-08-21 03:04:38.892]   Fallback Item: Øvelse 3 - VL spg 7.xlsx (Type: File)
+[2026-08-21 03:04:39.529]   Fallback Item: Øvelse 3 - VL (WORD versionen, brug hellere excel versionen).docx (Type: File)
+[2026-08-21 03:04:39.954] Fallback Scan: Module Module 5 - Uge 40 1xFO, 1xØV (Middel belastning) (found 10 items)
+[2026-08-21 03:04:39.955]   Fallback Item: Lineær programmering.pptx (Type: File)
+[2026-08-21 03:04:40.200]   Fallback Item: Øvelse forelæsningen - Opgaven formuleret i Word.docx (Type: File)
+[2026-08-21 03:04:40.375]   Fallback Item: Øvelse forelæsning - Opgaven formuleret i Excel.xlsx (Type: File)
+[2026-08-21 03:04:40.550]   Fallback Item: Øvelse forelæsning - Vejl løs.xlsx (Type: File)
+[2026-08-21 03:04:40.778]   Fallback Item: LP eksempel - Opgaven.xlsx (Type: File)
+[2026-08-21 03:04:40.980]   Fallback Item: LP eksempel - VL.xlsx (Type: File)
+[2026-08-21 03:04:41.208]   Fallback Item: Øvelse 4 (Type: File)
+[2026-08-21 03:04:41.388]   Fallback Item: Øvelse 4 - VL.xlsx (Type: File)
+[2026-08-21 03:04:41.579]   Fallback Item: Øvelse 4 - VL (Wordversionen).docx (Type: File)
+[2026-08-21 03:04:41.736]   Fallback Item: Linear Programming (note  ) (Type: File)
+[2026-08-21 03:04:42.125] Fallback Scan: Module Module 6 - Uge 41 1xFO, 1xØV (Middel belastning) (found 7 items)
+[2026-08-21 03:04:42.125]   Fallback Item: Opsummering.pptx (Type: File)
+[2026-08-21 03:04:42.286]   Fallback Item: Øvelse 5.docx (Type: File)
+[2026-08-21 03:04:42.439]   Fallback Item: Øvelse 5 - VL (Type: File)
+[2026-08-21 03:04:42.591]   Fallback Item: Øvelse 5 - VL (Wordversionen).docx (Type: File)
+[2026-08-21 03:04:42.780]   Fallback Item: Øvelse 5 - VL (Opgave 5).xlsx (Type: File)
+[2026-08-21 03:04:42.975]   Fallback Item: minitest.docx (Type: File)
+[2026-08-21 03:04:43.122]   Fallback Item: minitest -VL.docx (Type: File)
+[2026-08-21 03:04:43.407] Fallback Scan: Module Module 7 - Uge 43 1xFO, 1xØV (Let belastning) (found 4 items)
+[2026-08-21 03:04:43.408]   Fallback Item: FK.ppt (Type: File)
+[2026-08-21 03:04:43.551]   Fallback Item: Øvelse 6 (Type: File)
+[2026-08-21 03:04:43.715]   Fallback Item: Øvelse 6 - VL (Wordversion) (Type: File)
+[2026-08-21 03:04:43.886]   Fallback Item: Øvelse 6 - VL (xls version) (Type: File)
+[2026-08-21 03:04:44.190] Fallback Scan: Module Module 8 - Uge 44 1xFO, 1xØV (Middel belastning) (found 6 items)
+[2026-08-21 03:04:44.190]   Fallback Item: CS og PS.ppt (Type: File)
+[2026-08-21 03:04:44.338]   Fallback Item: opgave CS og PS.docx (Type: File)
+[2026-08-21 03:04:44.487]   Fallback Item: opgave CS og PS - med VL.docx (Type: File)
+[2026-08-21 03:04:44.633]   Fallback Item: CS og PS - VL.xlsx (Type: File)
+[2026-08-21 03:04:44.780]   Fallback Item: Øvelse 7.docx (Type: File)
+[2026-08-21 03:04:44.921]   Fallback Item: Øvelse 7 VL.xlsx (Type: File)
+[2026-08-21 03:04:45.255] Fallback Scan: Module Module 9 - Uge 45 1xFO, 1xØV (Middel belastning) (found 10 items)
+[2026-08-21 03:04:45.256]   Fallback Item: Kap.12 monopol.ppt (Type: File)
+[2026-08-21 03:04:45.422]   Fallback Item: Kap. 13a -ME monopolistisk konkurrence.ppt (Type: File)
+[2026-08-21 03:04:45.652]   Fallback Item: FO opgave A (Type: File)
+[2026-08-21 03:04:48.889]   Fallback Item: FO opgave A - VL (Type: File)
+[2026-08-21 03:04:49.040]   Fallback Item: FO opgave B (Type: File)
+[2026-08-21 03:04:49.195]   Fallback Item: FO opgave B - VL (Type: File)
+[2026-08-21 03:04:49.339]   Fallback Item: Monopolistisk konkurrence, effekt af markedsføring.xlsx (Type: File)
+[2026-08-21 03:04:49.489]   Fallback Item: Øvelse 8 (Type: File)
+[2026-08-21 03:04:49.638]   Fallback Item: Øvelse 8 - VL (opg6).docx (Type: File)
+[2026-08-21 03:04:49.803]   Fallback Item: Øvelse 8 - VL (NY) (Type: File)
+[2026-08-21 03:04:50.099] Fallback Scan: Module Module 10 - Uge 46 1xFO, 1xØV (Svær belastning) (found 6 items)
+[2026-08-21 03:04:50.100]   Fallback Item: Kap. 13b -ME oligopolmodeller.ppt (Type: File)
+[2026-08-21 03:04:50.292]   Fallback Item: Optimeringsmodeller-samlet-kogebog v2.pptx (Type: File)
+[2026-08-21 03:04:50.436]   Fallback Item: Øvelse 9 (Type: File)
+[2026-08-21 03:04:50.597]   Fallback Item: Øvelse 9 - VL.xlsx (Type: File)
+[2026-08-21 03:04:50.854]   Fallback Item: Øvelse 9 - VL (Wordversion) (Type: File)
+[2026-08-21 03:04:51.004]   Fallback Item: Oligopol (Knæk Afs) eksempel.xls (Type: File)
+[2026-08-21 03:04:51.275] Fallback Scan: Module Module 11 - Uge 47 1xFO, 1xØV (Middel belastning) (found 5 items)
+[2026-08-21 03:04:51.275]   Fallback Item: Kap 15 Pricing strategies.ppt (Type: File)
+[2026-08-21 03:04:51.438]   Fallback Item: Priceleader-modellen-1.pptx (Type: File)
+[2026-08-21 03:04:51.609]   Fallback Item: Priceleader eksempel - TB.xlsx (Type: File)
+[2026-08-21 03:04:51.856]   Fallback Item: Øvelse 10 ufp.docx (Type: File)
+[2026-08-21 03:04:52.479]   Fallback Item: øvesæt 10vejl_ufp.xlsx (Type: File)
+[2026-08-21 03:04:52.830] Fallback Scan: Module Module 12 - Uge 48 1xFO, 1xØV (Svær belastning) (found 6 items)
+[2026-08-21 03:04:52.830]   Fallback Item: Kap.15 Pricing strategies nr.2.pptx (Type: File)
+[2026-08-21 03:04:52.987]   Fallback Item: Matematisk eksempel - til PPT.xlsx (Type: File)
+[2026-08-21 03:04:53.157]   Fallback Item: PrisDiffEks - TB.xlsx (Type: File)
+[2026-08-21 03:04:53.351]   Fallback Item: øvesæt nr. 11.docx (Type: File)
+[2026-08-21 03:04:53.613]   Fallback Item: Øvelse 11 - VL  (1+4) (Type: File)
+[2026-08-21 03:04:53.857]   Fallback Item: Øvelse 11 - VL (Type: File)
+[2026-08-21 03:04:54.327] Fallback Scan: Module Ekstra træning (træning i gl. eksamensopgaver) (found 27 items)
+[2026-08-21 03:04:54.327]   Fallback Item: HAit reeksamen 2019 spg 1,2,4.docx (Type: File)
+[2026-08-21 03:04:54.486]   Fallback Item: HAit reeksamen 2019 - VL.xlsx (Type: File)
+[2026-08-21 03:04:54.634]   Fallback Item: Ekstra opgaver1.docx (ikke spg 4) (Type: File)
+[2026-08-21 03:04:54.778]   Fallback Item: Ekstraopgaver 1 - VL.xlsx (Type: File)
+[2026-08-21 03:04:54.917]   Fallback Item: HAit 2020 ORD opgave (VL findes ikke til denne opg.) (Type: File)
+[2026-08-21 03:04:55.052]   Fallback Item: HAit reeksamen 2020 (1).docx (Type: File)
+[2026-08-21 03:04:55.214]   Fallback Item: HA.IT-reeksamen-2020-VL-NY.xlsx (Type: File)
+[2026-08-21 03:04:55.440]   Fallback Item: HA.IT-reeksamen-2020-VL-Endelig1.xlsx (Type: File)
+[2026-08-21 03:04:55.753]   Fallback Item: HA-it (2021) - VØS1 ordinær (2timer).pdf (Type: File)
+[2026-08-21 03:04:56.029]   Fallback Item: HA(IT) (2021) - VØS1 ORD (2timer) - VL.xlsx (Type: File)
+[2026-08-21 03:04:56.182]   Fallback Item: HA-it (2021)-VØS1 Reeksamen (2timer).pdf (Type: File)
+[2026-08-21 03:04:56.339]   Fallback Item: HA(IT) (2021) - VØS1 REeksamen (2timer) - VL.xlsx (Type: File)
+[2026-08-21 03:04:56.477]   Fallback Item: HA-it (2022)-ordinær online-hjemme (2timer).pdf (Type: File)
+[2026-08-21 03:04:56.618]   Fallback Item: HA-it (2022)-ordinær online-hjemme (2timer) VL.xlsx (Type: File)
+[2026-08-21 03:04:56.763]   Fallback Item: HA-it (2022)-ordinær Bilag1 online-hjemme (2timer) .xlsx (Type: File)
+[2026-08-21 03:04:56.916]   Fallback Item: HA(IT) (2022) Reeksamen (2 timer) online.pdf (Type: File)
+[2026-08-21 03:04:57.054]   Fallback Item: HA-it (2022)-REeksamen VL (2timers).xlsx (Type: File)
+[2026-08-21 03:04:57.217]   Fallback Item: HA(it) VØS1, Ordinær Skriftlig eksamen - Januar 2023.pdf (Type: File)
+[2026-08-21 03:04:57.400]   Fallback Item: HAit VØS1 ORD 2023 VL.xlsx (Type: File)
+[2026-08-21 03:04:57.537]   Fallback Item: HA(IT) 2023 VØS1 RE-Eksamen.pdf (Type: File)
+[2026-08-21 03:04:57.671]   Fallback Item: HAit VØS1 RE 2023 VL.xlsx (Type: File)
+[2026-08-21 03:04:57.812]   Fallback Item: Ord-Eksamen2024-opgave.pdf (Type: File)
+[2026-08-21 03:04:57.946]   Fallback Item: VL - Ord2024.xlsx (Type: File)
+[2026-08-21 03:04:58.087]   Fallback Item: RE-eksamen2024-opgave.pdf (Type: File)
+[2026-08-21 03:04:58.220]   Fallback Item: Re2024.xlsx (Type: File)
+[2026-08-21 03:04:58.354]   Fallback Item: Eksamen HA(it) VØS I - Emneoversigt.xlsx (Type: File)
+[2026-08-21 03:04:58.489]   Fallback Item: Oversigt over tidligere eksamensopgaver VØS1.pdf (Type: File)
+[2026-08-21 03:04:58.632] Requesting URL: https://cbscanvas.instructure.com/files/1568831/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:58.636] Requesting URL: https://cbscanvas.instructure.com/files/1633225/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:58.638] Requesting URL: https://cbscanvas.instructure.com/files/1568616/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:58.639] Requesting URL: https://cbscanvas.instructure.com/files/1568731/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:58.641] Requesting URL: https://cbscanvas.instructure.com/files/1568712/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:59.111] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:04:59.188] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/opgavesæt.nr0 (pre-matematik).docx (324960 bytes)
+[2026-08-21 03:04:59.193] Requesting URL: https://cbscanvas.instructure.com/files/1568707/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:59.207] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:04:59.322] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:04:59.341] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:04:59.343] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/opgavesæt.nr0 (pre-matematik)- vejl..docx (458219 bytes)
+[2026-08-21 03:04:59.367] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Paraplyer - matematiske sammenhænge.docx (48437 bytes)
+[2026-08-21 03:04:59.368] Response Status: 200 Content-Type: text/plain
+[2026-08-21 03:04:59.378] Requesting URL: https://cbscanvas.instructure.com/files/1568580/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:59.384] Requesting URL: https://cbscanvas.instructure.com/files/1568667/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:59.399] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Undervisningsplan VØS (1) 1. semester E25.pdf (597203 bytes)
+[2026-08-21 03:04:59.400] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/VØS1matquiz-02.txt (6206 bytes)
+[2026-08-21 03:04:59.409] Requesting URL: https://cbscanvas.instructure.com/files/1568796/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:59.419] Requesting URL: https://cbscanvas.instructure.com/files/1568721/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:04:59.876] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:04:59.888] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Hjælp til at udlede prisafsætningsfunktionen.pdf (271859 bytes)
+[2026-08-21 03:04:59.894] Requesting URL: https://cbscanvas.instructure.com/files/1568741/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:00.008] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:00.013] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/F1-B . maksimeringsprincippet-1.pptx (110994 bytes)
+[2026-08-21 03:05:00.020] Requesting URL: https://cbscanvas.instructure.com/files/1568780/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:00.026] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:00.044] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Miniøvelse - flycosts - VL.xlsx (205869 bytes)
+[2026-08-21 03:05:00.052] Requesting URL: https://cbscanvas.instructure.com/files/1568766/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:00.054] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 03:05:00.076] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/F1-A -intro-1.ppt (552960 bytes)
+[2026-08-21 03:05:00.085] Requesting URL: https://cbscanvas.instructure.com/files/1568736/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:00.109] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:00.118] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Miniøvelse - flycosts - opgaven.xlsx (193507 bytes)
+[2026-08-21 03:05:00.125] Requesting URL: https://cbscanvas.instructure.com/files/1568668/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:00.527] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:00.532] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/F1. Udbud-efterspørgsel.pptx (124690 bytes)
+[2026-08-21 03:05:00.540] Requesting URL: https://cbscanvas.instructure.com/files/1568621/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:00.671] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:00.682] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/F.2 Elasticitet.pptx (135516 bytes)
+[2026-08-21 03:05:00.682] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 03:05:00.705] Requesting URL: https://cbscanvas.instructure.com/files/1634428/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:00.728] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Elasticitet oversigt.jpg (1315818 bytes)
+[2026-08-21 03:05:00.740] Requesting URL: https://cbscanvas.instructure.com/files/1568700/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:00.750] Response Status: 200 Content-Type: image/jpeg
+[2026-08-21 03:05:00.785] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:00.798] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Elasticitet tegning.jpg (1322150 bytes)
+[2026-08-21 03:05:00.803] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/optimium (1).xlsx (24946 bytes)
+[2026-08-21 03:05:00.815] Requesting URL: https://cbscanvas.instructure.com/files/1568792/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:00.821] Requesting URL: https://cbscanvas.instructure.com/files/1632625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:00.955] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:00.964] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/opgavesæt nr.1(efterspørgselsteori).docx (31899 bytes)
+[2026-08-21 03:05:00.973] Requesting URL: https://cbscanvas.instructure.com/files/1632626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:01.328] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:01.339] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/vejl opgavesæt nr. 1 (2).xlsx (200145 bytes)
+[2026-08-21 03:05:01.346] Requesting URL: https://cbscanvas.instructure.com/files/1568757/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:01.357] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:01.366] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/OmkostningerAfsætning - Ekstra - LØSNING.xlsx (119984 bytes)
+[2026-08-21 03:05:01.373] Requesting URL: https://cbscanvas.instructure.com/files/1639544/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:01.426] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:01.437] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/OmkostningerAfsætning - Ekstra - OPGAVEN.xlsx (52560 bytes)
+[2026-08-21 03:05:01.445] Requesting URL: https://cbscanvas.instructure.com/files/1568651/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:01.507] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:01.513] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/SimpelOptimeringogElasticitet-eksempel.xlsx (28201 bytes)
+[2026-08-21 03:05:01.521] Requesting URL: https://cbscanvas.instructure.com/files/1568641/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:01.643] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:01.651] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/SimpelOptimeringogElasticitet-eksempelVL.xlsx (32363 bytes)
+[2026-08-21 03:05:01.663] Requesting URL: https://cbscanvas.instructure.com/files/1568633/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:02.005] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:02.012] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/F4. Isokvanter og MRTS-Nr2.pptx (72782 bytes)
+[2026-08-21 03:05:02.018] Requesting URL: https://cbscanvas.instructure.com/files/1568809/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:02.082] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:02.090] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/F6. isokostlinjen-nr.3.pptx (48593 bytes)
+[2026-08-21 03:05:02.099] Requesting URL: https://cbscanvas.instructure.com/files/1568710/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:02.149] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 03:05:02.188] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/F3.Grundlæggende produktionstek -Nr1.ppt (394752 bytes)
+[2026-08-21 03:05:02.198] Requesting URL: https://cbscanvas.instructure.com/files/1568723/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:02.328] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:02.336] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Omkostningsminimering Nr.4.pptx (93148 bytes)
+[2026-08-21 03:05:02.344] Requesting URL: https://cbscanvas.instructure.com/files/1568795/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:02.521] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:02.541] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Opgavesæt nr. 2.docx (28244 bytes)
+[2026-08-21 03:05:02.553] Requesting URL: https://cbscanvas.instructure.com/files/1568657/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:02.733] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:02.739] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 2 - VL.xlsx (101849 bytes)
+[2026-08-21 03:05:02.747] Requesting URL: https://cbscanvas.instructure.com/files/1568804/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:02.829] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:02.836] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/DTR,DMR,DAR - Opgave.xlsx (15170 bytes)
+[2026-08-21 03:05:02.844] Requesting URL: https://cbscanvas.instructure.com/files/1568717/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:02.952] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:02.957] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/DTR,DMR,DAR - VL.xlsx (34321 bytes)
+[2026-08-21 03:05:02.964] Requesting URL: https://cbscanvas.instructure.com/files/1568777/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:02.978] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:02.986] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Productionanalysis - Eksempel.xlsx (109716 bytes)
+[2026-08-21 03:05:02.994] Requesting URL: https://cbscanvas.instructure.com/files/1568808/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:03.156] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:03.165] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Skalaafkast nr.5.pptx (64581 bytes)
+[2026-08-21 03:05:03.175] Requesting URL: https://cbscanvas.instructure.com/files/1568782/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:03.579] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:03.603] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/omkostning2.pptx (482278 bytes)
+[2026-08-21 03:05:03.610] Requesting URL: https://cbscanvas.instructure.com/files/1568630/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:03.612] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:03.629] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/omkostning1.pptx (140992 bytes)
+[2026-08-21 03:05:03.635] Requesting URL: https://cbscanvas.instructure.com/files/1652883/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:03.637] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:03.664] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Eksempel CobbDouglas - Optimering, Ekspansion, Omk.xlsx (645399 bytes)
+[2026-08-21 03:05:03.669] Requesting URL: https://cbscanvas.instructure.com/files/1652861/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:03.770] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:03.799] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/omkostning3.pptx (503548 bytes)
+[2026-08-21 03:05:03.808] Requesting URL: https://cbscanvas.instructure.com/files/1568768/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:03.893] Response Status: 200 Content-Type: application/vnd.ms-excel.sheet.macroEnabled.12
+[2026-08-21 03:05:03.899] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Breakevenmodel.xlsm (21945 bytes)
+[2026-08-21 03:05:03.907] Requesting URL: https://cbscanvas.instructure.com/files/1568805/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:04.180] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:04.187] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Opgavesæt 3.docx (52961 bytes)
+[2026-08-21 03:05:04.194] Requesting URL: https://cbscanvas.instructure.com/files/1568639/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:04.262] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:04.270] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 3 - VL spg 7.xlsx (38625 bytes)
+[2026-08-21 03:05:04.277] Requesting URL: https://cbscanvas.instructure.com/files/1568800/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:04.361] Response Status: 200 Content-Type: application/vnd.ms-excel
+[2026-08-21 03:05:04.381] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:04.398] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 3 - VL.xls (603648 bytes)
+[2026-08-21 03:05:04.412] Requesting URL: https://cbscanvas.instructure.com/files/1568763/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:04.414] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Opgavesæt 3 - VL (WORD versionen).docx (686855 bytes)
+[2026-08-21 03:05:04.421] Requesting URL: https://cbscanvas.instructure.com/files/1568779/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:04.505] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:04.558] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Lineær programmering.pptx (1609985 bytes)
+[2026-08-21 03:05:04.566] Requesting URL: https://cbscanvas.instructure.com/files/1568778/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:04.847] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:04.853] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse forelæsningen - Opgaven formuleret i Word.docx (12009 bytes)
+[2026-08-21 03:05:04.862] Requesting URL: https://cbscanvas.instructure.com/files/1568640/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:04.863] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:04.869] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse forelæsning - Opgaven formuleret i Excel.xlsx (11712 bytes)
+[2026-08-21 03:05:04.878] Requesting URL: https://cbscanvas.instructure.com/files/1568687/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:05.003] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:05.010] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/LP eksempel - Opgaven.xlsx (19424 bytes)
+[2026-08-21 03:05:05.018] Requesting URL: https://cbscanvas.instructure.com/files/1568772/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:05.057] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:05.063] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse forelæsning - Vejl løs.xlsx (17136 bytes)
+[2026-08-21 03:05:05.071] Requesting URL: https://cbscanvas.instructure.com/files/1568784/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:05.128] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:05.134] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/LP eksempel - VL.xlsx (35123 bytes)
+[2026-08-21 03:05:05.141] Requesting URL: https://cbscanvas.instructure.com/files/1568785/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:05.461] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:05.469] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:05.469] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 4 - VL.xlsx (72819 bytes)
+[2026-08-21 03:05:05.484] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/opgavesæt nr. 4.docx (27373 bytes)
+[2026-08-21 03:05:05.495] Requesting URL: https://cbscanvas.instructure.com/files/1568810/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:05.513] Requesting URL: https://cbscanvas.instructure.com/files/1568811/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:05.649] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:05.664] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 4 - VL (Wordversionen).docx (279540 bytes)
+[2026-08-21 03:05:05.674] Requesting URL: https://cbscanvas.instructure.com/files/1568776/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:05.738] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:05:05.787] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:05.839] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Opsummering.pptx (646211 bytes)
+[2026-08-21 03:05:05.840] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Linear Programming (note  ).pdf (2437730 bytes)
+[2026-08-21 03:05:05.850] Requesting URL: https://cbscanvas.instructure.com/files/1568694/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:05.857] Requesting URL: https://cbscanvas.instructure.com/files/1568660/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:06.107] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:06.122] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Opgavesæt 5 - VL (Excel).xlsx (212421 bytes)
+[2026-08-21 03:05:06.128] Requesting URL: https://cbscanvas.instructure.com/files/1568761/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:06.155] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:06.161] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 5.docx (37590 bytes)
+[2026-08-21 03:05:06.168] Requesting URL: https://cbscanvas.instructure.com/files/1568647/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:06.282] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:06.313] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Opgavesæt 5 - VL (Wordversionen).docx (544350 bytes)
+[2026-08-21 03:05:06.325] Requesting URL: https://cbscanvas.instructure.com/files/1568775/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:06.420] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:06.431] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/minitest.docx (154915 bytes)
+[2026-08-21 03:05:06.440] Requesting URL: https://cbscanvas.instructure.com/files/1568806/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:06.443] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:06.452] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Opgavesæt 5 - VL (Opgave 5).xlsx (18350 bytes)
+[2026-08-21 03:05:06.467] Requesting URL: https://cbscanvas.instructure.com/files/1568807/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:06.701] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:06.713] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/øvesæt6-fk-1.docx (37331 bytes)
+[2026-08-21 03:05:06.720] Requesting URL: https://cbscanvas.instructure.com/files/1568659/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:06.835] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:06.854] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/minitest -VL.docx (246795 bytes)
+[2026-08-21 03:05:06.861] Requesting URL: https://cbscanvas.instructure.com/files/1568625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:06.876] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 03:05:06.904] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/FK.ppt (642560 bytes)
+[2026-08-21 03:05:06.911] Requesting URL: https://cbscanvas.instructure.com/files/1568689/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:07.069] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:07.085] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/øveopgave6-vejl.docx (459284 bytes)
+[2026-08-21 03:05:07.092] Requesting URL: https://cbscanvas.instructure.com/files/1568693/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:07.260] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:07.276] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Opgavesæt 6-vejl.xlsx (318036 bytes)
+[2026-08-21 03:05:07.284] Requesting URL: https://cbscanvas.instructure.com/files/1568581/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:07.353] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 03:05:07.372] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/CS og PS.ppt (293376 bytes)
+[2026-08-21 03:05:07.381] Requesting URL: https://cbscanvas.instructure.com/files/1568652/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:07.679] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:07.687] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/opgave CS og PS.docx (14524 bytes)
+[2026-08-21 03:05:07.696] Requesting URL: https://cbscanvas.instructure.com/files/1568819/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:08.213] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:08.219] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/opgave CS og PS - med VL.docx (14517 bytes)
+[2026-08-21 03:05:08.229] Requesting URL: https://cbscanvas.instructure.com/files/1568767/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:08.305] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:08.311] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/CS og PS - VL.xlsx (31578 bytes)
+[2026-08-21 03:05:08.319] Requesting URL: https://cbscanvas.instructure.com/files/1568769/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:08.339] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:08.356] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 7.docx (312313 bytes)
+[2026-08-21 03:05:08.364] Requesting URL: https://cbscanvas.instructure.com/files/1568696/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:08.851] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 03:05:08.882] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Kap.12 monopol.ppt (523264 bytes)
+[2026-08-21 03:05:08.892] Requesting URL: https://cbscanvas.instructure.com/files/1568786/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:08.923] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:08.930] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/ForelæsningsopgaveA.docx (13395 bytes)
+[2026-08-21 03:05:08.940] Requesting URL: https://cbscanvas.instructure.com/files/1568817/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:09.094] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 03:05:09.204] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:09.235] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Losning FO-opgaveA.xlsx (18090 bytes)
+[2026-08-21 03:05:09.256] Requesting URL: https://cbscanvas.instructure.com/files/1568818/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:09.278] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Kap. 13a -ME monopolistisk konkurrence.ppt (5718016 bytes)
+[2026-08-21 03:05:09.285] Requesting URL: https://cbscanvas.instructure.com/files/1568695/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:09.349] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:09.356] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/FO-opgave.docx (14150 bytes)
+[2026-08-21 03:05:09.363] Requesting URL: https://cbscanvas.instructure.com/files/1568697/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:09.431] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:09.459] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 7 VL.xlsx (533172 bytes)
+[2026-08-21 03:05:09.467] Requesting URL: https://cbscanvas.instructure.com/files/1568816/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:09.781] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:09.932] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Losning-FO.Opgave.docx (441028 bytes)
+[2026-08-21 03:05:09.941] Requesting URL: https://cbscanvas.instructure.com/files/1568656/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:10.265] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:10.279] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 8 - VL (opg6).docx (194178 bytes)
+[2026-08-21 03:05:10.286] Requesting URL: https://cbscanvas.instructure.com/files/1568650/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:10.377] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:10.489] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:10.517] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/øvesæt nr. 8.docx (30253 bytes)
+[2026-08-21 03:05:10.535] Requesting URL: https://cbscanvas.instructure.com/files/1568655/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:10.591] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Monopolistisk konkurrence, effekt af markedsføring.xlsx (6569240 bytes)
+[2026-08-21 03:05:10.600] Requesting URL: https://cbscanvas.instructure.com/files/1568783/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:10.758] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:10.765] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Vejl.-løsning-opg.sæt-8_NYESTE.xlsx (109805 bytes)
+[2026-08-21 03:05:10.777] Requesting URL: https://cbscanvas.instructure.com/files/1568781/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:10.920] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 03:05:10.943] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Kap. 13b -ME oligopolmodeller.ppt (646144 bytes)
+[2026-08-21 03:05:10.952] Requesting URL: https://cbscanvas.instructure.com/files/1568820/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:11.055] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:11.080] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Optimeringsmodeller-samlet-kogebog v2.pptx (380031 bytes)
+[2026-08-21 03:05:11.091] Requesting URL: https://cbscanvas.instructure.com/files/1568661/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:11.313] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:11.332] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 9 - VL.xlsx (188223 bytes)
+[2026-08-21 03:05:11.338] Requesting URL: https://cbscanvas.instructure.com/files/1568670/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:11.361] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:11.368] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/øvesæt nr. 9.docx (27067 bytes)
+[2026-08-21 03:05:11.375] Requesting URL: https://cbscanvas.instructure.com/files/1568703/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:11.510] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:11.517] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/øvesæt nr. 9 vejl. løsning.docx (23372 bytes)
+[2026-08-21 03:05:11.524] Requesting URL: https://cbscanvas.instructure.com/files/1568794/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:11.657] Response Status: 200 Content-Type: application/vnd.ms-excel
+[2026-08-21 03:05:11.662] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Oligopol (Knæk Afs) eksempel.xls (38400 bytes)
+[2026-08-21 03:05:11.670] Requesting URL: https://cbscanvas.instructure.com/files/1568793/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:11.844] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-21 03:05:11.865] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Kap 15 Pricing strategies.ppt (361472 bytes)
+[2026-08-21 03:05:11.872] Requesting URL: https://cbscanvas.instructure.com/files/1699117/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:11.960] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:11.981] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Priceleader-modellen-1.pptx (238179 bytes)
+[2026-08-21 03:05:11.991] Requesting URL: https://cbscanvas.instructure.com/files/1700137/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:12.057] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:12.063] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Priceleader eksempel - TB.xlsx (31935 bytes)
+[2026-08-21 03:05:12.070] Requesting URL: https://cbscanvas.instructure.com/files/1568822/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:12.280] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:12.287] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Øvelse 10 ufp.docx (26937 bytes)
+[2026-08-21 03:05:12.294] Requesting URL: https://cbscanvas.instructure.com/files/1701729/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:12.341] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:12.368] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/øvesæt 10vejl_ufp.xlsx (496984 bytes)
+[2026-08-21 03:05:12.376] Requesting URL: https://cbscanvas.instructure.com/files/1568664/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:12.494] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-21 03:05:12.511] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Kap.15 Pricing strategies nr.2.pptx (112317 bytes)
+[2026-08-21 03:05:12.543] Requesting URL: https://cbscanvas.instructure.com/files/1568705/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:12.685] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:12.696] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Matematisk eksempel - til PPT.xlsx (13628 bytes)
+[2026-08-21 03:05:12.705] Requesting URL: https://cbscanvas.instructure.com/files/1568801/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:12.736] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:12.744] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/PrisDiffEks - TB.xlsx (26185 bytes)
+[2026-08-21 03:05:12.755] Requesting URL: https://cbscanvas.instructure.com/files/1568677/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:12.926] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:12.932] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/øvesæt nr. 11.docx (30319 bytes)
+[2026-08-21 03:05:12.939] Requesting URL: https://cbscanvas.instructure.com/files/1568678/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:13.003] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:13.020] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/vejl sæt 11. (1 4).docx (200187 bytes)
+[2026-08-21 03:05:13.027] Requesting URL: https://cbscanvas.instructure.com/files/1568676/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:13.185] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:13.205] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/rettevejl. øvesæt 11_med vandretaddNYmed rettelse!!..xlsx (225431 bytes)
+[2026-08-21 03:05:13.212] Requesting URL: https://cbscanvas.instructure.com/files/1568790/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:13.294] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:13.299] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HAit reeksamen 2020.docx (23788 bytes)
+[2026-08-21 03:05:13.306] Requesting URL: https://cbscanvas.instructure.com/files/1568802/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:13.336] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:13.370] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HAit reeksamen 2020 - VL.xlsx (943312 bytes)
+[2026-08-21 03:05:13.383] Requesting URL: https://cbscanvas.instructure.com/files/1568789/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:13.570] Response Status: 200 Content-Type: text/plain
+[2026-08-21 03:05:13.588] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/ekstra opgaver1.docx (149022 bytes)
+[2026-08-21 03:05:13.596] Requesting URL: https://cbscanvas.instructure.com/files/1568788/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:13.644] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:13.737] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/ekstraopgave 1 - VL.xlsx (2931301 bytes)
+[2026-08-21 03:05:13.745] Requesting URL: https://cbscanvas.instructure.com/files/1568654/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:13.867] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:13.873] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HAit 2020 ORD opgave.docx (27842 bytes)
+[2026-08-21 03:05:13.880] Requesting URL: https://cbscanvas.instructure.com/files/1568787/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:13.917] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-21 03:05:13.924] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HAit reeksamen 2020 (1).docx (23788 bytes)
+[2026-08-21 03:05:13.932] Requesting URL: https://cbscanvas.instructure.com/files/1568675/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:13.963] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:14.010] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA.IT-reeksamen-2020-VL-NY.xlsx (1398057 bytes)
+[2026-08-21 03:05:14.018] Requesting URL: https://cbscanvas.instructure.com/files/1568680/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:14.273] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:14.315] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA.IT-reeksamen-2020-VL-Endelig1.xlsx (1398381 bytes)
+[2026-08-21 03:05:14.323] Requesting URL: https://cbscanvas.instructure.com/files/1568791/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:14.810] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:14.818] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA(IT) RE-eksamen 2020 - VL.xlsx (24622 bytes)
+[2026-08-21 03:05:14.827] Requesting URL: https://cbscanvas.instructure.com/files/1568579/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:14.830] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:05:14.844] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA-it (2020-2021)-Reeksamen.pdf (122293 bytes)
+[2026-08-21 03:05:14.853] Requesting URL: https://cbscanvas.instructure.com/files/1568666/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:14.878] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:05:14.894] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA-it (2020-2021) - VØS1 ordinær.pdf (146235 bytes)
+[2026-08-21 03:05:14.903] Requesting URL: https://cbscanvas.instructure.com/files/1568681/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:14.927] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:14.936] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA(IT) (2020-2021) - VØS1 ORD - VL.xlsx (41728 bytes)
+[2026-08-21 03:05:14.944] Requesting URL: https://cbscanvas.instructure.com/files/1568679/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:15.373] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:05:15.398] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA-it (2022)-ordinær online-hjemme.pdf (518765 bytes)
+[2026-08-21 03:05:15.407] Requesting URL: https://cbscanvas.instructure.com/files/1568690/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:15.718] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:15.727] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:15.727] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA-it (2022)-ordinær Bilag1 online-hjemme.xlsx (9279 bytes)
+[2026-08-21 03:05:15.735] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA-it (2022)-RE-eksamen VL (2timers).xlsx (48531 bytes)
+[2026-08-21 03:05:15.742] Requesting URL: https://cbscanvas.instructure.com/files/1568803/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:15.750] Requesting URL: https://cbscanvas.instructure.com/files/1568691/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:15.770] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:05:15.804] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA(IT) (2022) Reeksamen 2 timer online.pdf (507761 bytes)
+[2026-08-21 03:05:15.813] Requesting URL: https://cbscanvas.instructure.com/files/1568692/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:15.828] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:15.835] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA-it (2022)-ordinær online-hjemme VL.xlsx (37194 bytes)
+[2026-08-21 03:05:15.844] Requesting URL: https://cbscanvas.instructure.com/files/1568815/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:16.060] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:05:16.086] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA(it) VØS1, Ordinær Skriftlig eksamen - Januar 2023.pdf (487473 bytes)
+[2026-08-21 03:05:16.093] Requesting URL: https://cbscanvas.instructure.com/files/1568823/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:16.359] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:05:16.384] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HA(IT) 2023 VØS1 RE-Eksamen.pdf (613916 bytes)
+[2026-08-21 03:05:16.389] Requesting URL: https://cbscanvas.instructure.com/files/1568813/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:16.417] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:16.424] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HAit VØS1 2023 VL.xlsx (41228 bytes)
+[2026-08-21 03:05:16.432] Requesting URL: https://cbscanvas.instructure.com/files/1568812/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:16.434] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:05:16.449] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:16.455] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Ord-Eksamen2024-opgave.pdf (534570 bytes)
+[2026-08-21 03:05:16.461] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/HAit VØS1 RE 2023 VL.xlsx (54349 bytes)
+[2026-08-21 03:05:16.468] Requesting URL: https://cbscanvas.instructure.com/files/1568706/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:16.474] Requesting URL: https://cbscanvas.instructure.com/files/1568821/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-21 03:05:16.705] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:16.711] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/VL - Ord2024.xlsx (64463 bytes)
+[2026-08-21 03:05:17.025] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:05:17.048] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/RE-eksamen2024-opgave.pdf (490825 bytes)
+[2026-08-21 03:05:17.073] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:17.080] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Eksamen HA(it) VØS I - Emneoversigt.xlsx (10571 bytes)
+[2026-08-21 03:05:17.107] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-21 03:05:17.114] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Re2024.xlsx (48857 bytes)
+[2026-08-21 03:05:17.420] Response Status: 200 Content-Type: application/pdf
+[2026-08-21 03:05:17.443] File Saved: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__office/downloads/Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)/Oversigt over tidligere eksamensopgaver VØS1.pdf (441229 bytes)
+[2026-08-21 03:05:17.451] Starting Catch-All Phase for non-module files...
+[2026-08-21 03:05:17.455] No partial/non-module files found.
+[2026-08-21 03:05:17.455] --- Download Complete: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) | 123 items | 45.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) ---
+==================================================
+[2026-08-21 03:05:26.258] [INFO] [core.sync_manager] Updated manifest entry 1568668 to new file: optimium (1).pdf
+[2026-08-21 03:05:27.809] [INFO] [core.sync_manager] Updated manifest entry 1568788 to new file: HA.IT-reeksamen-2020-VL-Endelig1.pdf
+[2026-08-21 03:05:30.373] [INFO] [core.sync_manager] Updated manifest entry 1568763 to new file: Øvelse forelæsning - Vejl løs.pdf
+[2026-08-21 03:05:31.356] [INFO] [core.sync_manager] Updated manifest entry 1568820 to new file: Oligopol (Knæk Afs) eksempel.pdf
+[2026-08-21 03:05:32.450] [INFO] [core.sync_manager] Updated manifest entry 1568818 to new file: Monopolistisk konkurrence, effekt af markedsføring.pdf
+[2026-08-21 03:05:33.486] [INFO] [core.sync_manager] Updated manifest entry 1568812 to new file: Re2024.pdf
+[2026-08-21 03:05:34.529] [INFO] [core.sync_manager] Updated manifest entry 1568807 to new file: Opgavesæt 6-vejl.pdf
+[2026-08-21 03:05:35.805] [INFO] [core.sync_manager] Updated manifest entry 1568694 to new file: Opgavesæt 5 - VL (Opgave 5).pdf
+[2026-08-21 03:05:37.179] [INFO] [core.sync_manager] Updated manifest entry 1568792 to new file: OmkostningerAfsætning - Ekstra - OPGAVEN.pdf
+[2026-08-21 03:05:38.255] [INFO] [core.sync_manager] Updated manifest entry 1568804 to new file: Eksempel CobbDouglas - Optimering, Ekspansion, Omk.pdf
+[2026-08-21 03:05:39.549] [INFO] [core.sync_manager] Updated manifest entry 1568700 to new file: OmkostningerAfsætning - Ekstra - LØSNING.pdf
+[2026-08-21 03:05:41.489] [INFO] [core.sync_manager] Updated manifest entry 1652883 to new file: Øvelse 3 - VL.pdf
+[2026-08-21 03:05:42.878] [INFO] [core.sync_manager] Updated manifest entry 1568816 to new file: Vejl.-løsning-opg.sæt-8_NYESTE.pdf
+[2026-08-21 03:05:49.234] [INFO] [core.sync_manager] Updated manifest entry 1568787 to new file: HA(IT) (2020-2021) - VØS1 ORD - VL.pdf
+[2026-08-21 03:05:50.465] [INFO] [core.sync_manager] Updated manifest entry 1568652 to new file: Øvelse 7 VL.pdf
+[2026-08-21 03:05:51.672] [INFO] [core.sync_manager] Updated manifest entry 1568778 to new file: LP eksempel - VL.pdf
+[2026-08-21 03:05:54.435] [INFO] [core.sync_manager] Updated manifest entry 1568676 to new file: ekstraopgave 1 - VL.pdf
+[2026-08-21 03:05:55.506] [INFO] [core.sync_manager] Updated manifest entry 1568796 to new file: Miniøvelse - flycosts - opgaven.pdf
+[2026-08-21 03:05:57.785] [INFO] [core.sync_manager] Updated manifest entry 1568795 to new file: Productionanalysis - Eksempel.pdf
+[2026-08-21 03:05:59.524] [INFO] [core.sync_manager] Updated manifest entry 1568822 to new file: PrisDiffEks - TB.pdf
+[2026-08-21 03:06:07.465] [INFO] [core.sync_manager] Updated manifest entry 1632626 to new file: SimpelOptimeringogElasticitet-eksempelVL.pdf
+[2026-08-21 03:06:09.000] [INFO] [core.sync_manager] Updated manifest entry 1568721 to new file: Miniøvelse - flycosts - VL.pdf
+[2026-08-21 03:06:10.633] [INFO] [core.sync_manager] Updated manifest entry 1568680 to new file: HA(IT) RE-eksamen 2020 - VL.pdf
+[2026-08-21 03:06:26.941] [INFO] [core.sync_manager] Updated manifest entry 1568579 to new file: HA-it (2022)-ordinær online-hjemme VL.pdf
+[2026-08-21 03:06:28.507] [INFO] [core.sync_manager] Updated manifest entry 1568705 to new file: rettevejl. øvesæt 11_med vandretaddNYmed rettelse!!..pdf
+[2026-08-21 03:06:29.614] [INFO] [core.sync_manager] Updated manifest entry 1568710 to new file: DTR,DMR,DAR - Opgave.pdf
+[2026-08-21 03:06:30.580] [INFO] [core.sync_manager] Updated manifest entry 1652861 to new file: Øvelse 3 - VL spg 7.pdf
+[2026-08-21 03:06:31.866] [INFO] [core.sync_manager] Updated manifest entry 1568692 to new file: HAit VØS1 RE 2023 VL.pdf
+[2026-08-21 03:06:33.122] [INFO] [core.sync_manager] Updated manifest entry 1568793 to new file: øvesæt 10vejl_ufp.pdf
+[2026-08-21 03:06:34.127] [INFO] [core.sync_manager] Updated manifest entry 1568782 to new file: Breakevenmodel.pdf
+[2026-08-21 03:06:35.053] [INFO] [core.sync_manager] Updated manifest entry 1568666 to new file: HA-it (2022)-ordinær Bilag1 online-hjemme.pdf
+[2026-08-21 03:06:35.990] [INFO] [core.sync_manager] Updated manifest entry 1568779 to new file: LP eksempel - Opgaven.pdf
+[2026-08-21 03:06:36.849] [INFO] [core.sync_manager] Updated manifest entry 1568706 to new file: Eksamen HA(it) VØS I - Emneoversigt.pdf
+[2026-08-21 03:06:38.102] [INFO] [core.sync_manager] Updated manifest entry 1568677 to new file: HAit reeksamen 2020 - VL.pdf
+[2026-08-21 03:06:39.305] [INFO] [core.sync_manager] Updated manifest entry 1568803 to new file: HAit VØS1 2023 VL.pdf
+[2026-08-21 03:06:40.726] [INFO] [core.sync_manager] Updated manifest entry 1568789 to new file: HA.IT-reeksamen-2020-VL-NY.pdf
+[2026-08-21 03:06:42.024] [INFO] [core.sync_manager] Updated manifest entry 1568723 to new file: DTR,DMR,DAR - VL.pdf
+[2026-08-21 03:06:43.008] [INFO] [core.sync_manager] Updated manifest entry 1568703 to new file: Priceleader eksempel - TB.pdf
+[2026-08-21 03:06:43.847] [INFO] [core.sync_manager] Updated manifest entry 1568800 to new file: Øvelse forelæsning - Opgaven formuleret i Excel.pdf
+[2026-08-21 03:06:44.713] [INFO] [core.sync_manager] Updated manifest entry 1700137 to new file: Matematisk eksempel - til PPT.pdf
+[2026-08-21 03:06:46.200] [INFO] [core.sync_manager] Updated manifest entry 1568809 to new file: Øvelse 2 - VL.pdf
+[2026-08-21 03:06:47.188] [INFO] [core.sync_manager] Updated manifest entry 1568696 to new file: Losning FO-opgaveA.pdf
+[2026-08-21 03:06:48.431] [INFO] [core.sync_manager] Updated manifest entry 1568823 to new file: VL - Ord2024.pdf
+[2026-08-21 03:06:49.810] [INFO] [core.sync_manager] Updated manifest entry 1568783 to new file: Øvelse 9 - VL.pdf
+[2026-08-21 03:06:51.066] [INFO] [core.sync_manager] Updated manifest entry 1568693 to new file: CS og PS - VL.pdf
+[2026-08-21 03:06:52.387] [INFO] [core.sync_manager] Updated manifest entry 1634428 to new file: vejl opgavesæt nr. 1 (2).pdf
+[2026-08-21 03:06:53.383] [INFO] [core.sync_manager] Updated manifest entry 1568679 to new file: HA-it (2022)-RE-eksamen VL (2timers).pdf
+[2026-08-21 03:06:54.814] [INFO] [core.sync_manager] Updated manifest entry 1568687 to new file: Øvelse 4 - VL.pdf
+[2026-08-21 03:06:55.981] [INFO] [core.sync_manager] Updated manifest entry 1568811 to new file: Opgavesæt 5 - VL (Excel).pdf
+[2026-08-21 03:06:56.917] [INFO] [core.sync_manager] Updated manifest entry 1632625 to new file: SimpelOptimeringogElasticitet-eksempel.pdf
+[2026-08-21 03:06:56.993] === Course Finished: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) | Downloaded: 171 items | Errors: 0 ===
+[2026-08-21 03:06:56.994] Post-processing ran: [zip, excel]
+[2026-08-21 03:06:57.762] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft PowerPoint -> left alone (we did not launch it)
+[2026-08-21 03:06:57.762] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft Word -> left alone (we did not launch it)
+[2026-08-21 03:06:57.762] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft Excel -> left alone (we did not launch it)

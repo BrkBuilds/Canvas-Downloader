@@ -1,0 +1,1696 @@
+{
+  "course_id": 43665,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+  "course_code": "BINTO2063U.LA_E25 (Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer)",
+  "fetched_at": "2026-08-21T14:29:10",
+  "folders": {
+    "388028": {
+      "id": 388028,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {},
+  "modules": [
+    {
+      "id": 297522,
+      "name": "Course description including examination rules",
+      "position": 1,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1012346,
+          "type": "ExternalUrl",
+          "title": "Course description including examination rules",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO2063U.aspx",
+          "published": null
+        },
+        {
+          "id": 1057864,
+          "type": "File",
+          "title": "Undervisningsplan VØS (1) 1. semester E25.pdf",
+          "content_id": 1568831,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306033,
+      "name": "Test mm.",
+      "position": 3,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1057726,
+          "type": "Quiz",
+          "title": "Introduktion til Managerial Economics",
+          "content_id": 107759,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057727,
+          "type": "ExternalUrl",
+          "title": "https://cbstest.dk/app/",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://cbstest.dk/app/",
+          "published": null
+        },
+        {
+          "id": 1097582,
+          "type": "File",
+          "title": "VØS1matquiz-02.txt",
+          "content_id": 1633225,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306034,
+      "name": "Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel",
+      "position": 4,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1057728,
+          "type": "File",
+          "title": "opgavesæt.nr0 (pre-matematik).docx",
+          "content_id": 1568616,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057729,
+          "type": "File",
+          "title": "opgavesæt.nr0 (pre-matematik)- vejl..docx",
+          "content_id": 1568731,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057730,
+          "type": "File",
+          "title": "Paraplyer - matematiske sammenhænge.docx",
+          "content_id": 1568712,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057731,
+          "type": "File",
+          "title": "Hjælp til at udlede prisafsætningsfunktionen.pdf",
+          "content_id": 1568707,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306035,
+      "name": "Module 1 - Uge 36 1xFO (LET belastning)",
+      "position": 5,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1057732,
+          "type": "File",
+          "title": "F1-A -intro-1.ppt",
+          "content_id": 1568580,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057733,
+          "type": "File",
+          "title": "F1-B . maksimeringsprincippet-1.pptx",
+          "content_id": 1568667,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057734,
+          "type": "File",
+          "title": "Miniøvelse - flycosts - opgaven.xlsx",
+          "content_id": 1568796,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057735,
+          "type": "File",
+          "title": "Miniøvelse - flycosts - VL.xlsx",
+          "content_id": 1568721,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306036,
+      "name": "Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)",
+      "position": 6,
+      "published": null,
+      "item_count": 11,
+      "items": [
+        {
+          "id": 1057736,
+          "type": "File",
+          "title": "F1. Udbud-efterspørgsel.pptx",
+          "content_id": 1568741,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057737,
+          "type": "File",
+          "title": "F.2 Elasticitet.pptx",
+          "content_id": 1568780,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057738,
+          "type": "File",
+          "title": "Elasticitet oversigt.jpg",
+          "content_id": 1568766,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057739,
+          "type": "File",
+          "title": "Elasticitet tegning.jpg",
+          "content_id": 1568736,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057740,
+          "type": "File",
+          "title": "optimum.xlsx",
+          "content_id": 1568668,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057741,
+          "type": "File",
+          "title": "Øvelse 1 (efterspørgselsteori)",
+          "content_id": 1568621,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1098340,
+          "type": "File",
+          "title": "Øvelse 1 - VL",
+          "content_id": 1634428,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057743,
+          "type": "File",
+          "title": "OmkostningerAfsætning - Ekstra - LØSNING.xlsx",
+          "content_id": 1568700,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057744,
+          "type": "File",
+          "title": "OmkostningerAfsætning - Ekstra - OPGAVEN.xlsx",
+          "content_id": 1568792,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1097051,
+          "type": "File",
+          "title": "SimpelOptimeringogElasticitet-eksempel.xlsx",
+          "content_id": 1632625,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1097052,
+          "type": "File",
+          "title": "SimpelOptimeringogElasticitet-eksempelVL.xlsx",
+          "content_id": 1632626,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306037,
+      "name": "Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)",
+      "position": 7,
+      "published": null,
+      "item_count": 9,
+      "items": [
+        {
+          "id": 1057747,
+          "type": "File",
+          "title": "F3.Grundlæggende produktionstek -Nr1.ppt",
+          "content_id": 1568757,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1101485,
+          "type": "File",
+          "title": "F4. Isokvanter og MRTS-Nr2.pptx",
+          "content_id": 1639544,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057749,
+          "type": "File",
+          "title": "F6. isokostlinjen-nr.3.pptx",
+          "content_id": 1568651,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057750,
+          "type": "File",
+          "title": "Omkostningsminimering Nr.4.pptx",
+          "content_id": 1568641,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057751,
+          "type": "File",
+          "title": "Øvelse 2",
+          "content_id": 1568633,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057752,
+          "type": "File",
+          "title": "Øvelse 2 - VL.xlsx",
+          "content_id": 1568809,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057753,
+          "type": "File",
+          "title": "DTR,DMR,DAR - Opgave.xlsx",
+          "content_id": 1568710,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057754,
+          "type": "File",
+          "title": "DTR,DMR,DAR - VL.xlsx",
+          "content_id": 1568723,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057755,
+          "type": "File",
+          "title": "Productionanalysis - Eksempel.xlsx",
+          "content_id": 1568795,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306038,
+      "name": "Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)",
+      "position": 8,
+      "published": null,
+      "item_count": 10,
+      "items": [
+        {
+          "id": 1057756,
+          "type": "File",
+          "title": "Skalaafkast 5.pptx",
+          "content_id": 1568657,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057765,
+          "type": "File",
+          "title": "Eksempel CobbDouglas - Optimering, Ekspansion, Omk.xlsx",
+          "content_id": 1568804,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057757,
+          "type": "File",
+          "title": "omkostning1.pptx",
+          "content_id": 1568717,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057758,
+          "type": "File",
+          "title": "omkostning2.pptx",
+          "content_id": 1568777,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057759,
+          "type": "File",
+          "title": "omkostning3.pptx",
+          "content_id": 1568808,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057760,
+          "type": "File",
+          "title": "Breakevenmodel.xlsm",
+          "content_id": 1568782,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057761,
+          "type": "File",
+          "title": "Øvelse 3",
+          "content_id": 1568630,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1105074,
+          "type": "File",
+          "title": "Øvelse 3 - VL.xls",
+          "content_id": 1652883,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1105064,
+          "type": "File",
+          "title": "Øvelse 3 - VL spg 7.xlsx",
+          "content_id": 1652861,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057764,
+          "type": "File",
+          "title": "Øvelse 3 - VL (WORD versionen, brug hellere excel versionen).docx",
+          "content_id": 1568768,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306039,
+      "name": "Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)",
+      "position": 9,
+      "published": null,
+      "item_count": 10,
+      "items": [
+        {
+          "id": 1057766,
+          "type": "File",
+          "title": "Lineær programmering.pptx",
+          "content_id": 1568805,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057767,
+          "type": "File",
+          "title": "Øvelse forelæsningen - Opgaven formuleret i Word.docx",
+          "content_id": 1568639,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057768,
+          "type": "File",
+          "title": "Øvelse forelæsning - Opgaven formuleret i Excel.xlsx",
+          "content_id": 1568800,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057769,
+          "type": "File",
+          "title": "Øvelse forelæsning - Vejl løs.xlsx",
+          "content_id": 1568763,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057770,
+          "type": "File",
+          "title": "LP eksempel - Opgaven.xlsx",
+          "content_id": 1568779,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057771,
+          "type": "File",
+          "title": "LP eksempel - VL.xlsx",
+          "content_id": 1568778,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057772,
+          "type": "File",
+          "title": "Øvelse 4",
+          "content_id": 1568640,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057773,
+          "type": "File",
+          "title": "Øvelse 4 - VL.xlsx",
+          "content_id": 1568687,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057774,
+          "type": "File",
+          "title": "Øvelse 4 - VL (Wordversionen).docx",
+          "content_id": 1568772,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057779,
+          "type": "File",
+          "title": "Linear Programming (note  )",
+          "content_id": 1568784,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306040,
+      "name": "Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)",
+      "position": 10,
+      "published": null,
+      "item_count": 7,
+      "items": [
+        {
+          "id": 1057780,
+          "type": "File",
+          "title": "Opsummering.pptx",
+          "content_id": 1568785,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057781,
+          "type": "File",
+          "title": "Øvelse 5.docx",
+          "content_id": 1568810,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057782,
+          "type": "File",
+          "title": "Øvelse 5 - VL",
+          "content_id": 1568811,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057783,
+          "type": "File",
+          "title": "Øvelse 5 - VL (Wordversionen).docx",
+          "content_id": 1568776,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057784,
+          "type": "File",
+          "title": "Øvelse 5 - VL (Opgave 5).xlsx",
+          "content_id": 1568694,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057785,
+          "type": "File",
+          "title": "minitest.docx",
+          "content_id": 1568660,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057786,
+          "type": "File",
+          "title": "minitest -VL.docx",
+          "content_id": 1568761,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306041,
+      "name": "Module 7 - Uge 43 1xFO, 1xØV (Let belastning)",
+      "position": 11,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1057787,
+          "type": "File",
+          "title": "FK.ppt",
+          "content_id": 1568647,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057788,
+          "type": "File",
+          "title": "Øvelse 6",
+          "content_id": 1568775,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057789,
+          "type": "File",
+          "title": "Øvelse 6 - VL (Wordversion)",
+          "content_id": 1568806,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057790,
+          "type": "File",
+          "title": "Øvelse 6 - VL (xls version)",
+          "content_id": 1568807,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306042,
+      "name": "Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)",
+      "position": 12,
+      "published": null,
+      "item_count": 6,
+      "items": [
+        {
+          "id": 1057791,
+          "type": "File",
+          "title": "CS og PS.ppt",
+          "content_id": 1568659,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057792,
+          "type": "File",
+          "title": "opgave CS og PS.docx",
+          "content_id": 1568625,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057793,
+          "type": "File",
+          "title": "opgave CS og PS - med VL.docx",
+          "content_id": 1568689,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057794,
+          "type": "File",
+          "title": "CS og PS - VL.xlsx",
+          "content_id": 1568693,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057795,
+          "type": "File",
+          "title": "Øvelse 7.docx",
+          "content_id": 1568581,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057796,
+          "type": "File",
+          "title": "Øvelse 7 VL.xlsx",
+          "content_id": 1568652,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306043,
+      "name": "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)",
+      "position": 13,
+      "published": null,
+      "item_count": 10,
+      "items": [
+        {
+          "id": 1057797,
+          "type": "File",
+          "title": "Kap.12 monopol.ppt",
+          "content_id": 1568819,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057798,
+          "type": "File",
+          "title": "Kap. 13a -ME monopolistisk konkurrence.ppt",
+          "content_id": 1568767,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057799,
+          "type": "File",
+          "title": "FO opgave A",
+          "content_id": 1568769,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057800,
+          "type": "File",
+          "title": "FO opgave A - VL",
+          "content_id": 1568696,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057801,
+          "type": "File",
+          "title": "FO opgave B",
+          "content_id": 1568786,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057802,
+          "type": "File",
+          "title": "FO opgave B - VL",
+          "content_id": 1568817,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057803,
+          "type": "File",
+          "title": "Monopolistisk konkurrence, effekt af markedsføring.xlsx",
+          "content_id": 1568818,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057804,
+          "type": "File",
+          "title": "Øvelse 8",
+          "content_id": 1568695,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057805,
+          "type": "File",
+          "title": "Øvelse 8 - VL (opg6).docx",
+          "content_id": 1568697,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057806,
+          "type": "File",
+          "title": "Øvelse 8 - VL (NY)",
+          "content_id": 1568816,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306044,
+      "name": "Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)",
+      "position": 14,
+      "published": null,
+      "item_count": 6,
+      "items": [
+        {
+          "id": 1057807,
+          "type": "File",
+          "title": "Kap. 13b -ME oligopolmodeller.ppt",
+          "content_id": 1568656,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057808,
+          "type": "File",
+          "title": "Optimeringsmodeller-samlet-kogebog v2.pptx",
+          "content_id": 1568650,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057809,
+          "type": "File",
+          "title": "Øvelse 9",
+          "content_id": 1568655,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057810,
+          "type": "File",
+          "title": "Øvelse 9 - VL.xlsx",
+          "content_id": 1568783,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057811,
+          "type": "File",
+          "title": "Øvelse 9 - VL (Wordversion)",
+          "content_id": 1568781,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057812,
+          "type": "File",
+          "title": "Oligopol (Knæk Afs) eksempel.xls",
+          "content_id": 1568820,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306045,
+      "name": "Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)",
+      "position": 15,
+      "published": null,
+      "item_count": 5,
+      "items": [
+        {
+          "id": 1057813,
+          "type": "File",
+          "title": "Kap 15 Pricing strategies.ppt",
+          "content_id": 1568661,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057814,
+          "type": "File",
+          "title": "Priceleader-modellen-1.pptx",
+          "content_id": 1568670,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057815,
+          "type": "File",
+          "title": "Priceleader eksempel - TB.xlsx",
+          "content_id": 1568703,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057816,
+          "type": "File",
+          "title": "Øvelse 10 ufp.docx",
+          "content_id": 1568794,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057817,
+          "type": "File",
+          "title": "øvesæt 10vejl_ufp.xlsx",
+          "content_id": 1568793,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306046,
+      "name": "Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)",
+      "position": 16,
+      "published": null,
+      "item_count": 6,
+      "items": [
+        {
+          "id": 1128671,
+          "type": "File",
+          "title": "Kap.15 Pricing strategies nr.2.pptx",
+          "content_id": 1699117,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1129275,
+          "type": "File",
+          "title": "Matematisk eksempel - til PPT.xlsx",
+          "content_id": 1700137,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057819,
+          "type": "File",
+          "title": "PrisDiffEks - TB.xlsx",
+          "content_id": 1568822,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1130040,
+          "type": "File",
+          "title": "øvesæt nr. 11.docx",
+          "content_id": 1701729,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057822,
+          "type": "File",
+          "title": "Øvelse 11 - VL  (1+4)",
+          "content_id": 1568664,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057823,
+          "type": "File",
+          "title": "Øvelse 11 - VL",
+          "content_id": 1568705,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306047,
+      "name": "Ekstra træning (træning i gl. eksamensopgaver)",
+      "position": 17,
+      "published": null,
+      "item_count": 27,
+      "items": [
+        {
+          "id": 1057836,
+          "type": "File",
+          "title": "HAit reeksamen 2019 spg 1,2,4.docx",
+          "content_id": 1568801,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057837,
+          "type": "File",
+          "title": "HAit reeksamen 2019 - VL.xlsx",
+          "content_id": 1568677,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057838,
+          "type": "File",
+          "title": "Ekstra opgaver1.docx (ikke spg 4)",
+          "content_id": 1568678,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057839,
+          "type": "File",
+          "title": "Ekstraopgaver 1 - VL.xlsx",
+          "content_id": 1568676,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057840,
+          "type": "File",
+          "title": "HAit 2020 ORD opgave (VL findes ikke til denne opg.)",
+          "content_id": 1568790,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057841,
+          "type": "File",
+          "title": "HAit reeksamen 2020 (1).docx",
+          "content_id": 1568802,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057842,
+          "type": "File",
+          "title": "HA.IT-reeksamen-2020-VL-NY.xlsx",
+          "content_id": 1568789,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057843,
+          "type": "File",
+          "title": "HA.IT-reeksamen-2020-VL-Endelig1.xlsx",
+          "content_id": 1568788,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057844,
+          "type": "File",
+          "title": "HA-it (2021) - VØS1 ordinær (2timer).pdf",
+          "content_id": 1568654,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057845,
+          "type": "File",
+          "title": "HA(IT) (2021) - VØS1 ORD (2timer) - VL.xlsx",
+          "content_id": 1568787,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057846,
+          "type": "File",
+          "title": "HA-it (2021)-VØS1 Reeksamen (2timer).pdf",
+          "content_id": 1568675,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057847,
+          "type": "File",
+          "title": "HA(IT) (2021) - VØS1 REeksamen (2timer) - VL.xlsx",
+          "content_id": 1568680,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057848,
+          "type": "File",
+          "title": "HA-it (2022)-ordinær online-hjemme (2timer).pdf",
+          "content_id": 1568791,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057849,
+          "type": "File",
+          "title": "HA-it (2022)-ordinær online-hjemme (2timer) VL.xlsx",
+          "content_id": 1568579,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057850,
+          "type": "File",
+          "title": "HA-it (2022)-ordinær Bilag1 online-hjemme (2timer) .xlsx",
+          "content_id": 1568666,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057851,
+          "type": "File",
+          "title": "HA(IT) (2022) Reeksamen (2 timer) online.pdf",
+          "content_id": 1568681,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057852,
+          "type": "File",
+          "title": "HA-it (2022)-REeksamen VL (2timers).xlsx",
+          "content_id": 1568679,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057853,
+          "type": "File",
+          "title": "HA(it) VØS1, Ordinær Skriftlig eksamen - Januar 2023.pdf",
+          "content_id": 1568690,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057854,
+          "type": "File",
+          "title": "HAit VØS1 ORD 2023 VL.xlsx",
+          "content_id": 1568803,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057855,
+          "type": "File",
+          "title": "HA(IT) 2023 VØS1 RE-Eksamen.pdf",
+          "content_id": 1568691,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057856,
+          "type": "File",
+          "title": "HAit VØS1 RE 2023 VL.xlsx",
+          "content_id": 1568692,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057857,
+          "type": "File",
+          "title": "Ord-Eksamen2024-opgave.pdf",
+          "content_id": 1568815,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057858,
+          "type": "File",
+          "title": "VL - Ord2024.xlsx",
+          "content_id": 1568823,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057859,
+          "type": "File",
+          "title": "RE-eksamen2024-opgave.pdf",
+          "content_id": 1568813,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057860,
+          "type": "File",
+          "title": "Re2024.xlsx",
+          "content_id": 1568812,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057861,
+          "type": "File",
+          "title": "Eksamen HA(it) VØS I - Emneoversigt.xlsx",
+          "content_id": 1568706,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1057862,
+          "type": "File",
+          "title": "Oversigt over tidligere eksamensopgaver VØS1.pdf",
+          "content_id": 1568821,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "ExternalUrl": 2,
+    "File": 121,
+    "Quiz": 1
+  },
+  "module_file_ids": [
+    1568579,
+    1568580,
+    1568581,
+    1568616,
+    1568621,
+    1568625,
+    1568630,
+    1568633,
+    1568639,
+    1568640,
+    1568641,
+    1568647,
+    1568650,
+    1568651,
+    1568652,
+    1568654,
+    1568655,
+    1568656,
+    1568657,
+    1568659,
+    1568660,
+    1568661,
+    1568664,
+    1568666,
+    1568667,
+    1568668,
+    1568670,
+    1568675,
+    1568676,
+    1568677,
+    1568678,
+    1568679,
+    1568680,
+    1568681,
+    1568687,
+    1568689,
+    1568690,
+    1568691,
+    1568692,
+    1568693,
+    1568694,
+    1568695,
+    1568696,
+    1568697,
+    1568700,
+    1568703,
+    1568705,
+    1568706,
+    1568707,
+    1568710,
+    1568712,
+    1568717,
+    1568721,
+    1568723,
+    1568731,
+    1568736,
+    1568741,
+    1568757,
+    1568761,
+    1568763,
+    1568766,
+    1568767,
+    1568768,
+    1568769,
+    1568772,
+    1568775,
+    1568776,
+    1568777,
+    1568778,
+    1568779,
+    1568780,
+    1568781,
+    1568782,
+    1568783,
+    1568784,
+    1568785,
+    1568786,
+    1568787,
+    1568788,
+    1568789,
+    1568790,
+    1568791,
+    1568792,
+    1568793,
+    1568794,
+    1568795,
+    1568796,
+    1568800,
+    1568801,
+    1568802,
+    1568803,
+    1568804,
+    1568805,
+    1568806,
+    1568807,
+    1568808,
+    1568809,
+    1568810,
+    1568811,
+    1568812,
+    1568813,
+    1568815,
+    1568816,
+    1568817,
+    1568818,
+    1568819,
+    1568820,
+    1568821,
+    1568822,
+    1568823,
+    1568831,
+    1632625,
+    1632626,
+    1633225,
+    1634428,
+    1639544,
+    1652861,
+    1652883,
+    1699117,
+    1700137,
+    1701729
+  ],
+  "only_in_modules": [
+    1568579,
+    1568580,
+    1568581,
+    1568616,
+    1568621,
+    1568625,
+    1568630,
+    1568633,
+    1568639,
+    1568640,
+    1568641,
+    1568647,
+    1568650,
+    1568651,
+    1568652,
+    1568654,
+    1568655,
+    1568656,
+    1568657,
+    1568659,
+    1568660,
+    1568661,
+    1568664,
+    1568666,
+    1568667,
+    1568668,
+    1568670,
+    1568675,
+    1568676,
+    1568677,
+    1568678,
+    1568679,
+    1568680,
+    1568681,
+    1568687,
+    1568689,
+    1568690,
+    1568691,
+    1568692,
+    1568693,
+    1568694,
+    1568695,
+    1568696,
+    1568697,
+    1568700,
+    1568703,
+    1568705,
+    1568706,
+    1568707,
+    1568710,
+    1568712,
+    1568717,
+    1568721,
+    1568723,
+    1568731,
+    1568736,
+    1568741,
+    1568757,
+    1568761,
+    1568763,
+    1568766,
+    1568767,
+    1568768,
+    1568769,
+    1568772,
+    1568775,
+    1568776,
+    1568777,
+    1568778,
+    1568779,
+    1568780,
+    1568781,
+    1568782,
+    1568783,
+    1568784,
+    1568785,
+    1568786,
+    1568787,
+    1568788,
+    1568789,
+    1568790,
+    1568791,
+    1568792,
+    1568793,
+    1568794,
+    1568795,
+    1568796,
+    1568800,
+    1568801,
+    1568802,
+    1568803,
+    1568804,
+    1568805,
+    1568806,
+    1568807,
+    1568808,
+    1568809,
+    1568810,
+    1568811,
+    1568812,
+    1568813,
+    1568815,
+    1568816,
+    1568817,
+    1568818,
+    1568819,
+    1568820,
+    1568821,
+    1568822,
+    1568823,
+    1568831,
+    1632625,
+    1632626,
+    1633225,
+    1634428,
+    1639544,
+    1652861,
+    1652883,
+    1699117,
+    1700137,
+    1701729
+  ],
+  "only_in_files_tab": [],
+  "files_tab_restricted": true,
+  "assignments": [],
+  "quizzes": [],
+  "announcements": [
+    {
+      "id": 161817,
+      "title": "Velkommen til VØS1 på HA(it) - Efterår 2024",
+      "posted_at": null
+    },
+    {
+      "id": 161816,
+      "title": "LP på CBS eksamenscomputere",
+      "posted_at": null
+    }
+  ],
+  "discussions": [],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_by_source": {
+    "announcement": [],
+    "assignment": [],
+    "discussion": [],
+    "syllabus": []
+  },
+  "inline_file_ids": [],
+  "embedded_only_file_ids": [],
+  "inline_only_file_ids": [],
+  "expected_file_ids": [
+    1568579,
+    1568580,
+    1568581,
+    1568616,
+    1568621,
+    1568625,
+    1568630,
+    1568633,
+    1568639,
+    1568640,
+    1568641,
+    1568647,
+    1568650,
+    1568651,
+    1568652,
+    1568654,
+    1568655,
+    1568656,
+    1568657,
+    1568659,
+    1568660,
+    1568661,
+    1568664,
+    1568666,
+    1568667,
+    1568668,
+    1568670,
+    1568675,
+    1568676,
+    1568677,
+    1568678,
+    1568679,
+    1568680,
+    1568681,
+    1568687,
+    1568689,
+    1568690,
+    1568691,
+    1568692,
+    1568693,
+    1568694,
+    1568695,
+    1568696,
+    1568697,
+    1568700,
+    1568703,
+    1568705,
+    1568706,
+    1568707,
+    1568710,
+    1568712,
+    1568717,
+    1568721,
+    1568723,
+    1568731,
+    1568736,
+    1568741,
+    1568757,
+    1568761,
+    1568763,
+    1568766,
+    1568767,
+    1568768,
+    1568769,
+    1568772,
+    1568775,
+    1568776,
+    1568777,
+    1568778,
+    1568779,
+    1568780,
+    1568781,
+    1568782,
+    1568783,
+    1568784,
+    1568785,
+    1568786,
+    1568787,
+    1568788,
+    1568789,
+    1568790,
+    1568791,
+    1568792,
+    1568793,
+    1568794,
+    1568795,
+    1568796,
+    1568800,
+    1568801,
+    1568802,
+    1568803,
+    1568804,
+    1568805,
+    1568806,
+    1568807,
+    1568808,
+    1568809,
+    1568810,
+    1568811,
+    1568812,
+    1568813,
+    1568815,
+    1568816,
+    1568817,
+    1568818,
+    1568819,
+    1568820,
+    1568821,
+    1568822,
+    1568823,
+    1568831,
+    1632625,
+    1632626,
+    1633225,
+    1634428,
+    1639544,
+    1652861,
+    1652883,
+    1699117,
+    1700137,
+    1701729
+  ],
+  "secondary_counts": {
+    "assignment": 0,
+    "quiz": 0,
+    "discussion": 0,
+    "announcement": 2,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "files_tab": "Forbidden: {\"status\":\"unauthorized\",\"errors\":[{\"message\":\"user not authorised to perform that action\"}]}",
+    "quizzes": "ResourceDoesNotExist: Not Found",
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 4.3
+}

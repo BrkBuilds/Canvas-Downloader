@@ -1,0 +1,73 @@
+{
+  "name": "s037",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "complete",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nQuick Sync done - everything up to date\n\nYour folders already match Canvas - nothing to download.\n\nℹ️\nQuick Sync skipped 2 files you edited locally.\nTo download them, run a normal 'Analyze, Review & Sync' and select them manually.\n\nGo to front page",
+      "waited_s": 24.0
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "s037_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "ok": true,
+    "landed_on": "complete",
+    "skipped": "already up to date",
+    "capture": "s037_complete"
+  },
+  "trace": [
+    {
+      "t": "11:41:55",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "11:42:24",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "complete",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nQuick Sync done - everything up to date\n\nYour folders already match Canvas - nothing to download.\n\nℹ️\nQuick Sync skipped 2 files you edited locally.\nTo download them, run a normal 'Analyze, Review & Sync' and select them manually.\n\nGo to front page",
+        "waited_s": 24.0
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "s037_after_analysis",
+      "ok": true
+    }
+  ]
+}

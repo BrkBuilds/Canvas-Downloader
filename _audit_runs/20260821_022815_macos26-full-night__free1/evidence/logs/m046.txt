@@ -1,0 +1,40 @@
+--- Debug Log Started: 2026-08-21 03:17:01.161150 ---
+[2026-08-21 03:17:01.161] === Session Environment ===
+  App: Canvas Downloader v2.0.2 | frozen=False | pid=63730
+  OS: Darwin 25.6.0 | macOS-26.6.1-arm64-arm-64bit | arch=arm64
+  Python: 3.11.16
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 1 course(s)
+===========================
+[2026-08-21 03:17:01.801] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 1 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43667.
+[2026-08-21 03:17:01.830] [INFO] [engine.applescript_bridge] [OfficeQuit] PowerPoint was already running before this run - it will be left alone at the end
+[2026-08-21 03:17:01.850] [INFO] [engine.applescript_bridge] [OfficeQuit] Word was already running before this run - it will be left alone at the end
+[2026-08-21 03:17:01.869] [INFO] [engine.applescript_bridge] [OfficeQuit] Excel was already running before this run - it will be left alone at the end
+[2026-08-21 03:17:01.929] === Download Start: BINT 1st semester (LA E25 BINTS1SEMU) | Course 1/1 ===
+[2026-08-21 03:17:01.930] Mode: flat | Filter: all
+[2026-08-21 03:17:01.930] Post-processing: [video]
+[2026-08-21 03:17:01.930] Secondary content: [none]
+[2026-08-21 03:17:01.935] 
+==================================================
+--- Download: BINT 1st semester (LA E25 BINTS1SEMU) (ID: 43667) Mode: flat ---
+==================================================
+[2026-08-21 03:17:01.935] Save Dir: /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads
+[2026-08-21 03:17:01.935] Filter: all | Concurrency: 5 | Max file size: disabled | Estimated payload: 0 MB
+[2026-08-21 03:17:01.935] Canvas Content: [none] | isolate=no
+[2026-08-21 03:17:01.936] Post-processing: [video]
+[2026-08-21 03:17:01.936] Starting Flat Download for BINT 1st semester (LA E25 BINTS1SEMU)
+[2026-08-21 03:17:02.646] Fallback Scan: Module Course description including examination rules (found 1 items)
+[2026-08-21 03:17:02.646]   Fallback Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-21 03:17:02.649] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTS1SEMU.aspx) -> /Users/m1/Canvas_Downloader/_audit_runs/20260821_022815_macos26-full-night__free1/downloads/BINT 1st semester (LA E25 BINTS1SEMU)/Course description including examination rules.webloc
+[2026-08-21 03:17:02.652] Starting Catch-All Phase for non-module files...
+[2026-08-21 03:17:02.653] No partial/non-module files found.
+[2026-08-21 03:17:02.653] --- Download Complete: BINT 1st semester (LA E25 BINTS1SEMU) | 1 items | 0.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: BINT 1st semester (LA E25 BINTS1SEMU) ---
+==================================================
+[2026-08-21 03:17:02.661] === Course Finished: BINT 1st semester (LA E25 BINTS1SEMU) | Downloaded: 1 items | Errors: 0 ===
+[2026-08-21 03:17:02.662] Post-processing ran: [video]
+[2026-08-21 03:17:03.521] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft PowerPoint -> left alone (we did not launch it)
+[2026-08-21 03:17:03.522] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft Word -> left alone (we did not launch it)
+[2026-08-21 03:17:03.522] [INFO] [engine.applescript_bridge] [OfficeQuit] pass 1: Microsoft Excel -> left alone (we did not launch it)

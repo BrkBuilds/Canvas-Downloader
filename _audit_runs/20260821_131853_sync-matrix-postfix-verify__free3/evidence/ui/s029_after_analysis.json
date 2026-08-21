@@ -1,0 +1,361 @@
+{
+  "name": "s029_after_analysis",
+  "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260821_131853_sync-matrix-postfix-verify__free3/evidence/screenshots/s029_after_analysis.png",
+  "captured": "2026-08-21 13:27:03",
+  "screen": {
+    "url": "http://127.0.0.1:8820/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Review Changes",
+      "Smart Select"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_active_idlesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_idle_idlesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_docx",
+        "text": "DOCX (2/4)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_pptx",
+        "text": "PPTX (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_select_all",
+        "text": "Select All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_deselect_all",
+        "text": "Deselect All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_new_43660",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_new_43660",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_new_43660",
+        "text": "",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_43660_1560205",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_43660_1560011",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_upd_43660",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_upd_43660",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_upd_43660",
+        "text": "",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_43660_1560219",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_43660_1560193",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_updmod_43660",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_updmod_43660",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_updmod_43660",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_43660_1560051",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_43660_1560056",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_sync_review_back",
+        "text": "Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_sync_selected",
+        "text": "Sync & Download 4 files",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [
+      {
+        "key": "cat_new_43660",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nNew Files"
+      },
+      {
+        "key": "cat_update_43660",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nUpdates Available"
+      },
+      {
+        "key": "cat_updmod_43660",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nUpdates Available — You've Edited These"
+      }
+    ],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n2\nNew files\n4\nUpdates available\n2\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (2/4)\n\nPPTX (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n6 files pending sync\n256 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 4 files",
+    "textLen": 678
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "active",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "idle",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "review": {
+    "courses": [
+      {
+        "course_id": "43660",
+        "categories": {
+          "new": {
+            "label": "keyboard_arrow_right\n\nNew Files",
+            "badge": "  (2 / 2 selected)",
+            "open": false,
+            "rowCount": 2,
+            "rows": [
+              {
+                "rowKey": "sync_row_new_43660_1560205",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_43660_1560011",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              }
+            ]
+          },
+          "updated_clean": {
+            "label": "keyboard_arrow_right\n\nUpdates Available",
+            "badge": "  (2 / 2 selected)",
+            "open": false,
+            "rowCount": 2,
+            "rows": [
+              {
+                "rowKey": "sync_row_upd_43660_1560219",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_upd_43660_1560193",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              }
+            ]
+          },
+          "updated_modified": {
+            "label": "keyboard_arrow_right\n\nUpdates Available — You've Edited These",
+            "badge": "  (0 / 2 selected)",
+            "open": false,
+            "rowCount": 2,
+            "rows": [
+              {
+                "rowKey": "sync_row_updmod_43660_1560051",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_updmod_43660_1560056",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "summaryCards": [],
+    "seen": {
+      "categoryContainers": 3,
+      "syncRows": 6,
+      "ignoredRows": 0,
+      "expanders": 3
+    },
+    "pageText": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n2\nNew files\n4\nUpdates available\n2\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (2/4)\n\nPPTX (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n6 files pending sync\n256 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 4 files"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}
