@@ -16,7 +16,7 @@ import re
 import sys
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Optional
 
 from shared import theme
@@ -297,10 +297,12 @@ def _resolve_conversion_target(sm, src_path, target_ext: str,
                else src.with_suffix(target_ext))
 
     if sm is not None:
-        try:
-            src_rel = str(src.relative_to(sm.local_path)).replace('\\', '/')
-        except (ValueError, AttributeError):
-            src_rel = None
+        # Same spelling problem as the repoint below, and here it costs MORE
+        # than bookkeeping: failing to find the row loses the "own product"
+        # ownership check, so the fallback plain-suffix name can overwrite a
+        # file this entry does not own - including a PDF the student has since
+        # annotated. See ``_course_relative``.
+        src_rel = _course_relative(sm, src)
         if src_rel is not None:
             try:
                 manifest = sm.load_manifest()
@@ -315,8 +317,16 @@ def _resolve_conversion_target(sm, src_path, target_ext: str,
                         sm.get_conversion_products().get(str(row_id), ''))
                     if prod_rel:
                         prod_path = sm.local_path / prod_rel
+                        # "Beside the source" is compared in COURSE-RELATIVE
+                        # terms, not as absolute paths. `prod_path` is always
+                        # built from `sm.local_path` while `src` carries
+                        # whatever spelling its caller used, so comparing the
+                        # absolute parents re-introduces exactly the mismatch
+                        # `_course_relative` exists to remove - and silently, in
+                        # the branch that protects an annotated PDF.
                         if (prod_path.suffix.lower() == target_ext.lower()
-                                and prod_path.parent == src.parent):
+                                and PurePosixPath(prod_rel).parent
+                                == PurePosixPath(src_rel).parent):
                             # OWN product - but only if the student has not
                             # since edited it. `_NewVersion` protects the file
                             # the DOWNLOAD would replace; a converted file is
@@ -354,15 +364,64 @@ def _resolve_conversion_target(sm, src_path, target_ext: str,
         n += 1
 
 
+def _course_relative(sm, path) -> str | None:
+    """The manifest's spelling of *path*, or None if it is genuinely outside.
+
+    THE MANIFEST KEYS ROWS ON A PATH RELATIVE TO THE COURSE FOLDER, so every
+    lookup in this module has to reproduce that spelling exactly.
+    ``Path.relative_to`` is a pure STRING operation, and the two sides do not
+    always arrive spelled the same way: ``converters/pdf.py`` and
+    ``converters/word.py`` both return ``str(dst.resolve())`` from their macOS
+    branch while ``converters/excel.py`` returns ``str(dst)``, and
+    ``sm.local_path`` carries whatever spelling the destination was configured
+    with. On any root reached through a symlink - ``/tmp`` -> ``/private/tmp``,
+    or a course folder linked onto an external drive - the resolved and
+    unresolved spellings differ, ``relative_to`` raises, and the callers used to
+    swallow that in SILENCE.
+
+    Measured 2026-08-21 in a real packaged run of course 43660: **62 of 63
+    Office conversions left their manifest row pointing at the source file they
+    had just deleted**, and the one converter that repointed correctly was the
+    only one that does not call ``resolve()``. Nothing was logged, on either
+    path. So the fallback compares REAL paths - the one spelling both sides can
+    always agree on - and the callers now say so when even that fails.
+
+    ``os.path.realpath`` is used rather than ``Path.resolve`` because it is
+    defined on a path that no longer EXISTS, which ``original_file`` never does
+    by the time the repoint runs: every source-consuming converter deletes its
+    source before reporting success.
+    """
+    root = getattr(sm, "local_path", None)
+    if root is None:
+        return None
+    p = Path(path)
+    candidates = ((p, Path(root)),
+                  (Path(os.path.realpath(p)), Path(os.path.realpath(root))))
+    for cand, cand_root in candidates:
+        try:
+            return str(cand.relative_to(cand_root)).replace('\\', '/')
+        except (ValueError, AttributeError, OSError):
+            continue
+    return None
+
+
 def _update_manifest_path(sm, original_file: Path, converted_path: Path):
     """Update the sync manifest to point from the original file to the converted file.
 
     Uses SyncManager exclusively - no raw sqlite3.  Fixes the audit inconsistency.
     """
-    try:
-        original_rel = str(original_file.relative_to(sm.local_path)).replace('\\', '/')
-        new_rel = str(converted_path.relative_to(sm.local_path)).replace('\\', '/')
-    except ValueError:
+    original_rel = _course_relative(sm, original_file)
+    new_rel = _course_relative(sm, converted_path)
+    if original_rel is None or new_rel is None:
+        # Not a crash and not data loss - the file IS converted - but the sync
+        # record is now stale, and a stale row is re-offered as a restore on the
+        # next sync while its product sits untracked. Silence here is what let
+        # that ship, so it is stated.
+        logger.warning(
+            "Could not place %s / %s inside the course folder %s, so the "
+            "manifest was not repointed. The file was converted; only the sync "
+            "record is stale.",
+            original_file, converted_path, getattr(sm, "local_path", None))
         return
 
     # BOOKKEEPING MUST NOT UNDO WORK THAT ALREADY SUCCEEDED. By the time this
@@ -384,6 +443,15 @@ def _update_manifest_path(sm, original_file: Path, converted_path: Path):
             if info.get('local_path', '') == original_rel:
                 sm.update_converted_file(int(file_id), new_rel)
                 break
+        else:
+            # A conversion whose source was never tracked is ORDINARY - an
+            # extracted archive member, a secondary-content render - so this is
+            # not an error. It is logged at debug because "no row matched" and
+            # "the row was repointed" were previously indistinguishable from
+            # outside, which is exactly what made a spelling mismatch invisible.
+            logger.debug(
+                "No manifest row for %s; nothing to repoint to %s.",
+                original_rel, new_rel)
     except Exception as e:
         logger.warning(
             "Could not repoint the manifest from %s to %s (%s: %s). The file was "
