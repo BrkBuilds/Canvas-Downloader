@@ -128,11 +128,11 @@ CRASH_MUTANTS = [
     # recoverable set must not swallow an ordinary error into "retry me", and
     # must not make a transient failure fatal.
     ("-609 falls back to 'other', so a dead connection is never retried", AB,
-     "    if ('-600' in err_msg or '-609' in err_msg or '-30001' in err_msg",
-     "    if ('-600' in err_msg or '-30001' in err_msg"),
-    ("-30001 falls back to 'other', so our own frontmost guard fails the file", AB,
-     "    if ('-600' in err_msg or '-609' in err_msg or '-30001' in err_msg",
-     "    if ('-600' in err_msg or '-609' in err_msg"),
+     "    if ('-600' in err_msg or '-609' in err_msg",
+     "    if ('-600' in err_msg"),
+    ("-30001 is made retryable, which misdescribes a running app", AB,
+     "    if ('-600' in err_msg or '-609' in err_msg",
+     "    if ('-600' in err_msg or '-609' in err_msg or '-30001' in err_msg"),
     ("the wording clause for a dead connection is dropped", AB,
      "            or 'connection is invalid' in low):",
      "            or 'connection is invalid xx' in low):"),
