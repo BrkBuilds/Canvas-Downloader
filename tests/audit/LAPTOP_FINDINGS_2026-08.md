@@ -1,5 +1,11 @@
 # Laptop session, 2026-08-21 - the long-path gate
 
+> **UPDATE 2026-08-22 - THE GATE IS RESTORED AND THE CONVERTER FINDING IS
+> NOW MEASURED.** The operator set `LongPathsEnabled=0` and rebooted, so areas
+> 2 and 3 below are superseded as a statement about *today*. They are kept
+> verbatim, because they are the record of what was true when measured and of
+> why the gate could not run. **Read area 4 first.**
+
 Written by the laptop agent briefed in `tests/audit/LAPTOP_LONGPATH_PROMPT.md`.
 Machine: `LAPTOP-KE2TQ36T`, ASUS ExpertBook L1500CDA, `PCSystemType 2` (mobile),
 battery present, 4 logical cores, **13.9 GB RAM (3.8 GB free at the time)**.
@@ -245,3 +251,98 @@ the deep tree WITH the prefix so fixture creation cannot itself be the failure.
 runs are scrubbed and committed (`f7d64ab`), and `_audit_runs/` is in this
 clone's `.git/info/exclude`, so a new run will not stage 3,000+ files. That
 exclude is local and uncommitted - it will not exist on a fresh clone.
+
+---
+
+## Area 4 - 2026-08-22: the gate is restored, and area 3 is now MEASURED
+
+The operator set `LongPathsEnabled=0` and rebooted. Confirmed: the registry reads
+`0x0`, and `LastBootUpTime` is 2026-08-22 00:04:01 - the reboot matters, because
+the value is read at process start and a running shell keeps the old behaviour.
+
+**This laptop is once again the only machine in the fleet that can fail.**
+
+### 4a. The check is now a tracked script
+
+`probe_longpath.py` lived in a session scratchpad, which dies with the session -
+and `CLAUDE.md`'s own rule is never to leave the only copy there. It is now
+`scripts/check_longpath_gate.py`, and there is exactly one of it.
+
+```
+$ python scripts/check_longpath_gate.py
+platform                  : win32
+registry LongPathsEnabled : 0
+probe path length         : 351 chars
+open() WITHOUT the prefix : FAILED (FileNotFoundError errno=2 winerror=None)
+open() WITH make_long_path: SUCCEEDED (read successfully)
+
+VALID - an unprefixed open at 351 characters failed while the prefixed open
+succeeded. This machine enforces MAX_PATH, so a forgotten make_long_path will
+show up as a real failure.                                            [exit 0]
+```
+
+**Note the error class: `FileNotFoundError`.** Windows reports an over-long path
+as ERROR_PATH_NOT_FOUND, so Python raises the same exception as a genuinely
+missing file. That single fact is the root of this whole defect family - it is
+why `unlink(missing_ok=True)` swallows it, and why `except FileNotFoundError`
+handlers read "too long" as "already gone".
+
+Design points, each of which is load-bearing rather than decoration:
+
+- **The fixture is built THROUGH the prefix.** Built the same unprefixed way it
+  is probed, the *creation* would fail on an enforcing machine, the file would
+  genuinely not exist, and the unprefixed open would raise for the wrong reason -
+  reporting a working gate on evidence that only proves `mkdir` failed.
+- **The prefixed open is a CONTROL, and the verdict checks it FIRST.** Without
+  it, "unprefixed raised" is equally explained by a missing file, a permissions
+  problem or a full disk. A failed control returns INCONCLUSIVE, never a verdict.
+- **Exit 1 when masked**, so a CI step or a shell guard cannot sail past it;
+  exit 2 inconclusive; exit 0 only for valid, or a clean not-applicable off
+  Windows (`make_long_path` is a documented no-op there and macOS has no
+  MAX_PATH to mask).
+- **`--self-test` ships with it**, because a check that can only ever say PASS
+  proves nothing. It drives `verdict()` to all three answers and takes a live
+  control showing a SHORT path really does open unprefixed - the same
+  observation the MASKED branch keys on.
+
+Pinned by `tests/test_longpath_gate_check.py` (8 tests, 1 skipped off-platform).
+Control: mutating `verdict()` so it can never return MASKED fails two of them.
+Restored from an in-memory snapshot, not `git checkout`.
+
+### 4b. Area 3's converters, measured - and the severity assessment HOLDS
+
+Driven against the real converter functions, fixtures created through
+`make_long_path` so a failure can only be about the converter's own I/O:
+
+| converter | path | result | source file |
+|---|---|---|---|
+| `convert_code_to_txt` | 318 | `None`, logged `[Errno 2] No such file or directory` | **survived** |
+| `convert_html_to_md` | 349 | `None`, logged `Invalid HTML file path` | **survived** |
+| `compile_urls_to_txt` | 360 | `(None, [])`, **logged nothing at all** | **survived** |
+| `unlink(missing_ok=True)` | 323 | returned normally, **deleted nothing** | n/a |
+
+Every prediction in area 3 held, and so does the judgement that came with it:
+**all four fail SAFE. The user's source survived in every case.** This is
+degradation and misdiagnosis, not data loss, and it should not be escalated
+beyond that.
+
+What the measurement adds:
+
+- **`compile_urls_to_txt` is the worst to diagnose**, which reading the code did
+  not predict. It logs *nothing*: the glob simply matches no `.url` files, so the
+  course silently compiles no links and reports success at compiling zero.
+- **`convert_html_to_md` fails at an `exists()` check** before it opens anything,
+  and says `Invalid HTML file path` - about a path that is perfectly valid.
+- **The `video.py` mechanism is confirmed outright.** A real 323-character file,
+  `unlink(missing_ok=True)`, returned normally and deleted nothing; the identical
+  call at a short path deletes correctly, so the no-op is about length and not
+  about the call.
+
+The user-visible symptom on a default Windows install is therefore: **files in
+deeply-nested course folders silently never convert**, and the reason given is
+either a file-not-found error about a file that is plainly there, or nothing.
+
+**Still open - nothing was fixed.** The remedy is `make_long_path` at those call
+sites. Not applied here because the operator had not asked for it, and a fix to
+the delete family deserves its own pass with the reproduce-fix-test-mutate cycle
+this repo runs on - which this machine can now actually complete.
