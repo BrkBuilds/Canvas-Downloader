@@ -1,0 +1,184 @@
+{
+  "name": "s001",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "iletype\n\nJS (all)\n\nMD (none)\n\nPDF (all)\n\nTXT (3/6)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n11 files pending sync\n122 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These",
+      "waited_s": 18.3
+    },
+    "capture": "s001_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_45899",
+      "cat_update_45899",
+      "cat_updmod_45899",
+      "cat_deleted_local_45899",
+      "cat_deleted_canvas_45899"
+    ],
+    "capture": "s001_review",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\screenshots\\s001_review.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\ui\\s001_review.json",
+    "textLen": 2225,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "ntouched\nLecture 15 Database Design Exercises_NewVersion.pdf\n\n​\n\n​\n\nUge 10 Forelæsning 15. Database 1 Opsætning af database\nløbeklub SQL_NewVersion.pdf\n\n​\n\n​\n\nUge 11 Forelæsning 16. Database 2 Datamodifikation\nCreate_ILearn_tables_sql.txt\n\n​\n\n​\n\nUge 12 Forelæsning 17. Database 3 Join og set operatorer\nhints.md\n\n​\n\n​\n\nUge 46 Forelæsning 10. Document Object Model (DOM)\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 15.4
+    },
+    "capture": "s001_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "22:40:24",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "22:40:52",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "iletype\n\nJS (all)\n\nMD (none)\n\nPDF (all)\n\nTXT (3/6)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n11 files pending sync\n122 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These",
+        "waited_s": 18.3
+      },
+      "capture": "s001_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "22:40:58",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_45899",
+        "cat_update_45899",
+        "cat_updmod_45899",
+        "cat_deleted_local_45899",
+        "cat_deleted_canvas_45899"
+      ],
+      "capture": "s001_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\screenshots\\s001_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\ui\\s001_review.json",
+      "textLen": 2225,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:41:03",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "22:41:08",
+      "action": "select_category",
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "22:41:09",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_45899",
+        "cat_update_45899",
+        "cat_updmod_45899",
+        "cat_deleted_local_45899",
+        "cat_deleted_canvas_45899"
+      ],
+      "capture": "s001_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\screenshots\\s001_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\ui\\s001_review.json",
+      "textLen": 2225,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:41:29",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "ntouched\nLecture 15 Database Design Exercises_NewVersion.pdf\n\n​\n\n​\n\nUge 10 Forelæsning 15. Database 1 Opsætning af database\nløbeklub SQL_NewVersion.pdf\n\n​\n\n​\n\nUge 11 Forelæsning 16. Database 2 Datamodifikation\nCreate_ILearn_tables_sql.txt\n\n​\n\n​\n\nUge 12 Forelæsning 17. Database 3 Join og set operatorer\nhints.md\n\n​\n\n​\n\nUge 46 Forelæsning 10. Document Object Model (DOM)\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 15.4
+      },
+      "capture": "s001_complete",
+      "ok": true
+    }
+  ]
+}

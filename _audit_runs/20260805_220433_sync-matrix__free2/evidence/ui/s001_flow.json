@@ -1,0 +1,184 @@
+{
+  "name": "s001",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n3\nNew files\n6\nUpdates available\n2\nEdited locally\n2\nDeleted locally",
+      "waited_s": 13.8
+    },
+    "capture": "s001_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_45899",
+      "cat_update_45899",
+      "cat_updmod_45899",
+      "cat_deleted_local_45899",
+      "cat_deleted_canvas_45899"
+    ],
+    "capture": "s001_review",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\screenshots\\s001_review.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\ui\\s001_review.json",
+    "textLen": 2225,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": false,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": ", so the new version from Canvas was saved next to them with \"_NewVersion\" in the name (for example: Lecture 15 Database Design Exercises_NewVersion.pdf). Your copy is untouched — compare the two and keep whichever you want, then delete the other.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n11 FILES\nTXT\n8\nPDF\n2\nMD\n1\nkeyboard_arrow_down\n\nFiles added",
+      "waited_s": 10.5
+    },
+    "capture": "s001_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "22:17:36",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "22:17:57",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n3\nNew files\n6\nUpdates available\n2\nEdited locally\n2\nDeleted locally",
+        "waited_s": 13.8
+      },
+      "capture": "s001_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "22:18:02",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_45899",
+        "cat_update_45899",
+        "cat_updmod_45899",
+        "cat_deleted_local_45899",
+        "cat_deleted_canvas_45899"
+      ],
+      "capture": "s001_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\screenshots\\s001_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\ui\\s001_review.json",
+      "textLen": 2225,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:18:05",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "22:18:08",
+      "action": "select_category",
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "22:18:09",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_45899",
+        "cat_update_45899",
+        "cat_updmod_45899",
+        "cat_deleted_local_45899",
+        "cat_deleted_canvas_45899"
+      ],
+      "capture": "s001_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\screenshots\\s001_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\ui\\s001_review.json",
+      "textLen": 2225,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:18:23",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": false,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": ", so the new version from Canvas was saved next to them with \"_NewVersion\" in the name (for example: Lecture 15 Database Design Exercises_NewVersion.pdf). Your copy is untouched — compare the two and keep whichever you want, then delete the other.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n11 FILES\nTXT\n8\nPDF\n2\nMD\n1\nkeyboard_arrow_down\n\nFiles added",
+        "waited_s": 10.5
+      },
+      "capture": "s001_complete",
+      "ok": true
+    }
+  ]
+}

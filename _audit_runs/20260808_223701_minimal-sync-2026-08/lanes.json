@@ -1,0 +1,29 @@
+{
+  "parent": "20260808_223701_minimal-sync-2026-08",
+  "lanes": [
+    {
+      "lane": "free1",
+      "index": 0,
+      "serial": false,
+      "parent": "20260808_223701_minimal-sync-2026-08",
+      "run_id": "20260808_223701_minimal-sync-2026-08__free1",
+      "app_port": 8850,
+      "cdp_port": 9450,
+      "headless": true,
+      "count": 22,
+      "spec": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\lane_spec.json"
+    },
+    {
+      "lane": "free2",
+      "index": 1,
+      "serial": false,
+      "parent": "20260808_223701_minimal-sync-2026-08",
+      "run_id": "20260808_223701_minimal-sync-2026-08__free2",
+      "app_port": 8860,
+      "cdp_port": 9460,
+      "headless": true,
+      "count": 21,
+      "spec": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\lane_spec.json"
+    }
+  ]
+}

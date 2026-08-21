@@ -1,0 +1,138 @@
+{
+  "name": "m028_complete",
+  "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08__office\\evidence\\screenshots\\m028_complete.png",
+  "captured": "2026-08-08 19:48:41",
+  "screen": {
+    "url": "http://127.0.0.1:8800/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Download Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_done_donesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "dl_open_0",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "dl_open_1",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n2\nCOURSES DOWNLOADED\n319\nFILES DOWNLOADED\n91.9\nMB DOWNLOADED\n24 files skipped because they exceeded the 5 MB limit.\n⚠️ 1 file could not be converted.\nThe original file downloaded fine and is in your course folder - only the converted copy could not be made. This is usually Microsoft Office not being installed or not signed in, or the file being open in another program. Close any open Office windows and run this course again to retry just it. Details are in download_errors.txt in each course folder.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n150 FILES\nPDF\n74\nHTML\n33\nURL\n18\nTXT\n13\nOTHER FILES\n12\n\nOpen Folder\n\nVirksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\n169 FILES\nPDF\n60\nTXT\n48\nDOCX\n33\nPPTX\n15\nOTHER FILES\n13\n\nOpen Folder\n\nGo to front page",
+    "textLen": 980
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "done",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "active",
+      "label": "5. Complete"
+    }
+  ],
+  "completion": {
+    "folderCards": [
+      {
+        "key": "dl_fc_0",
+        "text": "Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | 150 FILES | PDF | 74 | HTML | 33 | URL | 18 | TXT | 13 | OTHER FILES | 12 | Open Folder"
+      },
+      {
+        "key": "dl_fc_1",
+        "text": "Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) | 169 FILES | PDF | 60 | TXT | 48 | DOCX | 33 | PPTX | 15 | OTHER FILES | 13 | Open Folder"
+      }
+    ],
+    "dashboardInsideCard": false,
+    "strayDashboard": false,
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n2\nCOURSES DOWNLOADED\n319\nFILES DOWNLOADED\n91.9\nMB DOWNLOADED\n24 files skipped because they exceeded the 5 MB limit.\n⚠️ 1 file could not be converted.\nThe original file downloaded fine and is in your course folder - only the converted copy could not be made. This is usually Microsoft Office not being installed or not signed in, or the file being open in another program. Close any open Office windows and run this course again to retry just it. Details are in download_errors.txt in each course folder.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n150 FILES\nPDF\n74\nHTML\n33\nURL\n18\nTXT\n13\nOTHER FILES\n12\n\nOpen Folder\n\nVirksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\n169 FILES\nPDF\n60\nTXT\n48\nDOCX\n33\nPPTX\n15\nOTHER FILES\n13\n\nOpen Folder\n\nGo to front page"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

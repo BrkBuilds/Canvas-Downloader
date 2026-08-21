@@ -1,0 +1,70 @@
+{
+  "folder": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-08-08T22:46:40",
+  "applied": [
+    {
+      "kind": "readonly_target",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "updated_clean": 2
+  },
+  "expected_untracked": [
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt"
+  ],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_size_drift": [
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 133,
+    "files": 116
+  },
+  "after": {
+    "rows": 133,
+    "files": 116
+  },
+  "fixtures": [
+    {
+      "label": "readonly:Debug - shop - 1.txt",
+      "kind": "readonly_target",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "match_name": "Debug - shop - 1.txt",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1700483,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "readonly:Debug - Inventory - 1.txt",
+      "kind": "readonly_target",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+      "match_name": "Debug - Inventory - 1.txt",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1700478,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    }
+  ]
+}

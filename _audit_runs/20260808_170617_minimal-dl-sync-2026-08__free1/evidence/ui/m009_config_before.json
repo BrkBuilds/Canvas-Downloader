@@ -1,0 +1,153 @@
+{
+  "name": "m009_config_before",
+  "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08__free1\\evidence\\screenshots\\m009_config_before.png",
+  "captured": "2026-08-08 17:48:33",
+  "screen": {
+    "url": "http://127.0.0.1:8820/?mode=download&step=2",
+    "mode": "download",
+    "step": "2",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Custom Download",
+      "Course Files & Organization",
+      "Canvas Content (Optional)",
+      "Optimize for AI Tools (Optional)",
+      "Panopto Recordings (Optional)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_active_idlesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_idle_idlesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_idle_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_save_config",
+        "text": "Save Preset",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_presets_hub",
+        "text": "Presets",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_include_all",
+        "text": "All Files (default)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_include_study",
+        "text": "Slides & PDFs",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_org_subfolders",
+        "text": "With Subfolders",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_org_flat",
+        "text": "All in One Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "toggle_card2",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "toggle_card3",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "toggle_panopto",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "review_browse_folder",
+        "text": "Change folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "action_dl_back",
+        "text": "Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "action_dl_confirm",
+        "text": "Confirm and Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nCustom Download\nHelp\n\nSave Preset\n\nPresets\n\nCourse Files & Organization\n\nManage how teacher-uploaded files should be downloaded.\n\nChoose which files to download:\n\nAll Files (default)\n\nSlides & PDFs\n\nChoose how files should be organized:\n\nWith Subfolders\n\nAll in One Folder\n\nCanvas Content (Optional)\nOFF\nOptimize for AI Tools (Optional)\nOFF\nPanopto Recordings (Optional)\nOFF\nVerify your download destination\ndownloads\nC:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08__free1\n\nChange folder\n\nCourses selected for download\n1\n\nGo back\n\nConfirm and Download",
+    "textLen": 691
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

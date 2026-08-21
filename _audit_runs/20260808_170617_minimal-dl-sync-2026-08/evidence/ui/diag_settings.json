@@ -1,0 +1,112 @@
+{
+  "name": "diag_settings",
+  "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08\\evidence\\screenshots\\diag_settings.png",
+  "captured": "2026-08-08 17:23:57",
+  "screen": {
+    "url": "http://127.0.0.1:8795/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": true,
+    "dialogTitle": "​",
+    "headings": [],
+    "buttons": [
+      {
+        "key": "temp_max_size_mb",
+        "text": "",
+        "disabled": true,
+        "gated": true,
+        "kind": ""
+      },
+      {
+        "key": "temp_max_size_mb",
+        "text": "",
+        "disabled": true,
+        "gated": true,
+        "kind": ""
+      },
+      {
+        "key": "temp_archive_max_files",
+        "text": "",
+        "disabled": true,
+        "gated": false,
+        "kind": ""
+      },
+      {
+        "key": "temp_archive_max_files",
+        "text": "",
+        "disabled": true,
+        "gated": false,
+        "kind": ""
+      },
+      {
+        "key": "temp_sync_history_retention",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": ""
+      },
+      {
+        "key": "temp_sync_history_retention",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": ""
+      },
+      {
+        "key": "stg_btn_pick",
+        "text": "Choose Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "stg_btn_clear",
+        "text": "Clear",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "stg_btn_pan",
+        "text": "Manage transcription configuration",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "stg_btn_diag_reveal",
+        "text": "Show in Explorer",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "",
+        "text": "Cancel",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "stg_btn_save",
+        "text": "Save Settings",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "​\n\nSettings\nDOWNLOADS & STORAGE\nSimultaneous downloads\nHow many files download at once. Higher values may increase download speed.\nLower this if you encounter download issues. Default = 5.\n5\n1\n15\nSkip large files\nSkip files above a set size, so a few huge files can't bloat your drive.\n\nEnable limit\n\nMax size (MB)\n\nSkip huge archives\nDon't unpack a .zip that would add an enormous number of files to your course folder.\n\nEnable limit\n\nMax files inside an archive\n\nSync history\nHow many past sync operations to keep in the history panel. Higher values use slightly more disk space.\n\nKeep last N syncs\n\nDefault save location\nThe output folder every download starts from, so you don't have to set it each time. Default = your Downloads folder.\nC:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08\\downloads\n\nChoose Folder\n\nClear\n\nPREFERENCES\nNotifications\nA sound and a native notification when a download or sync finishes.\n\nEnable notifications\n\nCBS filters\nAdds course type, semester and year filters to every course list. For CBS students.\n\nEnable CBS filters\n\nTime format\nShow all times as 12-hour AM/PM instead of the default 24-hour clock.\n\nUse 12-hour format\n\nShow help text\nKeeps the Help buttons and the short explanations under the main action buttons.\n\nShow help text\n\nPANOPTO LECTURE RECORDINGS\nPanopto lecture recordings\nLook for Panopto recordings in your courses and offer them as downloads.\n\nInclude Panopto recordings\n\nPanopto transcription engine\nConfigure the local model, language and compute device used to transcribe Panopto recordings into Transcripts & Subtitles. These settings are shared across every download and sync - nothing is uploaded.\nReady · active model: tiny\n\nManage transcription configuration\n\nTROUBLESHOOTING\nError log file\nWrite a download_errors.txt into the output folder, listing any failed downloads or conversion errors.\n\nCreate error log\n\nSave debug log\n\nApp health record\nA short log of app startups, shutdowns and memory use, kept automatically. If Canvas Downloader closes unexpectedly or behaves oddly, send this file with your report. It contains no personal data, access tokens, course names or file names, and is never uploaded anywhere.\nC:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08\\config\\diagnostics\\health.log\n\nShow in Explorer\n\nCancel\n\nSave Settings",
+    "textLen": 2412
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

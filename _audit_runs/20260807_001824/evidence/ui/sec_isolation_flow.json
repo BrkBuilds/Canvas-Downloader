@@ -1,0 +1,227 @@
+{
+  "name": "sec_isolation",
+  "course_ids": [
+    46370
+  ],
+  "config": {
+    "convert_html": true,
+    "convert_code": true,
+    "convert_zip": true,
+    "convert_urls": true,
+    "dl_assignments": true,
+    "dl_announcements": true,
+    "dl_syllabus": true
+  },
+  "select": {
+    "courses": [
+      46370
+    ],
+    "results": [
+      {
+        "course_id": 46370,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "dl_assignments": true,
+      "dl_syllabus": true,
+      "dl_announcements": true,
+      "convert_zip": true,
+      "convert_html": true,
+      "convert_code": true,
+      "convert_urls": true
+    },
+    "failed": [],
+    "verified": {
+      "convert_zip": true,
+      "convert_html": true,
+      "convert_code": true,
+      "convert_urls": true,
+      "dl_assignments": true,
+      "dl_syllabus": true,
+      "dl_announcements": true
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "sec_isolation_config",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260807_001824\\evidence\\screenshots\\sec_isolation_config.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260807_001824\\evidence\\ui\\sec_isolation_config.json",
+    "textLen": 1281,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "sec_isolation",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n22\nFILES DOWNLOADED\n2.1\nMB DOWNLOADED\nFolders Updated\nMatematikMath Brush-up E25\n22 FILES\nPDF\n20\nMD\n2\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 20.4
+    },
+    "captures": [
+      "sec_isolation_phase_scan",
+      "sec_isolation_phase_download",
+      "sec_isolation_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "00:19:30",
+      "action": "select_courses",
+      "courses": [
+        46370
+      ],
+      "results": [
+        {
+          "course_id": 46370,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "00:19:31",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "00:19:35",
+      "action": "expand_card",
+      "card": "toggle_card2",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "00:19:37",
+      "action": "set_toggle",
+      "key": "btn_dl_assignments",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:19:38",
+      "action": "set_toggle",
+      "key": "btn_dl_syllabus",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:19:39",
+      "action": "set_toggle",
+      "key": "btn_dl_announcements",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:19:41",
+      "action": "expand_card",
+      "card": "toggle_card3",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "00:19:43",
+      "action": "set_toggle",
+      "key": "btn_convert_zip",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:19:44",
+      "action": "set_toggle",
+      "key": "btn_convert_html",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:19:45",
+      "action": "set_toggle",
+      "key": "btn_convert_code",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:19:48",
+      "action": "set_toggle",
+      "key": "btn_convert_urls",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:19:48",
+      "action": "configure",
+      "applied": {
+        "dl_assignments": true,
+        "dl_syllabus": true,
+        "dl_announcements": true,
+        "convert_zip": true,
+        "convert_html": true,
+        "convert_code": true,
+        "convert_urls": true
+      },
+      "failed": [],
+      "verified": {
+        "convert_zip": true,
+        "convert_html": true,
+        "convert_code": true,
+        "convert_urls": true,
+        "dl_assignments": true,
+        "dl_syllabus": true,
+        "dl_announcements": true
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "00:20:20",
+      "action": "confirm_and_run",
+      "name": "sec_isolation",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n22\nFILES DOWNLOADED\n2.1\nMB DOWNLOADED\nFolders Updated\nMatematikMath Brush-up E25\n22 FILES\nPDF\n20\nMD\n2\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 20.4
+      },
+      "captures": [
+        "sec_isolation_phase_scan",
+        "sec_isolation_phase_download",
+        "sec_isolation_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

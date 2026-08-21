@@ -1,0 +1,21 @@
+{
+  "run_id": "20260805_142902_minimal-smoke",
+  "label": "minimal-smoke",
+  "created": "2026-08-05T14:29:03",
+  "repo_root": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE",
+  "steps": [],
+  "app": {},
+  "ports_used": [
+    8790
+  ],
+  "browser": {},
+  "scope": [
+    {
+      "name": "smoke",
+      "flow": "download",
+      "course": "43667",
+      "config": "{\"mode\": \"flat\", \"file_filter\": \"all\"}",
+      "result": "ok"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+
+=== lane free2 start 2026-08-05 15:49:14 ===
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: EPIPE: broken pipe, write
+    at Socket._write (node:internal/net:75:18)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at PipeTransport.send (C:\Users\birkl\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\driver\package\lib\coreBundle.js:34369:25)
+    at dispatcherConnection.onmessage (C:\Users\birkl\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\driver\package\lib\coreBundle.js:67801:59)
+    at DispatcherConnection.sendCreate (C:\Users\birkl\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\driver\package\lib\coreBundle.js:18286:14)
+    at new Dispatcher (C:\Users\birkl\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\driver\package\lib\coreBundle.js:18181:27)
+    at new BrowserTypeDispatcher (C:\Users\birkl\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\driver\package\lib\coreBundle.js:54168:9)
+    at new PlaywrightDispatcher (C:\Users\birkl\AppData\Local\Programs\Python\Python313\Lib\site-packages\playwright\driver\package\lib\coreBundle.js:54882:26)
+Emitted 'error' event on Socket instance at:
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  errno: -4047,
+  syscall: 'write',
+  code: 'EPIPE'
+}
+
+Node.js v24.17.0

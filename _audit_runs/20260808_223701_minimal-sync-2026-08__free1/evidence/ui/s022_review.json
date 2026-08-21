@@ -1,0 +1,222 @@
+{
+  "name": "s022_review",
+  "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\screenshots\\s022_review.png",
+  "captured": "2026-08-08 22:51:09",
+  "screen": {
+    "url": "http://127.0.0.1:8850/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Review Changes",
+      "Smart Select"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_active_idlesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_idle_idlesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_txt",
+        "text": "TXT (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_select_all",
+        "text": "Select All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_deselect_all",
+        "text": "Deselect All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_upd_45899",
+        "text": "Select All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_upd_45899",
+        "text": "Deselect All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_upd_45899",
+        "text": "Move deselected files to Ignored (0)",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_45899_1670371",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_45899_1598721",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_sync_review_back",
+        "text": "Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_sync_selected",
+        "text": "Sync & Download 2 files",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [
+      {
+        "key": "cat_update_45899",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nUpdates Available"
+      }
+    ],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n0\nNew files\n2\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (all)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n131 files up to date\nkeyboard_arrow_down\n\nUpdates Available\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nYour local copies haven't been edited, so they'll be replaced in place with the newer Canvas version.\n\ng1 darts vejl_løsn_js TXT 1.2 KB\n\ngk2 vejl_løsn_js TXT 1.2 KB\n\nGo back\n\nSync & Download 2 files",
+    "textLen": 824
+  },
+  "review": {
+    "courses": [
+      {
+        "course_id": "45899",
+        "categories": {
+          "updated_clean": {
+            "label": "keyboard_arrow_down\n\nUpdates Available",
+            "badge": "  (2 / 2 selected)",
+            "open": true,
+            "rowCount": 2,
+            "rows": [
+              {
+                "rowKey": "sync_row_upd_45899_1670371",
+                "checked": true,
+                "name": "g1 darts vejl_løsn_js",
+                "stem": "g1 darts vejl_løsn_js",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "g1 darts vejl_løsn_js TXT 1.2 KB"
+              },
+              {
+                "rowKey": "sync_row_upd_45899_1598721",
+                "checked": true,
+                "name": "gk2 vejl_løsn_js",
+                "stem": "gk2 vejl_løsn_js",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "gk2 vejl_løsn_js TXT 1.2 KB"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "summaryCards": [],
+    "seen": {
+      "categoryContainers": 1,
+      "syncRows": 2,
+      "ignoredRows": 0,
+      "expanders": 1
+    },
+    "pageText": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n0\nNew files\n2\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (all)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n131 files up to date\nkeyboard_arrow_down\n\nUpdates Available\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nYour local copies haven't been edited, so they'll be replaced in place with the newer Canvas version.\n\ng1 darts vejl_løsn_js TXT 1.2 KB\n\ngk2 vejl_løsn_js TXT 1.2 KB\n\nGo back\n\nSync & Download 2 files"
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "active",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "idle",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

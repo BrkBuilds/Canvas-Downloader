@@ -1,0 +1,110 @@
+{
+  "folder": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free1\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-08-05T22:43:21",
+  "applied": [
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    },
+    {
+      "kind": "readonly_target",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 4,
+  "expected_categories": {
+    "uptodate": 2,
+    "updated_clean": 2
+  },
+  "expected_untracked": [
+    "Uge 47 Forelæsning 11. Asynkron programmering og event handling/Øvelser_Kapitel11og15.md",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1 - mine noter 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1 - mine noter 0.txt",
+    "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/forelæsningsnoter 13 OO UML.docx"
+  ],
+  "expected_missing_rows": [
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [
+    "Uge 47 Forelæsning 11. Asynkron programmering og event handling/Øvelser_Kapitel11og15.md",
+    "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/forelæsningsnoter 13 OO UML.docx"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 133,
+    "files": 116
+  },
+  "after": {
+    "rows": 131,
+    "files": 116
+  },
+  "fixtures": [
+    {
+      "label": "renamed-row-dropped:Debug - shop - 1 - mine noter 0.txt",
+      "kind": "renamed_row_dropped",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1 - mine noter 0.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1 - mine noter 0.txt",
+      "match_name": "Debug - shop - 1.txt",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1700483,
+      "original_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Debug - Inventory - 1 - mine noter 1.txt",
+      "kind": "renamed_row_dropped",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1 - mine noter 1.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1 - mine noter 1.txt",
+      "match_name": "Debug - Inventory - 1.txt",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1700478,
+      "original_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "readonly:Øvelser_Kapitel11og15.md",
+      "kind": "readonly_target",
+      "path": "Uge 47 Forelæsning 11. Asynkron programmering og event handling/Øvelser_Kapitel11og15.md",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Uge 47 Forelæsning 11. Asynkron programmering og event handling/Øvelser_Kapitel11og15.md",
+      "match_name": "Øvelser_Kapitel11og15.md",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1696760,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "readonly:forelæsningsnoter 13 OO UML.docx",
+      "kind": "readonly_target",
+      "path": "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/forelæsningsnoter 13 OO UML.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/forelæsningsnoter 13 OO UML.docx",
+      "match_name": "forelæsningsnoter 13 OO UML.docx",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1769666,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "folder": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-08-05T22:39:33",
+  "applied": [
+    {
+      "kind": "edited_update",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 4,
+  "expected_categories": {
+    "updated_modified": 2,
+    "uptodate": 2
+  },
+  "expected_untracked": [
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1 - mine noter 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1 - mine noter 0.txt"
+  ],
+  "expected_missing_rows": [
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt"
+  ],
+  "expected_md5_drift": [
+    "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+    "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt"
+  ],
+  "expected_size_drift": [
+    "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+    "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 133,
+    "files": 116
+  },
+  "after": {
+    "rows": 131,
+    "files": 116
+  },
+  "fixtures": [
+    {
+      "label": "edited-update:g1 darts vejl_løsn_js.txt",
+      "kind": "edited_update",
+      "path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "match_name": "g1 darts vejl_løsn_js.txt",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1670371,
+      "original_path": "",
+      "edited_md5": "73678d0d3ded9026f35589eb81843b04",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:gk2 vejl_løsn_js.txt",
+      "kind": "edited_update",
+      "path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "match_name": "gk2 vejl_løsn_js.txt",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1598721,
+      "original_path": "",
+      "edited_md5": "50199ba066b567be8aa7c32c24ffdbc5",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Debug - shop - 1 - mine noter 0.txt",
+      "kind": "renamed_row_dropped",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1 - mine noter 0.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1 - mine noter 0.txt",
+      "match_name": "Debug - shop - 1.txt",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1700483,
+      "original_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Debug - Inventory - 1 - mine noter 1.txt",
+      "kind": "renamed_row_dropped",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1 - mine noter 1.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1 - mine noter 1.txt",
+      "match_name": "Debug - Inventory - 1.txt",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1700478,
+      "original_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

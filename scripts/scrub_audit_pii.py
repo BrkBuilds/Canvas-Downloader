@@ -61,12 +61,21 @@ def tracked_audit_files() -> list[Path]:
     ignore rules can then never disagree about what is in scope.
     """
     out: list[Path] = []
-    for args in (["git", "ls-files", "_audit_runs"],
-                 ["git", "ls-files", "--others", "--exclude-standard", "_audit_runs"]):
-        r = subprocess.run(args, cwd=REPO, capture_output=True, text=True)
-        for line in r.stdout.splitlines():
-            p = REPO / line.strip()
-            if line.strip() and p.suffix.lower() in SUFFIXES and p.is_file():
+    for args in (["git", "ls-files", "-z", "_audit_runs"],
+                 ["git", "ls-files", "-z", "--others", "--exclude-standard",
+                  "_audit_runs"]):
+        # -z, and bytes rather than text=True. WITHOUT it git C-quotes any path
+        # holding a non-ASCII byte - "...sm\303\245..." - Path() then names a
+        # file that does not exist, is_file() answers False, and the file is
+        # dropped in SILENCE. It fails in the worst available direction: the
+        # scrubber reports CLEAN for a file it never opened. Every Danish course
+        # name in this operator's runs hits it (46 files measured 2026-08-21).
+        r = subprocess.run(args, cwd=REPO, capture_output=True)
+        for raw in r.stdout.split(b"\0"):
+            if not raw:
+                continue
+            p = REPO / raw.decode("utf-8")
+            if p.suffix.lower() in SUFFIXES and p.is_file():
                 out.append(p)
     return sorted(set(out))
 

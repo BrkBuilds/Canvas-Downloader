@@ -1,0 +1,19 @@
+
+=== audit app start 2026-08-08 17:06:23 port=8795 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8795
+  Network URL: http://10.60.12.191:8795
+  External URL: http://195.167.81.50:8795
+
+
+=== audit app start 2026-08-08 18:10:06 port=8795 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8795
+  Network URL: http://10.60.12.191:8795
+  External URL: http://195.167.81.50:8795
+
+Keyring get_password timed out (5s). Environment might be headless or restricted. Falling back.

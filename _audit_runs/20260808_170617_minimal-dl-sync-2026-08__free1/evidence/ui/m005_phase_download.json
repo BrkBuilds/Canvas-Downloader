@@ -1,0 +1,120 @@
+{
+  "name": "m005_phase_download",
+  "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08__free1\\evidence\\screenshots\\m005_phase_download.png",
+  "captured": "2026-08-08 17:46:54",
+  "screen": {
+    "url": "http://127.0.0.1:8820/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Panopto Recordings",
+      "BINT 1st semester (LA E25 BINTS1SEMU)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_active_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cancel_panopto_btn",
+        "text": "Cancel",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nPanopto Recordings\n\nSEARCHING FOR PANOPTO RECORDINGS\n\nBINT 1st semester (LA E25 BINTS1SEMU)\nSearching…\nCOURSES SCANNED\n0 / 1\nRECORDINGS FOUND\n0\nELAPSED\n00:00\nSEARCHING\nScanning BINT 1st semester (LA E25 BINTS1SEMU) - Course recordings\nSCANNING · BINT 1ST SEMESTER (LA E25 BINTS1SEMU)\n[BINT 1st semester (LA E25 BINTS1SEMU)] Scanning remaining files...\nCourse description including examination rules\n\nCancel",
+    "textLen": 491
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "active",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": true,
+    "header": "BINT 1st semester (LA E25 BINTS1SEMU)",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "COURSES SCANNED | 0 / 1 | RECORDINGS FOUND | 0 | ELAPSED | 00:00",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": "SEARCHING FOR PANOPTO RECORDINGS\n\nBINT 1st semester (LA E25 BINTS1SEMU)\nSearching…\nCOURSES SCANNED\n0 / 1\nRECORDINGS FOUND\n0\nELAPSED\n00:00\nSEARCHING\nScanning BINT 1st semester (LA E25 BINTS1SEMU) - Course recordings\nSCANNING · BINT 1ST SEMESTER (LA E25 BINTS1SEMU)\n[BINT 1st semester (LA E25 BINTS1SEMU)] Scanning remaining files...\nCourse description including examination rules"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

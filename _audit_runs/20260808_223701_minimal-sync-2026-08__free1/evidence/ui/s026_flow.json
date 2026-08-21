@@ -1,0 +1,156 @@
+{
+  "name": "s026",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "2\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (none)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n131 files up to date\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 0 files",
+      "waited_s": 13.5
+    },
+    "capture": "s026_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_updmod_45899"
+    ],
+    "capture": "s026_review",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\screenshots\\s026_review.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\ui\\s026_review.json",
+    "textLen": 964,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": false,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync Success\n1\nCOURSE UPDATED\n2\nFILES DOWNLOADED\n2.4\nKB DOWNLOADED",
+      "waited_s": 5.4
+    },
+    "capture": "s026_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "22:52:31",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "22:52:50",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "2\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (none)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n131 files up to date\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 0 files",
+        "waited_s": 13.5
+      },
+      "capture": "s026_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "22:52:51",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_updmod_45899"
+      ],
+      "capture": "s026_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\screenshots\\s026_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\ui\\s026_review.json",
+      "textLen": 965,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:52:54",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "22:52:55",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_updmod_45899"
+      ],
+      "capture": "s026_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\screenshots\\s026_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\ui\\s026_review.json",
+      "textLen": 964,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:53:04",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": false,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync Success\n1\nCOURSE UPDATED\n2\nFILES DOWNLOADED\n2.4\nKB DOWNLOADED",
+        "waited_s": 5.4
+      },
+      "capture": "s026_complete",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "folder": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free1\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-08-05T22:24:52",
+  "applied": [
+    {
+      "kind": "duplicate_copy",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {},
+  "expected_untracked": [
+    "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js - copy for exam.txt",
+    "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js - copy for exam.txt"
+  ],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 133,
+    "files": 116
+  },
+  "after": {
+    "rows": 133,
+    "files": 118
+  },
+  "fixtures": [
+    {
+      "label": "duplicate:g1 darts vejl_løsn_js - copy for exam.txt",
+      "kind": "duplicate_copy",
+      "path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js - copy for exam.txt",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js - copy for exam.txt",
+      "match_name": "g1 darts vejl_løsn_js - copy for exam.txt",
+      "why": "A byte-identical copy the student made. The original stays claimed by its row; the copy must remain unclaimed and must never be counted as Canvas content or offered for anything.",
+      "canvas_file_id": 1670371,
+      "original_path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "duplicate:gk2 vejl_løsn_js - copy for exam.txt",
+      "kind": "duplicate_copy",
+      "path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js - copy for exam.txt",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js - copy for exam.txt",
+      "match_name": "gk2 vejl_løsn_js - copy for exam.txt",
+      "why": "A byte-identical copy the student made. The original stays claimed by its row; the copy must remain unclaimed and must never be counted as Canvas content or offered for anything.",
+      "canvas_file_id": 1598721,
+      "original_path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

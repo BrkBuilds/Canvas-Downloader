@@ -1,0 +1,120 @@
+{
+  "name": "m025_phase_download",
+  "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_154112_matrix-dl__free1\\evidence\\screenshots\\m025_phase_download.png",
+  "captured": "2026-08-05 18:56:08",
+  "screen": {
+    "url": "http://127.0.0.1:8810/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Downloading...",
+      "Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_active_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cancel_download_btn",
+        "text": "Cancel Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownloading...\n\nDOWNLOADING\n\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n0%\nDOWNLOADED\n0.0 / 1346.5 MB\nSPEED\n0.0 MB/s\nFILES\n1 / 116\nTIME REMAINING\n~06:33\nDOWNLOADING\nCourse description including examination rules\nCourse description including examination rules\n\nCancel Download",
+    "textLen": 395
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "active",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": true,
+    "header": "Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "DOWNLOADED | 0.0 / 1346.5 MB | SPEED | 0.0 MB/s | FILES | 1 / 116 | TIME REMAINING | ~06:33",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": "DOWNLOADING\n\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n0%\nDOWNLOADED\n0.0 / 1346.5 MB\nSPEED\n0.0 MB/s\nFILES\n1 / 116\nTIME REMAINING\n~06:33\nDOWNLOADING\nCourse description including examination rules\nCourse description including examination rules"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

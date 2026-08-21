@@ -1,0 +1,66 @@
+{
+  "folder": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-08-05T22:20:34",
+  "applied": [
+    {
+      "kind": "edited_update",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "updated_modified": 2
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [
+    "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+    "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt"
+  ],
+  "expected_size_drift": [
+    "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+    "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 133,
+    "files": 116
+  },
+  "after": {
+    "rows": 133,
+    "files": 116
+  },
+  "fixtures": [
+    {
+      "label": "edited-update:g1 darts vejl_løsn_js.txt",
+      "kind": "edited_update",
+      "path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "match_name": "g1 darts vejl_løsn_js.txt",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1670371,
+      "original_path": "",
+      "edited_md5": "73678d0d3ded9026f35589eb81843b04",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:gk2 vejl_løsn_js.txt",
+      "kind": "edited_update",
+      "path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "match_name": "gk2 vejl_løsn_js.txt",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1598721,
+      "original_path": "",
+      "edited_md5": "50199ba066b567be8aa7c32c24ffdbc5",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

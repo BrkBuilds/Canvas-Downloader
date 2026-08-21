@@ -1,0 +1,60 @@
+
+=== audit app start 2026-08-05 15:49:15 port=8800 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8800
+  Network URL: http://10.60.12.150:8800
+  External URL: http://195.167.81.50:8800
+
+
+=== audit app start 2026-08-05 16:03:42 port=8800 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8800
+  Network URL: http://10.60.12.150:8800
+  External URL: http://195.167.81.50:8800
+
+
+=== audit app start 2026-08-05 16:09:43 port=8800 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8800
+  Network URL: http://10.60.12.150:8800
+  External URL: http://195.167.81.50:8800
+
+
+=== audit app start 2026-08-05 16:16:45 port=8800 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8800
+  Network URL: http://10.60.12.150:8800
+  External URL: http://195.167.81.50:8800
+
+
+=== audit app start 2026-08-05 16:21:57 port=8800 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8800
+  Network URL: http://10.60.12.150:8800
+  External URL: http://195.167.81.50:8800
+
+
+=== audit app start 2026-08-05 17:21:22 port=8800 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8800
+  Network URL: http://10.60.12.150:8800
+  External URL: http://195.167.81.50:8800
+
+C:\Users\birkl\AppData\Local\Programs\Python\Python313\Lib\site-packages\openpyxl\reader\drawings.py:67: UserWarning: wmf image format is not supported so the image is being dropped
+  warn(msg)
+C:\Users\birkl\AppData\Local\Programs\Python\Python313\Lib\site-packages\openpyxl\reader\drawings.py:33: UserWarning: DrawingML support is incomplete and limited to charts and images only. Shapes and drawings will be lost.
+  warn("DrawingML support is incomplete and limited to charts and images only. Shapes and drawings will be lost.")
+C:\Users\birkl\AppData\Local\Programs\Python\Python313\Lib\site-packages\openpyxl\worksheet\_reader.py:329: UserWarning: Unknown extension is not supported and will be removed
+  warn(msg)

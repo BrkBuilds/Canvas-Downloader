@@ -1,0 +1,708 @@
+--- Download: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) (ID: 43665) Mode: modules ---
+==================================================
+[2026-08-05 19:01:39.086] Save Dir: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads
+[2026-08-05 19:01:39.088] Filter: all | Concurrency: 5 | Max file size: disabled | Estimated payload: 1391 MB
+[2026-08-05 19:01:39.090] Canvas Content: [none] | isolate=no
+[2026-08-05 19:01:39.091] Post-processing: [code, excel]
+[2026-08-05 19:01:40.173] Processing Module: Course description including examination rules (ID: 297522)
+[2026-08-05 19:01:40.543] Found 2 items in module 'Course description including examination rules'
+[2026-08-05 19:01:40.546]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-05 19:01:40.570] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO2063U.aspx) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Course description including examination rules\Course description including examination rules.url
+[2026-08-05 19:01:40.625]   - Item: Undervisningsplan VØS (1) 1. semester E25.pdf (Type: File)
+[2026-08-05 19:01:40.979] Module file tracked: Undervisningsplan VØS (1) 1. semester E25.pdf (ID: 1568831)
+[2026-08-05 19:01:40.981] Processing Module: Test mm. (ID: 306033)
+[2026-08-05 19:01:41.238] Found 3 items in module 'Test mm.'
+[2026-08-05 19:01:41.240]   - Item: Introduktion til Managerial Economics (Type: Quiz)
+[2026-08-05 19:01:41.241]   - Item: https://cbstest.dk/app/ (Type: ExternalUrl)
+[2026-08-05 19:01:41.259] Creating Link: https://cbstest.dk/app/ (https://cbstest.dk/app/) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Test mm\httpscbstest.dkapp.url
+[2026-08-05 19:01:41.327]   - Item: VØS1matquiz-02.txt (Type: File)
+[2026-08-05 19:01:41.575] Module file tracked: VØS1matquiz-02.txt (ID: 1633225)
+[2026-08-05 19:01:41.576] Processing Module: Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel (ID: 306034)
+[2026-08-05 19:01:42.103] Found 4 items in module 'Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel'
+[2026-08-05 19:01:42.105]   - Item: opgavesæt.nr0 (pre-matematik).docx (Type: File)
+[2026-08-05 19:01:42.409] Module file tracked: opgavesæt.nr0 (pre-matematik).docx (ID: 1568616)
+[2026-08-05 19:01:42.411]   - Item: opgavesæt.nr0 (pre-matematik)- vejl..docx (Type: File)
+[2026-08-05 19:01:42.752] Module file tracked: opgavesæt.nr0 (pre-matematik)- vejl..docx (ID: 1568731)
+[2026-08-05 19:01:42.754]   - Item: Paraplyer - matematiske sammenhænge.docx (Type: File)
+[2026-08-05 19:01:43.060] Module file tracked: Paraplyer - matematiske sammenhænge.docx (ID: 1568712)
+[2026-08-05 19:01:43.062]   - Item: Hjælp til at udlede prisafsætningsfunktionen.pdf (Type: File)
+[2026-08-05 19:01:43.270] Module file tracked: Hjælp til at udlede prisafsætningsfunktionen.pdf (ID: 1568707)
+[2026-08-05 19:01:43.272] Processing Module: Module 1 - Uge 36 1xFO (LET belastning) (ID: 306035)
+[2026-08-05 19:01:43.517] Found 4 items in module 'Module 1 - Uge 36 1xFO (LET belastning)'
+[2026-08-05 19:01:43.521]   - Item: F1-A -intro-1.ppt (Type: File)
+[2026-08-05 19:01:43.799] Module file tracked: F1-A -intro-1.ppt (ID: 1568580)
+[2026-08-05 19:01:43.801]   - Item: F1-B . maksimeringsprincippet-1.pptx (Type: File)
+[2026-08-05 19:01:44.028] Module file tracked: F1-B . maksimeringsprincippet-1.pptx (ID: 1568667)
+[2026-08-05 19:01:44.030]   - Item: Miniøvelse - flycosts - opgaven.xlsx (Type: File)
+[2026-08-05 19:01:44.241] Module file tracked: Miniøvelse - flycosts - opgaven.xlsx (ID: 1568796)
+[2026-08-05 19:01:44.243]   - Item: Miniøvelse - flycosts - VL.xlsx (Type: File)
+[2026-08-05 19:01:44.512] Module file tracked: Miniøvelse - flycosts - VL.xlsx (ID: 1568721)
+[2026-08-05 19:01:44.514] Processing Module: Module 2 - Uge 37 2xFO, 1xØV (Middel belastning) (ID: 306036)
+[2026-08-05 19:01:44.860] Found 11 items in module 'Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)'
+[2026-08-05 19:01:44.864]   - Item: F1. Udbud-efterspørgsel.pptx (Type: File)
+[2026-08-05 19:01:45.081] Module file tracked: F1. Udbud-efterspørgsel.pptx (ID: 1568741)
+[2026-08-05 19:01:45.084]   - Item: F.2 Elasticitet.pptx (Type: File)
+[2026-08-05 19:01:45.324] Module file tracked: F.2 Elasticitet.pptx (ID: 1568780)
+[2026-08-05 19:01:45.326]   - Item: Elasticitet oversigt.jpg (Type: File)
+[2026-08-05 19:01:45.558] Module file tracked: Elasticitet oversigt.jpg (ID: 1568766)
+[2026-08-05 19:01:45.560]   - Item: Elasticitet tegning.jpg (Type: File)
+[2026-08-05 19:01:45.867] Module file tracked: Elasticitet tegning.jpg (ID: 1568736)
+[2026-08-05 19:01:45.869]   - Item: optimum.xlsx (Type: File)
+[2026-08-05 19:01:46.066] Module file tracked: optimium (1).xlsx (ID: 1568668)
+[2026-08-05 19:01:46.067]   - Item: Øvelse 1 (efterspørgselsteori) (Type: File)
+[2026-08-05 19:01:46.271] Module file tracked: opgavesæt nr.1(efterspørgselsteori).docx (ID: 1568621)
+[2026-08-05 19:01:46.273]   - Item: Øvelse 1 - VL (Type: File)
+[2026-08-05 19:01:46.640] Module file tracked: vejl opgavesæt nr. 1 (2).xlsx (ID: 1634428)
+[2026-08-05 19:01:46.642]   - Item: OmkostningerAfsætning - Ekstra - LØSNING.xlsx (Type: File)
+[2026-08-05 19:01:46.913] Module file tracked: OmkostningerAfsætning - Ekstra - LØSNING.xlsx (ID: 1568700)
+[2026-08-05 19:01:46.914]   - Item: OmkostningerAfsætning - Ekstra - OPGAVEN.xlsx (Type: File)
+[2026-08-05 19:01:47.127] Module file tracked: OmkostningerAfsætning - Ekstra - OPGAVEN.xlsx (ID: 1568792)
+[2026-08-05 19:01:47.129]   - Item: SimpelOptimeringogElasticitet-eksempel.xlsx (Type: File)
+[2026-08-05 19:01:47.337] Module file tracked: SimpelOptimeringogElasticitet-eksempel.xlsx (ID: 1632625)
+[2026-08-05 19:01:47.339]   - Item: SimpelOptimeringogElasticitet-eksempelVL.xlsx (Type: File)
+[2026-08-05 19:01:47.555] Module file tracked: SimpelOptimeringogElasticitet-eksempelVL.xlsx (ID: 1632626)
+[2026-08-05 19:01:47.558] Processing Module: Module 3 - Uge 38 2xFO, 1xØV (Svær belastning) (ID: 306037)
+[2026-08-05 19:01:47.875] Found 9 items in module 'Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)'
+[2026-08-05 19:01:47.877]   - Item: F3.Grundlæggende produktionstek -Nr1.ppt (Type: File)
+[2026-08-05 19:01:48.143] Module file tracked: F3.Grundlæggende produktionstek -Nr1.ppt (ID: 1568757)
+[2026-08-05 19:01:48.145]   - Item: F4. Isokvanter og MRTS-Nr2.pptx (Type: File)
+[2026-08-05 19:01:48.352] Module file tracked: F4. Isokvanter og MRTS-Nr2.pptx (ID: 1639544)
+[2026-08-05 19:01:48.354]   - Item: F6. isokostlinjen-nr.3.pptx (Type: File)
+[2026-08-05 19:01:48.566] Module file tracked: F6. isokostlinjen-nr.3.pptx (ID: 1568651)
+[2026-08-05 19:01:48.568]   - Item: Omkostningsminimering Nr.4.pptx (Type: File)
+[2026-08-05 19:01:48.787] Module file tracked: Omkostningsminimering Nr.4.pptx (ID: 1568641)
+[2026-08-05 19:01:48.789]   - Item: Øvelse 2 (Type: File)
+[2026-08-05 19:01:48.996] Module file tracked: Opgavesæt nr. 2.docx (ID: 1568633)
+[2026-08-05 19:01:48.998]   - Item: Øvelse 2 - VL.xlsx (Type: File)
+[2026-08-05 19:01:49.209] Module file tracked: Øvelse 2 - VL.xlsx (ID: 1568809)
+[2026-08-05 19:01:49.211]   - Item: DTR,DMR,DAR - Opgave.xlsx (Type: File)
+[2026-08-05 19:01:49.427] Module file tracked: DTR,DMR,DAR - Opgave.xlsx (ID: 1568710)
+[2026-08-05 19:01:49.430]   - Item: DTR,DMR,DAR - VL.xlsx (Type: File)
+[2026-08-05 19:01:49.639] Module file tracked: DTR,DMR,DAR - VL.xlsx (ID: 1568723)
+[2026-08-05 19:01:49.640]   - Item: Productionanalysis - Eksempel.xlsx (Type: File)
+[2026-08-05 19:01:49.845] Module file tracked: Productionanalysis - Eksempel.xlsx (ID: 1568795)
+[2026-08-05 19:01:49.847] Processing Module: Module 4 - Uge 39 2xFO, 1xØV (Svær belastning) (ID: 306038)
+[2026-08-05 19:01:50.206] Found 10 items in module 'Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)'
+[2026-08-05 19:01:50.207]   - Item: Skalaafkast 5.pptx (Type: File)
+[2026-08-05 19:01:50.460] Module file tracked: Skalaafkast nr.5.pptx (ID: 1568657)
+[2026-08-05 19:01:50.463]   - Item: Eksempel CobbDouglas - Optimering, Ekspansion, Omk.xlsx (Type: File)
+[2026-08-05 19:01:50.840] Module file tracked: Eksempel CobbDouglas - Optimering, Ekspansion, Omk.xlsx (ID: 1568804)
+[2026-08-05 19:01:50.841]   - Item: omkostning1.pptx (Type: File)
+[2026-08-05 19:01:51.177] Module file tracked: omkostning1.pptx (ID: 1568717)
+[2026-08-05 19:01:51.178]   - Item: omkostning2.pptx (Type: File)
+[2026-08-05 19:01:51.392] Module file tracked: omkostning2.pptx (ID: 1568777)
+[2026-08-05 19:01:51.393]   - Item: omkostning3.pptx (Type: File)
+[2026-08-05 19:01:51.621] Module file tracked: omkostning3.pptx (ID: 1568808)
+[2026-08-05 19:01:51.623]   - Item: Breakevenmodel.xlsm (Type: File)
+[2026-08-05 19:01:51.857] Module file tracked: Breakevenmodel.xlsm (ID: 1568782)
+[2026-08-05 19:01:51.859]   - Item: Øvelse 3 (Type: File)
+[2026-08-05 19:01:52.088] Module file tracked: Opgavesæt 3.docx (ID: 1568630)
+[2026-08-05 19:01:52.089]   - Item: Øvelse 3 - VL.xls (Type: File)
+[2026-08-05 19:01:52.321] Module file tracked: Øvelse 3 - VL.xls (ID: 1652883)
+[2026-08-05 19:01:52.323]   - Item: Øvelse 3 - VL spg 7.xlsx (Type: File)
+[2026-08-05 19:01:52.542] Module file tracked: Øvelse 3 - VL spg 7.xlsx (ID: 1652861)
+[2026-08-05 19:01:52.544]   - Item: Øvelse 3 - VL (WORD versionen, brug hellere excel versionen).docx (Type: File)
+[2026-08-05 19:01:52.760] Module file tracked: Opgavesæt 3 - VL (WORD versionen).docx (ID: 1568768)
+[2026-08-05 19:01:52.762] Processing Module: Module 5 - Uge 40 1xFO, 1xØV (Middel belastning) (ID: 306039)
+[2026-08-05 19:01:53.076] Found 10 items in module 'Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)'
+[2026-08-05 19:01:53.078]   - Item: Lineær programmering.pptx (Type: File)
+[2026-08-05 19:01:53.303] Module file tracked: Lineær programmering.pptx (ID: 1568805)
+[2026-08-05 19:01:53.305]   - Item: Øvelse forelæsningen - Opgaven formuleret i Word.docx (Type: File)
+[2026-08-05 19:01:53.529] Module file tracked: Øvelse forelæsningen - Opgaven formuleret i Word.docx (ID: 1568639)
+[2026-08-05 19:01:53.531]   - Item: Øvelse forelæsning - Opgaven formuleret i Excel.xlsx (Type: File)
+[2026-08-05 19:01:53.751] Module file tracked: Øvelse forelæsning - Opgaven formuleret i Excel.xlsx (ID: 1568800)
+[2026-08-05 19:01:53.753]   - Item: Øvelse forelæsning - Vejl løs.xlsx (Type: File)
+[2026-08-05 19:01:53.976] Module file tracked: Øvelse forelæsning - Vejl løs.xlsx (ID: 1568763)
+[2026-08-05 19:01:53.977]   - Item: LP eksempel - Opgaven.xlsx (Type: File)
+[2026-08-05 19:01:54.216] Module file tracked: LP eksempel - Opgaven.xlsx (ID: 1568779)
+[2026-08-05 19:01:54.217]   - Item: LP eksempel - VL.xlsx (Type: File)
+[2026-08-05 19:01:54.420] Module file tracked: LP eksempel - VL.xlsx (ID: 1568778)
+[2026-08-05 19:01:54.422]   - Item: Øvelse 4 (Type: File)
+[2026-08-05 19:01:54.623] Module file tracked: opgavesæt nr. 4.docx (ID: 1568640)
+[2026-08-05 19:01:54.625]   - Item: Øvelse 4 - VL.xlsx (Type: File)
+[2026-08-05 19:01:54.837] Module file tracked: Øvelse 4 - VL.xlsx (ID: 1568687)
+[2026-08-05 19:01:54.838]   - Item: Øvelse 4 - VL (Wordversionen).docx (Type: File)
+[2026-08-05 19:01:55.030] Module file tracked: Øvelse 4 - VL (Wordversionen).docx (ID: 1568772)
+[2026-08-05 19:01:55.032]   - Item: Linear Programming (note  ) (Type: File)
+[2026-08-05 19:01:55.234] Module file tracked: Linear Programming (note  ).pdf (ID: 1568784)
+[2026-08-05 19:01:55.236] Processing Module: Module 6 - Uge 41 1xFO, 1xØV (Middel belastning) (ID: 306040)
+[2026-08-05 19:01:55.541] Found 7 items in module 'Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)'
+[2026-08-05 19:01:55.542]   - Item: Opsummering.pptx (Type: File)
+[2026-08-05 19:01:55.784] Module file tracked: Opsummering.pptx (ID: 1568785)
+[2026-08-05 19:01:55.785]   - Item: Øvelse 5.docx (Type: File)
+[2026-08-05 19:01:56.032] Module file tracked: Øvelse 5.docx (ID: 1568810)
+[2026-08-05 19:01:56.033]   - Item: Øvelse 5 - VL (Type: File)
+[2026-08-05 19:01:56.260] Module file tracked: Opgavesæt 5 - VL (Excel).xlsx (ID: 1568811)
+[2026-08-05 19:01:56.262]   - Item: Øvelse 5 - VL (Wordversionen).docx (Type: File)
+[2026-08-05 19:01:56.469] Module file tracked: Opgavesæt 5 - VL (Wordversionen).docx (ID: 1568776)
+[2026-08-05 19:01:56.471]   - Item: Øvelse 5 - VL (Opgave 5).xlsx (Type: File)
+[2026-08-05 19:01:56.701] Module file tracked: Opgavesæt 5 - VL (Opgave 5).xlsx (ID: 1568694)
+[2026-08-05 19:01:56.703]   - Item: minitest.docx (Type: File)
+[2026-08-05 19:01:57.010] Module file tracked: minitest.docx (ID: 1568660)
+[2026-08-05 19:01:57.013]   - Item: minitest -VL.docx (Type: File)
+[2026-08-05 19:01:57.262] Module file tracked: minitest -VL.docx (ID: 1568761)
+[2026-08-05 19:01:57.263] Processing Module: Module 7 - Uge 43 1xFO, 1xØV (Let belastning) (ID: 306041)
+[2026-08-05 19:01:57.472] Found 4 items in module 'Module 7 - Uge 43 1xFO, 1xØV (Let belastning)'
+[2026-08-05 19:01:57.474]   - Item: FK.ppt (Type: File)
+[2026-08-05 19:01:57.684] Module file tracked: FK.ppt (ID: 1568647)
+[2026-08-05 19:01:57.685]   - Item: Øvelse 6 (Type: File)
+[2026-08-05 19:01:57.888] Module file tracked: øvesæt6-fk-1.docx (ID: 1568775)
+[2026-08-05 19:01:57.889]   - Item: Øvelse 6 - VL (Wordversion) (Type: File)
+[2026-08-05 19:01:58.105] Module file tracked: øveopgave6-vejl.docx (ID: 1568806)
+[2026-08-05 19:01:58.106]   - Item: Øvelse 6 - VL (xls version) (Type: File)
+[2026-08-05 19:01:58.317] Module file tracked: Opgavesæt 6-vejl.xlsx (ID: 1568807)
+[2026-08-05 19:01:58.318] Processing Module: Module 8 - Uge 44 1xFO, 1xØV (Middel belastning) (ID: 306042)
+[2026-08-05 19:01:58.713] Found 6 items in module 'Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)'
+[2026-08-05 19:01:58.714]   - Item: CS og PS.ppt (Type: File)
+[2026-08-05 19:01:59.490] Module file tracked: CS og PS.ppt (ID: 1568659)
+[2026-08-05 19:01:59.492]   - Item: opgave CS og PS.docx (Type: File)
+[2026-08-05 19:01:59.690] Module file tracked: opgave CS og PS.docx (ID: 1568625)
+[2026-08-05 19:01:59.692]   - Item: opgave CS og PS - med VL.docx (Type: File)
+[2026-08-05 19:01:59.900] Module file tracked: opgave CS og PS - med VL.docx (ID: 1568689)
+[2026-08-05 19:01:59.902]   - Item: CS og PS - VL.xlsx (Type: File)
+[2026-08-05 19:02:00.107] Module file tracked: CS og PS - VL.xlsx (ID: 1568693)
+[2026-08-05 19:02:00.108]   - Item: Øvelse 7.docx (Type: File)
+[2026-08-05 19:02:00.321] Module file tracked: Øvelse 7.docx (ID: 1568581)
+[2026-08-05 19:02:00.322]   - Item: Øvelse 7 VL.xlsx (Type: File)
+[2026-08-05 19:02:00.553] Module file tracked: Øvelse 7 VL.xlsx (ID: 1568652)
+[2026-08-05 19:02:00.554] Processing Module: Module 9 - Uge 45 1xFO, 1xØV (Middel belastning) (ID: 306043)
+[2026-08-05 19:02:00.788] Found 10 items in module 'Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)'
+[2026-08-05 19:02:00.789]   - Item: Kap.12 monopol.ppt (Type: File)
+[2026-08-05 19:02:00.995] Module file tracked: Kap.12 monopol.ppt (ID: 1568819)
+[2026-08-05 19:02:00.996]   - Item: Kap. 13a -ME monopolistisk konkurrence.ppt (Type: File)
+[2026-08-05 19:02:01.209] Module file tracked: Kap. 13a -ME monopolistisk konkurrence.ppt (ID: 1568767)
+[2026-08-05 19:02:01.210]   - Item: FO opgave A (Type: File)
+[2026-08-05 19:02:01.428] Module file tracked: ForelæsningsopgaveA.docx (ID: 1568769)
+[2026-08-05 19:02:01.430]   - Item: FO opgave A - VL (Type: File)
+[2026-08-05 19:02:01.628] Module file tracked: Losning FO-opgaveA.xlsx (ID: 1568696)
+[2026-08-05 19:02:01.630]   - Item: FO opgave B (Type: File)
+[2026-08-05 19:02:01.955] Module file tracked: FO-opgave.docx (ID: 1568786)
+[2026-08-05 19:02:01.956]   - Item: FO opgave B - VL (Type: File)
+[2026-08-05 19:02:02.172] Module file tracked: Losning-FO.Opgave.docx (ID: 1568817)
+[2026-08-05 19:02:02.173]   - Item: Monopolistisk konkurrence, effekt af markedsføring.xlsx (Type: File)
+[2026-08-05 19:02:02.375] Module file tracked: Monopolistisk konkurrence, effekt af markedsføring.xlsx (ID: 1568818)
+[2026-08-05 19:02:02.376]   - Item: Øvelse 8 (Type: File)
+[2026-08-05 19:02:02.586] Module file tracked: øvesæt nr. 8.docx (ID: 1568695)
+[2026-08-05 19:02:02.587]   - Item: Øvelse 8 - VL (opg6).docx (Type: File)
+[2026-08-05 19:02:02.806] Module file tracked: Øvelse 8 - VL (opg6).docx (ID: 1568697)
+[2026-08-05 19:02:02.807]   - Item: Øvelse 8 - VL (NY) (Type: File)
+[2026-08-05 19:02:03.013] Module file tracked: Vejl.-løsning-opg.sæt-8_NYESTE.xlsx (ID: 1568816)
+[2026-08-05 19:02:03.014] Processing Module: Module 10 - Uge 46 1xFO, 1xØV (Svær belastning) (ID: 306044)
+[2026-08-05 19:02:03.245] Found 6 items in module 'Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)'
+[2026-08-05 19:02:03.246]   - Item: Kap. 13b -ME oligopolmodeller.ppt (Type: File)
+[2026-08-05 19:02:03.443] Module file tracked: Kap. 13b -ME oligopolmodeller.ppt (ID: 1568656)
+[2026-08-05 19:02:03.444]   - Item: Optimeringsmodeller-samlet-kogebog v2.pptx (Type: File)
+[2026-08-05 19:02:03.655] Module file tracked: Optimeringsmodeller-samlet-kogebog v2.pptx (ID: 1568650)
+[2026-08-05 19:02:03.657]   - Item: Øvelse 9 (Type: File)
+[2026-08-05 19:02:03.888] Module file tracked: øvesæt nr. 9.docx (ID: 1568655)
+[2026-08-05 19:02:03.889]   - Item: Øvelse 9 - VL.xlsx (Type: File)
+[2026-08-05 19:02:04.209] Module file tracked: Øvelse 9 - VL.xlsx (ID: 1568783)
+[2026-08-05 19:02:04.211]   - Item: Øvelse 9 - VL (Wordversion) (Type: File)
+[2026-08-05 19:02:04.428] Module file tracked: øvesæt nr. 9 vejl. løsning.docx (ID: 1568781)
+[2026-08-05 19:02:04.429]   - Item: Oligopol (Knæk Afs) eksempel.xls (Type: File)
+[2026-08-05 19:02:04.676] Module file tracked: Oligopol (Knæk Afs) eksempel.xls (ID: 1568820)
+[2026-08-05 19:02:04.678] Processing Module: Module 11 - Uge 47 1xFO, 1xØV (Middel belastning) (ID: 306045)
+[2026-08-05 19:02:04.999] Found 5 items in module 'Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)'
+[2026-08-05 19:02:05.000]   - Item: Kap 15 Pricing strategies.ppt (Type: File)
+[2026-08-05 19:02:05.212] Module file tracked: Kap 15 Pricing strategies.ppt (ID: 1568661)
+[2026-08-05 19:02:05.213]   - Item: Priceleader-modellen-1.pptx (Type: File)
+[2026-08-05 19:02:05.416] Module file tracked: Priceleader-modellen-1.pptx (ID: 1568670)
+[2026-08-05 19:02:05.417]   - Item: Priceleader eksempel - TB.xlsx (Type: File)
+[2026-08-05 19:02:05.624] Module file tracked: Priceleader eksempel - TB.xlsx (ID: 1568703)
+[2026-08-05 19:02:05.625]   - Item: Øvelse 10 ufp.docx (Type: File)
+[2026-08-05 19:02:05.857] Module file tracked: Øvelse 10 ufp.docx (ID: 1568794)
+[2026-08-05 19:02:05.858]   - Item: øvesæt 10vejl_ufp.xlsx (Type: File)
+[2026-08-05 19:02:06.062] Module file tracked: øvesæt 10vejl_ufp.xlsx (ID: 1568793)
+[2026-08-05 19:02:06.063] Processing Module: Module 12 - Uge 48 1xFO, 1xØV (Svær belastning) (ID: 306046)
+[2026-08-05 19:02:06.299] Found 6 items in module 'Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)'
+[2026-08-05 19:02:06.300]   - Item: Kap.15 Pricing strategies nr.2.pptx (Type: File)
+[2026-08-05 19:02:06.513] Module file tracked: Kap.15 Pricing strategies nr.2.pptx (ID: 1699117)
+[2026-08-05 19:02:06.514]   - Item: Matematisk eksempel - til PPT.xlsx (Type: File)
+[2026-08-05 19:02:06.720] Module file tracked: Matematisk eksempel - til PPT.xlsx (ID: 1700137)
+[2026-08-05 19:02:06.722]   - Item: PrisDiffEks - TB.xlsx (Type: File)
+[2026-08-05 19:02:06.933] Module file tracked: PrisDiffEks - TB.xlsx (ID: 1568822)
+[2026-08-05 19:02:06.935]   - Item: øvesæt nr. 11.docx (Type: File)
+[2026-08-05 19:02:07.129] Module file tracked: øvesæt nr. 11.docx (ID: 1701729)
+[2026-08-05 19:02:07.130]   - Item: Øvelse 11 - VL  (1+4) (Type: File)
+[2026-08-05 19:02:07.325] Module file tracked: vejl sæt 11. (1 4).docx (ID: 1568664)
+[2026-08-05 19:02:07.326]   - Item: Øvelse 11 - VL (Type: File)
+[2026-08-05 19:02:07.536] Module file tracked: rettevejl. øvesæt 11_med vandretaddNYmed rettelse!!..xlsx (ID: 1568705)
+[2026-08-05 19:02:07.539] Processing Module: Ekstra træning (træning i gl. eksamensopgaver) (ID: 306047)
+[2026-08-05 19:02:07.880] Found 27 items in module 'Ekstra træning (træning i gl. eksamensopgaver)'
+[2026-08-05 19:02:07.882]   - Item: HAit reeksamen 2019 spg 1,2,4.docx (Type: File)
+[2026-08-05 19:02:08.080] Module file tracked: HAit reeksamen 2020.docx (ID: 1568801)
+[2026-08-05 19:02:08.081]   - Item: HAit reeksamen 2019 - VL.xlsx (Type: File)
+[2026-08-05 19:02:08.297] Module file tracked: HAit reeksamen 2020 - VL.xlsx (ID: 1568677)
+[2026-08-05 19:02:08.299]   - Item: Ekstra opgaver1.docx (ikke spg 4) (Type: File)
+[2026-08-05 19:02:08.525] Module file tracked: ekstra opgaver1.docx (ID: 1568678)
+[2026-08-05 19:02:08.526]   - Item: Ekstraopgaver 1 - VL.xlsx (Type: File)
+[2026-08-05 19:02:08.730] Module file tracked: ekstraopgave 1 - VL.xlsx (ID: 1568676)
+[2026-08-05 19:02:08.732]   - Item: HAit 2020 ORD opgave (VL findes ikke til denne opg.) (Type: File)
+[2026-08-05 19:02:08.938] Module file tracked: HAit 2020 ORD opgave.docx (ID: 1568790)
+[2026-08-05 19:02:08.939]   - Item: HAit reeksamen 2020 (1).docx (Type: File)
+[2026-08-05 19:02:09.145] Module file tracked: HAit reeksamen 2020 (1).docx (ID: 1568802)
+[2026-08-05 19:02:09.146]   - Item: HA.IT-reeksamen-2020-VL-NY.xlsx (Type: File)
+[2026-08-05 19:02:09.342] Module file tracked: HA.IT-reeksamen-2020-VL-NY.xlsx (ID: 1568789)
+[2026-08-05 19:02:09.343]   - Item: HA.IT-reeksamen-2020-VL-Endelig1.xlsx (Type: File)
+[2026-08-05 19:02:09.560] Module file tracked: HA.IT-reeksamen-2020-VL-Endelig1.xlsx (ID: 1568788)
+[2026-08-05 19:02:09.561]   - Item: HA-it (2021) - VØS1 ordinær (2timer).pdf (Type: File)
+[2026-08-05 19:02:09.758] Module file tracked: HA-it (2020-2021) - VØS1 ordinær.pdf (ID: 1568654)
+[2026-08-05 19:02:09.760]   - Item: HA(IT) (2021) - VØS1 ORD (2timer) - VL.xlsx (Type: File)
+[2026-08-05 19:02:09.972] Module file tracked: HA(IT) (2020-2021) - VØS1 ORD - VL.xlsx (ID: 1568787)
+[2026-08-05 19:02:09.973]   - Item: HA-it (2021)-VØS1 Reeksamen (2timer).pdf (Type: File)
+[2026-08-05 19:02:10.188] Module file tracked: HA-it (2020-2021)-Reeksamen.pdf (ID: 1568675)
+[2026-08-05 19:02:10.189]   - Item: HA(IT) (2021) - VØS1 REeksamen (2timer) - VL.xlsx (Type: File)
+[2026-08-05 19:02:10.382] Module file tracked: HA(IT) RE-eksamen 2020 - VL.xlsx (ID: 1568680)
+[2026-08-05 19:02:10.383]   - Item: HA-it (2022)-ordinær online-hjemme (2timer).pdf (Type: File)
+[2026-08-05 19:02:10.588] Module file tracked: HA-it (2022)-ordinær online-hjemme.pdf (ID: 1568791)
+[2026-08-05 19:02:10.589]   - Item: HA-it (2022)-ordinær online-hjemme (2timer) VL.xlsx (Type: File)
+[2026-08-05 19:02:10.903] Module file tracked: HA-it (2022)-ordinær online-hjemme VL.xlsx (ID: 1568579)
+[2026-08-05 19:02:10.905]   - Item: HA-it (2022)-ordinær Bilag1 online-hjemme (2timer) .xlsx (Type: File)
+[2026-08-05 19:02:11.119] Module file tracked: HA-it (2022)-ordinær Bilag1 online-hjemme.xlsx (ID: 1568666)
+[2026-08-05 19:02:11.121]   - Item: HA(IT) (2022) Reeksamen (2 timer) online.pdf (Type: File)
+[2026-08-05 19:02:11.332] Module file tracked: HA(IT) (2022) Reeksamen 2 timer online.pdf (ID: 1568681)
+[2026-08-05 19:02:11.334]   - Item: HA-it (2022)-REeksamen VL (2timers).xlsx (Type: File)
+[2026-08-05 19:02:11.531] Module file tracked: HA-it (2022)-RE-eksamen VL (2timers).xlsx (ID: 1568679)
+[2026-08-05 19:02:11.532]   - Item: HA(it) VØS1, Ordinær Skriftlig eksamen - Januar 2023.pdf (Type: File)
+[2026-08-05 19:02:11.751] Module file tracked: HA(it) VØS1, Ordinær Skriftlig eksamen - Januar 2023.pdf (ID: 1568690)
+[2026-08-05 19:02:11.752]   - Item: HAit VØS1 ORD 2023 VL.xlsx (Type: File)
+[2026-08-05 19:02:11.980] Module file tracked: HAit VØS1 2023 VL.xlsx (ID: 1568803)
+[2026-08-05 19:02:11.981]   - Item: HA(IT) 2023 VØS1 RE-Eksamen.pdf (Type: File)
+[2026-08-05 19:02:12.182] Module file tracked: HA(IT) 2023 VØS1 RE-Eksamen.pdf (ID: 1568691)
+[2026-08-05 19:02:12.184]   - Item: HAit VØS1 RE 2023 VL.xlsx (Type: File)
+[2026-08-05 19:02:12.479] Module file tracked: HAit VØS1 RE 2023 VL.xlsx (ID: 1568692)
+[2026-08-05 19:02:12.480]   - Item: Ord-Eksamen2024-opgave.pdf (Type: File)
+[2026-08-05 19:02:12.704] Module file tracked: Ord-Eksamen2024-opgave.pdf (ID: 1568815)
+[2026-08-05 19:02:12.705]   - Item: VL - Ord2024.xlsx (Type: File)
+[2026-08-05 19:02:12.919] Module file tracked: VL - Ord2024.xlsx (ID: 1568823)
+[2026-08-05 19:02:12.920]   - Item: RE-eksamen2024-opgave.pdf (Type: File)
+[2026-08-05 19:02:13.133] Module file tracked: RE-eksamen2024-opgave.pdf (ID: 1568813)
+[2026-08-05 19:02:13.135]   - Item: Re2024.xlsx (Type: File)
+[2026-08-05 19:02:13.676] Module file tracked: Re2024.xlsx (ID: 1568812)
+[2026-08-05 19:02:13.677]   - Item: Eksamen HA(it) VØS I - Emneoversigt.xlsx (Type: File)
+[2026-08-05 19:02:13.890] Module file tracked: Eksamen HA(it) VØS I - Emneoversigt.xlsx (ID: 1568706)
+[2026-08-05 19:02:13.892]   - Item: Oversigt over tidligere eksamensopgaver VØS1.pdf (Type: File)
+[2026-08-05 19:02:14.093] Module file tracked: Oversigt over tidligere eksamensopgaver VØS1.pdf (ID: 1568821)
+[2026-08-05 19:02:14.120] Requesting URL: https://cbscanvas.instructure.com/files/1568831/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:14.125] Requesting URL: https://cbscanvas.instructure.com/files/1633225/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:14.128] Requesting URL: https://cbscanvas.instructure.com/files/1568616/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:14.130] Requesting URL: https://cbscanvas.instructure.com/files/1568731/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:14.133] Requesting URL: https://cbscanvas.instructure.com/files/1568712/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:15.241] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:15.318] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:15.498] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel\opgavesæt.nr0 (pre-matematik).docx (324960 bytes)
+[2026-08-05 19:02:15.560] Requesting URL: https://cbscanvas.instructure.com/files/1568707/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:15.601] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel\opgavesæt.nr0 (pre-matematik)- vejl..docx (458219 bytes)
+[2026-08-05 19:02:15.637] Requesting URL: https://cbscanvas.instructure.com/files/1568580/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:15.810] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:15.980] Response Status: 200 Content-Type: text/plain
+[2026-08-05 19:02:16.016] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:16.050] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Course description including examination rules\Undervisningsplan VØS (1) 1. semester E25.pdf (597203 bytes)
+[2026-08-05 19:02:16.053] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Test mm\VØS1matquiz-02.txt (6206 bytes)
+[2026-08-05 19:02:16.105] Requesting URL: https://cbscanvas.instructure.com/files/1568667/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:16.108] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel\Paraplyer - matematiske sammenhænge.docx (48437 bytes)
+[2026-08-05 19:02:16.296] Requesting URL: https://cbscanvas.instructure.com/files/1568796/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:16.338] Requesting URL: https://cbscanvas.instructure.com/files/1568721/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:16.679] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:16.775] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 00 - EKSAMEN HINTS, Uofficielle øvelser, Matematik, Excel\Hjælp til at udlede prisafsætningsfunktionen.pdf (271859 bytes)
+[2026-08-05 19:02:16.792] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-05 19:02:16.836] Requesting URL: https://cbscanvas.instructure.com/files/1568741/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:16.930] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 1 - Uge 36 1xFO (LET belastning)\F1-A -intro-1.ppt (552960 bytes)
+[2026-08-05 19:02:16.962] Requesting URL: https://cbscanvas.instructure.com/files/1568780/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:17.111] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:17.183] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 1 - Uge 36 1xFO (LET belastning)\F1-B . maksimeringsprincippet-1.pptx (110994 bytes)
+[2026-08-05 19:02:17.223] Requesting URL: https://cbscanvas.instructure.com/files/1568766/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:17.690] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:17.740] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 1 - Uge 36 1xFO (LET belastning)\Miniøvelse - flycosts - opgaven.xlsx (193507 bytes)
+[2026-08-05 19:02:17.778] Requesting URL: https://cbscanvas.instructure.com/files/1568736/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:17.852] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:17.917] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\F1. Udbud-efterspørgsel.pptx (124690 bytes)
+[2026-08-05 19:02:17.951] Requesting URL: https://cbscanvas.instructure.com/files/1568668/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:17.958] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:17.995] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 1 - Uge 36 1xFO (LET belastning)\Miniøvelse - flycosts - VL.xlsx (205869 bytes)
+[2026-08-05 19:02:18.033] Requesting URL: https://cbscanvas.instructure.com/files/1568621/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:18.051] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:18.090] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\F.2 Elasticitet.pptx (135516 bytes)
+[2026-08-05 19:02:18.126] Requesting URL: https://cbscanvas.instructure.com/files/1568700/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:18.495] Response Status: 200 Content-Type: image/jpeg
+[2026-08-05 19:02:18.734] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\Elasticitet oversigt.jpg (1315818 bytes)
+[2026-08-05 19:02:18.771] Requesting URL: https://cbscanvas.instructure.com/files/1634428/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:18.908] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:18.936] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\opgavesæt nr.1(efterspørgselsteori).docx (31899 bytes)
+[2026-08-05 19:02:18.976] Requesting URL: https://cbscanvas.instructure.com/files/1568792/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:19.033] Response Status: 200 Content-Type: image/jpeg
+[2026-08-05 19:02:19.351] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\Elasticitet tegning.jpg (1322150 bytes)
+[2026-08-05 19:02:19.391] Requesting URL: https://cbscanvas.instructure.com/files/1632625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:19.405] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:19.415] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:19.455] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\optimium (1).xlsx (24946 bytes)
+[2026-08-05 19:02:19.478] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\OmkostningerAfsætning - Ekstra - LØSNING.xlsx (119984 bytes)
+[2026-08-05 19:02:19.512] Requesting URL: https://cbscanvas.instructure.com/files/1632626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:19.728] Requesting URL: https://cbscanvas.instructure.com/files/1568757/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:20.277] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:20.303] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\vejl opgavesæt nr. 1 (2).xlsx (200145 bytes)
+[2026-08-05 19:02:20.323] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:20.345] Requesting URL: https://cbscanvas.instructure.com/files/1568633/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:20.368] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\OmkostningerAfsætning - Ekstra - OPGAVEN.xlsx (52560 bytes)
+[2026-08-05 19:02:20.401] Requesting URL: https://cbscanvas.instructure.com/files/1639544/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:20.527] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:20.551] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\SimpelOptimeringogElasticitet-eksempel.xlsx (28201 bytes)
+[2026-08-05 19:02:20.620] Requesting URL: https://cbscanvas.instructure.com/files/1568641/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:20.879] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:20.912] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)\SimpelOptimeringogElasticitet-eksempelVL.xlsx (32363 bytes)
+[2026-08-05 19:02:20.951] Requesting URL: https://cbscanvas.instructure.com/files/1568651/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:21.033] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-05 19:02:21.058] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)\F3.Grundlæggende produktionstek -Nr1.ppt (394752 bytes)
+[2026-08-05 19:02:21.097] Requesting URL: https://cbscanvas.instructure.com/files/1568809/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:21.390] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:21.442] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)\F4. Isokvanter og MRTS-Nr2.pptx (72782 bytes)
+[2026-08-05 19:02:21.478] Requesting URL: https://cbscanvas.instructure.com/files/1568710/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:21.483] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:21.508] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)\Opgavesæt nr. 2.docx (28244 bytes)
+[2026-08-05 19:02:21.550] Requesting URL: https://cbscanvas.instructure.com/files/1568723/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:21.913] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:21.934] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)\F6. isokostlinjen-nr.3.pptx (48593 bytes)
+[2026-08-05 19:02:21.936] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:22.002] Requesting URL: https://cbscanvas.instructure.com/files/1568657/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:22.010] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)\Omkostningsminimering Nr.4.pptx (93148 bytes)
+[2026-08-05 19:02:22.045] Requesting URL: https://cbscanvas.instructure.com/files/1568804/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:22.396] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:22.458] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)\Øvelse 2 - VL.xlsx (101849 bytes)
+[2026-08-05 19:02:22.501] Requesting URL: https://cbscanvas.instructure.com/files/1568717/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:22.754] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:22.774] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)\DTR,DMR,DAR - VL.xlsx (34321 bytes)
+[2026-08-05 19:02:22.807] Requesting URL: https://cbscanvas.instructure.com/files/1568777/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:22.945] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:22.966] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)\DTR,DMR,DAR - Opgave.xlsx (15170 bytes)
+[2026-08-05 19:02:23.000] Requesting URL: https://cbscanvas.instructure.com/files/1568795/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:23.261] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:23.285] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)\Skalaafkast nr.5.pptx (64581 bytes)
+[2026-08-05 19:02:23.305] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:23.326] Requesting URL: https://cbscanvas.instructure.com/files/1568808/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:23.431] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)\Eksempel CobbDouglas - Optimering, Ekspansion, Omk.xlsx (645399 bytes)
+[2026-08-05 19:02:23.469] Requesting URL: https://cbscanvas.instructure.com/files/1568782/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:23.592] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:23.614] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)\omkostning1.pptx (140992 bytes)
+[2026-08-05 19:02:23.653] Requesting URL: https://cbscanvas.instructure.com/files/1568630/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:23.779] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:23.840] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)\omkostning2.pptx (482278 bytes)
+[2026-08-05 19:02:23.882] Requesting URL: https://cbscanvas.instructure.com/files/1652883/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:24.166] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:24.207] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)\Productionanalysis - Eksempel.xlsx (109716 bytes)
+[2026-08-05 19:02:24.256] Requesting URL: https://cbscanvas.instructure.com/files/1652861/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:24.438] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:24.515] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)\omkostning3.pptx (503548 bytes)
+[2026-08-05 19:02:24.556] Requesting URL: https://cbscanvas.instructure.com/files/1568763/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:24.576] Response Status: 200 Content-Type: application/vnd.ms-excel.sheet.macroEnabled.12
+[2026-08-05 19:02:24.604] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)\Breakevenmodel.xlsm (21945 bytes)
+[2026-08-05 19:02:24.658] Requesting URL: https://cbscanvas.instructure.com/files/1568805/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:24.769] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:24.795] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)\Opgavesæt 3.docx (52961 bytes)
+[2026-08-05 19:02:24.833] Requesting URL: https://cbscanvas.instructure.com/files/1568779/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:25.097] Response Status: 200 Content-Type: application/vnd.ms-excel
+[2026-08-05 19:02:25.176] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)\Øvelse 3 - VL.xls (603648 bytes)
+[2026-08-05 19:02:25.227] Requesting URL: https://cbscanvas.instructure.com/files/1568778/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:25.647] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:25.718] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:25.741] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:25.817] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)\Øvelse 3 - VL spg 7.xlsx (38625 bytes)
+[2026-08-05 19:02:25.983] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)\Øvelse forelæsning - Vejl løs.xlsx (17136 bytes)
+[2026-08-05 19:02:25.986] Requesting URL: https://cbscanvas.instructure.com/files/1568640/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:26.067] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)\Lineær programmering.pptx (1609985 bytes)
+[2026-08-05 19:02:26.101] Requesting URL: https://cbscanvas.instructure.com/files/1568687/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:26.143] Requesting URL: https://cbscanvas.instructure.com/files/1568772/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:26.149] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:26.201] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)\LP eksempel - Opgaven.xlsx (19424 bytes)
+[2026-08-05 19:02:26.250] Requesting URL: https://cbscanvas.instructure.com/files/1568639/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:26.488] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:26.514] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)\LP eksempel - VL.xlsx (35123 bytes)
+[2026-08-05 19:02:26.555] Requesting URL: https://cbscanvas.instructure.com/files/1568784/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:27.095] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:27.119] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)\opgavesæt nr. 4.docx (27373 bytes)
+[2026-08-05 19:02:27.159] Requesting URL: https://cbscanvas.instructure.com/files/1568785/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:27.225] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:27.251] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)\Øvelse 4 - VL.xlsx (72819 bytes)
+[2026-08-05 19:02:27.263] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:27.307] Requesting URL: https://cbscanvas.instructure.com/files/1568810/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:27.358] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)\Øvelse 4 - VL (Wordversionen).docx (279540 bytes)
+[2026-08-05 19:02:27.397] Requesting URL: https://cbscanvas.instructure.com/files/1568811/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:27.423] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:27.450] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)\Øvelse forelæsningen - Opgaven formuleret i Word.docx (12009 bytes)
+[2026-08-05 19:02:27.487] Requesting URL: https://cbscanvas.instructure.com/files/1568776/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:27.635] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:27.973] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)\Linear Programming (note  ).pdf (2437730 bytes)
+[2026-08-05 19:02:28.020] Requesting URL: https://cbscanvas.instructure.com/files/1568694/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:28.268] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:28.351] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)\Opsummering.pptx (646211 bytes)
+[2026-08-05 19:02:28.390] Requesting URL: https://cbscanvas.instructure.com/files/1568800/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:28.636] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:28.688] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)\Opgavesæt 5 - VL (Excel).xlsx (212421 bytes)
+[2026-08-05 19:02:28.733] Requesting URL: https://cbscanvas.instructure.com/files/1568660/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:28.807] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:28.830] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)\Øvelse 5.docx (37590 bytes)
+[2026-08-05 19:02:28.864] Requesting URL: https://cbscanvas.instructure.com/files/1568761/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:28.876] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:28.937] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)\Opgavesæt 5 - VL (Wordversionen).docx (544350 bytes)
+[2026-08-05 19:02:28.973] Requesting URL: https://cbscanvas.instructure.com/files/1568647/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:29.352] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:29.375] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)\Opgavesæt 5 - VL (Opgave 5).xlsx (18350 bytes)
+[2026-08-05 19:02:29.437] Requesting URL: https://cbscanvas.instructure.com/files/1568768/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:29.572] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:29.609] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)\Øvelse forelæsning - Opgaven formuleret i Excel.xlsx (11712 bytes)
+[2026-08-05 19:02:29.657] Requesting URL: https://cbscanvas.instructure.com/files/1568775/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:29.949] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:29.976] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-05 19:02:30.012] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)\minitest.docx (154915 bytes)
+[2026-08-05 19:02:30.108] Requesting URL: https://cbscanvas.instructure.com/files/1568806/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:30.114] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 7 - Uge 43 1xFO, 1xØV (Let belastning)\FK.ppt (642560 bytes)
+[2026-08-05 19:02:30.118] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:30.149] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)\minitest -VL.docx (246795 bytes)
+[2026-08-05 19:02:30.183] Requesting URL: https://cbscanvas.instructure.com/files/1568807/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:30.217] Requesting URL: https://cbscanvas.instructure.com/files/1568659/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:30.559] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:30.651] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 7 - Uge 43 1xFO, 1xØV (Let belastning)\øvesæt6-fk-1.docx (37331 bytes)
+[2026-08-05 19:02:30.715] Requesting URL: https://cbscanvas.instructure.com/files/1568625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:30.719] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:30.796] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)\Opgavesæt 3 - VL (WORD versionen).docx (686855 bytes)
+[2026-08-05 19:02:30.850] Requesting URL: https://cbscanvas.instructure.com/files/1568689/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:31.250] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:31.311] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 7 - Uge 43 1xFO, 1xØV (Let belastning)\øveopgave6-vejl.docx (459284 bytes)
+[2026-08-05 19:02:31.346] Requesting URL: https://cbscanvas.instructure.com/files/1568693/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:31.350] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-05 19:02:31.393] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)\CS og PS.ppt (293376 bytes)
+[2026-08-05 19:02:31.396] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:31.459] Requesting URL: https://cbscanvas.instructure.com/files/1568581/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:31.484] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 7 - Uge 43 1xFO, 1xØV (Let belastning)\Opgavesæt 6-vejl.xlsx (318036 bytes)
+[2026-08-05 19:02:31.523] Requesting URL: https://cbscanvas.instructure.com/files/1568652/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:31.911] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:31.951] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)\opgave CS og PS.docx (14524 bytes)
+[2026-08-05 19:02:32.025] Requesting URL: https://cbscanvas.instructure.com/files/1568819/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:32.461] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:32.469] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:32.524] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)\CS og PS - VL.xlsx (31578 bytes)
+[2026-08-05 19:02:32.531] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)\opgave CS og PS - med VL.docx (14517 bytes)
+[2026-08-05 19:02:32.638] Requesting URL: https://cbscanvas.instructure.com/files/1568767/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:32.696] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:32.733] Requesting URL: https://cbscanvas.instructure.com/files/1568769/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:32.799] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)\Øvelse 7.docx (312313 bytes)
+[2026-08-05 19:02:32.846] Requesting URL: https://cbscanvas.instructure.com/files/1568696/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:32.850] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:32.943] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)\Øvelse 7 VL.xlsx (533172 bytes)
+[2026-08-05 19:02:33.002] Requesting URL: https://cbscanvas.instructure.com/files/1568786/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:33.052] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-05 19:02:33.142] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)\Kap.12 monopol.ppt (523264 bytes)
+[2026-08-05 19:02:33.202] Requesting URL: https://cbscanvas.instructure.com/files/1568817/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:33.389] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:33.424] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)\ForelæsningsopgaveA.docx (13395 bytes)
+[2026-08-05 19:02:33.471] Requesting URL: https://cbscanvas.instructure.com/files/1568818/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:33.653] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-05 19:02:33.869] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:34.282] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:34.389] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)\FO-opgave.docx (14150 bytes)
+[2026-08-05 19:02:34.509] Requesting URL: https://cbscanvas.instructure.com/files/1568695/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:34.702] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)\Losning FO-opgaveA.xlsx (18090 bytes)
+[2026-08-05 19:02:34.803] Requesting URL: https://cbscanvas.instructure.com/files/1568697/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:34.960] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:35.283] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)\Losning-FO.Opgave.docx (441028 bytes)
+[2026-08-05 19:02:35.359] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)\Kap. 13a -ME monopolistisk konkurrence.ppt (5718016 bytes)
+[2026-08-05 19:02:35.495] Requesting URL: https://cbscanvas.instructure.com/files/1568816/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:35.604] Requesting URL: https://cbscanvas.instructure.com/files/1568656/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:35.613] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:35.650] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)\øvesæt nr. 8.docx (30253 bytes)
+[2026-08-05 19:02:35.699] Requesting URL: https://cbscanvas.instructure.com/files/1568650/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:36.024] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:36.595] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:36.652] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)\Monopolistisk konkurrence, effekt af markedsføring.xlsx (6569240 bytes)
+[2026-08-05 19:02:36.655] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:36.667] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)\Øvelse 8 - VL (opg6).docx (194178 bytes)
+[2026-08-05 19:02:36.713] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-05 19:02:36.716] Requesting URL: https://cbscanvas.instructure.com/files/1568655/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:36.777] Requesting URL: https://cbscanvas.instructure.com/files/1568783/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:36.785] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)\Vejl.-løsning-opg.sæt-8_NYESTE.xlsx (109805 bytes)
+[2026-08-05 19:02:36.856] Requesting URL: https://cbscanvas.instructure.com/files/1568781/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:36.881] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:36.886] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)\Kap. 13b -ME oligopolmodeller.ppt (646144 bytes)
+[2026-08-05 19:02:36.940] Requesting URL: https://cbscanvas.instructure.com/files/1568820/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:36.997] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)\Optimeringsmodeller-samlet-kogebog v2.pptx (380031 bytes)
+[2026-08-05 19:02:37.050] Requesting URL: https://cbscanvas.instructure.com/files/1568661/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:37.884] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:37.909] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)\øvesæt nr. 9.docx (27067 bytes)
+[2026-08-05 19:02:37.943] Requesting URL: https://cbscanvas.instructure.com/files/1568670/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:38.058] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:38.104] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)\Øvelse 9 - VL.xlsx (188223 bytes)
+[2026-08-05 19:02:38.110] Response Status: 200 Content-Type: application/vnd.ms-powerpoint
+[2026-08-05 19:02:38.177] Requesting URL: https://cbscanvas.instructure.com/files/1568703/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:38.181] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)\Kap 15 Pricing strategies.ppt (361472 bytes)
+[2026-08-05 19:02:38.188] Response Status: 200 Content-Type: application/vnd.ms-excel
+[2026-08-05 19:02:38.230] Requesting URL: https://cbscanvas.instructure.com/files/1568794/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:38.235] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)\Oligopol (Knæk Afs) eksempel.xls (38400 bytes)
+[2026-08-05 19:02:38.273] Requesting URL: https://cbscanvas.instructure.com/files/1568793/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:38.410] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:38.440] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)\øvesæt nr. 9 vejl. løsning.docx (23372 bytes)
+[2026-08-05 19:02:38.475] Requesting URL: https://cbscanvas.instructure.com/files/1699117/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:38.954] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:38.993] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)\Priceleader-modellen-1.pptx (238179 bytes)
+[2026-08-05 19:02:39.025] Requesting URL: https://cbscanvas.instructure.com/files/1700137/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:39.360] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:39.362] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:39.386] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)\Øvelse 10 ufp.docx (26937 bytes)
+[2026-08-05 19:02:39.409] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)\Priceleader eksempel - TB.xlsx (31935 bytes)
+[2026-08-05 19:02:39.413] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:39.433] Requesting URL: https://cbscanvas.instructure.com/files/1568822/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:39.482] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)\øvesæt 10vejl_ufp.xlsx (496984 bytes)
+[2026-08-05 19:02:39.506] Requesting URL: https://cbscanvas.instructure.com/files/1701729/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:39.534] Requesting URL: https://cbscanvas.instructure.com/files/1568664/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:39.569] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-05 19:02:39.616] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)\Kap.15 Pricing strategies nr.2.pptx (112317 bytes)
+[2026-08-05 19:02:39.662] Requesting URL: https://cbscanvas.instructure.com/files/1568705/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:40.157] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:40.180] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)\Matematisk eksempel - til PPT.xlsx (13628 bytes)
+[2026-08-05 19:02:40.250] Requesting URL: https://cbscanvas.instructure.com/files/1568801/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:40.557] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:40.617] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)\vejl sæt 11. (1 4).docx (200187 bytes)
+[2026-08-05 19:02:40.661] Requesting URL: https://cbscanvas.instructure.com/files/1568677/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:40.670] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:40.697] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)\øvesæt nr. 11.docx (30319 bytes)
+[2026-08-05 19:02:40.736] Requesting URL: https://cbscanvas.instructure.com/files/1568678/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:40.823] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:40.849] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)\PrisDiffEks - TB.xlsx (26185 bytes)
+[2026-08-05 19:02:40.889] Requesting URL: https://cbscanvas.instructure.com/files/1568676/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:40.970] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:41.034] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)\rettevejl. øvesæt 11_med vandretaddNYmed rettelse!!..xlsx (225431 bytes)
+[2026-08-05 19:02:41.076] Requesting URL: https://cbscanvas.instructure.com/files/1568790/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:41.519] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:41.538] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HAit reeksamen 2020.docx (23788 bytes)
+[2026-08-05 19:02:41.575] Requesting URL: https://cbscanvas.instructure.com/files/1568802/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:41.812] Response Status: 200 Content-Type: text/plain
+[2026-08-05 19:02:41.855] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\ekstra opgaver1.docx (149022 bytes)
+[2026-08-05 19:02:41.891] Requesting URL: https://cbscanvas.instructure.com/files/1568789/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:41.994] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:42.118] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HAit reeksamen 2020 - VL.xlsx (943312 bytes)
+[2026-08-05 19:02:42.122] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:42.198] Requesting URL: https://cbscanvas.instructure.com/files/1568788/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:42.376] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\ekstraopgave 1 - VL.xlsx (2931301 bytes)
+[2026-08-05 19:02:42.411] Requesting URL: https://cbscanvas.instructure.com/files/1568654/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:42.431] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:42.455] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HAit 2020 ORD opgave.docx (27842 bytes)
+[2026-08-05 19:02:42.494] Requesting URL: https://cbscanvas.instructure.com/files/1568787/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:42.538] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-05 19:02:42.569] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HAit reeksamen 2020 (1).docx (23788 bytes)
+[2026-08-05 19:02:42.605] Requesting URL: https://cbscanvas.instructure.com/files/1568675/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:43.029] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:43.218] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA.IT-reeksamen-2020-VL-NY.xlsx (1398057 bytes)
+[2026-08-05 19:02:43.262] Requesting URL: https://cbscanvas.instructure.com/files/1568680/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:43.543] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:43.575] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:43.581] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA(IT) (2020-2021) - VØS1 ORD - VL.xlsx (41728 bytes)
+[2026-08-05 19:02:43.669] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:43.671] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:43.673] Requesting URL: https://cbscanvas.instructure.com/files/1568791/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:43.772] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA-it (2020-2021) - VØS1 ordinær.pdf (146235 bytes)
+[2026-08-05 19:02:43.776] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA-it (2020-2021)-Reeksamen.pdf (122293 bytes)
+[2026-08-05 19:02:43.780] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA.IT-reeksamen-2020-VL-Endelig1.xlsx (1398381 bytes)
+[2026-08-05 19:02:43.812] Requesting URL: https://cbscanvas.instructure.com/files/1568579/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:43.839] Requesting URL: https://cbscanvas.instructure.com/files/1568666/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:43.868] Requesting URL: https://cbscanvas.instructure.com/files/1568681/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:44.378] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:44.419] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA(IT) RE-eksamen 2020 - VL.xlsx (24622 bytes)
+[2026-08-05 19:02:44.477] Requesting URL: https://cbscanvas.instructure.com/files/1568679/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:44.754] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:44.864] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA-it (2022)-ordinær online-hjemme.pdf (518765 bytes)
+[2026-08-05 19:02:44.867] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:44.869] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:44.870] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:44.925] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA-it (2022)-ordinær Bilag1 online-hjemme.xlsx (9279 bytes)
+[2026-08-05 19:02:44.953] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA-it (2022)-ordinær online-hjemme VL.xlsx (37194 bytes)
+[2026-08-05 19:02:44.978] Requesting URL: https://cbscanvas.instructure.com/files/1568690/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:45.022] Requesting URL: https://cbscanvas.instructure.com/files/1568803/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:45.040] Requesting URL: https://cbscanvas.instructure.com/files/1568691/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:45.045] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA(IT) (2022) Reeksamen 2 timer online.pdf (507761 bytes)
+[2026-08-05 19:02:45.082] Requesting URL: https://cbscanvas.instructure.com/files/1568692/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:45.545] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:45.569] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA-it (2022)-RE-eksamen VL (2timers).xlsx (48531 bytes)
+[2026-08-05 19:02:45.620] Requesting URL: https://cbscanvas.instructure.com/files/1568815/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:46.010] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:46.088] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:46.350] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:46.352] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:46.356] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA(it) VØS1, Ordinær Skriftlig eksamen - Januar 2023.pdf (487473 bytes)
+[2026-08-05 19:02:46.468] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HAit VØS1 2023 VL.xlsx (41228 bytes)
+[2026-08-05 19:02:46.524] Requesting URL: https://cbscanvas.instructure.com/files/1568823/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:46.601] Requesting URL: https://cbscanvas.instructure.com/files/1568813/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:46.604] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HAit VØS1 RE 2023 VL.xlsx (54349 bytes)
+[2026-08-05 19:02:46.634] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\HA(IT) 2023 VØS1 RE-Eksamen.pdf (613916 bytes)
+[2026-08-05 19:02:46.660] Requesting URL: https://cbscanvas.instructure.com/files/1568812/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:46.683] Requesting URL: https://cbscanvas.instructure.com/files/1568706/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:46.932] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:47.013] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\Ord-Eksamen2024-opgave.pdf (534570 bytes)
+[2026-08-05 19:02:47.090] Requesting URL: https://cbscanvas.instructure.com/files/1568821/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-05 19:02:47.519] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:47.543] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\VL - Ord2024.xlsx (64463 bytes)
+[2026-08-05 19:02:47.559] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:47.653] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\RE-eksamen2024-opgave.pdf (490825 bytes)
+[2026-08-05 19:02:47.996] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:48.015] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\Re2024.xlsx (48857 bytes)
+[2026-08-05 19:02:48.189] Response Status: 200 Content-Type: application/pdf
+[2026-08-05 19:02:48.195] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-08-05 19:02:48.254] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\Oversigt over tidligere eksamensopgaver VØS1.pdf (441229 bytes)
+[2026-08-05 19:02:48.258] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__office\downloads\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\Ekstra træning (træning i gl. eksamensopgaver)\Eksamen HA(it) VØS I - Emneoversigt.xlsx (10571 bytes)
+[2026-08-05 19:02:48.326] Starting Catch-All Phase for non-module files...
+[2026-08-05 19:02:48.509] Catch-All Phase Error: {"status":"unauthorized","errors":[{"message":"user not authorised to perform that action"}]}
+[2026-08-05 19:02:48.511] [WARNING] [core.canvas_logic] Files tab restricted for 'Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)' - skipping catch-all phase.
+[2026-08-05 19:02:48.535] --- Download Complete: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) | 123 items | 45.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) ---
+==================================================
+[2026-08-05 19:04:14.570] [INFO] [core.sync_manager] Updated manifest entry 1568706 to new file: Ekstra træning (træning i gl. eksamensopgaver)/Eksamen HA(it) VØS I - Emneoversigt.pdf
+[2026-08-05 19:06:31.936] [INFO] [core.sync_manager] Updated manifest entry 1568676 to new file: Ekstra træning (træning i gl. eksamensopgaver)/ekstraopgave 1 - VL.pdf
+[2026-08-05 19:06:47.890] [INFO] [core.sync_manager] Updated manifest entry 1568787 to new file: Ekstra træning (træning i gl. eksamensopgaver)/HA(IT) (2020-2021) - VØS1 ORD - VL.pdf
+[2026-08-05 19:07:10.500] [INFO] [core.sync_manager] Updated manifest entry 1568680 to new file: Ekstra træning (træning i gl. eksamensopgaver)/HA(IT) RE-eksamen 2020 - VL.pdf
+[2026-08-05 19:07:16.175] [INFO] [core.sync_manager] Updated manifest entry 1568666 to new file: Ekstra træning (træning i gl. eksamensopgaver)/HA-it (2022)-ordinær Bilag1 online-hjemme.pdf
+[2026-08-05 19:07:29.673] [INFO] [core.sync_manager] Updated manifest entry 1568579 to new file: Ekstra træning (træning i gl. eksamensopgaver)/HA-it (2022)-ordinær online-hjemme VL.pdf
+[2026-08-05 19:07:42.817] [INFO] [core.sync_manager] Updated manifest entry 1568679 to new file: Ekstra træning (træning i gl. eksamensopgaver)/HA-it (2022)-RE-eksamen VL (2timers).pdf
+[2026-08-05 19:08:09.884] [INFO] [core.sync_manager] Updated manifest entry 1568788 to new file: Ekstra træning (træning i gl. eksamensopgaver)/HA.IT-reeksamen-2020-VL-Endelig1.pdf
+[2026-08-05 19:08:34.389] [INFO] [core.sync_manager] Updated manifest entry 1568789 to new file: Ekstra træning (træning i gl. eksamensopgaver)/HA.IT-reeksamen-2020-VL-NY.pdf
+[2026-08-05 19:08:52.311] [INFO] [core.sync_manager] Updated manifest entry 1568677 to new file: Ekstra træning (træning i gl. eksamensopgaver)/HAit reeksamen 2020 - VL.pdf
+[2026-08-05 19:09:16.890] [INFO] [core.sync_manager] Updated manifest entry 1568803 to new file: Ekstra træning (træning i gl. eksamensopgaver)/HAit VØS1 2023 VL.pdf
+[2026-08-05 19:09:41.861] [INFO] [core.sync_manager] Updated manifest entry 1568692 to new file: Ekstra træning (træning i gl. eksamensopgaver)/HAit VØS1 RE 2023 VL.pdf
+[2026-08-05 19:09:58.938] [INFO] [core.sync_manager] Updated manifest entry 1568812 to new file: Ekstra træning (træning i gl. eksamensopgaver)/Re2024.pdf
+[2026-08-05 19:10:31.495] [INFO] [core.sync_manager] Updated manifest entry 1568823 to new file: Ekstra træning (træning i gl. eksamensopgaver)/VL - Ord2024.pdf
+[2026-08-05 19:10:35.788] [INFO] [core.sync_manager] Updated manifest entry 1568796 to new file: Module 1 - Uge 36 1xFO (LET belastning)/Miniøvelse - flycosts - opgaven.pdf
+[2026-08-05 19:10:42.733] [INFO] [core.sync_manager] Updated manifest entry 1568721 to new file: Module 1 - Uge 36 1xFO (LET belastning)/Miniøvelse - flycosts - VL.pdf
+[2026-08-05 19:10:50.721] [INFO] [core.sync_manager] Updated manifest entry 1568820 to new file: Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/Oligopol (Knæk Afs) eksempel.pdf
+[2026-08-05 19:11:12.051] [INFO] [core.sync_manager] Updated manifest entry 1568783 to new file: Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/Øvelse 9 - VL.pdf
+[2026-08-05 19:11:23.036] [INFO] [core.sync_manager] Updated manifest entry 1568703 to new file: Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)/Priceleader eksempel - TB.pdf
+[2026-08-05 19:11:52.809] [INFO] [core.sync_manager] Updated manifest entry 1568793 to new file: Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)/øvesæt 10vejl_ufp.pdf
+[2026-08-05 19:11:57.984] [INFO] [core.sync_manager] Updated manifest entry 1700137 to new file: Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)/Matematisk eksempel - til PPT.pdf
+[2026-08-05 19:12:12.682] [INFO] [core.sync_manager] Updated manifest entry 1568822 to new file: Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)/PrisDiffEks - TB.pdf
+[2026-08-05 19:12:45.522] [INFO] [core.sync_manager] Updated manifest entry 1568705 to new file: Module 12 - Uge 48 1xFO, 1xØV (Svær belastning)/rettevejl. øvesæt 11_med vandretaddNYmed rettelse!!..pdf
+[2026-08-05 19:13:20.440] [INFO] [core.sync_manager] Updated manifest entry 1568700 to new file: Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)/OmkostningerAfsætning - Ekstra - LØSNING.pdf
+[2026-08-05 19:13:50.554] [INFO] [core.sync_manager] Updated manifest entry 1568792 to new file: Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)/OmkostningerAfsætning - Ekstra - OPGAVEN.pdf
+[2026-08-05 19:13:58.899] [INFO] [core.sync_manager] Updated manifest entry 1568668 to new file: Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)/optimium (1).pdf
+[2026-08-05 19:14:08.239] [INFO] [core.sync_manager] Updated manifest entry 1632625 to new file: Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)/SimpelOptimeringogElasticitet-eksempel.pdf
+[2026-08-05 19:14:17.809] [INFO] [core.sync_manager] Updated manifest entry 1632626 to new file: Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)/SimpelOptimeringogElasticitet-eksempelVL.pdf
+[2026-08-05 19:14:47.436] [INFO] [core.sync_manager] Updated manifest entry 1634428 to new file: Module 2 - Uge 37 2xFO, 1xØV (Middel belastning)/vejl opgavesæt nr. 1 (2).pdf
+[2026-08-05 19:14:57.429] [INFO] [core.sync_manager] Updated manifest entry 1568710 to new file: Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)/DTR,DMR,DAR - Opgave.pdf
+[2026-08-05 19:15:15.728] [INFO] [core.sync_manager] Updated manifest entry 1568723 to new file: Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)/DTR,DMR,DAR - VL.pdf
+[2026-08-05 19:15:58.679] [INFO] [core.sync_manager] Updated manifest entry 1568795 to new file: Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)/Productionanalysis - Eksempel.pdf
+[2026-08-05 19:16:28.040] [INFO] [core.sync_manager] Updated manifest entry 1568809 to new file: Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)/Øvelse 2 - VL.pdf
+[2026-08-05 19:16:33.003] [INFO] [core.sync_manager] Updated manifest entry 1568782 to new file: Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)/Breakevenmodel.pdf
+[2026-08-05 19:16:47.219] [INFO] [core.sync_manager] Updated manifest entry 1568804 to new file: Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)/Eksempel CobbDouglas - Optimering, Ekspansion, Omk.pdf
+[2026-08-05 19:16:54.580] [INFO] [core.sync_manager] Updated manifest entry 1652861 to new file: Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)/Øvelse 3 - VL spg 7.pdf
+[2026-08-05 19:17:46.646] [INFO] [core.sync_manager] Updated manifest entry 1652883 to new file: Module 4 - Uge 39 2xFO, 1xØV (Svær belastning)/Øvelse 3 - VL.pdf
+[2026-08-05 19:17:55.579] [INFO] [core.sync_manager] Updated manifest entry 1568779 to new file: Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/LP eksempel - Opgaven.pdf
+[2026-08-05 19:18:20.545] [INFO] [core.sync_manager] Updated manifest entry 1568778 to new file: Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/LP eksempel - VL.pdf
+[2026-08-05 19:18:43.132] [INFO] [core.sync_manager] Updated manifest entry 1568687 to new file: Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/Øvelse 4 - VL.pdf
+[2026-08-05 19:18:47.075] [INFO] [core.sync_manager] Updated manifest entry 1568800 to new file: Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/Øvelse forelæsning - Opgaven formuleret i Excel.pdf
+[2026-08-05 19:18:56.418] [INFO] [core.sync_manager] Updated manifest entry 1568763 to new file: Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/Øvelse forelæsning - Vejl løs.pdf
+[2026-08-05 19:19:20.400] [INFO] [core.sync_manager] Updated manifest entry 1568811 to new file: Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)/Opgavesæt 5 - VL (Excel).pdf
+[2026-08-05 19:19:30.879] [INFO] [core.sync_manager] Updated manifest entry 1568694 to new file: Module 6 - Uge 41 1xFO, 1xØV (Middel belastning)/Opgavesæt 5 - VL (Opgave 5).pdf
+[2026-08-05 19:19:50.810] [INFO] [core.sync_manager] Updated manifest entry 1568807 to new file: Module 7 - Uge 43 1xFO, 1xØV (Let belastning)/Opgavesæt 6-vejl.pdf
+[2026-08-05 19:20:02.206] [INFO] [core.sync_manager] Updated manifest entry 1568693 to new file: Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)/CS og PS - VL.pdf
+[2026-08-05 19:20:24.272] [INFO] [core.sync_manager] Updated manifest entry 1568652 to new file: Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)/Øvelse 7 VL.pdf
+[2026-08-05 19:20:29.817] [INFO] [core.sync_manager] Updated manifest entry 1568696 to new file: Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/Losning FO-opgaveA.pdf
+[2026-08-05 19:20:41.626] [INFO] [core.sync_manager] Updated manifest entry 1568818 to new file: Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/Monopolistisk konkurrence, effekt af markedsføring.pdf
+[2026-08-05 19:21:03.718] [INFO] [core.sync_manager] Updated manifest entry 1568816 to new file: Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/Vejl.-løsning-opg.sæt-8_NYESTE.pdf
+[2026-08-05 19:21:06.808] === Course Finished: Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U) | Downloaded: 171 items | Errors: 0 ===
+[2026-08-05 19:21:06.809] Post-processing ran: [code, excel]

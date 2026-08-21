@@ -1,0 +1,119 @@
+{
+  "name": "after_all2",
+  "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_154112_matrix-dl__free1\\evidence\\screenshots\\after_all2.png",
+  "captured": "2026-08-05 16:00:16",
+  "screen": {
+    "url": "http://127.0.0.1:8791/?mode=download&step=1",
+    "mode": "download",
+    "step": "1",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Select Courses"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_active_idlesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_idle_idlesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_idle_idlesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_idle_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_fav_favorites_dl",
+        "text": "Favorites Only",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_fav_all_dl",
+        "text": "All Courses",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_course_select_all",
+        "text": "Select All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_course_clear_selection",
+        "text": "Clear Selection",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_course_refresh",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_custom_download",
+        "text": "Custom Download",
+        "disabled": false,
+        "gated": true,
+        "kind": "primary"
+      },
+      {
+        "key": "btn_quick_download",
+        "text": "Quick Download",
+        "disabled": false,
+        "gated": true,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [
+      {
+        "key": "course_search",
+        "value": ""
+      }
+    ],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nSelect Courses\nHelp\n\nShow:\n\nFavorites Only\n\nAll Courses\n\nSelect All\n\nClear Selection\n\n0 of 33 selected\n\n​\n\nBINT 1st semester (LA)\n\nBINT 2nd semester (LA)\n\nBINT 3rd semester (LA)\n\nBrush-up - Mikroøkonomi (LA)\n\nComputernetværk og distribuerede systemer (LA)\n\nComputernetværk og distribuerede systemer (XB)\n\nHow to Uni (LA)\n\nIndføring i organisationers opbygning og funktion (LA)\n\nIndføring i organisationers opbygning og funktion (XB)\n\nIntroduction to Information Systems (LA)\n\nIntroduction to Information Systems (XB)\n\nIT-forandringsledelse (LA)\n\nIT-forandringsledelse (XB)\n\nIT-projektledelse (LA)\n\nIT-projektledelse (XB)\n\nKursus i akademisk redelighed (LA)\n\nMakroøkonomi (LA)\n\nMakroøkonomi (XB)\n\nMatematik/Math Brush-up E25\n\nMentor Meeting (LA)\n\nProgrammering og udvikling af små systemer samt databaser (LA)\n\nProgrammering og udvikling af små systemer samt databaser (LA)\n\nProgrammering og udvikling af små systemer samt databaser (XC)\n\nProgrammering og udvikling af små systemer samt databaser (XE)\n\nStudiestart (LA)\n\nStudiestart (LA)\n\nStudiestart PROF (LA)\n\nStudievejledning, studieteknik og bibliotek (LA)\n\nStudy Start - Welcome (LA)\n\nVirksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA)\n\nVirksomhedens økonomiske styring (2): Regnskabsvæsen (LA)\n\nVirksomhedens økonomiske styring (3): Finansiering (LA)\n\nVirksomhedens økonomiske styring (3): Finansiering (XB)\n\nCustom Download\n\nOR\n\nQuick Download\n\nChoose exactly what to download, and how\nPick a preset and download",
+    "textLen": 1596
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

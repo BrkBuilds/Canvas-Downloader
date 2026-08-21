@@ -1,0 +1,117 @@
+{
+  "name": "s041",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n\nSync History",
+      "waited_s": 20.8
+    },
+    "capture": "s041_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_update_45899",
+      "cat_updmod_45899"
+    ],
+    "capture": "s041_review",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\screenshots\\s041_review.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\ui\\s041_review.json",
+    "textLen": 1244,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "trace": [
+    {
+      "t": "22:43:14",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "22:43:42",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n\nSync History",
+        "waited_s": 20.8
+      },
+      "capture": "s041_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "22:43:45",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_45899",
+        "cat_updmod_45899"
+      ],
+      "capture": "s041_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\screenshots\\s041_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\ui\\s041_review.json",
+      "textLen": 1244,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:43:49",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "22:43:49",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_45899",
+        "cat_updmod_45899"
+      ],
+      "capture": "s041_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\screenshots\\s041_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\ui\\s041_review.json",
+      "textLen": 1244,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

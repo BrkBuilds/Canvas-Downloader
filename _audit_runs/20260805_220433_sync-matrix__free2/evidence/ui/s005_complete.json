@@ -1,0 +1,161 @@
+{
+  "name": "s005_complete",
+  "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\evidence\\screenshots\\s005_complete.png",
+  "captured": "2026-08-05 22:21:46",
+  "screen": {
+    "url": "http://127.0.0.1:8810/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Sync Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_done_donesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_done_donesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_protected_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_protected_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_protected_1",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_protected_1",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_complete_open_0",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page_sync_complete",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [
+      {
+        "key": "sync_complete_fc_0",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nFiles added"
+      }
+    ],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync Success\n1\nCOURSE UPDATED\n2\nFILES DOWNLOADED\n2.4\nKB DOWNLOADED\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 FILES\nTXT\n2\nkeyboard_arrow_down\n\nFiles added\n\n Modified Files Protected (2)\nSaved next to your copy, which was left untouched\ng1 darts vejl_løsn_js.txt\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\ngk2 vejl_løsn_js.txt\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\n\nOpen Folder\n\nGo to front page",
+    "textLen": 560
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "done",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "done",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "active",
+      "label": "5. Complete"
+    }
+  ],
+  "completion": {
+    "folderCards": [
+      {
+        "key": "sync_complete_fc_0",
+        "text": "Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | 2 FILES | TXT | 2 | keyboard_arrow_down | Files added |  Modified Files Protected (2) | Saved next to your copy, which was left untouched | g1 darts vejl_løsn_js.txt | ​ | ​ | Obligatoriske afleveringer efterår 2025 | gk2 vejl_løsn_js.txt | ​ | ​ | Obligatoriske afleveringer efterår 2025 | Open Folder"
+      }
+    ],
+    "dashboardInsideCard": false,
+    "strayDashboard": false,
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync Success\n1\nCOURSE UPDATED\n2\nFILES DOWNLOADED\n2.4\nKB DOWNLOADED\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 FILES\nTXT\n2\nkeyboard_arrow_down\n\nFiles added\n\n Modified Files Protected (2)\nSaved next to your copy, which was left untouched\ng1 darts vejl_løsn_js.txt\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\ngk2 vejl_løsn_js.txt\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\n\nOpen Folder\n\nGo to front page"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

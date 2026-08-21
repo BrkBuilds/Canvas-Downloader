@@ -1,0 +1,41 @@
+{
+  "rows": [
+    {
+      "id": "m002",
+      "ok": false,
+      "error": "FlowError: Could not select course(s): [{'course_id': 43667, 'ok': False}]",
+      "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 542, in run_lane\n    res = execute(rp, job)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 586, in execute\n    return _execute_download(rp, job)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 611, in _execute_download\n    res = f.run(job.name, list(job.course_ids), job.config)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\flows.py\", line 375, in run\n    out[\"select\"] = self.select_courses(course_ids)\n                    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\flows.py\", line 231, in select_courses\n    raise FlowError(f\"Could not select course(s): {bad}\")\ntests.audit.harness.flows.FlowError: Could not select course(s): [{'course_id': 43667, 'ok': False}]\n",
+      "seconds": 87.0
+    },
+    {
+      "id": "m005",
+      "ok": false,
+      "error": "BrowserError: Browser is not open. Run: python -m tests.audit browser open",
+      "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 542, in run_lane\n    res = execute(rp, job)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 586, in execute\n    return _execute_download(rp, job)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 609, in _execute_download\n    with B.session(rp) as s:\n         ~~~~~~~~~^^^^\n  File \"C:\\Users\\birkl\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\contextlib.py\", line 141, in __enter__\n    return next(self.gen)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\browser.py\", line 169, in session\n    raise BrowserError(\"Browser is not open. Run: python -m tests.audit browser open\")\ntests.audit.harness.browser.BrowserError: Browser is not open. Run: python -m tests.audit browser open\n",
+      "seconds": 0.1
+    },
+    {
+      "id": "m011",
+      "ok": false,
+      "error": "BrowserError: Browser is not open. Run: python -m tests.audit browser open",
+      "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 542, in run_lane\n    res = execute(rp, job)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 586, in execute\n    return _execute_download(rp, job)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 609, in _execute_download\n    with B.session(rp) as s:\n         ~~~~~~~~~^^^^\n  File \"C:\\Users\\birkl\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\contextlib.py\", line 141, in __enter__\n    return next(self.gen)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\browser.py\", line 169, in session\n    raise BrowserError(\"Browser is not open. Run: python -m tests.audit browser open\")\ntests.audit.harness.browser.BrowserError: Browser is not open. Run: python -m tests.audit browser open\n",
+      "seconds": 0.0
+    },
+    {
+      "id": "m014",
+      "ok": false,
+      "error": "BrowserError: Browser is not open. Run: python -m tests.audit browser open",
+      "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 542, in run_lane\n    res = execute(rp, job)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 586, in execute\n    return _execute_download(rp, job)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 609, in _execute_download\n    with B.session(rp) as s:\n         ~~~~~~~~~^^^^\n  File \"C:\\Users\\birkl\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\contextlib.py\", line 141, in __enter__\n    return next(self.gen)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\browser.py\", line 169, in session\n    raise BrowserError(\"Browser is not open. Run: python -m tests.audit browser open\")\ntests.audit.harness.browser.BrowserError: Browser is not open. Run: python -m tests.audit browser open\n",
+      "seconds": 0.0
+    },
+    {
+      "id": "m017",
+      "ok": false,
+      "error": "BrowserError: Browser is not open. Run: python -m tests.audit browser open",
+      "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 542, in run_lane\n    res = execute(rp, job)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 586, in execute\n    return _execute_download(rp, job)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\parallel.py\", line 609, in _execute_download\n    with B.session(rp) as s:\n         ~~~~~~~~~^^^^\n  File \"C:\\Users\\birkl\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\contextlib.py\", line 141, in __enter__\n    return next(self.gen)\n  File \"C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\tests\\audit\\harness\\browser.py\", line 169, in session\n    raise BrowserError(\"Browser is not open. Run: python -m tests.audit browser open\")\ntests.audit.harness.browser.BrowserError: Browser is not open. Run: python -m tests.audit browser open\n",
+      "seconds": 0.0
+    }
+  ],
+  "current": "m021",
+  "updated": "2026-08-05T15:55:39"
+}

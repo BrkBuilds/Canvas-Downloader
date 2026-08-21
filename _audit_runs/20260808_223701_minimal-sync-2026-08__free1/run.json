@@ -1,0 +1,12 @@
+{
+  "run_id": "20260808_223701_minimal-sync-2026-08__free1",
+  "label": "lane:free1",
+  "parent": "20260808_223701_minimal-sync-2026-08",
+  "lane": "free1",
+  "created": "2026-08-08T22:37:20",
+  "app": {},
+  "ports_used": [
+    8850
+  ],
+  "browser": {}
+}

@@ -1,0 +1,126 @@
+{
+  "name": "valtest",
+  "course_ids": [
+    43667
+  ],
+  "config": {
+    "mode": "flat",
+    "file_filter": "all"
+  },
+  "select": {
+    "courses": [
+      43667
+    ],
+    "results": [
+      {
+        "course_id": 43667,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "all",
+      "mode": "flat"
+    },
+    "failed": [],
+    "verified": {},
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "valtest_config",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_154112_matrix-dl__free1\\evidence\\screenshots\\valtest_config.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_154112_matrix-dl__free1\\evidence\\ui\\valtest_config.json",
+    "textLen": 677,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "valtest",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n1\nFILE DOWNLOADED\n0\nMB DOWNLOADED\nFolders Updated\nBINT 1st semester (LA E25 BINTS1SEMU)\n1 FILE\nURL\n1\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 0.0
+    },
+    "captures": [
+      "valtest_phase_scan",
+      "valtest_phase_download",
+      "valtest_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "16:08:32",
+      "action": "select_courses",
+      "courses": [
+        43667
+      ],
+      "results": [
+        {
+          "course_id": 43667,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "16:08:34",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "16:08:39",
+      "action": "configure",
+      "applied": {
+        "file_filter": "all",
+        "mode": "flat"
+      },
+      "failed": [],
+      "verified": {},
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "16:08:48",
+      "action": "confirm_and_run",
+      "name": "valtest",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n1\nFILE DOWNLOADED\n0\nMB DOWNLOADED\nFolders Updated\nBINT 1st semester (LA E25 BINTS1SEMU)\n1 FILE\nURL\n1\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 0.0
+      },
+      "captures": [
+        "valtest_phase_scan",
+        "valtest_phase_download",
+        "valtest_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

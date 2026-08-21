@@ -1,0 +1,802 @@
+--- Debug Log Started: 2026-08-08 17:51:46.253276 ---
+[2026-08-08 17:51:46.254] === Session Environment ===
+  App: Canvas Downloader v2.0.1 | frozen=False | pid=10140
+  OS: Windows 11 | Windows-11-10.0.26200-SP0 | arch=AMD64
+  Python: 3.13.7
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 1 course(s)
+===========================
+[2026-08-08 17:51:56.630] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 133 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 45899.
+[2026-08-08 17:51:57.139] === Download Start: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | Course 1/1 ===
+[2026-08-08 17:51:57.145] Mode: modules | Filter: all
+[2026-08-08 17:51:57.148] Post-processing: [zip]
+[2026-08-08 17:51:57.149] Secondary content: [none]
+[2026-08-08 17:51:57.189] 
+==================================================
+--- Download: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) (ID: 45899) Mode: modules ---
+==================================================
+[2026-08-08 17:51:57.192] Save Dir: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads
+[2026-08-08 17:51:57.194] Filter: all | Concurrency: 5 | Max file size: disabled | Estimated payload: 1346 MB
+[2026-08-08 17:51:57.196] Canvas Content: [none] | isolate=no
+[2026-08-08 17:51:57.197] Post-processing: [zip]
+[2026-08-08 17:51:58.369] Processing Module: Course description including examination rules (ID: 309654)
+[2026-08-08 17:51:58.620] Found 1 items in module 'Course description including examination rules'
+[2026-08-08 17:51:58.622]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-08 17:51:58.627] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2024-2025/BA-BINTO1064U.aspx) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Course description including examination rules\Course description including examination rules.url
+[2026-08-08 17:51:58.656] Processing Module: Informationer (ID: 309655)
+[2026-08-08 17:51:58.976] Found 3 items in module 'Informationer'
+[2026-08-08 17:51:58.978]   - Item: Eloquent JavaScript bog: https://eloquentjavascript.net (bemærk: 4. udgave) (Type: SubHeader)
+[2026-08-08 17:51:58.979]   - Item: Bøger til foråret: se course readings (Type: SubHeader)
+[2026-08-08 17:51:58.981]   - Item: køb: Ben-Gan, I. (2023) T-SQL fundamentals . Fourth edition. Redmond ;; London :, Microsoft Press ; Pearson Education Inc. (Type: SubHeader)
+[2026-08-08 17:51:58.983] Processing Module: Andre ressourcer (ID: 313790)
+[2026-08-08 17:51:59.331] Found 1 items in module 'Andre ressourcer'
+[2026-08-08 17:51:59.332]   - Item: Trin-for-trin Guide til VS Code og konsollen.pdf (Type: File)
+[2026-08-08 17:51:59.651] Module file tracked: Trin-for-trin Guide til VS Code og konsollen.pdf (ID: 1598669)
+[2026-08-08 17:51:59.653] Processing Module: Obligatoriske afleveringer efterår 2025 (ID: 309657)
+[2026-08-08 17:52:00.229] Found 10 items in module 'Obligatoriske afleveringer efterår 2025'
+[2026-08-08 17:52:00.231]   - Item: Godkendelsesopgave 1 (Type: Assignment)
+[2026-08-08 17:52:00.233]   - Item: Godkendelsesopgave 1 vejl_løsn.js (Type: File)
+[2026-08-08 17:52:00.648] Module file tracked: g1 darts vejl_løsn.js (ID: 1670371)
+[2026-08-08 17:52:00.650]   - Item: Godkendelsesopgave 2 (Type: Assignment)
+[2026-08-08 17:52:00.651]   - Item: G2 vejl_løsn.js (Type: File)
+[2026-08-08 17:52:01.114] Module file tracked: gk2 vejl_løsn.js (ID: 1598721)
+[2026-08-08 17:52:01.115]   - Item: G2 fælles_feedback.pdf (Type: File)
+[2026-08-08 17:52:01.522] Module file tracked: g2_fælles_feedback.pdf (ID: 1687491)
+[2026-08-08 17:52:01.524]   - Item: Godkendelsesopgave 3 (Type: Assignment)
+[2026-08-08 17:52:01.526]   - Item: G3 opgave.bierOgBlomster analysevejledning.pdf (Type: File)
+[2026-08-08 17:52:02.040] Module file tracked: G3 opgave.bierOgBlomster analysevejledning.pdf (ID: 1692940)
+[2026-08-08 17:52:02.042]   - Item: Fælles feedback G3 v2.pdf (Type: File)
+[2026-08-08 17:52:02.385] Module file tracked: Fælles feedback G3 v2.pdf (ID: 1700523)
+[2026-08-08 17:52:02.386]   - Item: g3 opgave-bierOgBlomsterOO vejl.js (Type: File)
+[2026-08-08 17:52:02.683] Module file tracked: g3 opgave-bierOgBlomsterOO vejl.js (ID: 1700515)
+[2026-08-08 17:52:02.685]   - Item: G4  (Type: Quiz)
+[2026-08-08 17:52:02.686] Processing Module: Obligatoriske afleveringer forår 2026 (ID: 326739)
+[2026-08-08 17:52:03.157] Found 5 items in module 'Obligatoriske afleveringer forår 2026'
+[2026-08-08 17:52:03.159]   - Item: Godkendelsesopgave 5 (Type: Assignment)
+[2026-08-08 17:52:03.160]   - Item: g5_fælles_feedback.pdf (Type: File)
+[2026-08-08 17:52:03.438] Module file tracked: g5_fælles_feedback.pdf (ID: 1796825)
+[2026-08-08 17:52:03.440]   - Item: Godkendelsesopgave 6 (Type: Assignment)
+[2026-08-08 17:52:03.441]   - Item: Godkendelsesopgave 7 (Type: Assignment)
+[2026-08-08 17:52:03.443]   - Item: Godkendelsesopgave 8 - Quiz (Sidste frist for aflevering: onsdag 6. maj 23:59.) (Type: Quiz)
+[2026-08-08 17:52:03.444] Processing Module: Skriftlig Eksamen (ID: 322481)
+[2026-08-08 17:52:03.855] Found 7 items in module 'Skriftlig Eksamen'
+[2026-08-08 17:52:03.857]   - Item: Ordinær eksamen med vejledende løsning (Type: SubHeader)
+[2026-08-08 17:52:03.858]   - Item: eksamen 2025E ordinær.pdf (Type: File)
+[2026-08-08 17:52:04.182] Module file tracked: eksamen 2025E ordinær final.pdf (ID: 1736378)
+[2026-08-08 17:52:04.184]   - Item: eksamen 2025 ord vejledende.zip (Type: File)
+[2026-08-08 17:52:04.811] Module file tracked: eksamen 2025 ord vejledende.zip (ID: 1736379)
+[2026-08-08 17:52:04.813]   - Item: NB: feedback ordinær.pdf (Type: File)
+[2026-08-08 17:52:05.256] Module file tracked: feedback ordinær.pdf (ID: 1736380)
+[2026-08-08 17:52:05.257]   - Item: Re-eksamen med vejledende løsning (Type: SubHeader)
+[2026-08-08 17:52:05.259]   - Item: eksamen 2025E re-eksamen.pdf (Type: File)
+[2026-08-08 17:52:05.587] Module file tracked: eksamen 2025E re-eksamen.pdf (ID: 1770754)
+[2026-08-08 17:52:05.588]   - Item: eksamen 2025 re vejledende.zip (Type: File)
+[2026-08-08 17:52:05.918] Module file tracked: eksamen 2025 re vejledende.zip (ID: 1770755)
+[2026-08-08 17:52:05.920] Processing Module: Rapporteksamen (ID: 326738)
+[2026-08-08 17:52:06.269] Found 1 items in module 'Rapporteksamen'
+[2026-08-08 17:52:06.271]   - Item: Rapporteksamen 2026 - Ejendomsinvesterings-app.pdf (Type: File)
+[2026-08-08 17:52:06.545] Module file tracked: Eksamen 2026 rev_6.pdf (ID: 1771104)
+[2026-08-08 17:52:06.547] Processing Module: Kursus-evaluering (ID: 309656)
+[2026-08-08 17:52:06.931] Found 1 items in module 'Kursus-evaluering'
+[2026-08-08 17:52:06.933]   - Item: Kursusevaluering (Type: File)
+[2026-08-08 17:52:07.398] Module file tracked: PowerPoint to use in class_141223 (2).pptx (ID: 1815182)
+[2026-08-08 17:52:07.399] Processing Module: Uge 36: Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, data, værdier, typer og operatorer. (ID: 309658)
+[2026-08-08 17:52:07.885] Found 8 items in module 'Uge 36: Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, data, værdier, typer og operatorer.'
+[2026-08-08 17:52:07.887]   - Item: Feedback til Ole (lect1) (Type: ExternalUrl)
+[2026-08-08 17:52:07.903] Creating Link: Feedback til Ole (lect1) (https://app.sli.do/event/wQ4oH75RtvyKQDU862K3ny) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 36 Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, d\Feedback til Ole (lect1).url
+[2026-08-08 17:52:07.950]   - Item: Læs: Eloquent JavaScript – kap 1  (Type: SubHeader)
+[2026-08-08 17:52:07.958]   - Item: Javascript practice quiz 1 (Type: Quiz)
+[2026-08-08 17:52:07.961]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:07.963]   - Item: forelæsning 1 25.pdf (Type: File)
+[2026-08-08 17:52:08.248] Module file tracked: forelæsning 1 25.pdf (ID: 1626276)
+[2026-08-08 17:52:08.249]   - Item: forelæsning 1 25.pptx (Type: File)
+[2026-08-08 17:52:08.673] Module file tracked: forelæsning 1 25.pptx (ID: 1626277)
+[2026-08-08 17:52:08.675]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:08.677]   - Item: øvelsessæt 1- Grundlæggende javascript 1.pdf (Type: File)
+[2026-08-08 17:52:09.058] Module file tracked: øvelsessæt 1- Grundlæggende javascript 1.pdf (ID: 1626486)
+[2026-08-08 17:52:09.059] Processing Module: Uge 37: Forelæsning 2. Programstruktur: udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser. (ID: 309659)
+[2026-08-08 17:52:09.478] Found 8 items in module 'Uge 37: Forelæsning 2. Programstruktur: udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser.'
+[2026-08-08 17:52:09.480]   - Item: Læs: Eloquent JavaScript – kap 2  (Type: SubHeader)
+[2026-08-08 17:52:09.481]   - Item: Javascript practice quiz 2 (Type: Quiz)
+[2026-08-08 17:52:09.483]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:09.484]   - Item: forelæsning 2 25.pdf (Type: File)
+[2026-08-08 17:52:09.843] Module file tracked: forelæsning 2 25.pdf (ID: 1632000)
+[2026-08-08 17:52:09.844]   - Item: forelæsning 2 25.pptx (Type: File)
+[2026-08-08 17:52:10.138] Module file tracked: forelæsning 2 25.pptx (ID: 1632001)
+[2026-08-08 17:52:10.140]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:10.141]   - Item: øvelsessæt 2- Program - Struktur - Algoritmer.pdf (Type: File)
+[2026-08-08 17:52:10.432] Module file tracked: øvelsessæt 2- Program - Struktur - Algoritmer.pdf (ID: 1632558)
+[2026-08-08 17:52:10.434]   - Item: Feedback til Ole (Type: ExternalUrl)
+[2026-08-08 17:52:10.440] Creating Link: Feedback til Ole (https://app.sli.do/event/3sn9oZ5PHhhh19jrXt37y7) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 37 Forelæsning 2. Programstruktur udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser\Feedback til Ole.url
+[2026-08-08 17:52:10.468] Processing Module: Uge 38: Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak. (ID: 309660)
+[2026-08-08 17:52:10.882] Found 7 items in module 'Uge 38: Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak.'
+[2026-08-08 17:52:10.884]   - Item: Læs: Eloquent JavaScript – kap 3  (Type: SubHeader)
+[2026-08-08 17:52:10.885]   - Item: Javascript practice quiz 3 (Type: Quiz)
+[2026-08-08 17:52:10.886]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:10.887]   - Item: forelæsning 3 25.pdf (Type: File)
+[2026-08-08 17:52:11.247] Module file tracked: forelæsning 3 25.pdf (ID: 1637607)
+[2026-08-08 17:52:11.249]   - Item: forelæsning 3 25.pptx (Type: File)
+[2026-08-08 17:52:11.607] Module file tracked: forelæsning 3 25.pptx (ID: 1637608)
+[2026-08-08 17:52:11.608]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:11.611]   - Item: øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (Type: File)
+[2026-08-08 17:52:11.901] Module file tracked: øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (ID: 1637584)
+[2026-08-08 17:52:11.902] Processing Module: Uge 39: Forelæsning 4. Datastrukturer - Objekter og arrays. (ID: 309661)
+[2026-08-08 17:52:12.318] Found 7 items in module 'Uge 39: Forelæsning 4. Datastrukturer - Objekter og arrays.'
+[2026-08-08 17:52:12.319]   - Item: Læs: Eloquent JavaScript – kap 4  (Type: SubHeader)
+[2026-08-08 17:52:12.321]   - Item: Javascript practice quiz 4 (Type: Quiz)
+[2026-08-08 17:52:12.323]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:12.325]   - Item: forelæsning 4 25.pptx (Type: File)
+[2026-08-08 17:52:12.894] Module file tracked: forelæsning 4 25.pptx (ID: 1643465)
+[2026-08-08 17:52:12.895]   - Item: forelæsning 4 25.pdf (Type: File)
+[2026-08-08 17:52:13.204] Module file tracked: forelæsning 4 25.pdf (ID: 1643462)
+[2026-08-08 17:52:13.205]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:13.207]   - Item: øvelsessæt 4.pdf (Type: File)
+[2026-08-08 17:52:13.564] Module file tracked: øvelsessæt 4.pdf (ID: 1643483)
+[2026-08-08 17:52:13.566] Processing Module: Uge 40: Forelæsning 5. Højere-ordens funktioner og rekursion (ID: 309662)
+[2026-08-08 17:52:13.919] Found 9 items in module 'Uge 40: Forelæsning 5. Højere-ordens funktioner og rekursion'
+[2026-08-08 17:52:13.921]   - Item: Læs: Eloquent JavaScript – kap 5 (Type: SubHeader)
+[2026-08-08 17:52:13.923]   - Item: Læs: Eloquent JavaScript – kap 3 (afsnit om rekursion) (Type: SubHeader)
+[2026-08-08 17:52:13.925]   - Item: Javascript practice quiz 5 incl. recursion  (Type: Quiz)
+[2026-08-08 17:52:13.927]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:13.928]   - Item: forelæsning 5 25.pptx (Type: File)
+[2026-08-08 17:52:14.367] Module file tracked: forelæsning 5 25.pptx (ID: 1658577)
+[2026-08-08 17:52:14.368]   - Item: forelæsning 5 25.pdf (Type: File)
+[2026-08-08 17:52:14.686] Module file tracked: forelæsning 5 25.pdf (ID: 1658578)
+[2026-08-08 17:52:14.688]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:14.690]   - Item: øvelsessæt 5.pdf (Type: File)
+[2026-08-08 17:52:14.958] Module file tracked: øvelsessæt 5.pdf (ID: 1658625)
+[2026-08-08 17:52:14.960]   - Item: øvelsessæt 5 løsninger.pdf (Type: File)
+[2026-08-08 17:52:15.296] Module file tracked: øvelsessæt 5 løsninger.pdf (ID: 1658626)
+[2026-08-08 17:52:15.297] Processing Module: Uge 41: Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling. (ID: 309663)
+[2026-08-08 17:52:15.740] Found 10 items in module 'Uge 41: Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling.'
+[2026-08-08 17:52:15.741]   - Item: Læs: Eloquent JavaScript – kap 6 (Type: SubHeader)
+[2026-08-08 17:52:15.743]   - Item: Javascript practice quiz 6  (Type: Quiz)
+[2026-08-08 17:52:15.744]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:15.745]   - Item: forelæsning 6 25.pdf (Type: File)
+[2026-08-08 17:52:16.147] Module file tracked: forelæsning 6 25.pdf (ID: 1666624)
+[2026-08-08 17:52:16.149]   - Item: forelæsning 6 25.pptx (Type: File)
+[2026-08-08 17:52:16.434] Module file tracked: forelæsning 6 25.pptx (ID: 1666625)
+[2026-08-08 17:52:16.435]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:16.437]   - Item: øvelsessæt 6.pdf (Type: File)
+[2026-08-08 17:52:16.897] Module file tracked: øvelsessæt 6.pdf (ID: 1666626)
+[2026-08-08 17:52:16.899]   - Item: øvelsessæt 6 løsninger.pdf (Type: File)
+[2026-08-08 17:52:17.179] Module file tracked: øvelsessæt 6 løsninger.pdf (ID: 1666630)
+[2026-08-08 17:52:17.180]   - Item: 2022 - ordinær (Type: File)
+[2026-08-08 17:52:17.456] Module file tracked: 2022 ordinær.pdf (ID: 1598570)
+[2026-08-08 17:52:17.457]   - Item: eksamen 2023E ordinær.pdf (Type: File)
+[2026-08-08 17:52:17.730] Module file tracked: eksamen 2023E ordinær.pdf (ID: 1670338)
+[2026-08-08 17:52:17.732] Processing Module: Uge 42: Efterårsferie (ID: 309664)
+[2026-08-08 17:52:17.983] Found 0 items in module 'Uge 42: Efterårsferie'
+[2026-08-08 17:52:17.985] Processing Module: Uge 43: Forelæsning 7. Error-handling, Moduler (ID: 309665)
+[2026-08-08 17:52:18.286] Found 8 items in module 'Uge 43: Forelæsning 7. Error-handling, Moduler'
+[2026-08-08 17:52:18.287]   - Item: Læs: Eloquent JavaScript – kap 8, 10 (Type: SubHeader)
+[2026-08-08 17:52:18.289]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:18.292]   - Item: forelæsning 7 25.pdf (Type: File)
+[2026-08-08 17:52:18.592] Module file tracked: forelæsning 7 25.pdf (ID: 1677087)
+[2026-08-08 17:52:18.593]   - Item: forelæsning 7 25.pptx (Type: File)
+[2026-08-08 17:52:18.874] Module file tracked: forelæsning 7 25.pptx (ID: 1677089)
+[2026-08-08 17:52:18.875]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:18.876]   - Item: øvelsessæt 7.pdf (Type: File)
+[2026-08-08 17:52:19.256] Module file tracked: øvelsessæt 7.pdf (ID: 1677085)
+[2026-08-08 17:52:19.258]   - Item: øvelsessæt 7 løsninger.pdf (Type: File)
+[2026-08-08 17:52:19.541] Module file tracked: øvelsessæt 7 løsninger.pdf (ID: 1677090)
+[2026-08-08 17:52:19.543]   - Item: Øvelser - fredag d. 24/10 (Type: File)
+[2026-08-08 17:52:19.895] Module file tracked: Øvelse_u43.pdf (ID: 1679207)
+[2026-08-08 17:52:19.897] Processing Module: Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1 (ID: 309666)
+[2026-08-08 17:52:20.233] Found 8 items in module 'Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1'
+[2026-08-08 17:52:20.235]   - Item: Læs: Eloquent JavaScript – kap 13 (Type: SubHeader)
+[2026-08-08 17:52:20.239]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:20.242]   - Item: Forelæsning 8 - Intro til Web Teknologier.pdf (Type: File)
+[2026-08-08 17:52:20.516] Module file tracked: Forelæsning 8 - Intro til Web Teknologier.pdf (ID: 1682843)
+[2026-08-08 17:52:20.518]   - Item: Forelæsning 8 - Intro til Web Teknologier.pptx (Type: File)
+[2026-08-08 17:52:20.808] Module file tracked: Forelæsning 8 - Intro til Web Teknologier.pptx (ID: 1682844)
+[2026-08-08 17:52:20.810]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:20.812]   - Item: Hjælpeopgaver - fredag d. 31/10 (Type: File)
+[2026-08-08 17:52:21.106] Module file tracked: små_opgaver.pdf (ID: 1684203)
+[2026-08-08 17:52:21.108]   - Item: Minefelt.pdf (Type: File)
+[2026-08-08 17:52:21.415] Module file tracked: Minefelt.pdf (ID: 1684229)
+[2026-08-08 17:52:21.417]   - Item: minefeltVEJL.js (Type: File)
+[2026-08-08 17:52:21.709] Module file tracked: minefeltVEJL.js (ID: 1685205)
+[2026-08-08 17:52:21.711] Processing Module: Uge 45: Forelæsning 9. HTML 2 og CSS (ID: 309667)
+[2026-08-08 17:52:22.083] Found 7 items in module 'Uge 45: Forelæsning 9. HTML 2 og CSS'
+[2026-08-08 17:52:22.085]   - Item: Læs: Eloquent JavaScript – kap 14 og 18 (Type: SubHeader)
+[2026-08-08 17:52:22.087]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:22.088]   - Item: Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (Type: File)
+[2026-08-08 17:52:22.417] Module file tracked: Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (ID: 1688312)
+[2026-08-08 17:52:22.419]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:22.420]   - Item: Flexbox Froggy (Type: ExternalUrl)
+[2026-08-08 17:52:22.427] Creating Link: Flexbox Froggy (https://flexboxfroggy.com/#da) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 45 Forelæsning 9. HTML 2 og CSS\Flexbox Froggy.url
+[2026-08-08 17:52:22.478]   - Item: CSS Diner (Type: ExternalUrl)
+[2026-08-08 17:52:22.486] Creating Link: CSS Diner (https://flukeout.github.io/) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 45 Forelæsning 9. HTML 2 og CSS\CSS Diner.url
+[2026-08-08 17:52:22.524]   - Item: bondemand.pdf (Type: File)
+[2026-08-08 17:52:22.831] Module file tracked: bondemand.pdf (ID: 1690005)
+[2026-08-08 17:52:22.833] Processing Module: Uge 46: Forelæsning 10. Document Object Model (DOM) (ID: 309668)
+[2026-08-08 17:52:23.247] Found 7 items in module 'Uge 46: Forelæsning 10. Document Object Model (DOM)'
+[2026-08-08 17:52:23.248]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:23.250]   - Item: 2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (Type: File)
+[2026-08-08 17:52:23.569] Module file tracked: 2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (ID: 1692896)
+[2026-08-08 17:52:23.570]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:23.572]   - Item: opgave 102 - hints.html (Type: File)
+[2026-08-08 17:52:23.902] Module file tracked: hints.html (ID: 1692936)
+[2026-08-08 17:52:23.903]   - Item: styling_opgave102.css (Type: File)
+[2026-08-08 17:52:24.204] Module file tracked: styling_opgave102.css (ID: 1693079)
+[2026-08-08 17:52:24.206]   - Item: Eksamen 2023E Ordinær Klasse opgave.pdf (Type: File)
+[2026-08-08 17:52:24.463] Module file tracked: Eksamen 2023E Ordinær Klasse opgave.pdf (ID: 1694147)
+[2026-08-08 17:52:24.465]   - Item: Eksamen 2024E Ordinær Klasse opgave.pdf (Type: File)
+[2026-08-08 17:52:24.748] Module file tracked: Eksamen 2024E Ordinær Klasse opgave.pdf (ID: 1694158)
+[2026-08-08 17:52:24.749] Processing Module: Uge 47: Forelæsning 11. Asynkron programmering og event handling  (ID: 309669)
+[2026-08-08 17:52:25.087] Found 8 items in module 'Uge 47: Forelæsning 11. Asynkron programmering og event handling '
+[2026-08-08 17:52:25.090]   - Item: Læs: Eloquent JavaScript – kap 11+15 (Type: SubHeader)
+[2026-08-08 17:52:25.092]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:25.093]   - Item: Asynkronitet og Events.pdf (Type: File)
+[2026-08-08 17:52:25.378] Module file tracked: Asynkronitet og Events.pdf (ID: 1696759)
+[2026-08-08 17:52:25.379]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:25.381]   - Item: Øvelser_Kapitel11og15.md (Type: File)
+[2026-08-08 17:52:25.643] Module file tracked: Øvelser_Kapitel11og15.md (ID: 1696760)
+[2026-08-08 17:52:25.644]   - Item: Opgavesæt uge 47.pdf (Type: File)
+[2026-08-08 17:52:25.932] Module file tracked: Opgavesæt uge 47.pdf (ID: 1698072)
+[2026-08-08 17:52:25.934]   - Item: html terninger.pdf (Type: File)
+[2026-08-08 17:52:26.224] Module file tracked: html terninger.pdf (ID: 1598722)
+[2026-08-08 17:52:26.226]   - Item: Video gennemgang af terning opgaven (Type: File)
+[2026-08-08 17:52:26.496] Module file tracked: GK2 Samlet-1.mp4 (ID: 1698028)
+[2026-08-08 17:52:26.498] Processing Module: Uge 48: Forelæsning 12. Node.js og debugger samt eksamensforberedelse (ID: 309670)
+[2026-08-08 17:52:26.938] Found 10 items in module 'Uge 48: Forelæsning 12. Node.js og debugger samt eksamensforberedelse'
+[2026-08-08 17:52:26.941]   - Item: Læs: Eloquent JavaScript – kap 20  (Type: SubHeader)
+[2026-08-08 17:52:26.946]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:26.949]   - Item: NodeJs og Debugging.pdf (Type: File)
+[2026-08-08 17:52:27.263] Module file tracked: NodeJs og Debugging.pdf (ID: 1700490)
+[2026-08-08 17:52:27.265]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:27.266]   - Item: Debug - grades - 1.txt (Type: File)
+[2026-08-08 17:52:27.535] Module file tracked: Debug - grades - 1.txt (ID: 1700471)
+[2026-08-08 17:52:27.536]   - Item: Debug - Inventory - 1.txt (Type: File)
+[2026-08-08 17:52:27.823] Module file tracked: Debug - Inventory - 1.txt (ID: 1700478)
+[2026-08-08 17:52:27.824]   - Item: Debug - shop - 1.txt (Type: File)
+[2026-08-08 17:52:28.089] Module file tracked: Debug - shop - 1.txt (ID: 1700483)
+[2026-08-08 17:52:28.091]   - Item: Studietimers overblik - Opgave.pdf (Type: File)
+[2026-08-08 17:52:28.359] Module file tracked: Studietimers overblik - Opgave.pdf (ID: 1701809)
+[2026-08-08 17:52:28.361]   - Item: StudieTimerVejl.js (Type: File)
+[2026-08-08 17:52:28.630] Module file tracked: StudieTimerVejl.js (ID: 1702591)
+[2026-08-08 17:52:28.631]   - Item: JavaScript Objekter – Øvelser.pdf (Type: File)
+[2026-08-08 17:52:28.895] Module file tracked: JavaScript Objekter – Øvelser.pdf (ID: 1701948)
+[2026-08-08 17:52:28.897] Processing Module: Uge 49: Øvelser (ID: 319198)
+[2026-08-08 17:52:29.195] Found 3 items in module 'Uge 49: Øvelser'
+[2026-08-08 17:52:29.196]   - Item: Gavelisten - Opgave.pdf (Type: File)
+[2026-08-08 17:52:29.480] Module file tracked: Gavelisten - Opgave.pdf (ID: 1703058)
+[2026-08-08 17:52:29.482]   - Item: Juleværksted - Opgave.pdf (Type: File)
+[2026-08-08 17:52:29.752] Module file tracked: Juleværksted - Opgave.pdf (ID: 1703059)
+[2026-08-08 17:52:29.754]   - Item: Mus - Opgave.docx (Type: File)
+[2026-08-08 17:52:30.036] Module file tracked: Mus - Opgave.docx (ID: 1703063)
+[2026-08-08 17:52:30.037] Processing Module: Tidligere eksamenssæt (de fleste med vejledende løsninger) (ID: 309671)
+[2026-08-08 17:52:30.336] Found 4 items in module 'Tidligere eksamenssæt (de fleste med vejledende løsninger)'
+[2026-08-08 17:52:30.337]   - Item: Husk, at der også kan komme andre ting såsom switch-statements, loops igennem objekter, HTML osv. som ikke fremgår så ofte i tidligere eksamenssæt. (Type: SubHeader)
+[2026-08-08 17:52:30.338]   - Item: Eksamens arkiv.zip (Type: File)
+[2026-08-08 17:52:30.594] Module file tracked: Eksamens arkiv.zip (ID: 1692058)
+[2026-08-08 17:52:30.595]   - Item: Fiktiv Eksamensopgave.pdf (Type: File)
+[2026-08-08 17:52:30.911] Module file tracked: Fiktiv Eksamensopgave.pdf (ID: 1598591)
+[2026-08-08 17:52:30.912]   - Item: Fiktiv Eksamensopgave3.pdf (Type: File)
+[2026-08-08 17:52:31.197] Module file tracked: Fiktiv Eksamensopgave3.pdf (ID: 1598593)
+[2026-08-08 17:52:31.199] Processing Module: Uge 7: Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel) (ID: 323358)
+[2026-08-08 17:52:31.585] Found 12 items in module 'Uge 7: Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)'
+[2026-08-08 17:52:31.586]   - Item: Læs:  (Type: SubHeader)
+[2026-08-08 17:52:31.588]   - Item: UML @ Classroom : kap. 1,2,3,4 (Type: ExternalTool)
+[2026-08-08 17:52:31.595] Creating Link: UML @ Classroom : kap. 1,2,3,4 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150025) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)\UML @ Classroom  kap. 1,2,3,4.url
+[2026-08-08 17:52:31.728]   - Item: Kursorisk: (Type: SubHeader)
+[2026-08-08 17:52:31.730]   - Item: UML Diagram Types Guide: Class diagram (Type: ExternalTool)
+[2026-08-08 17:52:31.738] Creating Link: UML Diagram Types Guide: Class diagram (https://cbscanvas.instructure.com/courses/45899/modules/items/1150026) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)\UML Diagram Types Guide Class diagram.url
+[2026-08-08 17:52:31.791]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:31.792]   - Item: Forelæsning13.pdf (Type: File)
+[2026-08-08 17:52:32.081] Module file tracked: Forelæsning13.pdf (ID: 1769713)
+[2026-08-08 17:52:32.082]   - Item: Forelæsning13.pptx (Type: File)
+[2026-08-08 17:52:32.395] Module file tracked: Forelæsning13.pptx (ID: 1769714)
+[2026-08-08 17:52:32.397]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:32.398]   - Item: UMLanalyseopgaver.pdf (Type: File)
+[2026-08-08 17:52:32.673] Module file tracked: UMLanalyseopgaver.pdf (ID: 1768580)
+[2026-08-08 17:52:32.674]   - Item: UMLcases.pdf (Type: File)
+[2026-08-08 17:52:32.947] Module file tracked: UMLcases.pdf (ID: 1768581)
+[2026-08-08 17:52:32.949]   - Item: exercises system modelling - solutions.pdf (Type: File)
+[2026-08-08 17:52:33.263] Module file tracked: exercises system modelling - solutions.pdf (ID: 1598710)
+[2026-08-08 17:52:33.265]   - Item: forelæsningsnoter 13 OO+UML.docx (Type: File)
+[2026-08-08 17:52:33.521] Module file tracked: forelæsningsnoter 13 OO UML.docx (ID: 1769666)
+[2026-08-08 17:52:33.523] Processing Module: Uge 8: Forelæsnigsfri (ID: 323360)
+[2026-08-08 17:52:33.789] Found 0 items in module 'Uge 8: Forelæsnigsfri'
+[2026-08-08 17:52:33.791] Processing Module: Uge 9: Forelæsning 14. Design, Arkitektur  (ID: 323359)
+[2026-08-08 17:52:34.154] Found 11 items in module 'Uge 9: Forelæsning 14. Design, Arkitektur '
+[2026-08-08 17:52:34.155]   - Item: Læs:  (Type: SubHeader)
+[2026-08-08 17:52:34.158]   - Item: UML @ Classroom : kap. 5, (6), 7  (Type: ExternalTool)
+[2026-08-08 17:52:34.165] Creating Link: UML @ Classroom : kap. 5, (6), 7  (https://cbscanvas.instructure.com/courses/45899/modules/items/1150036) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 9 Forelæsning 14. Design, Arkitektur\UML @ Classroom  kap. 5, (6), 7.url
+[2026-08-08 17:52:34.293]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:34.295]   - Item: Forelæsning 14 OO+UML 2.pdf (Type: File)
+[2026-08-08 17:52:34.574] Module file tracked: Forelæsning 14 OO UML 2.pdf (ID: 1780749)
+[2026-08-08 17:52:34.576]   - Item: Forelæsning 14 OO+UML 2.pptx (Type: File)
+[2026-08-08 17:52:34.890] Module file tracked: Forelæsning 14 OO UML 2.pptx (ID: 1780750)
+[2026-08-08 17:52:34.891]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:34.893]   - Item: VRS_registrérKunde_vejl.pdf (Type: File)
+[2026-08-08 17:52:35.173] Module file tracked: VRS_registrérKunde_vejl.pdf (ID: 1780937)
+[2026-08-08 17:52:35.175]   - Item: opgave_bibliotekssystem.pdf (Type: File)
+[2026-08-08 17:52:35.456] Module file tracked: opgave_bibliotekssystem.pdf (ID: 1780752)
+[2026-08-08 17:52:35.457]   - Item: opgave_bibliotekssystem_vejl.pdf (Type: File)
+[2026-08-08 17:52:35.819] Module file tracked: opgave_bibliotekssystem_vejl.pdf (ID: 1780936)
+[2026-08-08 17:52:35.821]   - Item: Biblioteks_DSD_vejl.jpg (Type: File)
+[2026-08-08 17:52:36.092] Module file tracked: Biblioteks_DSD_vejl.jpg (ID: 1781875)
+[2026-08-08 17:52:36.094]   - Item: Biblioteks_SSD_vejl.jpg (Type: File)
+[2026-08-08 17:52:36.366] Module file tracked: Biblioteks_SSD_vejl.jpg (ID: 1781876)
+[2026-08-08 17:52:36.368] Processing Module: Uge 10: Forelæsning 15. Database 1 | Opsætning af database (ID: 323361)
+[2026-08-08 17:52:36.753] Found 12 items in module 'Uge 10: Forelæsning 15. Database 1 | Opsætning af database'
+[2026-08-08 17:52:36.754]   - Item: Læs:  (Type: SubHeader)
+[2026-08-08 17:52:36.756]   - Item: The Worlds of Database Systems. pp 1-13 (Type: ExternalTool)
+[2026-08-08 17:52:36.765] Creating Link: The Worlds of Database Systems. pp 1-13 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150046) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 10 Forelæsning 15. Database 1  Opsætning af database\The Worlds of Database Systems. pp 1-13.url
+[2026-08-08 17:52:36.928]   - Item: The relational model of data. pp 15-65 (Type: ExternalTool)
+[2026-08-08 17:52:36.959] Creating Link: The relational model of data. pp 15-65 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150047) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 10 Forelæsning 15. Database 1  Opsætning af database\The relational model of data. pp 15-65.url
+[2026-08-08 17:52:37.137]   - Item: Kursorisk: (Type: SubHeader)
+[2026-08-08 17:52:37.139]   - Item: Entity Relationship Modeling with UML (Type: ExternalTool)
+[2026-08-08 17:52:37.149] Creating Link: Entity Relationship Modeling with UML (https://cbscanvas.instructure.com/courses/45899/modules/items/1150048) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 10 Forelæsning 15. Database 1  Opsætning af database\Entity Relationship Modeling with UML.url
+[2026-08-08 17:52:37.182]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:37.184]   - Item: Forelæsning 15 DB1.pdf (Type: File)
+[2026-08-08 17:52:37.453] Module file tracked: Forelæsning 15 DB1_x.pdf (ID: 1784973)
+[2026-08-08 17:52:37.456]   - Item: Forelæsning 15 DB1.pptx (Type: File)
+[2026-08-08 17:52:37.740] Module file tracked: Forelæsning 15 DB1_x.pptx (ID: 1784974)
+[2026-08-08 17:52:37.742]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:37.744]   - Item: Lecture 15 Database Design Exercises solutions.pdf (Type: File)
+[2026-08-08 17:52:38.022] Module file tracked: Lecture 15 Database Design Exercises solutions NY.pdf (ID: 1784717)
+[2026-08-08 17:52:38.024]   - Item: Lecture 15 Database Design Exercises.pdf (Type: File)
+[2026-08-08 17:52:38.298] Module file tracked: Lecture 15 Database Design Exercises.pdf (ID: 1784716)
+[2026-08-08 17:52:38.300]   - Item: Guide til opsætning af database-2026.pdf (Type: File)
+[2026-08-08 17:52:38.590] Module file tracked: Guide til opsætning af database-2026.pdf (ID: 1784715)
+[2026-08-08 17:52:38.592] Processing Module: Uge 11: Forelæsning 16. Database 2 | Datamodifikation (ID: 323362)
+[2026-08-08 17:52:38.921] Found 6 items in module 'Uge 11: Forelæsning 16. Database 2 | Datamodifikation'
+[2026-08-08 17:52:38.923]   - Item: T-SQL fundamentals kap. 1, 2, 8 (Type: ExternalTool)
+[2026-08-08 17:52:38.930] Creating Link: T-SQL fundamentals kap. 1, 2, 8 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150056) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 11 Forelæsning 16. Database 2  Datamodifikation\T-SQL fundamentals kap. 1, 2, 8.url
+[2026-08-08 17:52:39.043]   - Item: Forelæsning 16 - DB2.pptx (Type: File)
+[2026-08-08 17:52:39.331] Module file tracked: Forelæsning 16 - DB2.pptx (ID: 1789277)
+[2026-08-08 17:52:39.333]   - Item: Forelæsning 16 - DB2.pdf (Type: File)
+[2026-08-08 17:52:39.611] Module file tracked: Forelæsning 16 - DB2.pdf (ID: 1789278)
+[2026-08-08 17:52:39.613]   - Item: løbeklub SQL.pdf (Type: File)
+[2026-08-08 17:52:39.879] Module file tracked: løbeklub SQL.pdf (ID: 1789978)
+[2026-08-08 17:52:39.881]   - Item: Lecture 16 ER-RM exercises (solutions).pdf (Type: File)
+[2026-08-08 17:52:40.162] Module file tracked: Lecture 16 svar øvelse.pdf (ID: 1789237)
+[2026-08-08 17:52:40.164]   - Item: Lecture 16 ER-RM Exercises.pdf (Type: File)
+[2026-08-08 17:52:40.428] Module file tracked: Lecture 16 ER-RM Exercises.pdf (ID: 1789236)
+[2026-08-08 17:52:40.430] Processing Module: Uge 12: Forelæsning 17. Database 3 | Join og set operatorer (ID: 323363)
+[2026-08-08 17:52:40.832] Found 13 items in module 'Uge 12: Forelæsning 17. Database 3 | Join og set operatorer'
+[2026-08-08 17:52:40.834]   - Item: Læs:  (Type: SubHeader)
+[2026-08-08 17:52:40.836]   - Item: T-SQL fundamentals kap. 3, 6 (Type: ExternalTool)
+[2026-08-08 17:52:40.843] Creating Link: T-SQL fundamentals kap. 3, 6 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150065) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 12 Forelæsning 17. Database 3  Join og set operatorer\T-SQL fundamentals kap. 3, 6.url
+[2026-08-08 17:52:40.874]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:40.875]   - Item: Forelæsning 17 - DB3.pdf (Type: File)
+[2026-08-08 17:52:41.177] Module file tracked: Forelæsning 17 - DB3.pdf (ID: 1793427)
+[2026-08-08 17:52:41.179]   - Item: Forelæsning 17 - DB3.pptx (Type: File)
+[2026-08-08 17:52:41.578] Module file tracked: Forelæsning 17 - DB3.pptx (ID: 1793428)
+[2026-08-08 17:52:41.580]   - Item: EKSTRA: DB-kapitelnoter-øvelser-løsninger.zip (Type: File)
+[2026-08-08 17:52:42.016] Module file tracked: DB-kapitelnoter-øvelser-løsninger.zip (ID: 1793434)
+[2026-08-08 17:52:42.017]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:42.018]   - Item: Create_ILearn_tables.sql (Type: File)
+[2026-08-08 17:52:42.339] Module file tracked: Create_ILearn_tables.sql (ID: 1789210)
+[2026-08-08 17:52:42.341]   - Item: Insert_ILearn_data.sql (Type: File)
+[2026-08-08 17:52:42.659] Module file tracked: Insert_ILearn_data.sql (ID: 1598646)
+[2026-08-08 17:52:42.660]   - Item: Forelæsning 17 ILearn SQL Exercises.pdf (Type: File)
+[2026-08-08 17:52:42.941] Module file tracked: Forelæsning 17 ILearn SQL Exercises.pdf (ID: 1793429)
+[2026-08-08 17:52:42.942]   - Item: Forelæsning 17 ILearn SQL Solutions.sql (Type: File)
+[2026-08-08 17:52:43.215] Module file tracked: Forelæsning 17 ILearn SQL Solutions.sql (ID: 1793556)
+[2026-08-08 17:52:43.217]   - Item: SQL-Opgave.pdf (Type: File)
+[2026-08-08 17:52:43.493] Module file tracked: SQL-Opgave.pdf (ID: 1794805)
+[2026-08-08 17:52:43.494]   - Item: SQL Opgave Vejl.sql (Type: File)
+[2026-08-08 17:52:43.767] Module file tracked: SQL Opgave Vejl.sql (ID: 1794807)
+[2026-08-08 17:52:43.769] Processing Module: Uge 13: Forelæsning 18. Webserver & APIer (ID: 323364)
+[2026-08-08 17:52:44.118] Found 9 items in module 'Uge 13: Forelæsning 18. Webserver & APIer'
+[2026-08-08 17:52:44.119]   - Item: Læs:  (Type: SubHeader)
+[2026-08-08 17:52:44.122]   - Item: Express_Nodejs Introduction, mozilla.org (Type: ExternalTool)
+[2026-08-08 17:52:44.131] Creating Link: Express_Nodejs Introduction, mozilla.org (https://cbscanvas.instructure.com/courses/45899/modules/items/1150084) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 13 Forelæsning 18. Webserver & APIer\Express_Nodejs Introduction, mozilla.org.url
+[2026-08-08 17:52:44.233]   - Item: Hello world example - ExpressJs (Type: ExternalTool)
+[2026-08-08 17:52:44.240] Creating Link: Hello world example - ExpressJs (https://cbscanvas.instructure.com/courses/45899/modules/items/1150083) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 13 Forelæsning 18. Webserver & APIer\Hello world example - ExpressJs.url
+[2026-08-08 17:52:44.321]   - Item: Node.js - Express Framework (Type: ExternalTool)
+[2026-08-08 17:52:44.329] Creating Link: Node.js - Express Framework (https://cbscanvas.instructure.com/courses/45899/modules/items/1150085) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 13 Forelæsning 18. Webserver & APIer\Node.js - Express Framework.url
+[2026-08-08 17:52:44.357]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:44.359]   - Item: Forelæsning 18 - Webserver og API.pptx (Type: File)
+[2026-08-08 17:52:44.650] Module file tracked: Forelæsning 18 - Webserver og API.pptx (ID: 1797870)
+[2026-08-08 17:52:44.652]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:44.655]   - Item: Webserver-opgave.pdf (Type: File)
+[2026-08-08 17:52:44.964] Module file tracked: Webserver-opgave.pdf (ID: 1799465)
+[2026-08-08 17:52:44.965]   - Item: Webserver-Opgave-Vejl.zip (Type: File)
+[2026-08-08 17:52:45.260] Module file tracked: Webserver-Opgave-Vejl.zip (ID: 1799926)
+[2026-08-08 17:52:45.261] Processing Module: Uge 14: Forelæsnigsfri (Påske) (ID: 323366)
+[2026-08-08 17:52:45.510] Found 0 items in module 'Uge 14: Forelæsnigsfri (Påske)'
+[2026-08-08 17:52:45.511] Processing Module: Uge 15: Forelæsning 19. Webserver & Databaser (ID: 323365)
+[2026-08-08 17:52:45.802] Found 5 items in module 'Uge 15: Forelæsning 19. Webserver & Databaser'
+[2026-08-08 17:52:45.805]   - Item: Læs:  (Type: SubHeader)
+[2026-08-08 17:52:45.807]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:45.810]   - Item: Forelæsning 19 - Webserver og Databaser.pptx (Type: File)
+[2026-08-08 17:52:46.090] Module file tracked: Forelæsning 19 - Webserver og Databaser.pptx (ID: 1805046)
+[2026-08-08 17:52:46.092]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:46.094]   - Item: Forelæsning 19.zip (Type: File)
+[2026-08-08 17:52:46.363] Module file tracked: Forelæsning 19.zip (ID: 1805047)
+[2026-08-08 17:52:46.365] Processing Module: Uge 16: Forelæsning 20. Små systemer 1 | Testing - Teori og praksis (ID: 323368)
+[2026-08-08 17:52:46.687] Found 6 items in module 'Uge 16: Forelæsning 20. Små systemer 1 | Testing - Teori og praksis'
+[2026-08-08 17:52:46.689]   - Item: Læs:  (Type: SubHeader)
+[2026-08-08 17:52:46.691]   - Item: Certified Tester Foundation Level (CTFL) v4.0 (Type: ExternalTool)
+[2026-08-08 17:52:46.699] Creating Link: Certified Tester Foundation Level (CTFL) v4.0 (https://cbscanvas.instructure.com/courses/45899/modules/items/1150088) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis\Certified Tester Foundation Level (CTFL) v4.0.url
+[2026-08-08 17:52:46.732]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:46.735]   - Item: Uge 16 - Testing - Teori og praksis.pdf (Type: File)
+[2026-08-08 17:52:47.012] Module file tracked: Uge 16 - Testing - Teori og praksis.pdf (ID: 1807958)
+[2026-08-08 17:52:47.013]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:47.015]   - Item: Uge 16 - Jest.zip (Type: File)
+[2026-08-08 17:52:47.285] Module file tracked: Uge 16 - Jest.zip (ID: 1808151)
+[2026-08-08 17:52:47.287] Processing Module: Uge 18: Forelæsning 21. Små systemer 2 | Security 101, (authentification, authorization, audit) (ID: 323369)
+[2026-08-08 17:52:47.585] Found 4 items in module 'Uge 18: Forelæsning 21. Små systemer 2 | Security 101, (authentification, authorization, audit)'
+[2026-08-08 17:52:47.587]   - Item: Læs:  (Type: SubHeader)
+[2026-08-08 17:52:47.590]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:47.592]   - Item: Forelæsning 21 - Cloud & Security 101.pptx (Type: File)
+[2026-08-08 17:52:47.890] Module file tracked: Forelæsning 22 - Cloud & Security 101.pptx (ID: 1814657)
+[2026-08-08 17:52:47.892]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:47.894] Processing Module: uge 19: Forelæsning 22. Små systemer 3 | Arkitektur, Backend, MVC + fullstack (ID: 323367)
+[2026-08-08 17:52:48.200] Found 4 items in module 'uge 19: Forelæsning 22. Små systemer 3 | Arkitektur, Backend, MVC + fullstack'
+[2026-08-08 17:52:48.202]   - Item: Læs:  (Type: SubHeader)
+[2026-08-08 17:52:48.203]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:48.206]   - Item: Uge 19 - System Arkitektur - 3 tier, Backend, MVC + fullstack.pdf (Type: File)
+[2026-08-08 17:52:48.490] Module file tracked: Uge 19 - System Arkitektur - 3 tier, Backend, MVC   fullstack.pdf (ID: 1817698)
+[2026-08-08 17:52:48.492]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:48.494] Processing Module: Uge 20: Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse. (ID: 323371)
+[2026-08-08 17:52:48.802] Found 6 items in module 'Uge 20: Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse.'
+[2026-08-08 17:52:48.804]   - Item: Læs:  (Type: SubHeader)
+[2026-08-08 17:52:48.806]   - Item: Kursusbeskrivelse og eksamensregler (Type: ExternalUrl)
+[2026-08-08 17:52:48.816] Creating Link: Kursusbeskrivelse og eksamensregler (https://kursuskatalog.cbs.dk/2024-2025/BA-BINTO1064U.aspx) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 20 Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse\Kursusbeskrivelse og eksamensregler.url
+[2026-08-08 17:52:48.847]   - Item: Slides (Type: SubHeader)
+[2026-08-08 17:52:48.849]   - Item: Forelæsning 23 - eksamensforberedelse.pptx (Type: File)
+[2026-08-08 17:52:49.137] Module file tracked: Forelæsning 23 - eksamensforberedelse.pptx (ID: 1823174)
+[2026-08-08 17:52:49.139]   - Item: Forelæsning 23 - eksamensforberedelse.pdf (Type: File)
+[2026-08-08 17:52:49.420] Module file tracked: Forelæsning 23 - eksamensforberedelse.pdf (ID: 1823208)
+[2026-08-08 17:52:49.422]   - Item: Øvelser (Type: SubHeader)
+[2026-08-08 17:52:49.462] Requesting URL: https://cbscanvas.instructure.com/files/1598669/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:49.466] Requesting URL: https://cbscanvas.instructure.com/files/1670371/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:49.470] Requesting URL: https://cbscanvas.instructure.com/files/1598721/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:49.474] Requesting URL: https://cbscanvas.instructure.com/files/1687491/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:49.477] Requesting URL: https://cbscanvas.instructure.com/files/1692940/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:51.019] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:51.050] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:51.120] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Andre ressourcer\Trin-for-trin Guide til VS Code og konsollen.pdf (150525 bytes)
+[2026-08-08 17:52:51.134] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:51.165] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Obligatoriske afleveringer efterår 2025\G3 opgave.bierOgBlomster analysevejledning.pdf (265292 bytes)
+[2026-08-08 17:52:51.180] Requesting URL: https://cbscanvas.instructure.com/files/1700523/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:51.223] Response Status: 200 Content-Type: text/javascript
+[2026-08-08 17:52:51.258] Requesting URL: https://cbscanvas.instructure.com/files/1700515/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:51.262] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Obligatoriske afleveringer efterår 2025\g2_fælles_feedback.pdf (225849 bytes)
+[2026-08-08 17:52:51.317] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Obligatoriske afleveringer efterår 2025\g1 darts vejl_løsn.js (1209 bytes)
+[2026-08-08 17:52:51.324] Requesting URL: https://cbscanvas.instructure.com/files/1796825/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:51.353] Requesting URL: https://cbscanvas.instructure.com/files/1736378/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:51.399] Response Status: 200 Content-Type: text/javascript
+[2026-08-08 17:52:51.420] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Obligatoriske afleveringer efterår 2025\gk2 vejl_løsn.js (1213 bytes)
+[2026-08-08 17:52:51.451] Requesting URL: https://cbscanvas.instructure.com/files/1736379/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:52.079] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:52.149] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Obligatoriske afleveringer efterår 2025\Fælles feedback G3 v2.pdf (354538 bytes)
+[2026-08-08 17:52:52.179] Requesting URL: https://cbscanvas.instructure.com/files/1736380/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:52.249] Response Status: 200 Content-Type: text/javascript
+[2026-08-08 17:52:52.265] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Obligatoriske afleveringer efterår 2025\g3 opgave-bierOgBlomsterOO vejl.js (7858 bytes)
+[2026-08-08 17:52:52.292] Requesting URL: https://cbscanvas.instructure.com/files/1770754/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:52.351] Response Status: 200 Content-Type: application/zip
+[2026-08-08 17:52:52.365] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Skriftlig Eksamen\eksamen 2025 ord vejledende.zip (14542 bytes)
+[2026-08-08 17:52:52.368] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:52.411] Requesting URL: https://cbscanvas.instructure.com/files/1770755/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:52.502] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Skriftlig Eksamen\eksamen 2025E ordinær final.pdf (655581 bytes)
+[2026-08-08 17:52:52.535] Requesting URL: https://cbscanvas.instructure.com/files/1771104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:52.541] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:52.596] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Obligatoriske afleveringer forår 2026\g5_fælles_feedback.pdf (144594 bytes)
+[2026-08-08 17:52:52.633] Requesting URL: https://cbscanvas.instructure.com/files/1815182/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:53.200] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:53.233] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Skriftlig Eksamen\feedback ordinær.pdf (111925 bytes)
+[2026-08-08 17:52:53.265] Requesting URL: https://cbscanvas.instructure.com/files/1626276/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:53.291] Response Status: 200 Content-Type: application/zip
+[2026-08-08 17:52:53.307] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Skriftlig Eksamen\eksamen 2025 re vejledende.zip (13770 bytes)
+[2026-08-08 17:52:53.337] Requesting URL: https://cbscanvas.instructure.com/files/1626277/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:53.443] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:53.518] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Skriftlig Eksamen\eksamen 2025E re-eksamen.pdf (700836 bytes)
+[2026-08-08 17:52:53.521] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:53.557] Requesting URL: https://cbscanvas.instructure.com/files/1632000/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:53.583] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Rapporteksamen\Eksamen 2026 rev_6.pdf (263452 bytes)
+[2026-08-08 17:52:53.625] Requesting URL: https://cbscanvas.instructure.com/files/1632001/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:53.635] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:52:53.774] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Kursus-evaluering\PowerPoint to use in class_141223 (2).pptx (1718878 bytes)
+[2026-08-08 17:52:53.805] Requesting URL: https://cbscanvas.instructure.com/files/1626486/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:54.346] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:54.484] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:52:54.494] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 36 Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, d\forelæsning 1 25.pdf (1593444 bytes)
+[2026-08-08 17:52:54.541] Requesting URL: https://cbscanvas.instructure.com/files/1632558/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:54.760] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:54.999] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 37 Forelæsning 2. Programstruktur udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser\forelæsning 2 25.pdf (951046 bytes)
+[2026-08-08 17:52:55.016] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:52:55.097] Requesting URL: https://cbscanvas.instructure.com/files/1637607/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:55.434] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:55.584] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 36 Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, d\øvelsessæt 1- Grundlæggende javascript 1.pdf (155545 bytes)
+[2026-08-08 17:52:55.707] Requesting URL: https://cbscanvas.instructure.com/files/1637608/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:55.997] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:56.169] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 37 Forelæsning 2. Programstruktur udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser\øvelsessæt 2- Program - Struktur - Algoritmer.pdf (184026 bytes)
+[2026-08-08 17:52:56.267] Requesting URL: https://cbscanvas.instructure.com/files/1637584/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:56.816] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:57.460] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 38 Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak\forelæsning 3 25.pdf (797272 bytes)
+[2026-08-08 17:52:57.600] Requesting URL: https://cbscanvas.instructure.com/files/1643465/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:57.758] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:52:58.112] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:52:58.342] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 38 Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak\øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf (199331 bytes)
+[2026-08-08 17:52:58.479] Requesting URL: https://cbscanvas.instructure.com/files/1643462/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:59.262] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 36 Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, d\forelæsning 1 25.pptx (25963296 bytes)
+[2026-08-08 17:52:59.357] Requesting URL: https://cbscanvas.instructure.com/files/1643483/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:52:59.415] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:00.078] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:00.435] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 39 Forelæsning 4. Datastrukturer - Objekter og arrays\forelæsning 4 25.pdf (1093469 bytes)
+[2026-08-08 17:53:00.470] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 37 Forelæsning 2. Programstruktur udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser\forelæsning 2 25.pptx (27494979 bytes)
+[2026-08-08 17:53:00.525] Requesting URL: https://cbscanvas.instructure.com/files/1658577/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:00.530] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 38 Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak\forelæsning 3 25.pptx (14493933 bytes)
+[2026-08-08 17:53:00.598] Requesting URL: https://cbscanvas.instructure.com/files/1658578/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:00.653] Requesting URL: https://cbscanvas.instructure.com/files/1658625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:01.003] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:01.038] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 39 Forelæsning 4. Datastrukturer - Objekter og arrays\øvelsessæt 4.pdf (258644 bytes)
+[2026-08-08 17:53:01.091] Requesting URL: https://cbscanvas.instructure.com/files/1658626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:02.136] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:02.328] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:02.437] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:02.472] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 39 Forelæsning 4. Datastrukturer - Objekter og arrays\forelæsning 4 25.pptx (24744385 bytes)
+[2026-08-08 17:53:02.475] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:02.580] Requesting URL: https://cbscanvas.instructure.com/files/1666624/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:02.592] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion\øvelsessæt 5.pdf (245920 bytes)
+[2026-08-08 17:53:02.769] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion\øvelsessæt 5 løsninger.pdf (282049 bytes)
+[2026-08-08 17:53:02.987] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion\forelæsning 5 25.pdf (772981 bytes)
+[2026-08-08 17:53:03.516] Requesting URL: https://cbscanvas.instructure.com/files/1666625/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:04.223] Requesting URL: https://cbscanvas.instructure.com/files/1666630/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:04.333] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:04.403] Requesting URL: https://cbscanvas.instructure.com/files/1666626/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:04.579] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling\forelæsning 6 25.pdf (1154888 bytes)
+[2026-08-08 17:53:04.639] Requesting URL: https://cbscanvas.instructure.com/files/1598570/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:04.779] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:05.176] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 40 Forelæsning 5. Højere-ordens funktioner og rekursion\forelæsning 5 25.pptx (17174017 bytes)
+[2026-08-08 17:53:05.267] Requesting URL: https://cbscanvas.instructure.com/files/1682844/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:05.602] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:05.637] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:05.741] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling\øvelsessæt 6 løsninger.pdf (239167 bytes)
+[2026-08-08 17:53:05.810] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling\øvelsessæt 6.pdf (203755 bytes)
+[2026-08-08 17:53:05.830] Requesting URL: https://cbscanvas.instructure.com/files/1679207/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:05.963] Requesting URL: https://cbscanvas.instructure.com/files/1682843/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:06.115] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:06.260] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling\2022 ordinær.pdf (203316 bytes)
+[2026-08-08 17:53:06.371] Requesting URL: https://cbscanvas.instructure.com/files/1677090/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:07.071] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:07.435] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:07.607] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:07.938] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:08.236] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 43 Forelæsning 7. Error-handling, Moduler\øvelsessæt 7 løsninger.pdf (292720 bytes)
+[2026-08-08 17:53:08.596] Requesting URL: https://cbscanvas.instructure.com/files/1677085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:09.615] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 43 Forelæsning 7. Error-handling, Moduler\Øvelse_u43.pdf (3962706 bytes)
+[2026-08-08 17:53:09.850] Requesting URL: https://cbscanvas.instructure.com/files/1670338/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:09.993] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1\Forelæsning 8 - Intro til Web Teknologier.pdf (5854748 bytes)
+[2026-08-08 17:53:10.098] Requesting URL: https://cbscanvas.instructure.com/files/1677087/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:11.375] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:11.543] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 43 Forelæsning 7. Error-handling, Moduler\øvelsessæt 7.pdf (274244 bytes)
+[2026-08-08 17:53:11.606] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:11.638] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling\forelæsning 6 25.pptx (39644299 bytes)
+[2026-08-08 17:53:11.658] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:11.669] Requesting URL: https://cbscanvas.instructure.com/files/1684203/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:11.732] Requesting URL: https://cbscanvas.instructure.com/files/1684229/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:11.780] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 41 Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling\eksamen 2023E ordinær.pdf (255500 bytes)
+[2026-08-08 17:53:11.846] Requesting URL: https://cbscanvas.instructure.com/files/1685205/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:11.882] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 43 Forelæsning 7. Error-handling, Moduler\forelæsning 7 25.pdf (982759 bytes)
+[2026-08-08 17:53:11.930] Requesting URL: https://cbscanvas.instructure.com/files/1677089/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:11.935] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1\Forelæsning 8 - Intro til Web Teknologier.pptx (23173123 bytes)
+[2026-08-08 17:53:11.965] Requesting URL: https://cbscanvas.instructure.com/files/1688312/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:12.764] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:12.799] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1\små_opgaver.pdf (164552 bytes)
+[2026-08-08 17:53:12.834] Requesting URL: https://cbscanvas.instructure.com/files/1690005/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:13.125] Response Status: 200 Content-Type: text/javascript
+[2026-08-08 17:53:13.147] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1\minefeltVEJL.js (787 bytes)
+[2026-08-08 17:53:13.181] Requesting URL: https://cbscanvas.instructure.com/files/1692896/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:13.186] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:13.217] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1\Minefelt.pdf (366149 bytes)
+[2026-08-08 17:53:13.258] Requesting URL: https://cbscanvas.instructure.com/files/1692936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:13.406] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:13.468] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:14.024] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:14.169] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 45 Forelæsning 9. HTML 2 og CSS\bondemand.pdf (380086 bytes)
+[2026-08-08 17:53:14.256] Requesting URL: https://cbscanvas.instructure.com/files/1693079/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:14.700] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:15.425] Response Status: 200 Content-Type: text/html
+[2026-08-08 17:53:15.527] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 45 Forelæsning 9. HTML 2 og CSS\Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx (9440778 bytes)
+[2026-08-08 17:53:15.769] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 46 Forelæsning 10. Document Object Model (DOM)\hints.html (15176 bytes)
+[2026-08-08 17:53:15.787] Requesting URL: https://cbscanvas.instructure.com/files/1694147/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:16.261] Requesting URL: https://cbscanvas.instructure.com/files/1694158/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:16.291] Response Status: 200 Content-Type: text/css
+[2026-08-08 17:53:16.449] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 46 Forelæsning 10. Document Object Model (DOM)\styling_opgave102.css (4063 bytes)
+[2026-08-08 17:53:16.599] Requesting URL: https://cbscanvas.instructure.com/files/1696759/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:16.691] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 43 Forelæsning 7. Error-handling, Moduler\forelæsning 7 25.pptx (13428202 bytes)
+[2026-08-08 17:53:16.798] Requesting URL: https://cbscanvas.instructure.com/files/1696760/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:17.134] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 46 Forelæsning 10. Document Object Model (DOM)\2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx (9243144 bytes)
+[2026-08-08 17:53:17.169] Requesting URL: https://cbscanvas.instructure.com/files/1698072/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:17.691] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:17.713] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 46 Forelæsning 10. Document Object Model (DOM)\Eksamen 2023E Ordinær Klasse opgave.pdf (54694 bytes)
+[2026-08-08 17:53:17.752] Requesting URL: https://cbscanvas.instructure.com/files/1598722/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:17.776] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:17.806] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 46 Forelæsning 10. Document Object Model (DOM)\Eksamen 2024E Ordinær Klasse opgave.pdf (167555 bytes)
+[2026-08-08 17:53:17.841] Requesting URL: https://cbscanvas.instructure.com/files/1698028/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:17.866] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:17.974] Response Status: 200 Content-Type: text/markdown
+[2026-08-08 17:53:17.999] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 47 Forelæsning 11. Asynkron programmering og event handling\Asynkronitet og Events.pdf (1248126 bytes)
+[2026-08-08 17:53:18.016] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 47 Forelæsning 11. Asynkron programmering og event handling\Øvelser_Kapitel11og15.md (6374 bytes)
+[2026-08-08 17:53:18.035] Requesting URL: https://cbscanvas.instructure.com/files/1700490/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:18.150] Requesting URL: https://cbscanvas.instructure.com/files/1700471/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:18.442] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:18.490] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 47 Forelæsning 11. Asynkron programmering og event handling\Opgavesæt uge 47.pdf (148870 bytes)
+[2026-08-08 17:53:18.525] Requesting URL: https://cbscanvas.instructure.com/files/1700478/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:18.967] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:19.017] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 47 Forelæsning 11. Asynkron programmering og event handling\html terninger.pdf (226046 bytes)
+[2026-08-08 17:53:19.054] Requesting URL: https://cbscanvas.instructure.com/files/1700483/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:19.084] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:19.196] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\NodeJs og Debugging.pdf (1226376 bytes)
+[2026-08-08 17:53:19.227] Requesting URL: https://cbscanvas.instructure.com/files/1701809/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:19.244] Response Status: 200 Content-Type: text/plain
+[2026-08-08 17:53:19.261] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\Debug - grades - 1.txt (990 bytes)
+[2026-08-08 17:53:19.279] Response Status: 200 Content-Type: video/mp4
+[2026-08-08 17:53:19.313] Requesting URL: https://cbscanvas.instructure.com/files/1702591/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:19.734] Response Status: 200 Content-Type: text/plain
+[2026-08-08 17:53:19.837] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\Debug - Inventory - 1.txt (1464 bytes)
+[2026-08-08 17:53:19.982] Requesting URL: https://cbscanvas.instructure.com/files/1701948/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:20.533] Response Status: 200 Content-Type: text/plain
+[2026-08-08 17:53:20.599] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\Debug - shop - 1.txt (1415 bytes)
+[2026-08-08 17:53:20.665] Requesting URL: https://cbscanvas.instructure.com/files/1703058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:20.683] Response Status: 200 Content-Type: text/javascript
+[2026-08-08 17:53:20.777] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\StudieTimerVejl.js (4094 bytes)
+[2026-08-08 17:53:20.880] Requesting URL: https://cbscanvas.instructure.com/files/1703059/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:20.907] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:21.017] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\Studietimers overblik - Opgave.pdf (166800 bytes)
+[2026-08-08 17:53:21.159] Requesting URL: https://cbscanvas.instructure.com/files/1703063/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:22.121] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:22.186] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\JavaScript Objekter – Øvelser.pdf (229478 bytes)
+[2026-08-08 17:53:22.395] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:22.399] Requesting URL: https://cbscanvas.instructure.com/files/1692058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:22.483] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 49 Øvelser\Gavelisten - Opgave.pdf (125183 bytes)
+[2026-08-08 17:53:22.571] Requesting URL: https://cbscanvas.instructure.com/files/1598591/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:22.597] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:22.690] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 49 Øvelser\Juleværksted - Opgave.pdf (197615 bytes)
+[2026-08-08 17:53:22.845] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-08 17:53:22.850] Requesting URL: https://cbscanvas.instructure.com/files/1598593/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:22.998] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 49 Øvelser\Mus - Opgave.docx (205833 bytes)
+[2026-08-08 17:53:23.096] Requesting URL: https://cbscanvas.instructure.com/files/1769713/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:23.643] Response Status: 200 Content-Type: application/zip
+[2026-08-08 17:53:24.029] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:24.164] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Tidligere eksamenssæt (de fleste med vejledende løsninger)\Fiktiv Eksamensopgave.pdf (43733 bytes)
+[2026-08-08 17:53:24.311] Requesting URL: https://cbscanvas.instructure.com/files/1769714/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:24.333] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Tidligere eksamenssæt (de fleste med vejledende løsninger)\Eksamens arkiv.zip (2918862 bytes)
+[2026-08-08 17:53:24.337] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:24.392] Requesting URL: https://cbscanvas.instructure.com/files/1768580/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:24.484] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Tidligere eksamenssæt (de fleste med vejledende løsninger)\Fiktiv Eksamensopgave3.pdf (141950 bytes)
+[2026-08-08 17:53:24.507] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:24.594] Requesting URL: https://cbscanvas.instructure.com/files/1768581/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:24.926] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)\Forelæsning13.pdf (1560239 bytes)
+[2026-08-08 17:53:25.016] Requesting URL: https://cbscanvas.instructure.com/files/1598710/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:25.926] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:25.929] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:26.060] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)\UMLanalyseopgaver.pdf (119412 bytes)
+[2026-08-08 17:53:26.150] Requesting URL: https://cbscanvas.instructure.com/files/1769666/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:26.251] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:26.441] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)\UMLcases.pdf (142648 bytes)
+[2026-08-08 17:53:26.532] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:26.592] Requesting URL: https://cbscanvas.instructure.com/files/1780749/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:26.696] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)\exercises system modelling - solutions.pdf (182349 bytes)
+[2026-08-08 17:53:26.787] Requesting URL: https://cbscanvas.instructure.com/files/1780750/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:27.923] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-08-08 17:53:28.173] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)\forelæsningsnoter 13 OO UML.docx (31244 bytes)
+[2026-08-08 17:53:28.456] Requesting URL: https://cbscanvas.instructure.com/files/1780937/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:28.620] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:28.873] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:29.115] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 9 Forelæsning 14. Design, Arkitektur\Forelæsning 14 OO UML 2.pdf (1024966 bytes)
+[2026-08-08 17:53:29.354] Requesting URL: https://cbscanvas.instructure.com/files/1780752/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:30.440] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:30.653] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 9 Forelæsning 14. Design, Arkitektur\VRS_registrérKunde_vejl.pdf (197720 bytes)
+[2026-08-08 17:53:30.789] Requesting URL: https://cbscanvas.instructure.com/files/1780936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:31.244] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:31.526] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 9 Forelæsning 14. Design, Arkitektur\opgave_bibliotekssystem.pdf (174680 bytes)
+[2026-08-08 17:53:31.682] Requesting URL: https://cbscanvas.instructure.com/files/1781875/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:32.674] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 9 Forelæsning 14. Design, Arkitektur\Forelæsning 14 OO UML 2.pptx (13151543 bytes)
+[2026-08-08 17:53:32.793] Requesting URL: https://cbscanvas.instructure.com/files/1781876/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:32.927] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:33.114] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 9 Forelæsning 14. Design, Arkitektur\opgave_bibliotekssystem_vejl.pdf (245890 bytes)
+[2026-08-08 17:53:33.231] Requesting URL: https://cbscanvas.instructure.com/files/1784973/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:33.480] Response Status: 200 Content-Type: image/jpeg
+[2026-08-08 17:53:33.613] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 9 Forelæsning 14. Design, Arkitektur\Biblioteks_DSD_vejl.jpg (122731 bytes)
+[2026-08-08 17:53:33.807] Requesting URL: https://cbscanvas.instructure.com/files/1784974/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:35.003] Response Status: 200 Content-Type: image/jpeg
+[2026-08-08 17:53:35.176] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 9 Forelæsning 14. Design, Arkitektur\Biblioteks_SSD_vejl.jpg (32215 bytes)
+[2026-08-08 17:53:35.324] Requesting URL: https://cbscanvas.instructure.com/files/1784717/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:35.457] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:35.929] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 10 Forelæsning 15. Database 1  Opsætning af database\Forelæsning 15 DB1_x.pdf (1692942 bytes)
+[2026-08-08 17:53:36.045] Requesting URL: https://cbscanvas.instructure.com/files/1784716/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:36.268] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:37.111] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:37.346] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 10 Forelæsning 15. Database 1  Opsætning af database\Lecture 15 Database Design Exercises solutions NY.pdf (138522 bytes)
+[2026-08-08 17:53:37.467] Requesting URL: https://cbscanvas.instructure.com/files/1784715/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:37.886] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:38.047] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 10 Forelæsning 15. Database 1  Opsætning af database\Lecture 15 Database Design Exercises.pdf (78871 bytes)
+[2026-08-08 17:53:38.195] Requesting URL: https://cbscanvas.instructure.com/files/1789277/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:39.136] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)\Forelæsning13.pptx (51957778 bytes)
+[2026-08-08 17:53:39.265] Requesting URL: https://cbscanvas.instructure.com/files/1789278/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:39.399] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:40.259] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:42.413] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:42.617] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 10 Forelæsning 15. Database 1  Opsætning af database\Guide til opsætning af database-2026.pdf (4907315 bytes)
+[2026-08-08 17:53:42.799] Requesting URL: https://cbscanvas.instructure.com/files/1789978/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:43.070] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 11 Forelæsning 16. Database 2  Datamodifikation\Forelæsning 16 - DB2.pdf (1551149 bytes)
+[2026-08-08 17:53:43.227] Requesting URL: https://cbscanvas.instructure.com/files/1789237/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:44.866] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:45.136] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 11 Forelæsning 16. Database 2  Datamodifikation\løbeklub SQL.pdf (97930 bytes)
+[2026-08-08 17:53:45.320] Requesting URL: https://cbscanvas.instructure.com/files/1789236/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:45.524] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:45.889] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 11 Forelæsning 16. Database 2  Datamodifikation\Lecture 16 svar øvelse.pdf (670880 bytes)
+[2026-08-08 17:53:46.063] Requesting URL: https://cbscanvas.instructure.com/files/1793427/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:46.522] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 11 Forelæsning 16. Database 2  Datamodifikation\Forelæsning 16 - DB2.pptx (14136388 bytes)
+[2026-08-08 17:53:46.719] Requesting URL: https://cbscanvas.instructure.com/files/1793428/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:47.563] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:47.951] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 11 Forelæsning 16. Database 2  Datamodifikation\Lecture 16 ER-RM Exercises.pdf (186181 bytes)
+[2026-08-08 17:53:48.304] Requesting URL: https://cbscanvas.instructure.com/files/1793434/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:48.439] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:48.470] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 10 Forelæsning 15. Database 1  Opsætning af database\Forelæsning 15 DB1_x.pptx (34805489 bytes)
+[2026-08-08 17:53:48.882] Requesting URL: https://cbscanvas.instructure.com/files/1789210/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:48.999] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 12 Forelæsning 17. Database 3  Join og set operatorer\Forelæsning 17 - DB3.pdf (1038221 bytes)
+[2026-08-08 17:53:49.054] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:49.151] Requesting URL: https://cbscanvas.instructure.com/files/1598646/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:49.315] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 12 Forelæsning 17. Database 3  Join og set operatorer\Forelæsning 17 - DB3.pptx (883058 bytes)
+[2026-08-08 17:53:49.460] Requesting URL: https://cbscanvas.instructure.com/files/1793429/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:50.074] Response Status: 200 Content-Type: application/zip
+[2026-08-08 17:53:50.308] Response Status: 200 Content-Type: application/sql
+[2026-08-08 17:53:50.435] Response Status: 200 Content-Type: application/x-sql
+[2026-08-08 17:53:50.534] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 12 Forelæsning 17. Database 3  Join og set operatorer\Create_ILearn_tables.sql (3134 bytes)
+[2026-08-08 17:53:50.706] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 12 Forelæsning 17. Database 3  Join og set operatorer\Insert_ILearn_data.sql (17683 bytes)
+[2026-08-08 17:53:50.769] Requesting URL: https://cbscanvas.instructure.com/files/1793556/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:50.880] Requesting URL: https://cbscanvas.instructure.com/files/1794805/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:51.010] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:51.235] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 12 Forelæsning 17. Database 3  Join og set operatorer\Forelæsning 17 ILearn SQL Exercises.pdf (228477 bytes)
+[2026-08-08 17:53:51.434] Requesting URL: https://cbscanvas.instructure.com/files/1794807/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:52.732] Response Status: 200 Content-Type: application/sql
+[2026-08-08 17:53:52.890] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 12 Forelæsning 17. Database 3  Join og set operatorer\Forelæsning 17 ILearn SQL Solutions.sql (5520 bytes)
+[2026-08-08 17:53:52.938] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:53.062] Requesting URL: https://cbscanvas.instructure.com/files/1797870/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:53.407] Response Status: 200 Content-Type: application/sql
+[2026-08-08 17:53:53.889] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 12 Forelæsning 17. Database 3  Join og set operatorer\SQL Opgave Vejl.sql (2554 bytes)
+[2026-08-08 17:53:54.253] Requesting URL: https://cbscanvas.instructure.com/files/1799465/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:54.742] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 12 Forelæsning 17. Database 3  Join og set operatorer\DB-kapitelnoter-øvelser-løsninger.zip (13332356 bytes)
+[2026-08-08 17:53:54.856] Requesting URL: https://cbscanvas.instructure.com/files/1799926/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:55.007] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 12 Forelæsning 17. Database 3  Join og set operatorer\SQL-Opgave.pdf (4007174 bytes)
+[2026-08-08 17:53:55.127] Requesting URL: https://cbscanvas.instructure.com/files/1805046/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:55.494] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:56.118] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:53:56.577] Response Status: 200 Content-Type: application/zip
+[2026-08-08 17:53:56.886] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 13 Forelæsning 18. Webserver & APIer\Webserver-Opgave-Vejl.zip (2163 bytes)
+[2026-08-08 17:53:57.063] Requesting URL: https://cbscanvas.instructure.com/files/1805047/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:57.328] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:53:57.607] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 13 Forelæsning 18. Webserver & APIer\Webserver-opgave.pdf (3970615 bytes)
+[2026-08-08 17:53:57.822] Requesting URL: https://cbscanvas.instructure.com/files/1807958/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:58.855] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 13 Forelæsning 18. Webserver & APIer\Forelæsning 18 - Webserver og API.pptx (9918524 bytes)
+[2026-08-08 17:53:58.967] Requesting URL: https://cbscanvas.instructure.com/files/1808151/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:59.247] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 15 Forelæsning 19. Webserver & Databaser\Forelæsning 19 - Webserver og Databaser.pptx (6406516 bytes)
+[2026-08-08 17:53:59.385] Requesting URL: https://cbscanvas.instructure.com/files/1814657/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:53:59.485] Response Status: 200 Content-Type: application/zip
+[2026-08-08 17:53:59.790] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:54:00.471] Response Status: 200 Content-Type: application/zip
+[2026-08-08 17:54:00.651] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis\Uge 16 - Jest.zip (10482 bytes)
+[2026-08-08 17:54:00.701] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis\Uge 16 - Testing - Teori og praksis.pdf (3126264 bytes)
+[2026-08-08 17:54:00.827] Requesting URL: https://cbscanvas.instructure.com/files/1817698/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:54:00.880] Requesting URL: https://cbscanvas.instructure.com/files/1823174/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:54:01.271] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:54:03.938] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-08-08 17:54:04.702] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:54:07.270] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\uge 19 Forelæsning 22. Små systemer 3  Arkitektur, Backend, MVC   fullstack\Uge 19 - System Arkitektur - 3 tier, Backend, MVC   fullstack.pdf (4891900 bytes)
+[2026-08-08 17:54:07.450] Requesting URL: https://cbscanvas.instructure.com/files/1823208/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-08 17:54:08.115] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 18 Forelæsning 21. Små systemer 2  Security 101, (authentification, authorization, audit)\Forelæsning 22 - Cloud & Security 101.pptx (11668334 bytes)
+[2026-08-08 17:54:09.965] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 20 Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse\Forelæsning 23 - eksamensforberedelse.pptx (11448039 bytes)
+[2026-08-08 17:54:10.492] Response Status: 200 Content-Type: application/pdf
+[2026-08-08 17:54:11.105] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 20 Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse\Forelæsning 23 - eksamensforberedelse.pdf (2001367 bytes)
+[2026-08-08 17:54:12.530] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 15 Forelæsning 19. Webserver & Databaser\Forelæsning 19.zip (34749837 bytes)
+[2026-08-08 17:55:26.689] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\Uge 47 Forelæsning 11. Asynkron programmering og event handling\GK2 Samlet-1.mp4 (939534379 bytes)
+[2026-08-08 17:55:26.728] Starting Catch-All Phase for non-module files...
+[2026-08-08 17:55:27.296] Catch-All Phase Error: {"status":"unauthorized","errors":[{"message":"user not authorised to perform that action"}]}
+[2026-08-08 17:55:27.298] [WARNING] [core.canvas_logic] Files tab restricted for 'Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)' - skipping catch-all phase.
+[2026-08-08 17:55:27.313] --- Download Complete: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | 133 items | 1346.5 MB downloaded ---
+
+==================================================
+--- Post-Processing: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) ---
+==================================================
+[2026-08-08 17:57:38.683] === Course Finished: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | Downloaded: 133 items | Errors: 0 ===
+[2026-08-08 17:57:38.685] Post-processing ran: [zip]

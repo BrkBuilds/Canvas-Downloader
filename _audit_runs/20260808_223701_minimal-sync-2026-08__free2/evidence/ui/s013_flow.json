@@ -1,0 +1,156 @@
+{
+  "name": "s013",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "es\n2\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (all)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n131 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 16.2
+    },
+    "capture": "s013_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_update_45899"
+    ],
+    "capture": "s013_review",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\screenshots\\s013_review.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\ui\\s013_review.json",
+    "textLen": 824,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    }
+  ],
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": false,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "mpare the two and keep whichever you want, then delete the other.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 FILES\nTXT\n2\nkeyboard_arrow_down\n\nFiles added\n\n Modified Files Protected (2)\nSaved next to your copy, which was left untouched\nDebug - Inventory - 1_NewVersion.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse",
+      "waited_s": 5.5
+    },
+    "capture": "s013_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "22:46:53",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "22:47:15",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "es\n2\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (all)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n131 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 16.2
+      },
+      "capture": "s013_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "22:47:16",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_45899"
+      ],
+      "capture": "s013_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\screenshots\\s013_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\ui\\s013_review.json",
+      "textLen": 824,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:47:16",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    },
+    {
+      "t": "22:47:16",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_45899"
+      ],
+      "capture": "s013_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\screenshots\\s013_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\ui\\s013_review.json",
+      "textLen": 824,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:47:26",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": false,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "mpare the two and keep whichever you want, then delete the other.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 FILES\nTXT\n2\nkeyboard_arrow_down\n\nFiles added\n\n Modified Files Protected (2)\nSaved next to your copy, which was left untouched\nDebug - Inventory - 1_NewVersion.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse",
+        "waited_s": 5.5
+      },
+      "capture": "s013_complete",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "name": "s015",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "complete",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync done - everything up to date\n\nChecked 133 files in this course - your folder already matches Canvas.\n\nGo to front page",
+      "waited_s": 15.7
+    },
+    "capture": "s015_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "ok": true,
+    "skipped": "already up to date",
+    "landed_on": "complete",
+    "capture": "s015_up_to_date"
+  },
+  "trace": [
+    {
+      "t": "22:47:54",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "22:48:17",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "complete",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync done - everything up to date\n\nChecked 133 files in this course - your folder already matches Canvas.\n\nGo to front page",
+        "waited_s": 15.7
+      },
+      "capture": "s015_after_analysis",
+      "ok": true
+    }
+  ]
+}

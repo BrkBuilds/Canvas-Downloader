@@ -1,0 +1,227 @@
+{
+  "name": "audit_hardening",
+  "course_ids": [
+    43658
+  ],
+  "config": {
+    "convert_html": true,
+    "convert_code": true,
+    "convert_zip": true,
+    "convert_urls": true,
+    "dl_assignments": true,
+    "dl_announcements": true,
+    "dl_syllabus": true
+  },
+  "select": {
+    "courses": [
+      43658
+    ],
+    "results": [
+      {
+        "course_id": 43658,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "dl_assignments": true,
+      "dl_syllabus": true,
+      "dl_announcements": true,
+      "convert_zip": true,
+      "convert_html": true,
+      "convert_code": true,
+      "convert_urls": true
+    },
+    "failed": [],
+    "verified": {
+      "convert_zip": true,
+      "convert_html": true,
+      "convert_code": true,
+      "convert_urls": true,
+      "dl_assignments": true,
+      "dl_syllabus": true,
+      "dl_announcements": true
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "audit_hardening_config",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260807_000338\\evidence\\screenshots\\audit_hardening_config.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260807_000338\\evidence\\ui\\audit_hardening_config.json",
+    "textLen": 1281,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "audit_hardening",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n14\nFILES DOWNLOADED\n405.7\nKB DOWNLOADED\nFolders Updated\nHow to Uni (LA E25 BINTU7005U)\n14 FILES\nMD\n11\nURL\n1\nPNG\n1\nJPG\n1\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 29.3
+    },
+    "captures": [
+      "audit_hardening_phase_scan",
+      "audit_hardening_phase_download",
+      "audit_hardening_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "00:07:10",
+      "action": "select_courses",
+      "courses": [
+        43658
+      ],
+      "results": [
+        {
+          "course_id": 43658,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "00:07:12",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "00:07:20",
+      "action": "expand_card",
+      "card": "toggle_card2",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "00:07:22",
+      "action": "set_toggle",
+      "key": "btn_dl_assignments",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:07:23",
+      "action": "set_toggle",
+      "key": "btn_dl_syllabus",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:07:25",
+      "action": "set_toggle",
+      "key": "btn_dl_announcements",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:07:27",
+      "action": "expand_card",
+      "card": "toggle_card3",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "00:07:31",
+      "action": "set_toggle",
+      "key": "btn_convert_zip",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:07:33",
+      "action": "set_toggle",
+      "key": "btn_convert_html",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:07:35",
+      "action": "set_toggle",
+      "key": "btn_convert_code",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:07:37",
+      "action": "set_toggle",
+      "key": "btn_convert_urls",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:07:37",
+      "action": "configure",
+      "applied": {
+        "dl_assignments": true,
+        "dl_syllabus": true,
+        "dl_announcements": true,
+        "convert_zip": true,
+        "convert_html": true,
+        "convert_code": true,
+        "convert_urls": true
+      },
+      "failed": [],
+      "verified": {
+        "convert_zip": true,
+        "convert_html": true,
+        "convert_code": true,
+        "convert_urls": true,
+        "dl_assignments": true,
+        "dl_syllabus": true,
+        "dl_announcements": true
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "00:08:22",
+      "action": "confirm_and_run",
+      "name": "audit_hardening",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n14\nFILES DOWNLOADED\n405.7\nKB DOWNLOADED\nFolders Updated\nHow to Uni (LA E25 BINTU7005U)\n14 FILES\nMD\n11\nURL\n1\nPNG\n1\nJPG\n1\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 29.3
+      },
+      "captures": [
+        "audit_hardening_phase_scan",
+        "audit_hardening_phase_download",
+        "audit_hardening_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

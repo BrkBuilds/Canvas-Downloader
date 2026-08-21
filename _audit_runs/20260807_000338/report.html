@@ -1,0 +1,313 @@
+<!doctype html><meta charset='utf-8'><title>Canvas Downloader live audit - 20260807_000338</title><style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin:0; padding:32px; background:#0e1117; color:#e2e8f0;
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+.wrap { max-width:1100px; margin:0 auto; }
+h1 { font-size:26px; margin:0 0 4px; color:#fff; letter-spacing:-.01em; }
+h2 { font-size:17px; margin:34px 0 12px; color:#fff; }
+.sub { color:#94a3b8; margin:0 0 24px; }
+.tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px; margin-bottom:28px; }
+.tile { background:#161b24; border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; padding:14px 16px; }
+.tile .n { font-size:26px; font-weight:700; line-height:1.1; }
+.tile .l { font-size:11px; text-transform:uppercase; letter-spacing:.07em;
+  color:#94a3b8; margin-top:4px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th,td { text-align:left; padding:7px 10px; border-bottom:1px solid rgba(255,255,255,.06);
+  vertical-align:top; }
+th { color:#94a3b8; font-weight:600; font-size:11px; text-transform:uppercase;
+  letter-spacing:.06em; }
+.f { border:1px solid rgba(255,255,255,.08); border-left-width:3px;
+  border-radius:8px; margin-bottom:10px; background:#141922; }
+.f > summary { cursor:pointer; padding:11px 14px; list-style:none;
+  display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; }
+.f > summary::-webkit-details-marker { display:none; }
+.f[open] > summary { border-bottom:1px solid rgba(255,255,255,.06); }
+.badge { font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.06em; padding:2px 7px; border-radius:4px; white-space:nowrap; }
+.title { font-weight:600; color:#fff; flex:1; min-width:260px; }
+.meta { font-size:11px; color:#94a3b8; }
+.body { padding:12px 14px 16px; }
+.detail { color:#cbd5e1; margin-bottom:10px; white-space:pre-wrap; }
+pre { background:#0b0e14; border:1px solid rgba(255,255,255,.06); border-radius:6px;
+  padding:10px 12px; overflow-x:auto; font-size:12px; color:#cbd5e1; margin:0; }
+code { background:rgba(255,255,255,.06); padding:1px 5px; border-radius:3px;
+  font-size:12px; }
+.oracle { display:inline-block; background:rgba(99,102,241,.14); color:#a5b4fc;
+  border:1px solid rgba(99,102,241,.3); border-radius:4px; padding:1px 6px;
+  font-size:10px; font-weight:600; margin-right:4px; }
+.synthetic { background:rgba(168,85,247,.14); color:#d8b4fe;
+  border:1px solid rgba(168,85,247,.3); border-radius:4px; padding:1px 6px;
+  font-size:10px; }
+.empty { padding:26px; text-align:center; color:#68d4a3;
+  background:rgba(104,212,163,.08); border:1px solid rgba(104,212,163,.25);
+  border-radius:10px; font-weight:600; }
+.legend { font-size:12px; color:#94a3b8; margin:6px 0 18px; }
+.legend b { color:#cbd5e1; }
+@media (max-width:640px){ body{padding:16px;} .title{min-width:0;} }
+</style><div class='wrap'><h1>Live audit report</h1><p class='sub'>Run <code>20260807_000338</code> &middot; started 2026-08-07T00:03:39 &middot; rendered 2026-08-07 00:13</p><div class='tiles'><div class='tile'><div class='n' style='color:#fff'>0</div><div class='l'>defects</div></div><div class='tile'><div class='n' style='color:#475569'>0</div><div class='l'>critical</div></div><div class='tile'><div class='n' style='color:#475569'>0</div><div class='l'>high</div></div><div class='tile'><div class='n' style='color:#475569'>0</div><div class='l'>medium</div></div><div class='tile'><div class='n' style='color:#475569'>0</div><div class='l'>low</div></div><div class='tile'><div class='n' style='color:#94a3b8'>6</div><div class='l'>info</div></div></div><p class='legend'>Every finding is a disagreement between two independent views of the same fact. <b>O1</b> UI (what the app tells the user). <b>O2</b> Debug log (what the app says it did). <b>O3</b> Disk (what actually exists). <b>O4</b> Sync manifest (what the app believes). <b>O5</b> Canvas API (what should exist).</p><h2>What ran</h2><table><tr><th>Scenario</th><th>Course</th><th>Configuration</th><th>Result</th></tr><tr><td><code>audit_hardening</code></td><td>43658</td><td class='meta'>{&quot;convert_html&quot;: true, &quot;convert_code&quot;: true, &quot;convert_zip&quot;: true, &quot;convert_urls&quot;: true, &quot;dl_assignments&quot;: true, &quot;dl_announcements&quot;: true, &quot;dl_syllabus&quot;: true}</td><td>ok</td></tr><tr><td><code>audit_sync</code></td><td></td><td class='meta'>{}</td><td>ok</td></tr></table><h2>Findings</h2><div class='empty'>No defects found. Observations are listed below.</div><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>1 manifest row(s) describe files a converter consumed</span><span class='meta'>observation · audit_hardening · How to Uni (LA E25 BINTU7005U)</span></summary><div class='body'><div class='detail'>Expected: the engine&#x27;s bypass treats a missing source of a source-consuming converter as &#x27;converted away&#x27;. Listed so the rows are visible without being counted as defects.</div><pre>{
+  &quot;exts&quot;: [
+    &quot;.asm&quot;,
+    &quot;.bash&quot;,
+    &quot;.bat&quot;,
+    &quot;.c&quot;,
+    &quot;.cfg&quot;,
+    &quot;.conf&quot;,
+    &quot;.cpp&quot;,
+    &quot;.cs&quot;,
+    &quot;.css&quot;,
+    &quot;.csv&quot;,
+    &quot;.dart&quot;,
+    &quot;.env&quot;,
+    &quot;.go&quot;,
+    &quot;.gz&quot;,
+    &quot;.h&quot;,
+    &quot;.hpp&quot;,
+    &quot;.ini&quot;,
+    &quot;.java&quot;,
+    &quot;.js&quot;,
+    &quot;.json&quot;,
+    &quot;.jsx&quot;,
+    &quot;.kt&quot;,
+    &quot;.log&quot;,
+    &quot;.lua&quot;,
+    &quot;.m&quot;,
+    &quot;.mdx&quot;,
+    &quot;.php&quot;,
+    &quot;.pl&quot;,
+    &quot;.pm&quot;,
+    &quot;.ps1&quot;,
+    &quot;.py&quot;,
+    &quot;.r&quot;,
+    &quot;.rb&quot;,
+    &quot;.rmd&quot;,
+    &quot;.rs&quot;,
+    &quot;.scala&quot;,
+    &quot;.scss&quot;,
+    &quot;.sh&quot;,
+    &quot;.sql&quot;,
+    &quot;.svelte&quot;,
+    &quot;.swift&quot;,
+    &quot;.tar&quot;,
+    &quot;.toml&quot;,
+    &quot;.ts&quot;,
+    &quot;.tsv&quot;,
+    &quot;.tsx&quot;,
+    &quot;.url&quot;,
+    &quot;.vba&quot;,
+    &quot;.vue&quot;,
+    &quot;.webloc&quot;,
+    &quot;.xml&quot;,
+    &quot;.yaml&quot;,
+    &quot;.yml&quot;,
+    &quot;.zip&quot;,
+    &quot;.zsh&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>1 manifest row(s) describe files a converter consumed</span><span class='meta'>observation · How to Uni (LA E25 BINTU7005U)</span></summary><div class='body'><div class='detail'>Expected: the engine&#x27;s bypass treats a missing source of a source-consuming converter as &#x27;converted away&#x27;. Listed so the rows are visible without being counted as defects.</div><pre>{
+  &quot;exts&quot;: [
+    &quot;.asm&quot;,
+    &quot;.bash&quot;,
+    &quot;.bat&quot;,
+    &quot;.c&quot;,
+    &quot;.cfg&quot;,
+    &quot;.conf&quot;,
+    &quot;.cpp&quot;,
+    &quot;.cs&quot;,
+    &quot;.css&quot;,
+    &quot;.csv&quot;,
+    &quot;.dart&quot;,
+    &quot;.env&quot;,
+    &quot;.go&quot;,
+    &quot;.gz&quot;,
+    &quot;.h&quot;,
+    &quot;.hpp&quot;,
+    &quot;.ini&quot;,
+    &quot;.java&quot;,
+    &quot;.js&quot;,
+    &quot;.json&quot;,
+    &quot;.jsx&quot;,
+    &quot;.kt&quot;,
+    &quot;.log&quot;,
+    &quot;.lua&quot;,
+    &quot;.m&quot;,
+    &quot;.mdx&quot;,
+    &quot;.php&quot;,
+    &quot;.pl&quot;,
+    &quot;.pm&quot;,
+    &quot;.ps1&quot;,
+    &quot;.py&quot;,
+    &quot;.r&quot;,
+    &quot;.rb&quot;,
+    &quot;.rmd&quot;,
+    &quot;.rs&quot;,
+    &quot;.scala&quot;,
+    &quot;.scss&quot;,
+    &quot;.sh&quot;,
+    &quot;.sql&quot;,
+    &quot;.svelte&quot;,
+    &quot;.swift&quot;,
+    &quot;.tar&quot;,
+    &quot;.toml&quot;,
+    &quot;.ts&quot;,
+    &quot;.tsv&quot;,
+    &quot;.tsx&quot;,
+    &quot;.url&quot;,
+    &quot;.vba&quot;,
+    &quot;.vue&quot;,
+    &quot;.webloc&quot;,
+    &quot;.xml&quot;,
+    &quot;.yaml&quot;,
+    &quot;.yml&quot;,
+    &quot;.zip&quot;,
+    &quot;.zsh&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>1 manifest row(s) describe files a converter consumed</span><span class='meta'>observation · audit_sync · How to Uni (LA E25 BINTU7005U)</span></summary><div class='body'><div class='detail'>Expected: the engine&#x27;s bypass treats a missing source of a source-consuming converter as &#x27;converted away&#x27;. Listed so the rows are visible without being counted as defects.</div><pre>{
+  &quot;exts&quot;: [
+    &quot;.asm&quot;,
+    &quot;.bash&quot;,
+    &quot;.bat&quot;,
+    &quot;.c&quot;,
+    &quot;.cfg&quot;,
+    &quot;.conf&quot;,
+    &quot;.cpp&quot;,
+    &quot;.cs&quot;,
+    &quot;.css&quot;,
+    &quot;.csv&quot;,
+    &quot;.dart&quot;,
+    &quot;.env&quot;,
+    &quot;.go&quot;,
+    &quot;.gz&quot;,
+    &quot;.h&quot;,
+    &quot;.hpp&quot;,
+    &quot;.ini&quot;,
+    &quot;.java&quot;,
+    &quot;.js&quot;,
+    &quot;.json&quot;,
+    &quot;.jsx&quot;,
+    &quot;.kt&quot;,
+    &quot;.log&quot;,
+    &quot;.lua&quot;,
+    &quot;.m&quot;,
+    &quot;.mdx&quot;,
+    &quot;.php&quot;,
+    &quot;.pl&quot;,
+    &quot;.pm&quot;,
+    &quot;.ps1&quot;,
+    &quot;.py&quot;,
+    &quot;.r&quot;,
+    &quot;.rb&quot;,
+    &quot;.rmd&quot;,
+    &quot;.rs&quot;,
+    &quot;.scala&quot;,
+    &quot;.scss&quot;,
+    &quot;.sh&quot;,
+    &quot;.sql&quot;,
+    &quot;.svelte&quot;,
+    &quot;.swift&quot;,
+    &quot;.tar&quot;,
+    &quot;.toml&quot;,
+    &quot;.ts&quot;,
+    &quot;.tsv&quot;,
+    &quot;.tsx&quot;,
+    &quot;.url&quot;,
+    &quot;.vba&quot;,
+    &quot;.vue&quot;,
+    &quot;.webloc&quot;,
+    &quot;.xml&quot;,
+    &quot;.yaml&quot;,
+    &quot;.yml&quot;,
+    &quot;.zip&quot;,
+    &quot;.zsh&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Canvas exposes no md5 for any of this course&#x27;s 2 files</span><span class='meta'>observation · audit_hardening · How to Uni (LA E25 BINTU7005U)</span></summary><div class='body'><div class='detail'>analyze_course&#x27;s adoption tier (b) - the content match - can therefore never fire here, leaving only tier (c) (unique size+extension) for a file whose manifest row is gone. Note this does NOT weaken ordinary renames: heal_manifest Tier 2 matches on original_md5, which the app computes locally from the bytes it wrote, and works with no Canvas hash at all. Recorded because the tier-(b) comment reads as though it were the primary mechanism.</div><pre>{
+  &quot;files_with_md5&quot;: 0,
+  &quot;files&quot;: 2
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 28% of lines</span><span class='meta'>observation · audit_hardening · How to Uni (LA E25 BINTU7005U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-07 00:07:39.522435 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;--- Download: How to Uni (LA E25 BINTU7005U) (ID: 43658) Mode: modules ---&quot;
+    },
+    {
+      &quot;line&quot;: 21,
+      &quot;text&quot;: &quot;Canvas Content: [assignments, syllabus, announcements] | isolate=no&quot;
+    },
+    {
+      &quot;line&quot;: 25,
+      &quot;text&quot;: &quot;  - Item: Course description including examination rules (Type: ExternalUrl)&quot;
+    },
+    {
+      &quot;line&quot;: 29,
+      &quot;text&quot;: &quot;  - Item: Ready for the next step (Type: Page)&quot;
+    },
+    {
+      &quot;line&quot;: 31,
+      &quot;text&quot;: &quot;  - Item: Introduction week (Type: Page)&quot;
+    },
+    {
+      &quot;line&quot;: 35,
+      &quot;text&quot;: &quot;  - Item: Velkommen til How to Uni (Type: Page)&quot;
+    },
+    {
+      &quot;line&quot;: 39,
+      &quot;text&quot;: &quot;  - Item: Fra elev til studerende (Type: Page)&quot;
+    },
+    {
+      &quot;line&quot;: 41,
+      &quot;text&quot;: &quot;  - Item: Tjek dit kommende semester eller quarter ud (Type: Page)&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 28% of lines</span><span class='meta'>observation · How to Uni (LA E25 BINTU7005U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-07 00:07:39.522435 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;--- Download: How to Uni (LA E25 BINTU7005U) (ID: 43658) Mode: modules ---&quot;
+    },
+    {
+      &quot;line&quot;: 21,
+      &quot;text&quot;: &quot;Canvas Content: [assignments, syllabus, announcements] | isolate=no&quot;
+    },
+    {
+      &quot;line&quot;: 25,
+      &quot;text&quot;: &quot;  - Item: Course description including examination rules (Type: ExternalUrl)&quot;
+    },
+    {
+      &quot;line&quot;: 29,
+      &quot;text&quot;: &quot;  - Item: Ready for the next step (Type: Page)&quot;
+    },
+    {
+      &quot;line&quot;: 31,
+      &quot;text&quot;: &quot;  - Item: Introduction week (Type: Page)&quot;
+    },
+    {
+      &quot;line&quot;: 35,
+      &quot;text&quot;: &quot;  - Item: Velkommen til How to Uni (Type: Page)&quot;
+    },
+    {
+      &quot;line&quot;: 39,
+      &quot;text&quot;: &quot;  - Item: Fra elev til studerende (Type: Page)&quot;
+    },
+    {
+      &quot;line&quot;: 41,
+      &quot;text&quot;: &quot;  - Item: Tjek dit kommende semester eller quarter ud (Type: Page)&quot;
+    }
+  ]
+}</pre></div></details></div>

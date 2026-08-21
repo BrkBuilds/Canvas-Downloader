@@ -1,0 +1,368 @@
+{
+  "name": "m012",
+  "course_ids": [
+    43665
+  ],
+  "config": {
+    "pan_master": false,
+    "pan_out_mp4": false,
+    "pan_out_txt": false,
+    "pan_out_srt": false,
+    "pan_out_mp3": false,
+    "pan_layout": "match",
+    "mode": "modules",
+    "file_filter": "all",
+    "secondary_isolated": false,
+    "max_file_size": null,
+    "convert_zip": false,
+    "convert_pptx": true,
+    "convert_word": false,
+    "convert_excel": false,
+    "convert_html": false,
+    "convert_code": false,
+    "convert_urls": false,
+    "convert_video": false,
+    "dl_assignments": false,
+    "dl_syllabus": false,
+    "dl_announcements": false,
+    "dl_discussions": false,
+    "dl_quizzes": false,
+    "dl_submissions": false
+  },
+  "select": {
+    "courses": [
+      43665
+    ],
+    "results": [
+      {
+        "course_id": 43665,
+        "ok": true
+      }
+    ]
+  },
+  "size_cap": {
+    "mb": null,
+    "toggle": {
+      "set": true,
+      "key": "temp_max_size_enabled",
+      "changed": false,
+      "checked": false
+    },
+    "dialog_closed": true,
+    "closed_with_escape": false,
+    "ok": true
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "all",
+      "mode": "modules",
+      "dl_assignments": false,
+      "dl_syllabus": false,
+      "dl_announcements": false,
+      "dl_discussions": false,
+      "dl_quizzes": false,
+      "dl_submissions": false,
+      "secondary_isolated": false,
+      "convert_zip": false,
+      "convert_pptx": true,
+      "convert_word": false,
+      "convert_excel": false,
+      "convert_html": false,
+      "convert_code": false,
+      "convert_urls": false,
+      "convert_video": false
+    },
+    "failed": [],
+    "verified": {
+      "convert_zip": false,
+      "convert_pptx": true,
+      "convert_word": false,
+      "convert_excel": false,
+      "convert_html": false,
+      "convert_code": false,
+      "convert_urls": false,
+      "convert_video": false,
+      "dl_assignments": false,
+      "dl_syllabus": false,
+      "dl_announcements": false,
+      "dl_discussions": false,
+      "dl_quizzes": false,
+      "dl_submissions": false,
+      "pan_out_mp4": null,
+      "pan_out_mp3": null,
+      "pan_out_txt": null,
+      "pan_out_srt": null
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "m012_config",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08__office\\evidence\\screenshots\\m012_config.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08__office\\evidence\\ui\\m012_config.json",
+    "textLen": 1317,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "m012",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": false,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n123\nFILES DOWNLOADED\n45.0\nMB DOWNLOADED",
+      "waited_s": 374.0
+    },
+    "captures": [
+      "m012_phase_scan",
+      "m012_phase_download",
+      "m012_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "18:27:40",
+      "action": "select_courses",
+      "courses": [
+        43665
+      ],
+      "results": [
+        {
+          "course_id": 43665,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "18:27:47",
+      "action": "set_size_cap",
+      "mb": null,
+      "toggle": {
+        "set": true,
+        "key": "temp_max_size_enabled",
+        "changed": false,
+        "checked": false
+      },
+      "dialog_closed": true,
+      "closed_with_escape": false,
+      "ok": true
+    },
+    {
+      "t": "18:27:52",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "18:28:01",
+      "action": "expand_card",
+      "card": "toggle_card2",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "18:28:01",
+      "action": "set_toggle",
+      "key": "btn_dl_assignments",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:01",
+      "action": "set_toggle",
+      "key": "btn_dl_syllabus",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:01",
+      "action": "set_toggle",
+      "key": "btn_dl_announcements",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:01",
+      "action": "set_toggle",
+      "key": "btn_dl_discussions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:01",
+      "action": "set_toggle",
+      "key": "btn_dl_quizzes",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:01",
+      "action": "set_toggle",
+      "key": "btn_dl_submissions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:23",
+      "action": "expand_card",
+      "card": "toggle_card3",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "18:28:23",
+      "action": "set_toggle",
+      "key": "btn_convert_zip",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:25",
+      "action": "set_toggle",
+      "key": "btn_convert_pptx",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "18:28:25",
+      "action": "set_toggle",
+      "key": "btn_convert_word",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:25",
+      "action": "set_toggle",
+      "key": "btn_convert_excel",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:26",
+      "action": "set_toggle",
+      "key": "btn_convert_html",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:26",
+      "action": "set_toggle",
+      "key": "btn_convert_code",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:26",
+      "action": "set_toggle",
+      "key": "btn_convert_urls",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:26",
+      "action": "set_toggle",
+      "key": "btn_convert_video",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:28:27",
+      "action": "configure",
+      "applied": {
+        "file_filter": "all",
+        "mode": "modules",
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": false,
+        "dl_discussions": false,
+        "dl_quizzes": false,
+        "dl_submissions": false,
+        "secondary_isolated": false,
+        "convert_zip": false,
+        "convert_pptx": true,
+        "convert_word": false,
+        "convert_excel": false,
+        "convert_html": false,
+        "convert_code": false,
+        "convert_urls": false,
+        "convert_video": false
+      },
+      "failed": [],
+      "verified": {
+        "convert_zip": false,
+        "convert_pptx": true,
+        "convert_word": false,
+        "convert_excel": false,
+        "convert_html": false,
+        "convert_code": false,
+        "convert_urls": false,
+        "convert_video": false,
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": false,
+        "dl_discussions": false,
+        "dl_quizzes": false,
+        "dl_submissions": false,
+        "pan_out_mp4": null,
+        "pan_out_mp3": null,
+        "pan_out_txt": null,
+        "pan_out_srt": null
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "18:35:10",
+      "action": "confirm_and_run",
+      "name": "m012",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": false,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n123\nFILES DOWNLOADED\n45.0\nMB DOWNLOADED",
+        "waited_s": 374.0
+      },
+      "captures": [
+        "m012_phase_scan",
+        "m012_phase_download",
+        "m012_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

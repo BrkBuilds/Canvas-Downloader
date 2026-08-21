@@ -1,0 +1,156 @@
+{
+  "name": "s006",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "les\n0\nUpdates available\n0\nEdited locally\n2\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (none)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n131 files up to date\nkeyboard_arrow_right\n\nDeleted Locally\n\nGo back\n\nSync & Download 0 files",
+      "waited_s": 16.4
+    },
+    "capture": "s006_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_deleted_local_45899"
+    ],
+    "capture": "s006_review",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\screenshots\\s006_review.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\ui\\s006_review.json",
+    "textLen": 922,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "ling af små systemer samt databaser (LA E25 BINTO1064U)\n2 FILES\nTXT\n2\nkeyboard_arrow_down\n\nFiles added\n\n Locally-Deleted Files Restored (2)\nRe-downloaded because your local copy was missing\nminefeltVEJL_js.txt\n\n​\n\n​\n\nUge 44 Forelæsning 8. JavaScript og Browseren, HTML 1\nDebug - grades - 1.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 11.3
+    },
+    "capture": "s006_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "22:43:56",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "22:44:17",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "les\n0\nUpdates available\n0\nEdited locally\n2\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (none)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n131 files up to date\nkeyboard_arrow_right\n\nDeleted Locally\n\nGo back\n\nSync & Download 0 files",
+        "waited_s": 16.4
+      },
+      "capture": "s006_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "22:44:18",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_deleted_local_45899"
+      ],
+      "capture": "s006_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\screenshots\\s006_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\ui\\s006_review.json",
+      "textLen": 923,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:44:22",
+      "action": "select_category",
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "22:44:23",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_deleted_local_45899"
+      ],
+      "capture": "s006_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\screenshots\\s006_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free1\\evidence\\ui\\s006_review.json",
+      "textLen": 922,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:44:39",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "ling af små systemer samt databaser (LA E25 BINTO1064U)\n2 FILES\nTXT\n2\nkeyboard_arrow_down\n\nFiles added\n\n Locally-Deleted Files Restored (2)\nRe-downloaded because your local copy was missing\nminefeltVEJL_js.txt\n\n​\n\n​\n\nUge 44 Forelæsning 8. JavaScript og Browseren, HTML 1\nDebug - grades - 1.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 11.3
+      },
+      "capture": "s006_complete",
+      "ok": true
+    }
+  ]
+}

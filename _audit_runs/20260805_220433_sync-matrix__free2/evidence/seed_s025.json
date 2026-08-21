@@ -1,0 +1,60 @@
+{
+  "folder": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-08-05T22:33:33",
+  "applied": [
+    {
+      "kind": "deleted_on_canvas",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "deleted_on_canvas": 2
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 133,
+    "files": 116
+  },
+  "after": {
+    "rows": 135,
+    "files": 118
+  },
+  "fixtures": [
+    {
+      "label": "deleted-on-canvas:GhostFile_0_g1 darts vejl_løsn_js.txt",
+      "kind": "deleted_on_canvas",
+      "path": "Obligatoriske afleveringer efterår 2025/GhostFile_0_g1 darts vejl_løsn_js.txt",
+      "expect_category": "deleted_on_canvas",
+      "expect_after": "unchanged",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/GhostFile_0_g1 darts vejl_løsn_js.txt",
+      "match_name": "GhostFile_0_g1 darts vejl_løsn_js.txt",
+      "why": "A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files.",
+      "canvas_file_id": 900000000,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-on-canvas:GhostFile_1_gk2 vejl_løsn_js.txt",
+      "kind": "deleted_on_canvas",
+      "path": "Obligatoriske afleveringer efterår 2025/GhostFile_1_gk2 vejl_løsn_js.txt",
+      "expect_category": "deleted_on_canvas",
+      "expect_after": "unchanged",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/GhostFile_1_gk2 vejl_løsn_js.txt",
+      "match_name": "GhostFile_1_gk2 vejl_løsn_js.txt",
+      "why": "A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files.",
+      "canvas_file_id": 900000001,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

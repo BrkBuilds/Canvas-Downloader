@@ -1,0 +1,17 @@
+--- Download: BINT 1st semester (LA E25 BINTS1SEMU) (ID: 43667) Mode: modules ---
+==================================================
+[2026-08-05 16:25:38.316] Save Dir: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260805_154112_matrix-dl__free1\downloads
+[2026-08-05 16:25:38.318] Filter: study | Concurrency: 5 | Max file size: disabled | Estimated payload: 0 MB
+[2026-08-05 16:25:38.321] Canvas Content: [none] | isolate=no
+[2026-08-05 16:25:38.323] Post-processing: [none]
+[2026-08-05 16:25:38.617] Processing Module: Course description including examination rules (ID: 297524)
+[2026-08-05 16:25:38.827] Found 1 items in module 'Course description including examination rules'
+[2026-08-05 16:25:38.829]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-05 16:25:38.831] Starting Catch-All Phase for non-module files...
+[2026-08-05 16:25:39.067] No partial/non-module files found.
+[2026-08-05 16:25:39.070] --- Download Complete: BINT 1st semester (LA E25 BINTS1SEMU) | 0 items | 0.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: BINT 1st semester (LA E25 BINTS1SEMU) ---
+==================================================
+[2026-08-05 16:25:39.136] === Course Finished: BINT 1st semester (LA E25 BINTS1SEMU) | Downloaded: 0 items | Errors: 0 ===

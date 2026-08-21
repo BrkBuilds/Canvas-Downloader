@@ -1,0 +1,66 @@
+{
+  "folder": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free1\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-08-05T22:22:55",
+  "applied": [
+    {
+      "kind": "renamed_row_intact",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "uptodate": 2
+  },
+  "expected_untracked": [
+    "Obligatoriske afleveringer efterår 2025/zz mine noter 0.txt",
+    "Obligatoriske afleveringer efterår 2025/zz mine noter 1.txt"
+  ],
+  "expected_missing_rows": [
+    "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+    "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 133,
+    "files": 116
+  },
+  "after": {
+    "rows": 133,
+    "files": 116
+  },
+  "fixtures": [
+    {
+      "label": "renamed-row-intact:zz mine noter 0.txt",
+      "kind": "renamed_row_intact",
+      "path": "Obligatoriske afleveringer efterår 2025/zz mine noter 0.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/zz mine noter 0.txt",
+      "match_name": "g1 darts vejl_løsn_js.txt",
+      "why": "Renamed on disk, bytes untouched, manifest row still present. heal_manifest Tier 2 (original_md5 + exact size, both computed locally) must relocate the row so the file reads UP TO DATE. Offering it as New would put a second copy of the same content in the folder under the Canvas name.",
+      "canvas_file_id": 1670371,
+      "original_path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-intact:zz mine noter 1.txt",
+      "kind": "renamed_row_intact",
+      "path": "Obligatoriske afleveringer efterår 2025/zz mine noter 1.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/zz mine noter 1.txt",
+      "match_name": "gk2 vejl_løsn_js.txt",
+      "why": "Renamed on disk, bytes untouched, manifest row still present. heal_manifest Tier 2 (original_md5 + exact size, both computed locally) must relocate the row so the file reads UP TO DATE. Offering it as New would put a second copy of the same content in the folder under the Canvas name.",
+      "canvas_file_id": 1598721,
+      "original_path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

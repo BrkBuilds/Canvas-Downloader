@@ -1,0 +1,114 @@
+{
+  "name": "s030",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "s available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (all)\n\nMD (all)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n131 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 19.0
+    },
+    "capture": "s030_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_update_45899"
+    ],
+    "capture": "s030_review",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free1\\evidence\\screenshots\\s030_review.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free1\\evidence\\ui\\s030_review.json",
+    "textLen": 847,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    }
+  ],
+  "trace": [
+    {
+      "t": "22:37:01",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "22:37:28",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "s available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (all)\n\nMD (all)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n131 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 19.0
+      },
+      "capture": "s030_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "22:37:29",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_45899"
+      ],
+      "capture": "s030_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free1\\evidence\\screenshots\\s030_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free1\\evidence\\ui\\s030_review.json",
+      "textLen": 847,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:37:29",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    },
+    {
+      "t": "22:37:30",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_45899"
+      ],
+      "capture": "s030_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free1\\evidence\\screenshots\\s030_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260805_220433_sync-matrix__free1\\evidence\\ui\\s030_review.json",
+      "textLen": 847,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

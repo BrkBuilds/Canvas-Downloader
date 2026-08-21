@@ -1,0 +1,174 @@
+--- Debug Log Started: 2026-08-07 00:19:49.873762 ---
+[2026-08-07 00:19:50.412] === Session Environment ===
+  App: Canvas Downloader v2.0.1 | frozen=False | pid=22464
+  OS: Windows 11 | Windows-11-10.0.26200-SP0 | arch=AMD64
+  Python: 3.13.7
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 1 course(s)
+===========================
+[2026-08-07 00:19:55.007] === Download Start: Matematik/Math Brush-up E25 | Course 1/1 ===
+[2026-08-07 00:19:55.019] Mode: modules | Filter: all
+[2026-08-07 00:19:55.022] Post-processing: [zip, html, code, urls]
+[2026-08-07 00:19:55.024] Secondary content: [assignments, syllabus, announcements]
+[2026-08-07 00:19:55.089] 
+==================================================
+--- Download: Matematik/Math Brush-up E25 (ID: 46370) Mode: modules ---
+==================================================
+[2026-08-07 00:19:55.093] Save Dir: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads
+[2026-08-07 00:19:55.095] Filter: all | Concurrency: 5 | Max file size: disabled | Estimated payload: 2 MB
+[2026-08-07 00:19:55.097] Canvas Content: [assignments, syllabus, announcements] | isolate=no
+[2026-08-07 00:19:55.099] Post-processing: [zip, html, code, urls]
+[2026-08-07 00:19:56.948] Processing Module: Kurset/The course (ID: 311904)
+[2026-08-07 00:19:57.245] Found 1 items in module 'Kurset/The course'
+[2026-08-07 00:19:57.246]   - Item: Math Brush-up Teaser E25 ENG - V01.pdf (Type: File)
+[2026-08-07 00:19:57.501] Module file tracked: Math Brush-up Teaser E25 ENG - V01.pdf (ID: 1624913)
+[2026-08-07 00:19:57.503] Processing Module: Formelsamling / Formula Library (ID: 313196)
+[2026-08-07 00:19:57.723] Found 2 items in module 'Formelsamling / Formula Library'
+[2026-08-07 00:19:57.724]   - Item: MBU - Formula Library - DK v04.pdf (Type: File)
+[2026-08-07 00:19:58.080] Module file tracked: MBU - Formula Library - DK v04.pdf (ID: 1624915)
+[2026-08-07 00:19:58.082]   - Item: MBU - Formula Library - ENG v04.pdf (Type: File)
+[2026-08-07 00:19:58.306] Module file tracked: MBU - Formula Library - ENG v04.pdf (ID: 1624914)
+[2026-08-07 00:19:58.307] Processing Module: MyLab Onboarding (ID: 313858)
+[2026-08-07 00:19:58.498] Found 1 items in module 'MyLab Onboarding'
+[2026-08-07 00:19:58.500]   - Item: MyLab registrering (Type: File)
+[2026-08-07 00:19:58.719] Module file tracked: CBS Mylab Math Brush up course E25.pdf (ID: 1628918)
+[2026-08-07 00:19:58.720] Processing Module: Opgaver (Dansk) (ID: 313199)
+[2026-08-07 00:19:58.951] Found 4 items in module 'Opgaver (Dansk)'
+[2026-08-07 00:19:58.953]   - Item: MBU - Block 1 - Problems - DK v02.pdf (Type: File)
+[2026-08-07 00:19:59.181] Module file tracked: MBU - Block 1 - Problems - DK v02.pdf (ID: 1624917)
+[2026-08-07 00:19:59.183]   - Item: MBU - Block 2 - Problems - DK v04.pdf (Type: File)
+[2026-08-07 00:19:59.431] Module file tracked: MBU - Block 2 - Problems - DK v04.pdf (ID: 1624918)
+[2026-08-07 00:19:59.432]   - Item: MBU - Block 3 - Problems - DK v04.pdf (Type: File)
+[2026-08-07 00:19:59.647] Module file tracked: MBU - Block 3 - Problems - DK v04.pdf (ID: 1624919)
+[2026-08-07 00:19:59.649]   - Item: MBU - Block 4 - Problems - DK v04.pdf (Type: File)
+[2026-08-07 00:19:59.870] Module file tracked: MBU - Block 4 - Problems - DK v04.pdf (ID: 1624916)
+[2026-08-07 00:19:59.872] Processing Module: Løsninger (Dansk) (ID: 313200)
+[2026-08-07 00:20:00.089] Found 4 items in module 'Løsninger (Dansk)'
+[2026-08-07 00:20:00.090]   - Item: MBU - Block 1 - Solutions - DK v02.pdf (Type: File)
+[2026-08-07 00:20:00.439] Module file tracked: MBU - Block 1 - Solutions - DK v02.pdf (ID: 1624921)
+[2026-08-07 00:20:00.440]   - Item: MBU - Block 2 - Solutions - DK v04.pdf (Type: File)
+[2026-08-07 00:20:00.664] Module file tracked: MBU - Block 2 - Solutions - DK v04.pdf (ID: 1624922)
+[2026-08-07 00:20:00.665]   - Item: MBU - Block 3 - Solutions - DK v04.pdf (Type: File)
+[2026-08-07 00:20:00.881] Module file tracked: MBU - Block 3 - Solutions - DK v04.pdf (ID: 1624923)
+[2026-08-07 00:20:00.882]   - Item: MBU - Block 4 - Solutions - DK v04.pdf (Type: File)
+[2026-08-07 00:20:01.087] Module file tracked: MBU - Block 4 - Solutions - DK v04.pdf (ID: 1624920)
+[2026-08-07 00:20:01.089] Processing Module: Exercises (English) (ID: 313197)
+[2026-08-07 00:20:01.299] Found 4 items in module 'Exercises (English)'
+[2026-08-07 00:20:01.300]   - Item: MBU - Block 1 - Problems - ENG v02.pdf (Type: File)
+[2026-08-07 00:20:01.541] Module file tracked: MBU - Block 1 - Problems - ENG v02.pdf (ID: 1624926)
+[2026-08-07 00:20:01.544]   - Item: MBU - Block 2 - Problems - ENG v04.pdf (Type: File)
+[2026-08-07 00:20:01.750] Module file tracked: MBU - Block 2 - Problems - ENG v04.pdf (ID: 1624927)
+[2026-08-07 00:20:01.751]   - Item: MBU - Block 3 - Problems - ENG v04.pdf (Type: File)
+[2026-08-07 00:20:01.961] Module file tracked: MBU - Block 3 - Problems - ENG v04.pdf (ID: 1624928)
+[2026-08-07 00:20:01.962]   - Item: MBU - Block 4 - Problems - ENG v04.pdf (Type: File)
+[2026-08-07 00:20:02.171] Module file tracked: MBU - Block 4 - Problems - ENG v04.pdf (ID: 1624925)
+[2026-08-07 00:20:02.172] Processing Module: Solutions (English) (ID: 313198)
+[2026-08-07 00:20:02.394] Found 4 items in module 'Solutions (English)'
+[2026-08-07 00:20:02.395]   - Item: MBU - Block 1 - Solutions - ENG v04.pdf (Type: File)
+[2026-08-07 00:20:02.628] Module file tracked: MBU - Block 1 - Solutions - ENG v04.pdf (ID: 1624932)
+[2026-08-07 00:20:02.629]   - Item: MBU - Block 2 - Solutions - ENG v04.pdf (Type: File)
+[2026-08-07 00:20:02.837] Module file tracked: MBU - Block 2 - Solutions - ENG v04.pdf (ID: 1624929)
+[2026-08-07 00:20:02.838]   - Item: MBU - Block 3 - Solutions - ENG v04.pdf (Type: File)
+[2026-08-07 00:20:03.115] Module file tracked: MBU - Block 3 - Solutions - ENG v04.pdf (ID: 1624930)
+[2026-08-07 00:20:03.117]   - Item: MBU - Block 4 - Solutions - ENG v04.pdf (Type: File)
+[2026-08-07 00:20:03.347] Module file tracked: MBU - Block 4 - Solutions - ENG v04.pdf (ID: 1624931)
+[2026-08-07 00:20:03.355] Requesting URL: https://cbscanvas.instructure.com/files/1624913/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:03.363] Requesting URL: https://cbscanvas.instructure.com/files/1624915/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:03.369] Requesting URL: https://cbscanvas.instructure.com/files/1624914/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:03.372] Requesting URL: https://cbscanvas.instructure.com/files/1628918/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:03.402] Requesting URL: https://cbscanvas.instructure.com/files/1624917/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:05.417] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:05.431] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:05.450] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:05.510] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Formelsamling  Formula Library\MBU - Formula Library - ENG v04.pdf (103127 bytes)
+[2026-08-07 00:20:05.514] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:05.571] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Formelsamling  Formula Library\MBU - Formula Library - DK v04.pdf (103659 bytes)
+[2026-08-07 00:20:05.597] Requesting URL: https://cbscanvas.instructure.com/files/1624918/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:05.686] Requesting URL: https://cbscanvas.instructure.com/files/1624919/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:05.721] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\MyLab Onboarding\CBS Mylab Math Brush up course E25.pdf (185718 bytes)
+[2026-08-07 00:20:05.728] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Opgaver (Dansk)\MBU - Block 1 - Problems - DK v02.pdf (79527 bytes)
+[2026-08-07 00:20:05.731] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:05.771] Requesting URL: https://cbscanvas.instructure.com/files/1624916/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:05.820] Requesting URL: https://cbscanvas.instructure.com/files/1624921/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:05.835] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\KursetThe course\Math Brush-up Teaser E25 ENG - V01.pdf (325794 bytes)
+[2026-08-07 00:20:05.871] Requesting URL: https://cbscanvas.instructure.com/files/1624922/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:07.049] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:07.081] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Opgaver (Dansk)\MBU - Block 2 - Problems - DK v04.pdf (54053 bytes)
+[2026-08-07 00:20:07.104] Requesting URL: https://cbscanvas.instructure.com/files/1624923/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:07.149] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:07.166] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:07.169] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Opgaver (Dansk)\MBU - Block 3 - Problems - DK v04.pdf (97430 bytes)
+[2026-08-07 00:20:07.194] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Opgaver (Dansk)\MBU - Block 4 - Problems - DK v04.pdf (90214 bytes)
+[2026-08-07 00:20:07.215] Requesting URL: https://cbscanvas.instructure.com/files/1624920/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:07.372] Requesting URL: https://cbscanvas.instructure.com/files/1624927/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:07.421] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:07.440] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:07.468] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Løsninger (Dansk)\MBU - Block 2 - Solutions - DK v04.pdf (56899 bytes)
+[2026-08-07 00:20:07.516] Requesting URL: https://cbscanvas.instructure.com/files/1624926/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:07.561] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Løsninger (Dansk)\MBU - Block 1 - Solutions - DK v02.pdf (173728 bytes)
+[2026-08-07 00:20:07.600] Requesting URL: https://cbscanvas.instructure.com/files/1624928/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:08.439] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:08.463] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Løsninger (Dansk)\MBU - Block 3 - Solutions - DK v04.pdf (102250 bytes)
+[2026-08-07 00:20:08.494] Requesting URL: https://cbscanvas.instructure.com/files/1624925/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:08.665] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:08.684] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Exercises (English)\MBU - Block 2 - Problems - ENG v04.pdf (52824 bytes)
+[2026-08-07 00:20:08.701] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:08.734] Requesting URL: https://cbscanvas.instructure.com/files/1624932/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:08.772] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Løsninger (Dansk)\MBU - Block 4 - Solutions - DK v04.pdf (90318 bytes)
+[2026-08-07 00:20:08.804] Requesting URL: https://cbscanvas.instructure.com/files/1624929/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:08.812] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:08.828] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Exercises (English)\MBU - Block 1 - Problems - ENG v02.pdf (78962 bytes)
+[2026-08-07 00:20:08.862] Requesting URL: https://cbscanvas.instructure.com/files/1624930/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:08.868] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:08.900] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Exercises (English)\MBU - Block 3 - Problems - ENG v04.pdf (97038 bytes)
+[2026-08-07 00:20:08.932] Requesting URL: https://cbscanvas.instructure.com/files/1624931/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-08-07 00:20:09.975] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:10.001] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Exercises (English)\MBU - Block 4 - Problems - ENG v04.pdf (89309 bytes)
+[2026-08-07 00:20:10.114] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:10.150] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Solutions (English)\MBU - Block 1 - Solutions - ENG v04.pdf (172569 bytes)
+[2026-08-07 00:20:10.339] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:10.368] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Solutions (English)\MBU - Block 2 - Solutions - ENG v04.pdf (55556 bytes)
+[2026-08-07 00:20:10.373] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:10.405] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Solutions (English)\MBU - Block 3 - Solutions - ENG v04.pdf (100641 bytes)
+[2026-08-07 00:20:10.502] Response Status: 200 Content-Type: application/pdf
+[2026-08-07 00:20:10.531] File Saved: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Solutions (English)\MBU - Block 4 - Solutions - ENG v04.pdf (89111 bytes)
+[2026-08-07 00:20:10.581] --- Canvas Content Phase: [assignments, syllabus, announcements] ---
+[2026-08-07 00:20:10.583] === Starting Canvas Content Download ===
+[2026-08-07 00:20:10.600] Secondary: Fetching assignments...
+[2026-08-07 00:20:10.871] Secondary: Fetching syllabus...
+[2026-08-07 00:20:11.280] Syllabus body is empty, skipping.
+[2026-08-07 00:20:11.282] Secondary: Fetching announcements...
+[2026-08-07 00:20:12.382] Saving announcement: 2025-09-04 - MATH BRUSH-UP - UPDATES -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Announcement 2025-09-04 - MATH BRUSH-UP - UPDATES.html
+[2026-08-07 00:20:12.698] Saving announcement: 2025-09-01 - MATH BRUSH-UP -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260807_001824\downloads\MatematikMath Brush-up E25\Announcement 2025-09-01 - MATH BRUSH-UP.html
+[2026-08-07 00:20:12.848] === Canvas Content Download Complete ===
+[2026-08-07 00:20:12.850] Starting Catch-All Phase for non-module files...
+[2026-08-07 00:20:13.855] Catch-All skipping module file: CBS+Mylab+Math+Brush+up+course+E25.pdf (ID: 1628918)
+[2026-08-07 00:20:13.856] Catch-All skipping module file: Math+Brush-up+Teaser+E25+ENG+-+V01.pdf (ID: 1624913)
+[2026-08-07 00:20:13.859] Catch-All skipping module file: MBU+-+Block+1+-+Problems+-+DK+v02.pdf (ID: 1624917)
+[2026-08-07 00:20:13.861] Catch-All skipping module file: MBU+-+Block+1+-+Problems+-+ENG+v02.pdf (ID: 1624926)
+[2026-08-07 00:20:13.863] Catch-All skipping module file: MBU+-+Block+1+-+Solutions+-+DK+v02.pdf (ID: 1624921)
+[2026-08-07 00:20:13.864] Catch-All skipping module file: MBU+-+Block+1+-+Solutions+-+ENG+v04.pdf (ID: 1624932)
+[2026-08-07 00:20:13.866] Catch-All skipping module file: MBU+-+Block+2+-+Problems+-+DK+v04.pdf (ID: 1624918)
+[2026-08-07 00:20:13.868] Catch-All skipping module file: MBU+-+Block+2+-+Problems+-+ENG+v04.pdf (ID: 1624927)
+[2026-08-07 00:20:13.870] Catch-All skipping module file: MBU+-+Block+2+-+Solutions+-+DK+v04.pdf (ID: 1624922)
+[2026-08-07 00:20:13.871] Catch-All skipping module file: MBU+-+Block+2+-+Solutions+-+ENG+v04.pdf (ID: 1624929)
+[2026-08-07 00:20:13.874] Catch-All skipping module file: MBU+-+Block+3+-+Problems+-+DK+v04.pdf (ID: 1624919)
+[2026-08-07 00:20:13.877] Catch-All skipping module file: MBU+-+Block+3+-+Problems+-+ENG+v04.pdf (ID: 1624928)
+[2026-08-07 00:20:13.879] Catch-All skipping module file: MBU+-+Block+3+-+Solutions+-+DK+v04.pdf (ID: 1624923)
+[2026-08-07 00:20:13.880] Catch-All skipping module file: MBU+-+Block+3+-+Solutions+-+ENG+v04.pdf (ID: 1624930)
+[2026-08-07 00:20:13.882] Catch-All skipping module file: MBU+-+Block+4+-+Problems+-+DK+v04.pdf (ID: 1624916)
+[2026-08-07 00:20:13.883] Catch-All skipping module file: MBU+-+Block+4+-+Problems+-+ENG+v04.pdf (ID: 1624925)
+[2026-08-07 00:20:13.885] Catch-All skipping module file: MBU+-+Block+4+-+Solutions+-+DK+v04.pdf (ID: 1624920)
+[2026-08-07 00:20:13.886] Catch-All skipping module file: MBU+-+Block+4+-+Solutions+-+ENG+v04.pdf (ID: 1624931)
+[2026-08-07 00:20:13.888] Catch-All skipping module file: MBU+-+Formula+Library+-+DK+v04.pdf (ID: 1624915)
+[2026-08-07 00:20:13.889] Catch-All skipping module file: MBU+-+Formula+Library+-+ENG+v04.pdf (ID: 1624914)
+[2026-08-07 00:20:13.890] No partial/non-module files found.
+[2026-08-07 00:20:13.894] --- Download Complete: Matematik/Math Brush-up E25 | 20 items | 2.1 MB downloaded ---
+
+==================================================
+--- Post-Processing: Matematik/Math Brush-up E25 ---
+==================================================
+[2026-08-07 00:20:14.729] [INFO] [core.sync_manager] Updated manifest entry -30165244 to new file: Announcement 2025-09-01 - MATH BRUSH-UP.md
+[2026-08-07 00:20:14.980] [INFO] [core.sync_manager] Updated manifest entry -30165590 to new file: Announcement 2025-09-04 - MATH BRUSH-UP - UPDATES.md
+[2026-08-07 00:20:15.139] === Course Finished: Matematik/Math Brush-up E25 | Downloaded: 22 items | Errors: 0 ===
+[2026-08-07 00:20:15.148] Post-processing ran: [zip, html, code, urls]

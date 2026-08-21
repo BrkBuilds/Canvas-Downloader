@@ -1,0 +1,29 @@
+{
+  "run_id": "20260805_154112_matrix-dl__free1",
+  "label": "lane:free1",
+  "parent": "20260805_154112_matrix-dl",
+  "lane": "free1",
+  "created": "2026-08-05T16:03:01",
+  "app": {},
+  "ports_used": [
+    8810,
+    8791
+  ],
+  "browser": {},
+  "scope": [
+    {
+      "name": "valtest",
+      "flow": "download",
+      "course": "43667",
+      "config": "{\"mode\": \"flat\", \"file_filter\": \"all\"}",
+      "result": "ok"
+    },
+    {
+      "name": "captest",
+      "flow": "download",
+      "course": "43667",
+      "config": "{\"mode\": \"flat\", \"file_filter\": \"all\", \"max_file_size\": null}",
+      "result": "ok"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "name": "smoke",
+  "course_ids": [
+    43667
+  ],
+  "config": {},
+  "select": {
+    "courses": [
+      43667
+    ],
+    "results": [
+      {
+        "course_id": 43667,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {},
+    "failed": [],
+    "verified": {},
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "smoke_config",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08\\evidence\\screenshots\\smoke_config.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_170617_minimal-dl-sync-2026-08\\evidence\\ui\\smoke_config.json",
+    "textLen": 684,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "smoke",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n1\nFILE DOWNLOADED\n0\nMB DOWNLOADED\nFolders Updated\nBINT 1st semester (LA E25 BINTS1SEMU)\n1 FILE\nURL\n1\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 5.1
+    },
+    "captures": [
+      "smoke_phase_scan",
+      "smoke_phase_download",
+      "smoke_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "17:08:56",
+      "action": "select_courses",
+      "courses": [
+        43667
+      ],
+      "results": [
+        {
+          "course_id": 43667,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "17:08:57",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "17:09:00",
+      "action": "configure",
+      "applied": {},
+      "failed": [],
+      "verified": {},
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "17:09:14",
+      "action": "confirm_and_run",
+      "name": "smoke",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n1\nFILE DOWNLOADED\n0\nMB DOWNLOADED\nFolders Updated\nBINT 1st semester (LA E25 BINTS1SEMU)\n1 FILE\nURL\n1\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 5.1
+      },
+      "captures": [
+        "smoke_phase_scan",
+        "smoke_phase_download",
+        "smoke_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

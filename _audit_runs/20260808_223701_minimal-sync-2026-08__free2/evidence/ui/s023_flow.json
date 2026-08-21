@@ -1,0 +1,133 @@
+{
+  "name": "s023",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "\n2\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (2/4)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n4 files pending sync\n129 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 15.1
+    },
+    "capture": "s023_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_update_45899",
+      "cat_deleted_local_45899"
+    ],
+    "capture": "s023_review",
+    "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\screenshots\\s023_review.png",
+    "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\ui\\s023_review.json",
+    "textLen": 1202,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    }
+  ],
+  "trace": [
+    {
+      "t": "22:51:33",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "22:51:53",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "\n2\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (2/4)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n4 files pending sync\n129 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 15.1
+      },
+      "capture": "s023_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "22:51:55",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_45899",
+        "cat_deleted_local_45899"
+      ],
+      "capture": "s023_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\screenshots\\s023_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\ui\\s023_review.json",
+      "textLen": 1202,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "22:51:58",
+      "action": "select_category",
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "22:51:58",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    },
+    {
+      "t": "22:51:58",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_45899",
+        "cat_deleted_local_45899"
+      ],
+      "capture": "s023_review",
+      "screenshot": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\screenshots\\s023_review.png",
+      "extract": "C:\\Users\\birkl\\Desktop\\Canvas Downloader WORKSPACE\\_audit_runs\\20260808_223701_minimal-sync-2026-08__free2\\evidence\\ui\\s023_review.json",
+      "textLen": 1202,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

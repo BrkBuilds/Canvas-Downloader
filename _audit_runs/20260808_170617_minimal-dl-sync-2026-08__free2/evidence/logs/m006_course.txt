@@ -1,0 +1,32 @@
+--- Download: BINT 1st semester (LA E25 BINTS1SEMU) (ID: 43667) Mode: modules ---
+==================================================
+[2026-08-08 17:47:32.822] Save Dir: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free2\downloads
+[2026-08-08 17:47:32.824] Filter: all | Concurrency: 5 | Max file size: disabled | Estimated payload: 0 MB
+[2026-08-08 17:47:32.826] Canvas Content: [none] | isolate=no
+[2026-08-08 17:47:32.827] Post-processing: [none]
+[2026-08-08 17:47:33.155] Processing Module: Course description including examination rules (ID: 297524)
+[2026-08-08 17:47:33.434] Found 1 items in module 'Course description including examination rules'
+[2026-08-08 17:47:33.436]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-08 17:47:33.445] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTS1SEMU.aspx) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free2\downloads\BINT 1st semester (LA E25 BINTS1SEMU)\Course description including examination rules\Course description including examination rules.url
+[2026-08-08 17:47:33.475] Starting Catch-All Phase for non-module files...
+[2026-08-08 17:47:33.748] No partial/non-module files found.
+[2026-08-08 17:47:33.750] --- Download Complete: BINT 1st semester (LA E25 BINTS1SEMU) | 1 items | 0.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: BINT 1st semester (LA E25 BINTS1SEMU) ---
+==================================================
+[2026-08-08 17:47:33.811] === Course Finished: BINT 1st semester (LA E25 BINTS1SEMU) | Downloaded: 1 items | Errors: 0 ===
+[2026-08-08 17:47:34.128] [INFO] [panopto.runner] Panopto batch start (pid=21148): 1 target(s) | model=tiny device=cpu lang=auto | engine_ready=True (outputs + layout resolved per target)
+[2026-08-08 17:47:34.136] [INFO] [panopto.runner] Discovering Panopto recordings in 'BINT 1st semester (LA E25 BINTS1SEMU)' (course id=43667)...
+[2026-08-08 17:47:37.640] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=none
+[2026-08-08 17:47:37.649] [INFO] [panopto.auth] Panopto LTI: no session id resolved - landed on https://cbs.cloud.panopto.eu/Panopto/Pages/Sessions/List.aspx | unfollowed form: ./List.aspx | body: 123029 chars, 0 candidate id(s) | folder: 40a0d61b-4767-4982-bd69-b34b013c2dd2 | auth: cookies[cbs.cloud.panopto.eu]=.ASPXAUTH,csrfToken,sandboxCookie | markers=none
+[2026-08-08 17:47:37.733] [INFO] [panopto.discovery] Panopto api/v1 folder listing unavailable for 40a0d61b-4767-4982-bd69-b34b013c2dd2 (status 401) - will fall back to Data.svc/GetSessions.
+[2026-08-08 17:47:37.977] [INFO] [panopto.discovery] Panopto GetSessions: folder 40a0d61b-4767-4982-bd69-b34b013c2dd2 reports 0 session(s) (page 0 returned 0).
+[2026-08-08 17:47:37.979] [INFO] [panopto.discovery] Panopto GetSessions raw 'd' node for 40a0d61b-4767-4982-bd69-b34b013c2dd2: {"__type": "SessionResults:#Panopto.Data.DB.WebUI", "Results": [], "TotalNumber": 0, "ArchivedCount": null, "BookmarkedSessionCount": null, "CanAddSubfolder": false, "ContainsArchivedDeliveries": false, "FolderType": 0, "InProgressSessionCount": null, "ParentFolderId": null, "ScheduledRecordingCount": null, "Subfolders": []}
+[2026-08-08 17:47:38.068] [INFO] [panopto.discovery] Panopto GetFolders failed for folder 40a0d61b-4767-4982-bd69-b34b013c2dd2: HTTP 500: <Fault xmlns="http://schemas.microsoft.com/ws/2005/05/envelope/none"><Code><Value>Sender</Value></Code><Reason><Text xml:lang="en-US">User unified\<CANVAS_USER> is not in role (FolderEnumerate).</Text></Reason></Fault>
+[2026-08-08 17:47:38.167] [INFO] [panopto.discovery] Panopto GetFolderInfo probe for 40a0d61b-4767-4982-bd69-b34b013c2dd2 -> name='BINT 1st semester (LA E25 BINTS1SEMU)' sessions=? subfolders=?
+[2026-08-08 17:47:38.420] [INFO] [panopto.discovery] Panopto unscoped GetSessions probe -> TotalNumber=3082 (0 = the Panopto session holds NO content grants at all, i.e. the LTI cookie is effectively anonymous; >0 = auth works and the problem is folder-scoped)
+[2026-08-08 17:47:38.422] [INFO] [panopto.discovery] Panopto course-folder fallback: enumerated 0 session(s) in the course folder for course 43667 via a course-level launch (no content link required).
+[2026-08-08 17:47:39.225] [INFO] [panopto.runner] Discovered 0 recording(s) in 'BINT 1st semester (LA E25 BINTS1SEMU)'
+[2026-08-08 17:47:39.234] [INFO] [panopto.runner] Discovery complete: 0 found across 0 course(s); planned 0 download(s) (0 video), 0 transcription(s), 0 shortcut(s), 0 skipped (already on disk).
+[2026-08-08 17:47:39.237] [INFO] [panopto.runner] Panopto batch ending after discovery (cancelled=False, tasks=0).

@@ -1,0 +1,33 @@
+--- Debug Log Started: 2026-08-08 17:47:49.701448 ---
+[2026-08-08 17:47:49.719] === Session Environment ===
+  App: Canvas Downloader v2.0.1 | frozen=False | pid=10140
+  OS: Windows 11 | Windows-11-10.0.26200-SP0 | arch=AMD64
+  Python: 3.13.7
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 1 course(s)
+===========================
+[2026-08-08 17:47:51.290] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 1 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43667.
+[2026-08-08 17:47:52.394] === Download Start: BINT 1st semester (LA E25 BINTS1SEMU) | Course 1/1 ===
+[2026-08-08 17:47:52.400] Mode: flat | Filter: all
+[2026-08-08 17:47:52.402] Post-processing: [none]
+[2026-08-08 17:47:52.403] Secondary content: [none]
+[2026-08-08 17:47:52.444] 
+==================================================
+--- Download: BINT 1st semester (LA E25 BINTS1SEMU) (ID: 43667) Mode: flat ---
+==================================================
+[2026-08-08 17:47:52.447] Save Dir: C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads
+[2026-08-08 17:47:52.449] Filter: all | Concurrency: 5 | Max file size: disabled | Estimated payload: 0 MB
+[2026-08-08 17:47:52.450] Canvas Content: [none] | isolate=no
+[2026-08-08 17:47:52.452] Post-processing: [none]
+[2026-08-08 17:47:52.453] Starting Flat Download for BINT 1st semester (LA E25 BINTS1SEMU)
+[2026-08-08 17:47:53.373] Fallback Scan: Module Course description including examination rules (found 1 items)
+[2026-08-08 17:47:53.374]   Fallback Item: Course description including examination rules (Type: ExternalUrl)
+[2026-08-08 17:47:53.384] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTS1SEMU.aspx) -> C:\Users\birkl\Desktop\Canvas Downloader WORKSPACE\_audit_runs\20260808_170617_minimal-dl-sync-2026-08__free1\downloads\BINT 1st semester (LA E25 BINTS1SEMU)\Course description including examination rules.url
+[2026-08-08 17:47:53.414] Starting Catch-All Phase for non-module files...
+[2026-08-08 17:47:53.419] No partial/non-module files found.
+[2026-08-08 17:47:53.421] --- Download Complete: BINT 1st semester (LA E25 BINTS1SEMU) | 1 items | 0.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: BINT 1st semester (LA E25 BINTS1SEMU) ---
+==================================================
+[2026-08-08 17:47:53.488] === Course Finished: BINT 1st semester (LA E25 BINTS1SEMU) | Downloaded: 1 items | Errors: 0 ===

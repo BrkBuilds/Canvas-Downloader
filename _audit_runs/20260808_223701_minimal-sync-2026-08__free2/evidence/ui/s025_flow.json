@@ -1,0 +1,65 @@
+{
+  "name": "s025",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "complete",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nQuick Sync done - everything up to date\n\nYour folders already match Canvas - nothing to download.\n\n⚠️ Quick Sync skipped 2 files deleted on Canvas.\nTo download them, run a normal 'Analyze, Review & Sync' and select them manually.\n\nGo to front page",
+      "waited_s": 15.6
+    },
+    "capture": "s025_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "ok": true,
+    "skipped": "already up to date",
+    "landed_on": "complete",
+    "capture": "s025_up_to_date"
+  },
+  "trace": [
+    {
+      "t": "22:52:21",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "22:52:41",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "complete",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nQuick Sync done - everything up to date\n\nYour folders already match Canvas - nothing to download.\n\n⚠️ Quick Sync skipped 2 files deleted on Canvas.\nTo download them, run a normal 'Analyze, Review & Sync' and select them manually.\n\nGo to front page",
+        "waited_s": 15.6
+      },
+      "capture": "s025_after_analysis",
+      "ok": true
+    }
+  ]
+}
