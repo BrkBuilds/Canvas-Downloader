@@ -31,6 +31,7 @@ SM = "core/sync_manager.py"
 
 TESTS = [
     "tests/test_new_files_are_not_name_keyed.py",
+    "tests/test_analysis_conservation.py",
     "tests/test_sync_manager.py",
 ]
 TEST_TARGET = TESTS
@@ -84,6 +85,34 @@ NAME_KEY_MUTANTS = [
      SM,
      "        result.new_files = _unique_new + secondary_new_files",
      "        result.new_files = _unique_new"),
+
+    # -- the SECOND defect: a deleted row carrying a file away with it -------
+    ("a pruned row keeps the new file it had consumed",
+     SM,
+     "                    _back = getattr(del_info, '_reupload_new_file', None)\n"
+     "                    if _back is not None:\n"
+     "                        _reupload_consumed.discard(id(_back))",
+     "                    pass"),
+
+    ("the give-back happens but the offer is computed BEFORE the prune",
+     SM,
+     "        _unique_new = [nf for nf in regular_new_files\n"
+     "                       if id(nf) not in _reupload_consumed]\n"
+     "        result.new_files = _unique_new + secondary_new_files",
+     "        result.new_files = list(regular_new_files) + secondary_new_files"),
+
+    ("the give-back fires for a KEPT row too, so a real re-upload is offered twice",
+     SM,
+     "                    _back = getattr(del_info, '_reupload_new_file', None)\n"
+     "                    if _back is not None:\n"
+     "                        _reupload_consumed.discard(id(_back))\n"
+     "                else:\n"
+     "                    _kept.append(del_info)",
+     "                else:\n"
+     "                    _kept.append(del_info)\n"
+     "                _back = getattr(del_info, '_reupload_new_file', None)\n"
+     "                if _back is not None:\n"
+     "                    _reupload_consumed.discard(id(_back))"),
 ]
 
 KNOWN_EQUIVALENT = 0

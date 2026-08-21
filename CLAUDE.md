@@ -861,6 +861,67 @@ show.**
   pass rather than just the suite. Three mutants survived the first version of
   the tests and each was a real gap.
 
+## …and a DELETED row took a file with it - the same class, one loop down (2026-08-21)
+Found by asking what ELSE removes a file from the offer without accounting for
+it. Two mechanisms, each correct alone, wrong together - which is exactly why
+nothing caught it:
+- **The teacher-re-upload branch takes a NEW Canvas file OFF `new_files`** and
+  rides it on a locally-deleted row. That is M-6 policy and it is right: the
+  user deleted their copy, so the replacement must not be offered as if nothing
+  had happened.
+- **The phantom-row prune then DELETES that row**, when its basename is owned by
+  another tracked row whose file exists. The file was in `new_files`, is now in
+  neither, and **is a file the user has never had**.
+- Measured against the real analyzer: row 100 (`A/notes.pdf`, gone from Canvas,
+  deleted locally) consumes new Canvas id 200 (`notes.pdf`); row 100 is pruned
+  as superseded by row 101 (`B/notes.pdf`, same basename, different folder,
+  present); **200 lands in NO category and `new=0`**.
+- **The fix is that a row being deleted gives back what it had taken**, and the
+  offer is computed BELOW the pruning block. Not that the prune should match
+  more narrowly: `_live_name_keys` is keyed by BASENAME on purpose, narrowing it
+  risks resurrecting the "Deleted Locally on every sync for ever" defect it
+  exists to fix, and it costs nothing here - the row's own id is gone from
+  Canvas, so the local file it described is unrecoverable either way. **The only
+  thing a dying row must not take with it is a file that is still on Canvas.**
+- Note the contrast one prune up: the *case-B* prune keys on `_path_owner_map`,
+  i.e. on a real PATH identity, and is correct. Two prunes for one idea, two
+  strengths of identity - the weaker one is the one that bit.
+- It self-heals on the next sync (the prune really does delete the row, so
+  nothing consumes the file twice), the same shape as the name-keyed drop above
+  and worth just as little.
+
+## CONSERVATION is the invariant that makes both of those impossible
+Both defects are the same shape and NEITHER is a wrong classification - which is
+what every other check looks for. Both are a file that is simply **absent**: not
+new, not up to date, not updated, not deleted anywhere. **Nothing on the review
+screen can show a row that was never produced**, so the only way to see it is to
+count.
+- **The property**: every `CanvasFileInfo` handed to `analyze_course` appears
+  exactly once across `new_files` · `uptodate_files` · `updated_clean_files` ·
+  `updated_modified_files` · `ignored_files` · `locally_deleted_files` ·
+  `deleted_on_canvas` · riding on a locally-deleted row - or is counted in
+  `out_of_scope_files`, the one place the analyzer legitimately declines to
+  produce a row and says so with a number.
+- **`locally_deleted` and `deleted_on_canvas` ARE landing places for an input
+  file.** Leaving them out is how the first version of this accounting reported
+  a false loss on a perfectly healthy shape; a row whose local file is gone is a
+  legitimate answer about a file Canvas still has.
+- **`tests/test_analysis_conservation.py` asserts it over 500 deterministic
+  generated states**, whose generator draws names from a SMALL vocabulary and
+  ids from a small pool - collisions are the entire point, and a generator
+  producing unique names everywhere would exercise none of this.
+- **The control is part of the definition of it working.** Mutating either fix
+  back out makes the sweep report **49** and **15** losing seeds out of 600. A
+  property test that passes on broken code is worth nothing.
+- Mechanical sweeps for the literal pattern came back clean and are worth not
+  repeating: every other name-keyed structure in `core`/`sync` uses
+  `setdefault(k, []).append(...)` (a list, which cannot drop), the only
+  scalar-valued one left is `pair_labels`' label index (first-wins is its
+  DOCUMENTED precedence rule), Panopto's `videos` dict is keyed by delivery id
+  and its one re-key is guarded by `taken`, and `all_files_map` is keyed by
+  Canvas id. Four `if <name> in <seen>: continue` sites exist and all four are
+  benign (app-owned filenames, and one keyed on a real PATH).
+
 ## An audit oracle that is BLIND does not under-report - it INVENTS (2026-08-21)
 The audit's log oracle named three tags the app has never emitted
 (`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's
