@@ -235,3 +235,79 @@ Nothing on a rented box survives reimaging, but these are the operator's:
 5. The **small Whisper model** at `panopto_models/small` (464 MiB, gitignored).
    Keep it if the next session does Panopto work; delete it to get the
    transcription-setup notice back.
+
+
+---
+
+# THE FIFTH SESSION - the overnight full audit (2026-08-21)
+
+Run `_audit_runs/20260821_022815_macos26-full-night` (matrix) and
+`20260821_night_pkg` (packaged). Branch `macos-audit-26`, 10 commits, all pushed.
+
+## What ran
+
+| | |
+|---|---|
+| bundle | REBUILT from HEAD and ad-hoc signed; `--verify --deep --strict` rc=0 |
+| download matrix | **56/56 rows, 0 failures** - 100% 2-way and 3-way coverage, 4 courses, 3 lanes |
+| packaged Panopto | **maximal**: 43660, all five outputs, 408 files / 3.3 GB in 2h35m |
+| suite / audit | **4085 passed, 26 skipped**; architecture audit **0 violations** |
+| register | **156 total, 8 open** - the same 8 as before the night, none macOS-specific |
+
+## Unproven items CLOSED
+
+* **#3 transcription in the packaged app.** 36/36 transcribed, `panopto_manifest`
+  holds 36 of every kind (mp3/mp4/srt/txt/url), **0 `.part` leftovers**, and the
+  Panopto completion screen was reached and reads *36 downloaded · 36
+  transcribed · 36 links*.
+* **#6 mp4.** 36 real h264/AAC files; the first probes at 9m37s, 1920x960, 60fps.
+* Total transcription workload measured: **8.21 h of audio, 36 recordings, mean
+  13.7 min**, at ~4.1 min per recording with `small` on this M4 CPU.
+
+## Four product defects and one harness defect, all fixed
+
+1. **The manifest repoint depended on how the path was SPELLED** - 62 of 63
+   Office conversions left their row on the source they had just deleted.
+   Measured consequence, on the app's own review screen: **"63 Deleted
+   locally"**. Mechanism and fix in `CLAUDE.md`.
+2. **A part-way conversion's 64 KB partial PDF passed `pdf_looks_real`** and was
+   promoted into the folder. That gate also guards deleting the user's only
+   copy. Now requires a `%%EOF` trailer.
+3. **-609 (`connectionInvalid`) was classified `other`**, so a dead Office
+   connection was never retried. Now `app_crashed`. Verified live: row m001
+   recovered in 4 s from the same condition row m048 reported as a dead loss.
+4. **-30001 deliberately left as `other`** - our own frontmost guard; retrying
+   it would tell the user a running app had stopped.
+5. **HARNESS: office+gpu rows ran in two concurrent lanes** - 7 of 9 gpu rows
+   also convert Office. Only avoided this run because the gpu lane was started
+   by hand.
+
+## Traps, and things that are NOT defects
+
+All recorded in `MAC_RUNBOOK.md` under "The fifth macOS session". The two that
+cost the most time:
+
+* **`open --env` is not sticky.** A second launch runs with no override, the two
+  instances have different config dirs so their single-instance locks cannot see
+  each other, and the audit silently ran a 152-file download against the
+  developer's real config. `pkgdrive.launch()` now reads the override back off
+  the running process and refuses otherwise.
+* **Seven of my own analyses were wrong before they were right** - `files_tab`
+  is not `files`, `local_path` is RELATIVE, Panopto lives in its own
+  `panopto_manifest` table, `_cost_mb` belongs to `_course_ids` not
+  `_course_id`, `estimated_cost_mb` is a scheduling cost and not bytes, the
+  Canvas-link collision was ordering not overwriting, and the `(n)` PDFs were
+  directory reuse. Measure with the harness's own oracles before believing an
+  ad-hoc query.
+
+## What is LEFT
+
+* **The SYNC matrix was not run.** A snapshot of the packaged folder is captured
+  (`c43660_panopto_maximal`, 405 files, 2.7 GB, manifest integrity ok) and one
+  targeted sync analysis was run against it - that is what produced the "63
+  Deleted locally" measurement. The full `--kind sync` matrix is the main
+  remaining coverage gap.
+* The 8 open register findings are Windows or cross-platform; investigate them
+  off this machine.
+* FDA is now GRANTED to the app, so the FDA nudge and the per-session powerbox
+  re-arm are untestable until it is revoked.
