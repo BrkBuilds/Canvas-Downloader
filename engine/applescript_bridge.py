@@ -165,6 +165,27 @@ def _office_app_lock(app_name: str):
             pass
 
 
+@contextmanager
+def _office_app_lock_unless(app_name: str, already_held: bool):
+    """`_office_app_lock`, skipped when the CALLER already holds that app's lock.
+
+    flock is per open file description, so a second acquire from the same
+    process blocks against the first - it would not deadlock outright (the
+    120s timeout releases it) but it would stall a thread whose entire purpose
+    is not to block. The only caller passing True is the timeout-recovery
+    sweep fired from inside `_run_applescript_locked`.
+
+    The parameter is REQUIRED and has no default, so a new call site has to
+    state which case it is rather than inherit the dangerous answer silently -
+    the same discipline `_idle_quit_script.undescribable_is_ours` uses.
+    """
+    if already_held:
+        yield
+        return
+    with _office_app_lock(app_name):
+        yield
+
+
 def _product_is_real(staged_dst: Path) -> bool:
     """Is the file Office just wrote worth promoting to the user's folder?
 
@@ -1055,7 +1076,10 @@ def _run_applescript_locked(src: Path, dst: Path, app_name: str, script: str) ->
         # direct-path fallback). Async so a hung app can't block the next file.
         mapping = _APP_DOC_MAP.get(app_name)
         if mapping:
-            _force_close_canvas_docs_async(mapping[0])
+            # This runs from INSIDE `run_applescript`'s lock for this app, so
+            # the sweep must not try to take it again - see the note in
+            # `_force_close_canvas_docs_sync`.
+            _force_close_canvas_docs_async(mapping[0], _locked_by_caller=True)
         return False
     except Exception as e:
         logger.error(f"[AppleScript] {app_name} error: {e}")
@@ -1954,7 +1978,8 @@ def _close_marker_docs_script(app: str, collection: str) -> str:
     '''
 
 
-def _force_close_canvas_docs_sync(only_app: str | None = None) -> None:
+def _force_close_canvas_docs_sync(only_app: str | None = None, *,
+                                  _locked_by_caller: bool = False) -> None:
     """Close any Office documents still open from OUR container staging dir.
 
     A conversion can leave its staged document open in a hidden Office process
@@ -1973,21 +1998,30 @@ def _force_close_canvas_docs_sync(only_app: str | None = None) -> None:
         if only_app and app != only_app:
             continue
         try:
-            subprocess.run(
-                ['osascript', '-e', _close_marker_docs_script(app, collection)],
-                capture_output=True, timeout=30,
-            )
+            # macOS has ONE of each Office app per user session, so this drives
+            # the same application a second instance may be converting with.
+            # `_locked_by_caller` is the ONE exemption: the timeout-recovery
+            # sweep in `_run_applescript_locked` already holds this app's lock,
+            # and taking it again would stall that thread for the lock timeout
+            # - which is exactly what its async wrapper exists to avoid.
+            with _office_app_lock_unless(app, _locked_by_caller):
+                subprocess.run(
+                    ['osascript', '-e', _close_marker_docs_script(app, collection)],
+                    capture_output=True, timeout=30,
+                )
         except Exception:
             pass
 
 
-def _force_close_canvas_docs_async(only_app: str | None = None) -> None:
+def _force_close_canvas_docs_async(only_app: str | None = None, *,
+                                   _locked_by_caller: bool = False) -> None:
     """Fire-and-forget thread wrapper around ``_force_close_canvas_docs_sync``."""
     if sys.platform != 'darwin':
         return
     import threading
     threading.Thread(
-        target=_force_close_canvas_docs_sync, args=(only_app,), daemon=True,
+        target=_force_close_canvas_docs_sync, args=(only_app,),
+        kwargs={'_locked_by_caller': _locked_by_caller}, daemon=True,
     ).start()
 
 
@@ -2214,8 +2248,11 @@ def _probe_open_docs(app: str, collection: str) -> str:
         end try
     '''
     try:
-        r = subprocess.run(['osascript', '-e', script],
-                           capture_output=True, text=True, timeout=15)
+        # Drives the app (a `count of <collection>` enumeration), so it takes
+        # the same per-app lock a conversion does.
+        with _office_app_lock(app):
+            r = subprocess.run(['osascript', '-e', script],
+                               capture_output=True, text=True, timeout=15)
         return (r.stdout or "").strip() or f"probe failed: rc={r.returncode}"
     except Exception as e:
         return f"probe failed: {e}"
@@ -2278,17 +2315,22 @@ def quit_idle_office_apps() -> None:
                 logger.info(f"[OfficeQuit] pass {pass_no}: {app} -> {statuses[app]}")
                 continue
             try:
-                r = subprocess.run(
-                    ['osascript', '-e',
-                     # EXPLICIT, never the default. Reaching this line means the
-                     # gate above certified we launched the app, which is the
-                     # ONLY condition under which an undescribable document may
-                     # be treated as ours; the signature defaults to False so a
-                     # future second call site cannot inherit the dangerous
-                     # answer by saying nothing.
-                     _idle_quit_script(app, collection, undescribable_is_ours=True)],
-                    capture_output=True, text=True, timeout=30,
-                )
+                # Enumerates and quits the app, so it is Office automation and
+                # takes the per-app lock. Without it two instances tearing down
+                # at once drive one Excel and crash it into Microsoft Error
+                # Reporting - measured 2026-08-21, see `_office_app_lock`.
+                with _office_app_lock(app):
+                    r = subprocess.run(
+                        ['osascript', '-e',
+                         # EXPLICIT, never the default. Reaching this line means the
+                         # gate above certified we launched the app, which is the
+                         # ONLY condition under which an undescribable document may
+                         # be treated as ours; the signature defaults to False so a
+                         # future second call site cannot inherit the dangerous
+                         # answer by saying nothing.
+                         _idle_quit_script(app, collection, undescribable_is_ours=True)],
+                        capture_output=True, text=True, timeout=30,
+                    )
                 status = (r.stdout or "").strip() or f"osascript rc={r.returncode}"
             except Exception as e:
                 status = f"osascript failed: {e}"
@@ -2310,10 +2352,14 @@ def quit_idle_office_apps() -> None:
         """
         import time as _t
         try:
-            subprocess.run(
-                ['osascript', '-e', f'tell application "{app}" to quit saving no'],
-                capture_output=True, timeout=10,
-            )
+            # Office automation - same lock as every other `tell application`.
+            # The pgrep/pkill escalation below is not, and deliberately runs
+            # outside it: signalling a process is not driving it.
+            with _office_app_lock(app):
+                subprocess.run(
+                    ['osascript', '-e', f'tell application "{app}" to quit saving no'],
+                    capture_output=True, timeout=10,
+                )
         except Exception:
             pass
         _t.sleep(1.0)
@@ -2618,63 +2664,68 @@ def _warmup_apps(apps: list, write_macro_pref: bool,
         # Check for default installation path to prevent "Where is X?" dialogs
         if not Path(f"/Applications/{app}.app").exists():
             continue
-        try:
-            # Launch hidden (-j) and without foregrounding (-g) so the app is
-            # already running, off-screen, by the time conversions start.
-            subprocess.run(
-                ['open', '-g', '-j', '-a', app],
-                capture_output=True, timeout=60,
-            )
-        except Exception:
-            pass
-        if touch_containers:
-            # Pre-create the staging dir inside the app's sandbox container so
-            # the macOS 15 "Canvas Downloader would like to access data from
-            # other apps" prompt fires NOW (user is at the screen) rather than
-            # at the first conversion. The container exists once the app has
-            # launched (we just did); a missing container simply no-ops.
+        # ONE Office app per macOS user session, so LAUNCHING it is Office
+        # automation exactly as converting is. Two instances priming at the
+        # same moment drive one Excel - the crash this lock exists for. Held
+        # per app for this app's warmup only, never across the whole loop.
+        with _office_app_lock(app):
             try:
-                _office_container_tmp(short_by_ms.get(app, ''))
+                # Launch hidden (-j) and without foregrounding (-g) so the app is
+                # already running, off-screen, by the time conversions start.
+                subprocess.run(
+                    ['open', '-g', '-j', '-a', app],
+                    capture_output=True, timeout=60,
+                )
             except Exception:
                 pass
-        answered = False
-        try:
-            # Harmless Apple Event → triggers the per-app Automation TCC prompt.
-            # Returns rc 0 on Allow, -1743 on Deny; raises TimeoutExpired when
-            # the prompt sat unanswered - only then is the app NOT recorded as
-            # answered, so the next run re-batches it.
-            subprocess.run(
-                ['osascript', '-e', f'tell application "{app}" to count windows'],
-                capture_output=True, timeout=120,
-            )
-            answered = True
-        except Exception:
-            pass
-        # NOTE deliberately NO System Events hide here. `open -g -j` above has
-        # already launched the app hidden, and the hide demanded Accessibility
-        # while also hiding any Word/Excel/PowerPoint window the USER had open
-        # themselves - see the measured note above TCC_FIRST_RUN_NOTICE.
-        if app == "Microsoft Excel":
-            # Best-effort suppression of the "this workbook contains links to
-            # external sources" dialog. Done HERE, in its own isolated
-            # osascript, NOT inline in the conversion script: if this Excel
-            # build doesn't expose the property the statement is a COMPILE
-            # error (-2741) that `try` can't catch - inline it would kill
-            # every conversion. Isolated, a bad property name just no-ops.
-            for _prop in ('ask to update links', 'ask to update automatic links'):
+            if touch_containers:
+                # Pre-create the staging dir inside the app's sandbox container so
+                # the macOS 15 "Canvas Downloader would like to access data from
+                # other apps" prompt fires NOW (user is at the screen) rather than
+                # at the first conversion. The container exists once the app has
+                # launched (we just did); a missing container simply no-ops.
                 try:
-                    subprocess.run(
-                        ['osascript', '-e',
-                         f'tell application "{app}" to set {_prop} to false'],
-                        capture_output=True, timeout=15,
-                    )
+                    _office_container_tmp(short_by_ms.get(app, ''))
                 except Exception:
                     pass
-        if answered and on_app_answered is not None:
+            answered = False
             try:
-                on_app_answered(app)
+                # Harmless Apple Event → triggers the per-app Automation TCC prompt.
+                # Returns rc 0 on Allow, -1743 on Deny; raises TimeoutExpired when
+                # the prompt sat unanswered - only then is the app NOT recorded as
+                # answered, so the next run re-batches it.
+                subprocess.run(
+                    ['osascript', '-e', f'tell application "{app}" to count windows'],
+                    capture_output=True, timeout=120,
+                )
+                answered = True
             except Exception:
                 pass
+            # NOTE deliberately NO System Events hide here. `open -g -j` above has
+            # already launched the app hidden, and the hide demanded Accessibility
+            # while also hiding any Word/Excel/PowerPoint window the USER had open
+            # themselves - see the measured note above TCC_FIRST_RUN_NOTICE.
+            if app == "Microsoft Excel":
+                # Best-effort suppression of the "this workbook contains links to
+                # external sources" dialog. Done HERE, in its own isolated
+                # osascript, NOT inline in the conversion script: if this Excel
+                # build doesn't expose the property the statement is a COMPILE
+                # error (-2741) that `try` can't catch - inline it would kill
+                # every conversion. Isolated, a bad property name just no-ops.
+                for _prop in ('ask to update links', 'ask to update automatic links'):
+                    try:
+                        subprocess.run(
+                            ['osascript', '-e',
+                             f'tell application "{app}" to set {_prop} to false'],
+                            capture_output=True, timeout=15,
+                        )
+                    except Exception:
+                        pass
+            if answered and on_app_answered is not None:
+                try:
+                    on_app_answered(app)
+                except Exception:
+                    pass
 
 
 def prime_office_automation(contract: dict) -> None:
