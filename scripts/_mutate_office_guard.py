@@ -123,6 +123,22 @@ CRASH_MUTANTS = [
      "                err_msg = result.stderr.strip() or err_msg"),
     ("relaunch pause removed", AB,
      "_CRASH_RELAUNCH_PAUSE_S = 3.0", "_CRASH_RELAUNCH_PAUSE_S = 0.0"),
+    # Added 2026-08-21 with the -609 / -30001 widening. Each is a way of
+    # half-doing it, and the last two are the ones that matter: widening the
+    # recoverable set must not swallow an ordinary error into "retry me", and
+    # must not make a transient failure fatal.
+    ("-609 falls back to 'other', so a dead connection is never retried", AB,
+     "    if ('-600' in err_msg or '-609' in err_msg or '-30001' in err_msg",
+     "    if ('-600' in err_msg or '-30001' in err_msg"),
+    ("-30001 falls back to 'other', so our own frontmost guard fails the file", AB,
+     "    if ('-600' in err_msg or '-609' in err_msg or '-30001' in err_msg",
+     "    if ('-600' in err_msg or '-609' in err_msg"),
+    ("the wording clause for a dead connection is dropped", AB,
+     "            or 'connection is invalid' in low):",
+     "            or 'connection is invalid xx' in low):"),
+    ("the widening swallows EVERYTHING into app_crashed", AB,
+     "            or 'connection is invalid' in low):",
+     "            or True):"),
 ]
 
 

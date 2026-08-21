@@ -717,7 +717,30 @@ def _classify_stderr(err_msg: str) -> str:
         or 'unable to find application' in low
     ):
         return 'app_missing'
-    if '-600' in err_msg or "isn't running" in low:
+    # -609 is `connectionInvalid`: the Apple event connection to the app died
+    # under us. It is the same recoverable condition as -600 one step earlier -
+    # the app was there when we addressed it and is not there now - and this
+    # module's OWN docstring already cites `Connection is invalid. (-609)` as
+    # the signature of PowerPoint being torn down mid-conversion. It was
+    # nonetheless classified `other`, which gets NO retry, so a transient death
+    # failed the file outright.
+    #
+    # -30001 is OUR OWN guard ("the frontmost presentation is not the one Canvas
+    # Downloader opened"). It fires when the app comes back with a recovered or
+    # foreign document in front - exactly the state a crash leaves - and a retry
+    # is SAFE by construction, because the guard's whole purpose is that it
+    # refuses to touch a document it does not own. Retrying it converts nothing
+    # it should not; declining to retry loses a file for a transient race.
+    #
+    # Measured 2026-08-21, matrix row m032 (the largest Office batch in the
+    # plan, ~88 files across two courses): three files failed this way, each
+    # surrounded by dozens of successes. They were only recovered because
+    # `retry_failed_conversions` sweeps the phase afterwards - and that late
+    # sweep re-resolves the target, so each one also minted a duplicate
+    # `<stem> (n).pdf` beside the real product.
+    if ('-600' in err_msg or '-609' in err_msg or '-30001' in err_msg
+            or "isn't running" in low
+            or 'connection is invalid' in low):
         return 'app_crashed'
     return 'other'
 
@@ -946,8 +969,9 @@ def _run_applescript_locked(src: Path, dst: Path, app_name: str, script: str) ->
             # remaining 57 files.
             if category == 'app_crashed':
                 logger.warning(
-                    f"[AppleScript] {app_name} was not running ({err_msg}) - it "
-                    f"most likely crashed; relaunching and retrying {src.name} once"
+                    f"[AppleScript] {app_name} was not usable ({err_msg}) - it "
+                    f"most likely crashed or was torn down mid-conversion; "
+                    f"relaunching and retrying {src.name} once"
                 )
                 time.sleep(_CRASH_RELAUNCH_PAUSE_S)
                 result = subprocess.run(
