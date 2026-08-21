@@ -650,3 +650,87 @@ def test_an_unrelated_oserror_is_not_retried(tmp_path, monkeypatch):
 
 def test_an_absent_tree_is_a_no_op(tmp_path):
     snapshot._rmtree(tmp_path / "never-existed")
+
+
+# --------------------------------------------------------------------------
+# parallel: a row needing BOTH resources must not let the two lanes overlap
+#
+# Found by the live macOS audit, 2026-08-21. `classify` answers with ONE lane
+# name, which is the right answer to "where does this row live" and the wrong
+# answer to "what does it touch": a row with transcription AND Office
+# conversion reports "gpu", lands in the gpu lane, and then drives Office while
+# the office lane is driving Office - the exact arrangement this module's
+# docstring says must never happen.
+#
+# Measured on that run's 56-row plan: 7 of the 9 gpu rows also converted
+# Office. It only escaped the clash because the gpu lane was started by hand
+# after the office lane had finished; a plain `matrix launch` would have run
+# them together, and the resulting -609 / -30001 PowerPoint failures read
+# exactly like product defects. One such row cost a full investigation.
+# --------------------------------------------------------------------------
+
+def _lane_of(parts, job_id):
+    for d in parts:
+        if any(j.id == job_id for j in d["jobs"]):
+            return d["lane"]
+    raise AssertionError(f"{job_id} was not placed")
+
+
+def test_resources_reports_every_resource_not_just_the_first():
+    assert parallel.resources({"pan_out_txt": True}) == {"gpu"}
+    assert parallel.resources({"convert_excel": True}) == {"office"}
+    assert parallel.resources({"convert_excel": True, "pan_out_txt": True}) \
+        == {"gpu", "office"}
+    assert parallel.resources({}) == set()
+
+
+@pytest.mark.parametrize("lanes", [2, 3, 4, 8])
+def test_a_dual_need_row_forces_office_and_gpu_into_ONE_lane(lanes):
+    """The office rows must not run while the dual row drives Office."""
+    jobs = _jobs([
+        {"convert_excel": True},                        # m000 office
+        {"pan_out_txt": True},                          # m001 gpu
+        {"convert_word": True, "pan_out_srt": True},    # m002 BOTH
+        {},                                             # m003 free
+    ])
+    parts = partition(jobs, lanes)
+    assert _lane_of(parts, "m000") == _lane_of(parts, "m001") == _lane_of(parts, "m002"), (
+        "a dual-need row is present, so office work and gpu work can no longer "
+        "be given a lane each - whichever lane holds it drives Office while the "
+        "other lane is also driving Office")
+    assert all(d["serial"] for d in parts
+               if _lane_of(parts, "m002") == d["lane"]), \
+        "the merged lane must still be serial"
+
+
+@pytest.mark.parametrize("lanes", [3, 4, 8])
+def test_the_quiet_direction_no_dual_row_keeps_the_lanes_separate(lanes):
+    """A check that always fires is not a check.
+
+    With no dual-need row the two resources really are independent, and merging
+    them would halve the throughput of every ordinary plan for nothing.
+
+    Three lanes minimum: at two, `test_office_and_gpu_share_a_lane_when_there_
+    are_not_enough` already applies, and the pre-existing "never spend every
+    lane on the serial classes" rule merges them for a different reason.
+    """
+    jobs = _jobs([
+        {"convert_excel": True},
+        {"pan_out_txt": True},
+        {},
+    ])
+    parts = partition(jobs, lanes)
+    assert _lane_of(parts, "m000") != _lane_of(parts, "m001"), (
+        "office and gpu are independent here and must still get a lane each")
+
+
+def test_a_dual_need_row_is_still_placed_exactly_once():
+    jobs = _jobs([
+        {"convert_excel": True},
+        {"pan_out_txt": True},
+        {"convert_word": True, "pan_out_srt": True},
+        {},
+    ])
+    ids = _all_ids(partition(jobs, 4))
+    assert sorted(ids) == sorted(j.id for j in jobs)
+    assert len(ids) == len(set(ids))
