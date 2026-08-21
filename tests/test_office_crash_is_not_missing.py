@@ -369,9 +369,6 @@ TRANSIENT_MESSAGES = [
      "Connection is invalid. (-609)"),
     ("connection invalid, wording only",
      "execution error: Microsoft Word got an error: Connection is invalid."),
-    ("our frontmost guard",
-     "1022:1028: execution error: the frontmost presentation is not the one "
-     "Canvas Downloader opened (-30001)"),
 ]
 
 
@@ -430,5 +427,23 @@ def test_the_NUMBER_alone_carries_a_dead_connection_on_a_localised_mac():
     ) == "app_crashed"
 
 
-def test_the_NUMBER_alone_carries_the_frontmost_guard_too():
-    assert AB._classify_stderr("eksekveringsfejl: (-30001)") == "app_crashed"
+def test_our_own_frontmost_guard_deliberately_stays_other():
+    """A DECISION, not an omission - do not "fix" this into app_crashed.
+
+    -30001 is our own guard: the app is running perfectly, it simply has
+    someone else's document in front, which is what happens when the user opens
+    a document mid-run. Retrying it would be safe, but `app_crashed` tells the
+    user the app "stopped running while converting", which is false - and a
+    product whose reporting contract is that it tells the truth does not buy one
+    retry with a message that misdescribes the machine.
+
+    `tests/test_container_denied_attribution.py` also relies on -30001 being the
+    one non-timeout `other` message, to exercise a clause nothing else reaches.
+    If this is ever made retryable it needs its OWN category and wording.
+    """
+    for msg in (
+        "1022:1028: execution error: the frontmost presentation is not the one "
+        "Canvas Downloader opened (-30001)",
+        "eksekveringsfejl: (-30001)",
+    ):
+        assert AB._classify_stderr(msg) == "other"

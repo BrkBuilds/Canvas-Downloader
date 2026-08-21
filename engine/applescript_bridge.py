@@ -725,20 +725,26 @@ def _classify_stderr(err_msg: str) -> str:
     # nonetheless classified `other`, which gets NO retry, so a transient death
     # failed the file outright.
     #
-    # -30001 is OUR OWN guard ("the frontmost presentation is not the one Canvas
-    # Downloader opened"). It fires when the app comes back with a recovered or
-    # foreign document in front - exactly the state a crash leaves - and a retry
-    # is SAFE by construction, because the guard's whole purpose is that it
-    # refuses to touch a document it does not own. Retrying it converts nothing
-    # it should not; declining to retry loses a file for a transient race.
-    #
     # Measured 2026-08-21, matrix row m032 (the largest Office batch in the
-    # plan, ~88 files across two courses): three files failed this way, each
-    # surrounded by dozens of successes. They were only recovered because
-    # `retry_failed_conversions` sweeps the phase afterwards - and that late
-    # sweep re-resolves the target, so each one also minted a duplicate
-    # `<stem> (n).pdf` beside the real product.
-    if ('-600' in err_msg or '-609' in err_msg or '-30001' in err_msg
+    # plan, ~88 files across two courses): three files failed transiently, each
+    # surrounded by dozens of successes, and all three fell to `other`. They
+    # were recovered only because `retry_failed_conversions` sweeps the phase
+    # afterwards - and because that late sweep re-resolves the destination, each
+    # also minted a duplicate `<stem> (n).pdf` beside the real product.
+    #
+    # -30001 is deliberately NOT here, and that is a decision, not an omission.
+    # It is OUR OWN guard ("the frontmost presentation is not the one Canvas
+    # Downloader opened"), and `app_crashed` tells the user the app "stopped
+    # running while converting" - which is FALSE for -30001: the app is running
+    # perfectly, it simply has someone else's document in front, which is what
+    # happens when the user opens a document mid-run. Buying one retry with a
+    # message that misdescribes the machine's state is the wrong trade in a
+    # product whose whole reporting contract is that it tells the truth. It also
+    # collapses the one distinction that made this row diagnosable at all.
+    # `test_container_denied_attribution` additionally uses -30001 as its only
+    # non-timeout `other` fixture. If it is ever made retryable it needs its own
+    # category and its own wording - see MAC_RUNBOOK.md.
+    if ('-600' in err_msg or '-609' in err_msg
             or "isn't running" in low
             or 'connection is invalid' in low):
         return 'app_crashed'
