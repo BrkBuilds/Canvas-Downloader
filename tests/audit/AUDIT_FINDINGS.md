@@ -5130,3 +5130,25 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 > Not observed in the latest run.
 
 ---
+
+### find_new_office_pid can adopt the USER'S OWN Office process, so a watchdog timeout kills their unsaved document - and our real instance is the one that leaks
+<!-- fp:a41c7e0b93d2 -->
+
+**Status**: open
+**Severity**: high
+**Category**: data-loss
+**Oracles**: live-observation,O3
+**First seen**: 2026-08-21 (windows-verification-2026-08-21)
+**Last seen**: 2026-08-21 (windows-verification-2026-08-21)
+**Occurrences**: 2
+**Scenario**: Windows 11 26200, single app instance, real Office COM
+
+**Detail**:
+
+PINS THE TRIGGER behind fp:6759ff4ce798 and fp:b79fd1dd2b22 (the EXCEL.EXE that outlived the 2026-08-08 audit by 5h54m), and escalates it: the same defect is reachable by a SINGLE-INSTANCE user and costs them unsaved work, not just memory. engine/office_pid.find_new_office_pid returns the FIRST process of that image name not in the pre-snapshot, with no test that it is the one we spawned; converters/word.py, excel.py and pdf.py all use it identically. Ground truth is available and was used to prove the misattribution - Application.Hwnd -> GetWindowThreadProcessId gives the true pid of our own instance. (a) TWO CONCURRENT LANES, each dispatching Excel as the app does: laneA guessed=2448 TRUE=9816, laneB guessed=2448 TRUE=2448 - pid 9816 tracked by NOBODY, and laneA would taskkill laneB's Excel. That is exactly the 2026-08-08 observation, and it resolves both loose ends in those entries: 'the app correctly killed every instance it tracked' (it tracked 2448 twice), and 'appeared inside m014's window, a row whose convert_excel toggle was never applied' (attribution is CROSS-LANE, so the creation time falls in one lane's window while another lane spawned it). There is no special row - the trigger is any two concurrent _init_app calls. (b) THE SINGLE-INSTANCE CASE, no harness: pre-snapshot [], the user opens their own workbook (pid 23236), the app dispatches (TRUE pid 23244), find_new_office_pid returns 23236 - THE USER'S EXCEL. _on_timeout then does taskkill /F /PID on it after a 180s hang, killing their unsaved workbook without saving, which is the precise thing office_pid.py's docstring says it exists to prevent; _kill_app does the same on a failed Quit(); and our real instance is tracked by nobody, so it leaks. pid_is_process does not help - it only confirms the pid is AN Excel, which the user's process also is. WINDOW WIDTH, measured per app (snapshot -> find_pid returning): Excel 0.506s, Word 2.344s, PowerPoint 2.357s, dominated by DispatchEx; the lookup itself is 0.002s. It reopens on every _init_app - once per converter per batch plus once per _ensure_app self-heal. WHY IT IS INTERMITTENT: with find_new_office_pid forced to return None, an ordinary convert still leaks nothing because Quit() succeeds on a healthy channel; the leak needs a lost/wrong pid AND a failed Quit(), i.e. the hung instance the watchdog exists for. ALSO: find_new_office_pid's docstring says 'callers must fall back to /IM kill in that case', and the two callers disagree - _kill_app does nothing when _com_pid is None, while _on_timeout's `_pid or 0` degrades to a broad /IM kill that closes every Excel the user has open.
+
+RECOMMENDED FIX (NOT APPLIED - this touches process-killing semantics where a wrong choice destroys unsaved work, and CLAUDE.md records the structurally identical macOS ownership decision being deferred for exactly that reason): (1) return None when more than one candidate appears, instead of picking one - fails safe; (2) land that together with removing _on_timeout's broad /IM degradation, which becomes reachable more often once (1) is in and is worse than doing nothing; (3) where ground truth exists, take it - Excel and PowerPoint expose Application.Hwnd, so GetWindowThreadProcessId gives the pid exactly. Word's Application has no Hwnd (only ActiveWindow.Hwnd, which needs an open document), so Word still needs (1)+(2).
+
+**Notes**: Full method, probes and measurements in tests/audit/WINDOWS_FINDINGS_2026-08.md, area 5.
+
+---

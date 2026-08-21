@@ -25,6 +25,7 @@ under its real long name.
 """
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -157,6 +158,13 @@ def test_staging_still_degrades_to_a_passthrough_with_no_container(tmp_path,
 LINE_BREAK_NAMES = ["Lec\rture.doc", "Lec\nture.doc", "a\r\nb.doc"]
 
 
+@pytest.mark.skipif(
+    os.name == "nt",
+    reason="Windows forbids CR/LF in a filename, so the fixture cannot be "
+           "built - src.write_bytes raises OSError [Errno 22] before any "
+           "product code runs. The path under test is the macOS AppleScript "
+           "literal, which does not execute on Windows anyway.",
+)
 @pytest.mark.parametrize("name", LINE_BREAK_NAMES)
 def test_a_line_break_in_the_name_never_reaches_the_applescript_literal(
         container, tmp_path, name):
