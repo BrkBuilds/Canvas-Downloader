@@ -54,18 +54,52 @@ from core.sync_manager import SyncManager          # noqa: E402
 # fixtures
 # ----------------------------------------------------------------------------
 
+def _symlinks_available(tmp_path: Path) -> bool:
+    """Can this process actually CREATE a symlink here?
+
+    ``hasattr(Path, "symlink_to")`` is the wrong question and was silently the
+    wrong answer for every Windows run: the attribute always exists there, and
+    the call fails at run time with ``WinError 1314`` ("a required privilege is
+    not held") unless the account is elevated or Developer Mode is on. So the
+    six symlink tests below did not skip, they FAILED - in fixture setup, before
+    reaching any product code, which reads exactly like the repoint guard being
+    gone. Probe the capability instead of the attribute.
+    """
+    probe = tmp_path / "_symlink_probe"
+    target = tmp_path / "_symlink_probe_target"
+    try:
+        target.mkdir(exist_ok=True)
+        probe.symlink_to(target)
+    except (OSError, NotImplementedError, AttributeError):
+        return False
+    finally:
+        try:
+            probe.unlink()
+        except OSError:
+            pass
+    return True
+
+
 def _make_course(tmp_path: Path, *, through_symlink: bool) -> tuple[Path, Path]:
     """Return ``(root_for_sm, real_course_dir)``.
 
     ``through_symlink`` is the whole point: it reproduces a course folder whose
     configured path and whose realpath disagree, which is what the packaged run
     hit.
+
+    The capability check lives HERE rather than as a decorator on each test,
+    because only one of the six symlink tests ever carried one - so five were
+    unguarded, and a seventh added later would be unguarded too. The helper is
+    the one place every symlink test must pass through.
     """
     real = tmp_path / "real"
     real.mkdir()
     course = real / "Course"
     course.mkdir()
     if through_symlink:
+        if not _symlinks_available(tmp_path):
+            pytest.skip("this account cannot create symlinks "
+                        "(Windows needs elevation or Developer Mode)")
         link = tmp_path / "via_link"
         link.symlink_to(real)
         return link / "Course", course
@@ -105,7 +139,6 @@ REL = "Tema 2 Uformelle træk/Lektion uge 41 - upload.pptx"
 # the defect, in the shape it actually shipped
 # ----------------------------------------------------------------------------
 
-@pytest.mark.skipif(not hasattr(Path, "symlink_to"), reason="no symlinks")
 def test_repoint_survives_a_course_root_reached_through_a_symlink(tmp_path):
     """THE regression. Pre-fix this left the row on the deleted .pptx."""
     root, course = _make_course(tmp_path, through_symlink=True)
