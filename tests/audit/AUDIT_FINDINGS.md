@@ -11,7 +11,154 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260821_144948_macos26-dl-matrix-short2` on 2026-08-21.
 
-**7 open** · 163 total · 29 accepted · 91 fixed · 35 invalid · 1 wontfix
+**19 open** · 175 total · 29 accepted · 91 fixed · 35 invalid · 1 wontfix
+
+---
+
+### Unexpected bridged_error in debug log: 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx  Conve
+<!-- fp:3497d9e289e7 -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: 251009_Kom og vær med_Til Stig N.pptx  Conversion failed - 1022:1028: execution error: the
+<!-- fp:ec3439926351 -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+251009_Kom og vær med_Til Stig N.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Forelæsning 17 - DB3.pptx  Conversion failed - 1022:1028: execution error: Microsoft Power
+<!-- fp:f8e8cd4bc081 -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+Forelæsning 17 - DB3.pptx  Conversion failed - 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Opgavesæt 6-vejl.xlsx  1424:1430: execution error: Microsoft Excel got an error: Parameter
+<!-- fp:aeda030ca62e -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m014 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+
+**Detail**:
+
+Opgavesæt 6-vejl.xlsx  1424:1430: execution error: Microsoft Excel got an error: Parameter error. (-50)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Sensemaking slides 2.pptx  Conversion failed - 1022:1028: execution error: the frontmost p
+<!-- fp:c0cf118df1f2 -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Sensemaking slides 2.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Øvelse 3 - VL.xls  1421:1427: execution error: Microsoft Excel got an error: Parameter err
+<!-- fp:2bb23c609df1 -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m014 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+
+**Detail**:
+
+Øvelse 3 - VL.xls  1421:1427: execution error: Microsoft Excel got an error: Parameter error. (-50)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_error in debug log: Øvelsesslides formelle træk - organisationsformer-1.pptx  Conversion failed - 1022:1028: e
+<!-- fp:056417648214 -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Øvelsesslides formelle træk - organisationsformer-1.pptx  Conversion failed - 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**: 
 
 ---
 
@@ -66,7 +213,7 @@ Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full
 **Oracles**: live-observation,log
 **First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
 **Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
+**Occurrences**: 2
 **Scenario**: audit harness with a converting lane alongside other lanes; NOT reachable single-instance
 
 **Detail**:
@@ -95,6 +242,111 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 **Notes**:   
 > Not observed in the latest run.
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for 2024_Lektion uge 43_1 Individ og Organisation - Innovation og la
+<!-- fp:d0806804f019 -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for 251009_Kom og vær med_Til Stig N.pptx: 1022:1028: execution erro
+<!-- fp:4dc5844aa221 -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for 251009_Kom og vær med_Til Stig N.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for Forelæsning 17 - DB3.pptx: 1022:1028: execution error: Microsoft
+<!-- fp:919cb2030055 -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+PDF conversion failed for Forelæsning 17 - DB3.pptx: 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for Sensemaking slides 2.pptx: 1022:1028: execution error: the front
+<!-- fp:dfbd12761e8d -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for Sensemaking slides 2.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**: 
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for Øvelsesslides formelle træk - organisationsformer-1.pptx: 1022:1
+<!-- fp:f108b644b5d7 -->
+
+**Status**: invalid
+**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for Øvelsesslides formelle træk - organisationsformer-1.pptx: 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**: 
 
 ---
 
@@ -1702,7 +1954,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [AppleScript] Excel failed (other): 1424:1430: execution error: Microsoft Excel got an err~~
+### ~~Unexpected bridged_error in debug log: [AppleScript] Excel failed (other): 1421:1427: execution error: Microsoft Excel got an err~~
 <!-- fp:9086db677dd1 -->
 
 **Status**: fixed
@@ -1710,16 +1962,15 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 **Category**: robustness
 **Oracles**: O2
 **First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m048_c43665 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 3
+**Scenario**: m014 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
 
 **Detail**:
 
-[AppleScript] Excel failed (other): 1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)
+[AppleScript] Excel failed (other): 1421:1427: execution error: Microsoft Excel got an error: Parameter error. (-50)
 
-**Notes**: Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.  
-> Not observed in the latest run.
+**Notes**: Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.
 
 ---
 
@@ -1744,7 +1995,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint~~
+### ~~Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint ~~
 <!-- fp:39d13fe4271b -->
 
 **Status**: accepted
@@ -1752,16 +2003,15 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 **Category**: robustness
 **Oracles**: O2
 **First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 3
+**Scenario**: m025_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
 
 **Detail**:
 
-[AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+[AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
 
-**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
-> Not observed in the latest run.
+**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
 
 ---
 
@@ -1773,16 +2023,15 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 **Category**: robustness
 **Oracles**: O2
 **First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 2
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
 
 [AppleScript] PowerPoint failed (other): 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
 
-**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
-> Not observed in the latest run.
+**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
 
 ---
 
