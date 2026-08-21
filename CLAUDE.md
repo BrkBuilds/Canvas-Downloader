@@ -922,6 +922,25 @@ count.
   Canvas id. Four `if <name> in <seen>: continue` sites exist and all four are
   benign (app-owned filenames, and one keyed on a real PATH).
 
+
+### Two things conservation does NOT cover - stated rather than implied
+- **A file can be CONSERVED and still be invisible.** The re-upload hand-over
+  parks a genuinely new Canvas file on a locally-deleted row, and that row is
+  **unchecked by default** (M-6 respects the user's deletion). So the file is
+  accounted for, the review screen shows a row, and a user who leaves the
+  default alone downloads nothing - while the row is labelled with the OLD
+  file's name, not the new one. That is correct when the two really are the same
+  file re-uploaded, and merely opaque when the name match was a coincidence
+  across folders. Considered on 2026-08-21 and deliberately NOT changed: it is
+  the documented M-6 policy, and changing which category a file lands in is a
+  product decision, not a bug fix. Recorded so the next session does not
+  re-derive the question and quietly answer it differently.
+- **Only `analyze_course` is asserted.** The DOWNLOAD engine has the same shape
+  of question - every Canvas file the scan produced either lands, is deferred to
+  a later phase, or is reported - and it is covered only by the audit's own
+  `_count_coherence`, which is a per-run check rather than a property over
+  generated states. That is the obvious next place to point this instrument.
+
 ## An audit oracle that is BLIND does not under-report - it INVENTS (2026-08-21)
 The audit's log oracle named three tags the app has never emitted
 (`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's

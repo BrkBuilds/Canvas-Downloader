@@ -214,7 +214,19 @@ depends on timing cannot be compared against the previous audit, which is the
 same reason the covering array is generated deterministically.
 
 Progress is per row: a killed worker resumes, and a **failed** row is retried
-while a successful one is not repeated.
+while a successful one is not repeated. `_completed()` counts only rows with
+`ok: True`, so this is exact.
+
+**Two things about that follow, and one of them cost a wrong number on
+2026-08-21.** `matrix launch` spawns workers unconditionally and returns
+`{"status": "finished"}` when they exit - that is the result of a completed
+pass, NOT a refusal to retry, and reading it as a refusal sent a session
+looking for a defect in a mechanism that was working. And because a retry
+happens on a LATER launch, **`matrix collect` must run after every row has a
+successful record, not merely after the workers exit**: collecting between the
+failure and the retry silently reports the matrix on N-1 rows. Check
+`matrix lanes` shows `failed=0` before collecting; if it does not, launch again
+and collect after.
 
 ---
 

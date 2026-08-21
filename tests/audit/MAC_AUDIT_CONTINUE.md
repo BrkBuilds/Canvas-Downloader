@@ -400,7 +400,7 @@ matrix re-run would close it and re-validate all five checker fixes end to end.
 A full 43-row sync matrix ran against the real app, a real browser and real
 Canvas: `_audit_runs/20260821_131853_sync-matrix-postfix-verify`.
 
-**97 findings, ALL INFO** - zero critical, zero high, zero medium, against
+**103 findings, ALL INFO** - zero critical, zero high, zero medium, against
 **29 HIGH** on the pre-fix run of the same matrix. Every info finding is a known
 benign family (Panopto `GetFolders` 500 = checker defect 29, long paths,
 converter-consumed rows, and the `ambiguous by name` non-assertion).
@@ -411,8 +411,17 @@ both -> **O1** the REVIEW SCREEN renders both rows (s021/s024/s001/s010; before
 the fix only `...Upload-1` appeared) -> **O3** both land on disk and the
 student's renamed `zz flertydig 0/1.pdf` are untouched.
 
-Row s035 failed its restore (checker defect 36) and was re-run standalone, so
-all 43 rows are covered.
+Row s035 failed its restore (checker defect 36). **The matrix retried it itself
+and it passed**, which is worth stating because this session first read
+`matrix launch` returning `status: finished` as a refusal to retry and went
+looking for a defect in a mechanism that was working - `_completed()` counts only
+`ok: True` rows, exactly as `RUNBOOK.md` says.
+
+**The real cost of that misreading was a WRONG NUMBER**: `matrix collect` had
+already run BEFORE the retry, so the first figure quoted (97 findings) was
+computed over 42 rows. Re-collected after the retry: **103 INFO across all 43
+rows**, still nothing above INFO. Collect AFTER every row has a successful
+record, not merely after the workers exit.
 
 ## Setting the audit up again
 

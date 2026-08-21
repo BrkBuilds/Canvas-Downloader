@@ -3672,7 +3672,10 @@ run of the same matrix. The full oracle chain agrees on the pair:
       and the student's renamed `zz flertydig 0/1.pdf` are untouched.
 
 Row s035 failed its snapshot restore (a prior row's `debug_log.txt` counted as
-`extra`) and was re-run standalone afterwards, so all 43 rows are covered.
+`extra`). **The matrix retried it itself and it passed** - `matrix launch`
+re-runs exactly the rows that failed, which this session initially and wrongly
+read as a refusal. The corrected tally, collected AFTER that retry, is **103
+INFO and no product finding of any higher severity**, across all 43 rows.
 
 ---
 
