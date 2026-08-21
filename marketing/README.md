@@ -56,7 +56,7 @@ before trusting; these rot.
   Philippines 82, US 79, Australia 70, South Africa 62, India 55, Nigeria 27,
   UK 24. This corrects an earlier reading taken from the app's institution
   directory, which measures where tenants are, not where users are.
-- The site now carries **social proof**: 800+ downloads (767 Store installs plus
+- The site now carries **social proof**: 800+ installs (Store installs plus
   44 from GitHub) and 100 countries, in the hero strip and in `llms.txt`. The
   Store has **0 ratings and 0 reviews**, so nothing on the site claims an
   opinion, and nothing mentions the absence either.

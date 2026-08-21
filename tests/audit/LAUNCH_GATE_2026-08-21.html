@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canvas Downloader Launch Gate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+  :root {
+    --ground:      #f6f7f9;
+    --surface:     #ffffff;
+    --surface-2:   #eef1f5;
+    --line:        #d8dee7;
+    --line-soft:   #e7ebf1;
+    --ink:         #141a22;
+    --ink-2:       #46505e;
+    --ink-3:       #6b7684;
+    --accent:      #2f639f;
+    --accent-soft: #e3ecf7;
+    --stop:        #b23c33;
+    --warn:        #9a6a12;
+    --ok:          #2c7a53;
+    --stop-bg:     #f8e6e4;
+    --warn-bg:     #f8f0dd;
+    --ok-bg:       #e2f1e9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0e1117;
+      --surface:     #161b23;
+      --surface-2:   #1d232d;
+      --line:        #2a323e;
+      --line-soft:   #222933;
+      --ink:         #e2e8f0;
+      --ink-2:       #aab6c6;
+      --ink-3:       #7c8899;
+      --accent:      #6fa4e0;
+      --accent-soft: #1a2836;
+      --stop:        #e08078;
+      --warn:        #d6a441;
+      --ok:          #62c295;
+      --stop-bg:     #2c1c1b;
+      --warn-bg:     #2a2417;
+      --ok-bg:       #16281f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #0e1117;
+    --surface:     #161b23;
+    --surface-2:   #1d232d;
+    --line:        #2a323e;
+    --line-soft:   #222933;
+    --ink:         #e2e8f0;
+    --ink-2:       #aab6c6;
+    --ink-3:       #7c8899;
+    --accent:      #6fa4e0;
+    --accent-soft: #1a2836;
+    --stop:        #e08078;
+    --warn:        #d6a441;
+    --ok:          #62c295;
+    --stop-bg:     #2c1c1b;
+    --warn-bg:     #2a2417;
+    --ok-bg:       #16281f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 860px; margin: 0 auto; padding: 56px 24px 96px; }
+
+  h1, h2, h3, .ui {
+    font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  h1 {
+    font-size: 34px; font-weight: 700; letter-spacing: -0.02em;
+    margin: 0 0 6px; text-wrap: balance; line-height: 1.15;
+  }
+  h2 {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--ink-3);
+    margin: 0; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+  }
+  h3 {
+    font-size: 19px; font-weight: 600; letter-spacing: -0.01em;
+    margin: 0 0 4px; text-wrap: balance; color: var(--ink);
+  }
+  p { margin: 0 0 14px; }
+  p:last-child { margin-bottom: 0; }
+  a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+  strong { font-weight: 600; }
+  code, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.87em;
+  }
+  code {
+    background: var(--surface-2); border: 1px solid var(--line-soft);
+    padding: 0.1em 0.34em; border-radius: 3px; white-space: nowrap;
+  }
+
+  .deck {
+    font-size: 19px; color: var(--ink-2); margin: 0 0 8px;
+    text-wrap: pretty; max-width: 62ch;
+  }
+  .stamp {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    color: var(--ink-3); letter-spacing: 0.04em;
+  }
+
+  section { margin-top: 52px; }
+  .section-body { margin-top: 22px; display: flex; flex-direction: column; gap: 22px; }
+
+  /* ── score ───────────────────────────────────────────────────────── */
+  .score-head { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .score-num {
+    font-family: "IBM Plex Sans", sans-serif; font-weight: 700;
+    font-size: 76px; line-height: 1; letter-spacing: -0.04em;
+    color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+  .score-den { font-size: 26px; color: var(--ink-3); font-weight: 400; }
+  .score-note { color: var(--ink-2); max-width: 40ch; font-size: 16px; }
+
+  table.axes { width: 100%; border-collapse: collapse; font-size: 15px; }
+  table.axes th {
+    font-family: "IBM Plex Sans", sans-serif; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3);
+    text-align: left; padding: 0 0 8px; border-bottom: 1px solid var(--line);
+  }
+  table.axes th.n, table.axes td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  table.axes td {
+    padding: 11px 0; border-bottom: 1px solid var(--line-soft); vertical-align: middle;
+  }
+  table.axes td:first-child { font-family: "IBM Plex Sans", sans-serif; font-weight: 500; }
+  table.axes td.n { font-family: "IBM Plex Mono", monospace; color: var(--ink-2); padding-left: 14px; }
+  .bar { height: 7px; background: var(--surface-2); border-radius: 1px; overflow: hidden; min-width: 90px; }
+  .bar > i { display: block; height: 100%; background: var(--accent); }
+  .bar.is-weak > i { background: var(--warn); }
+  .bar.is-bad  > i { background: var(--stop); }
+  td.barcell { width: 34%; padding-left: 18px; }
+
+  /* ── findings ────────────────────────────────────────────────────── */
+  .item {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 4px; padding: 18px 20px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .item-head { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .item-head h3 { flex: 1 1 300px; }
+  .chip {
+    font-family: "IBM Plex Mono", monospace; font-size: 10.5px; font-weight: 500;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 2px; white-space: nowrap;
+    border: 1px solid transparent; flex: 0 0 auto; margin-top: 3px;
+  }
+  .chip.stop { background: var(--stop-bg); color: var(--stop); border-color: var(--stop); }
+  .chip.warn { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
+  .chip.ok   { background: var(--ok-bg);   color: var(--ok);   border-color: var(--ok); }
+  .chip.flat { background: var(--surface-2); color: var(--ink-3); border-color: var(--line); }
+
+  .ev {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px; line-height: 1.7;
+    background: var(--surface-2); border: 1px solid var(--line-soft);
+    border-radius: 3px; padding: 11px 13px; color: var(--ink-2);
+    overflow-x: auto; white-space: pre;
+  }
+  .item p { font-size: 16px; }
+
+  /* ── plan ────────────────────────────────────────────────────────── */
+  ol.plan { list-style: none; counter-reset: step; margin: 0; padding: 0;
+            display: flex; flex-direction: column; gap: 20px; }
+  ol.plan > li {
+    counter-increment: step; display: grid;
+    grid-template-columns: 40px 1fr; gap: 16px; align-items: start;
+  }
+  ol.plan > li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 500;
+    color: var(--accent); padding-top: 4px; font-variant-numeric: tabular-nums;
+  }
+  .plan-body { display: flex; flex-direction: column; gap: 6px; }
+  .plan-body p { font-size: 16px; }
+
+  ul.tight { margin: 4px 0 0; padding-left: 20px; }
+  ul.tight li { margin-bottom: 5px; font-size: 16px; }
+
+  .note {
+    border-left: 2px solid var(--line); padding-left: 16px;
+    color: var(--ink-2); font-size: 16px;
+  }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 36px 18px 72px; }
+    .score-num { font-size: 58px; }
+    td.barcell { display: none; }
+    table.axes th.barhead { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="stamp">21 AUGUST 2026 · BRANCH macos-audit-26 · v2.0.2 UNRELEASED</p>
+    <h1>Canvas Downloader Launch Gate</h1>
+    <p class="deck">The product is in good shape. The launch is not — because the product has never been released, and one of its two platforms has not been looked at since a great deal changed underneath it.</p>
+  </header>
+
+  <section>
+    <h2>Verdict</h2>
+    <div class="section-body">
+      <div class="score-head">
+        <div><span class="score-num">72</span><span class="score-den">/100</span></div>
+        <p class="score-note">Weighted across six axes. The engine scores in the nineties; everything holding the number down is mechanical work with a known shape, not unknown risk.</p>
+      </div>
+
+      <div style="overflow-x:auto">
+      <table class="axes">
+        <thead>
+          <tr>
+            <th>Axis</th>
+            <th class="n">Weight</th>
+            <th class="n">Score</th>
+            <th class="barhead"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Core engine correctness</td><td class="n">25%</td><td class="n">93</td>
+              <td class="barcell"><div class="bar"><i style="width:93%"></i></div></td></tr>
+          <tr><td>macOS platform</td><td class="n">15%</td><td class="n">95</td>
+              <td class="barcell"><div class="bar"><i style="width:95%"></i></div></td></tr>
+          <tr><td>Docs, README, legal</td><td class="n">8%</td><td class="n">90</td>
+              <td class="barcell"><div class="bar"><i style="width:90%"></i></div></td></tr>
+          <tr><td>Website &amp; SEO</td><td class="n">12%</td><td class="n">72</td>
+              <td class="barcell"><div class="bar is-weak"><i style="width:72%"></i></div></td></tr>
+          <tr><td>Windows platform</td><td class="n">20%</td><td class="n">55</td>
+              <td class="barcell"><div class="bar is-weak"><i style="width:55%"></i></div></td></tr>
+          <tr><td>Release engineering</td><td class="n">20%</td><td class="n">40</td>
+              <td class="barcell"><div class="bar is-bad"><i style="width:40%"></i></div></td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <p class="note">Read the two low bars literally. <strong>Release engineering is 40</strong> because there is no <code>v2.0.2</code> tag, no built installers, and eight commits — including two real product fixes — sit unmerged and unpushed on this branch. <strong>Windows is 55</strong> because the last Windows audit was 8 August; about thirty source files have changed since, including all three Office COM converters, the sync engine and the keyring path. Neither is a quality problem. Both are a "nobody has done it yet" problem, and both are days of work.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>State of the evidence</h2>
+    <div class="section-body">
+      <div class="ev">test suite            4,298 passed · 26 skipped · 0 failed
+architecture audit    0 violations (66 py + 8 css scanned)
+macOS download matrix 56/56 rows, 0 genuine defects
+macOS sync matrix     43/43 rows, 103 findings, ALL INFO
+register              7 open  ·  91 fixed  ·  29 accepted  ·  47 invalid</div>
+      <p>That sync matrix number is the one worth trusting most. The same matrix produced <strong>29 HIGH</strong> before the log oracle was fixed; every one of those turned out to be the audit inventing findings in categories it was structurally blind to. After the fix, on real Canvas, a real browser and the real app: zero above INFO.</p>
+      <p>The register header said <strong>19 open</strong> when I started. Counted from the entries themselves it is <strong>7</strong> — the summary line is only rewritten by a run, and the last adjudication happened by hand. I corrected it, because 19 is the number a launch decision would otherwise have been made on.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Fixed today</h2>
+    <div class="section-body">
+
+      <div class="item">
+        <div class="item-head">
+          <h3>The macOS bundle could ship a broken code signature</h3>
+          <span class="chip stop">was shipping</span>
+        </div>
+        <p>Both specs bundle the app's packages by directory, so PyInstaller swept a developer's <code>__pycache__</code> into the bundle — 75 stale <code>.pyc</code> — and <code>codesign</code> sealed them. Remove any one of them afterwards and the seal breaks. That is not cosmetic, and it matters <em>because</em> the app ships unsigned:</p>
+        <div class="ev">valid ad-hoc seal    spctl -a -t exec  →  "rejected"                      exit 3
+__pycache__ removed  spctl -a -t exec  →  "a sealed resource is missing"  exit 1</div>
+        <p>Those are different verdict <em>classes</em>. Exit 3 is the not-notarized denial — the <em>"Apple could not verify…"</em> dialog with the <strong>Open Anyway</strong> path that the whole of <code>mac-setup.html</code> walks a user through. Exit 1 is a signature validity failure: <em>"…is damaged and can't be opened"</em>, which has no Open Anyway path at all. A bundle that can lose its seal turns your only onboarding route into a wall.</p>
+        <p>Fixed in the shared policy module, so both specs get it. Then proved end to end on a real build: <strong>0</strong> <code>__pycache__</code>, <code>--verify --deep --strict</code> exit 0, quarantined verdict back to <strong>exit 3</strong>, and the packaged app booted from sources alone — <code>health=200</code>, one clean <code>SESSION END</code>.</p>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <h3>75% of the homepage and 97% of the guide were invisible without JavaScript</h3>
+          <span class="chip warn">live</span>
+        </div>
+        <p>Every block carried <code>class="reveal"</code>, which is <code>opacity: 0</code> until an observer fires. Google renders JS; several assistant crawlers do not — and this folder already records that the site appeared in zero of three web searches while an assistant summarising the product quoted the <em>Store</em> copy.</p>
+        <p>The fix is additive: one rule on <code>html:not(.js)</code> plus an inline head script. With JS present the new rule cannot match, so the animation is untouched. I measured it against the deployed pre-fix site rather than assuming — same reveal count, same initially-hidden count, same per-element delay ladder, same computed transition, 0 hidden after scrolling. No-JS hidden words went <strong>3,125 → 0</strong> and <strong>7,025 → 0</strong>.</p>
+        <p>The inverted form of this fix — hiding on <code>html.js .reveal</code> — would outrank <code>.reveal.vis</code> and nothing would ever be revealed again. That mutant is in the guard.</p>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <h3>The homepage overstated adoption, and the test meant to stop it did not exist</h3>
+          <span class="chip stop">live claim</span>
+        </div>
+        <p>The page read <strong>"800+ installs"</strong>. Measured installs are <strong>767</strong>; the 811 figure is installs <em>plus</em> GitHub asset downloads, and your own register is emphatic that <em>"downloads is the honest umbrella"</em>. <code>llms.txt</code> had it right; the page did not.</p>
+        <p>It survived because <code>tests/test_website_social_proof.py</code> and <code>scripts/_mutate_social_proof.py</code> are described by four marketing documents and <strong>were never committed</strong> — so a recorded "15 of 15 mutations caught" measured nothing. Both now exist and catch 14 of 14, including a fabricated <code>aggregateRating</code>, a sentiment claim, and <code>llms.txt</code> drifting from the page.</p>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <h3>Two stale claims in the registers</h3>
+          <span class="chip flat">documentation</span>
+        </div>
+        <p><code>marketing/FINDINGS.md</code> described the proof strip as <code>justify-content: space-between</code>; the shipped rule is <code>center</code>, and the quoted 214/1226 figures are the container's edges, not tag ink. I re-measured at three widths — the boxes align exactly — and corrected the document rather than writing the test to match it. The register's open-findings header was corrected the same way.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Open — ranked by what it costs you at launch</h2>
+    <div class="section-body">
+
+      <div class="item">
+        <div class="item-head">
+          <h3>1 · No v2.0.2 exists, and two product fixes are unpushed</h3>
+          <span class="chip stop">blocker</span>
+        </div>
+        <p>Eight commits on <code>macos-audit-26</code> are not on <code>main</code> and not on the remote. Two of them are real fixes to <code>engine/applescript_bridge.py</code> (Office lock coverage; the marker force-close that destroyed documents silently). The website correctly advertises v2.0.1 today — it must not be touched until the tag exists.</p>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <h3>2 · Windows is unverified against ~30 changed files</h3>
+          <span class="chip stop">blocker</span>
+        </div>
+        <p>Everything since 8 August was verified on macOS or by simulating <code>sys.platform</code>. The Windows-only code that changed: the three Office COM converters, <code>office_safe_path</code>'s long-path handling, the DPAPI token fallback, and the shared sync engine. This repo's own history is that a fix lands on one platform and sits broken on the other for months.</p>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <h3>3 · Four dead links on the latest release</h3>
+          <span class="chip ok">fixed</span>
+        </div>
+        <p>All three releases pointed at the retired project Pages site, which does not redirect after a move to a custom domain. Four hard 404s on v2.0.1 alone, including the headline "Website &amp; guides" link and the interactive Mac setup guide — the single link a Mac user needs when Gatekeeper stops them.</p>
+        <p>Rewritten onto <code>canvasdownloader.app</code> and the current org, across <strong>v2.0.1, v2.0.0 and v1.0.0</strong>. Every replacement URL was checked to return 200 <em>before</em> publishing, and all three now carry zero stale references. Two extras fell out on the way: v1.0.0 had a link accidentally wrapped in a Google search URL, and v2.0.1's notes named a Windows file that is not the attached asset — the build emits <code>Canvas_Downloader_Setup_&lt;ver&gt;.exe</code> and the release carries <code>Canvas_Downloader_v&lt;ver&gt;_Windows.exe</code>. That rename is manual; it is the trap to avoid repeating for 2.0.2.</p>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <h3>4 · The GitHub social card is the app icon</h3>
+          <span class="chip warn">before any push</span>
+        </div>
+        <p>Your register says the preview "is not set". It <em>is</em> set — and it is <code>docs/icon.png</code>, byte-identical, <strong>1024×1024</strong>. Social cards render 2:1, so every shared repo link is a square icon letterboxed into a wide card: no product name, no proposition, mostly empty. The correct asset already exists unused at <code>docs/assets/github-social-preview.png</code>, verified 1280×640. This one is a two-minute settings upload and it is the image every Reddit and Product Hunt link will use.</p>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <h3>5 · Is the site indexed at all?</h3>
+          <span class="chip warn">unanswered</span>
+        </div>
+        <p>Still the most important open question in <code>marketing/</code>, and only Search Console answers it. The no-JS fix removes one plausible cause; it does not tell you whether the cause was ever operating. Scripted <code>site:</code> queries are not evidence — that was tried and the control query proved the parser, not the index.</p>
+      </div>
+
+      <div class="item">
+        <div class="item-head">
+          <h3>6 · The seven register findings</h3>
+          <span class="chip flat">none blocking</span>
+        </div>
+        <ul class="tight">
+          <li><strong>Two Windows COM <code>EXCEL.EXE</code> leaks</strong> (medium). One measured at 5h54m, outliving the app and the browser. Not pinned to a trigger; the stated reproduction is a 20-minute experiment — run the office lane alone and watch for an <code>EXCEL.EXE</code> that survives a completed row. Worth folding into the Windows pass.</li>
+          <li><strong>Office ownership is instance-blind</strong> (medium). Harness-only: needs two concurrent instances, which <code>start.py</code>'s lock prevents for real users. Workaround is one lane for Office rows.</li>
+          <li><strong>A Canvas 502 on one module</strong> (medium). Seen once, 5 August, server-side.</li>
+          <li><strong>Three low UX/config items</strong>: a folder's Panopto formats have no editor outside re-running a Download; the read-only <code>os.replace</code> note (accepted, measured, deliberately unfixed); Whisper model deletion is one unconfirmed click.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>The plan</h2>
+    <div class="section-body">
+      <p class="note">Ordered as a real sequence — each step depends on the one before it. Steps 1–2 are mine and can start now; 3 is yours and is the gate; 4–6 are the release itself.</p>
+      <ol class="plan">
+
+        <li><div class="plan-body">
+          <h3>Land today's work</h3>
+          <p>Merge <code>macos-audit-26</code> into <code>main</code> and push. Full suite green (4,298) and architecture audit clean before and after. This also gets the two Office fixes off this machine, which is rented.</p>
+        </div></li>
+
+        <li><div class="plan-body">
+          <h3>Harden the Windows surface from here, before you touch a Windows box</h3>
+          <p>Everything reachable from macOS by driving the real functions with <code>sys.platform</code> answering <code>win32</code> — the technique that already caught the divergent AppleScript escaper. Targets are the three COM converters' delete gates, <code>office_safe_path</code>, the DPAPI fallback, and <code>make_long_path</code>'s UNC form. Cheaper than finding it on the day, and it shortens your own pass.</p>
+        </div></li>
+
+        <li><div class="plan-body">
+          <h3>Your Windows pass — the gate</h3>
+          <p>Build, install from the Inno installer, then the eight things that could have regressed. I will write this as an exact checklist, not prose. Note the naming trap while you are there: the build emits <code>Canvas_Downloader_Setup_2.0.2.exe</code> while the release asset is named <code>Canvas_Downloader_v2.0.2_Windows.exe</code> — that rename is manual and is why v2.0.1's notes name a file that is not attached to it.</p>
+        </div></li>
+
+        <li><div class="plan-body">
+          <h3>Cut v2.0.2</h3>
+          <p>Tag, run the macOS DMG workflow, attach both installers, and write notes with <em>live</em> links. Fix v2.0.1's four dead links in the same sitting — they stay live for everyone who lands on the releases page.</p>
+        </div></li>
+
+        <li><div class="plan-body">
+          <h3>Update the website to the shipped tag</h3>
+          <p><code>docs/releases.html</code> carries a maintenance block naming exactly six things to change, plus the sitemap. <code>tests/test_website_advertises_shipped_version.py</code> fails if you miss one. Do not do this before the tag exists — the site must never advertise a build nobody can download.</p>
+        </div></li>
+
+        <li><div class="plan-body">
+          <h3>Store submission, then the push</h3>
+          <p>MSIX certification takes days, so it gates the date rather than following it. Set the social card and open Search Console while you wait — both are minutes, and the push should not go out in front of a square icon or an unanswered indexing question.</p>
+        </div></li>
+
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <h2>What I need from you</h2>
+    <div class="section-body">
+      <ul class="tight">
+        <li><strong>May I merge and push?</strong> Step 1 is otherwise stalled, and this machine is rented.</li>
+        <li><strong>May I edit the v2.0.1 release notes?</strong> That is a public, outward-facing change, so I will not do it unasked. I can prepare the exact replacement text either way.</li>
+        <li><strong>The tracked audit evidence discloses your university.</strong> <code>cbscanvas</code> appears about 43,000 times across the committed runs, alongside CBS course names and lecturer names in slide filenames. The PII scrub is genuinely working — I ran a positive control and found the 605 expected <code>&lt;CANVAS_USER&gt;</code> redactions — and no name, email, token or JWT survives. But the institution is not redacted, and this is about to become a much more visible public repo. Your call; say the word and I will extend the scrub.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Sweeps that came back clean</h2>
+    <div class="section-body">
+      <p>Recorded so nobody repeats them. A near-miss sweep over 4,922 string collections found 7 pairs overlapping ≥60% without being identical — the shape that caught the LTI-stream divergence — and every one is deliberate and documented, including the <code>.pdf</code>-in-the-PowerPoint-set rule in mirror image. A duplicate-function-name sweep found the same 17 names already on record, with no new divergence. One promising candidate — two hand-copied 30-key session-reset lists differing by exactly one key, with a comment claiming they matched — turned out to be fine: the missing key is popped 47 lines further down. I checked before asserting it.</p>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

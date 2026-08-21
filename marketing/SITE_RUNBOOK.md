@@ -114,7 +114,8 @@ All fast, all offline.
 | `tests/test_website_internal_links.py` | Every internal `href`/`src` resolves; no pre-transfer path prefix; 404 uses root-relative paths; every sitemap URL exists and is indexable; no page is missing from the sitemap. |
 | `tests/test_no_stale_repo_urls.py` | No file links to the old owner or old Pages host; the installer's three URLs are separate and absolute. |
 | `tests/test_website_login_claims.py` | Pre-existing: what the site says about logging in is still true of the app. |
-| `tests/test_website_social_proof.py` | The adoption figures: one download count and one country count across every surface, neither exceeding what was measured, no rating markup anywhere, no page mentioning the absence of reviews, "used by" not "loved by", the strip renders without JavaScript, has no chrome but does have a blurred glow, spans the full width, and stays coupled to its CSS. 15 of 15 mutations caught by `scripts/_mutate_social_proof.py`. |
+| `tests/test_website_noscript_content.py` | Nothing on `index`, `guide` or `engine` is `opacity: 0` to a crawler that runs no JavaScript. The reveal animation is gated on `html.js`, set from an inline `<head>` script only when `IntersectionObserver` exists. Pins the additive form: hiding on `html.js .reveal` instead would outrank `.reveal.vis` and nothing would ever be revealed. |
+| *(adoption figures)* | **Deliberately untested.** The published figure is a rounded-down floor on a number that only grows, so any hard-coded ceiling is wrong the week after it is written. `docs/index.html` and `docs/llms.txt` are the two surfaces; change them together by hand. See `FINDINGS.md`. |
 
 10 of 10 mutations of the real code are caught by these. **Re-run the mutation
 pass, not just the suite, after touching any of them**, per this repo's standing
