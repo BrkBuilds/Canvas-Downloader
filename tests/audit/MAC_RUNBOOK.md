@@ -1959,3 +1959,72 @@ con = sqlite3.connect(course/".canvas_sync.db")
 That last point is its own trap: `local_path` is **relative**, so an
 `os.path.exists(p)` check reports every row as missing and looks like total
 corruption.
+
+## The sixth macOS session (2026-08-21) - the shortened download matrix
+
+Runs `20260821_144948_macos26-dl-matrix-short2` (56 rows, **1h49m**) and
+`20260821_162842_macos26-dl-redo-contaminated` (5 rows re-run alone).
+**56/56, 0 failures, and ZERO genuine high/medium/critical product findings.**
+
+### Shortening a download matrix: transcription IS the wall clock
+
+The overnight matrix took **5h28m**; seven rows of it each transcribed all 36
+recordings of course 43660 at 29-55 min apiece, i.e. **4h09m of the 5h28m**.
+Everything else - 49 rows - is about an hour of row time that parallelises to
+~25 min.
+
+- **`--no-triple` is NOT the lever.** It cuts 56 rows to 39 and leaves all 9
+  transcription rows standing: 5h28m -> 5h05m. Almost nothing.
+- **The lever is how many rows transcribe.** Keep it on **m001 only** - the
+  plan's own `all-on` extremes row, which already carries mp4+mp3+txt+srt, so
+  one row exercises every Panopto output. (`pan_out_url` is not a matrix factor,
+  so four outputs IS the full set.)
+- **Cost, measured rather than asserted: 1096 -> 1052 two-way tuples, 96.0%
+  retained, and every one of the 44 lost tuples involves `pan_out_txt=True` or
+  `pan_out_srt=True`.** Nothing else in the space loses a pair.
+- Recipe: `matrix build --courses ... --save`, then edit the job list
+  (`jobs_from_plan`, set `pan_out_txt/srt = False` on every gpu-class row but
+  m001), then `matrix prepare --lanes 5 --jobs @that_file.json`.
+- 43660 is the ONLY course in the set with recordings (36), so there is no
+  cheaper course to point transcription at.
+- **m001 alone took 38.2 min, not the 59.3 min it cost overnight** - same row,
+  same work, but it had the machine to itself.
+
+### Lane count is NOT the lever either
+
+The office+gpu merge (`e20c085`) puts every dual-need row in ONE serial lane, and
+that lane is the bottleneck at 4, 5, 6 or 7 lanes alike. Five is a good choice:
+the free lanes clear in ~25 min and the converting lane then runs on a quiet
+machine, which is what the `-609`/`-30001` failure class wants.
+
+### RUN OFFICE ROWS IN A SINGLE LANE - until the ownership defect is fixed
+
+The register's *"Office ownership is instance-blind"* (medium, open,
+harness-only) means a free lane's teardown will quit and then `pkill` the Office
+app a converting lane is using. Measured: free3 `force-terminated Microsoft
+PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812. It corrupted
+**five rows and produced 12 false HIGH findings**.
+
+**Symptoms that you are looking at contention rather than a product defect:**
+`-609 Connection is invalid`, `-600 Application isn't running`, `-50 Parameter
+error`, and `-30001 the frontmost presentation is not the one Canvas Downloader
+opened`. The `-30001` is the app's OWN guard working correctly after a
+crash-recovery deck came frontmost - a downstream symptom, never a second defect.
+The app's own log names the mechanism outright: *"it most likely crashed **or was
+torn down mid-conversion**"*.
+
+**Detecting it**: `pgrep -x 'Microsoft Error Reporting'`. Use `-x`, not `-f` - a
+`pgrep -f 'Microsoft Error Reporting'` watcher matches ITS OWN command line and
+cries wolf on every tick. A new crash report under
+`~/Library/Logs/DiagnosticReports` matching `Microsoft*` is the stronger signal.
+
+**Proof it is not the product**: `scripts/verify_office_end_to_end.py --state
+cold --files 4` single-instance was ALL GOOD on the same code, the same day, and
+13 consecutive office rows after isolation produced 0 crashes.
+
+### The overnight run was not clean either - row-level counts hide this
+
+The 2026-08-21 overnight matrix reported "56/56, 0 failures" while containing
+**12 x -609, 12 x -30001 and 6 failed conversions**. A ROW passes even when
+individual file conversions inside it fail. If you want to know whether Office
+was healthy, count conversion failures in the logs - do not read the row tally.
