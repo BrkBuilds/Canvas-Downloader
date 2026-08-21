@@ -9,30 +9,9 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260821_141849_macos26-dl-matrix-short` on 2026-08-21.
+Last updated by run `20260821_144948_macos26-dl-matrix-short2` on 2026-08-21.
 
-**7 open** · 162 total · 29 accepted · 90 fixed · 35 invalid · 1 wontfix
-
----
-
-### Office priming and teardown drove the app without the per-app lock, crashing Excel
-<!-- fp:db1a2417c30a -->
-
-**Status**: fixed
-**Fixed in**: 2ca557b (2026-08-21) - locked `_warmup_apps`, `_quit_pass`, `_probe_open_docs`, `_terminate_gallery_stuck` per app; `_force_close_canvas_docs_sync` via the new `_office_app_lock_unless` because its one nested caller already holds the lock. Verified: 18 concurrent teardowns -> 0 Microsoft Error Reporting; `verify_office_end_to_end --state cold --files 4` ALL GOOD. `tests/test_office_automation_lock_coverage.py` (14), `scripts/_mutate_office_lock_coverage.py` 9/9.
-**Severity**: high
-**Category**: robustness
-**Oracles**: live-observation,process-table
-**First seen**: 2026-08-21 (20260821_141849_macos26-dl-matrix-short)
-**Last seen**: 2026-08-21 (20260821_141849_macos26-dl-matrix-short)
-**Occurrences**: 1
-**Scenario**: five concurrent audit lanes (= five app instances) on macOS 26.6.1
-
-**Detail**:
-
-_office_app_lock was added 2026-08-11 and landed on ONE of eight osascript call sites (the conversion). _warmup_apps (the launcher), _quit_pass, _probe_open_docs, _terminate_gallery_stuck and _force_close_canvas_docs_sync all drove Office unlocked. Two lanes that convert NOTHING (free2 pid 8965, free3 pid 8968) were both running 'tell application Microsoft Excel' when it crashed into Microsoft Error Reporting; four concurrent Office teardown osascripts captured in flight, two of them Word. Worse than the case the original lock was written for, which needed both instances to be CONVERTING. office_is_ours_to_quit prevents quitting a user's document; nothing prevented crashing one. Fixed in 2ca557b. _wait_for_exit stays unlocked on purpose (System Events only; a lock across its 12s poll is the phase-wide lock the module rules out).
-
-**Notes**: 
+**7 open** · 163 total · 29 accepted · 91 fixed · 35 invalid · 1 wontfix
 
 ---
 
@@ -75,6 +54,26 @@ Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full
 
 **Notes**:   
 > Not observed in the latest run.
+
+---
+
+### Office ownership is instance-blind, so one lane tears down another lane's in-flight conversion (harness-reachable only)
+<!-- fp:37cb30ec4fa7 -->
+
+**Status**: open
+**Severity**: medium
+**Category**: robustness
+**Oracles**: live-observation,log
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: audit harness with a converting lane alongside other lanes; NOT reachable single-instance
+
+**Detail**:
+
+The CanvasDownloaderTmp marker means 'some Canvas Downloader', not 'this instance', so a lane's teardown reads another lane's staged conversion document as ours-and-discardable, quits, waits 12s, then pkills the app mid-conversion. Measured 0.77s from free3's force-terminate to the office lane's -609. Requires two concurrent instances, which start.py's flock/mutex prevents for normal users and the harness creates by design - so this is recorded as a HARNESS-BLOCKING robustness gap, not a user-facing defect. Blocks trustworthy Office rows in any multi-lane matrix; workaround is to run the converting lane alone.
+
+**Notes**: 
 
 ---
 
@@ -3953,6 +3952,27 @@ sync/analysis.py:247,250 log a [NEW] and [UPDATE-CLEAN] line per file. The other
 Consequence: a shared debug log cannot answer WHICH file the app put in those categories, so 'why did it not re-download X?' is undiagnosable after the fact, and any log-based verification is blind to five sevenths of the classification logic. Extending the existing one-line-per-file treatment to the remaining categories is a few lines and makes the log a complete record of the decision.
 
 **Notes**: AUDIT ERROR, not a product defect. The grep used tag names that do not exist (UPDATE-MODIFIED/DELETED-CANVAS/DELETED-LOCAL); the real tags are UPDATE-EDIT/CANVAS-DEL/LOCAL-DEL, and five categories were already logged. Superseded by the 'omitted the Ignored category and printed URL-encoded filenames' entry, which is the accurate version and is fixed. ---  
+> Not observed in the latest run.
+
+---
+
+### ~~Office priming and teardown drove the app without the per-app lock, crashing Excel~~
+<!-- fp:db1a2417c30a -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: robustness
+**Oracles**: live-observation,process-table
+**First seen**: 2026-08-21 (20260821_141849_macos26-dl-matrix-short)
+**Last seen**: 2026-08-21 (20260821_141849_macos26-dl-matrix-short)
+**Occurrences**: 1
+**Scenario**: five concurrent audit lanes (= five app instances) on macOS 26.6.1
+
+**Detail**:
+
+_office_app_lock was added 2026-08-11 and landed on ONE of eight osascript call sites (the conversion). _warmup_apps (the launcher), _quit_pass, _probe_open_docs, _terminate_gallery_stuck and _force_close_canvas_docs_sync all drove Office unlocked. Two lanes that convert NOTHING (free2 pid 8965, free3 pid 8968) were both running 'tell application Microsoft Excel' when it crashed into Microsoft Error Reporting; four concurrent Office teardown osascripts captured in flight, two of them Word. Worse than the case the original lock was written for, which needed both instances to be CONVERTING. REACHABILITY, corrected 2026-08-21 after the product owner challenged the framing and it was re-checked against the source: this needs TWO CONCURRENT INSTANCES and a normal user cannot hit it. `start.py` holds a real flock on instance.lock (named mutex on Windows) that blocks a second GUI, and within one instance conversions are strictly sequential (converters/post_processing has no thread pool; teardown runs after conversions). So this is a multi-instance robustness gap, NOT a user-facing defect - it was recorded as high on the strength of a consequence carried over from a scenario the guard prevents. Where it genuinely bites is the AUDIT HARNESS, which runs five instances by design and had five office rows corrupted by it. The repo already defends this scenario deliberately - _office_app_lock's docstring cites the guard's three fail-open paths as why it cannot be the only defence - so closing the coverage gap is consistent with a standing decision rather than a new claim about user risk. Fixed in 2ca557b. _wait_for_exit stays unlocked on purpose (System Events only; a lock across its 12s poll is the phase-wide lock the module rules out).
+
+**Notes**:   
 > Not observed in the latest run.
 
 ---
