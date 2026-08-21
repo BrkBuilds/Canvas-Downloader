@@ -103,9 +103,26 @@ Write the notes with live links. The four dead ones on v2.0.1 are already fixed
 
 ### 7 · Update the website — only after the tag exists
 
-`docs/releases.html` carries a maintenance block naming **exactly six things**
-to change, plus `docs/sitemap.xml`. `tests/test_website_advertises_shipped_version.py`
-fails if you miss one, so run the suite after.
+**This is now one command, not seven hand edits:**
+
+```
+python scripts/sync_release_page.py --check    # show the drift
+python scripts/sync_release_page.py            # rewrite
+python -m pytest tests/test_website_advertises_shipped_version.py -q
+```
+
+It derives every fact from the ACTUAL release - tag, real asset names, real byte
+sizes, real publish date - and regenerates the "Previous versions" baseline, so
+none of it is typed. **Asset names are read, never constructed**, which is the
+whole point: the Windows build emits `Canvas_Downloader_Setup_<ver>.exe` while
+the release carries `Canvas_Downloader_v<ver>_Windows.exe`, and the macOS
+workflow emits `_macOS.dmg` while v2.0.1's asset is `_MacOS.dmg` — a template
+would be wrong on both counts, and that is exactly how v2.0.1's notes came to
+name a file not attached to them.
+
+Run `--check` **before** tagging too. It should say "already in sync", and that
+is the control: a script that cannot reproduce the page as it stands has no
+business writing the next one.
 
 **Never do this before the tag.** The site must advertise what a visitor can
 actually download; the register records the homepage once advertising a 2.0.2
