@@ -1124,6 +1124,19 @@ each of these is a different way the invention was made to look sound.
     list. Fold direction is NFC, chosen to match the app, and a test pins that
     rather than merely pinning "some consistent form".
 
+36. **A snapshot restore refused because the APP had written its debug log into
+    the folder.** `verify_restore` treats anything not in the snapshot inventory
+    as `extra` and fails the restore - the right instinct (never judge a product
+    against a contaminated folder) applied to the wrong file. `restore` clears
+    its destination first, so `debug_log.txt` appeared AFTER the copy: the
+    lane's app is long-lived and writes its log into whichever folder it is
+    pointed at, which races the verify that runs immediately after. Measured on
+    the post-fix sync matrix: row s035 failed outright with
+    `extra: ["debug_log.txt"]` and never ran - 1 row of 43 lost, and the race
+    can take any row. `APP_GENERATED` now extends `DB_SIDECARS` with it on the
+    VERIFY side only; capture is unchanged, so no snapshot's inventory moves.
+
+
 **The result: 29 HIGH -> 13, with ZERO new findings**, across both the sync
 matrix and the 275-finding download matrix. And the 13 that remained turned out
 to be a REAL product defect whose mechanism the register had carried as

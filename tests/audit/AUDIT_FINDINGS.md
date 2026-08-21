@@ -9,236 +9,29 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260821_113342_sync-matrix` on 2026-08-21.
+Last updated by run `20260821_131853_sync-matrix-postfix-verify` on 2026-08-21.
 
-**12 open** · 160 total · 29 accepted · 87 fixed · 31 invalid · 1 wontfix
-
----
-
-### 'deleted-on-canvas:GhostFile_1_Svarark - Gode råd til projektet.docx' was not offered as deleted_on_canvas in this run
-<!-- fp:0cfaabfe6c27 -->
-
-**Status**: invalid
-**Severity**: high
-**Category**: classification
-**Oracles**: O5,O1
-**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
-**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
-**Occurrences**: 4
-**Scenario**: s025 · s025
-
-**Detail**:
-
-A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files. O1 listed other files under deleted_on_canvas and this was not among them, so it was genuinely not offered rather than merely unseen.
-
-**Notes**:
-
-**2026-08-21 - AUDIT DEFECT, not a product defect.** The app classified this
-fixture correctly and NAMED it in its own debug log, in the right category, on
-the line below the analysis summary. The audit could not read that line: the log
-oracle's `analysis_row` pattern named three tags the app has never emitted
-(`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's
-`UPDATE-EDIT` / `CANVAS-DEL` / `LOCAL-DEL`), that blindness was then written into
-`crosscheck._LOG_DETAILED_CATS` as a fact about the product, which routed this
-category to the REVIEW SCREEN as its only witness - and a Quick Sync row never
-renders one. The blind guard covered only `oracle == "O2"`, so the O1 verdict
-fell through to "was not offered" and quoted a peer list from the log, i.e. from
-the oracle it had not consulted.
-
-Fixed: `RUNBOOK.md` checker defect 26 (which had found the tag mismatch on
-2026-08-08 and prescribed this exact fix order) plus new defects 32-35.
-Re-checking the SAME evidence with the fixed checker drops this finding and
-introduces none: 29 HIGH -> 13 on the sync matrix, 0 new on the 275-finding
-download matrix. Covered by `tests/test_audit_log_tag_vocabulary.py` (32);
-`scripts/_mutate_log_tag_vocabulary.py` 19/19.
+**7 open** · 161 total · 29 accepted · 89 fixed · 35 invalid · 1 wontfix
 
 ---
 
-### 'edited-update:Eksempel - Gruppekontrakt.docx' was not offered as updated_modified in this run
-<!-- fp:d7b76427b413 -->
-
-**Status**: invalid
-**Severity**: high
-**Category**: classification
-**Oracles**: O5,O1
-**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
-**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
-**Occurrences**: 5
-**Scenario**: s020 · s020
-
-**Detail**:
-
-Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched. O1 listed other files under updated_modified and this was not among them, so it was genuinely not offered rather than merely unseen.
-
-**Notes**:
-
-**2026-08-21 - AUDIT DEFECT, not a product defect.** The app classified this
-fixture correctly and NAMED it in its own debug log, in the right category, on
-the line below the analysis summary. The audit could not read that line: the log
-oracle's `analysis_row` pattern named three tags the app has never emitted
-(`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's
-`UPDATE-EDIT` / `CANVAS-DEL` / `LOCAL-DEL`), that blindness was then written into
-`crosscheck._LOG_DETAILED_CATS` as a fact about the product, which routed this
-category to the REVIEW SCREEN as its only witness - and a Quick Sync row never
-renders one. The blind guard covered only `oracle == "O2"`, so the O1 verdict
-fell through to "was not offered" and quoted a peer list from the log, i.e. from
-the oracle it had not consulted.
-
-Fixed: `RUNBOOK.md` checker defect 26 (which had found the tag mismatch on
-2026-08-08 and prescribed this exact fix order) plus new defects 32-35.
-Re-checking the SAME evidence with the fixed checker drops this finding and
-introduces none: 29 HIGH -> 13 on the sync matrix, 0 new on the 275-finding
-download matrix. Covered by `tests/test_audit_log_tag_vocabulary.py` (32);
-`scripts/_mutate_log_tag_vocabulary.py` 19/19.
-
----
-
-### 'readonly:Eksempel - Gruppekontrakt.docx' was not offered as updated_clean in this run
-<!-- fp:681bc9bdade0 -->
-
-**Status**: invalid
-**Severity**: high
-**Category**: classification
-**Oracles**: O5,O2
-**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
-**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
-**Occurrences**: 1
-**Scenario**: s036 · s036
-
-**Detail**:
-
-A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error. O2 listed other files under updated_clean and this was not among them, so it was genuinely not offered rather than merely unseen.
-
-**Notes**:
-
-**2026-08-21 - AUDIT DEFECT, not a product defect.** The app classified this
-fixture correctly and NAMED it in its own debug log, in the right category, on
-the line below the analysis summary. The audit could not read that line: the log
-oracle's `analysis_row` pattern named three tags the app has never emitted
-(`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's
-`UPDATE-EDIT` / `CANVAS-DEL` / `LOCAL-DEL`), that blindness was then written into
-`crosscheck._LOG_DETAILED_CATS` as a fact about the product, which routed this
-category to the REVIEW SCREEN as its only witness - and a Quick Sync row never
-renders one. The blind guard covered only `oracle == "O2"`, so the O1 verdict
-fell through to "was not offered" and quoted a peer list from the log, i.e. from
-the oracle it had not consulted.
-
-Fixed: `RUNBOOK.md` checker defect 26 (which had found the tag mismatch on
-2026-08-08 and prescribed this exact fix order) plus new defects 32-35.
-Re-checking the SAME evidence with the fixed checker drops this finding and
-introduces none: 29 HIGH -> 13 on the sync matrix, 0 new on the 275-finding
-download matrix. Covered by `tests/test_audit_log_tag_vocabulary.py` (32);
-`scripts/_mutate_log_tag_vocabulary.py` 19/19.
-
----
-
-### 'renamed-ambiguous:zz flertydig 0.pdf' was not offered as new in this run
-<!-- fp:650084e0245d -->
+### A locally-deleted row that is pruned takes the new Canvas file it had adopted with it
+<!-- fp:bbdd30be4106 -->
 
 **Status**: fixed
-**Severity**: high
+**Severity**: medium
 **Category**: classification
 **Oracles**: O5,O2
-**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
-**Occurrences**: 19
-**Scenario**: s038 · s038
+**First seen**: 2026-08-21 (20260821_131853_sync-matrix-postfix-verify)
+**Last seen**: 2026-08-21 (20260821_131853_sync-matrix-postfix-verify)
+**Occurrences**: 1
+**Scenario**: analyzer · 43660
 
 **Detail**:
 
-Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back. O2 listed other files under new and this was not among them, so it was genuinely not offered rather than merely unseen.
+Found while auditing the fix for fp:5c1dc682e36c, by asking what ELSE removes a file from the offer without accounting for it. Two mechanisms, individually correct, jointly wrong. (1) The teacher-re-upload branch takes a NEW Canvas file off new_files and rides it on a locally-deleted row - M-6 policy, the user's deletion is respected and the replacement is not offered separately. (2) The phantom-row prune then DELETES that row when its basename is owned by another tracked row whose file exists (_live_name_keys is keyed by basename, so a same-named file in a different folder counts). The file was in new_files, is now in neither, and is a file the user has NEVER had. Reproduced against the real analyzer: manifest row 100 (A/notes.pdf, gone from Canvas, deleted locally) consumes new Canvas id 200 (notes.pdf); row 100 is pruned as superseded by row 101 (B/notes.pdf, present); id 200 lands in NO category and new=0. It clears on the next sync because the prune really does delete the row, so nothing consumes the file a second time - the same self-healing shape as fp:5c1dc682e36c and worth as little: for one sync a file Canvas is offering is one the app never mentions. FIX: a row being deleted gives back whatever it had taken (_reupload_consumed.discard), and the offer is computed BELOW the pruning block. The prune's own basename matching is deliberately left broad - narrowing it risks resurrecting the 'Deleted Locally on every sync for ever' defect it exists to fix, and it costs nothing now: the row's id is gone from Canvas, so the local file it described is unrecoverable either way. Covered by tests/test_analysis_conservation.py and tests/test_new_files_are_not_name_keyed.py; scripts/_mutate_new_files_name_key.py 10/10.
 
-**Notes**: FIXED - verified 2026-08-20 on macOS 26.6.1, run 20260820_143238_macos-26-v2.0.2.
-Fixed INCIDENTALLY, by the short-basename staging done for LONG PATHS on
-2026-08-10/11, which also removed this one's reachability. Both halves of the
-original entry are now clean.
-
-Re-measured against the REAL Word converter with a fresh Word and a positive
-control per case (the methodology the entry itself demands, because one hostile
-name wedging Word makes every later case unbelievable). 13/13 CONVERTED, PDF at
-the real path, source consumed, every control passing:
-
-    control / CR / control / LF / control / quote / control / backslash /
-    control / 250-BYTE component / control / Danish + emoji / control
-
-So the 250-char component recorded here as "an open question rather than a
-diagnosed defect" is also answered: it converts. It was the staged TOTAL path,
-exactly as office_container_stage's own comment now says.
-
-THE ESCAPER IS UNCHANGED AND STILL CANNOT CARRY A LINE BREAK. `applescript_string`
-still renders CR as a space - correct for a MESSAGE, unsafe for a PATH - and an
-AppleScript string literal genuinely cannot span lines, so that is not a bug to
-fix in the escaper. What makes the converters safe is that the hostile name
-NEVER REACHES the literal: the app is handed `src_<hex>.<ext>` inside its own
-container and the product is moved to the real destination afterwards. Captured
-from the live call:
-
-    POSIX literal in script:
-      /Users/m1/Library/Containers/com.microsoft.Word/Data/tmp/
-      CanvasDownloaderTmp/cd_00e404fce2/src_04fce2.doc
-
-RESIDUAL, STATED: staging degrades to `_direct_passthrough` when
-`_office_container_tmp` returns None, and in THAT state the corruption would
-bite again. All three containers exist on a machine with Office installed
-(verified for Word/Excel/PowerPoint). Note the app name is the SHORT one -
-`_office_container_tmp("Microsoft Word")` is None while `("Word")` resolves;
-passing the bundle name is a probe bug that makes staging look unavailable and
-cost this session a wrong intermediate conclusion.
-
-GUARDED so staging cannot be narrowed and silently re-open it:
-`tests/test_office_staging_short_names.py` gains a line-break parametrisation,
-a test pinning the escaper's sharp edge, and an AST test asserting ALL THREE
-converters escape the STAGED path rather than the real one. Both mutations are
-caught (converter escapes `src`; staging preserves `src.name`).
-
-**2026-08-21 - the mechanical detection of `fp:5c1dc682e36c`, whose mechanism is
-now established and FIXED.** `analyze_course` rebuilt `result.new_files` from
-`new_name_map`, a dict keyed by FILENAME - so of two Canvas files sharing one
-`filename` (Canvas disambiguates only `display_name`), the loser of the
-`setdefault` was dropped from every category. Read that entry for the evidence.
-
-This finding is CORRECT for the run that produced it, and it will legitimately
-persist on any re-check of `20260821_113342_sync-matrix`, because that run really
-did offer only one of the pair. It clears on the next LIVE sync matrix.
-
----
-
-### 'readonly:Eksempel - Gruppekontrakt.docx' placed as updated_clean by O1 but absent from O2
-<!-- fp:d445541f6268 -->
-
-**Status**: invalid
-**Severity**: high
-**Category**: ui-truth
-**Oracles**: O1,O2
-**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
-**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
-**Occurrences**: 4
-**Scenario**: s034 · s034
-
-**Detail**:
-
-A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error. The two oracles disagree about whether this file was offered at all, so neither can be trusted for it until that is resolved.
-
-**Notes**:
-
-**2026-08-21 - AUDIT DEFECT, not a product defect.** The app classified this
-fixture correctly and NAMED it in its own debug log, in the right category, on
-the line below the analysis summary. The audit could not read that line: the log
-oracle's `analysis_row` pattern named three tags the app has never emitted
-(`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's
-`UPDATE-EDIT` / `CANVAS-DEL` / `LOCAL-DEL`), that blindness was then written into
-`crosscheck._LOG_DETAILED_CATS` as a fact about the product, which routed this
-category to the REVIEW SCREEN as its only witness - and a Quick Sync row never
-renders one. The blind guard covered only `oracle == "O2"`, so the O1 verdict
-fell through to "was not offered" and quoted a peer list from the log, i.e. from
-the oracle it had not consulted.
-
-Fixed: `RUNBOOK.md` checker defect 26 (which had found the tag mismatch on
-2026-08-08 and prescribed this exact fix order) plus new defects 32-35.
-Re-checking the SAME evidence with the fixed checker drops this finding and
-introduces none: 29 HIGH -> 13 on the sync matrix, 0 new on the 275-finding
-download matrix. Covered by `tests/test_audit_log_tag_vocabulary.py` (32);
-`scripts/_mutate_log_tag_vocabulary.py` 19/19.
+**Notes**: 
 
 ---
 
@@ -302,123 +95,6 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 **Notes**:   
 > Not observed in the latest run.
-
----
-
-### Two orphaned Canvas files of identical size are re-offered one per sync, not both
-<!-- fp:5c1dc682e36c -->
-
-**Status**: fixed
-**Severity**: low
-**Category**: classification
-**Oracles**: O5,O2
-**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 4
-**Scenario**: it5 · 43660
-
-**Detail**:
-
-Course 43660 holds THREE distinct Canvas files whose `filename` is all
-`CBS_SolbjergPlads_ImageHeader.jpg` (ids 1559837 / 1560082 / 1560087, all
-2032529 bytes, all Files-tab only). Canvas disambiguates them by display_name:
-`...ImageHeader-1.jpg`, `...ImageHeader.jpg`, `...ImageHeader-1-1.jpg`.
-
-The seeder orphans two of them (renames the local file, drops the manifest row),
-leaving a state in which two same-size, same-extension Canvas files have no row.
-
-MEASURED, two consecutive syncs of the same folder with no reseed:
-  run 1  O2 debug log: "Analysis complete: 10 new ...", [NEW] list contains
-         `CBS_SolbjergPlads_ImageHeader-1.jpg` and NOT `...ImageHeader.jpg`.
-         O1 review screen: one row, `CBS_SolbjergPlads_ImageHeader-1`.
-         O4 after: row for 1559837 present and downloaded; NO row for 1560082.
-  run 2  O2: "Analysis complete: 1 new"; [NEW] = `...ImageHeader.jpg`.
-         O1: one row, `CBS_SolbjergPlads_ImageHeader`.
-
-So the app re-offers ONE of the two orphans per sync rather than both at once.
-
-WHY THIS IS NOT A BLOCKER: nothing is lost and nothing is silently bound. The
-user's renamed copies (`zz flertydig 0/1.jpg`) are untouched on disk, no
-manifest row was created for the file that was not offered, and the next sync
-offers it. The review screen never claimed otherwise - it showed exactly what
-the run would do. The auto-discovery uniqueness guard behaved correctly
-throughout: tier (c) refuses when more than one same-size, same-extension orphan
-exists, which is the documented and desired refusal.
-
-WHAT IS NOT ESTABLISHED: the mechanism. `analyze_course` dedups by canvas id and
-seeds `claimed_paths` only from TRACKED rows, so on inspection both ids should
-have been offered in run 1. I did not find the line that defers the second one,
-and did not spend further budget on it - the outcome is self-healing and the
-release is imminent.
-
-ORACLE PAIR: O5 (Canvas lists three live files, two with no manifest row) vs
-O1+O2 (one offered). O1 and O2 AGREE with each other, which is what rules out
-the harness as the cause.
-
-NOTE FOR THE NEXT PASS: tests/audit/MAC_AUDIT_CONTINUE.md recorded this as a
-checker oracle-SELECTION defect with the app "CORRECT". That diagnosis confused
-the two fixtures - fixture 0 (`...ImageHeader-1.jpg`) was found in the log,
-fixture 1 (`...ImageHeader.jpg`) genuinely was not. The checker's misleading
-"no oracle placed it in any category" wording is what produced the wrong
-conclusion; it has been fixed (479cd29).
-
-**Notes**: **2026-08-21 (fifth macOS session)**: REPRODUCED on a second, independent file pair, which generalises it beyond the `CBS_SolbjergPlads_ImageHeader.jpg` triple. On the first CONVERTED sync fixture (`c43660_postfix_clean`), the seeder orphaned Canvas ids **1560011** and **1560205** - both displayed `2024_Lektion uge 46_1 ... Omgivelser - 1 _ Upload`, both `.pptx` converted to `.pdf` locally, identical extension and size class. The review offered `...Upload-1.pptx` and NOT `...Upload.pptx`: one of the two, exactly as recorded. It surfaced **13 times across a 43-row sync matrix**, at HIGH, because the checker raises one finding per fixture per row - so the severity of the REPORT is a checker artefact while the BEHAVIOUR is the low-severity one described above. The mechanism is still not established; note it is not specific to Files-tab jpgs, and now reproduces on module .pptx files whose local form is a conversion product.  
-> Not observed in the latest run.
-
-**MECHANISM ESTABLISHED AND FIXED, 2026-08-21 (sixth session).** The entry above
-says "WHAT IS NOT ESTABLISHED: the mechanism ... I did not find the line that
-defers the second one." Found:
-
-`analyze_course` built `new_name_map` so the teacher-re-upload check could look
-a new file up BY NAME, and then rebuilt `result.new_files` **from that map's
-values**. A dict keyed by name cannot hold two files that share a name, so the
-loser of the `setdefault` was dropped from the offer entirely - which is why the
-file appeared in no category rather than in the wrong one.
-
-It needs no exotic data, because `_match_key` UNQUOTES. Canvas keeps ONE
-`filename` when a file is uploaded twice and disambiguates only `display_name`,
-so the copy whose display_name still equals its filename collapses to a SINGLE
-key - and if the sibling is listed first, that key is already taken. Which copy
-loses is therefore decided by the order Canvas happened to list them in, and
-that is why it looked arbitrary.
-
-The inspection that stalled the last pass was right as far as it went: the file
-DOES reach `raw_new_files`, and nothing in the auto-discovery tiers defers it.
-The drop is ~120 lines further down, in a loop whose comment says
-"Deduplicate new files that were registered under two name keys" - it was
-written to undo a double registration and also discards single ones.
-
-MEASURED, twice, both against the real product:
-  * ids 1560011 / 1560205 (`2024_Lektion+uge+46_1+...+Upload.pptx`, 2,223,911 B)
-    driven through the REAL `SyncManager` against an APFS clone of the real
-    course folder and its real 262-row manifest, with the real 140-file Canvas
-    metadata from this run's own O5 snapshot: before, `new=1` and 1560011 in NO
-    category; after, `new=2` and both offered. Reversing the two in the input
-    list offered both even before the fix - the whole difference was ordering.
-  * the `CBS_SolbjergPlads_ImageHeader.jpg` TRIPLE recorded above: 2 of 3
-    before, 3 of 3 after, and the copy that was missing is exactly the one whose
-    display_name equals its filename, as the live run showed.
-
-FIX: `new_name_map` is a lookup index only. The re-upload branch records the file
-it takes over in an explicit `_reupload_consumed` set (by identity - the whole
-point is that names collide), and `_unique_new` is now every regular new file
-that set does not name, in Canvas order.
-
-Covered by `tests/test_new_files_are_not_name_keyed.py` (14);
-`scripts/_mutate_new_files_name_key.py` - **7/7 caught**, so re-run the mutation
-pass rather than just the suite. Three of those mutants survived the first
-version of the tests and each exposed a real gap: the map indexes BOTH the raw
-filename and the display name and each half is load-bearing for a different
-vintage of manifest row, and secondary content is appended separately so it can
-be dropped with nothing else failing.
-
-**NOT YET SEEN LIVE.** The verification above drives the real analyzer with real
-data but not the browser, so the REVIEW SCREEN showing both rows is inferred
-rather than measured. The register's own note records that O1 and O2 agreed on
-this question in the live run, so the risk is low - but the next live sync matrix
-should confirm it, and the 13 HIGH findings in
-`20260821_113342_sync-matrix` will legitimately persist on any re-check of the
-OLD evidence, because that run really did offer only one.
 
 ---
 
@@ -676,6 +352,192 @@ THE OTHER DIRECTION, verified separately and at least as important: this resolve
 sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initialised anywhere in the file (used 7 times: appends at 2272/2277/2283/2303/2317/2322, read at 2325 retry_failed_conversions). Introduced by commit 4b98b2e (2026-07-29), which copied the conversion retry-pass pattern from converters/post_processing.py:run_all_conversions - where _attempts: list = [] IS declared at line 1125 - without copying the declaration. TRIGGER: unconditional. Unlike the download flow, which guards every append behind 'if pptx_files:', line 2272 runs on every sync that reaches post-processing, regardless of contract or file types. Confirmed on THREE different snapshots simultaneously (c43657_study, c43657_isolated, c45899_base); only the no-op 'nothing changed' row survived because it returns before post-processing. IMPACT: run_pptx_conversion at 2271 completes first - and it is source-consuming, so .pptx originals are deleted - then the NameError aborts the script run. Everything after 2272 never executes: HTML-to-MD, code-to-TXT, URL compilation, Word-to-PDF, Excel data+PDF, video-to-MP3, the retry pass, and the sidecar ledger injection at 2327. The user sees a Streamlit exception screen instead of a completion screen. 1951 unit tests pass against this; it is only reachable by running a real sync.
 
 **Notes**: Fixed 2026-07-30, same day, same session that found it. `_attempts: list = []` now declared in `run_sync` before the converter section (sync/execution.py), mirroring `run_all_conversions`. Introduced by 4b98b2e when the retry-pass was copied over WITHOUT its declaration; unconditional there (the download flow guards each append behind `if <files>:`), so it fired on every sync that transferred a file, on every contract shape - confirmed simultaneously on c43657_study, c43657_isolated and c45899_base. Only the no-op "nothing changed" row survived, because it returns before post-processing. VERIFIED by re-running the full 43-row sync matrix against the fix: 43/43 rows, **0 defects**, zero `NameError` in any lane log, and the `edited_update` critical fixture passing on 11 of 12 rows across all four contract shapes and both sync modes (the 12th was a 20s UI click timeout that the identical configuration passed elsewhere - transient, not a defect). GUARDED by `tests/test_undefined_names.py`, an AST checker asserting no function in 8 engine modules reads a name nothing binds. A test naming `_attempts` would not have caught the FIRST bug of this class (the `isolate` UnboundLocalError in CLAUDE.md) and would not catch the next; the guard validates in both directions and includes a case that strips the real declaration from the real file and asserts it still fires, so it cannot quietly die in a refactor.  
+> Not observed in the latest run.
+
+---
+
+### ~~'deleted-on-canvas:GhostFile_1_Svarark - Gode råd til projektet.docx' was not offered as deleted_on_canvas in this run~~
+<!-- fp:0cfaabfe6c27 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: classification
+**Oracles**: O5,O1
+**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Occurrences**: 4
+**Scenario**: s025 · s025
+
+**Detail**:
+
+A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files. O1 listed other files under deleted_on_canvas and this was not among them, so it was genuinely not offered rather than merely unseen.
+
+**Notes**: **2026-08-21 - AUDIT DEFECT, not a product defect.** The app classified this
+fixture correctly and NAMED it in its own debug log, in the right category, on
+the line below the analysis summary. The audit could not read that line: the log
+oracle's `analysis_row` pattern named three tags the app has never emitted
+(`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's
+`UPDATE-EDIT` / `CANVAS-DEL` / `LOCAL-DEL`), that blindness was then written into
+`crosscheck._LOG_DETAILED_CATS` as a fact about the product, which routed this
+category to the REVIEW SCREEN as its only witness - and a Quick Sync row never
+renders one. The blind guard covered only `oracle == "O2"`, so the O1 verdict
+fell through to "was not offered" and quoted a peer list from the log, i.e. from
+the oracle it had not consulted.
+
+Fixed: `RUNBOOK.md` checker defect 26 (which had found the tag mismatch on
+2026-08-08 and prescribed this exact fix order) plus new defects 32-35.
+Re-checking the SAME evidence with the fixed checker drops this finding and
+introduces none: 29 HIGH -> 13 on the sync matrix, 0 new on the 275-finding
+download matrix. Covered by `tests/test_audit_log_tag_vocabulary.py` (32);
+`scripts/_mutate_log_tag_vocabulary.py` 19/19.  
+> Not observed in the latest run.
+
+---
+
+### ~~'edited-update:Eksempel - Gruppekontrakt.docx' was not offered as updated_modified in this run~~
+<!-- fp:d7b76427b413 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: classification
+**Oracles**: O5,O1
+**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Occurrences**: 5
+**Scenario**: s020 · s020
+
+**Detail**:
+
+Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched. O1 listed other files under updated_modified and this was not among them, so it was genuinely not offered rather than merely unseen.
+
+**Notes**: **2026-08-21 - AUDIT DEFECT, not a product defect.** The app classified this
+fixture correctly and NAMED it in its own debug log, in the right category, on
+the line below the analysis summary. The audit could not read that line: the log
+oracle's `analysis_row` pattern named three tags the app has never emitted
+(`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's
+`UPDATE-EDIT` / `CANVAS-DEL` / `LOCAL-DEL`), that blindness was then written into
+`crosscheck._LOG_DETAILED_CATS` as a fact about the product, which routed this
+category to the REVIEW SCREEN as its only witness - and a Quick Sync row never
+renders one. The blind guard covered only `oracle == "O2"`, so the O1 verdict
+fell through to "was not offered" and quoted a peer list from the log, i.e. from
+the oracle it had not consulted.
+
+Fixed: `RUNBOOK.md` checker defect 26 (which had found the tag mismatch on
+2026-08-08 and prescribed this exact fix order) plus new defects 32-35.
+Re-checking the SAME evidence with the fixed checker drops this finding and
+introduces none: 29 HIGH -> 13 on the sync matrix, 0 new on the 275-finding
+download matrix. Covered by `tests/test_audit_log_tag_vocabulary.py` (32);
+`scripts/_mutate_log_tag_vocabulary.py` 19/19.  
+> Not observed in the latest run.
+
+---
+
+### ~~'readonly:Eksempel - Gruppekontrakt.docx' was not offered as updated_clean in this run~~
+<!-- fp:681bc9bdade0 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: classification
+**Oracles**: O5,O2
+**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Occurrences**: 1
+**Scenario**: s036 · s036
+
+**Detail**:
+
+A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error. O2 listed other files under updated_clean and this was not among them, so it was genuinely not offered rather than merely unseen.
+
+**Notes**: **2026-08-21 - AUDIT DEFECT, not a product defect.** The app classified this
+fixture correctly and NAMED it in its own debug log, in the right category, on
+the line below the analysis summary. The audit could not read that line: the log
+oracle's `analysis_row` pattern named three tags the app has never emitted
+(`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's
+`UPDATE-EDIT` / `CANVAS-DEL` / `LOCAL-DEL`), that blindness was then written into
+`crosscheck._LOG_DETAILED_CATS` as a fact about the product, which routed this
+category to the REVIEW SCREEN as its only witness - and a Quick Sync row never
+renders one. The blind guard covered only `oracle == "O2"`, so the O1 verdict
+fell through to "was not offered" and quoted a peer list from the log, i.e. from
+the oracle it had not consulted.
+
+Fixed: `RUNBOOK.md` checker defect 26 (which had found the tag mismatch on
+2026-08-08 and prescribed this exact fix order) plus new defects 32-35.
+Re-checking the SAME evidence with the fixed checker drops this finding and
+introduces none: 29 HIGH -> 13 on the sync matrix, 0 new on the 275-finding
+download matrix. Covered by `tests/test_audit_log_tag_vocabulary.py` (32);
+`scripts/_mutate_log_tag_vocabulary.py` 19/19.  
+> Not observed in the latest run.
+
+---
+
+### ~~'renamed-ambiguous:zz flertydig 0.pdf' was not offered as new in this run~~
+<!-- fp:650084e0245d -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: classification
+**Oracles**: O5,O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Occurrences**: 19
+**Scenario**: s038 · s038
+
+**Detail**:
+
+Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back. O2 listed other files under new and this was not among them, so it was genuinely not offered rather than merely unseen.
+
+**Notes**: FIXED - verified 2026-08-20 on macOS 26.6.1, run 20260820_143238_macos-26-v2.0.2.
+Fixed INCIDENTALLY, by the short-basename staging done for LONG PATHS on
+2026-08-10/11, which also removed this one's reachability. Both halves of the
+original entry are now clean.
+
+Re-measured against the REAL Word converter with a fresh Word and a positive
+control per case (the methodology the entry itself demands, because one hostile
+name wedging Word makes every later case unbelievable). 13/13 CONVERTED, PDF at
+the real path, source consumed, every control passing:
+
+    control / CR / control / LF / control / quote / control / backslash /
+    control / 250-BYTE component / control / Danish + emoji / control
+
+So the 250-char component recorded here as "an open question rather than a
+diagnosed defect" is also answered: it converts. It was the staged TOTAL path,
+exactly as office_container_stage's own comment now says.
+
+THE ESCAPER IS UNCHANGED AND STILL CANNOT CARRY A LINE BREAK. `applescript_string`
+still renders CR as a space - correct for a MESSAGE, unsafe for a PATH - and an
+AppleScript string literal genuinely cannot span lines, so that is not a bug to
+fix in the escaper. What makes the converters safe is that the hostile name
+NEVER REACHES the literal: the app is handed `src_<hex>.<ext>` inside its own
+container and the product is moved to the real destination afterwards. Captured
+from the live call:
+
+    POSIX literal in script:
+      /Users/m1/Library/Containers/com.microsoft.Word/Data/tmp/
+      CanvasDownloaderTmp/cd_00e404fce2/src_04fce2.doc
+
+RESIDUAL, STATED: staging degrades to `_direct_passthrough` when
+`_office_container_tmp` returns None, and in THAT state the corruption would
+bite again. All three containers exist on a machine with Office installed
+(verified for Word/Excel/PowerPoint). Note the app name is the SHORT one -
+`_office_container_tmp("Microsoft Word")` is None while `("Word")` resolves;
+passing the bundle name is a probe bug that makes staging look unavailable and
+cost this session a wrong intermediate conclusion.
+
+GUARDED so staging cannot be narrowed and silently re-open it:
+`tests/test_office_staging_short_names.py` gains a line-break parametrisation,
+a test pinning the escaper's sharp edge, and an AST test asserting ALL THREE
+converters escape the STAGED path rather than the real one. Both mutations are
+caught (converter escapes `src`; staging preserves `src.name`).
+
+**2026-08-21 - the mechanical detection of `fp:5c1dc682e36c`, whose mechanism is
+now established and FIXED.** `analyze_course` rebuilt `result.new_files` from
+`new_name_map`, a dict keyed by FILENAME - so of two Canvas files sharing one
+`filename` (Canvas disambiguates only `display_name`), the loser of the
+`setdefault` was dropped from every category. Read that entry for the evidence.
+
+This finding is CORRECT for the run that produced it, and it will legitimately
+persist on any re-check of `20260821_113342_sync-matrix`, because that run really
+did offer only one of the pair. It clears on the next LIVE sync matrix.  
 > Not observed in the latest run.
 
 ---
@@ -2227,6 +2089,44 @@ Reverted to the original single dimming rule and verified in the running app: po
 
 ---
 
+### ~~'readonly:Eksempel - Gruppekontrakt.docx' placed as updated_clean by O1 but absent from O2~~
+<!-- fp:d445541f6268 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: ui-truth
+**Oracles**: O1,O2
+**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Occurrences**: 4
+**Scenario**: s034 · s034
+
+**Detail**:
+
+A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error. The two oracles disagree about whether this file was offered at all, so neither can be trusted for it until that is resolved.
+
+**Notes**: **2026-08-21 - AUDIT DEFECT, not a product defect.** The app classified this
+fixture correctly and NAMED it in its own debug log, in the right category, on
+the line below the analysis summary. The audit could not read that line: the log
+oracle's `analysis_row` pattern named three tags the app has never emitted
+(`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's
+`UPDATE-EDIT` / `CANVAS-DEL` / `LOCAL-DEL`), that blindness was then written into
+`crosscheck._LOG_DETAILED_CATS` as a fact about the product, which routed this
+category to the REVIEW SCREEN as its only witness - and a Quick Sync row never
+renders one. The blind guard covered only `oracle == "O2"`, so the O1 verdict
+fell through to "was not offered" and quoted a peer list from the log, i.e. from
+the oracle it had not consulted.
+
+Fixed: `RUNBOOK.md` checker defect 26 (which had found the tag mismatch on
+2026-08-08 and prescribed this exact fix order) plus new defects 32-35.
+Re-checking the SAME evidence with the fixed checker drops this finding and
+introduces none: 29 HIGH -> 13 on the sync matrix, 0 new on the 275-finding
+download matrix. Covered by `tests/test_audit_log_tag_vocabulary.py` (32);
+`scripts/_mutate_log_tag_vocabulary.py` 19/19.  
+> Not observed in the latest run.
+
+---
+
 ### ~~An uninstalled Office app classified as 'other', not 'app_missing' - three of the four wording clauses were locale-dead~~
 <!-- fp:259a4ac3ac81 -->
 
@@ -3639,6 +3539,140 @@ alone, since the sites differ on attempts for real reasons.
 `tests/test_foreign_text_predicates.py` (14);
 `scripts/_mutate_foreign_text.py`, **7/7 caught**.  
 > Not observed in the latest run.
+
+---
+
+### ~~Two orphaned Canvas files of identical size are re-offered one per sync, not both~~
+<!-- fp:5c1dc682e36c -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: classification
+**Oracles**: O5,O2
+**First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
+**Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
+**Occurrences**: 4
+**Scenario**: it5 · 43660
+
+**Detail**:
+
+Course 43660 holds THREE distinct Canvas files whose `filename` is all
+`CBS_SolbjergPlads_ImageHeader.jpg` (ids 1559837 / 1560082 / 1560087, all
+2032529 bytes, all Files-tab only). Canvas disambiguates them by display_name:
+`...ImageHeader-1.jpg`, `...ImageHeader.jpg`, `...ImageHeader-1-1.jpg`.
+
+The seeder orphans two of them (renames the local file, drops the manifest row),
+leaving a state in which two same-size, same-extension Canvas files have no row.
+
+MEASURED, two consecutive syncs of the same folder with no reseed:
+  run 1  O2 debug log: "Analysis complete: 10 new ...", [NEW] list contains
+         `CBS_SolbjergPlads_ImageHeader-1.jpg` and NOT `...ImageHeader.jpg`.
+         O1 review screen: one row, `CBS_SolbjergPlads_ImageHeader-1`.
+         O4 after: row for 1559837 present and downloaded; NO row for 1560082.
+  run 2  O2: "Analysis complete: 1 new"; [NEW] = `...ImageHeader.jpg`.
+         O1: one row, `CBS_SolbjergPlads_ImageHeader`.
+
+So the app re-offers ONE of the two orphans per sync rather than both at once.
+
+WHY THIS IS NOT A BLOCKER: nothing is lost and nothing is silently bound. The
+user's renamed copies (`zz flertydig 0/1.jpg`) are untouched on disk, no
+manifest row was created for the file that was not offered, and the next sync
+offers it. The review screen never claimed otherwise - it showed exactly what
+the run would do. The auto-discovery uniqueness guard behaved correctly
+throughout: tier (c) refuses when more than one same-size, same-extension orphan
+exists, which is the documented and desired refusal.
+
+WHAT IS NOT ESTABLISHED: the mechanism. `analyze_course` dedups by canvas id and
+seeds `claimed_paths` only from TRACKED rows, so on inspection both ids should
+have been offered in run 1. I did not find the line that defers the second one,
+and did not spend further budget on it - the outcome is self-healing and the
+release is imminent.
+
+ORACLE PAIR: O5 (Canvas lists three live files, two with no manifest row) vs
+O1+O2 (one offered). O1 and O2 AGREE with each other, which is what rules out
+the harness as the cause.
+
+NOTE FOR THE NEXT PASS: tests/audit/MAC_AUDIT_CONTINUE.md recorded this as a
+checker oracle-SELECTION defect with the app "CORRECT". That diagnosis confused
+the two fixtures - fixture 0 (`...ImageHeader-1.jpg`) was found in the log,
+fixture 1 (`...ImageHeader.jpg`) genuinely was not. The checker's misleading
+"no oracle placed it in any category" wording is what produced the wrong
+conclusion; it has been fixed (479cd29).
+
+**Notes**: **2026-08-21 (fifth macOS session)**: REPRODUCED on a second, independent file pair, which generalises it beyond the `CBS_SolbjergPlads_ImageHeader.jpg` triple. On the first CONVERTED sync fixture (`c43660_postfix_clean`), the seeder orphaned Canvas ids **1560011** and **1560205** - both displayed `2024_Lektion uge 46_1 ... Omgivelser - 1 _ Upload`, both `.pptx` converted to `.pdf` locally, identical extension and size class. The review offered `...Upload-1.pptx` and NOT `...Upload.pptx`: one of the two, exactly as recorded. It surfaced **13 times across a 43-row sync matrix**, at HIGH, because the checker raises one finding per fixture per row - so the severity of the REPORT is a checker artefact while the BEHAVIOUR is the low-severity one described above. The mechanism is still not established; note it is not specific to Files-tab jpgs, and now reproduces on module .pptx files whose local form is a conversion product.  
+
+**MECHANISM ESTABLISHED AND FIXED, 2026-08-21 (sixth session).** The entry above
+says "WHAT IS NOT ESTABLISHED: the mechanism ... I did not find the line that
+defers the second one." Found:
+
+`analyze_course` built `new_name_map` so the teacher-re-upload check could look
+a new file up BY NAME, and then rebuilt `result.new_files` **from that map's
+values**. A dict keyed by name cannot hold two files that share a name, so the
+loser of the `setdefault` was dropped from the offer entirely - which is why the
+file appeared in no category rather than in the wrong one.
+
+It needs no exotic data, because `_match_key` UNQUOTES. Canvas keeps ONE
+`filename` when a file is uploaded twice and disambiguates only `display_name`,
+so the copy whose display_name still equals its filename collapses to a SINGLE
+key - and if the sibling is listed first, that key is already taken. Which copy
+loses is therefore decided by the order Canvas happened to list them in, and
+that is why it looked arbitrary.
+
+The inspection that stalled the last pass was right as far as it went: the file
+DOES reach `raw_new_files`, and nothing in the auto-discovery tiers defers it.
+The drop is ~120 lines further down, in a loop whose comment says
+"Deduplicate new files that were registered under two name keys" - it was
+written to undo a double registration and also discards single ones.
+
+MEASURED, twice, both against the real product:
+  * ids 1560011 / 1560205 (`2024_Lektion+uge+46_1+...+Upload.pptx`, 2,223,911 B)
+    driven through the REAL `SyncManager` against an APFS clone of the real
+    course folder and its real 262-row manifest, with the real 140-file Canvas
+    metadata from this run's own O5 snapshot: before, `new=1` and 1560011 in NO
+    category; after, `new=2` and both offered. Reversing the two in the input
+    list offered both even before the fix - the whole difference was ordering.
+  * the `CBS_SolbjergPlads_ImageHeader.jpg` TRIPLE recorded above: 2 of 3
+    before, 3 of 3 after, and the copy that was missing is exactly the one whose
+    display_name equals its filename, as the live run showed.
+
+FIX: `new_name_map` is a lookup index only. The re-upload branch records the file
+it takes over in an explicit `_reupload_consumed` set (by identity - the whole
+point is that names collide), and `_unique_new` is now every regular new file
+that set does not name, in Canvas order.
+
+Covered by `tests/test_new_files_are_not_name_keyed.py` (14);
+`scripts/_mutate_new_files_name_key.py` - **7/7 caught**, so re-run the mutation
+pass rather than just the suite. Three of those mutants survived the first
+version of the tests and each exposed a real gap: the map indexes BOTH the raw
+filename and the display name and each half is load-bearing for a different
+vintage of manifest row, and secondary content is appended separately so it can
+be dropped with nothing else failing.
+
+**NOT YET SEEN LIVE.** The verification above drives the real analyzer with real
+data but not the browser, so the REVIEW SCREEN showing both rows is inferred
+rather than measured. The register's own note records that O1 and O2 agreed on
+this question in the live run, so the risk is low - but the next live sync matrix
+should confirm it, and the 13 HIGH findings in
+`20260821_113342_sync-matrix` will legitimately persist on any re-check of the
+OLD evidence, because that run really did offer only one.  
+> Not observed in the latest run.
+
+**VERIFIED LIVE, 2026-08-21** - the "NOT YET SEEN LIVE" caveat above is closed.
+A full 43-row sync matrix was re-run against the real app, a real browser and
+real Canvas (`20260821_131853_sync-matrix-postfix-verify`): **97 findings, all
+INFO - zero critical, zero high, zero medium**, against 29 HIGH on the pre-fix
+run of the same matrix. The full oracle chain agrees on the pair:
+
+  O5  Canvas lists 1560011 and 1560205, one `filename`, display names differing
+      only by `-1`.
+  O2  the debug log's `[NEW]` list carries BOTH.
+  O1  the REVIEW SCREEN renders both rows under New - checked on s021, s024,
+      s001 and s010, and previously only `...Upload-1` appeared.
+  O3  after the sync both `...Upload.pdf` and `...Upload-1.pdf` are on disk,
+      and the student's renamed `zz flertydig 0/1.pdf` are untouched.
+
+Row s035 failed its snapshot restore (a prior row's `debug_log.txt` counted as
+`extra`) and was re-run standalone afterwards, so all 43 rows are covered.
 
 ---
 

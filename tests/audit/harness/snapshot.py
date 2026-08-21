@@ -64,6 +64,21 @@ DB_NAME = ".canvas_sync.db"
 # misleading - they would describe a transaction history the copy no longer has.
 DB_SIDECARS = (".canvas_sync.db-wal", ".canvas_sync.db-shm", ".canvas_sync.db-journal")
 
+# Files the APP writes into a course folder that are not course MATERIAL, and
+# so are neither captured nor expected back. `restore` clears its destination
+# first, so anything here appeared AFTER the copy - the lane's app is
+# long-lived and writes its debug log into whichever folder it is pointed at,
+# which races the verify that runs immediately after a restore.
+#
+# Measured 2026-08-21 on the post-fix sync matrix: row s035 failed outright
+# with `snapshot restore did not verify - extra: ["debug_log.txt"]`, and the
+# row never ran. That is the correct instinct (never judge a product against a
+# contaminated folder) applied to the wrong file: a debug log is the app's own
+# output, exactly like the sqlite sidecars already listed above, and its
+# presence says nothing about whether the MATERIAL restored intact. One row of
+# 43 lost, and the same race can take any row.
+APP_GENERATED = DB_SIDECARS + ("debug_log.txt",)
+
 FILE_ATTRIBUTE_READONLY = 0x01
 FILE_ATTRIBUTE_HIDDEN = 0x02
 FILE_ATTRIBUTE_NORMAL = 0x80
@@ -449,7 +464,7 @@ def verify_restore(name: str, dest: Path | str) -> dict:
         rel_root = os.path.relpath(root, _lp(dest))
         rel_root = "" if rel_root == "." else rel_root
         for fname in files:
-            if fname in DB_SIDECARS:
+            if fname in APP_GENERATED:
                 continue
             rel = (Path(rel_root) / fname).as_posix() if rel_root else fname
             if rel not in inv:

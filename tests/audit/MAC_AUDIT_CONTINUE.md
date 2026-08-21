@@ -390,3 +390,55 @@ matrix re-run would close it and re-validate all five checker fixes end to end.
   `folder.name`, and a re-check points `folder` at the harvested evidence
   directory, so a finding registered as `m012` instead of the course. Fixed via
   the disk scan's `root`.
+
+---
+
+# The live re-run, and a second defect of the same class (2026-08-21, sixth session cont.)
+
+## The token question is closed
+
+A full 43-row sync matrix ran against the real app, a real browser and real
+Canvas: `_audit_runs/20260821_131853_sync-matrix-postfix-verify`.
+
+**97 findings, ALL INFO** - zero critical, zero high, zero medium, against
+**29 HIGH** on the pre-fix run of the same matrix. Every info finding is a known
+benign family (Panopto `GetFolders` 500 = checker defect 29, long paths,
+converter-consumed rows, and the `ambiguous by name` non-assertion).
+
+The "NOT YET SEEN LIVE" caveat on `fp:5c1dc682e36c` is closed. Full chain, on
+the ambiguous pair: **O5** Canvas lists both -> **O2** the log's `[NEW]` carries
+both -> **O1** the REVIEW SCREEN renders both rows (s021/s024/s001/s010; before
+the fix only `...Upload-1` appeared) -> **O3** both land on disk and the
+student's renamed `zz flertydig 0/1.pdf` are untouched.
+
+Row s035 failed its restore (checker defect 36) and was re-run standalone, so
+all 43 rows are covered.
+
+## Setting the audit up again
+
+The app reads its token from the keyring under service `CanvasDownloader`,
+**username = the Canvas URL** (not `api_token` - that spelling finds nothing).
+O5 reads the repo-root `canvas_downloader_settings.json` for `api_url` and takes
+its own credential from the keyring, then `$CANVAS_DL_AUDIT_TOKEN`, then
+`~/mac_audit_secrets.env`. Seeding the keyring entry is enough to bring the app
+up already signed in - no browser login step.
+
+## A HAZARD worth its own line
+
+**Never mutate source while a live audit is driving the app from that tree.**
+The lanes run `streamlit run app.py` out of the working copy, so a mutation pass
+(or any edit) lands in the product mid-run. Same family as "never run a mutation
+pass on a tree something might commit", one step further out. The mutation and
+positive-control work in this session was deliberately deferred until
+`matrix lanes` reported every lane finished and `pgrep -f 'matrix worker'` was
+empty.
+
+## The second defect
+
+Found by auditing the first fix rather than by the matrix - see
+`CLAUDE.md`, "…and a DELETED row took a file with it", and the register entry
+"A locally-deleted row that is pruned takes the new Canvas file it had adopted
+with it". The durable outcome is `tests/test_analysis_conservation.py`, which
+asserts that every Canvas file handed to `analyze_course` reaches a category,
+over 500 generated states - and whose positive control is that mutating either
+fix back out makes it report 49 and 15 losing seeds of 600.

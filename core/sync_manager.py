@@ -1993,9 +1993,7 @@ class SyncManager:
         # equals its filename. It self-heals on the next sync (the offered copy
         # gains a manifest row and stops competing for the key), which is why it
         # read as "one per sync" rather than as a loss.
-        _unique_new = [nf for nf in regular_new_files
-                       if id(nf) not in _reupload_consumed]
-
+        # COMPUTED BELOW THE PRUNING BLOCK, because pruning can hand a file BACK.
         # --- Phantom-row pruning (post re-upload cleanup) ---
         # Once a re-upload has been downloaded under its NEW id, the OLD id's
         # manifest row lingers: not on Canvas, no local file - it would
@@ -2041,6 +2039,44 @@ class SyncManager:
                 if _superseded:
                     _pruned_ids.append(del_info.canvas_file_id)
                     files_section.pop(_did, None)
+                    # A ROW BEING DELETED CANNOT CARRY A FILE AWAY WITH IT.
+                    #
+                    # The re-upload branch above takes a NEW Canvas file off the
+                    # offer and rides it on this locally-deleted row, on the M-6
+                    # reasoning that the user's deletion is respected and the
+                    # replacement should not also be offered separately. Delete
+                    # the row and that reasoning has nothing left to stand on -
+                    # the file was in `new_files`, it is now in neither, and it
+                    # is a file the user has NEVER had.
+                    #
+                    # The two mechanisms are individually correct and jointly
+                    # wrong, which is why nothing caught it: neither one is
+                    # doing anything unreasonable on its own. Reproduced against
+                    # the real analyzer - manifest row 100 (`A/notes.pdf`, gone
+                    # from Canvas, deleted locally) consumes new Canvas id 200
+                    # (`notes.pdf`), then row 100 is pruned as superseded by row
+                    # 101 (`B/notes.pdf`, same basename, different folder, file
+                    # present) - and 200 lands in NO category, `new=0`.
+                    #
+                    # It clears on the NEXT sync, because the prune really does
+                    # delete the row and nothing consumes the file a second
+                    # time. That is the same self-healing shape as the
+                    # name-keyed drop this loop sits below, and it is worth just
+                    # as little: for one sync, a file Canvas is offering is one
+                    # the app never mentions.
+                    #
+                    # Note the prune's own name matching is deliberately left
+                    # BROAD (`_live_name_keys` is keyed by basename, so a
+                    # same-named file in another folder counts as the
+                    # replacement). Narrowing it risks resurrecting the
+                    # "Deleted Locally on every sync for ever" defect it exists
+                    # to fix, and it costs nothing here: the row's own id is
+                    # gone from Canvas, so the local file it described is
+                    # unrecoverable either way. The only thing the row must not
+                    # take with it is a file that IS still on Canvas.
+                    _back = getattr(del_info, '_reupload_new_file', None)
+                    if _back is not None:
+                        _reupload_consumed.discard(id(_back))
                 else:
                     _kept.append(del_info)
             final_locally_deleted = _kept
@@ -2049,7 +2085,11 @@ class SyncManager:
                             f"(teacher re-upload cleanup): {_pruned_ids}")
                 self.delete_manifest_rows(_pruned_ids)
 
-        # Reconstruct the remaining new files that were not duplicates
+        # EVERY new file that a re-upload row did not take over, in Canvas order.
+        # Computed HERE, below the pruning block, because a pruned row gives back
+        # whatever it had taken (see above).
+        _unique_new = [nf for nf in regular_new_files
+                       if id(nf) not in _reupload_consumed]
         result.new_files = _unique_new + secondary_new_files
         result.locally_deleted_files = final_locally_deleted
         
