@@ -9,9 +9,9 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260820_143238_macos-26-v2.0.2` on 2026-08-20.
+Last updated by run `20260821_022815_macos26-full-night` on 2026-08-21.
 
-**8 open** · 142 total · 23 accepted · 79 fixed · 31 invalid · 1 wontfix
+**22 open** · 156 total · 23 accepted · 79 fixed · 31 invalid · 1 wontfix
 
 ---
 
@@ -77,6 +77,189 @@ caught (converter escapes `src`; staging preserves `src.name`).
 
 ---
 
+### Unexpected bridged_error in debug log: Forelæsning 15 DB1_x.pptx  Conversion failed - 1022:1028: execution error: Microsoft Power
+<!-- fp:957a3679286c -->
+
+**Status**: accepted
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+Forelæsning 15 DB1_x.pptx  Conversion failed - 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
+
+---
+
+### Unexpected bridged_error in debug log: Organisationsprojekt_vidensproduktion_2021-2_upload.pptm  Conversion failed - 1022:1028: e
+<!-- fp:03bf667f17a1 -->
+
+**Status**: accepted
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Organisationsprojekt_vidensproduktion_2021-2_upload.pptm  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
+
+---
+
+### Unexpected bridged_error in debug log: [AppleScript] Excel failed (other): 1424:1430: execution error: Microsoft Excel got an err
+<!-- fp:9086db677dd1 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m048_c43665 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+
+**Detail**:
+
+[AppleScript] Excel failed (other): 1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)
+
+**Notes**:   Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.
+
+---
+
+### Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint 
+<!-- fp:39d13fe4271b -->
+
+**Status**: accepted
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+[AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
+
+---
+
+### Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 1022:1028: execution error: the frontmost present
+<!-- fp:5107b8603d66 -->
+
+**Status**: accepted
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+[AppleScript] PowerPoint failed (other): 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
+
+---
+
+### Unexpected bridged_error in debug log: Øvelse 9 - VL.xlsx  1424:1430: execution error: Microsoft Excel got an error: Connection i
+<!-- fp:99180da2531f -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m048_c43665 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+
+**Detail**:
+
+Øvelse 9 - VL.xlsx  1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)
+
+**Notes**:   Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.
+
+---
+
+### A part-way Office conversion left a 64 KB partial PDF that passed pdf_looks_real and was promoted
+<!-- fp:8517df378146 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: conversion
+**Oracles**: O3,O4
+**First seen**: 2026-08-21 (20260821_night_pkg)
+**Last seen**: 2026-08-21 (20260821_night_pkg)
+**Occurrences**: 1
+**Scenario**: m048 · 43665
+
+**Detail**:
+
+Matrix row m048. Excel's PDF export died mid-write with 'Connection is invalid. (-609)' and left 'Øvelse 9 - VL.pdf' at EXACTLY 65,536 bytes - one 64 KB buffer. Correct %PDF magic and 128x the 512-byte floor, so it passed pdf_looks_real, was promoted out of the Office container into the folder, and sat there UNTRACKED beside the .xlsx that had not been deleted. Canvas has no file of that name in 43665 (only the .xlsx), so it can only have come from the failed conversion; the audit checker independently flagged it as '1 content file on disk with no manifest row'. Two costs: it occupies the destination so the retry diverts to '<stem> (1).pdf' (the source of that run's duplicate PDFs), and pdf_looks_real is ALSO the gate in front of deleting the user's only copy of a legacy .doc/.xls/.ppt - a partial passing it is the dangerous direction, and only the -609 being reported as a failure kept the source this time. FIXED: pdf_looks_real now requires a %%EOF trailer within the last 4 KB. Verified against all 121 PDFs the audit produced (Canvas downloads and Word/Excel/PowerPoint conversions) - every one carries %%EOF inside the last 2 KB. tests/test_pdf_trailer_gate.py (14), 6/6 mutations caught.
+
+**Notes**:     Fixed 2026-08-21: pdf_looks_real now requires a %%EOF trailer within the last 4 KB. Verified against all 121 PDFs the audit produced - Canvas downloads and Word/Excel/PowerPoint conversions alike - every one carries it. tests/test_pdf_trailer_gate.py (14), 6/6 mutations caught.
+> Not observed in the latest run.
+
+---
+
+### 62 of 63 Office conversions left the manifest row on the deleted source - the repoint depends on path SPELLING
+<!-- fp:793f45d38c39 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: delivery
+**Oracles**: O3,O4
+**First seen**: 2026-08-21 (20260821_night_pkg)
+**Last seen**: 2026-08-21 (20260821_night_pkg)
+**Occurrences**: 1
+**Scenario**: pkg_maximal · 43660
+
+**Detail**:
+
+converters/pdf.py and converters/word.py return str(dst.resolve().absolute()) from their macOS branch; converters/excel.py returns str(dst). sm.local_path carries the configured spelling. Where the course folder is reached through a symlink (/tmp -> /private/tmp, or a course folder linked onto an external drive) the two disagree, Path.relative_to raises, and _update_manifest_path returned in silence. Measured in a real packaged run of course 43660: 68 manifest rows pointed at files not on disk (51 .pptx, 11 .pptm, 1 .doc consumed by conversion, plus 5 .webloc compiled by convert_urls), and only 2 repoints happened - both Excel. Consequence: a row naming a deleted source is re-offered as a RESTORE every sync; its PDF is untracked; a re-download plus re-conversion overwrites that PDF, losing a student's annotations. The same mismatch in _resolve_conversion_target loses the own-product ownership check that diverts to _NewVersion on local edits. FIXED in 8338cf1 via _course_relative (one primitive, realpath fallback) plus course-relative parent comparison; both silent paths now log. tests/test_conversion_repoint_spelling.py (12), 8/8 mutations caught.
+
+**Notes**:     Fixed 2026-08-21 in 8338cf1: _course_relative is the one primitive both call sites use (try as given, then compare realpaths), plus a course-relative parent comparison in _resolve_conversion_target that the mutation pass exposed as still broken. Both previously-silent paths now log. Verified end to end with the real PowerPoint converter on a symlinked root, and by tests/test_conversion_repoint_spelling.py (12) with 8/8 mutations caught.
+> Not observed in the latest run.
+
+---
+
+### HARNESS: a matrix row needing BOTH office and gpu let the two lanes drive Office concurrently
+<!-- fp:64421c5a2c1f -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: regression-guard
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_night_pkg)
+**Last seen**: 2026-08-21 (20260821_night_pkg)
+**Occurrences**: 1
+**Scenario**: matrix
+
+**Detail**:
+
+HARNESS DEFECT, not product. parallel.classify() returns a single lane name; a row with transcription AND Office conversion answers 'gpu', lands in the gpu lane, and drives Word/Excel/PowerPoint while the office lane does the same - the arrangement the module docstring says must never happen. Measured on the 56-row plan: 7 of 9 gpu rows also convert Office. This audit escaped it only because the gpu lane was started by hand after the office lane finished; a plain 'matrix launch' would have run them together and produced -609/-30001 failures that read exactly like product defects. FIXED in e20c085: new resources() reports every resource a row needs, and split_lanes merges office+gpu into one serial lane when any dual-need row exists. classify() is unchanged so the deliberate 'gpu outranks office' trade is preserved. Negative control confirms the new tests fail against the old placement at 3, 4 and 8 lanes.
+
+**Notes**:     Fixed 2026-08-21 in e20c085: parallel.resources() reports every resource a row needs, and split_lanes merges office+gpu into ONE serial lane when any dual-need row exists. classify() unchanged, so the deliberate 'gpu outranks office' trade is preserved. Negative control confirms the tests fail against the old placement at 3, 4 and 8 lanes.
+> Not observed in the latest run.
+
+---
+
 ### A COM-spawned EXCEL.EXE outlived 4+ rows (2h08m) while the app correctly killed every instance it tracked
 <!-- fp:6759ff4ce798 -->
 
@@ -137,6 +320,86 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 **Notes**:   
 > Not observed in the latest run.
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for Forelæsning 15 DB1_x.pptx: 1022:1028: execution error: Microsoft
+<!-- fp:afeb72dfc506 -->
+
+**Status**: accepted
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+PDF conversion failed for Forelæsning 15 DB1_x.pptx: 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
+
+---
+
+### Unexpected bridged_warning in debug log: PDF conversion failed for Organisationsprojekt_vidensproduktion_2021-2_upload.pptm: 1022:1
+<!-- fp:03f60d5442de -->
+
+**Status**: accepted
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for Organisationsprojekt_vidensproduktion_2021-2_upload.pptm: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
+
+---
+
+### Unexpected bridged_warning in debug log: [AppleScript] Excel was not usable (1424:1430: execution error: Microsoft Excel got an err
+<!-- fp:7877415c8e20 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m001_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+[AppleScript] Excel was not usable (1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)) - it most likely crashed or was torn down mid-conversion; relaunching and retrying src_2198d4.xlsx once
+
+**Notes**:   Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.
+
+---
+
+### CONFIRMED CONSEQUENCE: the stale Office rows render as '63 Deleted locally' on the next sync
+<!-- fp:849a3169faa3 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: ui-truth
+**Oracles**: O1,O3,O4
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: stale_rows_probe · 43660
+
+**Detail**:
+
+Live sync analysis of the packaged maximal run's folder (restored from snapshot c43660_panopto_maximal, 405 files). The review screen reports '63 Deleted locally' - 0/63 selected - and Smart Select offers them by filetype as DOC / PPTM / PPTX. Those are EXACTLY the 63 Office sources the conversion consumed (51 pptx + 11 pptm + 1 doc), whose manifest rows were never repointed because that bundle predates the spelling fix. Header reads '63 files pending sync, 199 files up to date'. The user never deleted any of them. Nothing re-downloads silently (the boxes default unchecked), so this is a reporting defect rather than data loss - but it recurs on EVERY sync, and 'Select All here' is the natural response to being told 63 files are missing, which re-downloads ~180 MB of PowerPoints and then overwrites the PDFs the user already has. This closes the causal chain for the repoint finding: manifest (O4) -> disk (O3) -> the app's own review screen (O1).
+
+**Notes**:   Not a separate defect - this IS the consequence of the repoint finding, measured on the app's own review screen. Closed with that fix (8338cf1).
 
 ---
 
@@ -226,6 +489,27 @@ That overwrite is the documented design and it is what makes the download run th
 Recorded as an observation rather than a defect: every individual behaviour here is deliberate and documented in CLAUDE.md, including the specific warning that a Panopto gate placed inside the runner would let a download write an all-off contract over every folder it touched. The gap is that the contract is presented as visible state with no editor, and the one thing that rewrites it does so without saying so.
 
 **Notes**:   
+> Not observed in the latest run.
+
+---
+
+### A transient Office failure (-609 connectionInvalid) was classified 'other', so it got no retry
+<!-- fp:9cca51fdfbd8 -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: conversion
+**Oracles**: O2,O3
+**First seen**: 2026-08-21 (20260821_night_pkg)
+**Last seen**: 2026-08-21 (20260821_night_pkg)
+**Occurrences**: 1
+**Scenario**: m032 · 43660
+
+**Detail**:
+
+Matrix row m032, the largest Office batch in the plan (~88 files across 43660+45899): three files failed transiently, each surrounded by dozens of successes - two with -30001 (our own frontmost-document guard) and one with 'Connection is invalid. (-609)'. _classify_stderr recognised only -600 as recoverable, so all three fell to 'other', which gets no per-file retry. They were recovered only because retry_failed_conversions sweeps the phase afterwards, and because that late sweep re-resolves the destination each also minted a duplicate '<stem> (n).pdf'. -609 is connectionInvalid - the app was there when addressed and is gone now, i.e. -600 one step earlier - and engine/applescript_bridge's OWN docstring already cited it as the signature of PowerPoint being torn down mid-conversion. FIXED in 247a734: -609 now classifies app_crashed (per-file, retried once, never fatal). -30001 deliberately left as 'other' (fix 1f0a…): it is our own guard and the app is running perfectly, so app_crashed's 'stopped running while converting' would be false - recorded as needing its own category if ever made retryable. 12/12 mutations caught.
+
+**Notes**:     Fixed 2026-08-21 in 247a734: -609 and the 'Connection is invalid' wording now classify as app_crashed (per-file, retried once, never fatal). -30001 deliberately left as 'other' - it is our own frontmost guard and app_crashed's message would misdescribe a running app. Verified live: row m001 logged 'Excel recovered after a crash; src_2198d4.xlsx converted on the retry' four seconds after the failure that row m048 (pre-fix) reported as a dead loss. 12/12 mutations caught.
 > Not observed in the latest run.
 
 ---
@@ -866,9 +1150,7 @@ EQUIVALENT mutant. The mutation pass exposed a real gap in the tests first: a
 row that is MISSING and a row that EXISTS WITH AN EMPTY md5 take different
 branches, and only the second tells the guards apart.
 
-**Notes**:
-
-NO HEAL PASS IS POSSIBLE - investigated 2026-08-20 at the product owner's
+**Notes**: NO HEAL PASS IS POSSIBLE - investigated 2026-08-20 at the product owner's
 request, before building anything. A row whose baseline was clobbered is
 INDISTINGUISHABLE from a legitimately clean one on every signal that survives:
 
@@ -904,7 +1186,9 @@ The fix stops the affected population growing.
 
 DECISION: no migration, and no user-facing warning - it could not name the
 affected files (neither can the app), so it would alarm everyone who ever
-re-downloaded a course while being actionable for almost nobody.
+re-downloaded a course while being actionable for almost nobody.  
+> Not observed in the latest run.
+
 ---
 
 ### ~~Download finished with 1 unexplained error(s)~~
@@ -963,9 +1247,9 @@ FIXED: resolve_discussion_topic() tries the individual endpoint first and falls 
 **Category**: persistence
 **Oracles**: O3,O4
 **First seen**: 2026-07-27 (20260727_165705_bootstrap)
-**Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 31
-**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 33
+**Scenario**: m048_c43665 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
 
 **Detail**:
 
@@ -975,8 +1259,7 @@ Each of these will be offered as a NEW file on every future sync unless the anal
 
 The audit's own exemption for this existed and never fired: it read `expect["converters"]` while `check download` is handed a FLAT config. The same shape mismatch was also reporting the 25 consumed `.url` rows as a broken manifest. Both now read the `sync_contract` the app stored in the folder, which is what the engine itself obeys.
 
-Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.  
-> Not observed in the latest run.
+Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.
 
 ---
 
@@ -1323,7 +1606,7 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 
 ---
 
-### ~~Unexpected bridged_error in debug log: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx~~
+### ~~Unexpected bridged_error in debug log: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx ~~
 <!-- fp:1dc7bf542396 -->
 
 **Status**: fixed
@@ -1331,16 +1614,15 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 **Category**: robustness
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 4
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
 
-2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
 
-**Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.  
-> Not observed in the latest run.
+**Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
@@ -1881,6 +2163,60 @@ Reverted to the original single dimming rule and verified in the running app: po
 
 ---
 
+### ~~An uninstalled Office app classified as 'other', not 'app_missing' - three of the four wording clauses were locale-dead~~
+<!-- fp:259a4ac3ac81 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: classification
+**Oracles**: the app's own classification rule vs the string macOS actually emits
+**First seen**: 2026-08-20 (20260820_143238_macos-26-v2.0.2)
+**Last seen**: 2026-08-20 (20260820_143238_macos-26-v2.0.2)
+**Occurrences**: 1
+**Scenario**: M1.3 - `_classify_stderr`, macOS 26.6.1
+
+**Detail**:
+
+Found while chasing something else: a `mac_eyes` window query started failing
+with the real denial text, and that text did not match the clause written to
+catch it.
+
+Measured by making osascript fail for real. A genuinely missing app emits
+``Can't get application "X". (-1728)`` with a **typographic** apostrophe
+(U+2019); `_classify_stderr` matched only the ASCII one, and **-1728 is not in
+its numeric list**, so the verdict fell through to `other` - which is NOT in
+`FATAL_CATEGORIES`.
+
+Consequence, for a user without Microsoft Office (it is not free, so this is an
+ordinary state): no "Word is not installed or could not be launched" message.
+Instead three generic per-file errors, then `SYSTEMIC_REPEAT_THRESHOLD` fires
+and tells them to **"Quit Microsoft Word and run again"** - about an
+application they do not have.
+
+Same class one clause over: this machine's macOS emits the **British**
+"Not authorised to send Apple events", while the permission clause knew only
+"authorized". That verdict survived purely on its `-1743` companion. Only
+``isn't running`` worked - because the 2026-08-11 `-600` fix gave that ONE
+clause both apostrophe forms and never reached its neighbours. The docstring
+three lines below states the lesson the code beside it had not learned.
+
+**Notes**: FIXED 2026-08-20. Normalise the apostrophe **once**, so a clause
+added later cannot inherit the bug, plus the British spelling.
+
+`-1728` is deliberately **NOT** added to the numeric list, and that is the
+non-obvious half: it is `errAENoSuchObject`, which our own scripts raise for an
+absent DOCUMENT (``can't get active document``). Mapping the code wholesale
+would abort a phase with "Office is not installed" on a machine where it
+plainly is - a fatal, and the wrong one. The wording separates the two exactly,
+which is why the apostrophe had to be fixed rather than the number added. A
+mutant pins it ("the obvious fix, and wrong").
+
+`tests/test_office_crash_is_not_missing.py` (29);
+`scripts/_mutate_applescript_locale.py`, **6/6 caught**.  
+> Not observed in the latest run.
+
+---
+
 ### ~~The case half of _path_key is a no-op on macOS, so a case-only rename still drops a tracked file out of the tracked set~~
 <!-- fp:f3cdebbc44ff -->
 
@@ -1960,6 +2296,73 @@ PRODUCT/BUILD finding, first time the macOS bundle's signature has been verified
 The sidebar of the running app reads 'v2.0.1' (screenshot fda_06_today_card.png, bottom left) while this audit is the final gate before v2.0.2 (tests/audit/MAC_AUDIT_PROMPT.md line 10) and v2.0.1 is ALREADY a shipped git tag. version.py has not been bumped. Four consequences, all measured or read off the source rather than supposed: (1) ui/auth.py:3915 prints the wrong version in the sidebar - observed. (2) ui/update_banner.py:97 computes update_available = _is_newer(github_tag, __version__); driven against the real function, _is_newer('2.0.2','2.0.1') returns True, so once the release is tagged v2.0.2 on GitHub EVERY user of that build sees the update notice permanently, pointing at the build they are running, on every launch. It cannot self-clear. (3) core/health_log.py:162 and core/canvas_debug.py:293 stamp diagnostics with 2.0.1, so every support report from the new release is mis-attributed to the old one - which matters most for the defects this very audit fixed. (4) CLAUDE.md records version.py as read by CI and both build specs, so the installer and bundle metadata would be stamped 2.0.1 too. Fix is one line, but it has to happen before the tag, and nothing in the build or the test suite currently asserts that version.py leads the newest tag.
 
 **Notes**: > 2026-08-13 reconciliation: `version.py` reads 2.0.2 and leads every shipped tag (v2.0.1 is the newest). Guarded from now on by `tests/test_version_leads_tags.py`. Re-verified on Windows 2026-08-13.  
+> Not observed in the latest run.
+
+---
+
+### ~~A denied "access data from other apps" prompt read as a slow document: ~4 minutes per file, and no cause named~~
+<!-- fp:f6924f2b9dbc -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: conversion
+**Oracles**: the debug log vs Word's own open-document path
+**First seen**: 2026-08-20 (packaged app, macOS 26.6.1)
+**Last seen**: 2026-08-20
+**Occurrences**: 1
+**Scenario**: the macOS powerbox prompt DENIED - a state nothing had ever driven
+
+**Detail**:
+
+Driving the untested state: **Don't Allow** on *"Canvas Downloader would like
+to access data from other apps"*. That is an ordinary click - the wording gives
+a cautious student no reason to accept. ONE `.doc` produced:
+
+    21:34:26  Word failed (other): ... AppleEvent timed out. (-1712)
+    21:34:26  Klyngevejledning_1_Program_2023.doc  Conversion failed - ... (-1712)
+    21:36:26  ... AppleEvent timed out. (-1712)            <- the retry
+    21:36:26  Klyngevejledning_1_Program_2023.doc  Conversion failed twice
+
+**Notes**: FIXED 2026-08-20. The fallback records itself (`_office_unstaged`,
+per-run, cleared by `reset_office_priming`) and `attribute_office_failure`
+refines the stderr-only verdict with it: a timeout while unstaged becomes
+`container_denied`, which is FATAL, so the phase aborts once instead of
+grinding per file.
+
+**Deliberately narrow.** A timeout WITH staging stays a per-file `other` - a
+genuinely huge deck must not abort the phase and send the user to a setting
+that is fine - and only TIMEOUTS qualify, so `-1708` (wedged Word) and
+`-30001` (mis-bound document) are never blamed on permissions. Mutants pin
+both directions.
+
+**The remedy names FULL DISK ACCESS, not "Files and Folders".** Checked in
+System Settings with this denial recorded: the app appears under Files and
+Folders with **no toggle**, so naming that pane sends the user nowhere. FDA
+supersedes the grant and is the pane the app's own nudge and Settings card
+already open, so the words match an affordance that exists.
+
+No data loss at any point: the `.doc` survived, no stub PDF was promoted, 0
+staged dirs were left.
+
+`tests/test_container_denied_attribution.py` (22);
+`scripts/_mutate_container_denied.py`, **10/10 caught**.
+
+**VERIFIED IN THE SHIPPED BUNDLE**, which is what caught the first fix being
+wrong. Rebuilt, re-signed, powerbox denied again:
+
+    [WARNING] container staging unavailable ([Errno 1] Operation not
+              permitted: .../com.microsoft.Word/Data/tmp/CanvasDownloaderTmp/
+              cd_483b93c19b); using direct path
+    [ERROR]   Word failed (container_denied): ... AppleEvent timed out. (-1712)
+    [ERROR]   Conversion failed - Microsoft Word did not respond, which usually
+              means macOS is waiting on permission to open files in this
+              folder. Turn on Canvas Downloader under System Settings →
+              Privacy & Security → Full Disk Access ...
+              skipping remaining 0 Word file(s)
+
+`Operation not permitted` on the container **mkdir** is the mechanism, proven.
+1 `container_denied`, **0** "failed twice", one ~2-minute attempt instead of
+two, `.doc` intact (153,600 B), no stub PDF, 0 staged dirs.  
 > Not observed in the latest run.
 
 ---
@@ -2514,7 +2917,7 @@ PDF conversion failed for 2025 7.lektion 31.marts .pptx: 710:716: execution erro
 
 ---
 
-### ~~Unexpected bridged_warning in debug log: PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over~~
+### ~~Unexpected bridged_warning in debug log: PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over ~~
 <!-- fp:721e4990f066 -->
 
 **Status**: fixed
@@ -2522,16 +2925,15 @@ PDF conversion failed for 2025 7.lektion 31.marts .pptx: 710:716: execution erro
 **Category**: robustness
 **Oracles**: O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 3
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 4
 **Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
 
-PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
 
-**Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.  
-> Not observed in the latest run.
+**Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
 
 ---
 
@@ -2966,6 +3368,68 @@ FIXED: count only entries whose DownloadError.course_name matches the course. Gu
 
 ---
 
+### ~~The macOS folder picker's cancel test matched the American spelling; macOS emits the British one~~
+<!-- fp:07f659093301 -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: classification
+**Oracles**: the app's predicate vs the string osascript actually emits
+**First seen**: 2026-08-20
+**Last seen**: 2026-08-20
+**Occurrences**: 1
+**Scenario**: pattern sweep after the `_classify_stderr` locale defect
+
+**Detail**:
+
+Found by sweeping for the PATTERN behind that day's classifier bug - predicates
+that decide behaviour by matching literal text ANOTHER system produced.
+Measured directly:
+
+    $ osascript -e 'error number -128'
+    0:17: execution error: User cancelled. (-128)
+
+while `shared/helpers.py` tested `'User canceled' in err` - **American, one L**.
+The clause was DEAD, exactly like `not authorized to send apple events`, and
+survived on the `'-128'` companion beside it.
+
+It decides something real: `[]` means the user cancelled, `None` means the
+picker could not run - and `native_folder_multi_picker` answers `None` by
+
+**Notes**: FIXED - both spellings, case-folded, number kept. Verified LIVE
+against real osascript output: the picker returns `[]`. A mutant that keeps
+only the number is caught, so the wording clause cannot quietly become
+decoration again.
+
+**Swept at the same time, and clean** - recorded so nobody re-investigates:
+
+* **macOS does NOT localise errno strings** - `os.strerror(EACCES)` is
+  `'Permission denied'` under both `en_US` and `da_DK`, so OSError-text
+  matching is safe on this platform.
+* **SQLite lock messages are not localised** (fixed English in the C library).
+* Canvas-error predicates in `core/canvas_logic.py` and `shared/components.py`
+  already carry BOTH `authorized`/`authorised`.
+* `'CERTIFICATE_VERIFY_FAILED'`, `'0x80040154'` and the AppleScript error
+  numbers are structured tokens, not prose - not at risk.
+
+**One divergence fixed with it, NOT a live defect**: the same "is this a
+SQLite lock?" question was asked at 19 sites in `core/sync_manager.py` in TWO
+spellings - `'locked' in str(e).lower()` and the strictly narrower,
+case-sensitive `'database is locked' in str(e)`, which misses SQLITE_LOCKED
+(`database table is locked`) and sat on the paths that RE-RAISE rather than
+retry. Measured before claiming anything: this app opens one short-lived
+connection per operation and uses no shared cache, so a contended write raises
+SQLITE_BUSY - reproduced, `database is locked` - and SQLITE_LOCKED is not
+reachable. Unified into `_is_locked_error` because a rule spelled twice is one
+some caller is already following an old version of; retry POLICY was left
+alone, since the sites differ on attempts for real reasons.
+
+`tests/test_foreign_text_predicates.py` (14);
+`scripts/_mutate_foreign_text.py`, **7/7 caught**.  
+> Not observed in the latest run.
+
+---
+
 ### ~~A filename containing a line break can never be converted on macOS: the shared AppleScript escaper turns CR into a space, so the path stops resolving~~
 <!-- fp:ad96dfaae9ad -->
 
@@ -2983,6 +3447,76 @@ FIXED: count only entries whose DownloadError.course_name matches the course. Gu
 MEASURED with a positive control per case and a FRESH Word each time, which is what makes it trustworthy - an earlier all-in-one-process run failed 8 of 8 because the first hostile name wedged Word (see mac_m1_word_wedge), so only the first case after a passing control can be believed. Isolated results: 'Lec\rture.doc' FAILED, 'Say "hi".doc' CONVERTED, a 250-char ASCII component FAILED - each preceded by a plain 'control.doc' that CONVERTED. THE CAUSE for the CR case is exact and visible in the escaper's own output: engine.applescript_bridge.applescript_string renders the path ending as 'Lec ture.doc' - CLAUDE.md's documented rule that 'a line break becomes a SPACE, never empty, because deleting it would silently join two words of a name shown to the user'. That rule is right for a MESSAGE string and wrong for a PATH: the emitted AppleScript is syntactically valid but now names a file that does not exist, so Word cannot open it. Round-trip check: literal.endswith(name) is False for CR and True for the quote and long-name cases, i.e. the quote path is passed through faithfully and the CR path is corrupted. WHY IT IS A DEFECT RATHER THAN A LIMITATION: MAC_RUNBOOK item 4 states of exactly these two names that 'Both must convert normally - _as_posix neutralises them'. It neutralises the SYNTAX hazard only. REACHABILITY: macOS permits every byte but / and NUL in a filename, and CLAUDE.md notes an extracted ARCHIVE member never passes through _sanitize_filename, so a zip can put one in a course folder. CONSEQUENCE is safe but silent: the conversion fails, the source is kept, and the user gets no PDF for that one file. POSSIBLE FIX (not applied): a path must not go through the message escaper - pass it as raw bytes/POSIX file via a mechanism that cannot rewrite it, or reject/rename such a source explicitly so the failure is stated rather than silent. SEPARATE, NOT ISOLATED: the 250-char ASCII component also failed although its path round-tripped identically (component 254 bytes, legal on macOS whose limit is 255 BYTES per component; full path 293 chars, so office_container_stage's >=240 staging applies). The cause was not established - it is Word's own limit or the staging - and is recorded as an open question rather than a diagnosed defect.
 
 **Notes**:   
+> Not observed in the latest run.
+
+---
+
+### ~~A phase that ABORTED on a fatal AppleScript condition was retried, emitting the actionable message twice~~
+<!-- fp:6c1a2474d09e -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: conversion
+**Oracles**: the debug log vs the health record - two independent counts of the same failure
+**First seen**: 2026-08-20 (packaged app, macOS 26.6.1)
+**Last seen**: 2026-08-20
+**Occurrences**: 1
+**Scenario**: M1.3 - Automation for Microsoft Word genuinely DENIED
+
+**Detail**:
+
+Measured in the PACKAGED app with the operator clicking **Don't Allow** on the
+real Automation prompt - the first time that state has been driven on a Mac.
+ONE `.doc` produced **3 per-file errors and 2 aborts**:
+
+    20:49:20.425  [AppleScript] Word failed (permission): ... Not authorised
+                  to send Apple events to Microsoft Word. (-1743)
+    20:49:20.435  Klyngevejledning_1_Program_2023.doc  Conversion failed - ...
+    20:49:20.440  macOS blocked ...  skipping remaining 0 Word file(s)
+    20:49:21.156  [AppleScript] Word failed (permission): ...   <- the RETRY
+    20:49:21.168  Klyngevejledning_1_Program_2023.doc  Conversion failed - ...
+    20:49:21.173  macOS blocked ...  skipping remaining 0 Word file(s)
+    20:49:21.242  Klyngevejledning_1_Program_2023.doc  Conversion failed twice
+
+Corroborated from a SECOND oracle rather than read twice out of one: the health
+record independently wrote `failures={'osascript_permission': 2}`.
+
+`retry_failed_conversions` retries anything whose source is still on disk. That
+is right for a destination locked by an editor and wrong for a FATAL category:
+`permission` and `app_missing` are in `FATAL_CATEGORIES` **precisely because**
+they "will identically doom every remaining file in the phase", so the second
+attempt cannot succeed. What it does instead is emit the one actionable message
+a second time - defeating the whole purpose of `_abort_applescript_phase` - and
+then label the file **"Conversion failed twice"**, which blames the document
+for a machine-wide permission state.
+
+**Notes**: FIXED 2026-08-20. `_abort_applescript_phase` records its phase label
+on the bridge - it is the one place that knows WHICH phase died and why - and
+the retry declines that phase.
+
+**The skip is per PHASE, not global, and that half is what makes it safe.** A
+Word denial says nothing about the HTML-to-Markdown runner, which uses no
+AppleScript at all, and Automation is granted per (client, target app) so it is
+not evidence about Excel either. Mutants pin both directions, including the
+tempting global form.
+
+The original `.doc` survived throughout (153,600 B) and no stub PDF was
+promoted, so the delete gate was never at risk - this is message quality, not
+data loss, hence low.
+
+`tests/test_conversion_retry.py` (37); `scripts/_mutate_retry_fatal_skip.py`,
+**6/6 caught**.
+
+**Verified through the REAL phase runner**, not only by unit tests - this repo's
+own rule, and the fix was briefly shipped without it. `run_word_conversion` plus
+the retry pass driven with a real `UIBridge`, with the ONLY substitution being
+osascript's result, set to the exact stderr macOS produced at 20:49:20:
+
+    WITHOUT the fix   aborts=2   "failed twice"=1   original survives=True
+    WITH the fix      aborts=1   "failed twice"=0   original survives=True
+
+The "without" column reproduces the packaged run's measured behaviour exactly,
+which is what makes the "with" column mean something.  
 > Not observed in the latest run.
 
 ---
@@ -4028,305 +4562,3 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 > Not observed in the latest run.
 
 ---
-
----
-
-### An uninstalled Office app classified as 'other', not 'app_missing' - three of the four wording clauses were locale-dead
-<!-- fp:259a4ac3ac81 -->
-
-**Status**: fixed
-**Severity**: medium
-**Category**: classification
-**Oracles**: the app's own classification rule vs the string macOS actually emits
-**First seen**: 2026-08-20 (20260820_143238_macos-26-v2.0.2)
-**Last seen**: 2026-08-20 (20260820_143238_macos-26-v2.0.2)
-**Occurrences**: 1
-**Scenario**: M1.3 - `_classify_stderr`, macOS 26.6.1
-
-**Detail**:
-
-Found while chasing something else: a `mac_eyes` window query started failing
-with the real denial text, and that text did not match the clause written to
-catch it.
-
-Measured by making osascript fail for real. A genuinely missing app emits
-``Can't get application "X". (-1728)`` with a **typographic** apostrophe
-(U+2019); `_classify_stderr` matched only the ASCII one, and **-1728 is not in
-its numeric list**, so the verdict fell through to `other` - which is NOT in
-`FATAL_CATEGORIES`.
-
-Consequence, for a user without Microsoft Office (it is not free, so this is an
-ordinary state): no "Word is not installed or could not be launched" message.
-Instead three generic per-file errors, then `SYSTEMIC_REPEAT_THRESHOLD` fires
-and tells them to **"Quit Microsoft Word and run again"** - about an
-application they do not have.
-
-Same class one clause over: this machine's macOS emits the **British**
-"Not authorised to send Apple events", while the permission clause knew only
-"authorized". That verdict survived purely on its `-1743` companion. Only
-``isn't running`` worked - because the 2026-08-11 `-600` fix gave that ONE
-clause both apostrophe forms and never reached its neighbours. The docstring
-three lines below states the lesson the code beside it had not learned.
-
-**The wider point**: wording clauses are inherently locale-fragile. On a
-Danish-language macOS every one of them matches nothing and only the numeric
-codes decide. That is a KNOWN REMAINING GAP, not something this fix closes.
-
-**Notes**: FIXED 2026-08-20. Normalise the apostrophe **once**, so a clause
-added later cannot inherit the bug, plus the British spelling.
-
-`-1728` is deliberately **NOT** added to the numeric list, and that is the
-non-obvious half: it is `errAENoSuchObject`, which our own scripts raise for an
-absent DOCUMENT (``can't get active document``). Mapping the code wholesale
-would abort a phase with "Office is not installed" on a machine where it
-plainly is - a fatal, and the wrong one. The wording separates the two exactly,
-which is why the apostrophe had to be fixed rather than the number added. A
-mutant pins it ("the obvious fix, and wrong").
-
-`tests/test_office_crash_is_not_missing.py` (29);
-`scripts/_mutate_applescript_locale.py`, **6/6 caught**.
-
----
-
-### A phase that ABORTED on a fatal AppleScript condition was retried, emitting the actionable message twice
-<!-- fp:6c1a2474d09e -->
-
-**Status**: fixed
-**Severity**: low
-**Category**: conversion
-**Oracles**: the debug log vs the health record - two independent counts of the same failure
-**First seen**: 2026-08-20 (packaged app, macOS 26.6.1)
-**Last seen**: 2026-08-20
-**Occurrences**: 1
-**Scenario**: M1.3 - Automation for Microsoft Word genuinely DENIED
-
-**Detail**:
-
-Measured in the PACKAGED app with the operator clicking **Don't Allow** on the
-real Automation prompt - the first time that state has been driven on a Mac.
-ONE `.doc` produced **3 per-file errors and 2 aborts**:
-
-    20:49:20.425  [AppleScript] Word failed (permission): ... Not authorised
-                  to send Apple events to Microsoft Word. (-1743)
-    20:49:20.435  Klyngevejledning_1_Program_2023.doc  Conversion failed - ...
-    20:49:20.440  macOS blocked ...  skipping remaining 0 Word file(s)
-    20:49:21.156  [AppleScript] Word failed (permission): ...   <- the RETRY
-    20:49:21.168  Klyngevejledning_1_Program_2023.doc  Conversion failed - ...
-    20:49:21.173  macOS blocked ...  skipping remaining 0 Word file(s)
-    20:49:21.242  Klyngevejledning_1_Program_2023.doc  Conversion failed twice
-
-Corroborated from a SECOND oracle rather than read twice out of one: the health
-record independently wrote `failures={'osascript_permission': 2}`.
-
-`retry_failed_conversions` retries anything whose source is still on disk. That
-is right for a destination locked by an editor and wrong for a FATAL category:
-`permission` and `app_missing` are in `FATAL_CATEGORIES` **precisely because**
-they "will identically doom every remaining file in the phase", so the second
-attempt cannot succeed. What it does instead is emit the one actionable message
-a second time - defeating the whole purpose of `_abort_applescript_phase` - and
-then label the file **"Conversion failed twice"**, which blames the document
-for a machine-wide permission state.
-
-**Notes**: FIXED 2026-08-20. `_abort_applescript_phase` records its phase label
-on the bridge - it is the one place that knows WHICH phase died and why - and
-the retry declines that phase.
-
-**The skip is per PHASE, not global, and that half is what makes it safe.** A
-Word denial says nothing about the HTML-to-Markdown runner, which uses no
-AppleScript at all, and Automation is granted per (client, target app) so it is
-not evidence about Excel either. Mutants pin both directions, including the
-tempting global form.
-
-The original `.doc` survived throughout (153,600 B) and no stub PDF was
-promoted, so the delete gate was never at risk - this is message quality, not
-data loss, hence low.
-
-`tests/test_conversion_retry.py` (37); `scripts/_mutate_retry_fatal_skip.py`,
-**6/6 caught**.
-
-**Verified through the REAL phase runner**, not only by unit tests - this repo's
-own rule, and the fix was briefly shipped without it. `run_word_conversion` plus
-the retry pass driven with a real `UIBridge`, with the ONLY substitution being
-osascript's result, set to the exact stderr macOS produced at 20:49:20:
-
-    WITHOUT the fix   aborts=2   "failed twice"=1   original survives=True
-    WITH the fix      aborts=1   "failed twice"=0   original survives=True
-
-The "without" column reproduces the packaged run's measured behaviour exactly,
-which is what makes the "with" column mean something.
-
----
-
-### A denied "access data from other apps" prompt read as a slow document: ~4 minutes per file, and no cause named
-<!-- fp:f6924f2b9dbc -->
-
-**Status**: fixed
-**Severity**: medium
-**Category**: conversion
-**Oracles**: the debug log vs Word's own open-document path
-**First seen**: 2026-08-20 (packaged app, macOS 26.6.1)
-**Last seen**: 2026-08-20
-**Occurrences**: 1
-**Scenario**: the macOS powerbox prompt DENIED - a state nothing had ever driven
-
-**Detail**:
-
-Driving the untested state: **Don't Allow** on *"Canvas Downloader would like
-to access data from other apps"*. That is an ordinary click - the wording gives
-a cautious student no reason to accept. ONE `.doc` produced:
-
-    21:34:26  Word failed (other): ... AppleEvent timed out. (-1712)
-    21:34:26  Klyngevejledning_1_Program_2023.doc  Conversion failed - ... (-1712)
-    21:36:26  ... AppleEvent timed out. (-1712)            <- the retry
-    21:36:26  Klyngevejledning_1_Program_2023.doc  Conversion failed twice
-
-**~4 minutes for one file**, and a message naming neither the cause nor a
-remedy. On a thirty-file course that is hours of apparent hang.
-
-**Mechanism, confirmed rather than inferred.** Word was left holding
-`Klyngevejledning_1_Program_2023.doc @ Macintosh HD:private:tmp:...` - the
-ORIGINAL path, not a staged `src_*` one. So the denial made
-`_office_container_tmp` answer None, `office_container_stage` fell back to
-`_direct_passthrough`, and Word was asked to open a file OUTSIDE its container
-- which raises the per-folder powerbox prompt **that staging exists to avoid**.
-A blocked prompt holds the AppleEvent until it times out.
-
-That docstring called the degrade *"never worse than before, only ever
-better"*, and the trap note thirty lines below it **already described this
-exact mechanism** - as a hazard for anyone re-MEASURING staging, without
-anyone noticing it is a live USER path.
-
-Two knock-ons, both recorded rather than fixed: Word is left RUNNING (the quit
-gate sees a real path and calls the document user-owned), and
-`_force_close_canvas_docs_sync` cannot clear it - it marker-matches on the
-staging dir, and a passthrough document is not in one.
-
-**Notes**: FIXED 2026-08-20. The fallback records itself (`_office_unstaged`,
-per-run, cleared by `reset_office_priming`) and `attribute_office_failure`
-refines the stderr-only verdict with it: a timeout while unstaged becomes
-`container_denied`, which is FATAL, so the phase aborts once instead of
-grinding per file.
-
-**Deliberately narrow.** A timeout WITH staging stays a per-file `other` - a
-genuinely huge deck must not abort the phase and send the user to a setting
-that is fine - and only TIMEOUTS qualify, so `-1708` (wedged Word) and
-`-30001` (mis-bound document) are never blamed on permissions. Mutants pin
-both directions.
-
-**The remedy names FULL DISK ACCESS, not "Files and Folders".** Checked in
-System Settings with this denial recorded: the app appears under Files and
-Folders with **no toggle**, so naming that pane sends the user nowhere. FDA
-supersedes the grant and is the pane the app's own nudge and Settings card
-already open, so the words match an affordance that exists.
-
-No data loss at any point: the `.doc` survived, no stub PDF was promoted, 0
-staged dirs were left.
-
-`tests/test_container_denied_attribution.py` (22);
-`scripts/_mutate_container_denied.py`, **10/10 caught**.
-
-**VERIFIED IN THE SHIPPED BUNDLE**, which is what caught the first fix being
-wrong. Rebuilt, re-signed, powerbox denied again:
-
-    [WARNING] container staging unavailable ([Errno 1] Operation not
-              permitted: .../com.microsoft.Word/Data/tmp/CanvasDownloaderTmp/
-              cd_483b93c19b); using direct path
-    [ERROR]   Word failed (container_denied): ... AppleEvent timed out. (-1712)
-    [ERROR]   Conversion failed - Microsoft Word did not respond, which usually
-              means macOS is waiting on permission to open files in this
-              folder. Turn on Canvas Downloader under System Settings →
-              Privacy & Security → Full Disk Access ...
-              skipping remaining 0 Word file(s)
-
-`Operation not permitted` on the container **mkdir** is the mechanism, proven.
-1 `container_denied`, **0** "failed twice", one ~2-minute attempt instead of
-two, `.doc` intact (153,600 B), no stub PDF, 0 staged dirs.
-
-### The first version of this fix was WRONG, and only the bundle showed it
-
-`office_container_stage` has **TWO** ways into the fallback and the fix
-instrumented one: `stage_root is None`. A denied app-data grant takes the
-OTHER - the container directory still exists and still lists, and what fails
-is the `mkdir`/`copy2` INTO it. Every unit test passed; the packaged app went
-on reporting a bare `-1712`.
-
-The record now lives in `_direct_passthrough`, which both routes converge on,
-so a third route added later gets it for free, and a test counts the routes.
-
-**Three rounds of my own tests were too weak, each caught by the mutation
-pass, never by review**: 3/7 (the tests re-implemented the rule instead of
-calling it, and one scanned a COMMENT that named both panes), then 6/8 (no
-case exercised an `other`-category NON-timeout, and nothing asserted the call
-site), then 9/10 (every test asserted STRUCTURE, so a guard changed to
-`and False` left the call in the AST and survived - only driving the real
-context manager catches a record that exists but never happens).
-
-**Also fixed**: that staging-unavailable line was `logger.debug`, and a real
-run with debug mode ON contains **zero** DEBUG lines - so the one line
-explaining why conversions are about to fail could never be read, by a user
-or by this audit. I nearly concluded from its absence that the branch had not
-run. It is a WARNING now.
-
----
-
-### The macOS folder picker's cancel test matched the American spelling; macOS emits the British one
-<!-- fp:07f659093301 -->
-
-**Status**: fixed
-**Severity**: low
-**Category**: classification
-**Oracles**: the app's predicate vs the string osascript actually emits
-**First seen**: 2026-08-20
-**Last seen**: 2026-08-20
-**Occurrences**: 1
-**Scenario**: pattern sweep after the `_classify_stderr` locale defect
-
-**Detail**:
-
-Found by sweeping for the PATTERN behind that day's classifier bug - predicates
-that decide behaviour by matching literal text ANOTHER system produced.
-Measured directly:
-
-    $ osascript -e 'error number -128'
-    0:17: execution error: User cancelled. (-128)
-
-while `shared/helpers.py` tested `'User canceled' in err` - **American, one L**.
-The clause was DEAD, exactly like `not authorized to send apple events`, and
-survived on the `'-128'` companion beside it.
-
-It decides something real: `[]` means the user cancelled, `None` means the
-picker could not run - and `native_folder_multi_picker` answers `None` by
-**falling back to the single picker**, i.e. opening a second dialog at someone
-who just pressed Cancel. Low severity only because the number is always
-present in osascript's output.
-
-**Notes**: FIXED - both spellings, case-folded, number kept. Verified LIVE
-against real osascript output: the picker returns `[]`. A mutant that keeps
-only the number is caught, so the wording clause cannot quietly become
-decoration again.
-
-**Swept at the same time, and clean** - recorded so nobody re-investigates:
-
-* **macOS does NOT localise errno strings** - `os.strerror(EACCES)` is
-  `'Permission denied'` under both `en_US` and `da_DK`, so OSError-text
-  matching is safe on this platform.
-* **SQLite lock messages are not localised** (fixed English in the C library).
-* Canvas-error predicates in `core/canvas_logic.py` and `shared/components.py`
-  already carry BOTH `authorized`/`authorised`.
-* `'CERTIFICATE_VERIFY_FAILED'`, `'0x80040154'` and the AppleScript error
-  numbers are structured tokens, not prose - not at risk.
-
-**One divergence fixed with it, NOT a live defect**: the same "is this a
-SQLite lock?" question was asked at 19 sites in `core/sync_manager.py` in TWO
-spellings - `'locked' in str(e).lower()` and the strictly narrower,
-case-sensitive `'database is locked' in str(e)`, which misses SQLITE_LOCKED
-(`database table is locked`) and sat on the paths that RE-RAISE rather than
-retry. Measured before claiming anything: this app opens one short-lived
-connection per operation and uses no shared cache, so a contended write raises
-SQLITE_BUSY - reproduced, `database is locked` - and SQLITE_LOCKED is not
-reachable. Unified into `_is_locked_error` because a rule spelled twice is one
-some caller is already following an old version of; retry POLICY was left
-alone, since the sites differ on attempts for real reasons.
-
-`tests/test_foreign_text_predicates.py` (14);
-`scripts/_mutate_foreign_text.py`, **7/7 caught**.
