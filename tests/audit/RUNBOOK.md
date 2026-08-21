@@ -56,6 +56,30 @@ whose path exists on disk with a matching md5" is a defect with a repro.
    invented finding costs more than a missed one, because the real finding then
    hides among the inventions. The full list is at the bottom of this file;
    read it before adding a check.
+3b. **Before blaming the app, check the CALLING CONVENTION.** Measured across
+   the macOS audits: up to **65% of a session** goes on harness iteration
+   rather than on the application. The largest single contributor is calling a
+   product function the way you assumed it works instead of the way it does -
+   a relative path where an absolute one is required, a fresh interpreter where
+   per-run state lives, a short app name where the full one is the key, a
+   guessed function name. Each produced a convincing "finding" that was the
+   harness. **Read the signature, the docstring, and ONE real call site first**;
+   all of them say so explicitly. `AUDIT_PLAYBOOK.md` has the table.
+
+3c. **Give a new check a POSITIVE CONTROL before trusting it.** If it cannot
+   confirm something you already know is true, it is not ready to tell you
+   about something you do not. Two forms that work: measure the same scenario
+   somewhere the answer is known (APFS beside HFS+), or report what the result
+   WOULD have been without the mechanism under test ("without `_path_key`, 2
+   files would read as untracked"). A check with no control is an opinion.
+
+3d. **An ABSENCE is not evidence unless you know it could have appeared.**
+   `core/canvas_debug.py` drops everything below INFO, so a `logger.debug` line
+   is invisible even with debug mode ON - a missing one says nothing. The same
+   trap: `pgrep -x UserNotificationCenter` reports a consent prompt long after
+   it was answered, because the process lingers; use `mac_eyes dialogs`, which
+   looks for an actual window.
+
 4. **A wait that times out is a finding**, not an error to retry around. Record
    it with the screen state and move on.
 5. **Judge the screenshots.** The mechanical checks catch disagreement between

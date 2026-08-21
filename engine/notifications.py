@@ -669,13 +669,29 @@ def _show_macos_notification_un(title: str, body: str) -> bool:
         #
         # `UNErrorCodeNotificationsNotAllowed` means someone went into System
         # Settings -> Notifications and turned Canvas Downloader OFF. The only
-        # fallback that could still put a banner on screen in that state is
-        # `osascript display notification`, which posts under **Script Editor's**
-        # identity - so it would (a) route around an explicit permission
-        # decision, and (b) show the user a banner attributed to an app they did
-        # not run, reading "Script Editor: Sync done - 12 new files". Both are
-        # worse than saying nothing. Product owner's call, 2026-08-11: respect
-        # the denial.
+        # fallback that could still reach the notification system in that state
+        # is `osascript display notification`, which posts under **Script
+        # Editor's** identity - so it would (a) route around an explicit
+        # permission decision, and (b) show the user a notification attributed
+        # to an app they did not run, reading "Script Editor: Sync done - 12 new
+        # files". Both are worse than saying nothing. Product owner's call,
+        # 2026-08-11: respect the denial.
+        #
+        # MEASURED 2026-08-20 on macOS 26.6.1, and this paragraph used to say
+        # "put a BANNER on screen", which is not what osascript does. Posting
+        # one and diffing the screen at 0.4/0.9/1.6/2.6/4.0s showed **zero
+        # changed pixels** in the banner region, before and after notifications
+        # were enabled - but the operator then opened Notification Center and
+        # every probe was there, grouped under a header reading **"Script
+        # Editor"**. So the fallback DELIVERS a persistent entry and paints no
+        # banner. That makes (b) a measured fact rather than a prediction, and
+        # it is the stronger half of this decision.
+        #
+        # Confounder, deliberately not argued away: the screen was observed over
+        # NoMachine, which may itself route banners straight to Notification
+        # Center. Whether osascript can banner on a LOCAL macOS 26 session is
+        # NOT established - do not restate it either way without measuring at
+        # the physical machine.
         #
         # The user is not left with no signal - `play_completion_beep` starts
         # `_play_macos_sound` on its own thread BEFORE calling us, and that is

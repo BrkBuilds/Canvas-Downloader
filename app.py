@@ -881,6 +881,16 @@ if not st.session_state.get('_library_migration_checked'):
 from ui.auth import restore_saved_session
 restore_saved_session()
 
+# macOS only, and only after an app UPDATE: the saved token could not be read
+# without raising a Keychain prompt, so restore_saved_session deliberately did
+# NOT block on it (an unanswered prompt used to leave the window empty for up to
+# 90 seconds). The login screen explains the prompt and raises it off the script
+# thread; this is the pass that adopts the answer, on whichever rerun it lands.
+# It must sit BEFORE _write_nav_to_query_params, which writes ?mode=auth when
+# signed out - otherwise the URL would still say "auth" on the run that signs in.
+from ui.auth import adopt_pending_keychain_unlock
+adopt_pending_keychain_unlock()
+
 _write_nav_to_query_params()
 
 # Breadcrumb for the local health record: if this session dies without running

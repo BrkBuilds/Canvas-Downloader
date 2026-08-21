@@ -282,10 +282,12 @@ around it is not.**
 6. **Dock recents tiles.** `purge_stale_self_dock_tiles` exists because a
    conversion left a Dock tile pointing at a file the app had deleted. Look at
    the Dock after the phase.
-7. **Long paths.** `office_safe_path` shadows sources ≥240 chars. macOS allows
-   1024-char paths but only **255 bytes per component** — a *different* limit
-   from Windows, and one nothing has ever tested. Build a deep course folder
-   and convert inside it.
+7. **Long paths — SETTLED 2026-08-20, see the section below.** The premise
+   here was wrong twice over: `office_safe_path` is a documented **no-op off
+   Windows**, and the component limit is **255 UTF-16 code units**, not bytes
+   (measured — 510 bytes of `æ` is legal, 512 bytes of emoji is not). What
+   actually handles length on macOS is `office_container_stage`, which stages
+   every conversion under a short `src_<hex>` name. A 900-char path converts.
 8. **WHO THE APP BELONGS TO — the one thing on this list that has never run on
    a Mac** (added 2026-08-13). The quit gate decides whether to send
    `quit saving no` to an app that may hold a student's unsaved essay, and its
@@ -788,3 +790,1172 @@ cluster in exactly three places: **TCC wording and prompt behaviour**,
 `scripts/mac_audit_bootstrap.sh`; it is idempotent and should take minutes.
 Carry `~/mac_audit_secrets.env` across so the Keychain and settings are seeded
 without retyping anything.
+
+
+---
+
+## Notifications on macOS 26: the osascript fallback DELIVERS but does not BANNER (2026-08-20)
+
+Measured on macOS 26.6.1 (Tahoe, M4), run `20260820_143238_macos-26-v2.0.2`,
+with the screen confirmed clear of consent prompts first (`mac_eyes dialogs`) -
+prompts sitting in the top-right corner are what invalidated the 2026-08-11
+attempt, because that is exactly where a banner would appear.
+
+**The question changes shape once the code is read.** `_show_macos_notification_un`
+already refuses to fall back on an explicit denial (`_un_error_is_denial` -> log
+once -> `return True`, meaning "the question is settled"). So the app NEVER
+reaches osascript while denied - that was settled by 588bead, product owner's
+call. The fallbacks run only on a NON-denial failure, and that is the case worth
+measuring.
+
+**What osascript actually does.** Screenshot diff (PIL `ImageChops.difference`
++ `getbbox`), banner region isolated, sampled at 0.4 / 0.9 / 1.6 / 2.6 / 4.0s:
+
+    topright bbox = None at every sample, 0 changed pixels
+
+Re-run after the operator enabled notifications: still no banner. (The pixel
+delta that appeared at 1.8s/3.0s was a VS Code redraw - the saved crop shows an
+editor, not a notification. **Always look at the crop before believing a
+bbox.**)
+
+**But it is delivered, not dropped.** The operator opened Notification Center
+and photographed it: every probe present, grouped under a header reading
+**"Script Editor"**. That is direct visual confirmation of the identity
+objection the product decision rests on, which until now was only reasoned - a
+user really would see `Script Editor: Sync done - 12 new files` attributed to an
+app they never ran.
+
+**CONFOUNDER, STATED RATHER THAN RESOLVED.** The operator is on NoMachine and
+raised it unprompted: a remote desktop may route banners straight to
+Notification Center without the popup. This session could not rule that out. The
+positive control needs an app with its OWN bundle identity to banner
+successfully in the same session; the packaged app now has that identity (the
+launch prompted, the operator allowed, Alert Style = **Temporary**), but making
+it post requires driving a run to completion.
+
+    TRUE            the fallback is not inert - it delivers a persistent entry
+    TRUE            the entry is attributed to Script Editor (photographed)
+    TRUE            the app attempts no fallback at all while denied
+    NOT ESTABLISHED whether osascript can banner on a LOCAL macOS 26 session
+
+Do not restate the banner claim as fact in either direction until someone
+measures it at the physical machine.
+
+
+---
+
+## WKWebView spot-check of what shipped AFTER the macOS 26 audit (2026-08-20)
+
+The 2026-08-11 run could not cover this: the dismissible transcription-setup
+notice (2026-08-19) and the conditional-`<style>` fixes (2026-08-20) did not
+exist yet. The second matters most here, because it changed **which style hosts
+exist and in what ORDER**, and both were verified only in Chrome over CDP. The
+shipped app renders in **WKWebView**.
+
+Built and ad-hoc signed on this machine (`--verify --deep --strict` rc=0,
+`apple-events` entitlement intact), launched with
+`open --env CANVAS_DL_CONFIG_DIR=...` pointed at a copy of the run's config so
+it restored a real session through its own code path.
+
+**All three targets render correctly.**
+
+* **Course list** - two-line rows, Favorites/All segmented toggle, the live
+  `0 of 14 selected` count (the one-cell grid with the hidden ghost sizer),
+  Select All / Clear Selection, search, and the sticky action bar with
+  Custom Download / OR / Quick Download.
+* **Sidebar** - nav with the active item lit, Settings, `Logged in as Birk`,
+  logout, `v2.0.2`, Support the project.
+* **Step tracker** - both flows correct (`Select Courses / Configure Download /
+  Analyzing / Downloading / Complete` and `Select Courses / Analyzing / Review
+  Changes / Download & Sync / Complete`).
+
+**The transcription notice's full cycle, which is the branch flip the
+conditional-`<style>` rule is about.** Driven with real clicks:
+
+    card (amber, 105px)  --click X-->  one-line link (~19px)  --click link-->  card
+
+Nothing below it was left behind at any step: the action row moved up and back,
+the card returned to the same geometry, and no stylesheet was lost - which is
+precisely the failure mode (a branch flip shifting every LATER stylesheet onto
+its neighbour's host) that the fix addresses. The `pad_slot_children` 2-child
+padding reconciles correctly in WebKit.
+
+**The dismissal persists and does not clobber the file.** After dismissing,
+`canvas_downloader_settings.json` gained `transcription_setup_notice_dismissed:
+true` with **all ten pre-existing keys intact** - an end-to-end confirmation of
+the settings co-ownership hardening in the packaged app, not just in unit tests.
+
+### Driving a WKWebView from the agent - what works
+
+* `osascript`/System Events needs **Accessibility**, which this app deliberately
+  never requests. Granting it to the terminal app is a decision for the
+  OPERATOR, and it does not take effect for already-running processes - the
+  grant landed but every `osascript` still returned `-25211` because VS Code
+  had not been restarted.
+* Even with access, `System Events ... click at {x,y}` returns **-25208** here.
+* What works is a **CoreGraphics event**: `CGWarpMouseCursorPosition` then
+  `CGEventCreateMouseEvent` down/up posted to `kCGHIDEventTap` (PyObjC's
+  `Quartz` is already available). A WKWebView has no AX tree to address
+  element-wise, so coordinates are the only handle - take a `screencapture`
+  first and read them off it. On this 1920x1080 display the capture maps 1:1.
+* `mac_eyes shot --window "Canvas Downloader"` matches by TITLE, and **VS Code's
+  own window title contains the same string**, so it silently captured the
+  editor. Activate the app by PID and take a full-desktop shot instead.
+
+### The Keychain prompt on a rebuild is real, and it BLOCKS
+
+Launching a freshly ad-hoc-signed bundle that reads the previous build's
+Keychain item raises *"Canvas Downloader wants to use your confidential
+information stored in 'CanvasDownloader'"*, with **Always Allow / Deny / Allow**
+and a password field. It blocks the app's session restore until answered, and
+macOS refuses synthetic clicks on it by design - screenshot it and ask the
+operator. This is the prompt `CLAUDE.md` predicts under "Keyring"; it is
+expected on a rebuild and does not affect a released build a user installs once.
+
+
+### The sync REVIEW notice, live at last (2026-08-20)
+
+`CLAUDE.md` recorded this as *"never verified live - unit tests only"* on ANY
+platform. It now is, in the packaged app on macOS 26.6.1.
+
+**Getting there is the hard part, and it is worth writing down.** The notice
+counts recordings that are ACTIONABLE and carry `txt`/`srt` in their
+`download_kinds` (`ui/sync_review.py:_tx_recording_count`), so it needs:
+
+1. a pair pointed at a course that really has Panopto recordings (43660 has 36);
+2. that folder's stored `panopto_contract` asking for `output_txt`/`output_srt`
+   - seed it with `SyncManager._save_metadata('panopto_contract', ...)`, since
+   no UI edits a folder's contract;
+3. an **EMPTY** folder, which is what makes every recording actionable rather
+   than up-to-date.
+
+Result: 246 new files, 36 recordings, analysis complete in under 45s including
+the 36 LTI handshakes, and the card reads
+
+    Transcripts & Subtitles need a one-time setup
+    36 pending recordings are set to produce Transcript or Subtitle files.
+    No transcription model is installed yet. ...
+    [ Set up transcription ]
+
+**The `dismissible=` split is confirmed on the one thing only a live run could
+show.** With `transcription_setup_notice_dismissed: true` already on disk (set
+by dismissing the sync-LIST card earlier in the same session), the two call
+sites diverged exactly as designed: the sync list rendered its **one-line
+link**, the review screen rendered the **full card with no dismiss control**.
+Same flag, same session, same process - so this is the per-call-site decision
+working, not two copies that happen to agree.
+
+Note the powerbox prompt: a course folder outside the app's own container
+(here, under `/tmp`) raises *"Canvas Downloader would like to access data from
+other apps"* on first access. macOS ignores synthetic clicks on it - screenshot
+it and ask the operator.
+
+
+### iCloud "Optimize Mac Storage" - the method, and the traps (2026-08-20)
+
+An iCloud account was created on the audit box for this; the previous two runs
+had none, which is the only reason it stayed open. **iCloud is supported** - see
+`CLAUDE.md` for the verdict and the contract tests. This is how to re-measure it.
+
+    fresh file          st_size 124009  st_blocks 248   dataless False
+    after brctl evict   st_size 124009  st_blocks 0     dataless True
+    compute_local_md5   CORRECT hash, 0.9-1.35 s
+    after the read      st_size 124009  st_blocks 248   dataless False
+
+Then, driving the REAL `SyncManager` on a fully evicted 10-12 file folder:
+
+    analysis, nothing changed on Canvas    0 materialised
+    analysis, ONE genuine update           1  (only the changed file)
+    heal_manifest after a RENAME           1  (only the renamed file)
+    os.replace onto a dataless target      OK, content correct
+
+**Detect dataless with `st_blocks == 0` at a nonzero `st_size`.** Do NOT use
+`brctl status`: on a freshly-enabled account it returns *"Client zone not
+found"* for a path that is plainly there, which reads like a broken test rather
+than an uninitialised zone. That is brctl failing to QUERY, not the file being
+unsynced - proved by evicting (blocks 248 -> 0) and reading the correct md5 back
+in 0.89 s, which can only have come from the cloud copy.
+
+**A test fixture must change the SIZE, not just the timestamp.** `_is_canvas_newer`
+deliberately treats same-size-newer-timestamp as a metadata touch and returns
+False, so a timestamp-only "change" produces no update at all. The first version
+of this measurement fooled itself exactly that way and nearly recorded "0
+materialised on an update" as a good result.
+
+**Measure the failure case by its CONSEQUENCE, not by going offline.** This
+machine is reached over NoMachine, so cutting the network strands the operator
+and the agent. Make the read fail (`chmod 000`) and ask the real primitive:
+`compute_local_md5` returns `None` and `_classify_local_modification` answers
+**`modified`** - the `_NewVersion` fork, the documented deliberate bias
+("preserve the local copy"). An unmaterialisable file costs a sibling, not an
+overwrite. A real materialisation failure remains unmeasured; only its
+consequence is.
+
+`tests/test_icloud_dataless.py` pins the properties that make all of this work,
+portably (it counts `compute_local_md5` calls instead of needing iCloud), and
+`scripts/_mutate_icloud_dataless.py` proves those tests can fail - 5/5.
+
+## Transcription on Apple silicon - M2.5, M2.6 and M3.3 settled (2026-08-20)
+
+The whole transcription subsystem had never run on a Mac. It does now, on macOS
+**26.6.1 / M4 arm64**, in both the dev tree and the packaged bundle. Nothing was
+found wrong with it; what follows is what "works" actually means, so the next
+session does not re-derive it.
+
+**Hardware detection is calm and correct.** `detect_compute_hardware()` returns
+in **0.09 s** with `status: cpu_only_mac`, `gpu_available: false`, cpu "Apple
+M4" / 10 cores, CT2 CPU compute types `{int8, int8_float32, float32}` -> picks
+`int8`. It recommends **Small** and deliberately omits the "a GPU would allow a
+larger model" upsell, which is right: the engine has no GPU backend on macOS at
+all, so no GPU a Mac user could buy changes the answer. `device_advisory` warns
+for medium / turbo / large-v3 and stays silent for tiny / base / small.
+
+**The measured speed table in `panopto/models.py` transfers.** 577 s of real
+speech transcribed in **95.8 s = 6.0x realtime** on `small` - against the 6.2x
+recorded there for an M4. That table is what stops Turbo being recommended on a
+Mac, so it is worth knowing it is still accurate.
+
+**Model download**: `start_download("small")` fetched 4 files / **486 MB in
+5.5 s** into `panopto_models/small`, reached terminal state `done`, and flipped
+`transcription_status()` to `ready: true` - which is the half that clears the
+setup notice. Note the progress denominator is the registry's `size_mb`
+(507.5 MB against 486.2 MB actual), so the bar tops out near 96 % and then
+jumps; that is the documented "approximate" denominator, not a defect.
+
+**The out-of-process design does its job.** Verified by sending a real
+**SIGSEGV** to a live worker - the closest thing to the uncatchable native crash
+the subprocess exists for:
+
+| | |
+|---|---|
+| parent | survived, raised `TranscriptionEngineCrash(exit_code=-11)` |
+| worker | reaped, no orphan |
+| stderr | faulthandler C-level traceback, mirrored into the parent's log |
+| `.part` | **left on disk** - see below |
+
+The abandoned sidecars are NOT a defect, because the phase-level `finally` in
+`panopto/runner.py` sweeps every task on the way out and there is exactly one
+production caller. That count is now a test (`CLAUDE.md` has the mechanism).
+
+**Cancel mid-transcription is clean, with a positive control.** The `.part`
+sidecars were confirmed present at 4.9 s, cancel took effect **0.1 s** after the
+flag, `PanoptoCancelled` was raised, **0 `.part` files remained**, no partial
+output was promoted, and the worker was reaped. That is the 2026-08-09 `finally`
+fix verified on a Mac for the first time.
+
+**M3.3 - the argv drop is genuinely fixed.** Driving the bundle's console worker
+with the env var ONLY and no argv flag:
+
+    worker start: pid=27989 frozen=True routed_via=env device=cpu ...
+
+`routed_via=env` is the proof, and the presence of that line at all is the
+documented tell that routing worked (its ABSENCE means the child booted the
+GUI). The frozen run produced **byte-identical** output to the dev run (9869 B
+txt / 10881 B srt, 30 segments, 95.7 s vs 95.8 s), which also proves
+faster-whisper, ctranslate2 and onnxruntime all load from the arm64 bundle.
+Exit 0, no `.part`, and only ONE `Canvas_Downloader` GUI process throughout.
+
+**Zero Dock footprint, confirmed.** With a frozen worker alive, `mac_eyes dock`
+showed `recent-apps` holding only Visual Studio Code - before, during and after
+the worker was killed - and System Events listed no worker among the non-
+background applications. The console-bootloader choice in `_worker_command()`
+is doing what its comment claims on macOS 26.
+
+**One thing the operator should expect, and it is cosmetic**: a worker that dies
+natively raises macOS's own *"Python quit unexpectedly"* crash-reporter dialog
+(in a packaged build it would name `Canvas_Downloader_Worker`). The app is fine
+and handles it - but the OS announces it regardless, and nothing in-process can
+suppress ReportCrash. Do not read that dialog as the app crashing.
+
+## M1.3 - forcing a conversion failure, live against real Word (2026-08-20)
+
+The macOS delete gate (`pdf_looks_real` on the AppleScript branch) had only ever
+been driven by SIMULATION - `sys.platform` patched to darwin with the bridge
+stubbed to leave a 0-byte file. This is the first time real Word has been made
+to fail on a Mac and the folder inspected afterwards.
+
+**Setup that works, and why each file is there.** `textutil -convert doc` makes
+a genuine legacy `.doc` (the runbook's own trap note - do NOT try to build one
+by driving Word). Four unconvertible siblings, ordered AFTER the good one so a
+success resets the repeat counter first:
+
+| file | how | what Word does |
+|---|---|---|
+| `good.doc` | `textutil -convert doc` | converts - the CONTROL |
+| `garbage.doc` | 4 KB `/dev/urandom` | hangs, then `-1712` timeout |
+| `truncated.doc` | first 200 B of `good.doc` | modal, `-30001` |
+| `empty.doc` | 0 bytes | modal, `-30001` |
+| `pretend.doc` | plain text | never reached (skipped) |
+
+**Result - every property holds:**
+
+    success 1  failure 4        systemic_failure() -> ('Word', 3)
+    good.doc   GONE -> good.pdf (7890 B, real PDF)
+    garbage / truncated / empty / pretend  ALL UNCHANGED
+    stub PDFs in the folder: NONE
+
+So the source-survival gate works against real Office failures, and the product
+gate refused to promote every failed output. Reproduced twice, identically.
+
+**The abort is ONE message, and its diagnosis is TRUE.** Three per-file errors,
+then the phase ended with a single line:
+
+> Microsoft Word failed on 3 files in a row with the same error (...). It is
+> most likely waiting on a dialog and will not convert anything else this run.
+> Quit Microsoft Word and run again to convert the rest. - skipping remaining 1
+> Word file(s)
+
+That claim was checked against the screen rather than believed: System Events
+reported Word holding exactly one window, `subrole=AXDialog`, titled
+**"File Conversion - src_efb781.doc"** - the encoding picker. O2 and O3 agree.
+The staged name also confirms the `src_<6 hex>` unique-basename fix is live.
+
+**The teardown recovers a modal-wedged Word**: `quit_idle_office_apps()` in the
+same process quit it in **12 s** while it sat on that alert holding our staged
+document. So "run again" works with no user action - the instruction is
+redundant when Word was ours, and necessary when it was the user's, which is
+the direction that matters.
+
+**THE HARNESS TRAP THAT NEARLY BECAME A FINDING.** Calling
+`quit_idle_office_apps()` from a FRESH interpreter logs
+`Microsoft Word -> left alone (we never drove it this run)` and quits nothing -
+correctly, because `_office_preexisting` is process-local per-run state and a
+new process has observed nothing. That reads exactly like the gate failing. Any
+teardown check must run in the SAME process as the conversions.
+
+Second trap: `run_word_conversion` needs a real `SyncManager` in its file
+tuples. Passing `None` raises inside `_update_manifest_path` AFTER the source
+has already been deleted.
+
+## M2.3 / M1.5 / M1.6 - shortcuts, Office leak, Dock tiles (2026-08-20)
+
+### M2.3 - "compile widely, delete narrowly", proven on macOS
+
+`converters/url.py` reads BOTH shortcut formats and deletes only this
+platform's own. Driven live with a folder built by the real
+`shared.shortcuts.write_shortcut`, so the bytes on disk are the app's own
+format - a `.webloc` two-key plist (`URL` + `CanvasDownloaderSource`) and a
+`.url` whose marker sits in its own `[CanvasDownloader]` INI section, exactly as
+the module docstring specifies.
+
+| file | expected | result |
+|---|---|---|
+| plain `.webloc` | compiled **and deleted** | as expected |
+| plain `.webloc`, nested a folder deep | compiled and deleted | reached by `rglob` |
+| `Lecture 1 (Panopto).webloc` (our marker) | kept, never compiled | as expected |
+| `Lecture 2 (Panopto).url` (our marker, foreign format) | kept, never compiled | as expected |
+| plain `.url` written on WINDOWS | compiled but **KEPT** | as expected |
+| `file://` shortcut | kept, never compiled | as expected |
+
+**Idempotent over repeated runs**, which is the property the surviving foreign
+`.url` makes load-bearing: it is re-read on every pass, so a dedupe miss would
+grow `Compiled_External_Links.txt` for ever. Three passes -> nothing further
+deleted, **exactly one** occurrence of the Windows link, file size stable at
+394 bytes.
+
+### M1.5 - no Office leak
+
+After a real Word phase plus the in-process teardown,
+`pgrep "Microsoft (Word|Excel|PowerPoint)"` is **empty**. A plain
+`quit saving no` also lands cleanly. The leaked-`EXCEL.EXE` finding is a
+Windows shape; the Mac does not share it.
+
+### M1.6 - Recents: TWO different stores, and the first check read the wrong one
+
+**CORRECTED the same day, by the operator noticing what the check could not.**
+The first pass reported "0 tiles of ours" from `defaults export com.apple.dock`
+and called M1.6 clean. Then the operator opened Word and found its start-screen
+Recents full of our staged `src_*` files.
+
+Both statements were true, because they are **different stores**:
+
+| store | holds | read with |
+|---|---|---|
+| Dock tiles | the Dock's own recent-apps / recent-documents | `defaults export com.apple.dock` (`mac_eyes dock`) |
+| **Office Recents** | what Word/Excel/PowerPoint show on their start screen | `~/Library/Group Containers/UBF8T346G9.Office/MicrosoftRegistrationDB.reg`, table `HKEY_CURRENT_USER` |
+
+`purge_stale_self_dock_tiles` is about the FIRST; the thing a user actually
+sees after a conversion phase is the SECOND. **Measure the Office registry**
+- `scripts/verify_office_end_to_end.py:_recents_ours()` already does, and it is
+the check to reuse.
+
+**The purge itself is correct, and it clears the BACKLOG.** Measured with 10 of
+our entries accumulated across the day's runs:
+
+    recents_ours_before: 10  ->  recents_ours_after: 0     VERDICT: ALL GOOD
+
+It matches on the marker (`CanvasDownloaderTmp`), so a single later run cleans
+everything left by earlier ones - the entries do not need the run that made
+them. The staged temp dirs are gone too, so those Recents rows point at files
+that no longer exist, which is exactly the condition the purge exists for.
+
+**Why the backlog existed at all - both reasons are harness, not product:**
+
+1. Ad-hoc conversion scripts that never call `quit_idle_office_apps()` leave
+   the entries, because the purge is part of the TEARDOWN.
+2. The purge **declines for a RUNNING app**, by design - an entry would be
+   resurrected from that app's in-memory list on exit. So with Word open
+   nothing is cleaned, and that is correct rather than a stall.
+
+Combined with the fresh-interpreter trap in M1.3, a purge check has THREE ways
+to report a false failure: wrong store, wrong process, app still running.
+
+Two things NOT to misread here. A `Microsoft Error Reporting` entry appears in
+`recent-apps` after you **`pkill`** a wedged Word - it is Microsoft's app, not a
+Canvas Downloader tile, and the app's own graceful teardown does not produce it.
+And Word being alive after a bare conversion script is the harness, not a leak:
+the teardown only runs if you call it, in the same process (see M1.3).
+
+### M1.3, second half - the Automation revoke is NOT PROVABLE mid-session
+
+Revoking Automation for Word in System Settings had **no effect** on a run
+already in flight: five genuinely convertible `.doc` files still converted in
+3.9 s, and a bare `osascript ... tell "Microsoft Word"` still succeeded. macOS
+caches the TCC decision in the RESPONSIBLE process, which here is the long-lived
+editor, so a mid-session revoke reaches nothing this agent can spawn. A probe
+against a never-used target (Calculator) did not prompt either, so this client
+already carries broad grants.
+
+Proving it needs a client with no cached decision - i.e. do it as the FIRST
+action after a fresh login, or from a Terminal whose grant is then cleared with
+`tccutil reset AppleEvents com.apple.Terminal`. Restarting the editor would kill
+the agent session.
+
+What that leaves unproven is narrow: whether macOS's real denial wording reaches
+`_classify_stderr`. The classification itself is unit-tested in BOTH directions
+(`tests/test_office_crash_is_not_missing.py`), and the abort it triggers is the
+SAME function the systemic path uses - which was verified live in M1.3's first
+half, one message and all remaining files skipped. So the untested step is a
+string match, not the machinery.
+
+## M1.7 - long paths, and the component limit is UTF-16 UNITS (2026-08-20)
+
+**The runbook's own premise was wrong, and so was `AUDIT_FINDINGS.md` - in
+opposite directions.** This file said "255 BYTES per component"; the findings
+register said "255 CHARACTERS, not bytes". Measured by writing real files on
+APFS, neither is right:
+
+| name | UTF-16 units | bytes | chars | result |
+|---|---|---|---|---|
+| 255 x `a` | 255 | 255 | 255 | OK |
+| 256 x `a` | 256 | 256 | 256 | ENAMETOOLONG |
+| 255 x `æ` | 255 | **510** | 255 | **OK** |
+| 127 x emoji | 254 | 508 | 127 | OK |
+| 128 x emoji | 256 | 512 | **128** | ENAMETOOLONG |
+| 253 x `æ` + 1 emoji | 255 | 510 | 254 | OK |
+| 254 x `æ` + 1 emoji | 256 | 512 | 255 | ENAMETOOLONG |
+
+The limit is **255 UTF-16 code units**. APFS stores names as UTF-16, and an
+astral character (emoji, CJK extension B, historic scripts) is a surrogate pair
+- two units for one Python character. NTFS counts the same way, so this is not a
+macOS quirk to guard on one platform.
+
+**Why it matters even though nothing is broken today.** The app's cap is
+expressed in CHARACTERS (`_sanitize_filename(..., max_length=120)`), the
+filesystem's in UNITS, and the worst-case ratio is 2:1. Measured worst output:
+**236 units** against a 255 ceiling - a margin of 19, about ten emoji. Raising
+the cap past **127** would make an all-astral Canvas filename illegal on both
+platforms, and it would fail as ENAMETOOLONG at download time, i.e. as a MISSING
+FILE rather than a visible error. Pinned by
+`tests/test_sanitize_filename.py` + `scripts/_mutate_filename_utf16_cap.py`
+(4/4 caught, including the plausible "raise it to 200 to preserve longer names").
+
+**`office_safe_path` does nothing here.** `shared/helpers.py` returns the
+pass-through branch on any non-Windows platform, by design and with a comment
+saying so - it exists for Win32 COM. macOS length is handled by
+`office_container_stage`, which stages EVERY conversion under a short
+`src_<hex>.<ext>` name regardless of the source's length.
+
+**Driven live, and it simply works:**
+
+    442-char path, 240-unit filename component  ->  converted in 1.6 s, real %PDF-
+    900-char path                               ->  converted in 0.9 s, real %PDF-
+
+both with the source removed and the PDF landing at the long destination. Going
+past ~900 needs more directory LEVELS, not a longer name - the two limits
+interact, since the component itself cannot exceed 255 units. Realistic worst
+case in this app is ~410 chars (root + course + module + file, each capped at
+120), so there is a wide margin.
+
+## M3.3 / M3.4 / M3.8 - the packaged app (2026-08-20)
+
+Run from `dist/Canvas Downloader.app` with `CANVAS_DL_CONFIG_DIR=/tmp/m34`, on a
+baseline with every earlier instance killed.
+
+**M3.4 - no phantom instance.** One process, one window
+(`Canvas Downloader`, 1920x960 - it opens BEHIND the editor, so "no window" is
+a false alarm; check `mac_eyes windows`, not the screen), one LaunchServices
+entry with a bundle path, and **no `duplicate_launches.log`**.
+
+`lsappinfo` additionally lists *"Canvas Downloader Networking"*, *"... Graphics
+and Media"* and *"... Web Content"*. **Those are WebKit's own XPC split**
+(`/System/Library/Frameworks/WebKit.framework/.../XPCServices/`), not instances
+and not Dock icons - do not report them.
+
+**M3.8 - quit and reap.** Quitting with a real Quit Apple event
+(`tell application "Canvas Downloader" to quit`, which is what Cmd-Q sends):
+
+    SESSION START ... 16:45:56Z
+    SESSION END (clean)  uptime=114s peak_self=222.2MB
+    clean_exit: True     children: []
+
+That is **exactly one END for one START**, and a `clean_exit` marker on the
+Cmd-Q route - the two defects `start.py`'s shutdown block documents (measured
+2026-08-10: `clean_exit=False` after a graceful quit, and later two identical
+END lines for one START). Both fixes hold on 26.6.1.
+
+Afterwards: **0 leftovers**, the app's own WebKit GPU helper reaped, port 8501
+released, `lsappinfo` reports no Canvas entry at all.
+
+**What this does NOT prove**: the session spawned no ffmpeg or transcription
+child, so only the WebKit teardown was exercised - not
+`_terminate_child_processes` against a real media child. That needs a quit taken
+DURING a Panopto download or transcription.
+
+### Two counting traps that produce fake orphans
+
+* `pgrep -f ffmpeg` **matches the shell running it**. Every "leftover" in a
+  naive sweep was the probe itself. Enumerate `ps -axo pid,command` and exclude
+  your own process explicitly.
+* WebKit helpers with pids far BELOW the app's belong to other applications
+  (the editor, Safari). Compare pids before concluding the app leaked one.
+
+### Quitting needs no System Events
+
+A direct Quit Apple event to the app works, so M3.8 does not depend on the
+System Events grant. Useful, because that grant is exactly what a mid-session
+Automation experiment takes away (see M1.3).
+
+## M2.6 - the model manager, both switch states (2026-08-20)
+
+Driven in the real app (isolated `CANVAS_DL_CONFIG_DIR`, the model symlinked in
+so the config could be disposable). Settings is NOT reachable before login, so
+this needs the keychain token - read it, never print it.
+
+**Panopto ON, model installed:**
+
+    status line : "Ready · active model: small"
+    button      : "Manage transcription configuration"
+
+**Panopto OFF, model installed** - the "do not strand the user's disk" case:
+
+    status line : "Panopto is switched off · open to remove the installed
+                   model or GPU libraries and reclaim the space"
+    button      : "Manage installed models"
+    is_enabled  : True      computed filter: none
+
+That last pair is the check worth making: a correct LABEL on a DISABLED button
+would defeat the whole purpose, since this dialog is the only place a
+multi-gigabyte model can be deleted. It is genuinely live, and not painted with
+the app's disabled recipe.
+
+**The dialog itself, judged on screen:**
+
+* Detected Hardware reads *"GPU - Apple Silicon - no GPU mode (the engine runs
+  on the CPU)"* and *"CPU - 10-core CPU · Apple M4"*; the GPU device button is
+  correctly unavailable.
+* **Exactly ONE "Recommended" badge** (on Small) - the documented double-badge
+  bug, where the registry flag and the UI's own computation both fired, stays
+  fixed.
+* Small shows **Active** plus a delete control; the other five show Download.
+
+**Three model-size numbers, and they are NOT a divergence.** The registry
+declares `size_mb: 484`, the row displays **464 MB**, and the download
+denominator was 507.5 MB. The UI shows the declared size until a model is
+installed and then switches to the MEASURED `installed_size_mb` - preferring
+measured over declared, which is right. The denominator is the declared figure
+in bytes, so the bar tops out near 96 % and jumps; `size_mb`'s own docstring
+calls it approximate.
+
+## M4.1 - HFS+ / NFD, and the case-only rename (2026-08-20)
+
+Both halves of Phase M4's macOS additions, driven against a REAL HFS+ volume
+(`hdiutil create -size 400m -fs "HFS+" -volname NFDTest`).
+
+**How HFS+ actually stores Danish, measured by writing files:**
+
+| name | HFS+ | APFS |
+|---|---|---|
+| `Årsrapport 2025.pdf` | **NFD** | NFC |
+| `Résumé.pdf` | **NFD** | NFC |
+| `Økonomi og ændring.pdf` | NFC | NFC |
+| `Plain ASCII.pdf` | NFC | NFC |
+
+Exactly the partial symptom `_path_key`'s docstring predicts: `å` and `é`
+decompose, `ø` and `æ` have no decomposition and do not. A user with a course
+folder on an external drive sees SOME files misbehave and not others, which is
+what makes it read as random rather than as an encoding fault.
+
+**Result - every file stays tracked, and the controls are not vacuous:**
+
+| scenario | matched | orphans | untracked | untracked WITHOUT `_path_key` |
+|---|---|---|---|---|
+| NFD, HFS+ | 4/4 | 0 | 0 | **2** |
+| NFD, APFS (control) | 4/4 | 0 | 0 | 0 |
+| case rename, HFS+ | 1/1 | 0 | 0 | **1** |
+| case rename, APFS | 1/1 | 0 | 0 | **1** |
+
+The APFS column reading 0 for NFD is the point: it proves the HFS+ result is the
+normalisation doing work rather than a test that could not fail.
+`_case_insensitive_volume` answers True for both volumes (HFS+ is
+case-insensitive by default), so the case fold applies on both.
+
+### THE TRAP: `_path_key` must be given an ABSOLUTE path
+
+A first version passed bare filenames (`_path_key("Notes.pdf")`) and reported
+the case-only rename as UNTRACKED on both volumes - which reads exactly like a
+missing fix. It is not: `_case_insensitive_volume` **deliberately refuses a
+relative path**, because it would resolve against the current directory rather
+than the course folder, and its own docstring says so. The real call sites join
+the root - `_path_key(self.local_path / row['local_path'])` - and so must any
+test. A relative-path check silently measures nothing.
+
+Cleanup: `hdiutil detach /Volumes/NFDTest && rm /tmp/nfd.dmg`.
+
+## The packaged-app run that closed M1.3, M2.1, M2.2, M2.4 and M3.8 (2026-08-20)
+
+One real run of course 43660 inside `dist/Canvas Downloader.app` closed five
+runbook items at once. **The technique is the reusable part.**
+
+### Drive the PACKAGED app over HTTP, not with synthetic clicks
+
+The bundle serves Streamlit on `127.0.0.1:8501`, and Streamlit runs the script
+in the SERVER process. So a Playwright session pointed at that port executes
+inside the packaged app: its children are the app's children and its Apple
+events carry the app's TCC identity (`com.canvasdownloader.app`). That removes
+the whole CoreGraphics-clicking problem the earlier sessions fought.
+
+Two things make it work:
+
+* **Reuse the live-audit harness's knowledge, do not restate it.** Import
+  `TOGGLES`, `CARD_FOR` and `IS_ON_JS` from `tests/audit/harness/flows.py`. The
+  settings are `st.button`s whose state lives only in CSS, and the rule is
+  **"ON iff the border colour is CHROMATIC"** (`spread > 24 && alpha > 0.5`) -
+  not a list of hexes, which this project's colour policing would rot. Toggles
+  are addressed by KEY (`btn_convert_word`, `btn_pan_out_mp3`), never by text.
+  A driver written from scratch rediscovers all of this badly - measured.
+* **Each Playwright run is a FRESH Streamlit session**, so the app resets to
+  step 1 and everything must happen in one script.
+
+Traps paid for: a script named `select.py` shadows the stdlib `select` module
+and playwright dies on a circular import; the course checkbox is clipped out of
+the viewport by the list's scroll container, so use the app's own search to
+narrow it and click via JS (`el.click()` on a real checkbox DOES fire React's
+onChange); and the toggle labels contain a U+2B62 arrow that does not survive a
+heredoc, so match by key, not by text.
+
+### M1.3 CLOSED - Automation genuinely denied, in the real app
+
+The operator clicked **Don't Allow** on `"Canvas Downloader" wants access to
+control "Microsoft Word"` (the prompt carries the app's own purpose string from
+`NSAppleEventsUsageDescription`). Result:
+
+    [AppleScript] Word failed (permission): ... Not authorised to send Apple
+                  events to Microsoft Word. (-1743)
+    Klyngevejledning_1_Program_2023.doc  Conversion failed - macOS blocked
+                  Canvas Downloader from controlling Microsoft Word (Automation
+                  permission denied). Enable it in System Settings → Privacy &
+                  Security → Automation → Canvas Downloader.
+
+* classified `permission` -> FATAL -> abort, message names the exact Settings path
+* **the original `.doc` survived** (153,600 B) and **no stub PDF** was promoted
+* macOS really does emit the **BRITISH "authorised"**, confirming live the
+  wording the classifier fix added the same day
+
+It also exposed a defect - the abort was emitted TWICE because
+`retry_failed_conversions` retried a fatal phase. Fixed; see the register
+(`fp:6c1a2474d09e`).
+
+**Afterwards run `tccutil reset AppleEvents com.canvasdownloader.app`** (and
+`SystemPolicyAppData` for the powerbox), or the app is left denied.
+
+### M2.1 / M2.2 / M2.4 CLOSED
+
+    36 recordings discovered (38 LTI handshakes, all OK, source {'module': 36})
+    36 mp3 in ~55s through the bundled arm64 ffmpeg
+       (44100 Hz stereo 128 kb/s; 25:14, 10:52, 14:22 - real durations)
+    77 .webloc: 0 malformed, all with a valid URL
+       36 carry CanvasDownloaderSource=Panopto   41 are plain Canvas links
+       ALL 36 of ours are '<title> (Panopto).webloc'
+
+That last line is the documented Canvas-ExternalTool collision case firing **at
+scale on real data**: every Panopto lecture is also a module item, so Canvas's
+own link already owned the name and ours correctly took `(Panopto)` beside it
+instead of overwriting.
+
+**Finder really opens one**: `open <ours>.webloc` brought Safari forward on
+`login.microsoftonline.com` - "Sign in with your CBS e-mail address" - i.e. the
+shortcut reaches the real lecture behind institutional SSO.
+
+### M3.8 CLOSED - with a REAL media child
+
+Quitting mid-transcription (Quit Apple event, what Cmd-Q sends) with a live
+`Canvas_Downloader_Worker` at 577 MB RSS:
+
+    worker 42234                     -> reaped
+    leftovers (ps -axo, excl. self)  -> 0
+    SESSION END (clean) uptime=1128s peak_tree=1036.7MB
+    clean_exit: True
+    children: [{'pid': 42234, 'name': 'Canvas_Downloader_Worker', 'mb': 577.4}]
+
+So `_terminate_child_processes` works against a real media child, not just the
+WebKit teardown - the gap the earlier M3.8 pass explicitly left open.
+
+### Two observations, neither a defect
+
+* **A `.part` survives an app QUIT mid-transcription** (`<name>.txt.part`,
+  2,695 B). The 2026-08-09 sweep lives in the transcription phase's `finally`,
+  and a quit ends in `os._exit` without unwinding Python, so no `finally` can
+  run. It **self-heals**: the mp3 remains, so the recording is a task again on
+  the next Panopto run over that folder and the phase sweep removes it -
+  verified by calling `_clean_part_files` on that exact file (1 -> 0). There is
+  no clean fix at the shutdown boundary, which has no access to the session's
+  course folders.
+* **Quitting while a TCC prompt is pending records an UNCLEAN exit**
+  (`PREVIOUS SESSION DID NOT EXIT CLEANLY pid=33358 phase='running'`). The
+  same Quit Apple event records `clean_exit: True` when the app is responsive,
+  so this is the modal blocking the Cocoa run loop rather than a shutdown
+  defect. Not reproduced deliberately; recorded so the next session does not
+  read it as a regression.
+
+### The powerbox prompt re-arms EVERY PROCESS
+
+`"Canvas Downloader" would like to access data from other apps` appears once per
+app launch, and post-processing BLOCKS on it - measured, ~20 minutes of a run
+sitting at the Post-Processing header with the app at 0% CPU. That is the
+documented per-process re-arm, not a leak. Budget for it: every app restart
+costs one more click, so enable debug logging BEFORE the run rather than
+restarting to add it.
+
+### Confirmed live: an UNDESCRIBABLE document cannot be force-closed
+
+Chasing leftover state after the packaged run produced a direct sighting of the
+condition `_office_preexisting`'s design note describes, which had only ever
+been reasoned about from the quit side.
+
+Word was found holding **3 of our staged `src_*.doc` documents**, all pristine.
+`_force_close_canvas_docs_sync("Microsoft Word")` closed **one**; the remaining
+two then reported `name` as **`missing value`** and no number of further calls
+touched them. That is exactly the documented limitation:
+
+> every app is left holding one document whose name, path and `saved` are ALL
+> unreadable once a conversion phase has run, and `_force_close_canvas_docs_sync`
+> cannot close it either because it identifies documents by those same
+> properties
+
+So it is **not a defect** - it is why the quit decision is "was it running
+before we touched it?" rather than a document check. Here Word was pre-existing
+(from earlier harness runs), the app correctly left it alone, and the
+undescribable documents stayed. `quit saving no` clears them; the app's own
+`_purge_recents_sqlite()` then removed all 3 Recents entries.
+
+**TRAP: `only_app` takes the FULL name.** `_QUIT_TARGETS` holds
+`"Microsoft Word"`, and every real caller passes `mapping[0]`. Calling
+`_force_close_canvas_docs_sync("Word")` filters everything out and does nothing
+- which reads exactly like the remedy failing. That was the third time in this
+session that checking the call convention before filing turned a "finding" back
+into a harness error; the other two were `_path_key` on a relative path and
+`quit_idle_office_apps` from a fresh interpreter.
+
+## The two second-look items, closed (2026-08-20, late)
+
+### A. The PACKAGED app CAN convert Office files — proven
+
+Every successful conversion before this ran under the venv, i.e. the EDITOR's
+TCC identity; the bundle's own identity had only ever been observed DENIED. Now
+driven with **Allow** on both prompts:
+
+    PDF: 184,741 bytes  magic=%PDF-     .doc: consumed     staged dirs: 0
+    Post-processing ran: [word]         Word: correctly quit (it was ours)
+
+The subsystem that deletes the user's original works end to end under
+`com.canvasdownloader.app`. "Errors: 2" on that run are Canvas-side LOCKED
+FILES ("The teacher has locked this file on Canvas") - honest reporting, not
+conversion failures.
+
+### B. A DENIED powerbox prompt — a real defect, now fixed
+
+`fp:f6924f2b9dbc`. Denying *"would like to access data from other apps"* cost
+**~4 minutes for one file** and reported only `AppleEvent timed out (-1712)`
+then "Conversion failed twice". Mechanism proven from Word's own open document,
+which held the ORIGINAL path rather than a staged `src_*` one. Fixed and
+verified in the rebuilt bundle; see the register.
+
+### The methodology lessons, which cost more than the fixes
+
+**Drive the packaged app over HTTP.** It serves Streamlit on 8501 and Streamlit
+runs the script in the SERVER process, so a Playwright session there executes
+inside the bundle - its children, its TCC identity. Import `TOGGLES`,
+`CARD_FOR` and `IS_ON_JS` from `tests/audit/harness/flows.py`; do not restate
+them.
+
+**Give the driver a LOGIN step.** A rebuilt bundle has a new ad-hoc signature,
+which raises the keychain prompt; DENY it and session restore fails, so a
+driver that assumes a restored session times out on a locator. Read the token
+from the keyring in the driver instead of depending on a human click - that
+cost two full runs here.
+
+**A denied keychain prompt costs ~90 SECONDS of bare "Connecting…".**
+`_KEYRING_TIMEOUT` is 90 s on macOS (the 5 s `_KEYRING_PROBE_TIMEOUT` is only
+`store_token`'s optimisation read), and `restore_saved_session` runs on the
+script thread during INIT - so the Streamlit script does not finish and the
+frontend shows its own "Connecting…". Confirmed with `sample <pid>`: the whole
+sample sits in `SecItemCopyMatching`. It RECOVERS - it is a stall, not a hang -
+but the user is shown nothing that explains it, and the prompt fires on every
+app UPDATE, because the signature changes. Recorded, not fixed: shortening the
+timeout would break the legitimate case where the user is typing their keychain
+password.
+
+**`pgrep -x UserNotificationCenter` is NOT a dialog detector** - the process
+lingers, so it reports a prompt long after one was answered. It produced 39
+false "prompt up" lines in one wait loop here. Use `mac_eyes dialogs`, which
+checks for an actual window.
+
+**Levels: the debug log captures INFO and above.** A real run with debug mode ON
+contains ZERO `[DEBUG]` lines. Anything logged at debug is invisible to the
+user AND to this audit - the absence of a debug line is never evidence.
+
+## Sweeping the PATTERN behind this session's defects (2026-08-20)
+
+Two defects the same day shared a shape, so the shape was swept rather than the
+instances. Recorded in full because most of it came back CLEAN, and a clean
+sweep is only worth doing once.
+
+### The pattern: a predicate that matches literal FOREIGN text
+
+`_classify_stderr` bet on American spelling and the ASCII apostrophe while
+macOS emits `"Not authorised"` and `Can’t`. **Every predicate in the app that
+decides behaviour by matching text another system produced** was enumerated
+(79 candidates; most were `'key' in some_dict` and were discarded).
+
+**One more live instance, fixed** (`fp:07f659093301`): the macOS folder picker
+tested `'User canceled'` while `osascript -e 'error number -128'` emits
+**`User cancelled.`** - British, two L's. Dead clause, carried by the `-128`
+beside it, deciding whether a cancel reads as a cancel; an unrecognised one
+makes `native_folder_multi_picker` fall back to opening a SECOND dialog at
+someone who just pressed Cancel.
+
+**Clean, and MEASURED rather than assumed** - do not re-investigate:
+
+| checked | result |
+|---|---|
+| `os.strerror` localisation on macOS | **not localised** - `'Permission denied'` under both `en_US.UTF-8` and `da_DK.UTF-8`, so OSError-text matching is safe here |
+| SQLite lock messages | fixed English in the C library, not localised |
+| Canvas-error predicates (`canvas_logic`, `components`) | already carry BOTH `authorized`/`authorised` |
+| `CERTIFICATE_VERIFY_FAILED`, `0x80040154`, AppleScript error numbers | structured tokens, not prose - not at risk |
+| `converters/pdf.py` `'Class not registered'` | Windows-only, has the `0x80040154` companion; unverifiable from here |
+
+### One divergence fixed, and it is NOT a live defect
+
+"Is this a SQLite lock?" was asked at **19 sites in one file, in two
+spellings** - `'locked' in str(e).lower()` and the strictly narrower,
+case-sensitive `'database is locked' in str(e)`, which misses SQLITE_LOCKED
+(`database table is locked`) and sat on the paths that RE-RAISE rather than
+retry.
+
+**Reachability was measured before any claim**: this app opens one short-lived
+connection per operation and uses no shared cache, so a contended write raises
+SQLITE_BUSY (reproduced: `database is locked`); SQLITE_LOCKED is a shared-cache
+condition and `cache=shared` appears nowhere. Unified into `_is_locked_error`
+anyway, because a rule spelled twice is one some caller is already following an
+old version of. **Retry POLICY deliberately untouched** - the sites differ on
+attempt counts for real reasons.
+
+### The other pattern: a signal logged where it cannot be READ
+
+`core/canvas_debug.py:208` drops anything below **INFO** for app loggers, so all
+**94** production `logger.debug` calls are invisible in the debug log - the
+absence of a debug line is never evidence, and I nearly concluded from one that
+a branch had not run.
+
+68 of them describe a failure or degradation. Triaged; the shape that matters is
+"the ONLY explanation for something the user asked for and did not get". Nearly
+all are best-effort cleanup, platform probes or cosmetic failures. The two worth
+naming:
+
+* **`office_container_stage`'s "container staging unavailable"** - genuinely the
+  only explanation for a conversion that is about to fail. **Raised to WARNING**
+  this session.
+* **`canvas_logic`'s "Quizzes/Rubrics not accessible"** - looks like the same
+  shape and is NOT: the outcome is recorded in `secondary_fetch_success`, which
+  `core/sync_manager.py:1829` consumes so a failed fetch is never mistaken for
+  "deleted on Canvas". Handled structurally; the log line is not load-bearing.
+  What a user does not get on the DOWNLOAD path is any message saying the
+  category was unavailable - a product decision, not a defect, and left alone.
+
+## The Keychain ACL prompt: how to reproduce it, and what it costs (2026-08-21)
+
+The mechanism, the fix and the two closed escapes are in `CLAUDE.md` ("The macOS
+Keychain prompt must never be on the SCRIPT THREAD"). This is only how to
+measure it, and the traps that cost this session wrong conclusions.
+
+**Put a machine into the post-update state on demand** - you do not have to ship
+an update. Re-create the item through `/usr/bin/security` so its ACL trusts
+`security` and not the app:
+
+    security add-generic-password -s CanvasDownloader -a "<api_url>" -w "<token>" -U
+
+Read the token with `ui.auth._safe_keyring_get` first and never print it. Restore
+afterwards with `ui.auth.store_token(url, token)`, which re-creates it under the
+app's own identity through the hardened verify-by-read-back path.
+
+**Rebuilding and re-signing the bundle IS a genuine app update** for keychain
+purposes - a new ad-hoc signature is a new cdhash, which is what the ACL keys
+on. That is the fastest faithful end-to-end test of the post-update path, and it
+is how the packaged verification here was done.
+
+**Ask "would this prompt?" WITHOUT prompting.** `SecKeychainSetUserInteractionAllowed(false)`
+is honoured by `SecItemCopyMatching`, so a read that would have raised a modal
+returns `-25293` (or `-25308`) in milliseconds instead of blocking. Measured:
+9.6 ms for "would prompt", 4.3 ms for a normal read. This is both the diagnostic
+AND the shipped fix. The flag is PROCESS-GLOBAL, so restore it in a `finally`.
+
+**A synthetic ESCAPE dismisses the keychain prompt; a synthetic CLICK does not.**
+`CGEventCreateKeyboardEvent(53)` posted to `kCGHIDEventTap` closed the
+SecurityAgent dialog on every one of four attempts (it acts as Deny). This
+narrows the standing rule: macOS refuses synthetic **clicks** on consent
+prompts, and `mac_eyes dialogs` is still the right detector, but an agent that
+merely needs to CLEAR a keychain prompt it raised itself does not have to
+interrupt the operator. Do not extend this to TCC/powerbox prompts without
+testing - it was only measured on the keychain ACL dialog.
+
+**`Allow` and `Always Allow` differ in two ways, both measured:**
+
+| button | ACL afterwards | second dialog? |
+|---|---|---|
+| Allow | UNCHANGED - prompts on every launch, for ever | YES, immediately (operator-observed, 3/3 runs) |
+| Always Allow | UPDATED - silent until the next update | no |
+
+Detection of the ACL half is automatic and needs no second click: after the
+answer, re-read with UI SUPPRESSED. Success means the ACL now trusts this
+binary; `-25293` means it does not. The second-dialog half is probably the two
+internal authorizations a data read needs (the item, then the key protecting
+it) being granted per-operation by `Allow` and permanently by `Always Allow` -
+stated as probable, not proven.
+
+### Three traps that produced wrong conclusions here
+
+* **A long-lived `streamlit run ... --server.fileWatcherType none` does not pick
+  up edits.** I concluded "the notice does not render" from a process launched
+  before the code existed. **Restart the app after every edit** - the same rule
+  the completion gallery already carries, and it applies to any harness started
+  before a change.
+* **A new browser session is NOT a fresh app.** The unlock single-flight is
+  module-global (a background thread has no `ScriptRunContext`) while
+  `keychain_unlock_pending` is per session, so a second Playwright context
+  inherits the first session's verdict. That confusion was worth having - it is
+  how the consume-the-token defect was found - but when measuring, restart the
+  PROCESS.
+* **A killed mutation pass leaves its mutant on disk.** A mutant that makes the
+  code block hangs pytest, the pass is killed from outside, and its `finally`
+  never runs. Found by grepping the source for `if False:` afterwards. The
+  harness now bounds each mutant with `subprocess.run(timeout=...)` and asserts
+  the restore took; the test's own duty is to run a "does not block" call on a
+  thread with a join timeout so it FAILS instead of hanging.
+
+### Correction: "PREVIOUS SESSION DID NOT EXIT CLEANLY" is NOT user-visible
+
+The third session's brief listed a possible unclean-exit-on-quit-during-a-TCC-prompt
+as something that "gets a scary 'PREVIOUS SESSION DID NOT EXIT CLEANLY' on their
+next launch". It does not. `_post_mortem` in `core/health_log.py` writes that line
+through `_write()`, which appends to `diagnostics/health.log`; a whole-tree grep
+finds no UI surface for it. Worth knowing before anyone spends a rental hour
+reproducing it: the residual risk is a confusing line in a diagnostic file, not
+a scary screen.
+
+### Startup baseline on this machine, after the Keychain fix (2026-08-21)
+
+Packaged app, M4 / macOS 26.6.1, sampled at 4 Hz from `open` with `screencapture`
+and bracketed against a known-usable frame:
+
+| state | time |
+|---|---|
+| WARM launch -> fully usable, signed in, course list rendered | **2.56 s** |
+| post-update (Keychain prompt up) -> painted login page + notice | **~3 s** |
+| after the user answers the prompt -> signed in | **~3 s** |
+
+The middle row is the one that matters: the same moment used to be a
+"Connecting…" overlay for 30 s followed by a COMPLETELY EMPTY window until the
+prompt was answered or the 90 s watchdog fired.
+
+Caveat stated rather than glossed: 2.56 s is a WARM launch (the app had been
+running seconds earlier, so the bundle is in the page cache). A first launch
+after boot is slower and was not measured.
+
+## The genuine FIRST-RUN walkthrough - a clean pass (2026-08-21)
+
+The third session's list ended with "a genuinely FIRST-RUN machine" as the last
+unproven item: this box carried answered prompts, a keychain item and a
+populated config, so nobody had seen the real first-launch sequence since those
+accumulated. It has now been driven end to end in the PACKAGED app.
+
+**How the first-run state was reached without destroying anything.** Two axes,
+and only one of them needs care:
+
+    tccutil reset AppleEvents        com.canvasdownloader.app
+    tccutil reset SystemPolicyAppData com.canvasdownloader.app
+    CANVAS_DL_CONFIG_DIR=/tmp/firstrun   # empty dir - no settings, no
+                                         # macos_permission_setup.json
+
+A fresh config dir is enough for the APP's own first-run state, and it also
+avoids touching the Keychain: `restore_saved_session` finds no `api_url`, so the
+keyring account is `default`, so the real item (keyed on the real URL) is never
+read. Do NOT delete the real keychain item to force a first run - it is not
+necessary, and logging in afterwards will not recreate it if `store_token`'s
+skip-optimisation sees an unchanged value.
+
+**The sequence, measured.** Download started 01:40:28; the app batches every
+outstanding Office Automation prompt at run start rather than letting each one
+ambush a later conversion, and that is exactly what happened - TCC grant rows
+written at:
+
+| grant | time | gap from start |
+|---|---|---|
+| PowerPoint | 01:40:35 | +7 s |
+| Word | 01:40:37 | +9 s |
+| Excel | 01:40:39 | +11 s |
+| App Data (powerbox) | 01:40:46 | +18 s |
+| run complete | 01:40:58 | +30 s |
+
+The operator answered each as it appeared. **Everything downstream was clean:**
+
+* 23 files delivered, 20 PDFs, `.webloc` external link valid (`plutil` shows a
+  well-formed single-key plist pointing at the real course-catalogue URL);
+* the one Office file CONVERTED and its source consumed - proven by the manifest
+  row rather than inferred from the absence of a `.pptx`:
+  `04_Exercise.pptx -> Exercise 4/04_Exercise.pdf`;
+* all three Office apps **quit** (0 processes) - the per-run quit gate correctly
+  read them as ours;
+* **0** of our entries left in Office's Recents (`_count_canvas_recents()`), and
+  **0** leftovers in all three `~/Library/Containers/com.microsoft.*/Data/tmp/
+  CanvasDownloaderTmp` staging dirs;
+* a completion notification delivered (below).
+
+**The keychain notice correctly did NOT render** on the first-run login page -
+a fresh install has no saved token, so there is nothing to unlock. That negative
+control matters as much as the positive one: the fix stays entirely out of the
+way of a first-time user.
+
+### Notifications: delivery is CONFIRMED under the app's own identity
+
+The macOS 15 session could only establish that no banner painted, with "no
+measurement at all of WHY". There is now a positive fact, from the delivery
+database rather than from prefs:
+
+    ~/Library/Group Containers/group.com.apple.usernoted/db2/db
+    select a.identifier, datetime(r.delivered_date+978307200,'unixepoch','localtime')
+      from record r join app a on r.app_id = a.app_id ...
+
+    com.canvasdownloader.app | 2026-08-21 01:40:53      <- this run
+    com.canvasdownloader.app | 2026-08-20 22:55:24      <- previous session
+    com.canvasdownloader.app | 2026-08-20 22:15:53
+    ...
+
+So the PRIMARY `UNUserNotificationCenter` path works in the packaged bundle and
+is attributed to **Canvas Downloader**, not to Script Editor - the fallback
+chain is not being reached at all. The operator heard the chime, and then opened
+Notification Centre, which SETTLES it visually:
+
+    [Canvas Downloader icon]  Canvas Downloader              9m ago
+                              Download Complete
+                              Downloaded 22 files across 1 course.
+
+**The same screenshot carries its own control.** Two older entries sit directly
+below it - "Canvas Downloader / Statistik 2025" and a "PROBE item 2 banner test"
+- and both show a GENERIC SCRIPT icon rather than the app's. Those are the
+`osascript` fallback from earlier probing sessions, posted under Script Editor's
+identity. The icon is the tell, and it distinguishes the two paths at a glance:
+**app icon = the UN path; script icon = the fallback.** Anyone re-checking this
+should look at the icon before believing an entry proves the primary path.
+
+The only half still unmeasured is whether a BANNER flashes at the moment of
+delivery, as opposed to landing in Notification Centre - and that is confounded
+by the remote session and by Focus state. It is not worth another prompt storm:
+the user gets the chime AND a correctly-attributed Notification Centre entry.
+
+**`com.apple.ncprefs` is the WRONG ORACLE for this and cost me a wrong
+inference.** The app has no entry there even after delivering, so "not in
+ncprefs" is not evidence that nothing was posted. Use the usernoted delivery DB
+above, which answers the question directly.
+
+## The fifth macOS session (2026-08-21) - traps, and one real defect
+
+### `open --env` is NOT sticky, and an unisolated lane looks exactly like an isolated one
+The packaged app is driven with `open --env CANVAS_DL_CONFIG_DIR=... -a "dist/Canvas Downloader.app"`.
+That works - **for the instance it launches**. Any *second* launch (a Dock
+click, a stray `open`, the operator opening the app to look at something)
+starts an instance with **no override at all**, and because the single-instance
+lock lives INSIDE the config dir the two instances cannot see each other, so
+both run happily.
+
+Measured this session: the first instance ended cleanly at 02:10:32 and a second
+started at 02:10:35 on the operator's REAL config. The audit attached to
+whichever answered port 8501 and ran a full 152-file download of course 43660
+against the developer's own settings and `~/Downloads`. **Nothing looked wrong.**
+The only tell was that the run's own `downloads/` directory stayed empty.
+
+The fix is a launcher that PROVES the override rather than assuming it:
+`tests/audit/harness/pkgdrive.launch()` reads `CANVAS_DL_CONFIG_DIR` back off the
+running process with `ps -Eww` and raises rather than returning a pid it cannot
+vouch for. It also refuses to launch when an instance is already up. Use it
+instead of a bare `open`.
+
+Corollary worth knowing: **the Office Automation grants SURVIVE an ad-hoc
+rebuild.** A bundle rebuilt and re-signed at 02:06 still carried the
+`kTCCServiceAppleEvents` rows written at 01:40, so the three Office prompts did
+NOT re-arm. Do not plan a session around re-answering them; check the TCC rows
+first (`select service,client,auth_value,datetime(last_modified,'unixepoch','localtime')
+from access where client='com.canvasdownloader.app'`).
+
+### Two non-findings, so nobody re-chases them
+* **`fda=True` with no grant in the user TCC.db.** Full Disk Access is a
+  **system**-level grant and lives in `/Library/Application Support/com.apple.TCC/TCC.db`,
+  not the per-user one. A user-db query finds nothing and that is correct.
+  Consequence for a session: once FDA is granted to the app the **FDA nudge
+  cannot render** and the powerbox stops re-arming per process, so both of those
+  surfaces become untestable until it is revoked.
+* **`packaged=False` in `health.log` on a genuinely packaged `.app`.** Known,
+  MSIX-related, and technically correct. Not a defect.
+
+### `estimated_cost_mb` is a SCHEDULING cost, not a byte forecast
+`matrix build` priced the 56-row plan at **127 GB** and the real download is
+about **30 GB**. The difference is not an error: `REC_COST_MB['transcribe']` is
+a *wall-time* figure converted into MB-equivalents at the link rate, precisely so
+the scheduler can weigh a transcription row against a download row. Read as
+bytes it will talk a session out of running a matrix that fits comfortably.
+
+Two more ways to mis-read that plan, both paid for this session:
+* a row's Panopto cost belongs to `_course_ids`, **not** `_course_id` - 15 of 56
+  rows carry two courses, so a row whose primary course has 0 recordings can
+  legitimately show a large media cost;
+* a Canvas snapshot has no `files` key. It is `files_tab` (a dict),
+  `module_file_ids`, and `expected_file_ids`. Reading `d['files']` reports every
+  course as empty.
+
+### Course 43660's Pages are now API-restricted
+The snapshot records `pages: []` with `pages_restricted: True`, where earlier
+runbook entries describe 35 Pages. That is a Canvas-side permission change, not
+a regression - but any checker still expecting 35 Pages will produce a false
+finding.
+
+### The defect: an Office conversion's manifest repoint depended on path SPELLING
+Full mechanism in `CLAUDE.md` ("…and the repoint must not depend on how the path
+is SPELLED"). In short: 62 of 63 Office conversions in a real packaged run left
+their manifest row on the source the converter had just deleted, because
+`converters/pdf.py` and `converters/word.py` `resolve()` the path they return
+while `sm.local_path` keeps the configured spelling, and the course folder was
+reached through a symlink. Fixed in `8338cf1`.
+
+**How to see it again**: point the download destination at a path containing a
+symlink (`/tmp/...` is one on macOS), download a course with `.pptx`, and count
+manifest rows whose `local_path` does not exist:
+
+```python
+con = sqlite3.connect(course/".canvas_sync.db")
+[p for (p,) in con.execute("select local_path from sync_manifest")
+   if not (course/p).exists()]        # local_path is RELATIVE to the course dir
+```
+
+That last point is its own trap: `local_path` is **relative**, so an
+`os.path.exists(p)` check reports every row as missing and looks like total
+corruption.

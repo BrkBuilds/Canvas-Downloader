@@ -131,3 +131,111 @@ def test_staging_still_degrades_to_a_passthrough_with_no_container(tmp_path,
     dst = tmp_path / (LONG + ".pdf")
     with AB.office_container_stage(src, dst, "Word") as (s_src, s_dst):
         assert s_src == src and s_dst == dst
+
+
+# ---------------------------------------------------------------------------
+# fp:ad96dfaae9ad - a filename carrying a CR could never be converted on macOS
+#
+# `applescript_string` renders a line break as a SPACE, which is the right rule
+# for a MESSAGE (deleting it would silently join two words of a name shown to
+# the user) and the WRONG one for a PATH: the emitted script stays syntactically
+# valid but now names a file that does not exist, so Word cannot open it. The
+# failure was silent - one file simply got no PDF.
+#
+# It is fixed INCIDENTALLY, by the short-basename staging above: the hostile
+# name never reaches AppleScript, because the app is handed `src_<hex>.<ext>`
+# inside its own container and the product is moved to the real destination
+# afterwards. Re-measured on macOS 26.6.1 on 2026-08-20 against the REAL Word
+# converter, fresh Word and a positive control per case - 13/13 converted:
+#
+#     CR, LF, embedded quote, backslash, a 250-BYTE component,
+#     Danish + emoji  -> all CONVERTED, PDF at the real path, source consumed
+#
+# So these tests exist to stop staging being removed or narrowed and silently
+# re-opening it, NOT because the escaper was changed - it still cannot carry a
+# line break, and that is still correct for its other callers.
+LINE_BREAK_NAMES = ["Lec\rture.doc", "Lec\nture.doc", "a\r\nb.doc"]
+
+
+@pytest.mark.parametrize("name", LINE_BREAK_NAMES)
+def test_a_line_break_in_the_name_never_reaches_the_applescript_literal(
+        container, tmp_path, name):
+    src = tmp_path / name
+    src.write_bytes(b"doc")
+    dst = src.with_suffix(".pdf")
+
+    with AB.office_container_stage(src, dst, "Word") as (s_src, s_dst):
+        for staged in (s_src, s_dst):
+            assert "\r" not in staged.name and "\n" not in staged.name, (
+                f"staged name {staged.name!r} still carries a line break, so "
+                f"applescript_string will replace it with a space and the "
+                f"script will name a file that does not exist")
+        # The literal must round-trip: what AppleScript is told to open has to
+        # be exactly the file on disk. This is the assertion that fails if the
+        # staged name ever goes back to carrying the real one.
+        assert AB.applescript_string(s_src) == str(s_src)
+
+
+def test_applescript_string_still_cannot_carry_a_line_break(tmp_path):
+    """The sharp edge itself, pinned so it is not mistaken for safe.
+
+    An AppleScript string literal cannot span lines, so this is not a bug to be
+    fixed in the escaper - it is why a PATH must be staged rather than escaped.
+    """
+    p = tmp_path / "Lec\rture.doc"
+    assert AB.applescript_string(p) != str(p)
+    assert "\r" not in AB.applescript_string(p)
+
+
+# ---------------------------------------------------------------------------
+# The guard above only holds if the converters actually USE what staging yields.
+# Counting the sites is the lesson this repo has paid for twice - `pdf_looks_real`
+# was written for two delete sites and landed on one for eight months - so this
+# asserts the property for ALL THREE converters rather than the one a fix
+# happened to touch.
+import ast                                                      # noqa: E402
+
+CONVERTERS = {
+    "converters/word.py": "Word",
+    "converters/excel.py": "Excel",
+    "converters/pdf.py": "PowerPoint",
+}
+REPO = Path(__file__).resolve().parent.parent
+
+
+@pytest.mark.parametrize("relpath,app", sorted(CONVERTERS.items()))
+def test_the_converter_escapes_the_STAGED_path_not_the_real_one(relpath, app):
+    """`_as_posix(...)` must be handed the names bound by `office_container_stage`.
+
+    Passing the ORIGINAL `src`/`dst` is what re-opens fp:ad96dfaae9ad (a line
+    break in the name) and the long-name failure together, and it looks
+    completely reasonable in review - the two names differ by two characters.
+    """
+    tree = ast.parse((REPO / relpath).read_text(encoding="utf-8"))
+
+    staged_names, escaped_args, found_stage = set(), [], False
+    for node in ast.walk(tree):
+        # `with office_container_stage(...) as (s_src, s_dst):`
+        if isinstance(node, ast.withitem) and isinstance(node.context_expr, ast.Call):
+            fn = node.context_expr.func
+            if getattr(fn, "id", getattr(fn, "attr", None)) == "office_container_stage":
+                found_stage = True
+                if isinstance(node.optional_vars, ast.Tuple):
+                    staged_names |= {e.id for e in node.optional_vars.elts
+                                     if isinstance(e, ast.Name)}
+        # `_as_posix(x)`
+        if isinstance(node, ast.Call):
+            fn = node.func
+            if getattr(fn, "id", getattr(fn, "attr", None)) == "_as_posix":
+                for a in node.args:
+                    if isinstance(a, ast.Name):
+                        escaped_args.append(a.id)
+
+    assert found_stage, f"{relpath} no longer stages through office_container_stage"
+    assert staged_names, f"{relpath} does not bind the staged (src, dst) pair"
+    assert escaped_args, f"{relpath} no longer escapes any path with _as_posix"
+    leaked = [a for a in escaped_args if a not in staged_names]
+    assert not leaked, (
+        f"{relpath} escapes {leaked} into the AppleScript instead of the staged "
+        f"{sorted(staged_names)} - the real filename would reach the literal, "
+        f"where a line break becomes a space and a long name breaks Word")

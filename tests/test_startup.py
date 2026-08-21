@@ -284,7 +284,7 @@ def test_restore_signs_in_without_a_rerun(auth, monkeypatch):
     """The whole point of the move: no second script run. The rerun is trapped
     by the fixture, so this fails loudly if it ever comes back."""
     _write_config(auth)
-    monkeypatch.setattr(auth, '_safe_keyring_get', lambda *a: 'tok')
+    monkeypatch.setattr(auth, 'keyring_get_without_prompting', lambda *a: ('tok', False))
     monkeypatch.setattr(auth, 'CanvasManager', _FakeManager)
 
     auth.restore_saved_session()
@@ -297,7 +297,7 @@ def test_restore_applies_saved_settings_before_anything_renders(auth, monkeypatc
     """These used to be adopted from inside render_login_page - i.e. after the
     sidebar had already rendered on the run that read them."""
     _write_config(auth, concurrent_downloads=9, show_help_text=False, debug_mode=True)
-    monkeypatch.setattr(auth, '_safe_keyring_get', lambda *a: '')
+    monkeypatch.setattr(auth, 'keyring_get_without_prompting', lambda *a: ('', False))
 
     auth.restore_saved_session()
 
@@ -316,8 +316,8 @@ def test_restore_is_a_noop_without_a_config(auth):
 def test_restore_runs_once_per_session(auth, monkeypatch):
     _write_config(auth)
     reads = []
-    monkeypatch.setattr(auth, '_safe_keyring_get',
-                        lambda *a: (reads.append(1), '')[1])
+    monkeypatch.setattr(auth, 'keyring_get_without_prompting',
+                        lambda *a: (reads.append(1), ('', False))[1])
 
     auth.restore_saved_session()
     auth.restore_saved_session()
