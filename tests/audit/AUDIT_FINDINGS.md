@@ -9,27 +9,28 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260821_131853_sync-matrix-postfix-verify` on 2026-08-21.
+Last updated by run `20260821_141849_macos26-dl-matrix-short` on 2026-08-21.
 
-**7 open** · 161 total · 29 accepted · 89 fixed · 35 invalid · 1 wontfix
+**7 open** · 162 total · 29 accepted · 90 fixed · 35 invalid · 1 wontfix
 
 ---
 
-### A locally-deleted row that is pruned takes the new Canvas file it had adopted with it
-<!-- fp:bbdd30be4106 -->
+### Office priming and teardown drove the app without the per-app lock, crashing Excel
+<!-- fp:db1a2417c30a -->
 
 **Status**: fixed
-**Severity**: medium
-**Category**: classification
-**Oracles**: O5,O2
-**First seen**: 2026-08-21 (20260821_131853_sync-matrix-postfix-verify)
-**Last seen**: 2026-08-21 (20260821_131853_sync-matrix-postfix-verify)
+**Fixed in**: 2ca557b (2026-08-21) - locked `_warmup_apps`, `_quit_pass`, `_probe_open_docs`, `_terminate_gallery_stuck` per app; `_force_close_canvas_docs_sync` via the new `_office_app_lock_unless` because its one nested caller already holds the lock. Verified: 18 concurrent teardowns -> 0 Microsoft Error Reporting; `verify_office_end_to_end --state cold --files 4` ALL GOOD. `tests/test_office_automation_lock_coverage.py` (14), `scripts/_mutate_office_lock_coverage.py` 9/9.
+**Severity**: high
+**Category**: robustness
+**Oracles**: live-observation,process-table
+**First seen**: 2026-08-21 (20260821_141849_macos26-dl-matrix-short)
+**Last seen**: 2026-08-21 (20260821_141849_macos26-dl-matrix-short)
 **Occurrences**: 1
-**Scenario**: analyzer · 43660
+**Scenario**: five concurrent audit lanes (= five app instances) on macOS 26.6.1
 
 **Detail**:
 
-Found while auditing the fix for fp:5c1dc682e36c, by asking what ELSE removes a file from the offer without accounting for it. Two mechanisms, individually correct, jointly wrong. (1) The teacher-re-upload branch takes a NEW Canvas file off new_files and rides it on a locally-deleted row - M-6 policy, the user's deletion is respected and the replacement is not offered separately. (2) The phantom-row prune then DELETES that row when its basename is owned by another tracked row whose file exists (_live_name_keys is keyed by basename, so a same-named file in a different folder counts). The file was in new_files, is now in neither, and is a file the user has NEVER had. Reproduced against the real analyzer: manifest row 100 (A/notes.pdf, gone from Canvas, deleted locally) consumes new Canvas id 200 (notes.pdf); row 100 is pruned as superseded by row 101 (B/notes.pdf, present); id 200 lands in NO category and new=0. It clears on the next sync because the prune really does delete the row, so nothing consumes the file a second time - the same self-healing shape as fp:5c1dc682e36c and worth as little: for one sync a file Canvas is offering is one the app never mentions. FIX: a row being deleted gives back whatever it had taken (_reupload_consumed.discard), and the offer is computed BELOW the pruning block. The prune's own basename matching is deliberately left broad - narrowing it risks resurrecting the 'Deleted Locally on every sync for ever' defect it exists to fix, and it costs nothing now: the row's id is gone from Canvas, so the local file it described is unrecoverable either way. Covered by tests/test_analysis_conservation.py and tests/test_new_files_are_not_name_keyed.py; scripts/_mutate_new_files_name_key.py 10/10.
+_office_app_lock was added 2026-08-11 and landed on ONE of eight osascript call sites (the conversion). _warmup_apps (the launcher), _quit_pass, _probe_open_docs, _terminate_gallery_stuck and _force_close_canvas_docs_sync all drove Office unlocked. Two lanes that convert NOTHING (free2 pid 8965, free3 pid 8968) were both running 'tell application Microsoft Excel' when it crashed into Microsoft Error Reporting; four concurrent Office teardown osascripts captured in flight, two of them Word. Worse than the case the original lock was written for, which needed both instances to be CONVERTING. office_is_ours_to_quit prevents quitting a user's document; nothing prevented crashing one. Fixed in 2ca557b. _wait_for_exit stays unlocked on purpose (System Events only; a lock across its 12s poll is the phase-wide lock the module rules out).
 
 **Notes**: 
 
@@ -2127,6 +2128,27 @@ download matrix. Covered by `tests/test_audit_log_tag_vocabulary.py` (32);
 
 ---
 
+### ~~A locally-deleted row that is pruned takes the new Canvas file it had adopted with it~~
+<!-- fp:bbdd30be4106 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: classification
+**Oracles**: O5,O2
+**First seen**: 2026-08-21 (20260821_131853_sync-matrix-postfix-verify)
+**Last seen**: 2026-08-21 (20260821_131853_sync-matrix-postfix-verify)
+**Occurrences**: 1
+**Scenario**: analyzer · 43660
+
+**Detail**:
+
+Found while auditing the fix for fp:5c1dc682e36c, by asking what ELSE removes a file from the offer without accounting for it. Two mechanisms, individually correct, jointly wrong. (1) The teacher-re-upload branch takes a NEW Canvas file off new_files and rides it on a locally-deleted row - M-6 policy, the user's deletion is respected and the replacement is not offered separately. (2) The phantom-row prune then DELETES that row when its basename is owned by another tracked row whose file exists (_live_name_keys is keyed by basename, so a same-named file in a different folder counts). The file was in new_files, is now in neither, and is a file the user has NEVER had. Reproduced against the real analyzer: manifest row 100 (A/notes.pdf, gone from Canvas, deleted locally) consumes new Canvas id 200 (notes.pdf); row 100 is pruned as superseded by row 101 (B/notes.pdf, present); id 200 lands in NO category and new=0. It clears on the next sync because the prune really does delete the row, so nothing consumes the file a second time - the same self-healing shape as fp:5c1dc682e36c and worth as little: for one sync a file Canvas is offering is one the app never mentions. FIX: a row being deleted gives back whatever it had taken (_reupload_consumed.discard), and the offer is computed BELOW the pruning block. The prune's own basename matching is deliberately left broad - narrowing it risks resurrecting the 'Deleted Locally on every sync for ever' defect it exists to fix, and it costs nothing now: the row's id is gone from Canvas, so the local file it described is unrecoverable either way. Covered by tests/test_analysis_conservation.py and tests/test_new_files_are_not_name_keyed.py; scripts/_mutate_new_files_name_key.py 10/10.
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
 ### ~~An uninstalled Office app classified as 'other', not 'app_missing' - three of the four wording clauses were locale-dead~~
 <!-- fp:259a4ac3ac81 -->
 
@@ -3655,7 +3677,6 @@ this question in the live run, so the risk is low - but the next live sync matri
 should confirm it, and the 13 HIGH findings in
 `20260821_113342_sync-matrix` will legitimately persist on any re-check of the
 OLD evidence, because that run really did offer only one.  
-> Not observed in the latest run.
 
 **VERIFIED LIVE, 2026-08-21** - the "NOT YET SEEN LIVE" caveat above is closed.
 A full 43-row sync matrix was re-run against the real app, a real browser and
@@ -3675,7 +3696,8 @@ Row s035 failed its snapshot restore (a prior row's `debug_log.txt` counted as
 `extra`). **The matrix retried it itself and it passed** - `matrix launch`
 re-runs exactly the rows that failed, which this session initially and wrongly
 read as a refusal. The corrected tally, collected AFTER that retry, is **103
-INFO and no product finding of any higher severity**, across all 43 rows.
+INFO and no product finding of any higher severity**, across all 43 rows.  
+> Not observed in the latest run.
 
 ---
 
