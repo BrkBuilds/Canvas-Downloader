@@ -1900,7 +1900,16 @@ class SyncManager:
         # Key new files by BOTH the raw canvas filename and the display-derived
         # on-disk name, so a re-upload matches regardless of which form the
         # (possibly legacy) manifest row recorded.
+        #
+        # THIS MAP IS A LOOKUP INDEX AND NOTHING ELSE. It used to be the source
+        # `result.new_files` was rebuilt from, and a name-keyed dict CANNOT
+        # represent two files that share a name - so a new file whose every key
+        # was already claimed by another new file simply vanished: not offered,
+        # not tracked, not reported anywhere. See `_reupload_consumed` below.
         new_name_map = {}
+        # New files the re-upload branch below hands to a locally-deleted row.
+        # Identity, not name: the whole point is that names collide.
+        _reupload_consumed: set = set()
         for nf in regular_new_files:
             for _nm in (nf.filename, preferred_disk_name(nf)):
                 _k = _match_key(_nm)
@@ -1945,6 +1954,7 @@ class SyncManager:
                 # Remove ALL keys pointing at this new file (raw + display form)
                 for _k in [k for k, v in new_name_map.items() if v is matching_new_cfile]:
                     del new_name_map[_k]
+                _reupload_consumed.add(id(matching_new_cfile))
                 # Respect the deletion: ride the new file on the SyncFileInfo
                 # and adopt its canonical target so a user-selected redownload
                 # lands where the new file belongs.
@@ -1956,13 +1966,35 @@ class SyncManager:
             else:
                 final_locally_deleted.append(del_info)
 
-        # Deduplicate new files that were registered under two name keys
-        _new_seen_ids: set = set()
-        _unique_new = []
-        for nf in new_name_map.values():
-            if id(nf) not in _new_seen_ids:
-                _new_seen_ids.add(id(nf))
-                _unique_new.append(nf)
+        # EVERY new file that a re-upload row did not take over, in Canvas order.
+        #
+        # This used to iterate `new_name_map.values()` - and a dict keyed by name
+        # can only hold ONE file per name, so a new file whose keys were all
+        # claimed by a *different* new file was silently dropped from the offer.
+        # `setdefault` decided it, which made the outcome depend on the order
+        # Canvas happened to list the files in.
+        #
+        # It is reachable with entirely ordinary Canvas data, because
+        # `_match_key` unquotes: a file uploaded twice keeps ONE `filename` and
+        # Canvas disambiguates only the `display_name` (`X.pptx`, `X-1.pptx`).
+        # So the copy whose display_name still equals its filename collapses to a
+        # SINGLE key, and if the other copy is listed first it has already taken
+        # that key. Measured on course 43660, Canvas ids 1560011 and 1560205,
+        # both `2024_Lektion+uge+46_1+...+Upload.pptx`, both 2,223,911 bytes:
+        # with both rows orphaned the analyzer offered 1560205 and placed
+        # 1560011 in NO category at all. Reversing the two in the input list
+        # offered both - the whole difference was Canvas's listing order.
+        #
+        # Registered as fp:5c1dc682e36c ("re-offered one per sync, not both"),
+        # where the same shape was measured independently on the course's
+        # `CBS_SolbjergPlads_ImageHeader.jpg` TRIPLE - three ids, one filename,
+        # display names `X-1.jpg` / `X.jpg` / `X-1-1.jpg` - and 2 of 3 were
+        # offered, the missing one being exactly the copy whose display_name
+        # equals its filename. It self-heals on the next sync (the offered copy
+        # gains a manifest row and stops competing for the key), which is why it
+        # read as "one per sync" rather than as a loss.
+        _unique_new = [nf for nf in regular_new_files
+                       if id(nf) not in _reupload_consumed]
 
         # --- Phantom-row pruning (post re-upload cleanup) ---
         # Once a re-upload has been downloaded under its NEW id, the OLD id's
