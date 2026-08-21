@@ -49,6 +49,38 @@ O1/O2/O3 are all downstream of the app's own discovery — if it misses thirty
 files, all three agree and all three are wrong. **O5 is the only view computed
 independently of the app.** A single-oracle observation is a note, not a finding.
 
+## FIRST: stop your audit runs from staging themselves
+
+`_audit_runs/` is **tracked** in this repo — unusual, and deliberate: a macOS
+session commits the RESULT of a run (findings, report, per-row logs) so a later
+session can re-adjudicate a finding without redoing hours of work on a rented
+machine. The ignore rules are exclusions *within* that directory, not a blanket
+one.
+
+The consequence on a second machine is that **the moment you run an audit,
+thousands of files appear as untracked** — 3k+ observed. Two problems, and the
+second is the one that matters:
+
+1. `git status` becomes useless to you, which is how a real change gets missed.
+2. **A fresh run carries the operator's real Canvas login, unredacted.** The
+   committed macOS runs were scrubbed by `scripts/scrub_audit_pii.py` as a
+   deliberate step; yours have not been. A `git add -A` would publish it.
+
+**Run this once, before your first audit.** It is a LOCAL exclude — not
+committed, and it does not disturb the runs already tracked:
+
+```
+printf '_audit_runs/\n' >> .git/info/exclude
+```
+
+Then confirm it took: `git status --short` should be quiet again after a run.
+
+**Do not commit your audit runs at all.** If you are ever asked to, run
+`python scripts\scrub_audit_pii.py --check` first and only proceed when it says
+CLEAN — and note that a negative result from a diagnostic you have not
+controlled is worth nothing, so plant a known string and confirm it is caught
+before believing it.
+
 ## Set up
 
 ```

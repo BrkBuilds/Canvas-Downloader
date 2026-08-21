@@ -1462,6 +1462,20 @@ A background monitor watching for `Microsoft Error Reporting` used `pgrep -f`, a
 - **Still ignored, each for its own reason**: `downloads/` (the operator's real course material, GBs, not ours to redistribute), `browser-profile/` (a live logged-in session), `config/*` except diagnostics (no token today, but it is where one lands if the keyring path fails), `disk_*.json` (499 MB, regenerable), `evidence/rows/`, `screenshots/`, `samples/`, `_snapshots/`, `_screens/`.
 - **The `/*` forms are load-bearing.** Git will not descend into an EXCLUDED DIRECTORY, so a negation inside one can never re-include anything - the same trap `.claude/*` documents. Excluding the CONTENTS is what lets `!.../downloads/debug_log.txt` and `!.../config/diagnostics/` work at all.
 - **KNOWN TRADE**: `matrix recheck` re-derives findings from `disk_*.json`, so a historical run can no longer be re-checked once its evidence is gone. What it already produced remains, which is what adjudication needs.
+- **SECOND-MACHINE CONSEQUENCE, found 2026-08-21 when a Windows session started
+  auditing in parallel: the ignore rules are exclusions WITHIN `_audit_runs/`,
+  not a blanket one, so the moment ANY machine runs an audit it stages the whole
+  result - 3k+ files observed.** Two costs, and the second is the real one:
+  `git status` stops being readable, which is how an actual change gets missed;
+  and **a fresh run carries the operator's real Canvas login unredacted**,
+  because the scrub is a deliberate manual step, so a `git add -A` publishes it.
+  The policy is right for the machine that curates and commits runs and wrong
+  for every other one. **The fix is per-machine, not a policy change**: a local
+  `printf '_audit_runs/\n' >> .git/info/exclude` on any machine that is not
+  committing its runs - not committed, and it cannot disturb the runs already
+  tracked, because a local exclude only affects UNTRACKED files. Do NOT solve it
+  by re-adding a blanket ignore: `git add` on an ignored path is a **silent
+  no-op**, which is exactly how an adjudication write-up was nearly lost here.
 - **`scripts/scrub_audit_pii.py` must run before committing audit runs**, because the app is driven against a REAL Canvas account. Measured on the first set: the operator's Canvas login appeared **605 times in 138 files**, including `findings.jsonl` and `report.html`. No token, email or JWT - the Panopto `.ASPXAUTH` hits are the cookie NAME only. It asks GIT for its file list so it and the ignore rules cannot disagree about scope, and it is idempotent (`--check` reports without writing).
 - **A negative result from a diagnostic you have not controlled is worth nothing.** The first PII scan was a shell one-liner and returned CLEAN; it had been broken by `xargs` escaping. What exposed it was a positive control against a string I had read with my own eyes minutes before. Same family as the `pgrep -f` self-match above: **ask what your own diagnostic looks like to itself, and prove it can still say yes.**
 
