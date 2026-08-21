@@ -1949,8 +1949,9 @@ def _close_marker_docs_script(app: str, collection: str) -> str:
     """
     return f'''
         tell application "System Events"
-            if not (exists process "{app}") then return
+            if not (exists process "{app}") then return "not running"
         end tell
+        set closedCount to 0
         repeat 30 times
             set closedOne to false
             try
@@ -1973,8 +1974,13 @@ def _close_marker_docs_script(app: str, collection: str) -> str:
                     end repeat
                 end tell
             end try
-            if not closedOne then exit repeat
+            if closedOne then
+                set closedCount to closedCount + 1
+            else
+                exit repeat
+            end if
         end repeat
+        return "closed " & closedCount
     '''
 
 
@@ -2005,12 +2011,28 @@ def _force_close_canvas_docs_sync(only_app: str | None = None, *,
             # and taking it again would stall that thread for the lock timeout
             # - which is exactly what its async wrapper exists to avoid.
             with _office_app_lock_unless(app, _locked_by_caller):
-                subprocess.run(
+                r = subprocess.run(
                     ['osascript', '-e', _close_marker_docs_script(app, collection)],
-                    capture_output=True, timeout=30,
+                    capture_output=True, text=True, timeout=30,
                 )
-        except Exception:
-            pass
+            status = (r.stdout or "").strip() or f"osascript rc={r.returncode}"
+            # CLOSING A DOCUMENT IS DESTRUCTIVE, so saying nothing was wrong.
+            # Silence here cost a live audit an hour: this is the one teardown
+            # step that can end another instance's in-flight conversion, and
+            # because it logged NOTHING the failure could not be correlated to a
+            # cause at all - it was settled only by re-running the row alone.
+            # A closure is rare and always worth a line; "nothing to do" is the
+            # common case and stays at debug.
+            if status.startswith("closed ") and status != "closed 0":
+                logger.info("[OfficeQuit] force-closed %s staged document(s) in %s",
+                            status[len("closed "):], app)
+            elif status.startswith("closed ") or status == "not running":
+                logger.debug("[OfficeQuit] %s: %s", app, status)
+            else:
+                logger.warning("[OfficeQuit] %s: marker close reported %r", app, status)
+        except Exception as e:
+            logger.warning("[OfficeQuit] %s: marker close failed: %s",
+                           app, e, exc_info=True)
 
 
 def _force_close_canvas_docs_async(only_app: str | None = None, *,
