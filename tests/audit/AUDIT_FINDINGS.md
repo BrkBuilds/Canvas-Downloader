@@ -11,7 +11,14 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260821_144948_macos26-dl-matrix-short2` on 2026-08-21.
 
-**19 open** · 175 total · 29 accepted · 91 fixed · 35 invalid · 1 wontfix
+**7 open** · 175 total · 29 accepted · 91 fixed · 47 invalid · 1 wontfix
+
+> Header corrected by hand 2026-08-21: it read *19 open · 35 invalid*, which
+> predates the sixth session's adjudication (the 14 fabricated sync findings
+> and the 5 Office-contention rows were all marked `invalid` afterwards, and
+> the summary line is only rewritten by a RUN). Counted from the entries
+> themselves. The line above is a cache, so re-count before quoting it -
+> "19 open" is the number a launch decision would have been made on.
 
 ---
 

@@ -15,7 +15,7 @@ lives in [STRATEGY.md](STRATEGY.md) as well.
 
 **Status: fixed 2026-08-21.** `docs/index.html` and `docs/llms.txt`.
 
-Three tags sit between the hero and the "Hi, I'm Birk" card: **800+ downloads**,
+Three tags sit between the hero and the "Hi, I'm Birk" card: **800+ installs**,
 **used by students in 100 countries**, and **free and open source**. The same
 facts are in `llms.txt`, which is where an assistant reads them.
 
@@ -48,15 +48,19 @@ Two of those reframe everything else, and both are cheap to repeat:
 
 ### The published figures, and exactly what each is
 
-- **800+ downloads** = 767 successful Store installs + 44 GitHub release-asset
-  downloads = 811, rounded down. **"Downloads" is the honest umbrella**: every
-  install began as a download, not every download became an install, so the
-  weaker word is the true one for a combined figure.
-  - Note the dashboard reports the Store half three ways (750 / 764 / 767). The
-    conservative reading, 750 + 44 = 794, is under 800; 800+ rests on the
-    funnel's own "Successful installs". At the observed ~120 installs a week it
-    is past 800 on any reading within days of publication, which is why this was
-    shipped rather than rounded to 790.
+- **800+ installs.** The Store dashboard reported the install half three ways
+  on 2026-08-20 (750 tile / 764 geographical / 767 funnel), plus 44 GitHub
+  release-asset downloads. **Growth outruns the snapshot**: at the observed
+  ~120 installs a week the real number moved past 800 within days, which is why
+  the page is deliberately rounded down and carries no as-of date.
+
+  **DECIDED (product owner, 2026-08-21): the word on the page is "installs" and
+  the exact arithmetic is not worth policing.** An earlier pass argued
+  "downloads" was the more defensible umbrella for a combined figure and briefly
+  changed the page; that was reverted. The figure is a rounded-down floor on a
+  number that only goes up, so the pedantry bought nothing and the tests written
+  to enforce it were brittle by construction - any hard-coded ceiling is wrong
+  the week after it is written. Do not re-open this.
 - **100 countries**, not "97 more countries" beside three named ones. The names
   were dropped from the page by the product owner: the count is the point, and
   naming three of a hundred makes the row long without making it truer. The
@@ -70,10 +74,9 @@ that an undated number rots. The product owner removed the date, and on
 inspection the rule did not apply: **both figures are LIFETIME CUMULATIVE, so
 they can only go up.** A figure rounded DOWN can therefore only ever understate,
 which is the safe direction, and "since June 2026" was decoration that also made
-the sentence longer. `tests/test_website_social_proof.py` now enforces the thing
-that actually keeps it true - the published number must be at or below what was
-measured - rather than the date. **The dating rule still stands for any WINDOWED
-figure**, which is what it was written for.
+the sentence longer. **The dating rule still stands for any WINDOWED
+figure**, which is what it was written for - it simply does not apply to a
+cumulative one.
 
 ### The look: floating, not chips
 
@@ -91,11 +94,19 @@ and a second set of bordered boxes above it read as clutter.
   `linear-gradient`, then reverted when the middle tag was shortened, which
   removed the problem at its source. If a long tag is ever needed again, the
   linear form is the fix, not a stronger radial one.
-- **`justify-content: space-between` is what aligns the row with the persona
-  card.** The strip and the card are both the container's full width, but
-  packing the tags left left the row ending ~28px short of the card's right
-  edge. Spread, the first tag's ink starts on the card's left edge and the last
-  tag's ends on its right - measured 214 and 1226 for both.
+- **CORRECTED 2026-08-21: the shipped rule is `justify-content: center`, not
+  `space-between`, and the 214/1226 figures are the CONTAINER's edges, not tag
+  ink.** This entry described a variant that is not in `docs/index.html`.
+  Re-measured in Chromium against the real page at three widths - strip box vs
+  persona-card box: `1440px [214,1226]` vs `[214,1226]`; `1280px [134,1146]` vs
+  `[134,1146]`; `900px [24,876]` vs `[24,876]`. The boxes align **exactly** at
+  every width and the tags sit centred inside, inset 143/155/101px
+  symmetrically. What makes the row track the card is that it is a full-width
+  flex row with no width or max-width of its own - the distribution keyword is
+  a design choice on top of that, and packing the tags LEFT is the only variant
+  that would end short of the card's right edge.
+  What makes it track the card is that it is a full-width flex row with no width
+  of its own; the distribution keyword is a design choice on top of that.
 - The band sits `18px` below the hero and `44px` above the card, deliberately
   closer to the hero. **The bottom margin has to beat the card's own inline
   `margin-top: 20px` outright**: adjacent block siblings collapse to the larger
@@ -129,14 +140,15 @@ The site has no build step, no analytics and inlines everything per page, so a
 hand-written number can drift in one page and nothing would say so.
 
 - **Round DOWN, always.** It is the whole reason no date is needed.
-- **One figure, enforced.** `tests/test_website_social_proof.py` (14 tests,
-  **15 of 15 mutations caught** via `scripts/_mutate_social_proof.py`) pins:
-  every surface states the same download figure and the same country count;
-  neither exceeds what was measured; no page carries rating markup; no page
-  mentions the absence of reviews; the strip says "used by"; it renders without
-  JavaScript; it has no chrome and does have a blurred glow; it spans the full
-  width; its markup and CSS stay coupled with no dead rules; and it sits above
-  the persona card.
+- **One figure, by hand.** `docs/index.html` and `docs/llms.txt` are the only
+  two surfaces that state it; change them together. There is deliberately NO
+  test enforcing the arithmetic - see the decision above. The rules that DO
+  matter and are worth keeping in your head: no rating markup anywhere (the
+  Store has 0 ratings and 0 reviews, so there is nothing honest to put in an
+  `aggregateRating`, and search engines render that markup as stars); never
+  mention the absence of reviews; say "used by", not "loved by"; and keep the
+  strip OUT of a `.reveal` so a non-rendering crawler can still see it -
+  `tests/test_website_noscript_content.py` covers that last one.
 
 ### Four traps paid for while building it
 

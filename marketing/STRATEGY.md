@@ -144,7 +144,7 @@ Settled on the institution-count measurement above.
 Settled 2026-08-21. The Store has 0 ratings and 0 reviews after 750 installs, so
 the site says "used by", carries no `aggregateRating` markup, and states no
 claim about how anyone feels about the product. Enforced by
-`tests/test_website_social_proof.py`. Revisit when the in-app rate prompt exists
+the two surfaces by hand (`docs/index.html`, `docs/llms.txt`). Revisit when the in-app rate prompt exists
 and real reviews follow.
 
 ### Every published number is rounded down

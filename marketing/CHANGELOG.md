@@ -11,7 +11,7 @@ the evidence for everything below.
 ### Built
 
 - **The adoption proof strip** in `docs/index.html`, between the hero and the
-  "Hi, I'm Birk" card: **800+ downloads / used by students in 100 countries /
+  "Hi, I'm Birk" card: **800+ installs / used by students in 100 countries /
   free and open source**. Floating tags, no background and no border, each over
   a dim green radial glow blurred so it has no edge; `space-between` so the row
   aligns with the card's left and right edges exactly (measured 214 and 1226 for
@@ -20,8 +20,10 @@ the evidence for everything below.
 - **The retired `.trust-pill` CSS is gone**, replaced rather than joined.
 - **`docs/llms.txt`** gained an `Adoption:` bullet with the same two figures.
   The top countries are named there and only there.
-- **`tests/test_website_social_proof.py`** (14 tests) and
-  **`scripts/_mutate_social_proof.py`** (15 mutants, **15 caught**).
+- No test enforces the adoption arithmetic, deliberately - a hard-coded ceiling
+  on a growing, rounded-down figure is wrong the week after it is written
+  (product owner, 2026-08-21). `tests/test_website_noscript_content.py` covers
+  the part that does not rot: the strip stays visible without JavaScript.
 
 ### Measured
 
