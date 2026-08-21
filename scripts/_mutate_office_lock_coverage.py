@@ -80,6 +80,24 @@ OFFICE_LOCK_MUTANTS = [
      "    if already_held:\n        yield\n        return\n    with _office_app_lock(app_name):\n        yield",
      "    yield"),
 
+    # -- the marker close must SAY what it did -------------------------------
+    ("the marker close goes silent again",
+     BRIDGE,
+     '            if status.startswith("closed ") and status != "closed 0":',
+     '            if False:'),
+    ("a closure is demoted to debug, so it is invisible in a normal log",
+     BRIDGE,
+     '                logger.info("[OfficeQuit] force-closed %s staged document(s) in %s",',
+     '                logger.debug("[OfficeQuit] force-closed %s staged document(s) in %s",'),
+    ("a failed marker close is swallowed again",
+     BRIDGE,
+     '        except Exception as e:\n            logger.warning("[OfficeQuit] %s: marker close failed: %s",',
+     '        except Exception as e:\n            logger.debug("[OfficeQuit] %s: marker close failed: %s",'),
+    ("the script stops reporting how many it closed",
+     BRIDGE,
+     '        return "closed " & closedCount',
+     '        return ""'),
+
     # -- and the original fix, which widening must not loosen ----------------
     # NOTE the anchor carries the docstring terminator ABOVE the `with`. The
     # bare `with _office_app_lock(app_name):` line appears TWICE in this module

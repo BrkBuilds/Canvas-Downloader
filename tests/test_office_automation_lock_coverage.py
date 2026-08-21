@@ -255,3 +255,79 @@ def test_the_conditional_helper_requires_an_explicit_answer():
     assert fn.args.defaults == [], (
         "`already_held` must have no default - inheriting the wrong answer "
         "silently is the failure this whole module keeps repeating")
+
+
+# ---------------------------------------------------------------------------
+# The marker force-close must SAY what it did.
+#
+# It logged nothing at all, and it is the one teardown step that can end another
+# instance's in-flight conversion. During the 2026-08-21 live audit that silence
+# meant an Office failure could not be correlated to any cause: the correlation
+# table recorded it as "UNEXPLAINED - candidate genuine" and it was settled only
+# by re-running the row alone, where it did not reproduce. A single log line
+# would have answered it.
+# ---------------------------------------------------------------------------
+
+def test_the_marker_close_script_reports_a_result_instead_of_returning_nothing():
+    import engine.applescript_bridge as B
+    src = B._close_marker_docs_script("Microsoft Excel", "workbooks")
+    assert '"not running"' in src, "must distinguish 'app absent' from 'closed nothing'"
+    assert 'return "closed " & closedCount' in src, "must report HOW MANY it closed"
+    assert "set closedCount to closedCount + 1" in src, "the count must actually increment"
+
+
+def _run_close(monkeypatch, stdout, rc=0, boom=None):
+    """Drive the real function with osascript stubbed to a known answer."""
+    import engine.applescript_bridge as B
+
+    class _R:
+        def __init__(self): self.stdout, self.returncode = stdout, rc
+
+    def fake_run(*a, **k):
+        if boom:
+            raise boom
+        return _R()
+
+    monkeypatch.setattr(B.sys, "platform", "darwin", raising=False)
+    monkeypatch.setattr(B.subprocess, "run", fake_run)
+    B._force_close_canvas_docs_sync(only_app="Microsoft Excel")
+
+
+def test_a_closure_is_logged_at_info_with_the_count(monkeypatch, caplog):
+    import logging
+    caplog.set_level(logging.DEBUG)
+    _run_close(monkeypatch, "closed 2")
+    hits = [r for r in caplog.records if "force-closed" in r.getMessage()]
+    assert hits, "closing a document must not be silent"
+    assert hits[0].levelno == logging.INFO
+    assert "2" in hits[0].getMessage()
+    assert "Microsoft Excel" in hits[0].getMessage()
+
+
+def test_the_boring_cases_stay_at_debug(monkeypatch, caplog):
+    """A closure is rare and always worth a line; 'nothing to do' is not."""
+    import logging
+    for answer in ("closed 0", "not running"):
+        caplog.clear()
+        caplog.set_level(logging.DEBUG)
+        _run_close(monkeypatch, answer)
+        assert not [r for r in caplog.records if r.levelno >= logging.INFO], \
+            f"{answer!r} should not be louder than debug"
+        assert [r for r in caplog.records if r.levelno == logging.DEBUG]
+
+
+def test_an_unexpected_answer_is_a_warning(monkeypatch, caplog):
+    import logging
+    caplog.set_level(logging.DEBUG)
+    _run_close(monkeypatch, "execution error: something went wrong", rc=1)
+    assert [r for r in caplog.records if r.levelno == logging.WARNING]
+
+
+def test_an_exception_is_logged_not_swallowed(monkeypatch, caplog):
+    """The handler was a bare `except Exception: pass`."""
+    import logging
+    caplog.set_level(logging.DEBUG)
+    _run_close(monkeypatch, "", boom=OSError("osascript exploded"))
+    warns = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert warns, "a failed marker close must never be silent"
+    assert "osascript exploded" in warns[0].getMessage()
