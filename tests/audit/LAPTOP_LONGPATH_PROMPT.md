@@ -56,7 +56,8 @@ python scripts/scrub_audit_pii.py             # redact in place
 python scripts/scrub_audit_pii.py --check     # must now say CLEAN (idempotent)
 ```
 
-### Four traps that were hit for real on the desktop. Do not re-learn them.
+### Five traps. Four were hit for real on the desktop; the fifth is specific to
+### this machine. Do not re-learn any of them.
 
 **1. THE ORDERING TRAP - this one nearly published real emails.**
 If anything staged those files *before* you scrubbed (an IDE's git integration
@@ -86,6 +87,46 @@ blobs containing the word `Canvas`). If it cannot say YES, its NO is worthless.
 Check `git status` after staging documentation - an ignored path simply will not
 appear, and `git add` on it is a silent no-op.
 
+**5. THE IGNORE RULES WERE WRITTEN FOR A NEWER RUN LAYOUT THAN YOURS.**
+Every `_audit_runs/` rule in `.gitignore` was authored on 2026-08-21 against the
+run shape the *desktop* produces today. Your runs are older. The rules exclude
+by PATH (`**/downloads/*`, `**/browser-profile/`, `**/config/*`,
+`**/evidence/rows/`, `**/evidence/screenshots/`, `**/samples/`, `disk_*.json`),
+so anything an older run put somewhere else is **not excluded and will be
+committed** - including, potentially, a browser profile with a live session or a
+directory of real course files.
+
+Do not reason about this. Enumerate it:
+
+```bash
+git add -n -- _audit_runs \
+  | sed 's|.*_audit_runs/[^/]*/||' \
+  | awk -F/ '{if (NF==1) print "(top level) "$1; else print $1"/"$2}' \
+  | sort | uniq -c | sort -rn
+```
+
+That prints every path SHAPE git intends to add, with counts. Confirm you
+recognise each one, and that the list contains **no `downloads/` beyond
+`debug_log.txt`, no `browser-profile/`, no `config/` beyond `diagnostics/`**, and
+nothing that looks like course material. Anything unfamiliar: **stop and ask**
+before committing, and say what you found.
+
+The desktop's tracked set, for comparison - **5,387 files, 69 MB**:
+
+```
+3444 evidence/ui          633 evidence/logs        211 evidence/canvas
+ 109 (top level) run.json  82 (top level) streamlit.log
+  81 downloads/debug_log.txt      80 config/diagnostics
+  80 (top level) findings.jsonl
+```
+
+Your counts will differ; the SHAPES should not. A shape that is not in that list
+is the thing this trap exists to catch.
+
+(`git add -n` prints nothing for files that are already tracked, so if your run
+directories were committed on a previous pass, use `git ls-files -- _audit_runs`
+with the same pipeline to inspect what is already in.)
+
 ### What must never be committed
 
 `.gitignore:112` (`_audit_runs/**/config/*`) is what keeps a stored Canvas token
@@ -100,6 +141,39 @@ Also confirm nothing token-shaped is in your commit:
 
 Then commit and push. Say in the message what was redacted and how you verified
 it (blob scan + control), not just "scrubbed".
+
+---
+
+## BETWEEN THE JOBS - do this before you start Job 2
+
+Job 1 taught you that cleaning and committing audit runs is the workflow **for
+the runs already on this machine**. Job 2 creates a NEW one, and the same
+workflow applied to it would be a mistake:
+
+- a fresh run stages **3,000+ files** the moment it exists, because the ignore
+  rules are exclusions *within* `_audit_runs/`, not a blanket one;
+- and it carries the operator's real Canvas login **unredacted**, because the
+  scrub is a deliberate step that has not run on it yet.
+
+`git status` also stops being readable, which is how a real change gets missed
+at the exact moment you most need to see one.
+
+**Run this once, now, before Job 2:**
+
+```bash
+printf '_audit_runs/\n' >> .git/info/exclude
+git status --short          # should be quiet
+```
+
+It is a LOCAL exclude - not committed, and it **cannot un-track what Job 1 just
+committed**, because a local exclude only affects untracked files. That is what
+makes it safe to do between the two jobs rather than instead of Job 1.
+
+**Do not commit Job 2's run directory.** Its output is your report and the
+long-path verdict, not evidence anybody needs to re-read. If the operator later
+asks for it, scrub it first and verify with a positive control - the same
+ordering trap as Job 1, and by then you will have live artifacts rather than
+old ones.
 
 ---
 
