@@ -579,6 +579,33 @@ When pure CSS/Python can't express an interaction (Shift-click range select, liv
 - **`_find_free_port` must not set `SO_REUSEADDR` on Windows.** There it does not mean "reuse a TIME_WAIT port" as it does on Unix - it means "bind even if another process is LISTENING", so the probe handed out occupied ports. Measured twice on 2026-07-27: with a server already on 8501 the launcher picked 8501, Streamlit bound it a second time, and the health check was answered by the *other* process. Tornado skips the flag on Windows for the same reason.
 - **Both prewarms in `start.py` are pure overlap, never a behaviour change.** `_prewarm_app_modules` imports the app's graph on a daemon thread while the server boots (safe concurrently: zero module-level import cycles across the 68 local modules, and `app.py` - the only file with module-level `st.*` calls - is never imported); `_prewarm_frontend_assets` pulls the 23 MB static bundle into the page cache, entry bundle first, frozen builds only. Frozen builds also pass `--server.fileWatcherType=none`: a packaged app's sources cannot change, and the watcher installs an observer per local module and re-walks `sys.modules` after every rerun.
 
+## The macOS Keychain prompt must never be on the SCRIPT THREAD (2026-08-21)
+`restore_saved_session()` runs during init, on the Streamlit script thread, before a single element renders - and `keyring`'s macOS backend calls `SecItemCopyMatching` with **no UI-suppression flag**. When the saved item's ACL does not trust the running binary that call **BLOCKS on a system prompt**, so the script never finishes and the frontend has nothing to render. Measured in the PACKAGED app on macOS 26.6.1, frames captured:
+
+| t | what the user saw |
+|---|---|
+| 0-30 s | boot overlay, "Connecting…" + spinner |
+| **30-90 s** | the overlay's absolute cap fires and the window is **COMPLETELY EMPTY** |
+| Deny, or the 90 s watchdog | the login page, **with no explanation at all** |
+
+Nothing on screen connected the empty window to the Keychain dialog, and `_load_fallback_token` is a deliberate no-op off Windows - so a denial silently means "go and find a Canvas token again".
+
+- **It fires on every app UPDATE, not once.** The bundle is ad-hoc signed (`TeamIdentifier=not set`), and **both** halves of a keychain item's access control key on the code signature: the trusted-application list *and*, since 10.11, the **partition list**.
+- **TWO ESCAPES ARE MEASURED AND CLOSED - do not re-derive them.** `security add-generic-password -A` (trusted-app list `<null>`) **still prompts**: the ACL dump shows `partition_id: apple-tool:`, and the partition list gates access independently. And the app **cannot silently repair its own ACL** afterwards - the delete half of delete+add needs authorisation we do not have and fails **-25244**. That failure is SAFE (the item survives), which is why the attempt is UI-suppressed or not made at all. So while the app is ad-hoc signed the prompt is **unavoidable**; only its cost is fixable.
+- **`Allow` and `Always Allow` are not interchangeable, and that is the single most valuable thing the notice says.** Measured by re-reading with UI suppressed after each click: **`Allow` leaves the ACL UNCHANGED**, so the prompt returns on **every launch, for ever**; **`Always Allow` updates it** and the prompt does not come back until the next update. A student who picks the safer-sounding button gets the worse outcome permanently, and nothing else in the product would ever tell them.
+- **The fix is a NON-INTERACTIVE probe, and it is a structural guarantee rather than a tuned timeout.** `keyring_get_without_prompting()` flips `SecKeychainSetUserInteractionAllowed(false)` around the read, so "macOS would put a modal in front of the user" stops being an unbounded block and becomes an error we see in milliseconds - **4.3 ms** on success, **9.6 ms** when a prompt would be needed. `needs_prompt` means *exactly* that: a missing item, or any other failure, answers `(None, False)`, because prompting cannot fix those.
+  - Suppression is **PROCESS-GLOBAL**, so the window is held under `_keychain_ui_lock` and restored in a `finally`. A probe that finds the lock already taken **returns `(None, True)` rather than waiting** - waiting for the in-flight unlock is the exact blocking this function exists to remove.
+  - **The seam is platform-independent on purpose.** `restore_saved_session` calls `keyring_get_without_prompting` on every platform (Windows delegates straight to the old watchdogged read). Had the darwin branch been the only caller, a regression would **pass on Windows and fail only on a Mac** - which is precisely how this class of bug survives in this repo.
+- **The prompt is raised as the LAST statement of `render_login_page`, and the position IS the fix.** The script run ends on the next line, so the explanation has already been emitted and the window paints before the system dialog can land on top of it. Starting it any earlier risks the dialog appearing over a window that is still empty - the experience being removed. Same discipline as "invoke a dialog after every event-container write".
+- **The notice must never write to the EVENT container.** It polls via `@st.fragment(run_every=1.0)`, and a fragment rerun **rewinds that container's write index** - so a style-only `st.html` or an `st.toast` inside it would land on a neighbouring stylesheet's host and strip a component of its CSS. Its stylesheet therefore lives in the login page's **unconditional** block (a conditional one shifts every later host by one), and the fragment emits exactly ONE element in every state.
+- **The resolved token is NOT consumed - found by driving the real app, not by the tests.** The unlock state is process-global (a background thread has no `ScriptRunContext`) while `keychain_unlock_pending` is per SESSION, so a second session - a reload, or a second window - set pending, found the unlock already `ok`, received an **empty** token because session one had taken it, and landed on a bare login page with no notice. Keeping the value costs nothing (it is already in the Keychain and in session one's `api_token`) and `reset_keychain_unlock()` clears it whenever the credential is dropped, at **both** the logout and `force_reauth` sites.
+- **`store_token` is deliberately NOT given the same treatment.** Its pre-read exists to *skip a write that cannot change anything*, and that skip is what stops a refused write destroying the credential (`set_password` on macOS is delete-then-add). Making that read non-interactive would trade a safe prompt for a **destructive** write, because the write's own delete prompts anyway. So a user who denies and then pastes a fresh token still meets one prompt at login - contextual, user-initiated, and bounded. Stated rather than fixed.
+- Verified end to end in the real app: post-update prompt -> **painted login page + notice in 1.12 s**; the user clicks Always Allow -> the app **signs itself in with no app interaction**; next launch -> **1.15 s, no notice, no dialog**, and the suppressed read confirms the ACL really was updated.
+- Covered by `tests/test_keychain_unlock.py` (33) and `scripts/_mutate_keychain_unlock.py` - **23/23 caught**, so re-run the mutation pass rather than just the suite. **Two survivors in the first pass were real gaps in my own tests**, and both are worth remembering: counting keychain READS is not a test of single-flight (the workers serialise on the UI lock, so exactly one read happens either way - count **THREADS**), and nothing checked `app.py`'s call site at all, so deleting the adoption call while leaving `from ui.auth import adopt_pending_keychain_unlock` above it satisfied every test.
+
+### A mutation pass needs a per-mutant TIMEOUT, or a hanging mutant strands itself
+This file already warns that a concurrent commit can capture a mutant. The same damage arrives from the pass's own runtime: a mutant that makes the code **block** (here, the probe taking the UI lock blocking, deadlocked against a test that holds it) hangs pytest, the pass is eventually killed from outside, and its `finally` never runs - so the **mutant is left on disk**, indistinguishable from real code. That happened while this set was being written and was caught only by grepping the source for `if False:` afterwards. `subprocess.run(..., timeout=...)` bounds it and a timeout counts as CAUGHT (a mutant that hangs the suite is one the suite noticed); the runner also asserts the restore actually took. The other half is the test's own duty, which this repo already states for the ffmpeg watchdog: **a test for "this does not block" must run the call on a thread with a join timeout, so a regression FAILS instead of hanging.**
+
 ## Never destroy data on the strength of an error you have not IDENTIFIED (2026-08-06)
 The failure audit found the same mistake in both of the app's stores, each time in the code written to *recover* from damage. Neither language gives you the distinction structurally, so both had to be made explicit. `tests/test_failure_hardening.py` guards all of it; all **15** mutations of the real code are caught, so re-run the mutation pass, not just the suite, after touching any of it.
 - **`sqlite3.OperationalError` IS a `sqlite3.DatabaseError`**, so `except sqlite3.DatabaseError` caught *transient* failures too - and `_init_db_locked`'s handler renamed the manifest to `.canvas_sync_corrupted.db`, or **deleted** it when the rename failed. Three purely transient conditions arrive as `OperationalError` (all verified): `unable to open database file` (share offline, disk full, permissions, a malformed path), `database is locked` (another process, antivirus, a stuck WAL), `attempt to write a readonly database`. **Reproduced: a folder left with NO manifest and NO backup**, from an error whose file on disk was never damaged - attempt 0 renamed the DB aside, attempt 1 unlinked that very backup and then failed to rename again. Losing the manifest is not cosmetic: every local file becomes untracked, so the next sync re-downloads over the student's annotated copies, and `_NewVersion` protection cannot fire because it reads manifest rows.
@@ -604,6 +631,16 @@ The failure audit found the same mistake in both of the app's stores, each time 
 - **One phase failing must not cancel the ones after it.** The nine `run_*` conversion runners are independent - a wedged COM server has no bearing on HTML→Markdown - but only `run_excel_data_conversion` had a per-item handler and `run_all_conversions` called all nine bare. One unexpected exception therefore took out every later phase **and `retry_failed_conversions`**, which is the thing that would otherwise have recovered the files. `_run_phase(runner, items, ui)` is the single guard, at the boundary the phases are already independent across; it cannot be forgotten when a tenth converter is added, and a test asserts every call site goes through it. It also clears `active_file_placeholder`, which the runners only do on their normal exit - otherwise the line stays stuck on whichever file blew up.
 - **`_update_manifest_path` must never raise.** By the time it runs the converted file is on disk and the original is deleted; all that is left is repointing a manifest row. But `load_manifest` deliberately RE-RAISES database errors ("Aborting to prevent data loss"), so a manifest briefly locked - by antivirus, or by the sync that has just finished writing to it - aborted the whole conversion phase mid-way. The trade is explicit: swallowing it costs one stale row that the next sync's heal pass fixes, propagating it costs every remaining file in the phase. Logged at warning, never silent.
 - Note the interaction with the sqlite classification above: making a transient DB error *stop resetting the manifest* means `_db_init_failed` is now reachable where it previously was not, and `load_manifest` raises on it. That is the intended trade (loud beats silent), but it is only safe because post-processing no longer treats a manifest failure as fatal.
+
+### …and the repoint must not depend on how the path is SPELLED (2026-08-21)
+Measured by the live macOS audit driving the PACKAGED app through a real run of course 43660: **62 of the 63 Office files converted in that run left their manifest row pointing at the source the converter had just deleted.** The one that repointed was an Excel file - and `converters/excel.py` is the only one of the three Office converters that does not call `resolve()` on the path it returns.
+- **`Path.relative_to` is a STRING operation.** `converters/pdf.py` and `converters/word.py` both return `str(dst.resolve().absolute())` from their macOS branch while `sm.local_path` carries whatever spelling the destination was CONFIGURED with. Wherever the course folder is reached through a symlink - `/tmp` → `/private/tmp`, or a course folder linked onto an external drive, which is an ordinary thing for the small-SSD student this product is aimed at - the two spellings differ, `relative_to` raises, and **both** call sites swallowed it without a word. Same app, same course, same converter, silently different outcome depending on how the destination happened to be spelled.
+- **It is not untidy bookkeeping, and the sync engine's own code says why.** `analyze_course`'s missing-local-file branch carries an explicit **URL Compiler bypass** (`.url`/`.webloc` gone while `convert_urls` is on → `uptodate_files`) and an **Archive Extraction bypass** - because those two converters are many→one and one→many and *cannot* repoint. There is deliberately **no such bypass for Office**, because Office is 1:1 and is supposed to repoint. So a stale Office row falls to `locally_deleted_files` and is re-offered as a **restore** on every later sync, its PDF sits untracked, and a re-download plus re-conversion then overwrites that PDF - which is how a student's annotated copy is lost.
+- **`_course_relative(sm, path)` is the one primitive** both sites use: try the paths as given, then compare **realpaths** - the one spelling both sides can always agree on. `os.path.realpath` rather than `Path.resolve` because it is defined on a path that no longer EXISTS, which `original_file` never does by then (every source-consuming converter deletes its source before reporting success).
+- **Both silent paths are now loud, because the silence is why it shipped**: a path genuinely outside the course warns, and a lookup that matched no row is logged at debug instead of being indistinguishable from a successful repoint. A conversion whose source was never tracked (an extracted archive member, a secondary-content render) is ORDINARY, so that one is debug and not a warning.
+- **The mutation pass found the fix INCOMPLETE, and that is the reusable part.** `_resolve_conversion_target`'s "is the recorded product beside the source" test compared **absolute** parents (`prod_path.parent == src.parent`), so a resolved `src` still disabled the ownership check even once the relativisation was fixed - and that check is the one that diverts to `_NewVersion` when the student has annotated the product. Both comparisons are now course-relative (`PurePosixPath(prod_rel).parent == PurePosixPath(src_rel).parent`).
+- **The user-visible consequence is MEASURED, not reasoned.** A live sync analysis of the packaged run's folder renders **"63 Deleted locally"** on the review screen - 0/63 selected, Smart Select offering them as DOC / PPTM / PPTX - which are exactly the 63 Office sources the conversion consumed. Header: *"63 files pending sync, 199 files up to date"*. Nothing re-downloads silently (the boxes default unchecked), so it is a reporting defect rather than data loss - but it recurs on every sync, and "Select All here" is the natural response to being told 63 files are missing, which re-downloads ~180 MB of PowerPoints and then overwrites the PDFs the user already has.
+- Covered by `tests/test_conversion_repoint_spelling.py` (12); all **8** mutations caught (`scripts/_mutate_conversion_repoint.py`), so re-run the mutation pass rather than just the suite. **Two of those mutants were surviving gaps in my own tests** - one asserted a rootless manager only for a path outside the cwd, and there was no test at all for the ownership site.
 
 ## `office_safe_path` is FOR long paths - so its own I/O has to be long-path safe
 The context manager exists only for sources ≥ 240 chars (Office COM hard-crashes on them), and then read the source and wrote the destination **without the prefix** - so on a default Windows install, where `LongPathsEnabled` is 0, the one function meant to handle long paths could not read or write them. Fixed via `make_long_path` on the shadow copy, the destination `mkdir` and the move-back.
@@ -634,6 +671,10 @@ Found by the LIVE audit cancelling a real transcription, and it is the second ro
 - **The same cancel exposed a LATENT long-path bug, and it is the classic asymmetry**: every WRITE in `panopto/transcribe.py` goes through `make_long_path` (the sidecars are opened with it and committed with it) and the DELETE did not. That fails in the most misleading way available - on a default Windows install (`LongPathsEnabled = 0`, i.e. most users) a path over 260 chars raises ERROR_PATH_NOT_FOUND, Python surfaces it as **`FileNotFoundError`**, and the retry loop reads that as *"already gone"*: no removal, no retry, **no log**. The audit measured **259 paths over 255 characters** in that one course and the two abandoned sidecars were **341**. It did not bite on the dev box only because it has `LongPathsEnabled = 1` - the identical reason `office_safe_path`'s long-path bug survived. When a path-length fix "cannot be reproduced", check that registry key first.
 - **The tests that were already there passed against BOTH defects**, because they anchored on `_clean_part_files(` appearing within **1800 characters** of `progress("transcribe_done")`. That is true of a sweep in a `finally`, of a sweep after the loop, and of a sweep that never runs - and documenting the fix pushed the call out of the window, so three of them then reported the sweep as *missing* when it was right there ("a brittle test anchor reads like a missing guard", again). They now resolve the sweep through the **AST** and assert the property that matters: that the call sits inside a `Try.finalbody`.
 - `tests/test_transcribe_partial_cleanup.py`; 5 of 6 mutations caught, including one for each original defect. The survivor - `break` -> `continue` on the `FileNotFoundError` branch - is an **equivalent mutant**: on a genuinely absent file it spins six cheap iterations with `last_err` still `None`, so the outcome and the logging are unchanged.
+- **The CRASH path does not sweep - only CANCEL does - and what contains that is a COUNT of one (measured on macOS 26.6.1, 2026-08-20).** Driving a real SIGSEGV into a live worker - which is exactly what an uncatchable native crash looks like, and the whole reason this runs out of process - confirmed containment works: the parent survived, raised `TranscriptionEngineCrash(exit_code=-11)`, faulthandler dumped the C-level traceback into the debug log, and the child was reaped. But `transcribe_in_subprocess` returned with **both `<name>.txt.part` and `<name>.srt.part` still on disk**; its sweep lives on the cancel branch, not in its own `finally`.
+  - It is not user-visible today because there is **exactly ONE production caller** (`panopto/runner.py:_run_panopto_batch`) and its phase-level `finally` sweeps every task on the way out. So the guarantee rests entirely on the caller, and a second caller added anywhere would leak on the crash path with nothing failing - the same shape as `pdf_looks_real` landing on two of three delete sites and surviving eight months.
+  - **Do NOT "fix" this by adding a sweep inside `transcribe_in_subprocess`'s own `finally`.** The runner retries a GPU crash on CPU by `continue`-ing to the SAME recording, and the engine-level function cannot tell a retry from an abandonment - sweeping there would delete work the retry is about to reuse the paths for. The phase is the boundary the tasks are already independent across, which is the same reasoning as `_run_phase` in post-processing and `_sec_category` in the secondary-content loop.
+  - `test_every_caller_of_the_subprocess_runner_sweeps_in_a_finally` encodes the RULE rather than the count, so a legitimate new caller is fine provided it sweeps; `test_the_subprocess_runner_has_at_least_one_production_caller` stops it going vacuous at zero sites. `scripts/_mutate_transcribe_caller_sweep.py`, **4/4 caught** - and the mutant that justifies the test is the one older tests miss: a plausible `_retranscribe_one()` helper added outside the phase.
 
 ## An AppleScript string literal is escaped in ONE place, because the rule had three (2026-08-10)
 Found by driving every macOS branch from Windows (`sys.platform`/`platform.system()` answered as darwin, real functions throughout - the same technique that caught the macOS Office delete-gate miss). An AppleScript string literal cannot span lines, so a raw `\n` **or `\r`** inside one is a SYNTAX error that kills the whole script; a bare `"` or `\` is an injection. Three places build such a literal, all three agreed on quotes and backslashes, and exactly one flattened only `\n`:
@@ -721,7 +762,8 @@ The rule above ("NEVER emit a `<style>` block CONDITIONALLY") was documented as 
 - Covered by `tests/test_conditional_stylesheets.py` (8); all **9** mutations caught (`scripts/_mutate_conditional_styles.py`), so re-run the mutation pass rather than just the suite.
 
 ### Two corrections to the transcription-notice entry above (2026-08-20)
-- **The sync REVIEW screen was never verified live** - unit tests only. It needs a Panopto analysis that produces actionable txt/srt recordings, which the test folder cannot produce. The sync LIST half *was* driven in the real app.
+- ~~**The sync REVIEW screen was never verified live**~~ - **VERIFIED 2026-08-20**, in the PACKAGED app on macOS 26.6.1 (WKWebView), against a real analysis of course 43660: 246 new files, **36 recordings**, and the card reads *"36 pending recordings are set to produce Transcript or Subtitle files."* - the `context_note` correct to the recording. Reaching it needs a pair whose folder contract asks for txt/srt pointed at a course with recordings; an EMPTY folder is what makes every recording actionable, which is what `_tx_recording_count` counts.
+  - **The `dismissible=` split is confirmed on the one thing that could only be seen live**: with `transcription_setup_notice_dismissed: true` on disk, the sync LIST notice rendered as its one-line link while the sync REVIEW card rendered in FULL, with **no dismiss control at all**, in the same session against the same flag. That is the per-call-site design working, not two copies that happen to agree.
 - **`ui/sync_review.py` carries an inline override for that card** (`margin-top: -24px`, keyed on the FULL key so it tucks under the metric row above it). The first version of the markup-to-CSS coupling test scanned `styles/global.css` only, so a key rename would have unbound that override silently. The test now scans every `styles/*.css` **and** every module mentioning the key prefix.
 
 ## A SENTINEL is not a measurement, and a display cell must never print one (2026-08-07)
@@ -889,6 +931,9 @@ Scanning for identical duplicated collections finds the known-and-deliberate one
 ### Sweeps that came back CLEAN on real macOS - do not repeat them
 Each was mechanical, whole-project, or driven against the real machine, so a future hit is genuinely new:
 - **Filename sanitiser fuzz against the real filesystem**: 450 hostile inputs (traversal, reserved device names, NUL/CR/LF, bidi overrides, 400-char names, emoji, Danish, URL-encoded) -> **0 directory escapes, 0 write failures, 0 name-too-long**. Note APFS limits to **255 characters, not bytes** (`128 x 'æ'` = 256 bytes is accepted), and the sanitiser's own 120-char cap sits well inside it.
+  - **CORRECTED 2026-08-20: the component limit is 255 UTF-16 CODE UNITS**, not bytes and not characters. The line above said "255 characters, not bytes" and `MAC_RUNBOOK.md` said "255 bytes" - two documents, two readings, both wrong. Measured by writing real files on APFS: `255 x æ` (510 BYTES) is legal, `128 x emoji` (128 CHARACTERS) is not, and `253 x æ + 1 emoji` (255 units) is legal while one more `æ` is not. APFS stores names as UTF-16 and an astral character is a surrogate pair; **NTFS counts the same way**, so this is not a platform-specific guard.
+  - **The hazard is a UNIT MISMATCH, not a value.** `_sanitize_filename`'s cap is in CHARACTERS (`max_length=120`) and the filesystem's is in UNITS, at a worst-case ratio of 2:1 - so the safe cap is **127**, and the measured worst output is **236 units against a 255 ceiling**, a margin of about ten emoji. Raising the cap to preserve longer Canvas names - an ordinary request - breaks only all-astral filenames, only past 127, and fails as ENAMETOOLONG **at download time, i.e. as a missing file**. `tests/test_sanitize_filename.py` derives the bound from the signature's own default rather than restating 120, so the test cannot go stale against the constant it guards; `scripts/_mutate_filename_utf16_cap.py`, 4/4 caught.
+  - **`office_safe_path` is a no-op off Windows** (documented, with a comment), so macOS long-path safety comes entirely from `office_container_stage`'s short `src_<hex>` staging. Verified live: **442-char and 900-char paths both convert** to a real `%PDF-` at the long destination. Going further needs more directory LEVELS, not a longer name.
 - **macOS `PATH_MAX` is 1024 and there is NO `\\?\` escape hatch** (`make_long_path` is a documented no-op off Windows), so a deep enough tree really does raise `ENAMETOOLONG`. The degradation is correct: every one of the seven `asyncio.gather` sites passes `return_exceptions=True` **and** inspects the results, turning one over-long path into one reported file rather than a lost course.
 - **Silent broad handlers**: 426 exist, but the large ones are all either reporting (the two ~250/440-line sync-engine handlers append to `error_list`, write a terminal line and log a full traceback via `log_debug_exc`) or documented best-effort (`count_course_items`). No new instance of the "swallowed hook" shape.
 - **Cleanup-after-loop that a `BaseException` would skip** (the class behind the `.part` sidecar leak): the one real instance is already in a `finally`; the rest are thread `join`s and in-memory `openpyxl` closes.
@@ -896,9 +941,123 @@ Each was mechanical, whole-project, or driven against the real machine, so a fut
 - **The real app on this Mac**: boots headless, login page renders with 0 `stException` and 0 page errors, and the institution picker answers accent-folded queries correctly (`kobenhavn` -> Københavns Universitet, `harvard` -> Harvard University first, `erhvervsakademi` -> Erhvervsakademi Aarhus).
 
 ### Known, NOT verified - stated rather than guessed
-**iCloud Drive eviction is untested.** Nothing in the app is aware of dataless/evicted files, and a Mac student keeping course folders in iCloud Drive with "Optimize Mac Storage" on is an ordinary setup. On modern APFS an evicted file keeps its name and materialises on read, so the likely effect is a slow or failing read rather than a missing file - but that is REASONING, not measurement: this audit machine has no iCloud Drive configured, so it could not be reproduced. Do not write a fix for it without a machine that can show the failure first.
+*(iCloud eviction used to be the headline entry here. It is MEASURED as of
+2026-08-20 - see "iCloud 'Optimize Mac Storage'" below.)*
 
 **A leftover harness can impersonate the app, and it nearly cost a wrong conclusion.** Three streamlit processes from earlier sessions were still listening on 8599/8601/8603/8605. Launching the app on 8599 failed with "Port 8599 is already in use", the health check still answered 200, and the browser rendered the *completion-screen gallery* - which read exactly like "the app boots clean". **Always confirm the listener's PID is yours** (`lsof -nP -iTCP:<port> -sTCP:LISTEN`) before believing anything a local port tells you.
+
+## A re-download REWROTE the edit-protection baseline - one bookkeeping line (2026-08-20)
+`original_md5` means **what we downloaded**. It is the sole basis of the app's
+headline promise: `_classify_local_modification` compares the file on disk
+against it to answer `clean` (safe to overwrite) or `modified` (preserve as
+`_NewVersion`). `record_downloaded_file` rewrote it from whatever was on disk.
+
+- **Found while measuring something else.** The iCloud pass asked "does a
+  re-download materialise an evicted folder?" - it did, 19 of 19 - and chasing
+  the cause landed on a line whose *other* effect is data loss. The materialise
+  question was the symptom; this is the disease.
+- **`record_downloaded_file` runs after EVERY file of a download, including the
+  ones that were SKIPPED because they already existed** (`core/canvas_logic.py`,
+  *"Sync Run #0: Record skipped-but-existing files to the DB"*), and that call
+  site passes no md5. The function then hashed the file on disk and stored it -
+  so a re-download replaced the baseline with the file's CURRENT content.
+  Measured, driving the real class:
+
+      first download        baseline = md5(original bytes)
+      student edits it      classification -> 'modified'   (protected)
+      re-download course    baseline = md5(THE EDIT)
+                            classification -> 'clean'      (NOT protected)
+
+  `clean` is the verdict that lets the next sync overwrite the file, and
+  `_NewVersion` cannot fire because it reads this row.
+- **The edit must preserve the file's SIZE**, because a size change is what
+  sends the download down the overwrite branch instead of the skip branch. That
+  makes it narrow - and silent, and aimed at the one thing the product promises
+  about the user's own work.
+- **The same line was the certain iCloud cost**: hashing READS the file, and
+  reading an evicted file materialises it. Re-running a download over a folder
+  macOS had evicted pulled the whole course back - **19 of 19** untouched files,
+  against **0 of 22** for the sync path, measured on a real account.
+- **`clear_ignored` already was the fresh-vs-skip discriminator** and its
+  docstring already said so, so the fix needed no new state: a caller with no
+  md5 is either recording bytes it just WROTE (`clear_ignored=True` - secondary
+  HTML/URL renders, where the file is ours and hashing is right) or re-recording
+  a skip-existing file (where it is NOT ours). The stored baseline is preferred
+  whenever one exists; hashing stays the fallback for a row that has none, which
+  keeps the original promise that a baseline is never silently dropped.
+- **Verified end to end on the real folder**: after the fix a real download over
+  a fully evicted iCloud course materialised **0** files. The one that changed
+  blocks was the `.webloc`, which `_create_link` REWRITES every run - our own
+  write resetting its blocks, not a fetch (confirmed by its mtime).
+- `tests/test_download_baseline_preservation.py` (8) and
+  `scripts/_mutate_download_baseline.py` - **4/4 caught, plus one documented
+  EQUIVALENT** mutant (trusting an empty stored baseline changes nothing,
+  because the fallback hashes on any falsy md5; the `and _prev[0]` guard is
+  belt-and-braces). The mutation pass is what exposed a genuine gap in my own
+  tests first - a row that is MISSING and a row that EXISTS WITH AN EMPTY md5
+  reach different branches, and only the second distinguishes them.
+
+## iCloud "Optimize Mac Storage": SUPPORTED, and now pinned by tests (2026-08-20)
+A student on a cheap small-SSD Mac is a core persona, and macOS EVICTS their
+course files to free space: the name and size stay, the bytes do not
+(`st_blocks == 0`), and **the first process to READ one silently downloads it
+again**. So on such a folder hashing a file is not cheap - it is a network fetch
+and a disk refill, and it undoes the very setting the student turned on.
+
+**Measured on macOS 26.6.1 against a real iCloud account, driving the REAL
+`SyncManager`** (an account was created on the audit box for this; the two
+previous runs had none, which is the only reason this stayed open):
+
+    analysis, nothing changed on Canvas    0 of 10 files materialised
+    analysis, ONE genuine update           1 of 12   (only the changed one)
+    heal_manifest after a RENAME           1 of 12   (only the renamed one)
+    os.replace onto a dataless target      works, content correct
+    read of a dataless file                correct md5 in ~0.9-1.35 s -> 'clean'
+
+- **macOS 26 uses DATALESS FILES, not `.icloud` placeholder stubs.** The listing
+  after eviction shows the real names and nothing else, so an evicted file does
+  NOT read as a missing file plus an untracked stub - the failure that would
+  have made every sync re-download the course. (Not verified on macOS 13/14.)
+- **The engine passes because of three properties nothing was pinning**: the
+  folder walks take `stat().st_size` and never open a file; candidate md5s are
+  explicitly lazy (`'md5': None  # Lazy compute`); and the update path hashes
+  only what `_is_canvas_newer` already selected. A reasonable refactor - *"just
+  hash everything up front, it's simpler"* - would silently turn every sync into
+  a full re-download for these users, **and no existing test would have failed**.
+  `tests/test_icloud_dataless.py` is now that contract, and it is PORTABLE: it
+  counts calls to `compute_local_md5` rather than needing iCloud, so it holds
+  the line on Windows and in CI, where the failure it prevents is invisible.
+- **Hashing the updated file is REQUIRED and must not be "optimised" away.** It
+  is how an edited local copy is told from a clean one, which is what
+  `_NewVersion` rests on - and a dataless file can absolutely contain the user's
+  edits, because edits sync to iCloud and are then evicted. The materialisation
+  is the price of the edit-protection guarantee. What must never happen is
+  hashing its NEIGHBOURS.
+- **A materialisation that FAILS is safe by construction.** `compute_local_md5`
+  catches `OSError` broadly - which is what matters, since a failed fetch
+  surfaces as `EIO`/`ETIMEDOUT` and not `PermissionError` - returns `None`, and
+  `_classify_local_modification` biases to `'modified'`, i.e. `_NewVersion`.
+  The local copy is preserved; the cost is a sibling, never an overwrite.
+  Narrowing that handler would let the error escape into `analyze_course`, which
+  has NO try around the call and would abort the whole course.
+- **`_is_canvas_newer` treats same-size-newer-timestamp as a metadata touch**
+  and returns False. A probe that "changes" a file by bumping only its timestamp
+  therefore measures nothing - the first version of this measurement fooled
+  itself exactly that way and nearly recorded "0 materialised on an update" as a
+  good result. A test fixture here must change the SIZE.
+- **Detect dataless with `st_blocks == 0` at a nonzero `st_size`.** Do NOT use
+  `brctl status`: on a freshly-enabled account it returns *"Client zone not
+  found"* for a path that is plainly there, which reads like a broken test. That
+  is brctl failing to QUERY, not the file being unsynced - proved by evicting a
+  file (blocks 248 -> 0) and reading the correct md5 back.
+- 5/5 mutations caught (`scripts/_mutate_icloud_dataless.py`), each a plausible
+  refactor rather than a strawman. Re-run the pass, not just the suite.
+
+**Still unmeasured**: a real materialisation FAILURE (offline, or an account
+over quota). Only its consequence is measured, above. Cutting the network is not
+available on a machine reached over remote desktop - it strands the operator and
+the agent both.
+
 
 ## Quit only what WE launched - asking the documents cannot answer it (2026-08-12)
 Found by driving all three Office apps in the ordinary *"the user is editing while a sync converts"* state. **Word closed the user's document and quit; Excel and PowerPoint did not** - which is exactly why this needed all three to surface.
@@ -922,6 +1081,40 @@ The fix above is only as good as the moment its observation is taken, and that m
 - **A test counts the SITES, not the fix**: `test_EVERY_function_that_launches_an_office_app_observes_first` walks the module for everything that reaches `_warmup_apps` and asserts each observes first. The 2026-08-12 test checked `prime_office_automation` because that is where the fix landed - the same shape as `pdf_looks_real`, written for two delete sites and landing on one for eight months.
 - **A harness cannot catch this and did not**: every scenario here drives the converters directly, so the launchers never run. The reproduction was `sys.platform` patched to darwin with `pgrep` and the launcher modelled - which proves the DECISION path only; the "documents become undescribable" half is the 2026-08-12 macOS measurement, not re-measured. **STILL UNVERIFIED ON A MAC**, and filed as such: `MAC_RUNBOOK.md` Phase M1 **step 8** is the procedure, `AUDIT_FINDINGS.md` fp `989c128a238d` is the open work item, and `MAC_OFFICE_FIXES.md` known gap 5 is the honest list. The check that matters is **two runs in ONE session with a dirty document opened in between** - `pkill`ing between them is not a substitute, because the bug is about state inside one process, which is exactly why `scripts/verify_office_end_to_end.py` (cold/busy, one run each) cannot see it as written.
 - **The residual case, considered and DECLINED**: the predicate asks "was it running when we looked?", not "did we drive it?", and `_QUIT_TARGETS` is all three apps every run - so an app observed as idle and never touched still counts as ours, and a user opening it MID-RUN is asked to quit. The document check protects them there, soundly: no conversion phase ran for that app, so its documents are still describable and only a pristine blank is quit. A separate "we actually drove it" set would close it exactly, and is a SECOND fact about the same question kept in a second place - which is the bug this file has now fixed twice.
+### …and it RAN on a Mac at last - the document check has a THRESHOLD (2026-08-20)
+The gate above shipped verified only by a Windows simulation, and the register
+said so (`fp:989c128a238d`, HIGH). It now runs on macOS 26.6.1, and the half the
+simulation could not reach turns out to be **load-dependent** - which is what
+makes a small test pass while proving nothing.
+- **All three Phase M1 step 8 checks pass against the real applications**: first
+  run (both apps quit, Recents 4 -> 0), **two runs in ONE process with a dirty
+  unsaved Word document opened between them** (`left alone (we did not launch
+  it)`, document intact), and cancel (`left alone (we never drove it this
+  run)`). The two "left alone" reasons are told apart on real hardware, which is
+  the distinction D11 was about.
+- **A conversion phase leaves Word's documents undescribable only past THREE
+  files.** Measured, reading `name`/`path`/`full name`/`saved` after a real
+  phase with the user's document open: **2 files -> all four read correctly; 3,
+  4 and 6 -> all four FAIL.** Below the threshold the document check still
+  works, so it catches a wrong gate decision and nothing looks broken.
+- **So a harness that converts one or two files is STRUCTURALLY BLIND to this**
+  - the same shape as D11 passing every harness in the repo, one variable
+  further in. The first 8(b) run of this session used `--files 2` to save rented
+  time, printed `VERDICT: ALL GOOD`, and armed nothing; re-run at `--files 4` it
+  passes for the right reason. `scripts/verify_office_end_to_end.py:
+  MIN_ARMING_FILES` (3) now REFUSES a below-threshold run, naming why.
+- **The negative control is what proves the gate is the SOLE defence**, and it
+  needs no mutation: send `_idle_quit_script(..., undescribable_is_ours=True)` -
+  byte-for-byte what the teardown emits for an app it believes it launched -
+  after a 6-file phase with the user's dirty document open. It answers `quit
+  sent (1 open doc(s), none user-owned)`, Word quits, the document is closed.
+- **Probe traps**: `repeat with d in documents` INSIDE a `tell application`
+  block dies `-1708` ("every document doesn't understand the count message") -
+  the rule is already written in `_idle_quit_script`, so read the product's
+  idiom rather than inventing one. And building a `.pptx` by driving PowerPoint
+  (`make new presentation` + `save`) times out `-1712` and crashes it into
+  Microsoft Error Reporting, because the save panel is hidden under `open -g -j`.
+
 - **Modelling `pgrep` in a test: sample the process table at CALL time, then delay.** Sampling after the delay models a probe that sees the future, and the thread-race test then fails against correct code - which is how the first version of it "found" a defect that was not there.
 - `tests/test_office_quit_scoping.py` (27); all **17** mutations of the real code are caught. Note that removing EITHER idempotence guard alone is an equivalent mutant now the function is double-checked - the mutant has to span both.
 
@@ -962,7 +1155,13 @@ Three log lines, three seconds apart, on the download matrix: `Parameter error. 
 - **`-600` is `procNotFound`** - "not running *right now*", exactly the state a crash leaves - and the next `tell application` relaunches the app. It was classified `app_missing`, which is in `FATAL_CATEGORIES`, so **57 files were abandoned for the rest of the run** and the user was told an app they had just watched convert forty files "is not installed or could not be launched".
 - It now has its own `app_crashed` category: per-file, **retried once** after a short pause (macOS must reap the dead process, and MER takes its turn first), and NOT fatal. An unrecoverable crash still ends the phase through `SYSTEMIC_REPEAT_THRESHOLD` after three consecutive failures - the mechanism that can actually tell "one bad deck" from "the app is gone". Genuine absence (`-10810`, `-10814`) is untouched and still fatal, because retrying an app that is not installed only delays an honest error.
 - **Office writes a TYPOGRAPHIC apostrophe**, so the pre-existing `"isn't running"` test (straight quote) never matched and the whole classification rested on the `-600` substring. Both forms are covered now, each with its own no-error-number test - the first version had only the curly one plus a straight-apostrophe message that also carried `-600`, and the mutation pass caught it.
-- `tests/test_office_crash_is_not_missing.py`; all **10** mutations caught.
+- **The WORDING clauses are locale-fragile, and three of the four were dead - measured on macOS 26.6.1 (2026-08-20).** The `-600` fix above gave `isn't running` both apostrophe forms and **stopped there**; its neighbours in the same function kept only the ASCII one, and macOS writes a TYPOGRAPHIC apostrophe. Made osascript fail for real:
+  - **`app_missing` was the live defect.** A genuinely absent app says `Can't get application "X". (-1728)` with U+2019, so the clause never fired - and unlike `permission` there is **no numeric companion** (-1728 is absent from the list, deliberately, see below). The verdict fell through to `other`, which is not in `FATAL_CATEGORIES`. So a user without Microsoft Office - not a free product, so an ordinary state - never sees *"Word is not installed"*: they get three generic per-file errors and then the systemic message telling them to **"Quit Microsoft Word and run again"**, about an app they do not have.
+  - **`permission` was dead too and nobody could tell**, because `-1743` carried it: this machine's macOS emits the **British** `Not authorised to send Apple events` and the clause knew only `authorized`. A locale can change the words; it cannot change the number.
+  - **Normalise the apostrophe ONCE, up front** - not two spellings per clause. Spelling each clause twice is precisely what produced this: one clause had both forms, its siblings had one, and the difference is invisible in review. A clause added later now cannot inherit the bug.
+  - **`-1728` must NOT go in the numeric list, and that is the non-obvious half.** It is `errAENoSuchObject`, which OUR OWN scripts raise for an absent DOCUMENT (`can't get active document`) - mapping the code wholesale would abort a phase with *"Office is not installed"* on a machine where it plainly is, i.e. a fatal, and the wrong one. The wording separates the two exactly, which is why the apostrophe had to be fixed rather than the number added; a mutant pins it as *"the obvious fix, and wrong"*.
+  - **Known remaining gap, stated rather than closed**: on a Danish-language macOS every wording clause matches nothing and only the numeric codes decide. That is why `app_missing` losing its number matters more than it looks.
+- `tests/test_office_crash_is_not_missing.py` (29); `scripts/_mutate_office_guard.py crash` **8/8** and `scripts/_mutate_applescript_locale.py` **6/6**. The crash set was 10 until the two apostrophe-CLAUSE mutants were retired - the property they guarded moved to the locale set, and `tests/test_mutation_anchors.py` failed them in the same commit that moved the code, which is exactly what it exists for.
 
 ## The staged product is promoted only if it is REAL (2026-08-11)
 `office_container_stage`'s exit promoted anything that EXISTED, under a comment calling it the "success path". A conversion that errors part-way still leaves whatever Office had written.

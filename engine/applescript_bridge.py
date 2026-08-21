@@ -200,6 +200,15 @@ def _product_is_real(staged_dst: Path) -> bool:
 def _direct_passthrough(src: Path, dst: Path, app_name: str):
     """The no-container path: Office writes straight to the real destination.
 
+    **Records the fallback here, and here ONLY**, because there are TWO ways to
+    reach it and the first version of this instrumented one of them - which is
+    the "a fix that lands on two of three sites" mistake this repo keeps
+    finding. The container can be missing (`_office_container_tmp` answers
+    None), or present-but-unusable, where the `mkdir`/`copy2` INTO it raises -
+    and a denied app-data grant takes the SECOND path, because the directory
+    still exists and lists. Verified live: the fix landed on the first branch
+    and the packaged app went on reporting a bare -1712.
+
     Nothing can be gated *before* the write here, so the most this can do is
     refuse to LEAVE a reject behind. The two cases are deliberately different:
 
@@ -215,6 +224,8 @@ def _direct_passthrough(src: Path, dst: Path, app_name: str):
     the shape non-macOS takes, though no converter reaches it there - Windows
     goes through `office_safe_path` and COM.
     """
+    if sys.platform == 'darwin':
+        _office_unstaged.add(app_name)
     existed = dst.exists()
     yield src, dst
     try:
@@ -243,16 +254,33 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
     powerbox prompt. On a clean exit the produced *staged_dst* is moved back to
     the real *dst*; the staging dir is always cleaned up.
 
-    Degrades safely: on any platform other than macOS, when the container is
-    unavailable, or if the staging copy fails, it yields the original
-    ``(src, dst)`` unchanged - behaviour is then identical to no staging
-    (i.e. never worse than before, only ever better).
+    Degrades to the original ``(src, dst)`` on any platform other than macOS,
+    when the container is unavailable, or if the staging copy fails.
+
+    **That degrade is NOT harmless on macOS 15+, and this docstring used to
+    say it was** ("never worse than before, only ever better"). Measured
+    2026-08-20 in the packaged app with the *"would like to access data from
+    other apps"* prompt DENIED: the container reads as unavailable, the
+    fallback asks Word to open a file at its real path, macOS raises the
+    per-folder file-access prompt **that staging exists to avoid**, and the
+    blocked AppleEvent times out after ~2 minutes - twice, because a timeout
+    is a per-file category and gets retried. One `.doc` cost ~4 minutes and
+    reported only ``AppleEvent timed out (-1712)`` then "Conversion failed
+    twice", naming neither the cause nor a remedy. The trap note further
+    down this function already described that exact mechanism - as a hazard
+    for anyone re-MEASURING staging, without noticing it is a live user path.
+
+    So the fallback still runs (a user who has granted per-folder access
+    converts fine), but it is RECORDED in ``_office_unstaged`` so a timeout
+    can be attributed to the prompt rather than blamed on the document.
     """
     src = Path(src)
     dst = Path(dst)
 
     stage_root = _office_container_tmp(app_name)
     if stage_root is None:
+        # The fallback records itself inside _direct_passthrough - BOTH routes
+        # to it must count, and this one is not the route a denial takes.
         yield from _direct_passthrough(src, dst, app_name)
         return
 
@@ -331,7 +359,13 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
         work.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, staged_src)
     except Exception as e:
-        logger.debug(f"[AppleScript] container staging unavailable ({e}); using direct path")
+        # WARNING, not debug: the app's debug log captures INFO and above
+        # (measured - a real run with debug mode ON contained 0 DEBUG lines),
+        # so at debug level the ONE line explaining why conversions are about
+        # to fail could never be read by anyone, including this audit.
+        logger.warning(f"[AppleScript] container staging unavailable ({e}); "
+                       f"using direct path - Office will be asked to open a file "
+                       f"outside its container, which macOS may block")
         shutil.rmtree(work, ignore_errors=True)
         yield from _direct_passthrough(src, dst, app_name)
         return
@@ -565,7 +599,16 @@ _last_error: tuple[str, str] | None = None
 # that is NOT recoverable still ends the phase - it just does it through
 # SYSTEMIC_REPEAT_THRESHOLD, after three consecutive failures, which is the
 # mechanism that can tell "one bad deck" from "the app is gone".
-FATAL_CATEGORIES = ('permission', 'app_missing')
+FATAL_CATEGORIES = ('permission', 'app_missing', 'container_denied')
+
+#: Office apps whose conversions ran WITHOUT container staging this run, i.e.
+#: `_office_container_tmp` answered None. Per-run, cleared by
+#: `reset_office_priming`. Read only to explain a TIMEOUT: unstaged means
+#: macOS is being asked to let us drive Office over a file outside its own
+#: container, which is the per-folder powerbox prompt that staging exists to
+#: avoid - and an unanswered or denied prompt BLOCKS the AppleEvent until it
+#: times out.
+_office_unstaged: set = set()
 
 # A failure that REPEATS is systemic even when its category is per-file.
 #
@@ -648,9 +691,25 @@ def _classify_stderr(err_msg: str) -> str:
     Genuine absence still lands in ``app_missing``: ``-10810`` (launch failed),
     ``-10814`` (kLSApplicationNotFoundErr) and the "can't be found" wordings.
     """
-    low = err_msg.lower()
-    if '-1743' in err_msg or 'not authorized to send apple events' in low:
+    # Normalise the apostrophe ONCE rather than spelling every clause twice.
+    # macOS writes a TYPOGRAPHIC apostrophe (U+2019) and the clauses below were
+    # written with the ASCII one, so they matched nothing. That was already
+    # learned here for "isn't running" - which is why that one line carries both
+    # forms - and the same fix was never applied to its neighbours. Measured on
+    # macOS 26.6.1: a missing app really says `Can’t get application "X". (-1728)`.
+    low = err_msg.lower().replace('\u2019', "'").replace('\u2018', "'")
+    # 'authorised' as well as 'authorized': this machine's macOS emits the
+    # BRITISH spelling, so the American-only clause never fired and the whole
+    # verdict rested on the -1743 code beside it.
+    if ('-1743' in err_msg
+            or 'not authorized to send apple events' in low
+            or 'not authorised to send apple events' in low):
         return 'permission'
+    # NOTE the numeric list does NOT include -1728. That is errAENoSuchObject,
+    # which our own scripts also raise for an absent DOCUMENT (`can't get active
+    # document`); mapping it wholesale would abort a phase with "Office is not
+    # installed" on a machine where it plainly is. The wording clause below
+    # separates the two exactly, now that it can match at all.
     if (
         '-10810' in err_msg or '-10814' in err_msg
         or "application can't be found" in low
@@ -658,9 +717,66 @@ def _classify_stderr(err_msg: str) -> str:
         or 'unable to find application' in low
     ):
         return 'app_missing'
-    if '-600' in err_msg or "isn't running" in low or "isn’t running" in low:
+    # -609 is `connectionInvalid`: the Apple event connection to the app died
+    # under us. It is the same recoverable condition as -600 one step earlier -
+    # the app was there when we addressed it and is not there now - and this
+    # module's OWN docstring already cites `Connection is invalid. (-609)` as
+    # the signature of PowerPoint being torn down mid-conversion. It was
+    # nonetheless classified `other`, which gets NO retry, so a transient death
+    # failed the file outright.
+    #
+    # Measured 2026-08-21, matrix row m032 (the largest Office batch in the
+    # plan, ~88 files across two courses): three files failed transiently, each
+    # surrounded by dozens of successes, and all three fell to `other`. They
+    # were recovered only because `retry_failed_conversions` sweeps the phase
+    # afterwards - and because that late sweep re-resolves the destination, each
+    # also minted a duplicate `<stem> (n).pdf` beside the real product.
+    #
+    # -30001 is deliberately NOT here, and that is a decision, not an omission.
+    # It is OUR OWN guard ("the frontmost presentation is not the one Canvas
+    # Downloader opened"), and `app_crashed` tells the user the app "stopped
+    # running while converting" - which is FALSE for -30001: the app is running
+    # perfectly, it simply has someone else's document in front, which is what
+    # happens when the user opens a document mid-run. Buying one retry with a
+    # message that misdescribes the machine's state is the wrong trade in a
+    # product whose whole reporting contract is that it tells the truth. It also
+    # collapses the one distinction that made this row diagnosable at all.
+    # `test_container_denied_attribution` additionally uses -30001 as its only
+    # non-timeout `other` fixture. If it is ever made retryable it needs its own
+    # category and its own wording - see MAC_RUNBOOK.md.
+    if ('-600' in err_msg or '-609' in err_msg
+            or "isn't running" in low
+            or 'connection is invalid' in low):
         return 'app_crashed'
     return 'other'
+
+
+def attribute_office_failure(category: str, app_name: str, err_msg: str) -> str:
+    """Refine a stderr-only verdict with what THIS RUN knows about staging.
+
+    `_classify_stderr` is handed the message and nothing else, so it cannot tell
+    a slow document from a blocked permission prompt - both surface as
+    ``AppleEvent timed out (-1712)``. The deciding fact is whether this run got
+    container staging for this app: unstaged means macOS was asked to let us
+    drive Office over a file OUTSIDE its container, which raises the per-folder
+    powerbox prompt that staging exists to avoid, and a denied or unanswered
+    prompt holds the event until it times out.
+
+    A separate function, not an inline test, for two reasons. It is the whole
+    decision, so tests can exercise the REAL rule instead of a copy - a copy is
+    how four mutants survived the first version of this. And it keeps
+    `run_applescript` reading as a sequence of verdicts rather than hiding a
+    second classifier inside it.
+
+    Deliberately narrow, because the failure in the other direction is real: a
+    genuinely huge deck that times out WITH staging must stay a per-file
+    ``other``, not abort the phase and tell the user to change a setting that is
+    fine.
+    """
+    if (category == 'other' and app_name in _office_unstaged
+            and ('-1712' in err_msg or 'timed out' in err_msg.lower())):
+        return 'container_denied'
+    return category
 
 
 def _timeout_for(src: Path, base: int = 180) -> int:
@@ -859,8 +975,9 @@ def _run_applescript_locked(src: Path, dst: Path, app_name: str, script: str) ->
             # remaining 57 files.
             if category == 'app_crashed':
                 logger.warning(
-                    f"[AppleScript] {app_name} was not running ({err_msg}) - it "
-                    f"most likely crashed; relaunching and retrying {src.name} once"
+                    f"[AppleScript] {app_name} was not usable ({err_msg}) - it "
+                    f"most likely crashed or was torn down mid-conversion; "
+                    f"relaunching and retrying {src.name} once"
                 )
                 time.sleep(_CRASH_RELAUNCH_PAUSE_S)
                 result = subprocess.run(
@@ -876,11 +993,30 @@ def _run_applescript_locked(src: Path, dst: Path, app_name: str, script: str) ->
                 err_msg = result.stderr.strip() or err_msg
                 category = _classify_stderr(err_msg)
 
+            # A timeout while UNSTAGED is the powerbox prompt, not a slow
+            # document - see `attribute_office_failure`.
+            category = attribute_office_failure(category, app_name, err_msg)
+
             if category == 'permission':
                 detail = (
                     f"macOS blocked Canvas Downloader from controlling Microsoft {app_name} "
                     f"(Automation permission denied). Enable it in System Settings → "
                     f"Privacy & Security → Automation → Canvas Downloader."
+                )
+            elif category == 'container_denied':
+                # Full Disk Access, NOT "Files and Folders": checked in System
+                # Settings on 26.6.1 with this denial recorded - the app appears
+                # under Files and Folders with NO TOGGLE, so sending the user
+                # there is sending them nowhere. FDA supersedes this grant and
+                # is the pane the app's own nudge and Settings card already
+                # open (`render_fda_settings_card`), so the words match an
+                # affordance the user can actually find.
+                detail = (
+                    f"Microsoft {app_name} did not respond, which usually means "
+                    f"macOS is waiting on permission to open files in this folder. "
+                    f"Turn on Canvas Downloader under System Settings → Privacy & "
+                    f"Security → Full Disk Access (or in the app's Settings → macOS "
+                    f"permissions), then run again."
                 )
             elif category == 'app_missing':
                 detail = f"Microsoft {app_name} is not installed or could not be launched."
@@ -1910,6 +2046,30 @@ def _idle_quit_script(app: str, collection: str,
     readable and behaved correctly throughout, which is exactly why this needed
     all three apps to surface.
 
+    **IT IS LOAD-DEPENDENT, AND THAT IS WHY A SMALL TEST PASSES VACUOUSLY.**
+    Re-measured on macOS 26.6.1 on 2026-08-20, same shape, counting the files
+    the phase converted before the properties were read:
+
+        2 files -> name/path/full name/saved ALL READ correctly
+        3 files -> ALL FAIL
+        4 files -> ALL FAIL
+        6 files -> ALL FAIL
+
+    Below three, the document check still works, so it catches a wrong gate
+    decision and nothing appears to be broken. A harness that converts one or
+    two files therefore CANNOT see this failure - the same structural blindness
+    that let D11 live while every harness in the repo passed, one variable
+    further in. `scripts/verify_office_end_to_end.py:MIN_ARMING_FILES` refuses
+    a below-threshold run for exactly this reason; the first 8(b) run of the
+    2026-08-20 session used `--files 2`, reported ALL GOOD, and proved nothing.
+
+    The negative control, run on that machine with no product code mutated:
+    this script with `undescribable_is_ours=True` - byte-for-byte what the
+    teardown emits for an app it believes it launched - sent after a 6-file
+    phase with the user's dirty document open returned `quit sent (1 open
+    doc(s), none user-owned)`, Word quit, and the document was closed. The
+    gate above is therefore the SOLE defence, not a belt-and-braces one.
+
     The cost of the safe default is an Office app left in the dock; the cost of
     the unsafe one is a student's unsaved essay. `pathKnown`/`savedKnown` make
     "we could not tell" expressible, which the old boolean pair could not say.
@@ -2360,6 +2520,10 @@ def reset_office_priming() -> None:
     # new run with the old run's answer - the very thing being fixed.
     with _office_observe_lock:
         _office_preexisting.clear()
+    # Per-run, exactly like _office_preexisting above it: a run that got
+    # staging must not inherit the previous run's 'unstaged' verdict and
+    # then explain an ordinary timeout as a permission problem.
+    _office_unstaged.clear()
 
 
 def office_contract_from_folder(folder, base_contract: dict) -> dict:

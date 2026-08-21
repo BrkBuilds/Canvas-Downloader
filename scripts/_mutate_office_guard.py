@@ -95,18 +95,23 @@ CRASH_MUTANTS = [
      "'-10810' in err_msg or '-10814' in err_msg",
      "'-10810' in err_msg or '-10814' in err_msg or '-600' in err_msg"),
     ("app_crashed made fatal", AB,
-     "FATAL_CATEGORIES = ('permission', 'app_missing')",
-     "FATAL_CATEGORIES = ('permission', 'app_missing', 'app_crashed')"),
+     "FATAL_CATEGORIES = ('permission', 'app_missing', 'container_denied')",
+     "FATAL_CATEGORIES = ('permission', 'app_missing', 'container_denied', 'app_crashed')"),
     ("no retry at all", AB,
      "if category == 'app_crashed':\n                logger.warning(",
      "if False:\n                logger.warning("),
     ("successful retry does not reset the wedge counter", AB,
      "                    global _repeat_key, _repeat_count\n                    _repeat_key, _repeat_count = None, 0\n                    logger.info(",
      "                    logger.info("),
-    ("curly apostrophe dropped", AB,
-     ' or "isn\u2019t running" in low', ""),
-    ("straight apostrophe dropped", AB,
-     '"isn\'t running" in low or ', ""),
+    # RETIRED 2026-08-20. These two broke the two apostrophe CLAUSES, which no
+    # longer exist: `_classify_stderr` now normalises U+2019 once, up front, so
+    # a clause added later cannot inherit the bug that produced them. The same
+    # property - and the wider locale problem they were the first sighting of -
+    # is covered by scripts/_mutate_applescript_locale.py ("the apostrophe
+    # normalisation is dropped", "only the curly apostrophe is normalised").
+    # Deleted rather than re-anchored: pointing them at the normalisation line
+    # would just duplicate that set, and a duplicated mutant inflates a score
+    # without adding a property.
     ("crash detail claims not installed", AB,
      'f"Microsoft {app_name} stopped running while converting "',
      'f"Microsoft {app_name} is not installed or could not be launched. "'),
@@ -118,6 +123,22 @@ CRASH_MUTANTS = [
      "                err_msg = result.stderr.strip() or err_msg"),
     ("relaunch pause removed", AB,
      "_CRASH_RELAUNCH_PAUSE_S = 3.0", "_CRASH_RELAUNCH_PAUSE_S = 0.0"),
+    # Added 2026-08-21 with the -609 / -30001 widening. Each is a way of
+    # half-doing it, and the last two are the ones that matter: widening the
+    # recoverable set must not swallow an ordinary error into "retry me", and
+    # must not make a transient failure fatal.
+    ("-609 falls back to 'other', so a dead connection is never retried", AB,
+     "    if ('-600' in err_msg or '-609' in err_msg",
+     "    if ('-600' in err_msg"),
+    ("-30001 is made retryable, which misdescribes a running app", AB,
+     "    if ('-600' in err_msg or '-609' in err_msg",
+     "    if ('-600' in err_msg or '-609' in err_msg or '-30001' in err_msg"),
+    ("the wording clause for a dead connection is dropped", AB,
+     "            or 'connection is invalid' in low):",
+     "            or 'connection is invalid xx' in low):"),
+    ("the widening swallows EVERYTHING into app_crashed", AB,
+     "            or 'connection is invalid' in low):",
+     "            or True):"),
 ]
 
 

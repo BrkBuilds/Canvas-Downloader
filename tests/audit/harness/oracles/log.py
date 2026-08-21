@@ -206,6 +206,14 @@ BENIGN_WARNINGS = (
     "ignoring embedded stale id",          # Panopto link carries an outdated id
     "Invalid color passed for",            # Streamlit 1.51 sidebar theme noise
     "Updated manifest entry",              # routine: a conversion moved a row
+    # The RECOVERY working, not a failure. When an Office app dies mid-file
+    # (-600, or -609 connectionInvalid) the bridge relaunches it and retries
+    # that one file; both halves of that are logged. Reporting the warning
+    # trains a reader to treat a successful self-heal as a defect - and the
+    # pair is what proves the retry ran at all. A retry that FAILS is reported
+    # by its own error line, which is not benign and is not listed here.
+    "was not usable",                      # ...relaunching and retrying <file> once
+    "recovered after a crash",             # ...<file> converted on the retry
     # A teacher-locked Canvas file. Permanent, Canvas-side, nothing the app can
     # do, and it already reports it precisely ("The teacher has locked this file
     # on Canvas"). Course 43660 carries two. Surfacing them every run trains a

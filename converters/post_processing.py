@@ -16,7 +16,7 @@ import re
 import sys
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Optional
 
 from shared import theme
@@ -93,6 +93,11 @@ class UIBridge:
     _eta_task: str = ''
     _eta: Any = None
     generated_sidecar_paths: list = field(default_factory=list)  # _Data.txt paths for UI ledger injection
+    # Phases that ABORTED on a FATAL AppleScript category (Automation denied,
+    # Office not installed). Written by `_abort_applescript_phase`, read by
+    # `retry_failed_conversions` - see its docstring for why a retry there is
+    # not merely wasted but actively contradicts the abort.
+    aborted_phases: set = field(default_factory=set)
 
 
 # ─────────────────────────────────────────────────────
@@ -292,10 +297,12 @@ def _resolve_conversion_target(sm, src_path, target_ext: str,
                else src.with_suffix(target_ext))
 
     if sm is not None:
-        try:
-            src_rel = str(src.relative_to(sm.local_path)).replace('\\', '/')
-        except (ValueError, AttributeError):
-            src_rel = None
+        # Same spelling problem as the repoint below, and here it costs MORE
+        # than bookkeeping: failing to find the row loses the "own product"
+        # ownership check, so the fallback plain-suffix name can overwrite a
+        # file this entry does not own - including a PDF the student has since
+        # annotated. See ``_course_relative``.
+        src_rel = _course_relative(sm, src)
         if src_rel is not None:
             try:
                 manifest = sm.load_manifest()
@@ -310,8 +317,16 @@ def _resolve_conversion_target(sm, src_path, target_ext: str,
                         sm.get_conversion_products().get(str(row_id), ''))
                     if prod_rel:
                         prod_path = sm.local_path / prod_rel
+                        # "Beside the source" is compared in COURSE-RELATIVE
+                        # terms, not as absolute paths. `prod_path` is always
+                        # built from `sm.local_path` while `src` carries
+                        # whatever spelling its caller used, so comparing the
+                        # absolute parents re-introduces exactly the mismatch
+                        # `_course_relative` exists to remove - and silently, in
+                        # the branch that protects an annotated PDF.
                         if (prod_path.suffix.lower() == target_ext.lower()
-                                and prod_path.parent == src.parent):
+                                and PurePosixPath(prod_rel).parent
+                                == PurePosixPath(src_rel).parent):
                             # OWN product - but only if the student has not
                             # since edited it. `_NewVersion` protects the file
                             # the DOWNLOAD would replace; a converted file is
@@ -349,15 +364,64 @@ def _resolve_conversion_target(sm, src_path, target_ext: str,
         n += 1
 
 
+def _course_relative(sm, path) -> str | None:
+    """The manifest's spelling of *path*, or None if it is genuinely outside.
+
+    THE MANIFEST KEYS ROWS ON A PATH RELATIVE TO THE COURSE FOLDER, so every
+    lookup in this module has to reproduce that spelling exactly.
+    ``Path.relative_to`` is a pure STRING operation, and the two sides do not
+    always arrive spelled the same way: ``converters/pdf.py`` and
+    ``converters/word.py`` both return ``str(dst.resolve())`` from their macOS
+    branch while ``converters/excel.py`` returns ``str(dst)``, and
+    ``sm.local_path`` carries whatever spelling the destination was configured
+    with. On any root reached through a symlink - ``/tmp`` -> ``/private/tmp``,
+    or a course folder linked onto an external drive - the resolved and
+    unresolved spellings differ, ``relative_to`` raises, and the callers used to
+    swallow that in SILENCE.
+
+    Measured 2026-08-21 in a real packaged run of course 43660: **62 of 63
+    Office conversions left their manifest row pointing at the source file they
+    had just deleted**, and the one converter that repointed correctly was the
+    only one that does not call ``resolve()``. Nothing was logged, on either
+    path. So the fallback compares REAL paths - the one spelling both sides can
+    always agree on - and the callers now say so when even that fails.
+
+    ``os.path.realpath`` is used rather than ``Path.resolve`` because it is
+    defined on a path that no longer EXISTS, which ``original_file`` never does
+    by the time the repoint runs: every source-consuming converter deletes its
+    source before reporting success.
+    """
+    root = getattr(sm, "local_path", None)
+    if root is None:
+        return None
+    p = Path(path)
+    candidates = ((p, Path(root)),
+                  (Path(os.path.realpath(p)), Path(os.path.realpath(root))))
+    for cand, cand_root in candidates:
+        try:
+            return str(cand.relative_to(cand_root)).replace('\\', '/')
+        except (ValueError, AttributeError, OSError):
+            continue
+    return None
+
+
 def _update_manifest_path(sm, original_file: Path, converted_path: Path):
     """Update the sync manifest to point from the original file to the converted file.
 
     Uses SyncManager exclusively - no raw sqlite3.  Fixes the audit inconsistency.
     """
-    try:
-        original_rel = str(original_file.relative_to(sm.local_path)).replace('\\', '/')
-        new_rel = str(converted_path.relative_to(sm.local_path)).replace('\\', '/')
-    except ValueError:
+    original_rel = _course_relative(sm, original_file)
+    new_rel = _course_relative(sm, converted_path)
+    if original_rel is None or new_rel is None:
+        # Not a crash and not data loss - the file IS converted - but the sync
+        # record is now stale, and a stale row is re-offered as a restore on the
+        # next sync while its product sits untracked. Silence here is what let
+        # that ship, so it is stated.
+        logger.warning(
+            "Could not place %s / %s inside the course folder %s, so the "
+            "manifest was not repointed. The file was converted; only the sync "
+            "record is stale.",
+            original_file, converted_path, getattr(sm, "local_path", None))
         return
 
     # BOOKKEEPING MUST NOT UNDO WORK THAT ALREADY SUCCEEDED. By the time this
@@ -379,6 +443,15 @@ def _update_manifest_path(sm, original_file: Path, converted_path: Path):
             if info.get('local_path', '') == original_rel:
                 sm.update_converted_file(int(file_id), new_rel)
                 break
+        else:
+            # A conversion whose source was never tracked is ORDINARY - an
+            # extracted archive member, a secondary-content render - so this is
+            # not an error. It is logged at debug because "no row matched" and
+            # "the row was repointed" were previously indistinguishable from
+            # outside, which is exactly what made a spelling mismatch invisible.
+            logger.debug(
+                "No manifest row for %s; nothing to repoint to %s.",
+                original_rel, new_rel)
     except Exception as e:
         logger.warning(
             "Could not repoint the manifest from %s to %s (%s: %s). The file was "
@@ -425,6 +498,16 @@ def _locked_sibling(src: Path) -> Path | None:
     return None
 
 
+#: Runner function name -> the phase label its `_abort_applescript_phase` call
+#: uses. Written here rather than derived, because the label is what the ABORT
+#: already carries and deriving it twice is how the two would drift apart.
+_RUNNER_PHASE = {
+    "run_word_conversion": "Word",
+    "run_excel_conversion": "Excel",
+    "run_pptx_conversion": "PowerPoint",
+}
+
+
 def retry_failed_conversions(attempts: list, ui: UIBridge) -> list:
     """One retry pass over conversions whose source is still on disk.
 
@@ -441,7 +524,40 @@ def retry_failed_conversions(attempts: list, ui: UIBridge) -> list:
     ``attempts`` is ``[(runner, items), ...]`` in the order they first ran; each
     ``items`` is the runner's own ``[(path, sm, ctx), ...]``. Returns the items
     that failed both times.
+
+    A phase that ABORTED for a FATAL reason is skipped, and that is not an
+    optimisation - retrying it directly contradicts the abort. `permission`
+    (Automation denied) and `app_missing` are in `FATAL_CATEGORIES` precisely
+    because they "will identically doom every remaining file in the phase", so
+    the second attempt cannot succeed; what it does instead is emit the one
+    actionable message a SECOND time - defeating the whole point of
+    `_abort_applescript_phase` - and then label the file "Conversion failed
+    twice", which blames the document for a machine-wide permission state.
+
+    Measured in the PACKAGED app on macOS 26.6.1 with Automation for Microsoft
+    Word genuinely denied (2026-08-20): 3 per-file errors and 2 aborts for ONE
+    `.doc`, corroborated independently by the health record's
+    `failures={'osascript_permission': 2}`.
+
+    The skip is per PHASE, not global: a Word denial says nothing about the
+    HTML-to-Markdown runner, which uses no AppleScript at all, and `permission`
+    is granted per (client, target app) so it says nothing about Excel either.
+    Only the phase that actually aborted stands down.
     """
+    _aborted = getattr(ui, "aborted_phases", None) or set()
+
+    def _phase_aborted(runner) -> bool:
+        return _RUNNER_PHASE.get(getattr(runner, "__name__", "")) in _aborted
+
+    for runner, items in attempts:
+        if _phase_aborted(runner) and items:
+            logger.info("Not retrying %d %s file(s): the phase aborted on a "
+                        "fatal condition (%s), which a second attempt cannot "
+                        "change.", len(items),
+                        _RUNNER_PHASE.get(getattr(runner, "__name__", "")),
+                        ", ".join(sorted(_aborted)))
+    attempts = [(r, items) for r, items in attempts if not _phase_aborted(r)]
+
     pending = [(runner, [it for it in items if _still_present(it)])
                for runner, items in attempts]
     pending = [(r, items) for r, items in pending if items]
@@ -604,9 +720,22 @@ def _applescript_last_error() -> tuple[str, str | None]:
 
 
 def _abort_applescript_phase(ui: UIBridge, fatal_msg: str, remaining: int, phase_label: str) -> None:
-    """Log a single actionable message and mark the remaining files as skipped."""
+    """Log a single actionable message and mark the remaining files as skipped.
+
+    Records *phase_label* on the bridge so the retry pass can decline to run
+    this phase again. Measured on macOS 26.6.1 with Automation for Word really
+    denied: without it the retry re-ran the phase, the actionable message was
+    emitted TWICE, and the file ended up labelled "Conversion failed twice" -
+    which blames the document for a machine-wide permission state.
+    """
     if remaining > 0:
         ui.pp_failure_count += remaining
+    try:
+        ui.aborted_phases.add(phase_label)
+    except AttributeError:
+        # A caller passing a stand-in bridge (tests, sync's own UI shim) must
+        # never be broken by bookkeeping - the retry simply stays as it was.
+        pass
     _emit(ui, 'error', fatal_msg, detail=f"skipping remaining {remaining} {phase_label} file(s)")
 
 

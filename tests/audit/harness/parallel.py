@@ -107,12 +107,43 @@ class Job:
 
 
 def classify(config: dict) -> str:
-    """Which shared resource a row needs exclusive use of."""
+    """Which shared resource a row needs exclusive use of.
+
+    A row wanting BOTH is reported as ``gpu`` - see :func:`resources` and
+    :func:`split_lanes` for why that answer alone is not enough to place it.
+    """
     if any(config.get(f) for f in GPU_FACTORS):
         return "gpu"
     if any(config.get(f) for f in OFFICE_FACTORS):
         return "office"
     return "free"
+
+
+def resources(config: dict) -> set[str]:
+    """EVERY exclusive resource a row needs, not just the first one.
+
+    ``classify`` returns a single name because a row lives in a single lane, and
+    that is exactly the information a placement decision does not have: a row
+    with transcription AND Office conversion answers ``"gpu"``, lands in the gpu
+    lane, and then drives Word/Excel/PowerPoint **while the office lane is doing
+    the same thing** - which is the one arrangement this module's own docstring
+    says must never happen.
+
+    Measured 2026-08-21 on a 56-row plan: **7 of the 9 gpu rows also converted
+    Office**. That audit only escaped the clash because the gpu lane was started
+    by hand after the office lane had finished; a plain ``matrix launch`` would
+    have run them together, and the resulting
+    ``Connection is invalid. (-609)`` / ``the frontmost presentation is not the
+    one Canvas Downloader opened (-30001)`` failures look exactly like product
+    defects. One such row cost a full investigation before the plan was
+    suspected.
+    """
+    out = set()
+    if any(config.get(f) for f in GPU_FACTORS):
+        out.add("gpu")
+    if any(config.get(f) for f in OFFICE_FACTORS):
+        out.add("office")
+    return out
 
 
 def jobs_from_plan(plan: dict, *, kind: str = "download",
@@ -252,6 +283,17 @@ def partition(jobs: list[Job], lanes: int = 4) -> list[dict]:
     by_class: dict[str, list[Job]] = {c: [] for c in LANE_CLASSES}
     for j in jobs:
         by_class[j.lane_class].append(j)
+
+    # A row that needs BOTH exclusive resources cannot be isolated by giving
+    # office and gpu a lane each: whichever lane holds it drives Office while
+    # the other lane is also driving Office. When any such row exists the two
+    # classes stop being independent and have to share ONE serial lane. Merging
+    # costs parallelism only for plans that actually contain a dual-need row -
+    # which is decided by the plan, not by the machine, so it stays
+    # deterministic. See `resources` for the measurement that forced this.
+    if any(len(resources(j.config)) > 1 for j in jobs):
+        by_class["office"] = by_class["office"] + by_class["gpu"]
+        by_class["gpu"] = []
 
     serial = [c for c in ("office", "gpu") if by_class[c]]
     # Never spend every lane on the serial classes - free work would then never

@@ -185,6 +185,65 @@ skipping step 4 produces tests that cannot fail.
 **Two of six rounds left survivors on the first pass, and both were my test's fault, not
 the mutation's.** Budget for a second pass.
 
+### The tests were wrong FIVE times before the code was (2026-08-20)
+
+One session, one fix, and the mutation pass went **3/7 → 6/8 → 9/10 → 10/10**.
+Every single step was fixing MY TESTS, never the product. None of it was
+visible in review. The five shapes, in the order they bit:
+
+1. **The test RE-IMPLEMENTED the rule instead of calling it.** A helper in the
+   test file repeated the predicate inline, so breaking the product's copy
+   could not fail anything. Three mutants survived on this alone. **The fix is
+   to extract the decision into a named function** the test imports - which is
+   also what makes it readable. This repo has learned it twice before
+   (`format_available_space`, the disk-fill ratio) and it recurred anyway.
+2. **The assertion matched an explanatory COMMENT.** A test scanned the source
+   for `"Full Disk Access"`; the comment above the message named both that pane
+   and the wrong one, so the test passed whatever the message said. **Blank
+   comments before scanning source** - the same rule `verify_architecture.py`
+   applies, for the same reason: documenting a trap must never satisfy the
+   check policing it.
+3. **The test asserted STRUCTURE where only BEHAVIOUR could fail.** An AST test
+   found the `record.add(...)` call and passed; a mutant that changed the guard
+   to `and False` left the call in the tree and survived. **A record that
+   exists but never happens is only caught by driving the real thing.**
+4. **The negative cases never reached the clause under test.** "A non-timeout
+   failure keeps its category" used messages that classified as
+   permission/app_missing - so the guard's FIRST clause carried them and the
+   timeout clause was never exercised. Pick negatives that reach the specific
+   condition.
+5. **A companion signal carried the assertion.** "The American spelling still
+   reads as a cancel" included the `-128` error number, so the number answered
+   and the wording clause was untested - the very defect the test existed for.
+   **Strip the companion** when testing a clause that has one.
+
+### READ THE CONTRACT BEFORE WRITING THE CALL
+
+The single most repeated mistake of that session - **four times in one day**,
+each producing a "finding" that was the harness:
+
+| the call | what was wrong | what it looked like |
+|---|---|---|
+| `_path_key("Notes.pdf")` | needs an ABSOLUTE path; the volume probe refuses a relative one, and says so in its docstring | a case-only rename reading as untracked, i.e. a missing fix |
+| `quit_idle_office_apps()` from a fresh interpreter | the per-run "who launched this" state is process-local | the quit gate failing to quit anything |
+| `_force_close_canvas_docs_sync("Word")` | `_QUIT_TARGETS` holds `"Microsoft Word"`; every real caller passes the full name | the documented remedy doing nothing |
+| `H._macos_multi_folder_picker(...)` | it is `_mac_multi_folder_picker` | an AttributeError, caught in seconds - but the same reflex |
+
+Every one would have been avoided by reading the signature, the docstring, and
+**what the REAL call sites pass**, before writing the call. Every one was read
+AFTER failing. The operator's measurement across all macOS audits is that up to
+**65% of a session** goes on harness iteration rather than on the application -
+this is the largest single contributor, and it is free to avoid.
+
+**Two rules that pay for themselves:**
+
+* **Read the contract first** - signature, docstring, and one real call site.
+* **Give every new check a POSITIVE CONTROL before trusting it.** If it cannot
+  confirm something already known to be true, it is not ready to report on
+  something unknown. The measurements that survived scrutiny this session all
+  had one (`without _path_key, 2 files would read as untracked`; `the same
+  timeout WITH staging stays "other"`); the ones that wasted time did not.
+
 ### Mistakes made this session — watch for these
 
 - **A difference too coarse to detect the mutation.** My datetime tests used timestamps a

@@ -32,22 +32,13 @@ sys.path.insert(0, str(REPO))
 SRC = (REPO / "shared" / "components.py").read_text(encoding="utf-8")
 
 
-def would_render(summary: dict) -> bool:
-    """The guard under test, mirrored from render_panopto_summary."""
-    if not summary:
-        return False
-    found = int(summary.get("found", 0) or 0)
-    is_sync = "uptodate" in summary
-    selected = int(summary.get("selected", found) or 0)
-    did_work = (int(summary.get("downloaded", 0) or 0)
-                or int(summary.get("transcribed", 0) or 0)
-                or int(summary.get("failed", 0) or 0)
-                or (selected if is_sync else 0))
-    if not did_work:
-        return False
-    if not is_sync and found <= 0:
-        return False
-    return True
+# THE REAL DECISION, not a mirror of it. This used to be a hand-copied
+# reimplementation ("mirrored from render_panopto_summary"), and a copy passes
+# happily while the shipped guard is wrong - measured 2026-08-20, when reverting
+# the real guard failed only the source-text checks and none of the behavioural
+# ones. The rule now lives in ONE module-level function and both test files
+# import it.
+from shared.components import panopto_summary_has_outcome as would_render  # noqa: E402
 
 
 # --------------------------------------------------------------------------
@@ -97,34 +88,62 @@ def test_sync_with_selected_work_still_shows_the_card():
         {"found": 36, "uptodate": 33, "downloaded": 3, "selected": 3})
 
 
-def test_sync_selection_alone_counts_as_work():
-    """Preserved from the original sync guard: a selection means the user asked
-    for something, even if the counters have not caught up yet."""
-    assert would_render({"found": 36, "uptodate": 30, "selected": 6, "downloaded": 0})
+def test_sync_selection_alone_is_NOT_work():
+    """REVERSED 2026-08-20, deliberately - this used to assert the opposite.
+
+    The old rule ("a selection means the user asked for something") is how a
+    success card made entirely of zeros reached the completion screen: the
+    operator synced course 43660 with a folder configured for txt/srt and no
+    transcription model, so 36 recordings were selected, nothing was produced,
+    and the card read "36 processed / 0 DOWNLOADED / 0 TRANSCRIBED". Selecting
+    is not producing. Product owner's call the same day: hide it.
+    """
+    assert not would_render(
+        {"found": 36, "uptodate": 30, "selected": 6, "downloaded": 0})
 
 
 # --------------------------------------------------------------------------
 # the implementation still carries the rule
 # --------------------------------------------------------------------------
 
+def _guard_src() -> str:
+    """The extracted guard's source, comments stripped.
+
+    Anchored on the FUNCTION, not on a byte offset inside the renderer: the rule
+    was moved out of `render_panopto_summary` on 2026-08-20 and these checks all
+    reported it as MISSING, which is the "brittle anchor reads like a missing
+    guard" trap this repo has paid for before. The guard had in fact got
+    stronger.
+    """
+    body = SRC.split("def panopto_summary_has_outcome", 1)[1]
+    body = body.split("\ndef ", 1)[0]
+    return re.sub(r"^\s*#.*$", "", body, flags=re.M)
+
+
 def test_the_guard_is_shared_by_both_modes():
-    body = SRC.split("def render_panopto_summary", 1)[1][:2600]
-    body = re.sub(r"^\s*#.*$", "", body, flags=re.M)   # comments quote the old text
-    assert "_did_work" in body
-    assert "if not _did_work:" in body, "the zero-suppression guard is gone"
-    assert body.count("_did_work =") == 1, \
-        "the two modes have diverged again - that is how download mode kept its zero"
+    # ONE rule, asked once. Two would be how download mode kept its zero.
+    assert SRC.count("def panopto_summary_has_outcome") == 1
+    renderer = SRC.split("def render_panopto_summary", 1)[1][:2600]
+    assert "panopto_summary_has_outcome(" in renderer, \
+        "the renderer no longer delegates to the shared guard"
+    # Behavioural, because that is what "shared" has to mean: the SAME produced-
+    # nothing summary is suppressed whichever mode it came from.
+    assert not would_render({"found": 36, "downloaded": 0, "transcribed": 0,
+                             "failed": 0})
+    assert not would_render({"found": 36, "uptodate": 0, "selected": 36,
+                             "downloaded": 0, "transcribed": 0, "failed": 0})
 
 
 def test_the_download_branch_no_longer_renders_on_found_alone():
-    body = SRC.split("def render_panopto_summary", 1)[1][:2600]
-    body = re.sub(r"^\s*#.*$", "", body, flags=re.M)
+    body = _guard_src()
     assert "elif found <= 0:" not in body, \
         "`found` alone decides rendering again, so a size-skipped run shows 0"
 
 
 @pytest.mark.parametrize("stat", ["downloaded", "transcribed", "failed"])
 def test_every_work_signal_is_part_of_the_guard(stat):
-    body = SRC.split("def render_panopto_summary", 1)[1][:2600]
-    i = body.find("_did_work =")
-    assert stat in body[i:i + 400], f"{stat} no longer counts as work"
+    """Behavioural, against the REAL guard - a source scan cannot tell whether a
+    signal that is merely MENTIONED actually counts."""
+    assert would_render({"found": 5, "uptodate": 0, stat: 1}) is True, \
+        f"{stat} no longer counts as work"
+    assert would_render({"found": 5, "uptodate": 0, stat: 0}) is False
