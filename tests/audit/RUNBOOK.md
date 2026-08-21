@@ -1605,3 +1605,55 @@ lane keeps the code it started with and the matrix stays internally consistent.
 The exception is `parallel._recover`, which restarts the app after a **crashed
 row** — those rows and everything after them would run the new code. Check
 `matrix lanes` for a non-zero `failed`/`retried` before trusting a mixed run.
+
+## Adjudicating a matrix that ran with Office contention (2026-08-21)
+
+A converting lane alongside ANY other live lane produces Office failures that are
+indistinguishable from product defects in the row's own findings. Until the
+register's *"Office ownership is instance-blind"* finding is fixed, this is not a
+hypothetical — it happened, and it produced **12 HIGH findings that were all
+false**.
+
+### The procedure that settles it
+
+1. **Stop the aggressors, not the converter.** The converting lane is the
+   expensive one (it holds the transcription row and every Office row); the free
+   lanes are cheap to re-run. Killing the free lanes lets the converting lane
+   finish clean.
+2. **Re-run every contaminated row ALONE**, in its own run, on a separate port
+   band (`--lanes 1 --app-base 8900 --cdp-base 9500`) so nothing can collide.
+3. **Compare finding COUNTS per row**, contaminated vs clean.
+4. **Insist on controls.** Rows that were never contaminated must reproduce
+   *identically*. On 2026-08-21: m012 3→3 and m013 5→5, while m014 went 7→3 and
+   m025 22→7. Without those controls the drop is equally explained by the re-run
+   simply reporting less, and the whole adjudication is worthless.
+
+### THE RULE, and it is the expensive lesson
+
+**A timestamp correlation can only ever CONFIRM contamination. It can NEVER
+establish that a finding is genuine.**
+
+Correlating office-lane failures against free-lane `[OfficeQuit]` timestamps
+worked beautifully where it matched — free3 `force-terminated Microsoft
+PowerPoint` at 14:59:54.043 against the converting lane's `-609` at 14:59:54.812,
+**0.77s**. So the table looked authoritative. It then produced one entry with *no*
+correlate, recorded as **"UNEXPLAINED — candidate genuine"**, which was one step
+from being filed as a product defect.
+
+It was not genuine. It did not reproduce when the row ran alone. The reason no
+correlate existed is that the most destructive mechanism —
+`_force_close_canvas_docs_sync` closing another instance's in-flight document —
+**logged nothing at all**. Absence of a log line was not evidence of absence.
+
+*(That silence is now fixed: the marker close reports `closed N` and logs it at
+INFO. But the rule outlives the fix — any correlation argument that rests on a
+missing log line is only as good as that subsystem's instrumentation, and you
+usually do not know how good that is until it has already misled you.)*
+
+### Do not let false findings into the register
+
+`register update` will merge contaminated findings as new OPEN entries — 12 of
+them, on 2026-08-21. Mark them `invalid` with the clean re-run named as the
+evidence. A register full of findings that were never real is the same failure as
+a blind oracle inventing them: it makes every genuine finding in that category
+unfalsifiable.
