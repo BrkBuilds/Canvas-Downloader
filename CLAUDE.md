@@ -1011,6 +1011,91 @@ the part that cost a session.**
   that the checker "correctly falls back to the review screen". That fallback is
   only correct when a review screen exists.
 
+## A bundle's SEAL is only as stable as the least deterministic thing in it (2026-08-21)
+Both specs bundle the app's packages by DIRECTORY, so PyInstaller sweeps in
+whatever `__pycache__` the working tree holds - **75 stale `.pyc` measured** -
+and `codesign` seals them. Remove any one afterwards and the seal breaks.
+- **The two Gatekeeper verdicts are different CLASSES, not different wordings**,
+  measured on macOS 26.6.1 against two quarantined copies of one bundle:
+  a valid ad-hoc seal gives `spctl -a -t exec` -> *"rejected"*, **exit 3**; the
+  same bundle with `__pycache__` removed gives *"a sealed resource is missing"*,
+  **exit 1**. Exit 3 is the not-notarized policy denial - the *"Apple could not
+  verify…"* dialog with the **Open Anyway** path `docs/mac-setup.html` walks the
+  user through. Exit 1 is a signature VALIDITY failure - *"…is damaged and can't
+  be opened"*, which has no Open Anyway path. **The app ships unsigned by design
+  (a free student project - do not re-raise notarization), so that one
+  recoverable dialog is the entire macOS onboarding route.**
+- **REACHABILITY, and this is the part to copy**: the claim was checked against
+  the SHIPPED artifact, not reasoned about. The **v2.0.1 DMG was downloaded and
+  inspected** - one `__pycache__`, in a third-party `dist-info/licenses` folder,
+  none of the app's own. Release DMGs come from a fresh CI checkout with nothing
+  to sweep in, so this never reached a user, and the exit-1 verdict was produced
+  on a LOCAL build. Fixed anyway so a local build is byte-comparable to the CI
+  one. **An inflated severity survives on every machine that reads this file**,
+  so state the reachability with the mechanism.
+- **What that inspection DID find**: v2.0.1's shipped bundle fails `codesign
+  --verify` outright, because `pync` vendors a nested app PyInstaller cannot
+  seal. Already fixed - `pync` is out of the spec and a fresh build verifies exit
+  0. **It still assessed as exit 3**, because `spctl` does not descend into that
+  subcomponent - so a failing `codesign` does NOT by itself mean "damaged", and
+  only a top-level sealed-resource failure produces the unrecoverable dialog.
+- `scripts/build_excludes.py:strip_bytecode_datas`, applied in BOTH specs
+  because a fix landing on one is this repo's documented failure mode.
+  `tests/test_bundle_bytecode_exclusion.py` counts the call sites;
+  `scripts/_mutate_bundle_bytecode.py` **9/9**.
+- **Six of nine mutants survived the first pass and three were defects in my own
+  tests**: a text search matched the call inside its own explanatory comment
+  (resolve the call through the **AST**), and TWO mutants hit a byte-identical
+  anchor in `strip_test_datas`, which is defined FIRST - so `.replace(..., 1)`
+  mutated the wrong function and reported SURVIVED under a label that was a lie.
+  **Fourth and fifth instances of the twin-anchor trap in this repo.** Anchor
+  uniquely, always including a preceding line.
+
+## A page's own text must not be `opacity: 0` to a crawler that runs no JS (2026-08-21)
+`docs/index.html`, `guide.html` and `engine.html` gate nearly every block behind
+`class="reveal"`, which an IntersectionObserver un-hides. Measured with a real
+parser: **guide 7,025/7,217 words (97%)**, **index 3,125/4,112 (75%)**, both
+with the `h1` hidden. Google renders JS; several assistant crawlers do not, and
+`marketing/` records the site appearing in zero of three web searches while an
+assistant quoted the *Store* copy.
+- **The fix is ADDITIVE and that is the whole point**: one rule on
+  `html:not(.js) .reveal`, plus an inline `<head>` script. With JS present
+  `html.js` matches so the new rule never applies. **Do not invert it onto
+  `html.js .reveal`** - that is (0,2,1) and outranks `.reveal.vis` (0,2,0), so
+  nothing would ever be revealed again. Total in a browser, invisible in review.
+- **The class means "the mechanism that reveals this exists"**, not "scripting is
+  on": it is set only when `IntersectionObserver` is present, because the reveal
+  script constructs one with no fallback.
+- **Verified against the DEPLOYED pre-fix site, not against a claim**: identical
+  reveal count, identical initially-hidden count, identical per-element
+  `transitionDelay` ladder, identical computed transition, 0 hidden after
+  scrolling. No-JS hidden words 3,125 -> 0 and 7,025 -> 0, confirmed live.
+- `tests/test_website_noscript_content.py` derives its page list FROM the markup
+  so a new page cannot silently miss the rule; 7/7 control mutants caught,
+  including the inversion and a rule that is merely commented out. Two of its own
+  assertions were too weak first: a lookbehind that a prefixed selector satisfied
+  (compare the WHOLE selector), and reading comment-bearing source instead of
+  `<style>` blocks with CSS comments stripped.
+
+## A documented test that was never committed measures nothing (2026-08-21)
+`tests/test_website_social_proof.py` and `scripts/_mutate_social_proof.py` were
+described by **four** marketing documents, including a recorded "15 of 15
+mutations caught". Neither file had ever existed in any commit. Same decay class
+as a stale mutation anchor, one level worse: an anchor that no longer resolves
+can at least be detected by `tests/test_mutation_anchors.py`, whereas a file that
+was never written is invisible to it.
+- **Writing them found a real drift** (the homepage and `llms.txt` disagreeing),
+  which is the argument for the class of guard - but **the product owner then
+  ruled the guard itself wrong** and both files were deleted the same day. The
+  published figure is a rounded-down floor on a number that only grows, so any
+  hard-coded ceiling is wrong the week after it is written. **Do not re-open the
+  installs-vs-downloads question**; it is settled in `marketing/FINDINGS.md`.
+- The reusable half: when a document names a test, **check the file exists**
+  before quoting its score. Three of this session's findings were documents
+  describing something that was not there - this one, the register header
+  ("19 open", actually 7), and "the GitHub social preview is not set" (it is set,
+  and it is the 1024x1024 app icon on a surface that renders 2:1).
+
 ## Auditing this app: two playbooks, and the one input that matters
 - **THIS FILE IS THE CROSS-MACHINE MEMORY, and that is why it is enormous.** The operator works from at least three checkouts (laptop, main desktop, and a rented macOS audit box) and any per-session assistant memory lives OUTSIDE the repo, so it does not travel and does not survive a machine being reimaged - which the audit box periodically is. Anything durable therefore belongs here, in `tests/audit/AUDIT_FINDINGS.md`, `tests/audit/MAC_RUNBOOK.md` or `AUDIT_PLAYBOOK.md`, written mechanism-first (what breaks, the measurement, why the obvious fix is wrong) rather than as a summary. Assistant memory is for facts about the PERSON and the working relationship; anything the repo should own goes in the repo, and goes in the same commit as the fix.
 - **Marketing, SEO and the launch live in `marketing/`, not here.** Same rule and same reason as the audit documents above: a website change, a search-visibility finding or a positioning decision is durable, so it belongs in the repo and travels between machines. `marketing/README.md` is the index; **`FINDINGS.md`** is the register (every defect found, its evidence, its status, and why anything deferred was deferred); **`STRATEGY.md`** holds the SETTLED decisions; **`SITE_RUNBOOK.md`** is what to read before touching `docs/`; **`PLAYBOOK.md`** is the off-site plan; **`CHANGELOG.md`** records what exists now. Four facts from it that bite ENGINEERING and not just copy: (a) the website must advertise the newest shipped **TAG**, never `version.py`, which `tests/test_version_leads_tags.py` deliberately keeps AHEAD of every tag - the homepage advertised a 2.0.2 nobody could download; (b) a `<button>` that receives a scripted `.href` is a **dead control**, and that shipped - both download buttons on `/releases.html` did nothing for six days after three `<a href="#">` were converted to buttons and only one got a handler; (c) `preload="none"` is **ignored while `autoplay` is present**, so deferring a video means withholding the `src`, which took mobile LCP from 5300 ms to 2764 ms; (d) student-facing copy says **"Canvas", never "LMS"** - a product-owner ruling that overrides SEO instinct and applies to app strings too, not only the website.
