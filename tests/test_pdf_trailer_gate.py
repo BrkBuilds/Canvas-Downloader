@@ -130,3 +130,20 @@ def test_a_directory_in_the_way_is_reported_not_raised(tmp_path):
     d.mkdir()
     ok, _ = pdf_looks_real(d)
     assert not ok, "never raises - an unreadable output keeps the source"
+
+
+def test_a_bare_EOF_inside_the_CONTENT_does_not_count_as_a_trailer(tmp_path):
+    """The marker is ``%%EOF``, not ``EOF``.
+
+    A PDF carries arbitrary bytes in its streams, so the three letters can and
+    do appear inside ordinary content - a slide that says "EOF", a code listing,
+    a compressed stream that happens to contain them. Matching the bare word
+    would let exactly the interrupted file this gate exists to catch through,
+    and the mutation pass survives on a suite whose payloads are all 'x'.
+    """
+    body = HEAD + b"x" * 500 + b" ... end of file EOF marker in the text ... " \
+        + b"y" * 500
+    p = _write(tmp_path, "eof_in_content.pdf", body)
+    ok, why = pdf_looks_real(p)
+    assert not ok, "a bare 'EOF' in the content was accepted as a trailer"
+    assert "incomplete" in why
