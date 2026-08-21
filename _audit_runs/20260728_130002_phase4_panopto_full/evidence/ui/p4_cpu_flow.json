@@ -1,0 +1,123 @@
+{
+  "name": "p4_cpu",
+  "open": {
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPANOPTO (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n3 files pending sync\n217 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 3 recordings",
+      "waited_s": 24.2
+    },
+    "capture": "p4_cpu_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_43660",
+      "cat_ignored_43660"
+    ],
+    "capture": "p4_cpu_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\screenshots\\p4_cpu_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\ui\\p4_cpu_review.json",
+    "textLen": 3425,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "trategi - beslutninger i organisationer\nForelæsningsvideo (1) Forandringsledelse.mp3\n\n​\n\n​\n\nTema 4 Ledelse og strategi- forandringer i organisationer\nForelæsningsvideo (1) Forandringsledelse.srt\n\n​\n\n​\n\nTema 4 Ledelse og strategi- forandringer i organisationer\nForelæsningsvideo (1) Forandringsledelse.txt\n\n​\n\n​\n\nTema 4 Ledelse og strategi- forandringer i organisationer\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 355.5
+    },
+    "capture": "p4_cpu_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "13:37:36",
+      "action": "open_sync",
+      "screen": "sync"
+    },
+    {
+      "t": "13:38:04",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPANOPTO (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n3 files pending sync\n217 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 3 recordings",
+        "waited_s": 24.2
+      },
+      "capture": "p4_cpu_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "13:38:05",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43660",
+        "cat_ignored_43660"
+      ],
+      "capture": "p4_cpu_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\screenshots\\p4_cpu_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\ui\\p4_cpu_review.json",
+      "textLen": 3425,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "13:44:04",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "trategi - beslutninger i organisationer\nForelæsningsvideo (1) Forandringsledelse.mp3\n\n​\n\n​\n\nTema 4 Ledelse og strategi- forandringer i organisationer\nForelæsningsvideo (1) Forandringsledelse.srt\n\n​\n\n​\n\nTema 4 Ledelse og strategi- forandringer i organisationer\nForelæsningsvideo (1) Forandringsledelse.txt\n\n​\n\n​\n\nTema 4 Ledelse og strategi- forandringer i organisationer\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 355.5
+      },
+      "capture": "p4_cpu_complete",
+      "ok": true
+    }
+  ]
+}

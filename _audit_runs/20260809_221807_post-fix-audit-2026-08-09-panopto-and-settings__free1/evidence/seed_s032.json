@@ -1,0 +1,68 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-08-09T23:28:09",
+  "applied": [
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    }
+  ],
+  "skipped": {
+    "renamed_ambiguous": "no eligible candidate in this folder"
+  },
+  "fixture_count": 2,
+  "expected_categories": {
+    "uptodate": 2
+  },
+  "expected_untracked": [
+    "Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 1.pdf",
+    "Course description including examination rules/Page Numbers for 6th and 5th Edition - mine noter 0.docx"
+  ],
+  "expected_missing_rows": [
+    "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+    "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 50,
+    "files": 50
+  },
+  "after": {
+    "rows": 48,
+    "files": 50
+  },
+  "fixtures": [
+    {
+      "label": "renamed-row-dropped:Page Numbers for 6th and 5th Edition - mine noter 0.docx",
+      "kind": "renamed_row_dropped",
+      "path": "Course description including examination rules/Page Numbers for 6th and 5th Edition - mine noter 0.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Course description including examination rules/Page Numbers for 6th and 5th Edition - mine noter 0.docx",
+      "match_name": "Page Numbers for 6th and 5th Edition.docx",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1627501,
+      "original_path": "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Compulsory Assignment_Fall 2025 - mine noter 1.pdf",
+      "kind": "renamed_row_dropped",
+      "path": "Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 1.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 1.pdf",
+      "match_name": "Compulsory Assignment_Fall 2025.pdf",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1637102,
+      "original_path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

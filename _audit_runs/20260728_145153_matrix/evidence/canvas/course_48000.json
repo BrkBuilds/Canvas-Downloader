@@ -1,0 +1,251 @@
+{
+  "course_id": 48000,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "Virksomhedens økonomiske styring (3): Finansiering (LA E26 BINTO1051U)",
+  "course_code": "BINTO1051U.LA_E26 (Virksomhedens økonomiske styring (3): Finansiering)",
+  "fetched_at": "2026-07-28T14:52:35",
+  "folders": {
+    "444590": {
+      "id": 444590,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {
+    "1840489": {
+      "id": 1840489,
+      "filename": "Connect+Quick+Start+Guide+for+Students+-+Finansiering+-+Efter%C3%A5r+2026+-+For%C3%A5r+2027.pdf",
+      "display_name": "Connect Quick Start Guide for Students - Finansiering - Efterår 2026 - Forår 2027.pdf",
+      "size": 567693,
+      "content_type": "application/pdf",
+      "updated_at": "2026-07-17T12:34:46Z",
+      "folder_id": 444590,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1833603": {
+      "id": 1833603,
+      "filename": "FCF+Ross+8e+2-3.pdf",
+      "display_name": "FCF Ross 8e 2-3.pdf",
+      "size": 1444781,
+      "content_type": "application/pdf",
+      "updated_at": "2026-07-08T11:43:12Z",
+      "folder_id": 444590,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1837779": {
+      "id": 1837779,
+      "filename": "HA_Finansiering_2026-2027.pdf",
+      "display_name": "HA_Finansiering_2026-2027.pdf",
+      "size": 2977902,
+      "content_type": "application/pdf",
+      "updated_at": "2026-07-17T12:34:23Z",
+      "folder_id": 444590,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1833596": {
+      "id": 1833596,
+      "filename": "SUPERGUIDE+to+CONNECT.pdf",
+      "display_name": "SUPERGUIDE to CONNECT.pdf",
+      "size": 5963518,
+      "content_type": "application/pdf",
+      "updated_at": "2026-07-06T07:00:11Z",
+      "folder_id": 444590,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1833602": {
+      "id": 1833602,
+      "filename": "Trykfejl_HRWJ_Levy+og+Sarnat_051225.pdf",
+      "display_name": "Trykfejl_HRWJ_Levy og Sarnat_051225.pdf",
+      "size": 203435,
+      "content_type": "application/pdf",
+      "updated_at": "2026-07-08T11:43:46Z",
+      "folder_id": 444590,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    }
+  },
+  "modules": [
+    {
+      "id": 326257,
+      "name": "Course description including examination rules",
+      "position": 1,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1165931,
+          "type": "ExternalUrl",
+          "title": "Course description including examination rules",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2026-2027/BA-BINTO1051U.aspx",
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 332119,
+      "name": "Læseplan, litteratur mv.",
+      "position": 2,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1198259,
+          "type": "File",
+          "title": "Trykfejl_HRWJ_Levy og Sarnat_051225.pdf",
+          "content_id": 1833602,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1198260,
+          "type": "File",
+          "title": "FCF Ross 8e 2-3.pdf",
+          "content_id": 1833603,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 332118,
+      "name": "Connect",
+      "position": 3,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1200075,
+          "type": "File",
+          "title": "HA_Finansiering_2026-2027.pdf",
+          "content_id": 1837779,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1201124,
+          "type": "File",
+          "title": "Connect Quick Start Guide for Students - Finansiering - Efterår 2026 - Forår 2027.pdf",
+          "content_id": 1840489,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1198257,
+          "type": "File",
+          "title": "SUPERGUIDE to CONNECT.pdf",
+          "content_id": 1833596,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 332157,
+      "name": "Forelæsninger",
+      "position": 4,
+      "published": null,
+      "item_count": 0,
+      "items": []
+    },
+    {
+      "id": 332158,
+      "name": "Øvelser",
+      "position": 5,
+      "published": null,
+      "item_count": 0,
+      "items": []
+    },
+    {
+      "id": 332159,
+      "name": "Øvelser Facit",
+      "position": 6,
+      "published": null,
+      "item_count": 0,
+      "items": []
+    },
+    {
+      "id": 332160,
+      "name": "Eksempler på tidligere eksamensopgaver",
+      "position": 7,
+      "published": null,
+      "item_count": 0,
+      "items": []
+    }
+  ],
+  "module_item_types": {
+    "ExternalUrl": 1,
+    "File": 5
+  },
+  "module_file_ids": [
+    1833596,
+    1833602,
+    1833603,
+    1837779,
+    1840489
+  ],
+  "only_in_modules": [],
+  "only_in_files_tab": [],
+  "files_tab_restricted": false,
+  "assignments": [],
+  "quizzes": [],
+  "announcements": [],
+  "discussions": [],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_file_ids": [],
+  "inline_only_file_ids": [],
+  "expected_file_ids": [
+    1833596,
+    1833602,
+    1833603,
+    1837779,
+    1840489
+  ],
+  "secondary_counts": {
+    "assignment": 0,
+    "quiz": 0,
+    "discussion": 0,
+    "announcement": 0,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "quizzes": "ResourceDoesNotExist: Not Found",
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 3.8
+}

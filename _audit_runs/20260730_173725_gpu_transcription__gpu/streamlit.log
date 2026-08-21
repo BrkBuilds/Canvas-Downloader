@@ -1,0 +1,10 @@
+
+=== audit app start 2026-07-30 17:37:34 port=8940 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8940
+  Network URL: http://192.168.1.50:8940
+  External URL: http://188.183.232.43:8940
+
+Hybrid Fetch: Found 77 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43660.

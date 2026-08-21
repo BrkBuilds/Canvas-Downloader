@@ -1,0 +1,376 @@
+--- Debug Log Started: 2026-08-10 00:27:08.401226 ---
+[2026-08-10 00:27:08.424] === Session Environment ===
+  App: Canvas Downloader v2.0.1 | frozen=False | pid=14308
+  OS: Windows 11 | Windows-11-10.0.26200-SP0 | arch=AMD64
+  Python: 3.13.1
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 1 course(s)
+===========================
+[2026-08-10 00:27:13.978] [INFO] [core.canvas_logic] Page-stub fallback: resolved 35 module Page item(s) by slug (Pages list restricted for course 43660)
+[2026-08-10 00:27:14.332] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 77 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43660.
+[2026-08-10 00:27:14.391] === Download Start: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | Course 1/1 ===
+[2026-08-10 00:27:14.391] Mode: flat | Filter: study
+[2026-08-10 00:27:14.391] Post-processing: [urls]
+[2026-08-10 00:27:14.392] Secondary content: [none]
+[2026-08-10 00:27:14.529] 
+==================================================
+--- Download: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) (ID: 43660) Mode: flat ---
+==================================================
+[2026-08-10 00:27:14.530] Save Dir: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260810_001830_mp4-and-macos-2026-08-10\downloads
+[2026-08-10 00:27:14.530] Filter: study | Concurrency: 10 | Max file size: disabled | Estimated payload: 813 MB
+[2026-08-10 00:27:14.530] Canvas Content: [none] | isolate=no
+[2026-08-10 00:27:14.531] Post-processing: [urls]
+[2026-08-10 00:27:14.804] Starting Flat Download for Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+[2026-08-10 00:27:16.928] Skipping existing file: 1999_Kotter_kap 1.pdf
+[2026-08-10 00:27:16.934] Skipping existing file: 1999_Kotter_kap 2.pdf
+[2026-08-10 00:27:16.937] Skipping existing file: 2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx
+[2026-08-10 00:27:16.939] Skipping existing file: 2024_Lektion uge 37_2 Struktur_upload.pptx
+[2026-08-10 00:27:16.942] Skipping existing file: 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx
+[2026-08-10 00:27:16.945] Skipping existing file: 2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pptx
+[2026-08-10 00:27:16.949] Skipping existing file: 2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pptx
+[2026-08-10 00:27:16.954] Skipping existing file: 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx
+[2026-08-10 00:27:16.960] Skipping existing file: 2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pptx
+[2026-08-10 00:27:16.964] Skipping existing file: 2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx
+[2026-08-10 00:27:16.969] Skipping existing file: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx
+[2026-08-10 00:27:16.973] Skipping existing file: 2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx
+[2026-08-10 00:27:16.980] Skipping existing file: 2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx
+[2026-08-10 00:27:16.986] Skipping existing file: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx
+[2026-08-10 00:27:16.990] Skipping existing file: 2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pptx
+[2026-08-10 00:27:16.992] Skipping existing file: 2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx
+[2026-08-10 00:27:16.995] Skipping existing file: 2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx
+[2026-08-10 00:27:16.996] Skipping existing file: 2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf
+[2026-08-10 00:27:16.998] Skipping existing file: 2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx
+[2026-08-10 00:27:17.000] Skipping existing file: 2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pptx
+[2026-08-10 00:27:17.002] Skipping existing file: 2025_Lektion uge 43_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf
+[2026-08-10 00:27:17.003] Skipping existing file: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx
+[2026-08-10 00:27:17.006] Skipping existing file: 251009_Kom og vær med_Til Stig N.pptx
+[2026-08-10 00:27:17.008] Skipping existing file: Berlingske Case.pdf
+[2026-08-10 00:27:17.009] Skipping existing file: Beslutninger - Uge 46 2025.pdf
+[2026-08-10 00:27:17.011] Skipping existing file: Børnemøbler_ny version.pdf
+[2026-08-10 00:27:17.012] Skipping existing file: culture.experiences.pdf
+[2026-08-10 00:27:17.014] Skipping existing file: E25_F26_HAIT_Organisationers opbygning.pdf
+[2026-08-10 00:27:17.015] Skipping existing file: F22_HAIT_Organisationers opbygning_2021-2022.pdf
+[2026-08-10 00:27:17.017] Skipping existing file: F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf
+[2026-08-10 00:27:17.018] Skipping existing file: Forandring - uge 47 2025.pdf
+[2026-08-10 00:27:17.020] Skipping existing file: Forandring i organisationer_video1_upload_2025.pptx
+[2026-08-10 00:27:17.022] Skipping existing file: Forandringsledelse slide del 2.pptx
+[2026-08-10 00:27:17.023] Skipping existing file: From Algorithmic Management to Data-driven Labour Organising(27).pdf
+[2026-08-10 00:27:17.024] Skipping existing file: GenAI in Danske Bank_opdateret.pdf
+[2026-08-10 00:27:17.026] Skipping existing file: HA(it.)_grupper E2021.pdf
+[2026-08-10 00:27:17.027] Skipping existing file: ind_org_Pensumoversigt_efterår2025.pdf
+[2026-08-10 00:27:17.029] Skipping existing file: Hildebrandt-1.pdf
+[2026-08-10 00:27:17.030] Skipping existing file: Individ og organisation_motivation & belønning 1_upload.pptx
+[2026-08-10 00:27:17.032] Skipping existing file: Industrialsupply.pdf
+[2026-08-10 00:27:17.033] Skipping existing file: Individ og organisation_motivation & belønning 2_upload.pptx
+[2026-08-10 00:27:17.035] Skipping existing file: Intro_uge 36_2025_slides.pdf
+[2026-08-10 00:27:17.037] Skipping existing file: Klyngevejledning - Upload.pptx
+[2026-08-10 00:27:17.038] Skipping existing file: Klyngevejledning 1_grp 14.pdf
+[2026-08-10 00:27:17.039] Skipping existing file: ITDoesntMatter.pdf
+[2026-08-10 00:27:17.041] Skipping existing file: Klyngevejledning 1_grp 15.pdf
+[2026-08-10 00:27:17.042] Skipping existing file: Klyngevejledning 1_grp 25.pdf
+[2026-08-10 00:27:17.044] Skipping existing file: Klyngevejledning_1_Program_2022.pdf
+[2026-08-10 00:27:17.045] Skipping existing file: Klyngevejledning_2_Program_ 21 april 2026.pdf
+[2026-08-10 00:27:17.047] Skipping existing file: Klyngevejledning_1_Program_2024.pdf
+[2026-08-10 00:27:17.049] Skipping existing file: Ledelse - uge 48.pdf
+[2026-08-10 00:27:17.050] Skipping existing file: Manual for eksamensprojekt 2021-2022_.pdf
+[2026-08-10 00:27:17.052] Skipping existing file: Lektion_sammenfatning af faget_2026.pptx
+[2026-08-10 00:27:17.054] Skipping existing file: Martin Thorborg tiltrækker nye ansatte ved at lokke_artikel okt 2023.pdf
+[2026-08-10 00:27:17.056] Skipping existing file: Manual for eksamensprojekt 2025-2026.pdf
+[2026-08-10 00:27:17.057] Skipping existing file: Motivationsfaktorer - uge 45 2025.pdf
+[2026-08-10 00:27:17.059] Skipping existing file: Munster 2017_intro.pdf
+[2026-08-10 00:27:17.061] Skipping existing file: Munster 2017_kap 1.pdf
+[2026-08-10 00:27:17.062] Skipping existing file: Oplæg på CBS - sendt.pdf
+[2026-08-10 00:27:17.063] Skipping existing file: Organisationsformer - oversigtstabel - udfyldt.pptx
+[2026-08-10 00:27:17.065] Skipping existing file: Organisationsprojekt_argumentation_2_upload.pptm
+[2026-08-10 00:27:17.068] Skipping existing file: Organisationsprojekt_klargøring af data_upload.pptm
+[2026-08-10 00:27:17.070] Skipping existing file: Organisationsprojekt_klargøring af data_eksempel_upload.pptx
+[2026-08-10 00:27:17.071] Skipping existing file: Organisationsprojekt_operationalisering_upload_.pptm
+[2026-08-10 00:27:17.073] Skipping existing file: Organisationsprojekt_operationalisering_upload.pptm
+[2026-08-10 00:27:17.074] Skipping existing file: Organisationsprojekt_problemformulering_1-upload-1.pptm
+[2026-08-10 00:27:17.076] Skipping existing file: Organisationsprojekt_problemformulering_1-upload.pptm
+[2026-08-10 00:27:17.078] Skipping existing file: Organisationsprojekt_problemformulering-2_upload.pptm
+[2026-08-10 00:27:17.079] Skipping existing file: Organisationsprojekt_vidensproduktion_1_2022-upload.pptm
+[2026-08-10 00:27:17.080] Skipping existing file: Organisationsprojekt_vidensproduktion_1_upload.pptm
+[2026-08-10 00:27:17.082] Skipping existing file: Organisationsprojekt_vidensproduktion_2_upload.pptm
+[2026-08-10 00:27:17.083] Skipping existing file: Organisationsprojekt_vidensproduktion_2021-2_upload.pptm
+[2026-08-10 00:27:17.085] Skipping existing file: Øvelse uge 37 - Organisationsdiagram.pdf
+[2026-08-10 00:27:17.087] Skipping existing file: Øvelse uge 44 - Læring.pdf
+[2026-08-10 00:27:17.088] Skipping existing file: Øvelse_uge6_intro_2022_upload-1.pptx
+[2026-08-10 00:27:17.089] Skipping existing file: Øvelse_uge9_problemformulering_XA_upload.pptx
+[2026-08-10 00:27:17.091] Skipping existing file: Øvelse_uge9_problemformulering_XB_UPLOAD.pptx
+[2026-08-10 00:27:17.092] Skipping existing file: Øvelser_uge13_analyse og tolkning_UPLOAD.pptx
+[2026-08-10 00:27:17.094] Skipping existing file: Øvelser_uge16_klynge_upload.pptx
+[2026-08-10 00:27:17.095] Skipping existing file: Øvelser_uge18_eksamen og afslutning_opdateret_upload.pptx
+[2026-08-10 00:27:17.096] Skipping existing file: Øvelser_uge36_intro_2025.pptx
+[2026-08-10 00:27:17.098] Skipping existing file: Øvelser_uge36B_mål_og_strategi_2025.pdf
+[2026-08-10 00:27:17.099] Skipping existing file: Øvelser_uge37_struktur_2025.pdf
+[2026-08-10 00:27:17.101] Skipping existing file: Øvelser_uge38_organisationsformer_upload.pptx
+[2026-08-10 00:27:17.102] Skipping existing file: Øvelser_uge39_kultur_2025.pdf
+[2026-08-10 00:27:17.104] Skipping existing file: Øvelser_uge39_kultur_E2025 upload.pptx
+[2026-08-10 00:27:17.105] Skipping existing file: Øvelser_uge39_sensemaking_2025.pdf
+[2026-08-10 00:27:17.107] Skipping existing file: Øvelser_uge40_perspektiver_på_kultur_til upload.pptx
+[2026-08-10 00:27:17.108] Skipping existing file: Øvelser_uge41_magt_E25.pdf
+[2026-08-10 00:27:17.110] Skipping existing file: Øvelsesslides - Intro.pptx
+[2026-08-10 00:27:17.111] Skipping existing file: Øvelsesslides - uge 12.pptx
+[2026-08-10 00:27:17.113] Skipping existing file: Øvelsesslides formelle træk - organisationsformer-1.pptx
+[2026-08-10 00:27:17.115] Skipping existing file: Øvelsesslides formelle træk - organisationsformer.pptx
+[2026-08-10 00:27:17.116] Skipping existing file: Øvelsesslides_mål og strategi_XA-1.pptx
+[2026-08-10 00:27:17.118] Skipping existing file: Schein 1994_uddrag.pdf
+[2026-08-10 00:27:17.119] Skipping existing file: Sensemaking in org (weick 1995).pdf
+[2026-08-10 00:27:17.121] Skipping existing file: Sensemaking slides 1.pdf
+[2026-08-10 00:27:17.122] Skipping existing file: Sensemaking slides 1.pptx
+[2026-08-10 00:27:17.124] Skipping existing file: Sensemaking slides 2.pdf
+[2026-08-10 00:27:17.126] Skipping existing file: Sensemaking slides 2.pptx
+[2026-08-10 00:27:17.128] Skipping existing file: Shook J. (2010) How to change a culture, lessons from nummi.pdf
+[2026-08-10 00:27:17.129] Skipping existing file: Slides - Henrik Stenmann - Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf
+[2026-08-10 00:27:17.131] Skipping existing file: Slides (1) Ledelse i organisationer forelæsning 1.pptx
+[2026-08-10 00:27:17.133] Skipping existing file: Slides (1) Motivationsfaktorer forelæsning 1.pptx
+[2026-08-10 00:27:17.134] Skipping existing file: Slides (2) Ledelse i organisationer forelæsning 2.pptx
+[2026-08-10 00:27:17.135] Skipping existing file: Slides (2) Motivationsfaktorer forelæsning 2.pptx
+[2026-08-10 00:27:17.137] Skipping existing file: Slides sidste forelæsning.pdf
+[2026-08-10 00:27:17.138] Skipping existing file: Slides_kulturanalyse del 1_E25.pdf
+[2026-08-10 00:27:17.140] Skipping existing file: Slides_kulturanalyse del 2_E25.pdf
+[2026-08-10 00:27:17.141] Skipping existing file: Slides_mål og strategi_del 1_E25.pdf
+[2026-08-10 00:27:17.143] Skipping existing file: Slides_mål og strategi_del 2_E25.pdf
+[2026-08-10 00:27:17.145] Skipping existing file: Søstrene Grene.pdf
+[2026-08-10 00:27:17.146] Skipping existing file: Strategy in Danske Bank.pdf
+[2026-08-10 00:27:17.147] Skipping existing file: Uge 10 Undersøgelsesdesign UPLOAD.pptx
+[2026-08-10 00:27:17.148] Skipping existing file: Uge 15 - Formidling.pptx
+[2026-08-10 00:27:17.150] Skipping existing file: Uge43_omgivelser_2025.pdf
+[2026-08-10 00:27:17.151] Skipping existing file: Uge45_motivation og belønning_upload.pptx
+[2026-08-10 00:27:23.285] Fallback Scan: Module Kursusbeskrivelse og eksamensregler (found 3 items)
+[2026-08-10 00:27:23.285]   Fallback Item: Kursusbeskrivelse - ink. eksamensregler (Type: ExternalUrl)
+[2026-08-10 00:27:23.285]   Fallback Item: Helle Zinner Henriksens Kontortid (Type: Page)
+[2026-08-10 00:27:23.509] Fallback Scan: Module Opdateret Pensumoversigt inkl. Forår 2026 (found 4 items)
+[2026-08-10 00:27:23.510]   Fallback Item: Grupper til eksamensprojekt (Type: Page)
+[2026-08-10 00:27:23.510]   Fallback Item: Brug af AI i eksamensprojektet (Type: Page)
+[2026-08-10 00:27:23.676] Fallback Scan: Module Introduktion til organisationsteori (found 5 items)
+[2026-08-10 00:27:23.676]   Fallback Item: Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-08-10 00:27:23.857] Fallback Scan: Module Tema 1: Formelle træk - mål og strategi (found 6 items)
+[2026-08-10 00:27:23.857]   Fallback Item: Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-08-10 00:27:23.857]   Fallback Item: Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-08-10 00:27:23.858]   Fallback Item: Quiz: mål og strategi i organisationer (Type: Quiz)
+[2026-08-10 00:27:24.073] Fallback Scan: Module Tema 1: Formelle træk - organisationsstruktur (found 8 items)
+[2026-08-10 00:27:24.073]   Fallback Item: Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-08-10 00:27:24.074]   Fallback Item: Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-08-10 00:27:24.074]   Fallback Item: Quiz: Organisationsstruktur  (Type: Quiz)
+[2026-08-10 00:27:24.074]   Fallback Item: Upload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk (Type: Discussion)
+[2026-08-10 00:27:24.320] Fallback Scan: Module Tema 1: Formelle træk - organisationsformer (found 8 items)
+[2026-08-10 00:27:24.320]   Fallback Item: Forelæsningsvideo (1): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-08-10 00:27:24.320]   Fallback Item: Forelæsningsvideo (2): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-08-10 00:27:24.320]   Fallback Item: Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-08-10 00:27:24.321]   Fallback Item: Danske Bank investor præsentation (læs s. 3-10) (Type: ExternalUrl)
+[2026-08-10 00:27:24.536] Fallback Scan: Module Tema 2: Uformelle træk - organisationskultur (found 13 items)
+[2026-08-10 00:27:24.536]   Fallback Item: Forelæsningsvideo (1): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-08-10 00:27:24.537]   Fallback Item: Forelæsningsvideo (2): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-08-10 00:27:24.537]   Fallback Item: Quiz: organisationskultur (Type: Quiz)
+[2026-08-10 00:27:24.537]   Fallback Item: Video med respons på feedback og introduktion til et nyt initiativ i undervisningen (Type: ExternalTool)
+[2026-08-10 00:27:24.538]   Fallback Item: Spørgsmål til pensum i organisationskultur (Type: Discussion)
+[2026-08-10 00:27:24.538]   Fallback Item: Supplerende literatur (Type: SubHeader)
+[2026-08-10 00:27:24.742] Fallback Scan: Module Tema 2: Uformelle træk - sensemaking (found 11 items)
+[2026-08-10 00:27:24.743]   Fallback Item: Forelæsningsvideo 1 om Sensemaking (Type: ExternalTool)
+[2026-08-10 00:27:24.743]   Fallback Item: Sensemaking slides 1.pptx (Type: File)
+[2026-08-10 00:27:24.898]   Fallback Item: Forelæsningsvideo 2 om Sensemaking (Type: ExternalTool)
+[2026-08-10 00:27:24.898]   Fallback Item: Sensemaking slides 2.pptx (Type: File)
+[2026-08-10 00:27:25.051]   Fallback Item: Weick, K. E., Sutcliffe, K. M., & Obstfeld, D. (2005). Organizing and the Process of Sensemaking. Organization Science 16(4), 409–421. https://doi.org/10.1287/orsc.1050.0133 (kan også findes via. CBS libsearch) (Type: SubHeader)
+[2026-08-10 00:27:25.051]   Fallback Item: Supplerende literatur (Type: SubHeader)
+[2026-08-10 00:27:25.052]   Fallback Item: Spørgsmål til oplægsholder: Jens Christian Finnerup, Systematic (Type: Discussion)
+[2026-08-10 00:27:25.275] Fallback Scan: Module Tema 2: Uformelle træk - magt og konflikt (found 11 items)
+[2026-08-10 00:27:25.276]   Fallback Item: Forelæsningsvideo (1): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-08-10 00:27:25.276]   Fallback Item: Forelæsningsvideo (2): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-08-10 00:27:25.276]   Fallback Item: Quiz: magt og konflikt (Type: Quiz)
+[2026-08-10 00:27:25.277]   Fallback Item: Spørgsmål til pensum: magt i organisationer (Type: Discussion)
+[2026-08-10 00:27:25.425] Fallback Scan: Module Uge 42: Ingen undervisning (found 0 items)
+[2026-08-10 00:27:25.653] Fallback Scan: Module Tema 3: Individ, organisation og omverden - organisation og omgivelser (found 9 items)
+[2026-08-10 00:27:25.654]   Fallback Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-08-10 00:27:25.654]   Fallback Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-08-10 00:27:25.654]   Fallback Item: Quiz: omgivelser (Type: Quiz)
+[2026-08-10 00:27:25.655]   Fallback Item: Upload af besvarelse af Rigshospitalscase (Type: Discussion)
+[2026-08-10 00:27:25.655]   Fallback Item: Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 (Type: ExternalTool)
+[2026-08-10 00:27:25.848] Fallback Scan: Module Tema 3: Individ, organisation og omverden - læring i organisationer (found 7 items)
+[2026-08-10 00:27:25.848]   Fallback Item: Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-08-10 00:27:25.849]   Fallback Item: Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-08-10 00:27:25.849]   Fallback Item: Quiz: læring og innovation (Type: Quiz)
+[2026-08-10 00:27:26.055] Fallback Scan: Module Tema 3: Individ, organisation og omverden- motivationsfaktorer (found 7 items)
+[2026-08-10 00:27:26.056]   Fallback Item: Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 (Type: ExternalTool)
+[2026-08-10 00:27:26.056]   Fallback Item: Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 (Type: ExternalTool)
+[2026-08-10 00:27:26.056]   Fallback Item: Quiz: motivationsfaktorer i organisationer (Type: Quiz)
+[2026-08-10 00:27:26.241] Fallback Scan: Module Tema 4: Ledelse og strategi - beslutninger i organisationer (found 7 items)
+[2026-08-10 00:27:26.241]   Fallback Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-08-10 00:27:26.241]   Fallback Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-08-10 00:27:26.242]   Fallback Item: Quiz: Beslutninger i organisationer (Type: Quiz)
+[2026-08-10 00:27:26.468] Fallback Scan: Module Tema 4: Ledelse og strategi- forandringer i organisationer (found 13 items)
+[2026-08-10 00:27:26.469]   Fallback Item: Forelæsningsvideo (1): Forandringsledelse (Type: ExternalTool)
+[2026-08-10 00:27:26.469]   Fallback Item: Forelæsningsvideo (2): Forandringsledelse (Type: ExternalTool)
+[2026-08-10 00:27:26.469]   Fallback Item: Quiz: Forandring i organisationer (Type: Quiz)
+[2026-08-10 00:27:26.470]   Fallback Item: Rick Maurer - Introduction to Change (Type: File)
+[2026-08-10 00:27:26.638]   Fallback Item: Forberedelse til øvelstime (Type: SubHeader)
+[2026-08-10 00:27:26.851] Fallback Scan: Module Tema 4: Ledelse og strategi - ledelse i organisationer (found 8 items)
+[2026-08-10 00:27:26.851]   Fallback Item: Forelæsningsvideo 1 Ledelse i organisationer 1 (Type: ExternalTool)
+[2026-08-10 00:27:26.851]   Fallback Item: Forelæsningsvideo 2 Ledelse i organisationer 2 (Type: ExternalTool)
+[2026-08-10 00:27:26.852]   Fallback Item: Quiz: ledelse i organisationer (Type: Quiz)
+[2026-08-10 00:27:26.852]   Fallback Item: Oplæg: Saxo Merrild, Handyhand (Type: SubHeader)
+[2026-08-10 00:27:26.852]   Fallback Item: Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse (Type: ExternalUrl)
+[2026-08-10 00:27:27.054] Fallback Scan: Module Tema 4: Ledelse og strategi  - organisationsteori i et historisk perspektiv (found 1 items)
+[2026-08-10 00:27:27.223] Fallback Scan: Module Opsummering - hvad har vi lært? (found 3 items)
+[2026-08-10 00:27:27.223]   Fallback Item: Uge 6: pensum (Type: Page)
+[2026-08-10 00:27:27.223]   Fallback Item: Uge 6: mål med undervisningen (Type: Page)
+[2026-08-10 00:27:27.459] Fallback Scan: Module Organisationsprojekt - vidensproduktion (found 7 items)
+[2026-08-10 00:27:27.459]   Fallback Item: Uge 8: pensum (Type: Page)
+[2026-08-10 00:27:27.460]   Fallback Item: Uge 8: mål med undervisningen (Type: Page)
+[2026-08-10 00:27:27.460]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-08-10 00:27:27.460]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-08-10 00:27:27.673] Fallback Scan: Module Organisationsprojekt - problemformulering (found 8 items)
+[2026-08-10 00:27:27.673]   Fallback Item: Uge 9: pensum (Type: Page)
+[2026-08-10 00:27:27.674]   Fallback Item: Uge 9: mål med undervisningen (Type: Page)
+[2026-08-10 00:27:27.674]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-08-10 00:27:27.674]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-08-10 00:27:27.885] Fallback Scan: Module Organisationsprojekt - undersøgelsesdesign (found 7 items)
+[2026-08-10 00:27:27.885]   Fallback Item: Uge 10: pensum (Type: Page)
+[2026-08-10 00:27:27.885]   Fallback Item: Uge 10: mål med undervisningen (Type: Page)
+[2026-08-10 00:27:27.886]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign (Type: ExternalTool)
+[2026-08-10 00:27:27.886]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker (Type: ExternalTool)
+[2026-08-10 00:27:28.130] Fallback Scan: Module Klyngevejledning 1 (found 11 items)
+[2026-08-10 00:27:28.131]   Fallback Item: Uge 11: formål med klyngevejledningen (Type: Page)
+[2026-08-10 00:27:28.131]   Fallback Item: Filer til Klynge 1 (Type: Page)
+[2026-08-10 00:27:28.131]   Fallback Item: Filer til Klynge 2 (Type: Page)
+[2026-08-10 00:27:28.132]   Fallback Item: Filer til Klynge 3 (Type: Page)
+[2026-08-10 00:27:28.132]   Fallback Item: Filer til Klynge 4 (Type: Page)
+[2026-08-10 00:27:28.132]   Fallback Item: Filer til Klynge 5 (Type: Page)
+[2026-08-10 00:27:28.133]   Fallback Item: Filer til Klynge 6 (Type: Page)
+[2026-08-10 00:27:28.133]   Fallback Item: Filer til Klynge 7 (Type: Page)
+[2026-08-10 00:27:28.344] Fallback Scan: Module Organisationsprojekt - operationalisering af teori (found 9 items)
+[2026-08-10 00:27:28.345]   Fallback Item: Uge 12: pensum (Type: Page)
+[2026-08-10 00:27:28.345]   Fallback Item: Uge 12: mål med undervisningen (Type: Page)
+[2026-08-10 00:27:28.345]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - operationalisering (Type: ExternalTool)
+[2026-08-10 00:27:28.346]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation (Type: ExternalTool)
+[2026-08-10 00:27:28.346]   Fallback Item: Upload af besvarelse Interviewguide (husk at notér XA og XB) (Type: Discussion)
+[2026-08-10 00:27:28.555] Fallback Scan: Module Organisationsprojekt - klargøring af data til analyse (found 10 items)
+[2026-08-10 00:27:28.555]   Fallback Item: Uge 13: pensum (Type: Page)
+[2026-08-10 00:27:28.556]   Fallback Item: Uge 13: mål med undervisningen (Type: Page)
+[2026-08-10 00:27:28.556]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - klargøring af data (Type: ExternalTool)
+[2026-08-10 00:27:28.556]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data (Type: ExternalTool)
+[2026-08-10 00:27:28.767] Fallback Scan: Module Sammenfatning og evaluering af organisationsfaget (found 4 items)
+[2026-08-10 00:27:28.767]   Fallback Item: Uge 15: pensum (Type: Page)
+[2026-08-10 00:27:28.768]   Fallback Item: Uge 15: mål med undervisningen (Type: Page)
+[2026-08-10 00:27:28.948] Fallback Scan: Module Øvelser i uge 16 (found 3 items)
+[2026-08-10 00:27:28.948]   Fallback Item: Uge 16: mål med øvelserne (Type: Page)
+[2026-08-10 00:27:29.201] Fallback Scan: Module Klyngevejledning 2 (found 11 items)
+[2026-08-10 00:27:29.201]   Fallback Item: Uge 17: formål med klyngevejledningen (Type: Page)
+[2026-08-10 00:27:29.202]   Fallback Item: Filer til Klynge 1 (Type: Page)
+[2026-08-10 00:27:29.202]   Fallback Item: Filer til Klynge 2 (Type: Page)
+[2026-08-10 00:27:29.202]   Fallback Item: Filer til Klynge 3 (Type: Page)
+[2026-08-10 00:27:29.202]   Fallback Item: Filer til Klynge 4 (Type: Page)
+[2026-08-10 00:27:29.203]   Fallback Item: Filer til Klynge 5 (Type: Page)
+[2026-08-10 00:27:29.203]   Fallback Item: Filer til Klynge 6 (Type: Page)
+[2026-08-10 00:27:29.203]   Fallback Item: Filer til Klynge 7 (Type: Page)
+[2026-08-10 00:27:29.204]   Fallback Item: Filer til Klynge 8 (Type: Page)
+[2026-08-10 00:27:29.351] Fallback Scan: Module Øvelser i uge 18 (found 3 items)
+[2026-08-10 00:27:29.354] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 1 (1).pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-08-10 00:27:29.357] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 2 (1).pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-08-10 00:27:29.357] Skipping existing file: Maurer_Introduction to Change.pdf
+[2026-08-10 00:27:29.572] Starting Catch-All Phase for non-module files...
+[2026-08-10 00:27:29.573] No partial/non-module files found.
+[2026-08-10 00:27:29.574] --- Download Complete: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | 118 items | 0.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) ---
+==================================================
+[2026-08-10 00:27:30.064] === Course Finished: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | Downloaded: 118 items | Errors: 2 ===
+[2026-08-10 00:27:30.064] Post-processing ran: [urls]
+[2026-08-10 00:27:30.398] [INFO] [panopto.runner] Panopto batch start (pid=14308): 1 target(s) | model=tiny device=cpu lang=auto | engine_ready=True (outputs + layout resolved per target)
+[2026-08-10 00:27:30.399] [INFO] [panopto.runner] Discovering Panopto recordings in 'Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' (course id=43660)...
+[2026-08-10 00:27:33.098] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b58f9a14-6513-4ba6-9d3a-b34600ba6f34 (via url)
+[2026-08-10 00:27:33.113] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=01913573-0a7a-4fdb-bcdb-b1a3008d199d (via url)
+[2026-08-10 00:27:33.126] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=c8b8a8d1-6e4e-45aa-9dc4-b1d301238290 (via url)
+[2026-08-10 00:27:33.128] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=dfb98470-ada0-463e-9c41-b1e300cba127 (via url)
+[2026-08-10 00:27:33.201] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f69a6d8f-d703-49cf-9da7-b34700839cae (via url)
+[2026-08-10 00:27:33.215] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=11e7ba5a-0ada-4780-b250-b1a30098565d (via url)
+[2026-08-10 00:27:34.679] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2c2cbc41-5e08-4632-a907-b366014f267e (via url)
+[2026-08-10 00:27:34.790] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=5faa984d-d76e-4462-94a8-b35f00dfccb3 (via url)
+[2026-08-10 00:27:34.845] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=4a698f87-388c-4e87-a9c2-b35f00b478cf (via url)
+[2026-08-10 00:27:34.885] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0074fde5-eba4-42a7-b226-b35f00c6be2c (via url)
+[2026-08-10 00:27:34.963] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=5ba76e8d-6421-4861-8883-b1a400ba9ccd (via url)
+[2026-08-10 00:27:35.043] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=1dba66ba-84e0-434c-81d5-b3660165409c (via url)
+[2026-08-10 00:27:36.190] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=d5bf4d12-bb2d-4787-a923-b1a400c0ec8a (via url)
+[2026-08-10 00:27:36.457] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=4e7d90eb-226a-4678-aade-b1a8008f85bf (via url)
+[2026-08-10 00:27:36.507] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f05d844b-c2c0-4acc-ae37-b1a8008b06bd (via url)
+[2026-08-10 00:27:36.593] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=1bad9dbd-7c6f-4309-ba52-b1a400e4f565 (via url)
+[2026-08-10 00:27:36.644] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=862d36b0-e512-4b45-aa5c-b37f0125fd68 (via url)
+[2026-08-10 00:27:36.695] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0c1d61e1-5788-4c94-8c3e-b1a400d76e9a (via url)
+[2026-08-10 00:27:37.677] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0d78cddd-c122-444c-a358-b389015d0350 (via url)
+[2026-08-10 00:27:38.150] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=281aef18-7f56-48b2-803b-b3890162e755 (via url)
+[2026-08-10 00:27:38.155] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=914641ae-c022-43b3-aabd-b1a80085fb1c (via url)
+[2026-08-10 00:27:38.170] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=ead91896-cf78-4d53-a88a-b1a80081e11b (via url)
+[2026-08-10 00:27:38.222] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=04652c96-a5cc-46ac-a087-b395008824e1 (via url)
+[2026-08-10 00:27:38.340] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=c7202c34-2dfb-48cc-8f4d-b39500b2cd9e (via url)
+[2026-08-10 00:27:39.568] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f5b07ec0-02dd-47ff-9ab6-b39e017157d0 (via url)
+[2026-08-10 00:27:39.783] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0e1a9ca1-13c0-41d7-a774-b39e01715e4a (via url)
+[2026-08-10 00:27:39.849] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2e97ed4e-c381-496d-a1dd-b10b0155c62b (via url)
+[2026-08-10 00:27:39.864] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=06d68daf-238e-46ce-bc82-acd10160f141 (via url)
+[2026-08-10 00:27:39.963] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=72399841-43f1-4e1b-999c-b10a016e41d4 (via url)
+[2026-08-10 00:27:40.005] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=25f87b63-5ecb-42d2-8386-b28c016b2c3f (via url)
+[2026-08-10 00:27:41.108] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=bec7eb89-fb15-480c-87ca-b28f014f1971 (via url)
+[2026-08-10 00:27:41.339] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=088298c4-fe8b-4f1b-81ed-b28f0152aeb0 (via url)
+[2026-08-10 00:27:41.356] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=a4070dbb-3a80-4fb3-841e-b29f0174dcae (via url)
+[2026-08-10 00:27:41.497] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2da3eec0-a094-417b-9200-ace001763a64 (via url)
+[2026-08-10 00:27:41.611] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=dfee0c49-93c7-4d20-a1a7-ace7015fa08f (via url)
+[2026-08-10 00:27:41.708] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b8c36f0d-6656-4969-88ae-b1350151c84f (via url)
+[2026-08-10 00:27:41.836] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - vidensproduktion' launch-resolves to 72399841-43f1-4e1b-999c-b10a016e41d4 - ignoring embedded stale id(s): 7f8ea4fc-a256-4bc0-8fcf-b10a01796155
+[2026-08-10 00:27:41.838] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - vidensproduktion' launch-resolves to 2e97ed4e-c381-496d-a1dd-b10b0155c62b - ignoring embedded stale id(s): a95f7ede-0fd8-498d-96da-b10b0162489f
+[2026-08-10 00:27:41.841] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - problemformulering' launch-resolves to 06d68daf-238e-46ce-bc82-acd10160f141 - ignoring embedded stale id(s): 7957ff53-56b3-4c87-9b3f-acd200a67a9e
+[2026-08-10 00:27:41.850] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation' launch-resolves to 2da3eec0-a094-417b-9200-ace001763a64 - ignoring embedded stale id(s): 5194533e-1be0-4932-9b9a-ace10170be66
+[2026-08-10 00:27:41.853] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - klargøring af data' launch-resolves to b8c36f0d-6656-4969-88ae-b1350151c84f - ignoring embedded stale id(s): d69d18c5-1cfc-4fdd-ab49-b135015f6470
+[2026-08-10 00:27:41.855] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data' launch-resolves to dfee0c49-93c7-4d20-a1a7-ace7015fa08f - ignoring embedded stale id(s): 91f06a70-924b-4a17-ac2a-ace800ce49a1
+[2026-08-10 00:27:44.259] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=none
+[2026-08-10 00:27:44.261] [INFO] [panopto.auth] Panopto LTI: no session id resolved - landed on https://cbs.cloud.panopto.eu/Panopto/Pages/Sessions/List.aspx | unfollowed form: ./List.aspx | body: 123029 chars, 0 candidate id(s) | folder: a7cbd921-586f-4bf5-8869-b338008ffda1 | auth: cookies[cbs.cloud.panopto.eu]=.ASPXAUTH,csrfToken,sandboxCookie | markers=none
+[2026-08-10 00:27:44.303] [INFO] [panopto.discovery] Panopto api/v1 folder listing unavailable for a7cbd921-586f-4bf5-8869-b338008ffda1 (status 401) - will fall back to Data.svc/GetSessions.
+[2026-08-10 00:27:44.430] [INFO] [panopto.discovery] Panopto GetSessions: folder a7cbd921-586f-4bf5-8869-b338008ffda1 reports 0 session(s) (page 0 returned 0).
+[2026-08-10 00:27:44.430] [INFO] [panopto.discovery] Panopto GetSessions raw 'd' node for a7cbd921-586f-4bf5-8869-b338008ffda1: {"__type": "SessionResults:#Panopto.Data.DB.WebUI", "Results": [], "TotalNumber": 0, "ArchivedCount": null, "BookmarkedSessionCount": null, "CanAddSubfolder": false, "ContainsArchivedDeliveries": false, "FolderType": 0, "InProgressSessionCount": null, "ParentFolderId": null, "ScheduledRecordingCount": null, "Subfolders": []}
+[2026-08-10 00:27:44.476] [INFO] [panopto.discovery] Panopto GetFolders failed for folder a7cbd921-586f-4bf5-8869-b338008ffda1: HTTP 500: <Fault xmlns="http://schemas.microsoft.com/ws/2005/05/envelope/none"><Code><Value>Sender</Value></Code><Reason><Text xml:lang="en-US">User unified\<CANVAS_USER> is not in role (FolderEnumerate).</Text></Reason></Fault>
+[2026-08-10 00:27:44.535] [INFO] [panopto.discovery] Panopto GetFolderInfo probe for a7cbd921-586f-4bf5-8869-b338008ffda1 -> name='Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' sessions=? subfolders=?
+[2026-08-10 00:27:44.727] [INFO] [panopto.discovery] Panopto unscoped GetSessions probe -> TotalNumber=3082 (0 = the Panopto session holds NO content grants at all, i.e. the LTI cookie is effectively anonymous; >0 = auth works and the problem is folder-scoped)
+[2026-08-10 00:27:44.728] [INFO] [panopto.discovery] Panopto course-folder fallback: enumerated 0 session(s) in the course folder for course 43660 via a course-level launch (no content link required).
+[2026-08-10 00:27:45.769] [INFO] [panopto.runner] Discovered 36 recording(s) in 'Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' by source {'module': 36}
+[2026-08-10 00:27:47.396] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b58f9a14-6513-4ba6-9d3a-b34600ba6f34 (via url)
+[2026-08-10 00:27:47.396] [INFO] [panopto.runner] Panopto auth bootstrap attempt 1/36 via https://cbscanvas.instructure.com/api/v1/courses/43660/external_tools/sessionless_launch -> OK
+[2026-08-10 00:27:47.589] [INFO] [panopto.runner] Discovery complete: 36 found across 1 course(s); planned 36 download(s) (36 video), 0 transcription(s), 36 shortcut(s), 0 skipped (already on disk).
+[2026-08-10 00:27:47.590] [INFO] [panopto.runner] Shortcut phase: 36 link file(s).
+[2026-08-10 00:27:53.535] [INFO] [panopto.runner] Download phase: 36 recording(s) (36 video, 0 audio); 4 concurrent worker(s).
+[2026-08-10 00:28:02.513] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (18.3 MB in 7.0s)
+[2026-08-10 00:28:05.879] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (49.4 MB in 10.9s)
+[2026-08-10 00:28:10.858] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (34.5 MB in 8.0s)
+[2026-08-10 00:28:19.039] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (30.2 MB in 12.8s)
+[2026-08-10 00:28:24.147] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (72.8 MB in 30.1s)
+[2026-08-10 00:28:34.825] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (60.2 MB in 23.4s)
+[2026-08-10 00:28:35.331] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (40.2 MB in 15.8s)
+[2026-08-10 00:28:35.394] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (51.5 MB in 10.8s)
+[2026-08-10 00:28:48.291] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (131.0 MB in 53.8s)
+[2026-08-10 00:28:53.280] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (19.2 MB in 4.5s)
+[2026-08-10 00:28:54.518] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (42.5 MB in 18.0s)
+[2026-08-10 00:28:57.195] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (57.0 MB in 21.0s)
+[2026-08-10 00:28:57.932] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (76.4 MB in 22.7s)
+[2026-08-10 00:28:59.958] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (17.4 MB in 4.8s)
+[2026-08-10 00:29:09.249] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (25.4 MB in 11.5s)
+[2026-08-10 00:29:09.642] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (35.8 MB in 9.3s)
+[2026-08-10 00:29:10.131] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (40.3 MB in 11.8s)
+[2026-08-10 00:29:10.423] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (39.6 MB in 16.5s)
+[2026-08-10 00:29:23.993] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (38.2 MB in 12.4s)
+[2026-08-10 00:29:24.812] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (44.2 MB in 13.8s)
+[2026-08-10 00:29:35.094] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (57.4 MB in 24.7s)
+[2026-08-10 00:29:45.557] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (76.4 MB in 35.8s)
+[2026-08-10 00:29:49.397] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (45.6 MB in 13.8s)
+[2026-08-10 00:30:08.106] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (91.6 MB in 43.4s)
+[2026-08-10 00:30:13.184] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (50.8 MB in 27.2s)
+[2026-08-10 00:30:17.837] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (59.6 MB in 27.8s)
+[2026-08-10 00:30:29.346] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (69.3 MB in 20.8s)
+[2026-08-10 00:30:30.064] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (136.4 MB in 64.8s)
+[2026-08-10 00:30:41.188] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (34.9 MB in 11.3s)
+[2026-08-10 00:30:41.477] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (39.5 MB in 10.3s)
+[2026-08-10 00:30:41.999] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (64.4 MB in 28.3s)
+[2026-08-10 00:30:42.394] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (91.1 MB in 23.9s)
+[2026-08-10 00:31:03.746] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (66.5 MB in 20.4s)
+[2026-08-10 00:31:06.791] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (63.6 MB in 25.0s)
+[2026-08-10 00:31:09.387] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (90.8 MB in 26.6s)
+[2026-08-10 00:31:10.107] [INFO] [panopto.stream] Panopto downloaded Recording.mp4 (83.6 MB in 27.9s)
+[2026-08-10 00:31:26.858] [INFO] [panopto.runner] Panopto batch done: found=36 downloaded=36 transcribed=0 shortcuts=36 skipped=0 failed=0 courses=1

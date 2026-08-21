@@ -1,0 +1,41 @@
+{
+  "parent": "20260729_004017_syncregress2",
+  "lanes": [
+    {
+      "lane": "free1",
+      "index": 0,
+      "serial": false,
+      "parent": "20260729_004017_syncregress2",
+      "run_id": "20260729_004017_syncregress2__free1",
+      "app_port": 8870,
+      "cdp_port": 9470,
+      "headless": true,
+      "count": 15,
+      "spec": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free1\\lane_spec.json"
+    },
+    {
+      "lane": "free2",
+      "index": 1,
+      "serial": false,
+      "parent": "20260729_004017_syncregress2",
+      "run_id": "20260729_004017_syncregress2__free2",
+      "app_port": 8880,
+      "cdp_port": 9480,
+      "headless": true,
+      "count": 14,
+      "spec": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\lane_spec.json"
+    },
+    {
+      "lane": "free3",
+      "index": 2,
+      "serial": false,
+      "parent": "20260729_004017_syncregress2",
+      "run_id": "20260729_004017_syncregress2__free3",
+      "app_port": 8890,
+      "cdp_port": 9490,
+      "headless": true,
+      "count": 14,
+      "spec": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free3\\lane_spec.json"
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-08-09T23:28:18",
+  "applied": [
+    {
+      "kind": "deleted_locally",
+      "count": 2
+    },
+    {
+      "kind": "readonly_target",
+      "count": 2
+    },
+    {
+      "kind": "foreign_content",
+      "count": 3
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 7,
+  "expected_categories": {
+    "deleted_locally": 2,
+    "updated_clean": 2
+  },
+  "expected_untracked": [
+    "Course description including examination rules/Timetable for presentations.pdf",
+    "Min egen mappe/gamle noter/tanker.txt",
+    "Min egen mappe/mine noter.docx",
+    "Modul 13 - Exam Preparation/Trial Exam.pdf",
+    "eksamensplan 2026.pdf"
+  ],
+  "expected_missing_rows": [
+    "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+    "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [
+    "Course description including examination rules/Timetable for presentations.pdf",
+    "Modul 13 - Exam Preparation/Trial Exam.pdf"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 50,
+    "files": 50
+  },
+  "after": {
+    "rows": 50,
+    "files": 51
+  },
+  "fixtures": [
+    {
+      "label": "deleted-locally:Page Numbers for 6th and 5th Edition.docx",
+      "kind": "deleted_locally",
+      "path": "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx",
+      "match_name": "Page Numbers for 6th and 5th Edition.docx",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1627501,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:Compulsory Assignment_Fall 2025.pdf",
+      "kind": "deleted_locally",
+      "path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "match_name": "Compulsory Assignment_Fall 2025.pdf",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1637102,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "readonly:Timetable for presentations.pdf",
+      "kind": "readonly_target",
+      "path": "Course description including examination rules/Timetable for presentations.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Course description including examination rules/Timetable for presentations.pdf",
+      "match_name": "Timetable for presentations.pdf",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1684097,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "readonly:Trial Exam.pdf",
+      "kind": "readonly_target",
+      "path": "Modul 13 - Exam Preparation/Trial Exam.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Modul 13 - Exam Preparation/Trial Exam.pdf",
+      "match_name": "Trial Exam.pdf",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1698205,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "foreign:mine noter.docx",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/mine noter.docx",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/mine noter.docx",
+      "match_name": "mine noter.docx",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:tanker.txt",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/gamle noter/tanker.txt",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/gamle noter/tanker.txt",
+      "match_name": "tanker.txt",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:eksamensplan 2026.pdf",
+      "kind": "foreign_content",
+      "path": "eksamensplan 2026.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "eksamensplan 2026.pdf",
+      "match_name": "eksamensplan 2026.pdf",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

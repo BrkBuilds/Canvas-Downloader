@@ -1,0 +1,127 @@
+{
+  "name": "dupA2_complete",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_232643_dupfix\\evidence\\screenshots\\dupA2_complete.png",
+  "captured": "2026-07-28 23:30:53",
+  "screen": {
+    "url": "http://127.0.0.1:8860/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Download Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_done_donesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "dl_open_0",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nPartial Success\n1\nCOURSE DOWNLOADED\n53\nFILES DOWNLOADED\n0\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nError Details\nFolders Updated\nIT-projektledelse (LA F26 BINTO1059U)\n53 FILES\nPDF\n25\nHTML\n10\nPPTX\n6\nMP4\n6\nOTHER FILES\n6\n\nOpen Folder\n\nGo to front page",
+    "textLen": 348
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "done",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "active",
+      "label": "5. Complete"
+    }
+  ],
+  "completion": {
+    "folderCards": [
+      {
+        "key": "dl_fc_0",
+        "text": "IT-projektledelse (LA F26 BINTO1059U) | 53 FILES | PDF | 25 | HTML | 10 | PPTX | 6 | MP4 | 6 | OTHER FILES | 6 | Open Folder"
+      }
+    ],
+    "dashboardInsideCard": false,
+    "strayDashboard": false,
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nPartial Success\n1\nCOURSE DOWNLOADED\n53\nFILES DOWNLOADED\n0\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nError Details\nFolders Updated\nIT-projektledelse (LA F26 BINTO1059U)\n53 FILES\nPDF\n25\nHTML\n10\nPPTX\n6\nMP4\n6\nOTHER FILES\n6\n\nOpen Folder\n\nGo to front page"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

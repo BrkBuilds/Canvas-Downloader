@@ -1,0 +1,11 @@
+
+=== audit app start 2026-07-29 00:40:26 port=8870 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8870
+  Network URL: http://192.168.1.50:8870
+  External URL: http://188.183.232.43:8870
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>

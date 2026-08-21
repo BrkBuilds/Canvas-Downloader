@@ -1,0 +1,15 @@
+{
+  "run_id": "20260730_173725_gpu_transcription",
+  "label": "gpu_transcription",
+  "created": "2026-07-30T17:37:25",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "lanes": [
+    {
+      "lane": "gpu",
+      "run_id": "20260730_173725_gpu_transcription__gpu",
+      "pid": 26188,
+      "log": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_173725_gpu_transcription__gpu\\worker.log"
+    }
+  ]
+}

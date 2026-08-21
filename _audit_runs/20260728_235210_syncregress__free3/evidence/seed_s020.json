@@ -1,0 +1,288 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_235210_syncregress__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-07-29T00:10:57",
+  "applied": [
+    {
+      "kind": "new_secondary",
+      "count": 2
+    },
+    {
+      "kind": "edited_update",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_intact",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    },
+    {
+      "kind": "duplicate_copy",
+      "count": 2
+    },
+    {
+      "kind": "readonly_target",
+      "count": 2
+    },
+    {
+      "kind": "partial_artifact",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 14,
+  "expected_categories": {
+    "uptodate": 4,
+    "new": 2,
+    "updated_modified": 2,
+    "updated_clean": 2
+  },
+  "expected_untracked": [
+    "Exam/Example solutions Exam - copy for exam.pdf",
+    "Modul 13 - Exam Preparation/Trial Exam_Solutions.pdf",
+    "Module 10 - Guest talk Grundfos x Celonis/Sign-up Academy Environment - copy for exam.pdf",
+    "Module 6 - Managing, Acquiring, and Developing BIS/06_Enterprise & Functional BIS.pdf",
+    "interrupted download.pdf.part",
+    "recording.part.mp4"
+  ],
+  "expected_missing_rows": [
+    "Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025 - mine noter 0.pdf",
+    "Course description including examination rules/zz mine noter 0.pdf",
+    "Exam/Example solutions RETAKE - mine noter 1.pdf",
+    "Modul 13 - Exam Preparation/zz mine noter 1.pdf"
+  ],
+  "expected_md5_drift": [
+    "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+    "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx"
+  ],
+  "expected_partials": [
+    "interrupted download.pdf.part",
+    "recording.part.mp4"
+  ],
+  "before": {
+    "rows": 50,
+    "files": 50
+  },
+  "after": {
+    "rows": 46,
+    "files": 50
+  },
+  "fixtures": [
+    {
+      "label": "new-secondary:Midterm course evaluation.html",
+      "kind": "new_secondary",
+      "path": "Quizzes/Midterm course evaluation.html",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Quizzes/Midterm course evaluation.html",
+      "match_name": "Midterm course evaluation.html",
+      "why": "Canvas Content entity (quiz) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -50110782,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new-secondary:Slides fra KOMBIT.html",
+      "kind": "new_secondary",
+      "path": "Discussions/Slides fra KOMBIT.html",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Discussions/Slides fra KOMBIT.html",
+      "match_name": "Slides fra KOMBIT.html",
+      "why": "Canvas Content entity (discussion) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -40168024,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:Page Numbers for 6th and 5th Edition.docx",
+      "kind": "edited_update",
+      "path": "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx",
+      "match_name": "Page Numbers for 6th and 5th Edition.docx",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1627501,
+      "original_path": "",
+      "edited_md5": "f8ae78af8f311bf6e127e063ab6de8a7",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:Compulsory Assignment_Fall 2025.pdf",
+      "kind": "edited_update",
+      "path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "match_name": "Compulsory Assignment_Fall 2025.pdf",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1637102,
+      "original_path": "",
+      "edited_md5": "87eb8a7ea89a53232f9b4017801c13b1",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-intact:zz mine noter 0.pdf",
+      "kind": "renamed_row_intact",
+      "path": "Course description including examination rules/zz mine noter 0.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Course description including examination rules/zz mine noter 0.pdf",
+      "match_name": "Timetable for presentations.pdf",
+      "why": "Renamed on disk, bytes untouched, manifest row still present. heal_manifest Tier 2 (original_md5 + exact size, both computed locally) must relocate the row so the file reads UP TO DATE. Offering it as New would put a second copy of the same content in the folder under the Canvas name.",
+      "canvas_file_id": 1684097,
+      "original_path": "Course description including examination rules/Timetable for presentations.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-intact:zz mine noter 1.pdf",
+      "kind": "renamed_row_intact",
+      "path": "Modul 13 - Exam Preparation/zz mine noter 1.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Modul 13 - Exam Preparation/zz mine noter 1.pdf",
+      "match_name": "Trial Exam.pdf",
+      "why": "Renamed on disk, bytes untouched, manifest row still present. heal_manifest Tier 2 (original_md5 + exact size, both computed locally) must relocate the row so the file reads UP TO DATE. Offering it as New would put a second copy of the same content in the folder under the Canvas name.",
+      "canvas_file_id": 1698205,
+      "original_path": "Modul 13 - Exam Preparation/Trial Exam.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Lektionsplan_HA(it.)_Intro to IS 2025 - mine noter 0.pdf",
+      "kind": "renamed_row_dropped",
+      "path": "Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025 - mine noter 0.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025 - mine noter 0.pdf",
+      "match_name": "Lektionsplan_HA(it.)_Intro to IS 2025.pdf",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1618647,
+      "original_path": "Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Example solutions RETAKE - mine noter 1.pdf",
+      "kind": "renamed_row_dropped",
+      "path": "Exam/Example solutions RETAKE - mine noter 1.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Exam/Example solutions RETAKE - mine noter 1.pdf",
+      "match_name": "Example solutions RETAKE.pdf",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1785484,
+      "original_path": "Exam/Example solutions RETAKE.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "duplicate:Example solutions Exam - copy for exam.pdf",
+      "kind": "duplicate_copy",
+      "path": "Exam/Example solutions Exam - copy for exam.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Exam/Example solutions Exam - copy for exam.pdf",
+      "match_name": "Example solutions Exam - copy for exam.pdf",
+      "why": "A byte-identical copy the student made. The original stays claimed by its row; the copy must remain unclaimed and must never be counted as Canvas content or offered for anything.",
+      "canvas_file_id": 1735929,
+      "original_path": "Exam/Example solutions Exam.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "duplicate:Sign-up Academy Environment - copy for exam.pdf",
+      "kind": "duplicate_copy",
+      "path": "Module 10 - Guest talk Grundfos x Celonis/Sign-up Academy Environment - copy for exam.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Module 10 - Guest talk Grundfos x Celonis/Sign-up Academy Environment - copy for exam.pdf",
+      "match_name": "Sign-up Academy Environment - copy for exam.pdf",
+      "why": "A byte-identical copy the student made. The original stays claimed by its row; the copy must remain unclaimed and must never be counted as Canvas content or offered for anything.",
+      "canvas_file_id": 1692581,
+      "original_path": "Module 10 - Guest talk Grundfos x Celonis/Sign-up Academy Environment.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "readonly:Trial Exam_Solutions.pdf",
+      "kind": "readonly_target",
+      "path": "Modul 13 - Exam Preparation/Trial Exam_Solutions.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Modul 13 - Exam Preparation/Trial Exam_Solutions.pdf",
+      "match_name": "Trial Exam_Solutions.pdf",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1698204,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "readonly:06_Enterprise & Functional BIS.pdf",
+      "kind": "readonly_target",
+      "path": "Module 6 - Managing, Acquiring, and Developing BIS/06_Enterprise & Functional BIS.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Module 6 - Managing, Acquiring, and Developing BIS/06_Enterprise & Functional BIS.pdf",
+      "match_name": "06_Enterprise & Functional BIS.pdf",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1663167,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "partial:interrupted download.pdf.part",
+      "kind": "partial_artifact",
+      "path": "interrupted download.pdf.part",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "interrupted download.pdf.part",
+      "match_name": "interrupted download.pdf.part",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "partial:recording.part.mp4",
+      "kind": "partial_artifact",
+      "path": "recording.part.mp4",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "recording.part.mp4",
+      "match_name": "recording.part.mp4",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

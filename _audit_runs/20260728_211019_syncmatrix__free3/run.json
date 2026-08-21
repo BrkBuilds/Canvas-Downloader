@@ -1,0 +1,12 @@
+{
+  "run_id": "20260728_211019_syncmatrix__free3",
+  "label": "lane:free3",
+  "parent": "20260728_211019_syncmatrix",
+  "lane": "free3",
+  "created": "2026-07-28T21:10:20",
+  "app": {},
+  "ports_used": [
+    8870
+  ],
+  "browser": {}
+}

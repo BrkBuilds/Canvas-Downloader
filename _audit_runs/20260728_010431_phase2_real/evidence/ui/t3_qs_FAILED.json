@@ -1,0 +1,281 @@
+{
+  "name": "t3_qs_FAILED",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_010431_phase2_real\\evidence\\screenshots\\t3_qs_FAILED.png",
+  "captured": "2026-07-28 02:16:42",
+  "screen": {
+    "url": "http://127.0.0.1:8793/?mode=today&step=1",
+    "mode": "today",
+    "step": "1",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [],
+    "buttons": [
+      {
+        "key": "today_manage_btn",
+        "text": "Manage",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "today_chip_0",
+        "text": "Programmering og udvikling af små systemer samt databaser (LA)",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "shist_btn_today_45899_6877b934",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "open_folder_today_45899_6877b934",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "open_all_today_45899_6877b934",
+        "text": "Open All Files",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_0",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_0",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_1",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_1",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_2",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_2",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_3",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_3",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_4",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_4",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_5",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_5",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_6",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_6",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_7",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_7",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_8",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_8",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_9",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_9",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_new_10",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_new_10",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_updated_0",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_updated_0",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_updated_1",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_updated_1",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_protected_0",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_protected_0",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_today_45899_6877b934_protected_1",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_today_45899_6877b934_protected_1",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "today_sync_now_btn",
+        "text": "Quick Sync now",
+        "disabled": false,
+        "gated": true,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "Auto-download today's new files\nNOT ACTIVATED\n\nAdd your courses to the daily sync, and their new files are downloaded automatically each morning, first time you open the app - no need to check Canvas yourself.\n\nHelp\nCourses in your daily sync\n1\n\nManage\n\nProgrammering og udvikling af små systemer samt databaser (LA)\n\nToday's files\n15 files\nDownloaded today for your daily sync courses – grouped by course.\n\n​\n\nProgrammering og udvikling af små systemer samt databaser (LA)\n15 files\n\nOpen Folder\n\nOpen All Files\n\n New Files Added (11)\nAnnouncement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf\n\n​\n\n​\n\nCourse folder\nAssignment temp.md\n\n​\n\n​\n\nCourse folder\ng1 darts vejl_løsn_js.txt\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\ngk2 vejl_løsn_js.txt\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\nQuiz G4.md\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\nAssignment Godkendelsesopgave 7 - G7-Assignment.pdf\n\n​\n\n​\n\nObligatoriske afleveringer forår 2026\ng5_fælles_feedback.pdf\n\n​\n\n​\n\nObligatoriske afleveringer forår 2026\nFiktiv Eksamensopgave.pdf\n\n​\n\n​\n\nTidligere eksamenssæt (de fleste med vejledende løsninger)\nEksamen 2023E Ordinær Klasse opgave.pdf\n\n​\n\n​\n\nUge 46 Forelæsning 10. Document Object Model (DOM)\nDebug - shop - 1.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\nUMLcases.pdf\n\n​\n\n​\n\nUge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)\n Updates Overwritten (2)\nYour unedited local copies were replaced with the newer versions\nSQL Opgave Vejl_sql.txt\n\n​\n\n​\n\nUge 12 Forelæsning 17. Database 3 Join og set operatorer\nDebug - Inventory - 1.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\n Modified Files Protected (2)\nSaved next to your copy, which was left untouched\nTrin-for-trin Guide til VS Code og konsollen_NewVersion.pdf\n\n​\n\n​\n\nAndre ressourcer\nOpgavesæt uge 47_NewVersion.pdf\n\n​\n\n​\n\nUge 47 Forelæsning 11. Asynkron programmering og event handling\nSync on demand\nDaily auto-sync runs each morning — trigger a manual Quick Sync any time to bring these courses up to date right now.\n\nQuick Sync now",
+    "textLen": 2116
+  },
+  "wizard": [],
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

@@ -1,0 +1,46 @@
+
+=== lane free1 start 2026-07-28 18:23:29 ===
+Port 8800 is served by another process (pids [29972]), not by this run's app. Stop the other run, or pass an explicit --port.
+
+=== audit app start 2026-07-28 18:23:29 port=8800 ===
+
+=== lane free1 start 2026-07-28 18:24:34 ===
+{
+  "ok": 1,
+  "lane": "free1",
+  "run_id": "20260728_182323_smokepan__free1",
+  "jobs": 1,
+  "failed": [],
+  "results": [
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_182323_smokepan__free1\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_182323_smokepan__free1\\evidence\\rows\\s202"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "high": 2,
+        "info": 3
+      },
+      "id": "s202",
+      "seconds": 378.8
+    }
+  ]
+}

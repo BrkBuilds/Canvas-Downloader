@@ -1,0 +1,28 @@
+{
+  "run_id": "20260728_234157_cleanconv",
+  "label": "cleanconv",
+  "created": "2026-07-28T23:41:57",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {},
+  "ports_used": [
+    8862
+  ],
+  "browser": {},
+  "scope": [
+    {
+      "name": "cleanconv",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "cleanconv2",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    }
+  ]
+}

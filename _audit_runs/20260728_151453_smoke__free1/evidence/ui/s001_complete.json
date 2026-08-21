@@ -1,0 +1,127 @@
+{
+  "name": "s001_complete",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_151453_smoke__free1\\evidence\\screenshots\\s001_complete.png",
+  "captured": "2026-07-28 15:16:06",
+  "screen": {
+    "url": "http://127.0.0.1:8800/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Download Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_done_donesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "dl_open_0",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n22\nFILES DOWNLOADED\n18.2\nMB DOWNLOADED\nFolders Updated\nIntroduction to Information Systems (XB E25 BINTO1078U)\n22 FILES\nPDF\n19\nPPTX\n1\nURL\n1\nOTHER FILES\n1\n\nOpen Folder\n\nGo to front page",
+    "textLen": 325
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "done",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "active",
+      "label": "5. Complete"
+    }
+  ],
+  "completion": {
+    "folderCards": [
+      {
+        "key": "dl_fc_0",
+        "text": "Introduction to Information Systems (XB E25 BINTO1078U) | 22 FILES | PDF | 19 | PPTX | 1 | URL | 1 | OTHER FILES | 1 | Open Folder"
+      }
+    ],
+    "dashboardInsideCard": false,
+    "strayDashboard": false,
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n22\nFILES DOWNLOADED\n18.2\nMB DOWNLOADED\nFolders Updated\nIntroduction to Information Systems (XB E25 BINTO1078U)\n22 FILES\nPDF\n19\nPPTX\n1\nURL\n1\nOTHER FILES\n1\n\nOpen Folder\n\nGo to front page"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

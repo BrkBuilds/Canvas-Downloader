@@ -1,0 +1,184 @@
+{
+  "name": "s001",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "atabaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n17 files pending sync\n198 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nGo back\n\nSync & Download 13 files",
+      "waited_s": 24.2
+    },
+    "capture": "s001_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_45899",
+      "cat_update_45899",
+      "cat_updmod_45899",
+      "cat_deleted_local_45899",
+      "cat_deleted_canvas_45899"
+    ],
+    "capture": "s001_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\screenshots\\s001_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\ui\\s001_review.json",
+    "textLen": 2399,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "new version from Canvas was saved next to them with \"_NewVersion\" in the name (for example: løbeklub SQL_NewVersion.pdf). Your copy is untouched — compare the two and keep whichever you want, then delete the other.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n17 FILES\nTXT\n10\nPDF\n4\nMD\n3\nkeyboard_arrow_right\n\nFiles added\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 15.1
+    },
+    "capture": "s001_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "21:15:36",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "21:16:05",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "atabaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n17 files pending sync\n198 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nGo back\n\nSync & Download 13 files",
+        "waited_s": 24.2
+      },
+      "capture": "s001_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "21:16:08",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_45899",
+        "cat_update_45899",
+        "cat_updmod_45899",
+        "cat_deleted_local_45899",
+        "cat_deleted_canvas_45899"
+      ],
+      "capture": "s001_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\screenshots\\s001_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\ui\\s001_review.json",
+      "textLen": 2400,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "21:16:10",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "21:16:12",
+      "action": "select_category",
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "21:16:12",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_45899",
+        "cat_update_45899",
+        "cat_updmod_45899",
+        "cat_deleted_local_45899",
+        "cat_deleted_canvas_45899"
+      ],
+      "capture": "s001_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\screenshots\\s001_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\ui\\s001_review.json",
+      "textLen": 2399,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "21:16:30",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "new version from Canvas was saved next to them with \"_NewVersion\" in the name (for example: løbeklub SQL_NewVersion.pdf). Your copy is untouched — compare the two and keep whichever you want, then delete the other.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n17 FILES\nTXT\n10\nPDF\n4\nMD\n3\nkeyboard_arrow_right\n\nFiles added\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 15.1
+      },
+      "capture": "s001_complete",
+      "ok": true
+    }
+  ]
+}

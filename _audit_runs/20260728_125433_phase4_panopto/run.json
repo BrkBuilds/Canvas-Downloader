@@ -1,0 +1,21 @@
+{
+  "run_id": "20260728_125433_phase4_panopto",
+  "label": "phase4_panopto",
+  "created": "2026-07-28T12:54:33",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {},
+  "ports_used": [
+    8795
+  ],
+  "browser": {},
+  "scope": [
+    {
+      "name": "p4_mp3",
+      "flow": "download",
+      "course": "43660",
+      "config": "{\"mode\": \"modules\", \"file_filter\": \"all\", \"secondary_isolated\": false, \"dl_assignments\": false, \"dl_syllabus\": false, \"dl_announcements\": false, \"dl_discussions\": false, \"dl_quizzes\": false, \"dl_submissions\": false, \"convert_zip\": false, \"convert_pptx\": false, \"convert_word\": false, \"convert_excel\":",
+      "result": "ok"
+    }
+  ]
+}

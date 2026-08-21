@@ -1,0 +1,56 @@
+{
+  "name": "t3_empty",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_010431_phase2_real\\evidence\\screenshots\\t3_empty.png",
+  "captured": "2026-07-28 02:12:12",
+  "screen": {
+    "url": "http://127.0.0.1:8793/?mode=today&step=1",
+    "mode": "today",
+    "step": "1",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [],
+    "buttons": [
+      {
+        "key": "today_add_courses_btn",
+        "text": "Add courses",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "today_offlist_close_btn",
+        "text": "​",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "today_sync_now_btn",
+        "text": "Quick Sync now",
+        "disabled": true,
+        "gated": true,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "Auto-download today's new files\nNOT ACTIVATED\n\nAdd your courses to the daily sync, and their new files are downloaded automatically each morning, first time you open the app - no need to check Canvas yourself.\n\nHelp\nCourses in your daily sync\nNo courses in your daily sync yet.\nUse Add courses to import saved pairs or groups.\n\nAdd courses\n\nToday's files\nFiles from your daily sync courses land here each day.\nNothing here yet\nAdd courses to your daily sync above and today's downloads for them show up here.\n15 more files were downloaded today for a course that isn't in your daily sync. Add the course above and its files appear here; every sync is always listed in full under Sync Course Folders → Sync History.\n\n​\n\nSync on demand\nDaily auto-sync runs each morning — trigger a manual Quick Sync any time to bring these courses up to date right now.\n\nQuick Sync now",
+    "textLen": 867
+  },
+  "today": {
+    "chips": [],
+    "pairCards": [],
+    "offlist": "15 more files were downloaded today for a course that isn't in your daily sync. Add the course above and its files appear here; every sync is always listed in full under Sync Course Folders → Sync History.",
+    "hasOfflist": true,
+    "text": "Auto-download today's new files\nNOT ACTIVATED\n\nAdd your courses to the daily sync, and their new files are downloaded automatically each morning, first time you open the app - no need to check Canvas yourself.\n\nHelp\nCourses in your daily sync\nNo courses in your daily sync yet.\nUse Add courses to import saved pairs or groups.\n\nAdd courses\n\nToday's files\nFiles from your daily sync courses land here each day.\nNothing here yet\nAdd courses to your daily sync above and today's downloads for them show up here.\n15 more files were downloaded today for a course that isn't in your daily sync. Add the course above and its files appear here; every sync is always listed in full under Sync Course Folders → Sync History.\n\n​\n\nSync on demand\nDaily auto-sync runs each morning — trigger a manual Quick Sync any time to bring these courses up to date right now.\n\nQuick Sync now"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

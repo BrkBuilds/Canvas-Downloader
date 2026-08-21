@@ -1,0 +1,96 @@
+--- Download: How to Uni (LA E25 BINTU7005U) (ID: 43658) Mode: modules ---
+==================================================
+[2026-07-28 17:54:02.967] Save Dir: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads
+[2026-07-28 17:54:02.968] Filter: all | Concurrency: 10 | Max file size: disabled | Estimated payload: 19 MB
+[2026-07-28 17:54:02.968] Canvas Content: [discussions, quizzes] | isolate=yes
+[2026-07-28 17:54:02.968] Post-processing: [html]
+[2026-07-28 17:54:03.272] Processing Module: Course description including examination rules (ID: 297515)
+[2026-07-28 17:54:03.438] Found 1 items in module 'Course description including examination rules'
+[2026-07-28 17:54:03.438]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-07-28 17:54:03.440] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTU7005U.aspx) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Course description including examination rules\Course description including examination rules.url
+[2026-07-28 17:54:03.617] Processing Module: Study start on CBS campus (ID: 306225)
+[2026-07-28 17:54:03.799] Found 2 items in module 'Study start on CBS campus'
+[2026-07-28 17:54:03.800]   - Item: Ready for the next step (Type: Page)
+[2026-07-28 17:54:04.068] Saving page: Ready for the next step -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Study start on CBS campus\Page Ready for the next step.html
+[2026-07-28 17:54:04.220]   - Item: Introduction week (Type: Page)
+[2026-07-28 17:54:04.522] Saving page: Introduction week -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Study start on CBS campus\Page Introduction week.html
+[2026-07-28 17:54:04.693] Processing Module: Velkommen til How to Uni (ID: 307155)
+[2026-07-28 17:54:04.862] Found 1 items in module 'Velkommen til How to Uni'
+[2026-07-28 17:54:04.863]   - Item: Velkommen til How to Uni (Type: Page)
+[2026-07-28 17:54:05.118] Saving page: Velkommen til How to Uni -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Velkommen til How to Uni\Page Velkommen til How to Uni.html
+[2026-07-28 17:54:05.277] Processing Module: Fra elev til studerende (ID: 307158)
+[2026-07-28 17:54:05.493] Found 3 items in module 'Fra elev til studerende'
+[2026-07-28 17:54:05.493]   - Item: Fra elev til studerende (Type: Page)
+[2026-07-28 17:54:05.714] Saving page: Fra elev til studerende -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Fra elev til studerende\Page Fra elev til studerende.html
+[2026-07-28 17:54:05.868]   - Item: Tjek dit kommende semester eller quarter ud (Type: Page)
+[2026-07-28 17:54:06.102] Saving page: Tjek dit kommende semester eller quarter ud -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Fra elev til studerende\Page Tjek dit kommende semester eller quarter ud.html
+[2026-07-28 17:54:06.269]   - Item: Refleksionsopgave: Dine kommende kurser (Type: Discussion)
+[2026-07-28 17:54:07.370] Saving discussion: Refleksionsopgave: Dine kommende kurser -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Discussions\Refleksionsopgave Dine kommende kurser.html
+[2026-07-28 17:54:07.667] Processing Module: Studievaner (ID: 307164)
+[2026-07-28 17:54:07.833] Found 2 items in module 'Studievaner'
+[2026-07-28 17:54:07.833]   - Item: Studievaner (Type: Page)
+[2026-07-28 17:54:08.079] Saving page: Studievaner -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Studievaner\Page Studievaner.html
+[2026-07-28 17:54:08.244]   - Item: Find dit skema (Type: Page)
+[2026-07-28 17:54:08.497] Saving page: Find dit skema -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Studievaner\Page Find dit skema.html
+[2026-07-28 17:54:08.661] Processing Module: Din motivation (ID: 307168)
+[2026-07-28 17:54:08.818] Found 1 items in module 'Din motivation'
+[2026-07-28 17:54:08.818]   - Item: Din motivation (Type: Page)
+[2026-07-28 17:54:09.087] Saving page: Din motivation -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Din motivation\Page Din motivation.html
+[2026-07-28 17:54:09.302] Processing Module: Faglige fælleskaber (ID: 307173)
+[2026-07-28 17:54:09.487] Found 2 items in module 'Faglige fælleskaber'
+[2026-07-28 17:54:09.488]   - Item: Faglige fællesskaber (Type: Page)
+[2026-07-28 17:54:09.719] Saving page: Faglige fællesskaber -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Faglige fælleskaber\Page Faglige fællesskaber.html
+[2026-07-28 17:54:09.902]   - Item: Refleksionsopgave: Fagligt fællesskab (Type: Discussion)
+[2026-07-28 17:54:10.887] Saving discussion: Refleksionsopgave: Fagligt fællesskab -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Discussions\Refleksionsopgave Fagligt fællesskab.html
+[2026-07-28 17:54:11.168] Processing Module: Studiestart på CBS (ID: 307182)
+[2026-07-28 17:54:11.345] Found 2 items in module 'Studiestart på CBS'
+[2026-07-28 17:54:11.346]   - Item: Klar til næste skridt (Type: Page)
+[2026-07-28 17:54:11.597] Saving page: Klar til næste skridt -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Studiestart på CBS\Page Klar til næste skridt.html
+[2026-07-28 17:54:11.769]   - Item: Introduktionsuge  (Type: Page)
+[2026-07-28 17:54:12.047] Saving page: Introduktionsuge  -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Studiestart på CBS\Page Introduktionsuge.html
+[2026-07-28 17:54:12.203] Starting Catch-All Phase for non-module files...
+[2026-07-28 17:54:12.414] Catch-All found new file: how to uni banner-min.png (ID: 1579684)
+[2026-07-28 17:54:12.414] Catch-All found new file: Learning-styles-photo.jpg (ID: 1572084)
+[2026-07-28 17:54:12.415] Downloading 2 catch-all files...
+[2026-07-28 17:54:12.416] Requesting URL: https://cbscanvas.instructure.com/files/1579684/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 17:54:12.417] Requesting URL: https://cbscanvas.instructure.com/files/1572084/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 17:54:13.341] Response Status: 200 Content-Type: image/jpeg
+[2026-07-28 17:54:13.348] Response Status: 200 Content-Type: image/png
+[2026-07-28 17:54:13.349] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Learning-styles-photo.jpg (47076 bytes)
+[2026-07-28 17:54:13.384] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\how to uni banner-min.png (368409 bytes)
+[2026-07-28 17:54:13.488] --- Canvas Content Phase: [discussions, quizzes] ---
+[2026-07-28 17:54:13.489] === Starting Canvas Content Download ===
+[2026-07-28 17:54:13.490] Secondary: Fetching discussions...
+[2026-07-28 17:54:14.486] Saving discussion: Reflection assignment: Courses in your programme -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Discussions\Reflection assignment Courses in your programme.html
+[2026-07-28 17:54:14.950] Saving discussion: Reflection assignment: Learning Community -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_175237_smoke3__free1\downloads\How to Uni (LA E25 BINTU7005U)\Discussions\Reflection assignment Learning Community.html
+[2026-07-28 17:54:15.277] Secondary: Fetching quizzes...
+[2026-07-28 17:54:15.393] Quiz list endpoint restricted (Not Found); falling back to module-embedded quizs.
+[2026-07-28 17:54:16.964] === Canvas Content Download Complete ===
+[2026-07-28 17:54:16.964] --- Download Complete: How to Uni (LA E25 BINTU7005U) | 14 items | 0.4 MB downloaded ---
+
+==================================================
+--- Post-Processing: How to Uni (LA E25 BINTU7005U) ---
+==================================================
+[2026-07-28 17:54:18.110] [INFO] [core.sync_manager] Updated manifest entry -251847 to new file: Din motivation/Page Din motivation.md
+[2026-07-28 17:54:18.494] [INFO] [core.sync_manager] Updated manifest entry -40161946 to new file: Discussions/Reflection assignment Courses in your programme.md
+[2026-07-28 17:54:18.869] [INFO] [core.sync_manager] Updated manifest entry -40161943 to new file: Discussions/Reflection assignment Learning Community.md
+[2026-07-28 17:54:19.235] [INFO] [core.sync_manager] Updated manifest entry -40162603 to new file: Discussions/Refleksionsopgave Dine kommende kurser.md
+[2026-07-28 17:54:19.577] [INFO] [core.sync_manager] Updated manifest entry -40162600 to new file: Discussions/Refleksionsopgave Fagligt fællesskab.md
+[2026-07-28 17:54:19.979] [INFO] [core.sync_manager] Updated manifest entry -251851 to new file: Faglige fælleskaber/Page Faglige fællesskaber.md
+[2026-07-28 17:54:20.394] [INFO] [core.sync_manager] Updated manifest entry -251858 to new file: Fra elev til studerende/Page Fra elev til studerende.md
+[2026-07-28 17:54:20.744] [INFO] [core.sync_manager] Updated manifest entry -251893 to new file: Fra elev til studerende/Page Tjek dit kommende semester eller quarter ud.md
+[2026-07-28 17:54:21.152] [INFO] [core.sync_manager] Updated manifest entry -251868 to new file: Studiestart på CBS/Page Introduktionsuge.md
+[2026-07-28 17:54:21.527] [INFO] [core.sync_manager] Updated manifest entry -251881 to new file: Studiestart på CBS/Page Klar til næste skridt.md
+[2026-07-28 17:54:21.869] [INFO] [core.sync_manager] Updated manifest entry -251854 to new file: Studievaner/Page Find dit skema.md
+[2026-07-28 17:54:22.269] [INFO] [core.sync_manager] Updated manifest entry -251886 to new file: Studievaner/Page Studievaner.md
+[2026-07-28 17:54:22.736] [INFO] [core.sync_manager] Updated manifest entry -250444 to new file: Study start on CBS campus/Page Introduction week.md
+[2026-07-28 17:54:23.271] [INFO] [core.sync_manager] Updated manifest entry -250447 to new file: Study start on CBS campus/Page Ready for the next step.md
+[2026-07-28 17:54:23.653] [INFO] [core.sync_manager] Updated manifest entry -251906 to new file: Velkommen til How to Uni/Page Velkommen til How to Uni.md
+[2026-07-28 17:54:23.708] === Course Finished: How to Uni (LA E25 BINTU7005U) | Downloaded: 18 items | Errors: 0 ===
+[2026-07-28 17:54:23.709] Post-processing ran: [html]
+[2026-07-28 17:54:23.753] === Download Start: Introduction to Information Systems (XB E25 BINTO1078U) | Course 2/2 ===
+[2026-07-28 17:54:23.754] Mode: modules | Filter: all
+[2026-07-28 17:54:23.754] Post-processing: [html]
+[2026-07-28 17:54:23.754] Secondary content: [discussions, quizzes]
+[2026-07-28 17:54:24.080] 
+==================================================

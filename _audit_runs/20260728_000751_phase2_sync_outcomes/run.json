@@ -1,0 +1,21 @@
+{
+  "run_id": "20260728_000751_phase2_sync_outcomes",
+  "label": "phase2_sync_outcomes",
+  "created": "2026-07-28T00:07:51",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {},
+  "browser": {},
+  "ports_used": [
+    8790
+  ],
+  "scope": [
+    {
+      "name": "p2_full",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    }
+  ]
+}

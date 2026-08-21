@@ -1,0 +1,35 @@
+--- Debug Log Started: 2026-07-31 17:51:23.113718 ---
+[2026-07-31 17:51:23.138] === Session Environment ===
+  App: Canvas Downloader v2.0.1 | frozen=False | pid=20400
+  OS: Windows 11 | Windows-11-10.0.26200-SP0 | arch=AMD64
+  Python: 3.13.1
+  CA bundle (certifi): ok
+  Context: Sync analysis
+===========================
+[2026-07-31 17:51:23.267] === Sync Analysis: syncfolder (ID: 46396) ===
+[2026-07-31 17:51:23.267] Mode: Analyze, Review & Sync
+[2026-07-31 17:51:23.268] Course Folder: G:/18 AI/ANTIGRAVITY WORKSPACES/Canvas Downloader/_audit_runs/_navperf/syncfolder
+[2026-07-31 17:51:23.675] Connected to course: IT-projektledelse (LA F26 BINTO1059U) (355 ms)
+[2026-07-31 17:51:23.936] Loaded local manifest: 31 tracked entrie(s) (2 ms)
+[2026-07-31 17:51:23.938] Secondary contract: source=database | enabled=[none] | isolate=yes
+[2026-07-31 17:51:26.443] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 3 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 46396.
+[2026-07-31 17:51:26.444] Fetched 43 files from Canvas (secondary: {}) (2453 ms)
+[2026-07-31 17:51:26.444]   ↳ fetch breakdown: bulk_files=680ms | pages=424ms (bulk‖pages wall-clock=682ms) | module_scan=1770ms | secondary=0ms
+[2026-07-31 17:51:26.498] Manifest healed | DB was reset: False (2 ms)
+[2026-07-31 17:51:26.558] Detected folder structure: flat
+[2026-07-31 17:51:26.567] Analysis complete (15 ms): 11 new | 0 clean updates | 0 locally-edited updates | 0 deleted on Canvas | 0 deleted locally
+[2026-07-31 17:51:26.567]   [NEW]           1_ITP boost Målhieraki og milepælsplan.mp4
+[2026-07-31 17:51:26.568]   [NEW]           2_ITP boost projekttrekanten v.1.0.mp4
+[2026-07-31 17:51:26.568]   [NEW]           3_ITP boost Aktivitetsplanlæg.mp4
+[2026-07-31 17:51:26.569]   [NEW]           4_ITP boost fremdriftsrapportering_SCRUM.mp4
+[2026-07-31 17:51:26.569]   [NEW]           4_ITP boost fremdriftsrapportering_vandfald.mp4
+[2026-07-31 17:51:26.569]   [NEW]           5_ITP boost Interessenter og roller i projektet.mp4
+[2026-07-31 17:51:26.570]   [NEW]           2025 7.lektion 31.marts .pptx
+[2026-07-31 17:51:26.570]   [NEW]           2026 2.lektion.pdf
+[2026-07-31 17:51:26.570]   [NEW]           2026_4. lektion_IT-Projektledelse.pdf
+[2026-07-31 17:51:26.571]   [NEW]           Grupper til Klyngevejledning 1.docx
+[2026-07-31 17:51:26.571]   [NEW]           Grupper til Klyngevejledning 1.pdf
+[2026-07-31 17:51:26.571] Up to date (no action): 31 file(s)
+[2026-07-31 17:51:26.577] --- Review Mode Tally ---
+[2026-07-31 17:51:26.578] New: 11 | Clean updates: 0 | Locally-edited: 0 | Locally-deleted: 0 | Panopto: 0 | Total changes: 11
+[2026-07-31 17:51:26.578] → Routing to: review screen (user selects files)

@@ -1,0 +1,61 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_142424_ship_sync_20260730__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-07-30T16:30:12",
+  "applied": [
+    {
+      "kind": "new_secondary",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "new": 2
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 43,
+    "files": 42
+  },
+  "after": {
+    "rows": 41,
+    "files": 40
+  },
+  "fixtures": [
+    {
+      "label": "new-secondary:Announcement 2026-03-02 - Retake.html",
+      "kind": "new_secondary",
+      "path": "Announcement 2026-03-02 - Retake.html",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Announcement 2026-03-02 - Retake.html",
+      "match_name": "Announcement 2026-03-02 - Retake.html",
+      "why": "Canvas Content entity (announcement) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -30177870,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new-secondary:Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html",
+      "kind": "new_secondary",
+      "path": "Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html",
+      "match_name": "Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html",
+      "why": "Canvas Content entity (announcement) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -30170868,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ],
+  "plan_path": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_142424_ship_sync_20260730__free1\\evidence\\seed_s003.json"
+}

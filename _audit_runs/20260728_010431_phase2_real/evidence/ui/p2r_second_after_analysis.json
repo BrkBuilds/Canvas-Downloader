@@ -1,0 +1,398 @@
+{
+  "name": "p2r_second_after_analysis",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_010431_phase2_real\\evidence\\screenshots\\p2r_second_after_analysis.png",
+  "captured": "2026-07-28 01:17:10",
+  "screen": {
+    "url": "http://127.0.0.1:8793/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Review Changes",
+      "Smart Select"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_active_idlesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_idle_idlesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_md",
+        "text": "MD (none)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_pdf",
+        "text": "PDF (none)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_txt",
+        "text": "TXT (none)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_select_all",
+        "text": "Select All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_deselect_all",
+        "text": "Deselect All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_updmod_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_updmod_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_updmod_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_45899_1692936",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_45899_1789210",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_locdel_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_locdel_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_locdel_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1685205",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1700471",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1784716",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1789978",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restore_all_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_45899_1696760",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_45899_1793556",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_sync_review_back",
+        "text": "Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_sync_selected",
+        "text": "Sync & Download 0 files",
+        "disabled": true,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [
+      {
+        "key": "cat_updmod_45899",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nUpdates Available — You've Edited These"
+      },
+      {
+        "key": "cat_deleted_local_45899",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nDeleted Locally"
+      },
+      {
+        "key": "cat_deleted_canvas_45899",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)"
+      },
+      {
+        "key": "cat_ignored_45899",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nIgnored Files"
+      }
+    ],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n0\nNew files\n2\nUpdates available\n2\nEdited locally\n4\nDeleted locally\n2\nDeleted on Canvas\nSmart Select\nBy filetype\n\nMD (none)\n\nPDF (none)\n\nTXT (none)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n6 files pending sync\n207 files up to date\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 0 files",
+    "textLen": 763
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "active",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "idle",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "review": {
+    "courses": [
+      {
+        "course_id": "45899",
+        "categories": {
+          "updated_modified": {
+            "label": "keyboard_arrow_right\n\nUpdates Available — You've Edited These",
+            "badge": "  (0 / 2 selected)",
+            "open": false,
+            "rowCount": 2,
+            "rows": [
+              {
+                "rowKey": "sync_row_updmod_45899_1692936",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_updmod_45899_1789210",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              }
+            ]
+          },
+          "deleted_locally": {
+            "label": "keyboard_arrow_right\n\nDeleted Locally",
+            "badge": "  (0 / 4 selected)",
+            "open": false,
+            "rowCount": 4,
+            "rows": [
+              {
+                "rowKey": "sync_row_locdel_45899_1685205",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1700471",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1784716",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1789978",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              }
+            ]
+          },
+          "deleted_on_canvas": {
+            "label": "keyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)",
+            "badge": "  (2) kept locally",
+            "open": false,
+            "rowCount": 0,
+            "rows": []
+          },
+          "ignored": {
+            "label": "keyboard_arrow_right\n\nIgnored Files",
+            "badge": "  (2)",
+            "open": false,
+            "rowCount": 2,
+            "rows": [
+              {
+                "rowKey": "ign_restore_row_45899_1696760",
+                "checked": null,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              },
+              {
+                "rowKey": "ign_restore_row_45899_1793556",
+                "checked": null,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "lookalike": false,
+                "text": ""
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "summaryCards": [],
+    "seen": {
+      "categoryContainers": 4,
+      "syncRows": 6,
+      "ignoredRows": 2,
+      "expanders": 4
+    },
+    "pageText": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n0\nNew files\n2\nUpdates available\n2\nEdited locally\n4\nDeleted locally\n2\nDeleted on Canvas\nSmart Select\nBy filetype\n\nMD (none)\n\nPDF (none)\n\nTXT (none)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n6 files pending sync\n207 files up to date\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 0 files"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

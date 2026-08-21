@@ -1,0 +1,120 @@
+{
+  "name": "m041_phase_download",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__gpu\\evidence\\screenshots\\m041_phase_download.png",
+  "captured": "2026-07-28 21:54:04",
+  "screen": {
+    "url": "http://127.0.0.1:8810/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Downloading...",
+      "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_active_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cancel_download_btn",
+        "text": "Cancel Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownloading...\n\nDOWNLOADING COURSE 1/2\n\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n0%\nDOWNLOADED\n3.6 / 1568.6 MB\nSPEED\n1.0 MB/s\nFILES\n0 / 238\nTIME REMAINING\n~10:31\nDOWNLOADING\n2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx\nculture.experiences.pdf (31.2 MB)\nSkipped - Exceeds filesize limit\nIndivid og organisation_motivation & belønning 2_upload.pptx (5.2 MB)\nSkipped - Exceeds filesize limit\nØvelse_uge9_problemformulering_XB_UPLOAD.pptx (10.1 MB)\nSkipped - Exceeds filesize limit\nØvelsesslides - Intro.pptx (10.6 MB)\nSkipped - Exceeds filesize limit\nØvelser_uge39_kultur_E2025 upload.pptx (5.8 MB)\nSkipped - Exceeds filesize limit\nØvelser_uge13_analyse og tolkning_UPLOAD.pptx (9.4 MB)\nSkipped - Exceeds filesize limit\nØvelse_uge6_intro_2022_upload-1.pptx (9.1 MB)\nSkipped - Exceeds filesize limit\nMunster 2017_kap 1.pdf (7.9 MB)\nSkipped - Exceeds filesize limit\nØvelser_uge18_eksamen og afslutning_opdateret_upload.pptx (5.3 MB)\nSkipped - Exceeds filesize limit\nCOLOURBOX53981090.jpg (12.0 MB)\nSkipped - Exceeds filesize limit\n2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pptx (448.5 MB)\nSkipped - Exceeds filesize limit\nSensemaking in org (weick 1995).pdf (15.6 MB)\nSkipped - Exceeds filesize limit\nUge45_motivation og belønning_upload.pptx (5.2 MB)\nSkipped - Exceeds filesize limit\nUge 15 - Formidling.pptx (9.4 MB)\nSkipped - Exceeds filesize limit\nUge 10 Undersøgelsesdesign UPLOAD.pptx (8.8 MB)\nSkipped - Exceeds filesize limit\nBørnemøbler_ny version.pdf (7.5 MB)\nSkipped - Exceeds filesize limit\nSchein 1994_uddrag.pdf (16.8 MB)\nSkipped - Exceeds filesize limit\n2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx (8.8 MB)\nSkipped - Exceeds filesize limit\n\nCancel Download",
+    "textLen": 1913
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "active",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": true,
+    "header": "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "DOWNLOADED | 3.7 / 1568.6 MB | SPEED | 1.0 MB/s | FILES | 0 / 238 | TIME REMAINING | ~10:30",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": "DOWNLOADING COURSE 1/2\n\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n0%\nDOWNLOADED\n3.7 / 1568.6 MB\nSPEED\n1.0 MB/s\nFILES\n0 / 238\nTIME REMAINING\n~10:30\nDOWNLOADING\n2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx\nculture.experiences.pdf (31.2 MB)\nSkipped - Exceeds filesize limit\nIndivid og organisation_motivation & belønning 2_upload.pptx (5.2 MB)\nSkipped - Exceeds filesize limit\nØvelse_uge9_problemformulering_XB_UPLOAD.pptx (10.1 MB)\nSkipped - Exceeds filesize limit\nØvelsesslides - Intro.pptx (10.6 MB)\nSkipped - Exceeds filesize limit\nØvelser_uge39_kultur_E2025 upload.pptx (5.8 MB)\nSkipped - Exceeds filesize limit\nØvelser_uge13_analyse og tolkning_UPLOAD.pptx (9.4 MB)\nSkipped - Exceeds filesize limit\nØvelse_uge6_intro_2022_upload-1.pptx (9.1 MB)\nSkipped - Exceeds filesize limit\nMunster 2017_kap 1.pdf (7.9 MB)\nSkipped - Exceeds filesize limit\nØvelser_uge18_eksamen og afslutning_opdateret_upload.pptx (5.3 MB)\nSkipped - Exceeds filesize limit\nCOLOURBOX53981090.jpg (12.0 MB)\nSkipped - Exceeds filesize limit\n2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pptx (448.5 MB)\nSkipped - Exceeds filesize limit\nSensemaking in org (weick 1995).pdf (15.6 MB)\nSkipped - Exceeds filesize limit\nUge45_motivation og belønning_upload.pptx (5.2 MB)\nSkipped - Exceeds filesize limit\nUge 15 - Formidling.pptx (9.4 MB)\nSkipped - Exceeds filesize limit\nUge 10 Undersøgelsesdesign UPLOAD.pptx (8.8 MB)\nSkipped - Exceeds filesize limit\nBørnemøbler_ny version.pdf (7.5 MB)\nSkipped - Exceeds filesize limit\nSchein 1994_uddrag.pdf (16.8 MB)\nSkipped - Exceeds filesize limit\n2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx (8.8 MB)\nSkipped - Exceeds filesize limit"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

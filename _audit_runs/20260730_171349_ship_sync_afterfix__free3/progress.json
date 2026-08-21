@@ -1,0 +1,338 @@
+{
+  "rows": [
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s002"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s002",
+      "seconds": 53.7
+    },
+    {
+      "id": "s005",
+      "ok": false,
+      "error": "TimeoutError: Locator.click: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\"[class*=\\\"st-key-sync_row_updmod_43657_1627501\\\"]\").first.locator(\"[data-testid=\\\"stCheckbox\\\"]\").first\n    - locator resolved to <div data-testid=\"stCheckbox\" class=\"row-widget stCheckbox st-emotion-cache-mo6sqg eg2gxky0\">…</div>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n      - waiting 100ms\n    39 × waiting for element to be visible, enabled and stable\n       - element is not visible\n     - retrying click action\n       - waiting 500ms\n",
+      "traceback": "obj.click(\n        ^^^^^^^^^^^^^^^^^^^^^\n    ...<10 lines>...\n        )\n        ^\n    )\n    ^\n  File \"C:\\Users\\birkl\\AppData\\Roaming\\Python\\Python313\\site-packages\\playwright\\_impl\\_sync_base.py\", line 115, in _sync\n    return task.result()\n           ~~~~~~~~~~~^^\n  File \"C:\\Users\\birkl\\AppData\\Roaming\\Python\\Python313\\site-packages\\playwright\\_impl\\_locator.py\", line 163, in click\n    return await self._frame._click(self._selector, strict=True, **params)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\birkl\\AppData\\Roaming\\Python\\Python313\\site-packages\\playwright\\_impl\\_frame.py\", line 591, in _click\n    await self._channel.send(\"click\", self._timeout, locals_to_params(locals()))\n  File \"C:\\Users\\birkl\\AppData\\Roaming\\Python\\Python313\\site-packages\\playwright\\_impl\\_connection.py\", line 69, in send\n    return await self._connection.wrap_api_call(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<3 lines>...\n    )\n    ^\n  File \"C:\\Users\\birkl\\AppData\\Roaming\\Python\\Python313\\site-packages\\playwright\\_impl\\_connection.py\", line 563, in wrap_api_call\n    raise rewrite_error(error, f\"{parsed_st['apiName']}: {error}\") from None\nplaywright._impl._errors.TimeoutError: Locator.click: Timeout 20000ms exceeded.\nCall log:\n  - waiting for locator(\"[class*=\\\"st-key-sync_row_updmod_43657_1627501\\\"]\").first.locator(\"[data-testid=\\\"stCheckbox\\\"]\").first\n    - locator resolved to <div data-testid=\"stCheckbox\" class=\"row-widget stCheckbox st-emotion-cache-mo6sqg eg2gxky0\">…</div>\n  - attempting click action\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n    - waiting 20ms\n    2 × waiting for element to be visible, enabled and stable\n      - element is not visible\n    - retrying click action\n      - waiting 100ms\n    39 × waiting for element to be visible, enabled and stable\n       - element is not visible\n     - retrying click action\n       - waiting 500ms\n\n",
+      "seconds": 59.3
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s008"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s008",
+      "seconds": 17.7
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s011"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s011",
+      "seconds": 14.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 45899,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s014"
+      },
+      "findings": 3,
+      "severities": {
+        "info": 3
+      },
+      "id": "s014",
+      "seconds": 298.2
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 45899,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s017"
+      },
+      "findings": 3,
+      "severities": {
+        "info": 3
+      },
+      "id": "s017",
+      "seconds": 337.6
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "sync",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s020"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s020",
+      "seconds": 24.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s023"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s023",
+      "seconds": 18.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s026"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s026",
+      "seconds": 26.9
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s029"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s029",
+      "seconds": 26.8
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s032"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s032",
+      "seconds": 15.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s035"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s035",
+      "seconds": 18.5
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s038"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s038",
+      "seconds": 14.2
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\rows\\s041"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s041",
+      "seconds": 14.2
+    }
+  ],
+  "current": "",
+  "updated": "2026-07-30T17:29:53"
+}

@@ -1,0 +1,279 @@
+{
+  "name": "m018",
+  "course_ids": [
+    44428
+  ],
+  "config": {
+    "mode": "modules",
+    "file_filter": "all",
+    "secondary_isolated": false,
+    "max_file_size": null,
+    "convert_zip": false,
+    "convert_pptx": false,
+    "convert_word": false,
+    "convert_excel": false,
+    "convert_html": false,
+    "convert_code": false,
+    "convert_urls": false,
+    "convert_video": false,
+    "dl_assignments": false,
+    "dl_syllabus": false,
+    "dl_announcements": false,
+    "dl_discussions": false,
+    "dl_quizzes": true,
+    "dl_submissions": false,
+    "pan_master": false,
+    "pan_layout": "match",
+    "pan_out_mp3": false,
+    "pan_out_mp4": false,
+    "pan_out_txt": false,
+    "pan_out_srt": false
+  },
+  "select": {
+    "courses": [
+      44428
+    ],
+    "results": [
+      {
+        "course_id": 44428,
+        "ok": true
+      }
+    ]
+  },
+  "size_cap": {
+    "mb": null,
+    "toggle": {
+      "set": true,
+      "key": "temp_max_size_enabled",
+      "changed": false,
+      "checked": false
+    },
+    "dialog_closed": true,
+    "ok": true
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "all",
+      "mode": "modules",
+      "dl_assignments": false,
+      "dl_syllabus": false,
+      "dl_announcements": false,
+      "dl_discussions": false,
+      "dl_quizzes": true,
+      "dl_submissions": false,
+      "secondary_isolated": false
+    },
+    "failed": [],
+    "verified": {
+      "convert_zip": null,
+      "convert_pptx": null,
+      "convert_word": null,
+      "convert_excel": null,
+      "convert_html": null,
+      "convert_code": null,
+      "convert_urls": null,
+      "convert_video": null,
+      "dl_assignments": false,
+      "dl_syllabus": false,
+      "dl_announcements": false,
+      "dl_discussions": false,
+      "dl_quizzes": true,
+      "dl_submissions": false,
+      "pan_out_mp4": null,
+      "pan_out_mp3": null,
+      "pan_out_txt": null,
+      "pan_out_srt": null
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "m018_config",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free1\\evidence\\screenshots\\m018_config.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free1\\evidence\\ui\\m018_config.json",
+    "textLen": 965,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "m018",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n23\nFILES DOWNLOADED\n18.2\nMB DOWNLOADED\nFolders Updated\nIntroduction to Information Systems (XB E25 BINTO1078U)\n23 FILES\nPDF\n19\nURL\n1\nHTML\n1\nPPTX\n1\nOTHER FILES\n1\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 25.5
+    },
+    "captures": [
+      "m018_phase_scan",
+      "m018_phase_download",
+      "m018_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "18:42:21",
+      "action": "select_courses",
+      "courses": [
+        44428
+      ],
+      "results": [
+        {
+          "course_id": 44428,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "18:42:22",
+      "action": "set_size_cap",
+      "mb": null,
+      "toggle": {
+        "set": true,
+        "key": "temp_max_size_enabled",
+        "changed": false,
+        "checked": false
+      },
+      "dialog_closed": true,
+      "ok": true
+    },
+    {
+      "t": "18:42:24",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "18:42:27",
+      "action": "expand_card",
+      "card": "toggle_card2",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "18:42:27",
+      "action": "set_toggle",
+      "key": "btn_dl_assignments",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:42:27",
+      "action": "set_toggle",
+      "key": "btn_dl_syllabus",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:42:27",
+      "action": "set_toggle",
+      "key": "btn_dl_announcements",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:42:27",
+      "action": "set_toggle",
+      "key": "btn_dl_discussions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:42:28",
+      "action": "set_toggle",
+      "key": "btn_dl_quizzes",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "18:42:28",
+      "action": "set_toggle",
+      "key": "btn_dl_submissions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "18:42:29",
+      "action": "configure",
+      "applied": {
+        "file_filter": "all",
+        "mode": "modules",
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": false,
+        "dl_discussions": false,
+        "dl_quizzes": true,
+        "dl_submissions": false,
+        "secondary_isolated": false
+      },
+      "failed": [],
+      "verified": {
+        "convert_zip": null,
+        "convert_pptx": null,
+        "convert_word": null,
+        "convert_excel": null,
+        "convert_html": null,
+        "convert_code": null,
+        "convert_urls": null,
+        "convert_video": null,
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": false,
+        "dl_discussions": false,
+        "dl_quizzes": true,
+        "dl_submissions": false,
+        "pan_out_mp4": null,
+        "pan_out_mp3": null,
+        "pan_out_txt": null,
+        "pan_out_srt": null
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "18:43:01",
+      "action": "confirm_and_run",
+      "name": "m018",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n23\nFILES DOWNLOADED\n18.2\nMB DOWNLOADED\nFolders Updated\nIntroduction to Information Systems (XB E25 BINTO1078U)\n23 FILES\nPDF\n19\nURL\n1\nHTML\n1\nPPTX\n1\nOTHER FILES\n1\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 25.5
+      },
+      "captures": [
+        "m018_phase_scan",
+        "m018_phase_download",
+        "m018_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

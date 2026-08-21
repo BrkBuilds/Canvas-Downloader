@@ -1,0 +1,243 @@
+--- Download: Introduction to Information Systems (LA E25 BINTO1078U) (ID: 43657) Mode: modules ---
+==================================================
+[2026-07-28 18:41:26.395] Save Dir: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads
+[2026-07-28 18:41:26.395] Filter: all | Concurrency: 10 | Max file size: disabled | Estimated payload: 65 MB
+[2026-07-28 18:41:26.395] Canvas Content: [announcements] | isolate=no
+[2026-07-28 18:41:26.395] Post-processing: [none]
+[2026-07-28 18:41:26.843] Processing Module: Course description including examination rules (ID: 297514)
+[2026-07-28 18:41:27.024] Found 5 items in module 'Course description including examination rules'
+[2026-07-28 18:41:27.024]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-07-28 18:41:27.026] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO1078U.aspx) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Course description including examination rules\Course description including examination rules.url
+[2026-07-28 18:41:27.419]   - Item: Lektionsplan_HA(it.)_Intro to IS 2025.pdf (Type: File)
+[2026-07-28 18:41:27.605] Module file tracked: Lektionsplan_HA(it.)_Intro to IS 2025.pdf (ID: 1618647)
+[2026-07-28 18:41:27.606]   - Item: Page Numbers for 6th and 5th Edition.docx (Type: File)
+[2026-07-28 18:41:27.788] Module file tracked: Page Numbers for 6th and 5th Edition.docx (ID: 1627501)
+[2026-07-28 18:41:27.789]   - Item: Compulsory Assignment_Fall 2025.pdf (Type: File)
+[2026-07-28 18:41:27.991] Module file tracked: Compulsory Assignment_Fall 2025.pdf (ID: 1637102)
+[2026-07-28 18:41:27.991]   - Item: Timetable for presentations.pdf (Type: File)
+[2026-07-28 18:41:28.263] Module file tracked: Timetable for presentations.pdf (ID: 1684097)
+[2026-07-28 18:41:28.263] Processing Module: Module 1 - Introduction to the Course (ID: 312001)
+[2026-07-28 18:41:28.425] Found 1 items in module 'Module 1 - Introduction to the Course'
+[2026-07-28 18:41:28.425]   - Item: 01_Introduction to the Course + Data & Information.pdf (Type: File)
+[2026-07-28 18:41:28.596] Module file tracked: 01_Introduction to the Course   Data & Information.pdf (ID: 1618644)
+[2026-07-28 18:41:28.597] Processing Module: Module 2 - BIS; Hardware & Software (ID: 313857)
+[2026-07-28 18:41:28.805] Found 2 items in module 'Module 2 - BIS; Hardware & Software'
+[2026-07-28 18:41:28.806]   - Item: 02_Introduction to BIS, Hardware and Software.pdf (Type: File)
+[2026-07-28 18:41:29.059] Module file tracked: 02_Introduction to BIS, Hardware and Software.pdf (ID: 1628916)
+[2026-07-28 18:41:29.060]   - Item: Quality Board HA(it).pptx (Type: File)
+[2026-07-28 18:41:29.248] Module file tracked: Quality Board Ha(IT).pptx (ID: 1632606)
+[2026-07-28 18:41:29.248] Processing Module: Module 3 - Internet and Networks (ID: 314421)
+[2026-07-28 18:41:29.662] Found 1 items in module 'Module 3 - Internet and Networks'
+[2026-07-28 18:41:29.662]   - Item: 03_Networks and Internet.pdf (Type: File)
+[2026-07-28 18:41:29.842] Module file tracked: 03_Networks and Internet.pdf (ID: 1634599)
+[2026-07-28 18:41:29.843] Processing Module: Modele 4 - Databases and Analytics (ID: 315298)
+[2026-07-28 18:41:30.068] Found 1 items in module 'Modele 4 - Databases and Analytics'
+[2026-07-28 18:41:30.068]   - Item: 04_Databases and Analytics.pdf (Type: File)
+[2026-07-28 18:41:30.271] Module file tracked: 04_Databases and Analytics.pdf (ID: 1640515)
+[2026-07-28 18:41:30.272] Processing Module: Module 5 - Guest Talk by KOMBIT (ID: 316176)
+[2026-07-28 18:41:30.515] Found 1 items in module 'Module 5 - Guest Talk by KOMBIT'
+[2026-07-28 18:41:30.515]   - Item: Guest Lecture KOMBIT (Type: File)
+[2026-07-28 18:41:30.936] Module file tracked: PP_UHE_20251001.pdf (ID: 1680432)
+[2026-07-28 18:41:30.936] Processing Module: Module 6 - Managing, Acquiring, and Developing BIS (ID: 316529)
+[2026-07-28 18:41:31.102] Found 3 items in module 'Module 6 - Managing, Acquiring, and Developing BIS'
+[2026-07-28 18:41:31.103]   - Item: Midterm course evaluation (Type: Quiz)
+[2026-07-28 18:41:31.103]   - Item: 06_Managing, acquiring, and developing BIS.pdf (Type: File)
+[2026-07-28 18:41:31.279] Module file tracked: 06_Managing, acquiring, and developing BIS.pdf (ID: 1663166)
+[2026-07-28 18:41:31.279]   - Item: 06_Enterprise & Functional BIS.pdf (Type: File)
+[2026-07-28 18:41:31.480] Module file tracked: 06_Enterprise & Functional BIS.pdf (ID: 1663167)
+[2026-07-28 18:41:31.481] Processing Module: Module 7- Initiating System Development (ID: 317579)
+[2026-07-28 18:41:31.705] Found 1 items in module 'Module 7- Initiating System Development'
+[2026-07-28 18:41:31.705]   - Item: 07_Developing BIS.pdf (Type: File)
+[2026-07-28 18:41:31.909] Module file tracked: 07_Developing BIS.pdf (ID: 1676946)
+[2026-07-28 18:41:31.909] Processing Module: Module 8 - System design, analysis and implementation (ID: 317760)
+[2026-07-28 18:41:32.097] Found 1 items in module 'Module 8 - System design, analysis and implementation'
+[2026-07-28 18:41:32.097]   - Item: 08_Systems Analysis, Design & Implementation.pdf (Type: File)
+[2026-07-28 18:41:32.290] Module file tracked: 08_Systems Analysis, Design & Implementation.pdf (ID: 1679585)
+[2026-07-28 18:41:32.291] Processing Module: Module 9 - IS Strategy & Management (ID: 318242)
+[2026-07-28 18:41:32.478] Found 2 items in module 'Module 9 - IS Strategy & Management'
+[2026-07-28 18:41:32.478]   - Item: 09a_IS Strategy.pdf (Type: File)
+[2026-07-28 18:41:32.758] Module file tracked: 09a_IS Strategy.pdf (ID: 1686564)
+[2026-07-28 18:41:32.758]   - Item: 09b_IS Management.pdf (Type: File)
+[2026-07-28 18:41:32.970] Module file tracked: 09b_IS Management.pdf (ID: 1686565)
+[2026-07-28 18:41:32.970] Processing Module: Module 10 - Guest talk Grundfos x Celonis (ID: 318566)
+[2026-07-28 18:41:33.155] Found 3 items in module 'Module 10 - Guest talk Grundfos x Celonis'
+[2026-07-28 18:41:33.155]   - Item: Sign-up Academy Environment.pdf (Type: File)
+[2026-07-28 18:41:33.355] Module file tracked: Sign-up Academy Environment.pdf (ID: 1692581)
+[2026-07-28 18:41:33.356]   - Item: CBS x Grundfos Presentation.pdf (Type: File)
+[2026-07-28 18:41:33.534] Module file tracked: CBS x Grundfos Presentation.pdf (ID: 1694357)
+[2026-07-28 18:41:33.534]   - Item: CBS X Celonis X Grundfos.pdf (Type: File)
+[2026-07-28 18:41:33.736] Module file tracked: CBS X Celonis X Grundfos.pdf (ID: 1694358)
+[2026-07-28 18:41:33.737] Processing Module: Module 11  - Managing Information Security, Privacy and Ethics (ID: 318760)
+[2026-07-28 18:41:33.928] Found 1 items in module 'Module 11  - Managing Information Security, Privacy and Ethics'
+[2026-07-28 18:41:33.928]   - Item: 11_Managing Information Security, Privacy, and Ethics.pdf (Type: File)
+[2026-07-28 18:41:34.147] Module file tracked: 11_Managing Information Security, Privacy, and Ethics.pdf (ID: 1695542)
+[2026-07-28 18:41:34.148] Processing Module: Module 12 - Trends in IS (ID: 318917)
+[2026-07-28 18:41:34.435] Found 4 items in module 'Module 12 - Trends in IS'
+[2026-07-28 18:41:34.435]   - Item: 12_Plattform Dominance.pdf (Type: File)
+[2026-07-28 18:41:34.822] Module file tracked: 12_Plattform Dominance.pdf (ID: 1700576)
+[2026-07-28 18:41:34.823]   - Item: 12_Quantum Computing.pdf (Type: File)
+[2026-07-28 18:41:35.030] Module file tracked: 12_Quantum Computing.pdf (ID: 1700577)
+[2026-07-28 18:41:35.030]   - Item: 12_ Digital Sustainability.pdf (Type: File)
+[2026-07-28 18:41:35.280] Module file tracked: 12_ Digital Sustainability.pdf (ID: 1700578)
+[2026-07-28 18:41:35.280]   - Item: Sustainability Video (Type: ExternalUrl)
+[2026-07-28 18:41:35.283] Creating Link: Sustainability Video (https://youtu.be/UFK4hqeRhIc) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 12 - Trends in IS\Sustainability Video.url
+[2026-07-28 18:41:35.627] Processing Module: Modul 13 - Exam Preparation (ID: 318918)
+[2026-07-28 18:41:35.812] Found 3 items in module 'Modul 13 - Exam Preparation'
+[2026-07-28 18:41:35.812]   - Item: Trial Exam_Solutions.pdf (Type: File)
+[2026-07-28 18:41:36.015] Module file tracked: Trial Exam_Solutions.pdf (ID: 1698204)
+[2026-07-28 18:41:36.016]   - Item: Trial Exam.pdf (Type: File)
+[2026-07-28 18:41:36.256] Module file tracked: Trial Exam.pdf (ID: 1698205)
+[2026-07-28 18:41:36.256]   - Item: 13_Course Review.pdf (Type: File)
+[2026-07-28 18:41:36.427] Module file tracked: 13_Course Review.pdf (ID: 1705221)
+[2026-07-28 18:41:36.428] Processing Module: Exam (ID: 322406)
+[2026-07-28 18:41:36.609] Found 2 items in module 'Exam'
+[2026-07-28 18:41:36.609]   - Item: Example solutions Exam.pdf (Type: File)
+[2026-07-28 18:41:36.777] Module file tracked: Example solutions Exam.pdf (ID: 1735929)
+[2026-07-28 18:41:36.777]   - Item: Example solutions RETAKE.pdf (Type: File)
+[2026-07-28 18:41:36.943] Module file tracked: Example solutions RETAKE.pdf (ID: 1785484)
+[2026-07-28 18:41:36.947] Requesting URL: https://cbscanvas.instructure.com/files/1618647/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:36.948] Requesting URL: https://cbscanvas.instructure.com/files/1627501/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:36.948] Requesting URL: https://cbscanvas.instructure.com/files/1637102/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:36.949] Requesting URL: https://cbscanvas.instructure.com/files/1684097/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:36.950] Requesting URL: https://cbscanvas.instructure.com/files/1618644/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:36.950] Requesting URL: https://cbscanvas.instructure.com/files/1628916/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:36.951] Requesting URL: https://cbscanvas.instructure.com/files/1632606/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:36.952] Requesting URL: https://cbscanvas.instructure.com/files/1640515/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:36.952] Requesting URL: https://cbscanvas.instructure.com/files/1634599/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:36.953] Requesting URL: https://cbscanvas.instructure.com/files/1680432/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:37.829] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:37.848] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:37.849] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Course description including examination rules\Timetable for presentations.pdf (146809 bytes)
+[2026-07-28 18:41:37.860] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:37.881] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:37.889] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:37.899] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:37.915] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Course description including examination rules\Compulsory Assignment_Fall 2025.pdf (123830 bytes)
+[2026-07-28 18:41:37.923] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:37.999] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 18:41:38.021] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 18:41:38.033] Requesting URL: https://cbscanvas.instructure.com/files/1663166/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:38.043] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Course description including examination rules\Page Numbers for 6th and 5th Edition.docx (18634 bytes)
+[2026-07-28 18:41:38.086] Requesting URL: https://cbscanvas.instructure.com/files/1663167/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:38.181] Requesting URL: https://cbscanvas.instructure.com/files/1679585/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:38.183] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:38.628] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Course description including examination rules\Lektionsplan_HA(it.)_Intro to IS 2025.pdf (248817 bytes)
+[2026-07-28 18:41:38.653] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 1 - Introduction to the Course\01_Introduction to the Course   Data & Information.pdf (2257725 bytes)
+[2026-07-28 18:41:38.920] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Modele 4 - Databases and Analytics\04_Databases and Analytics.pdf (2188082 bytes)
+[2026-07-28 18:41:38.989] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 2 - BIS; Hardware & Software\02_Introduction to BIS, Hardware and Software.pdf (1984512 bytes)
+[2026-07-28 18:41:38.997] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 3 - Internet and Networks\03_Networks and Internet.pdf (2296208 bytes)
+[2026-07-28 18:41:39.074] Requesting URL: https://cbscanvas.instructure.com/files/1676946/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:39.118] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 2 - BIS; Hardware & Software\Quality Board Ha(IT).pptx (1928124 bytes)
+[2026-07-28 18:41:39.197] Requesting URL: https://cbscanvas.instructure.com/files/1686564/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:39.250] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:39.305] Requesting URL: https://cbscanvas.instructure.com/files/1686565/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:39.381] Requesting URL: https://cbscanvas.instructure.com/files/1694357/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:39.426] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 6 - Managing, Acquiring, and Developing BIS\06_Managing, acquiring, and developing BIS.pdf (1251412 bytes)
+[2026-07-28 18:41:39.488] Requesting URL: https://cbscanvas.instructure.com/files/1692581/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:39.534] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:39.623] Requesting URL: https://cbscanvas.instructure.com/files/1694358/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:39.713] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 6 - Managing, Acquiring, and Developing BIS\06_Enterprise & Functional BIS.pdf (992368 bytes)
+[2026-07-28 18:41:39.730] Requesting URL: https://cbscanvas.instructure.com/files/1695542/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:39.874] Requesting URL: https://cbscanvas.instructure.com/files/1700576/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:40.443] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 5 - Guest Talk by KOMBIT\PP_UHE_20251001.pdf (15159199 bytes)
+[2026-07-28 18:41:40.444] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:40.537] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:40.589] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 10 - Guest talk Grundfos x Celonis\CBS x Grundfos Presentation.pdf (1579566 bytes)
+[2026-07-28 18:41:40.596] Requesting URL: https://cbscanvas.instructure.com/files/1700577/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:40.603] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:40.655] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:40.785] Requesting URL: https://cbscanvas.instructure.com/files/1700578/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:40.799] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 10 - Guest talk Grundfos x Celonis\Sign-up Academy Environment.pdf (534792 bytes)
+[2026-07-28 18:41:40.809] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:40.857] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 9 - IS Strategy & Management\09b_IS Management.pdf (1273096 bytes)
+[2026-07-28 18:41:40.910] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:40.941] Requesting URL: https://cbscanvas.instructure.com/files/1698205/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:41.040] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:41.159] Requesting URL: https://cbscanvas.instructure.com/files/1705221/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:41.196] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:41.288] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 7- Initiating System Development\07_Developing BIS.pdf (1692111 bytes)
+[2026-07-28 18:41:41.679] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 12 - Trends in IS\12_Plattform Dominance.pdf (1462649 bytes)
+[2026-07-28 18:41:41.697] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 8 - System design, analysis and implementation\08_Systems Analysis, Design & Implementation.pdf (1934965 bytes)
+[2026-07-28 18:41:41.757] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 11  - Managing Information Security, Privacy and Ethics\11_Managing Information Security, Privacy, and Ethics.pdf (1875346 bytes)
+[2026-07-28 18:41:41.854] Requesting URL: https://cbscanvas.instructure.com/files/1735929/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:41.991] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:42.000] Requesting URL: https://cbscanvas.instructure.com/files/1785484/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:42.045] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:42.177] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:42.182] Requesting URL: https://cbscanvas.instructure.com/files/1698204/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:42.307] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:42.515] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 12 - Trends in IS\12_Quantum Computing.pdf (1506100 bytes)
+[2026-07-28 18:41:42.521] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Modul 13 - Exam Preparation\Trial Exam.pdf (239211 bytes)
+[2026-07-28 18:41:42.810] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Modul 13 - Exam Preparation\13_Course Review.pdf (1951913 bytes)
+[2026-07-28 18:41:42.958] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:43.019] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:43.082] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Exam\Example solutions Exam.pdf (472925 bytes)
+[2026-07-28 18:41:43.321] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 12 - Trends in IS\12_ Digital Sustainability.pdf (3507946 bytes)
+[2026-07-28 18:41:43.352] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:43.427] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 10 - Guest talk Grundfos x Celonis\CBS X Celonis X Grundfos.pdf (10121823 bytes)
+[2026-07-28 18:41:43.432] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Module 9 - IS Strategy & Management\09a_IS Strategy.pdf (1429661 bytes)
+[2026-07-28 18:41:43.558] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:41:43.716] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Modul 13 - Exam Preparation\Trial Exam_Solutions.pdf (723089 bytes)
+[2026-07-28 18:41:43.871] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Exam\Example solutions RETAKE.pdf (456585 bytes)
+[2026-07-28 18:41:47.524] Starting Catch-All Phase for non-module files...
+[2026-07-28 18:41:48.147] Catch-All skipping module file: 01_Introduction+to+the+Course+%2B+Data+%26+Information.pdf (ID: 1618644)
+[2026-07-28 18:41:48.148] Catch-All skipping module file: 02_Introduction+to+BIS%2C+Hardware+and+Software.pdf (ID: 1628916)
+[2026-07-28 18:41:48.148] Catch-All skipping module file: 03_Networks+and+Internet.pdf (ID: 1634599)
+[2026-07-28 18:41:48.148] Catch-All skipping module file: 04_Databases+and+Analytics.pdf (ID: 1640515)
+[2026-07-28 18:41:48.148] Catch-All skipping module file: 06_Enterprise+%26+Functional+BIS.pdf (ID: 1663167)
+[2026-07-28 18:41:48.149] Catch-All found new file: 06_Enterprise & Functional BIS.pptx (ID: 1663150)
+[2026-07-28 18:41:48.149] Catch-All skipping module file: 06_Managing%2C+acquiring%2C+and+developing+BIS.pdf (ID: 1663166)
+[2026-07-28 18:41:48.149] Catch-All skipping module file: 07_Developing+BIS.pdf (ID: 1676946)
+[2026-07-28 18:41:48.149] Catch-All skipping module file: 08_Systems+Analysis%2C+Design+%26+Implementation.pdf (ID: 1679585)
+[2026-07-28 18:41:48.150] Catch-All skipping module file: 09a_IS+Strategy.pdf (ID: 1686564)
+[2026-07-28 18:41:48.150] Catch-All skipping module file: 09b_IS+Management.pdf (ID: 1686565)
+[2026-07-28 18:41:48.150] Catch-All skipping module file: 11_Managing+Information+Security%2C+Privacy%2C+and+Ethics.pdf (ID: 1695542)
+[2026-07-28 18:41:48.150] Catch-All found new file: 11_Managing Information Security, Privacy, and Ethics.pptx (ID: 1695541)
+[2026-07-28 18:41:48.150] Catch-All skipping module file: 12_+Digital+Sustainability.pdf (ID: 1700578)
+[2026-07-28 18:41:48.151] Catch-All skipping module file: 12_Plattform+Dominance.pdf (ID: 1700576)
+[2026-07-28 18:41:48.151] Catch-All skipping module file: 12_Quantum+Computing.pdf (ID: 1700577)
+[2026-07-28 18:41:48.151] Catch-All skipping module file: 13_Course+Review.pdf (ID: 1705221)
+[2026-07-28 18:41:48.152] Catch-All skipping module file: CBS+X+Celonis+X+Grundfos.pdf (ID: 1694358)
+[2026-07-28 18:41:48.152] Catch-All skipping module file: CBS+x+Grundfos+Presentation.pdf (ID: 1694357)
+[2026-07-28 18:41:48.152] Catch-All skipping module file: Compulsory+Assignment_Fall+2025.pdf (ID: 1637102)
+[2026-07-28 18:41:48.152] Catch-All skipping module file: Example+solutions+Exam.pdf (ID: 1735929)
+[2026-07-28 18:41:48.152] Catch-All skipping module file: Example+solutions+RETAKE.pdf (ID: 1785484)
+[2026-07-28 18:41:48.153] Catch-All skipping module file: Lektionsplan_HA%28it.%29_Intro+to+IS+2025.pdf (ID: 1618647)
+[2026-07-28 18:41:48.153] Catch-All skipping module file: Page+Numbers+for+6th+and+5th+Edition.docx (ID: 1627501)
+[2026-07-28 18:41:48.153] Catch-All skipping module file: PP_UHE_20251001.pdf (ID: 1680432)
+[2026-07-28 18:41:48.154] Catch-All skipping module file: Quality+Board+Ha%28IT%29.pptx (ID: 1632606)
+[2026-07-28 18:41:48.154] Catch-All skipping module file: Sign-up+Academy+Environment.pdf (ID: 1692581)
+[2026-07-28 18:41:48.154] Catch-All skipping module file: Timetable+for+presentations.pdf (ID: 1684097)
+[2026-07-28 18:41:48.154] Catch-All skipping module file: Trial+Exam_Solutions.pdf (ID: 1698204)
+[2026-07-28 18:41:48.155] Catch-All skipping module file: Trial+Exam.pdf (ID: 1698205)
+[2026-07-28 18:41:48.155] Downloading 2 catch-all files...
+[2026-07-28 18:41:48.156] Requesting URL: https://cbscanvas.instructure.com/files/1663150/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:48.157] Requesting URL: https://cbscanvas.instructure.com/files/1695541/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:41:48.891] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 18:41:48.938] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 18:41:49.820] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\06_Enterprise & Functional BIS.pptx (2853448 bytes)
+[2026-07-28 18:41:49.825] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\11_Managing Information Security, Privacy, and Ethics.pptx (5787344 bytes)
+[2026-07-28 18:41:51.284] --- Canvas Content Phase: [announcements] ---
+[2026-07-28 18:41:51.284] === Starting Canvas Content Download ===
+[2026-07-28 18:41:51.286] Secondary: Fetching announcements...
+[2026-07-28 18:41:52.001] Saving announcement: 2026-03-25 - Job Opportunity: Teaching Assistant -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html
+[2026-07-28 18:41:54.456] Saving announcement: 2026-03-02 - Retake -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2026-03-02 - Retake.html
+[2026-07-28 18:41:55.959] Saving announcement: 2026-01-10 - Exam grades -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2026-01-10 - Exam grades.html
+[2026-07-28 18:41:57.738] Saving announcement: 2025-11-21 - Feedback on assignment -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2025-11-21 - Feedback on assignment.html
+[2026-07-28 18:41:59.224] Saving announcement: 2025-11-21 - Preparation for last lecture and exercise -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2025-11-21 - Preparation for last lecture and exercise.html
+[2026-07-28 18:42:01.044] Saving announcement: 2025-11-12 - Presentation of the assignment and different dates next weeks -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html
+[2026-07-28 18:42:02.405] Saving announcement: 2025-10-31 - Approaching Assignment -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2025-10-31 - Approaching Assignment.html
+[2026-07-28 18:42:03.540] Saving announcement: 2025-10-06 - Open House in the Examinations Hall on 7th Oct & 20th Nov -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct & 20th Nov.html
+[2026-07-28 18:42:04.630] Saving announcement: 2025-09-18 - Exercise 3 Preparation and Perplexity for Students -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html
+[2026-07-28 18:42:05.814] Saving announcement: 2025-09-18 - Group changes for elective students -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2025-09-18 - Group changes for elective students.html
+[2026-07-28 18:42:06.827] Saving announcement: 2025-09-12 - Change of groups needed? -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2025-09-12 - Change of groups needed.html
+[2026-07-28 18:42:10.007] Could not fetch sub-replies: Not Found
+[2026-07-28 18:42:10.172] Saving announcement: 2025-09-05 - Groups have been assigned -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2025-09-05 - Groups have been assigned.html
+[2026-07-28 18:42:11.377] Saving announcement: 2025-08-26 - Welcome to CBS and Introduction to Information Systems -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (LA E25 BINTO1078U)\Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html
+[2026-07-28 18:42:12.300] === Canvas Content Download Complete ===
+[2026-07-28 18:42:12.301] --- Download Complete: Introduction to Information Systems (LA E25 BINTO1078U) | 32 items | 64.8 MB downloaded ---
+
+==================================================
+--- Post-Processing: Introduction to Information Systems (LA E25 BINTO1078U) ---
+==================================================
+[2026-07-28 18:42:13.495] === Course Finished: Introduction to Information Systems (LA E25 BINTO1078U) | Downloaded: 45 items | Errors: 0 ===

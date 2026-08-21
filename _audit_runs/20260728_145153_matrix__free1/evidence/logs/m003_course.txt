@@ -1,0 +1,161 @@
+--- Download: Introduction to Information Systems (XB E25 BINTO1078U) (ID: 44428) Mode: modules ---
+==================================================
+[2026-07-28 18:36:33.434] Save Dir: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads
+[2026-07-28 18:36:33.435] Filter: study | Concurrency: 10 | Max file size: disabled | Estimated payload: 18 MB
+[2026-07-28 18:36:33.435] Canvas Content: [none] | isolate=no
+[2026-07-28 18:36:33.435] Post-processing: [none]
+[2026-07-28 18:36:34.013] Processing Module: Course description including examination rules (ID: 300888)
+[2026-07-28 18:36:34.426] Found 2 items in module 'Course description including examination rules'
+[2026-07-28 18:36:34.427]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-07-28 18:36:34.427]   - Item: Compulsory Assignment_Fall 2025.pdf (Type: File)
+[2026-07-28 18:36:34.847] Module file tracked: Compulsory Assignment_Fall 2025.pdf (ID: 1637104)
+[2026-07-28 18:36:34.847] Processing Module: Exercise 1 (ID: 313288)
+[2026-07-28 18:36:35.037] Found 2 items in module 'Exercise 1'
+[2026-07-28 18:36:35.037]   - Item: 01_Exercise_vShared.pdf (Type: File)
+[2026-07-28 18:36:35.218] Module file tracked: 01_Exercise_vShared.pdf (ID: 1625441)
+[2026-07-28 18:36:35.218]   - Item: 01_Exercise_with solutions (Type: File)
+[2026-07-28 18:36:35.676] Module file tracked: 01_Exercise (1).pdf (ID: 1628929)
+[2026-07-28 18:36:35.676] Processing Module: Exercise 2 (ID: 314336)
+[2026-07-28 18:36:35.841] Found 2 items in module 'Exercise 2'
+[2026-07-28 18:36:35.842]   - Item: 02_Exercise.pdf (Type: File)
+[2026-07-28 18:36:36.016] Module file tracked: 02_Exercise.pdf (ID: 1632521)
+[2026-07-28 18:36:36.017]   - Item: 02_Exercise_case - with model answers.pdf (Type: File)
+[2026-07-28 18:36:36.186] Module file tracked: Exercise 2 Case - with model answers.pdf (ID: 1634823)
+[2026-07-28 18:36:36.186] Processing Module: Exercise 3 (ID: 315217)
+[2026-07-28 18:36:36.434] Found 2 items in module 'Exercise 3'
+[2026-07-28 18:36:36.434]   - Item: 03_Exercise.pdf (Type: File)
+[2026-07-28 18:36:36.671] Module file tracked: 03_Exercise.pdf (ID: 1639325)
+[2026-07-28 18:36:36.672]   - Item: Group Assignment Example.pdf (Type: File)
+[2026-07-28 18:36:36.844] Module file tracked: Group Assignment Example.pdf (ID: 1653360)
+[2026-07-28 18:36:36.844] Processing Module: Exercise 4 (ID: 315787)
+[2026-07-28 18:36:36.994] Found 1 items in module 'Exercise 4'
+[2026-07-28 18:36:36.994]   - Item: 04_Exercise.pptx (Type: File)
+[2026-07-28 18:36:37.235] Module file tracked: 04_Exercise.pptx (ID: 1652670)
+[2026-07-28 18:36:37.235] Processing Module: Exercise 5 (ID: 315886)
+[2026-07-28 18:36:37.702] Found 3 items in module 'Exercise 5'
+[2026-07-28 18:36:37.702]   - Item: Exercise5_SQL.sec (Type: File)
+[2026-07-28 18:36:37.873] Module file tracked: Exercise5_SQL.sec (ID: 1653978)
+[2026-07-28 18:36:37.873]   - Item: 05_Exercise_vShared.pdf (Type: File)
+[2026-07-28 18:36:38.055] Module file tracked: 05_Exercise_vShared.pdf (ID: 1657203)
+[2026-07-28 18:36:38.055]   - Item: 05_Exercise_vLecture.pdf (Type: File)
+[2026-07-28 18:36:38.256] Module file tracked: 05_Exercise_vLecture.pdf (ID: 1657204)
+[2026-07-28 18:36:38.256] Processing Module: Exercise 6 (ID: 316531)
+[2026-07-28 18:36:38.490] Found 3 items in module 'Exercise 6'
+[2026-07-28 18:36:38.491]   - Item: 06_Exercise_withAnswers.pdf (Type: File)
+[2026-07-28 18:36:38.693] Module file tracked: 06_Exercise_withAnswers.pdf (ID: 1669797)
+[2026-07-28 18:36:38.694]   - Item: 06_Exercise.pdf (Type: File)
+[2026-07-28 18:36:38.876] Module file tracked: 06_Exercise.pdf (ID: 1669798)
+[2026-07-28 18:36:38.876]   - Item: Midterm course evaluation (Type: Quiz)
+[2026-07-28 18:36:38.877] Processing Module: Exercise 7 (ID: 317416)
+[2026-07-28 18:36:39.049] Found 2 items in module 'Exercise 7'
+[2026-07-28 18:36:39.049]   - Item: 07_Exercise.pdf (Type: File)
+[2026-07-28 18:36:39.229] Module file tracked: 07_Exercise.pdf (ID: 1674582)
+[2026-07-28 18:36:39.230]   - Item: Teaching Case_ Design and Development of a Special Population Res.pdf (Type: File)
+[2026-07-28 18:36:39.421] Module file tracked: Teaching Case_ Design and Development of a Special Population Res.pdf (ID: 1674581)
+[2026-07-28 18:36:39.421] Processing Module: Exercise 8 (ID: 318051)
+[2026-07-28 18:36:39.568] Found 2 items in module 'Exercise 8'
+[2026-07-28 18:36:39.568]   - Item: 08_Exercise.pdf (Type: File)
+[2026-07-28 18:36:39.746] Module file tracked: 08_Exercise.pdf (ID: 1683969)
+[2026-07-28 18:36:39.746]   - Item: 08_Exercise_Answer.pdf (Type: File)
+[2026-07-28 18:36:39.925] Module file tracked: 08_Exercise_Answer.pdf (ID: 1685283)
+[2026-07-28 18:36:39.926] Processing Module: Exercise 9 (ID: 318413)
+[2026-07-28 18:36:40.087] Found 2 items in module 'Exercise 9'
+[2026-07-28 18:36:40.088]   - Item: 09_Exercise.pdf (Type: File)
+[2026-07-28 18:36:40.289] Module file tracked: 09_Exercise.pdf (ID: 1689336)
+[2026-07-28 18:36:40.289]   - Item: 09_ExerciseSolution.pdf (Type: File)
+[2026-07-28 18:36:40.468] Module file tracked: 09_ExerciseSolution.pdf (ID: 1689839)
+[2026-07-28 18:36:40.468] Processing Module: Last Year Exams (ID: 318916)
+[2026-07-28 18:36:40.664] Found 2 items in module 'Last Year Exams'
+[2026-07-28 18:36:40.665]   - Item: Introduction to Information Systems_Retake_with solutions.pdf (Type: File)
+[2026-07-28 18:36:40.878] Module file tracked: Introduction to Information Systems_Retake_with solutions.pdf (ID: 1698198)
+[2026-07-28 18:36:40.879]   - Item: Introduction to Information Systems_Exam_with solutions.pdf (Type: File)
+[2026-07-28 18:36:41.136] Module file tracked: Introduction to Information Systems_Exam_with solutions.pdf (ID: 1698199)
+[2026-07-28 18:36:41.140] Requesting URL: https://cbscanvas.instructure.com/files/1637104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:41.141] Requesting URL: https://cbscanvas.instructure.com/files/1625441/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:41.142] Requesting URL: https://cbscanvas.instructure.com/files/1628929/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:41.143] Requesting URL: https://cbscanvas.instructure.com/files/1632521/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:41.144] Requesting URL: https://cbscanvas.instructure.com/files/1634823/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:41.144] Requesting URL: https://cbscanvas.instructure.com/files/1639325/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:41.146] Requesting URL: https://cbscanvas.instructure.com/files/1653360/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:41.147] Requesting URL: https://cbscanvas.instructure.com/files/1652670/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:41.148] Requesting URL: https://cbscanvas.instructure.com/files/1657203/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:41.149] Requesting URL: https://cbscanvas.instructure.com/files/1657204/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:42.256] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:42.333] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:42.344] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:42.408] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:42.456] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:42.477] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:42.485] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:42.534] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:42.590] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 18:36:42.619] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 2\Exercise 2 Case - with model answers.pdf (95340 bytes)
+[2026-07-28 18:36:42.666] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Course description including examination rules\Compulsory Assignment_Fall 2025.pdf (123830 bytes)
+[2026-07-28 18:36:42.749] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:42.754] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 1\01_Exercise_vShared.pdf (706744 bytes)
+[2026-07-28 18:36:43.143] Requesting URL: https://cbscanvas.instructure.com/files/1669797/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:43.264] Requesting URL: https://cbscanvas.instructure.com/files/1669798/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:43.436] Requesting URL: https://cbscanvas.instructure.com/files/1674582/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:43.439] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 2\02_Exercise.pdf (791148 bytes)
+[2026-07-28 18:36:43.593] Requesting URL: https://cbscanvas.instructure.com/files/1674581/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:43.783] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 5\05_Exercise_vShared.pdf (588787 bytes)
+[2026-07-28 18:36:43.793] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 1\01_Exercise (1).pdf (836240 bytes)
+[2026-07-28 18:36:43.840] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 3\Group Assignment Example.pdf (2466662 bytes)
+[2026-07-28 18:36:43.890] Requesting URL: https://cbscanvas.instructure.com/files/1683969/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:43.917] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 3\03_Exercise.pdf (1042948 bytes)
+[2026-07-28 18:36:43.934] Requesting URL: https://cbscanvas.instructure.com/files/1685283/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:43.972] Requesting URL: https://cbscanvas.instructure.com/files/1689336/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:44.031] Requesting URL: https://cbscanvas.instructure.com/files/1689839/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:44.175] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 5\05_Exercise_vLecture.pdf (690488 bytes)
+[2026-07-28 18:36:44.353] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:44.447] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:44.484] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:44.550] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:44.741] Requesting URL: https://cbscanvas.instructure.com/files/1698198/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:44.864] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:45.017] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:45.261] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 7\Teaching Case_ Design and Development of a Special Population Res.pdf (446893 bytes)
+[2026-07-28 18:36:45.502] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 7\07_Exercise.pdf (604164 bytes)
+[2026-07-28 18:36:45.600] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:45.845] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 6\06_Exercise_withAnswers.pdf (1430850 bytes)
+[2026-07-28 18:36:46.060] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 9\09_Exercise.pdf (597783 bytes)
+[2026-07-28 18:36:46.069] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 8\08_Exercise.pdf (649172 bytes)
+[2026-07-28 18:36:46.204] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:46.321] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:46.545] Requesting URL: https://cbscanvas.instructure.com/files/1698199/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:36:46.550] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 8\08_Exercise_Answer.pdf (863477 bytes)
+[2026-07-28 18:36:46.689] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 6\06_Exercise.pdf (1566115 bytes)
+[2026-07-28 18:36:46.791] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Last Year Exams\Introduction to Information Systems_Retake_with solutions.pdf (430711 bytes)
+[2026-07-28 18:36:47.468] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:36:47.472] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 9\09_ExerciseSolution.pdf (769604 bytes)
+[2026-07-28 18:36:48.202] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Last Year Exams\Introduction to Information Systems_Exam_with solutions.pdf (647872 bytes)
+[2026-07-28 18:36:49.049] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 4\04_Exercise.pptx (3695853 bytes)
+[2026-07-28 18:36:49.212] Starting Catch-All Phase for non-module files...
+[2026-07-28 18:36:49.695] Catch-All skipping module file: 01_Exercise+%281%29.pdf (ID: 1628929)
+[2026-07-28 18:36:49.696] Catch-All skipping module file: 01_Exercise_vShared.pdf (ID: 1625441)
+[2026-07-28 18:36:49.696] Catch-All skipping module file: 02_Exercise.pdf (ID: 1632521)
+[2026-07-28 18:36:49.697] Catch-All skipping module file: 03_Exercise.pdf (ID: 1639325)
+[2026-07-28 18:36:49.697] Catch-All skipping module file: 04_Exercise.pptx (ID: 1652670)
+[2026-07-28 18:36:49.698] Catch-All skipping module file: 05_Exercise_vLecture.pdf (ID: 1657204)
+[2026-07-28 18:36:49.698] Catch-All skipping module file: 05_Exercise_vShared.pdf (ID: 1657203)
+[2026-07-28 18:36:49.698] Catch-All skipping module file: 06_Exercise_withAnswers.pdf (ID: 1669797)
+[2026-07-28 18:36:49.699] Catch-All skipping module file: 06_Exercise.pdf (ID: 1669798)
+[2026-07-28 18:36:49.699] Catch-All skipping module file: 07_Exercise.pdf (ID: 1674582)
+[2026-07-28 18:36:49.699] Catch-All skipping module file: 08_Exercise_Answer.pdf (ID: 1685283)
+[2026-07-28 18:36:49.700] Catch-All skipping module file: 08_Exercise.pdf (ID: 1683969)
+[2026-07-28 18:36:49.700] Catch-All skipping module file: 09_Exercise.pdf (ID: 1689336)
+[2026-07-28 18:36:49.700] Catch-All skipping module file: 09_ExerciseSolution.pdf (ID: 1689839)
+[2026-07-28 18:36:49.700] Catch-All skipping module file: Compulsory+Assignment_Fall+2025.pdf (ID: 1637104)
+[2026-07-28 18:36:49.701] Catch-All skipping module file: Exercise+2+Case+-+with+model+answers.pdf (ID: 1634823)
+[2026-07-28 18:36:49.701] Catch-All skipping module file: Exercise5_SQL.sec (ID: 1653978)
+[2026-07-28 18:36:49.701] Catch-All skipping module file: Group+Assignment+Example.pdf (ID: 1653360)
+[2026-07-28 18:36:49.702] Catch-All skipping module file: Introduction+to+Information+Systems_Exam_with+solutions.pdf (ID: 1698199)
+[2026-07-28 18:36:49.702] Catch-All skipping module file: Introduction+to+Information+Systems_Retake_with+solutions.pdf (ID: 1698198)
+[2026-07-28 18:36:49.702] Catch-All skipping module file: Teaching+Case_+Design+and+Development+of+a+Special+Population+Res.pdf (ID: 1674581)
+[2026-07-28 18:36:49.702] No partial/non-module files found.
+[2026-07-28 18:36:49.702] --- Download Complete: Introduction to Information Systems (XB E25 BINTO1078U) | 20 items | 18.2 MB downloaded ---
+
+==================================================
+--- Post-Processing: Introduction to Information Systems (XB E25 BINTO1078U) ---
+==================================================
+[2026-07-28 18:36:53.117] === Course Finished: Introduction to Information Systems (XB E25 BINTO1078U) | Downloaded: 20 items | Errors: 0 ===

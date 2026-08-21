@@ -1,0 +1,75 @@
+{
+  "name": "p2_sync_45899",
+  "open": {
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "ing af små systemer samt databaser (LA E25 BINTO1064U)\n17 files pending sync\n196 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 11 files",
+      "waited_s": 24.2
+    },
+    "capture": "p2_sync_45899_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [],
+    "capture": "p2_sync_45899_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260727_165705_bootstrap\\evidence\\screenshots\\p2_sync_45899_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260727_165705_bootstrap\\evidence\\ui\\p2_sync_45899_review.json",
+    "textLen": 859,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "trace": [
+    {
+      "t": "19:25:06",
+      "action": "open_sync",
+      "screen": "sync"
+    },
+    {
+      "t": "19:25:34",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "ing af små systemer samt databaser (LA E25 BINTO1064U)\n17 files pending sync\n196 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 11 files",
+        "waited_s": 24.2
+      },
+      "capture": "p2_sync_45899_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "19:25:34",
+      "action": "review_snapshot",
+      "expanded": [],
+      "capture": "p2_sync_45899_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260727_165705_bootstrap\\evidence\\screenshots\\p2_sync_45899_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260727_165705_bootstrap\\evidence\\ui\\p2_sync_45899_review.json",
+      "textLen": 859,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

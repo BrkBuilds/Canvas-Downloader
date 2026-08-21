@@ -1,0 +1,127 @@
+{
+  "name": "m045_complete",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__gpu\\evidence\\screenshots\\m045_complete.png",
+  "captured": "2026-07-28 23:49:51",
+  "screen": {
+    "url": "http://127.0.0.1:8810/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Download Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_done_donesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "dl_open_0",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nPartial Success\n1\nCOURSE DOWNLOADED\n375\nFILES DOWNLOADED\n3.3\nGB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nPanopto Recordings\n·\n36 found across 1 course\n36\nDOWNLOADED\n36\nTRANSCRIBED\nError Details\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n375 FILES\nPDF\n56\nHTML\n51\nPPTX\n49\nURL\n41\nOTHER FILES\n178\n\nOpen Folder\n\nGo to front page",
+    "textLen": 463
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "done",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "active",
+      "label": "5. Complete"
+    }
+  ],
+  "completion": {
+    "folderCards": [
+      {
+        "key": "dl_fc_0",
+        "text": "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | 375 FILES | PDF | 56 | HTML | 51 | PPTX | 49 | URL | 41 | OTHER FILES | 178 | Open Folder"
+      }
+    ],
+    "dashboardInsideCard": false,
+    "strayDashboard": false,
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nPartial Success\n1\nCOURSE DOWNLOADED\n375\nFILES DOWNLOADED\n3.3\nGB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nPanopto Recordings\n·\n36 found across 1 course\n36\nDOWNLOADED\n36\nTRANSCRIBED\nError Details\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n375 FILES\nPDF\n56\nHTML\n51\nPPTX\n49\nURL\n41\nOTHER FILES\n178\n\nOpen Folder\n\nGo to front page"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

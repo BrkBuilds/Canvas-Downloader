@@ -1,0 +1,62 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_235210_syncregress__free3\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-07-28T23:54:41",
+  "applied": [
+    {
+      "kind": "moved_deep",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "uptodate": 2
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [
+    "My Notes/semester 0/week 3/reading/Page Numbers for 6th and 5th Edition.docx",
+    "My Notes/semester 1/week 3/reading/Compulsory Assignment_Fall 2025.pdf"
+  ],
+  "expected_md5_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 50,
+    "files": 50
+  },
+  "after": {
+    "rows": 50,
+    "files": 50
+  },
+  "fixtures": [
+    {
+      "label": "moved-deep:Page Numbers for 6th and 5th Edition.docx",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 0/week 3/reading/Page Numbers for 6th and 5th Edition.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 0/week 3/reading/Page Numbers for 6th and 5th Edition.docx",
+      "match_name": "Page Numbers for 6th and 5th Edition.docx",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1627501,
+      "original_path": "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:Compulsory Assignment_Fall 2025.pdf",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 1/week 3/reading/Compulsory Assignment_Fall 2025.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 1/week 3/reading/Compulsory Assignment_Fall 2025.pdf",
+      "match_name": "Compulsory Assignment_Fall 2025.pdf",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1637102,
+      "original_path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

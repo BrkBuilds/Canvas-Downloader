@@ -1,0 +1,131 @@
+{
+  "name": "p2b",
+  "open": {
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "as not matched. For example, “html terninger.pdf” looks like “decoy 0 unrelated.pdf” in your folder. Hover the ⚠️ next to a file to see which of your files it resembles. You can leave it checked to download a fresh copy — your own files are never renamed, overwritten or deleted — uncheck it if you know you already have it, or use the eye icon to skip it for good.\n\nGo back\n\nSync & Download 24 files",
+      "waited_s": 24.2
+    },
+    "capture": "p2b_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_45899",
+      "cat_update_45899",
+      "cat_updmod_45899",
+      "cat_deleted_local_45899",
+      "cat_deleted_canvas_45899",
+      "cat_ignored_45899"
+    ],
+    "capture": "p2b_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_002311_phase2b_clean\\evidence\\screenshots\\p2b_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_002311_phase2b_clean\\evidence\\ui\\p2b_review.json",
+    "textLen": 4069,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "Complete\n\nSync Complete!\nSync Success\n1\nCOURSE UPDATED\n24\nFILES DOWNLOADED\n2.0\nMB DOWNLOADED\nℹ️\nSome files were skipped because you ignored them.\nYou can manage ignored files from the Sync Hub.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n24 FILES\nPDF\n12\nTXT\n6\nMD\n4\nDOCX\n1\nOTHER FILES\n1\nkeyboard_arrow_right\n\nFiles added\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 15.1
+    },
+    "capture": "p2b_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "00:28:34",
+      "action": "open_sync",
+      "screen": "sync"
+    },
+    {
+      "t": "00:29:02",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "as not matched. For example, “html terninger.pdf” looks like “decoy 0 unrelated.pdf” in your folder. Hover the ⚠️ next to a file to see which of your files it resembles. You can leave it checked to download a fresh copy — your own files are never renamed, overwritten or deleted — uncheck it if you know you already have it, or use the eye icon to skip it for good.\n\nGo back\n\nSync & Download 24 files",
+        "waited_s": 24.2
+      },
+      "capture": "p2b_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "00:29:07",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_45899",
+        "cat_update_45899",
+        "cat_updmod_45899",
+        "cat_deleted_local_45899",
+        "cat_deleted_canvas_45899",
+        "cat_ignored_45899"
+      ],
+      "capture": "p2b_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_002311_phase2b_clean\\evidence\\screenshots\\p2b_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_002311_phase2b_clean\\evidence\\ui\\p2b_review.json",
+      "textLen": 4069,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "00:29:25",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "Complete\n\nSync Complete!\nSync Success\n1\nCOURSE UPDATED\n24\nFILES DOWNLOADED\n2.0\nMB DOWNLOADED\nℹ️\nSome files were skipped because you ignored them.\nYou can manage ignored files from the Sync Hub.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n24 FILES\nPDF\n12\nTXT\n6\nMD\n4\nDOCX\n1\nOTHER FILES\n1\nkeyboard_arrow_right\n\nFiles added\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 15.1
+      },
+      "capture": "p2b_complete",
+      "ok": true
+    }
+  ]
+}

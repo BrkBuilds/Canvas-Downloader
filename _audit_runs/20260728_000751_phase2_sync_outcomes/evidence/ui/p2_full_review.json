@@ -1,0 +1,975 @@
+{
+  "name": "p2_full_review",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_000751_phase2_sync_outcomes\\evidence\\screenshots\\p2_full_review.png",
+  "captured": "2026-07-28 00:20:32",
+  "screen": {
+    "url": "http://127.0.0.1:8790/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Review Changes",
+      "Smart Select"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_active_idlesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_idle_idlesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_docx",
+        "text": "DOCX (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_html",
+        "text": "HTML (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_jpg",
+        "text": "JPG (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_js",
+        "text": "JS (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_md",
+        "text": "MD (none)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_pdf",
+        "text": "PDF (12/18)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_sql",
+        "text": "SQL (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_txt",
+        "text": "TXT (3/7)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_select_all",
+        "text": "Select All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_deselect_all",
+        "text": "Deselect All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_new_45899",
+        "text": "Select All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_new_45899",
+        "text": "Deselect All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_new_45899",
+        "text": "Move deselected files to Ignored (0)",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1670371",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1598721",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1598722",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1700483",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1700478",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1703059",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1598593",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1768581",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1769666",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1781876",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1784717",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1789236",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1793429",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1794807",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1808522",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1808520",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_-50111380",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_-50109007",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_-50110777",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_-10035533",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_upd_45899",
+        "text": "Select All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_upd_45899",
+        "text": "Deselect All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_upd_45899",
+        "text": "Move deselected files to Ignored (0)",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_45899_1796825",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_45899_1702591",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_45899_1701948",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_45899_1784207",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_updmod_45899",
+        "text": "Select All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_updmod_45899",
+        "text": "Deselect All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_updmod_45899",
+        "text": "Move deselected files to Ignored (3)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_45899_1692936",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_45899_1693079",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_45899_1789210",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_locdel_45899",
+        "text": "Select All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_locdel_45899",
+        "text": "Deselect All here",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_locdel_45899",
+        "text": "Move deselected files to Ignored (8)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1736380",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1637584",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1685205",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1694147",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1700471",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1598591",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1780937",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1768580",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restore_all_45899",
+        "text": "Restore All Ignored Files",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_45899_1694158",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_45899_1696760",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_45899_1780752",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_45899_1793556",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_sync_review_back",
+        "text": "Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_sync_selected",
+        "text": "Sync & Download 24 files",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [
+      {
+        "key": "cat_new_45899",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nNew Files"
+      },
+      {
+        "key": "cat_update_45899",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nUpdates Available"
+      },
+      {
+        "key": "cat_updmod_45899",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nUpdates Available — You've Edited These"
+      },
+      {
+        "key": "cat_deleted_local_45899",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nDeleted Locally"
+      },
+      {
+        "key": "cat_deleted_canvas_45899",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nDeleted on Canvas (Kept Locally)"
+      },
+      {
+        "key": "cat_ignored_45899",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nIgnored Files"
+      }
+    ],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n20\nNew files\n7\nUpdates available\n3\nEdited locally\n8\nDeleted locally\n2\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (all)\n\nHTML (all)\n\nJPG (all)\n\nJS (all)\n\nMD (none)\n\nPDF (12/18)\n\nSQL (all)\n\nTXT (3/7)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n35 files pending sync\n176 files up to date\nkeyboard_arrow_down\n\nNew Files\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nBrand new files available on Canvas that you don't have locally yet.\n\ng1 darts vejl_løsn JS 1.2 KB\n\ngk2 vejl_løsn JS 1.2 KB\n\nhtml terninger PDF 220.7 KB ⚠️\n\nDebug - shop - 1 TXT 1.4 KB\n\nDebug - Inventory - 1 TXT 1.4 KB\n\nJuleværksted - Opgave PDF 193.0 KB ⚠️\n\nFiktiv Eksamensopgave3 PDF 138.6 KB\n\nUMLcases PDF 139.3 KB\n\nforelæsningsnoter 13 OO UML DOCX 30.5 KB ⚠️\n\nBiblioteks_SSD_vejl JPG 31.5 KB ⚠️\n\nLecture 15 Database Design Exercises solutions NY PDF 135.3 KB\n\nLecture 16 ER-RM Exercises PDF 181.8 KB ⚠️\n\nForelæsning 17 ILearn SQL Exercises PDF 223.1 KB ⚠️\n\nSQL Opgave Vejl SQL 2.5 KB\n\nG7-Assignment-1 PDF 95.8 KB\n\nG7-Assignment PDF 95.8 KB\n\nG4 HTML\n\nJavascript practice quiz 4 HTML\n\nJavascript practice quiz 6 HTML\n\ntemp HTML\n\nkeyboard_arrow_down\n\nUpdates Available\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nYour local copies haven't been edited, so they'll be replaced in place with the newer Canvas version.\n\ng5_fælles_feedback PDF 141.2 KB\n\nStudieTimerVejl_js TXT 4.0 KB\n\nJavaScript Objekter – Øvelser PDF 224.1 KB\n\nAssignment Godkendelsesopgave 5 - G5_annalyseOgDesign F2026 PDF 225.1 KB\n\nkeyboard_arrow_down\n\nUpdates Available — You've Edited These\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (3)\n\nYou've modified your local copies of these files. They are unchecked by default to protect your edits. If you sync them, the new Canvas version will be saved alongside as _NewVersion — your edited copy is never touched.\n\nhints MD 14.8 KB\n\nstyling_opgave102_css TXT 4.0 KB\n\nCreate_ILearn_tables_sql TXT 3.1 KB\n\nkeyboard_arrow_down\n\nDeleted Locally\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (8)\n\nThese files are missing from your Course Folder. They are unchecked by default since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.\n\nfeedback ordinær PDF 109.3 KB\n\nøvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak PDF 194.7 KB\n\nminefeltVEJL_js TXT 857 B\n\nEksamen 2023E Ordinær Klasse opgave PDF 53.4 KB\n\nDebug - grades - 1 TXT 990 B\n\nFiktiv Eksamensopgave PDF 42.7 KB\n\nVRS_registrérKunde_vejl PDF 193.1 KB\n\nUMLanalyseopgaver PDF 116.6 KB\n\nkeyboard_arrow_down\n\nDeleted on Canvas (Kept Locally)\n\nThese files were deleted by the teacher on Canvas. They are preserved locally for your safety.\n\nGhostFile_0_g5_fælles_feedback\nPDF\n141.2 KB\nGhostFile_1_Studietimers overblik - Opgave\nPDF\n162.9 KB\nkeyboard_arrow_down\n\nIgnored Files\n\nRestore All Ignored Files\n\nThese files are safely ignored and will not be synced.\n\nEksamen 2024E Ordinær Klasse opgave\nPDF\n163.6 KB\nØvelser_Kapitel11og15\nMD\n6.2 KB\nopgave_bibliotekssystem\nPDF\n170.6 KB\nForelæsning 17 ILearn SQL Solutions\nTXT\n5.6 KB\n⚠️ 6 new files look like files you may already have\nThey are the same size and type as files already in your course folder, but the names are too different to be certain it is the same file, so it was not matched. For example, “html terninger.pdf” looks like “decoy 0 unrelated.pdf” in your folder. Hover the ⚠️ next to a file to see which of your files it resembles. You can leave it checked to download a fresh copy — your own files are never renamed, overwritten or deleted — uncheck it if you know you already have it, or use the eye icon to skip it for good.\n\nGo back\n\nSync & Download 24 files",
+    "textLen": 4069
+  },
+  "review": {
+    "courses": [
+      {
+        "course_id": "45899",
+        "categories": {
+          "new": {
+            "label": "keyboard_arrow_down\n\nNew Files",
+            "badge": "  (20 / 20 selected)",
+            "open": true,
+            "rowCount": 20,
+            "rows": [
+              {
+                "rowKey": "sync_row_new_45899_1670371",
+                "checked": true,
+                "name": "g1 darts vejl_løsn",
+                "stem": "g1 darts vejl_løsn",
+                "ext": "js",
+                "text": "g1 darts vejl_løsn JS 1.2 KB"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1598721",
+                "checked": true,
+                "name": "gk2 vejl_løsn",
+                "stem": "gk2 vejl_løsn",
+                "ext": "js",
+                "text": "gk2 vejl_løsn JS 1.2 KB"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1598722",
+                "checked": true,
+                "name": "html terninger ⚠️",
+                "stem": "html terninger ⚠️",
+                "ext": "pdf",
+                "text": "html terninger PDF 220.7 KB ⚠️"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1700483",
+                "checked": true,
+                "name": "Debug - shop - 1",
+                "stem": "Debug - shop - 1",
+                "ext": "txt",
+                "text": "Debug - shop - 1 TXT 1.4 KB"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1700478",
+                "checked": true,
+                "name": "Debug - Inventory - 1",
+                "stem": "Debug - Inventory - 1",
+                "ext": "txt",
+                "text": "Debug - Inventory - 1 TXT 1.4 KB"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1703059",
+                "checked": true,
+                "name": "Juleværksted - Opgave ⚠️",
+                "stem": "Juleværksted - Opgave ⚠️",
+                "ext": "pdf",
+                "text": "Juleværksted - Opgave PDF 193.0 KB ⚠️"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1598593",
+                "checked": true,
+                "name": "Fiktiv Eksamensopgave3",
+                "stem": "Fiktiv Eksamensopgave3",
+                "ext": "pdf",
+                "text": "Fiktiv Eksamensopgave3 PDF 138.6 KB"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1768581",
+                "checked": true,
+                "name": "UMLcases",
+                "stem": "UMLcases",
+                "ext": "pdf",
+                "text": "UMLcases PDF 139.3 KB"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1769666",
+                "checked": true,
+                "name": "forelæsningsnoter 13 OO UML ⚠️",
+                "stem": "forelæsningsnoter 13 OO UML ⚠️",
+                "ext": "docx",
+                "text": "forelæsningsnoter 13 OO UML DOCX 30.5 KB ⚠️"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1781876",
+                "checked": true,
+                "name": "Biblioteks_SSD_vejl ⚠️",
+                "stem": "Biblioteks_SSD_vejl ⚠️",
+                "ext": "jpg",
+                "text": "Biblioteks_SSD_vejl JPG 31.5 KB ⚠️"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1784717",
+                "checked": true,
+                "name": "Lecture 15 Database Design Exercises solutions NY",
+                "stem": "Lecture 15 Database Design Exercises solutions NY",
+                "ext": "pdf",
+                "text": "Lecture 15 Database Design Exercises solutions NY PDF 135.3 KB"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1789236",
+                "checked": true,
+                "name": "Lecture 16 ER-RM Exercises ⚠️",
+                "stem": "Lecture 16 ER-RM Exercises ⚠️",
+                "ext": "pdf",
+                "text": "Lecture 16 ER-RM Exercises PDF 181.8 KB ⚠️"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1793429",
+                "checked": true,
+                "name": "Forelæsning 17 ILearn SQL Exercises ⚠️",
+                "stem": "Forelæsning 17 ILearn SQL Exercises ⚠️",
+                "ext": "pdf",
+                "text": "Forelæsning 17 ILearn SQL Exercises PDF 223.1 KB ⚠️"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1794807",
+                "checked": true,
+                "name": "Opgave Vejl SQL",
+                "stem": "Opgave Vejl SQL",
+                "ext": "sql",
+                "text": "SQL Opgave Vejl SQL 2.5 KB"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1808522",
+                "checked": true,
+                "name": "G7-Assignment-1",
+                "stem": "G7-Assignment-1",
+                "ext": "pdf",
+                "text": "G7-Assignment-1 PDF 95.8 KB"
+              },
+              {
+                "rowKey": "sync_row_new_45899_1808520",
+                "checked": true,
+                "name": "G7-Assignment",
+                "stem": "G7-Assignment",
+                "ext": "pdf",
+                "text": "G7-Assignment PDF 95.8 KB"
+              },
+              {
+                "rowKey": "sync_row_new_45899_-50111380",
+                "checked": true,
+                "name": "G4",
+                "stem": "G4",
+                "ext": "html",
+                "text": "G4 HTML"
+              },
+              {
+                "rowKey": "sync_row_new_45899_-50109007",
+                "checked": true,
+                "name": "Javascript practice quiz 4",
+                "stem": "Javascript practice quiz 4",
+                "ext": "html",
+                "text": "Javascript practice quiz 4 HTML"
+              },
+              {
+                "rowKey": "sync_row_new_45899_-50110777",
+                "checked": true,
+                "name": "Javascript practice quiz 6",
+                "stem": "Javascript practice quiz 6",
+                "ext": "html",
+                "text": "Javascript practice quiz 6 HTML"
+              },
+              {
+                "rowKey": "sync_row_new_45899_-10035533",
+                "checked": true,
+                "name": "temp",
+                "stem": "temp",
+                "ext": "html",
+                "text": "temp HTML"
+              }
+            ]
+          },
+          "updated_clean": {
+            "label": "keyboard_arrow_down\n\nUpdates Available",
+            "badge": "  (4 / 4 selected)",
+            "open": true,
+            "rowCount": 4,
+            "rows": [
+              {
+                "rowKey": "sync_row_upd_45899_1796825",
+                "checked": true,
+                "name": "g5_fælles_feedback",
+                "stem": "g5_fælles_feedback",
+                "ext": "pdf",
+                "text": "g5_fælles_feedback PDF 141.2 KB"
+              },
+              {
+                "rowKey": "sync_row_upd_45899_1702591",
+                "checked": true,
+                "name": "StudieTimerVejl_js",
+                "stem": "StudieTimerVejl_js",
+                "ext": "txt",
+                "text": "StudieTimerVejl_js TXT 4.0 KB"
+              },
+              {
+                "rowKey": "sync_row_upd_45899_1701948",
+                "checked": true,
+                "name": "JavaScript Objekter – Øvelser",
+                "stem": "JavaScript Objekter – Øvelser",
+                "ext": "pdf",
+                "text": "JavaScript Objekter – Øvelser PDF 224.1 KB"
+              },
+              {
+                "rowKey": "sync_row_upd_45899_1784207",
+                "checked": true,
+                "name": "Assignment Godkendelsesopgave 5 - G5_annalyseOgDesign F2026",
+                "stem": "Assignment Godkendelsesopgave 5 - G5_annalyseOgDesign F2026",
+                "ext": "pdf",
+                "text": "Assignment Godkendelsesopgave 5 - G5_annalyseOgDesign F2026 PDF 225.1 KB"
+              }
+            ]
+          },
+          "updated_modified": {
+            "label": "keyboard_arrow_down\n\nUpdates Available — You've Edited These",
+            "badge": "  (0 / 3 selected)",
+            "open": true,
+            "rowCount": 3,
+            "rows": [
+              {
+                "rowKey": "sync_row_updmod_45899_1692936",
+                "checked": false,
+                "name": "hints",
+                "stem": "hints",
+                "ext": "md",
+                "text": "hints MD 14.8 KB"
+              },
+              {
+                "rowKey": "sync_row_updmod_45899_1693079",
+                "checked": false,
+                "name": "styling_opgave102_css",
+                "stem": "styling_opgave102_css",
+                "ext": "txt",
+                "text": "styling_opgave102_css TXT 4.0 KB"
+              },
+              {
+                "rowKey": "sync_row_updmod_45899_1789210",
+                "checked": false,
+                "name": "Create_ILearn_tables_sql",
+                "stem": "Create_ILearn_tables_sql",
+                "ext": "txt",
+                "text": "Create_ILearn_tables_sql TXT 3.1 KB"
+              }
+            ]
+          },
+          "deleted_locally": {
+            "label": "keyboard_arrow_down\n\nDeleted Locally",
+            "badge": "  (0 / 8 selected)",
+            "open": true,
+            "rowCount": 8,
+            "rows": [
+              {
+                "rowKey": "sync_row_locdel_45899_1736380",
+                "checked": false,
+                "name": "feedback ordinær",
+                "stem": "feedback ordinær",
+                "ext": "pdf",
+                "text": "feedback ordinær PDF 109.3 KB"
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1637584",
+                "checked": false,
+                "name": "øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak",
+                "stem": "øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak",
+                "ext": "pdf",
+                "text": "øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak PDF 194.7 KB"
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1685205",
+                "checked": false,
+                "name": "minefeltVEJL_js",
+                "stem": "minefeltVEJL_js",
+                "ext": "txt",
+                "text": "minefeltVEJL_js TXT 857 B"
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1694147",
+                "checked": false,
+                "name": "Eksamen 2023E Ordinær Klasse opgave",
+                "stem": "Eksamen 2023E Ordinær Klasse opgave",
+                "ext": "pdf",
+                "text": "Eksamen 2023E Ordinær Klasse opgave PDF 53.4 KB"
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1700471",
+                "checked": false,
+                "name": "Debug - grades - 1",
+                "stem": "Debug - grades - 1",
+                "ext": "txt",
+                "text": "Debug - grades - 1 TXT 990 B"
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1598591",
+                "checked": false,
+                "name": "Fiktiv Eksamensopgave",
+                "stem": "Fiktiv Eksamensopgave",
+                "ext": "pdf",
+                "text": "Fiktiv Eksamensopgave PDF 42.7 KB"
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1780937",
+                "checked": false,
+                "name": "VRS_registrérKunde_vejl",
+                "stem": "VRS_registrérKunde_vejl",
+                "ext": "pdf",
+                "text": "VRS_registrérKunde_vejl PDF 193.1 KB"
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1768580",
+                "checked": false,
+                "name": "UMLanalyseopgaver",
+                "stem": "UMLanalyseopgaver",
+                "ext": "pdf",
+                "text": "UMLanalyseopgaver PDF 116.6 KB"
+              }
+            ]
+          },
+          "deleted_on_canvas": {
+            "label": "keyboard_arrow_down\n\nDeleted on Canvas (Kept Locally)",
+            "badge": "  (2) kept locally",
+            "open": true,
+            "rowCount": 2,
+            "rows": [
+              {
+                "rowKey": "",
+                "checked": null,
+                "name": "GhostFile_0_g5_fælles_feedback",
+                "stem": "GhostFile_0_g5_fælles_feedback",
+                "ext": "pdf",
+                "text": "GhostFile_0_g5_fælles_feedback PDF 141.2 KB"
+              },
+              {
+                "rowKey": "",
+                "checked": null,
+                "name": "GhostFile_1_Studietimers overblik - Opgave",
+                "stem": "GhostFile_1_Studietimers overblik - Opgave",
+                "ext": "pdf",
+                "text": "GhostFile_1_Studietimers overblik - Opgave PDF 162.9 KB"
+              }
+            ]
+          },
+          "ignored": {
+            "label": "keyboard_arrow_down\n\nIgnored Files",
+            "badge": "  (4)",
+            "open": true,
+            "rowCount": 4,
+            "rows": [
+              {
+                "rowKey": "ign_restore_row_45899_1694158",
+                "checked": null,
+                "name": "Eksamen 2024E Ordinær Klasse opgave",
+                "stem": "Eksamen 2024E Ordinær Klasse opgave",
+                "ext": "pdf",
+                "text": "Eksamen 2024E Ordinær Klasse opgave PDF 163.6 KB"
+              },
+              {
+                "rowKey": "ign_restore_row_45899_1696760",
+                "checked": null,
+                "name": "Øvelser_Kapitel11og15",
+                "stem": "Øvelser_Kapitel11og15",
+                "ext": "md",
+                "text": "Øvelser_Kapitel11og15 MD 6.2 KB"
+              },
+              {
+                "rowKey": "ign_restore_row_45899_1780752",
+                "checked": null,
+                "name": "opgave_bibliotekssystem",
+                "stem": "opgave_bibliotekssystem",
+                "ext": "pdf",
+                "text": "opgave_bibliotekssystem PDF 170.6 KB"
+              },
+              {
+                "rowKey": "ign_restore_row_45899_1793556",
+                "checked": null,
+                "name": "Forelæsning 17 ILearn SQL Solutions",
+                "stem": "Forelæsning 17 ILearn SQL Solutions",
+                "ext": "txt",
+                "text": "Forelæsning 17 ILearn SQL Solutions TXT 5.6 KB"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "summaryCards": [],
+    "seen": {
+      "categoryContainers": 6,
+      "syncRows": 35,
+      "ignoredRows": 4,
+      "expanders": 6
+    },
+    "pageText": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n20\nNew files\n7\nUpdates available\n3\nEdited locally\n8\nDeleted locally\n2\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (all)\n\nHTML (all)\n\nJPG (all)\n\nJS (all)\n\nMD (none)\n\nPDF (12/18)\n\nSQL (all)\n\nTXT (3/7)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n35 files pending sync\n176 files up to date\nkeyboard_arrow_down\n\nNew Files\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nBrand new files available on Canvas that you don't have locally yet.\n\ng1 darts vejl_løsn JS 1.2 KB\n\ngk2 vejl_løsn JS 1.2 KB\n\nhtml terninger PDF 220.7 KB ⚠️\n\nDebug - shop - 1 TXT 1.4 KB\n\nDebug - Inventory - 1 TXT 1.4 KB\n\nJuleværksted - Opgave PDF 193.0 KB ⚠️\n\nFiktiv Eksamensopgave3 PDF 138.6 KB\n\nUMLcases PDF 139.3 KB\n\nforelæsningsnoter 13 OO UML DOCX 30.5 KB ⚠️\n\nBiblioteks_SSD_vejl JPG 31.5 KB ⚠️\n\nLecture 15 Database Design Exercises solutions NY PDF 135.3 KB\n\nLecture 16 ER-RM Exercises PDF 181.8 KB ⚠️\n\nForelæsning 17 ILearn SQL Exercises PDF 223.1 KB ⚠️\n\nSQL Opgave Vejl SQL 2.5 KB\n\nG7-Assignment-1 PDF 95.8 KB\n\nG7-Assignment PDF 95.8 KB\n\nG4 HTML\n\nJavascript practice quiz 4 HTML\n\nJavascript practice quiz 6 HTML\n\ntemp HTML\n\nkeyboard_arrow_down\n\nUpdates Available\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (0)\n\nYour local copies haven't been edited, so they'll be replaced in place with the newer Canvas version.\n\ng5_fælles_feedback PDF 141.2 KB\n\nStudieTimerVejl_js TXT 4.0 KB\n\nJavaScript Objekter – Øvelser PDF 224.1 KB\n\nAssignment Godkendelsesopgave 5 - G5_annalyseOgDesign F2026 PDF 225.1 KB\n\nkeyboard_arrow_down\n\nUpdates Available — You've Edited These\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (3)\n\nYou've modified your local copies of these files. They are unchecked by default to protect your edits. If you sync them, the new Canvas version will be saved alongside as _NewVersion — your edited copy is never touched.\n\nhints MD 14.8 KB\n\nstyling_opgave102_css TXT 4.0 KB\n\nCreate_ILearn_tables_sql TXT 3.1 KB\n\nkeyboard_arrow_down\n\nDeleted Locally\n\nSelect All here\n\nDeselect All here\n\nMove deselected files to Ignored (8)\n\nThese files are missing from your Course Folder. They are unchecked by default since your deletion may have been intentional. Select any files you'd like to re-download, or ignore them with the button below.\n\nfeedback ordinær PDF 109.3 KB\n\nøvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak PDF 194.7 KB\n\nminefeltVEJL_js TXT 857 B\n\nEksamen 2023E Ordinær Klasse opgave PDF 53.4 KB\n\nDebug - grades - 1 TXT 990 B\n\nFiktiv Eksamensopgave PDF 42.7 KB\n\nVRS_registrérKunde_vejl PDF 193.1 KB\n\nUMLanalyseopgaver PDF 116.6 KB\n\nkeyboard_arrow_down\n\nDeleted on Canvas (Kept Locally)\n\nThese files were deleted by the teacher on Canvas. They are preserved locally for your safety.\n\nGhostFile_0_g5_fælles_feedback\nPDF\n141.2 KB\nGhostFile_1_Studietimers overblik - Opgave\nPDF\n162.9 KB\nkeyboard_arrow_down\n\nIgnored Files\n\nRestore All Ignored Files\n\nThese files are safely ignored and will not be synced.\n\nEksamen 2024E Ordinær Klasse opgave\nPDF\n163.6 KB\nØvelser_Kapitel11og15\nMD\n6.2 KB\nopgave_bibliotekssystem\nPDF\n170.6 KB\nForelæsning 17 ILearn SQL Solutions\nTXT\n5.6 KB\n⚠️ 6 new files look like files you may already have\nThey are the same size and type as files already in your course folder, but the names are too different to be certain it is the same file, so it was not matched. For example, “html terninger.pdf” looks like “decoy 0 unrelated.pdf” in your folder. Hover the ⚠️ next to a file to see which of your files it resembles. You can leave it checked to download a fresh copy — your own files are never renamed, overwritten or deleted — uncheck it if you know you already have it, or use the eye icon to skip it for good.\n\nGo back\n\nSync & Download 24 files"
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "active",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "idle",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

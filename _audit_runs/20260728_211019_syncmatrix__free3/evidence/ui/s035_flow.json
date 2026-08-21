@@ -1,0 +1,114 @@
+{
+  "name": "s035",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "0\nNew files\n2\nUpdates available\n2\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (none)\n\nPDF (none)\n\nSelect All\n\nDeselect All\n\n1.\nIntroduction to Information Systems (LA)\nIntroduction to Information Systems (LA E25 BINTO1078U)\n2 files pending sync\n48 files up to date\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 0 files",
+      "waited_s": 6.1
+    },
+    "capture": "s035_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_updmod_43657"
+    ],
+    "capture": "s035_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free3\\evidence\\screenshots\\s035_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free3\\evidence\\ui\\s035_review.json",
+    "textLen": 965,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "trace": [
+    {
+      "t": "21:31:01",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "21:31:11",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "0\nNew files\n2\nUpdates available\n2\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (none)\n\nPDF (none)\n\nSelect All\n\nDeselect All\n\n1.\nIntroduction to Information Systems (LA)\nIntroduction to Information Systems (LA E25 BINTO1078U)\n2 files pending sync\n48 files up to date\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 0 files",
+        "waited_s": 6.1
+      },
+      "capture": "s035_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "21:31:12",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_updmod_43657"
+      ],
+      "capture": "s035_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free3\\evidence\\screenshots\\s035_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free3\\evidence\\ui\\s035_review.json",
+      "textLen": 967,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "21:31:13",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "21:31:14",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_updmod_43657"
+      ],
+      "capture": "s035_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free3\\evidence\\screenshots\\s035_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free3\\evidence\\ui\\s035_review.json",
+      "textLen": 965,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

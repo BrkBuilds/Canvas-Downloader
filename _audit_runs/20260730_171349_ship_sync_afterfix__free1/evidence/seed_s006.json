@@ -1,0 +1,63 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-07-30T17:15:21",
+  "applied": [
+    {
+      "kind": "deleted_locally",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "deleted_locally": 2
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [
+    "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+    "Course description including examination rules/Timetable for presentations.pdf"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 43,
+    "files": 42
+  },
+  "after": {
+    "rows": 43,
+    "files": 40
+  },
+  "fixtures": [
+    {
+      "label": "deleted-locally:Compulsory Assignment_Fall 2025.pdf",
+      "kind": "deleted_locally",
+      "path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "match_name": "Compulsory Assignment_Fall 2025.pdf",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1637102,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:Timetable for presentations.pdf",
+      "kind": "deleted_locally",
+      "path": "Course description including examination rules/Timetable for presentations.pdf",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Course description including examination rules/Timetable for presentations.pdf",
+      "match_name": "Timetable for presentations.pdf",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1684097,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

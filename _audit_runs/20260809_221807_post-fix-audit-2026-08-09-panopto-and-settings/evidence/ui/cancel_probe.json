@@ -1,0 +1,73 @@
+{
+  "name": "cancel_probe",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\\evidence\\screenshots\\cancel_probe.png",
+  "captured": "2026-08-09 22:57:31",
+  "screen": {
+    "url": "http://127.0.0.1:8798/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Panopto Recordings",
+      "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_active_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cancel_panopto_btn",
+        "text": "Cancel",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nPanopto Recordings\n\nTRANSCRIBING RECORDINGS\n\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n14%\nTRANSCRIBED\n5 / 36\nCURRENT FILE\n31%\nTIME REMAINING\n14:18\nTRANSCRIBING\nForelæsningsvideo (2): formelle træk - organisationsformer\nForelæsningsvideo (1): formelle træk - organisationsformer\nTXT, SRT\nForelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37\nTXT, SRT\nForelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37\nTXT, SRT\nForelæsningsvideo (2): formelle træk - mål og strategi i organisationer\nTXT, SRT\nForelæsningsvideo (1): formelle træk - mål og strategi i organisationer\nTXT, SRT\nTRANSCRIBING 36 RECORDINGS\nForelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data\nlink saved\nForelæsningsvideo (1): organisationsprojekt - klargøring af data\nlink saved\nForelæsningsvideo (2): organisationsprojekt - akademisk argumentation\nlink saved\nForelæsningsvideo (1): organisationsprojekt - operationalisering\nlink saved\nForelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker\nlink saved\nForelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign\nlink saved\nForelæsningsvideo (2): organisationsprojekt - problemformulering\nlink saved\nForelæsningsvideo (1): organisationsprojekt - problemformulering\nlink saved\nForelæsningsvideo (2): organisationsprojekt - vidensproduktion\nlink saved\nForelæsningsvideo (1): organisationsprojekt - vidensproduktion\nlink saved\nForelæsningsvideo 2 Ledelse i organisationer 2\nlink saved\nForelæsningsvideo 1 Ledelse i organisationer 1\nlink saved\nForelæsningsvideo (2): Forandringsledelse\nlink saved\nForelæsningsvideo (1): Forandringsledelse\nlink saved\nForelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025\nlink saved\nForelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025\nlink saved\nForelæsningsvideo (2) Motivationsfaktorer i organisationer 2\nlink saved\nForelæsningsvideo (1) Motivationsfaktorer i organisationer 1\nlink saved\nForelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025\nlink saved\nForelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025\nlink saved\nOmgivelser Opsamling Thursday, 23 October 2025 at 19.50.09\nlink saved\nForelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025\nlink saved\nForelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025\nlink saved\nForelæsningsvideo (2): uformelle træk - magt i organisationer\nlink saved\nForelæsningsvideo (1): uformelle træk - magt i organisationer\nlink saved\nForelæsningsvideo 2 om Sensemaking\nlink saved\nForelæsningsvideo 1 om Sensemaking\nlink saved\nVideo med respons på feedback og introduktion til et nyt initiativ i undervisningen\nlink saved\nForelæsningsvideo (2): Uformelletræk_organisationskultur\nlink saved\nForelæsningsvideo (1): Uformelletræk_organisationskultur\nlink saved\nForelæsningsvideo (2): formelle træk - organisationsformer\nlink saved\nForelæsningsvideo (1): formelle træk - organisationsformer\nlink saved\nForelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37\nlink saved\nForelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37\nlink saved\nForelæsningsvideo (2): formelle træk - mål og strategi i organisationer\nlink saved\nForelæsningsvideo (1): formelle træk - mål og strategi i organisationer\nlink saved\nSAVING 36 LECTURE LINKS\n36 RECORDINGS FOUND\nForelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data\nrecording found\nForelæsningsvideo (1): organisationsprojekt - klargøring af data\nrecording found\nForelæsningsvideo (2): organisationsprojekt - akademisk argumentation\nrecording found\nForelæsningsvideo (1): organisationsprojekt - operationalisering\nrecording found\nForelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker\nrecording found\nForelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign\nrecording found\nForelæsningsvideo (2): organisationsprojekt - problemformulering\nrecording found\nForelæsningsvideo (1): organisationsprojekt - problemformulering\nrecording found\nForelæsningsvideo (2): organisationsprojekt - vidensproduktion\nrecording found\nForelæsningsvideo (1): organisationsprojekt - vidensproduktion\nrecording found\nForelæsningsvideo 2 Ledelse i organisationer 2\nrecording found\nForelæsningsvideo 1 Ledelse i organisationer 1\nrecording found\nForelæsningsvideo (2): Forandringsledelse\nrecording found\nForelæsningsvideo (1): Forandringsledelse\nrecording found\nForelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025\nrecording found\nForelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025\nrecording found\nForelæsningsvideo (2) Motivationsfaktorer i organisationer 2\nrecording found\nForelæsningsvideo (1) Motivationsfaktorer i organisationer 1\nrecording found\nForelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025\nrecording found\nForelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025\nrecording found\nOmgivelser Opsamling Thursday, 23 October 2025 at 19.50.09\nrecording found\nForelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025\nrecording found\nForelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025\nrecording found\nForelæsningsvideo (2): uformelle træk - magt i organisationer\nrecording found\nForelæsningsvideo (1): uformelle træk - magt i organisationer\nrecording found\nForelæsningsvideo 2 om Sensemaking\nrecording found\nForelæsningsvideo 1 om Sensemaking\nrecording found\nVideo med respons på feedback og introduktion til et nyt initiativ i undervisningen\nrecording found\nForelæsningsvideo (2): Uformelletræk_organisationskultur\nrecording found\nForelæsningsvideo (1): Uformelletræk_organisationskultur\nrecording found\nForelæsningsvideo (2): formelle træk - organisationsformer\nrecording found\nForelæsningsvideo (1): formelle træk - organisationsformer\nrecording found\nForelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37\nrecording found\nForelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37\nrecording found\nForelæsningsvideo (2): formelle træk - mål og strategi i organisationer\nrecording found\nForelæsningsvideo (1): formelle træk - mål og strategi i organisationer\nrecording found\nSCANNING · INDFØRING I ORGANISATIONERS OPBYGNING OG FUNKTION (LA E25 BINTO1060U)\n[Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)] Scanning remaining files...\n[Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)] The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).\n[Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)] The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).\nFiler til Klynge 8\nFiler til Klynge 7\nFiler til Klynge 6\nFiler til Klynge 5\nFiler til Klynge 4\nFiler til Klynge 3\nFiler til Klynge 2\nFiler til Klynge 1\nUge 17: formål med klyngevejledningen\nUge 16: mål med øvelserne\nUge 15: mål med undervisningen\nUge 15: pensum\nForelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data\nForelæsningsvideo (1): organisationsprojekt - klargøring af data\nUge 13: mål med undervisningen\nUge 13: pensum\nForelæsningsvideo (2): organisationsprojekt - akademisk argumentation\nForelæsningsvideo (1): organisationsprojekt - operationalisering\nUge 12: mål med undervisningen\nUge 12: pensum\nFiler til Klynge 7\nFiler til Klynge 6\nFiler til Klynge 5\nFiler til Klynge 4\nFiler til Klynge 3\nFiler til Klynge 2\nFiler til Klynge 1\nUge 11: formål med klyngevejledningen\nForelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker\nForelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign\nUge 10: mål med undervisningen\nUge 10: pensum\nForelæsningsvideo (2): organisationsprojekt - problemformulering\nForelæsningsvideo (1): organisationsprojekt - problemformulering\nUge 9: mål med undervisningen\nUge 9: pensum\nForelæsningsvideo (2): organisationsprojekt - vidensproduktion\nForelæsningsvideo (1): organisationsprojekt - vidensproduktion\nUge 8: mål med undervisningen\nUge 8: pensum\nUge 6: mål med undervisningen\nUge 6: pensum\nLink til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse\nForelæsningsvideo 2 Ledelse i organisationer 2\nForelæsningsvideo 1 Ledelse i organisationer 1\nForelæsningsvideo (2): Forandringsledelse\nForelæsningsvideo (1): Forandringsledelse\nForelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025\nForelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025\nForelæsningsvideo (2) Motivationsfaktorer i organisationer 2\nForelæsningsvideo (1) Motivationsfaktorer i organisationer 1\nForelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025\nForelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025\nOmgivelser Opsamling Thursday, 23 October 2025 at 19.50.09\nForelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025\nForelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025\nForelæsningsvideo (2): uformelle træk - magt i organisationer\nForelæsningsvideo (1): uformelle træk - magt i organisationer\nForelæsningsvideo 2 om Sensemaking\nForelæsningsvideo 1 om Sensemaking\nVideo med respons på feedback og introduktion til et nyt initiativ i undervisningen\nForelæsningsvideo (2): Uformelletræk_organisationskultur\nForelæsningsvideo (1): Uformelletræk_organisationskultur\nDanske Bank investor præsentation (læs s. 3-10)\nDansk bank strategi (linket virker hvis I åbner det i et nyt vindue)\nForelæsningsvideo (2): formelle træk - organisationsformer\nForelæsningsvideo (1): formelle træk - organisationsformer\nForelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37\nForelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37\nForelæsningsvideo (2): formelle træk - mål og strategi i organisationer\nForelæsningsvideo (1): formelle træk - mål og strategi i organisationer\nOpfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue)\nBrug af AI i eksamensprojektet\nGrupper til eksamensprojekt\nHelle Zinner Henriksens Kontortid\nKursusbeskrivelse - ink. eksamensregler\n\nCancel",
+    "textLen": 10545
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "name": "s016_after_analysis",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\screenshots\\s016_after_analysis.png",
+  "captured": "2026-07-29 00:55:39",
+  "screen": {
+    "url": "http://127.0.0.1:8880/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Sync Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_done_donesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_done_donesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page_sync_complete",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync done - everything up to date\n\nChecked 1 file in this course - your folder already matches Canvas.\n\nGo to front page",
+    "textLen": 220
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "done",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "done",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "active",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": false,
+    "header": "",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": ""
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

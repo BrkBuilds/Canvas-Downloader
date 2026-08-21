@@ -1,0 +1,77 @@
+{
+  "run_id": "20260728_130002_phase4_panopto_full",
+  "label": "phase4_panopto_full",
+  "created": "2026-07-28T13:00:02",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {},
+  "ports_used": [
+    8796
+  ],
+  "browser": {},
+  "scope": [
+    {
+      "name": "p4_full",
+      "flow": "download",
+      "course": "43660",
+      "config": "{\"mode\": \"modules\", \"file_filter\": \"all\", \"secondary_isolated\": false, \"dl_assignments\": false, \"dl_syllabus\": false, \"dl_announcements\": false, \"dl_discussions\": false, \"dl_quizzes\": false, \"dl_submissions\": false, \"convert_zip\": false, \"convert_pptx\": false, \"convert_word\": false, \"convert_excel\":",
+      "result": "ok"
+    },
+    {
+      "name": "p4_tx",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "p4_tx2",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "p4_tx3",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "p4_gpu",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "p4_cpu",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "p4_cancel",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "p4_cancel2",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "p4_cancel3",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    }
+  ]
+}

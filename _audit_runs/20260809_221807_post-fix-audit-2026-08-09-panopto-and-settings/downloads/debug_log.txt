@@ -1,0 +1,996 @@
+--- Debug Log Started: 2026-08-09 23:51:25.544490 ---
+[2026-08-09 23:51:25.568] === Session Environment ===
+  App: Canvas Downloader v2.0.1 | frozen=False | pid=10672
+  OS: Windows 11 | Windows-11-10.0.26200-SP0 | arch=AMD64
+  Python: 3.13.1
+  CA bundle (certifi): ok
+  Context: Download mode (custom) | 1 course(s)
+===========================
+[2026-08-09 23:51:31.545] [INFO] [core.canvas_logic] Page-stub fallback: resolved 35 module Page item(s) by slug (Pages list restricted for course 43660)
+[2026-08-09 23:51:31.972] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 77 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43660.
+[2026-08-09 23:51:32.036] === Download Start: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | Course 1/1 ===
+[2026-08-09 23:51:32.036] Mode: modules | Filter: all
+[2026-08-09 23:51:32.037] Post-processing: [none]
+[2026-08-09 23:51:32.037] Secondary content: [none]
+[2026-08-09 23:51:32.332] 
+==================================================
+--- Download: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) (ID: 43660) Mode: modules ---
+==================================================
+[2026-08-09 23:51:32.332] Save Dir: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads
+[2026-08-09 23:51:32.332] Filter: all | Concurrency: 10 | Max file size: disabled | Estimated payload: 849 MB
+[2026-08-09 23:51:32.332] Canvas Content: [none] | isolate=no
+[2026-08-09 23:51:32.333] Post-processing: [none]
+[2026-08-09 23:51:33.161] Processing Module: Kursusbeskrivelse og eksamensregler (ID: 305028)
+[2026-08-09 23:51:33.350] Found 3 items in module 'Kursusbeskrivelse og eksamensregler'
+[2026-08-09 23:51:33.350]   - Item: Kursusbeskrivelse - ink. eksamensregler (Type: ExternalUrl)
+[2026-08-09 23:51:33.355] Creating Link: Kursusbeskrivelse - ink. eksamensregler (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO1060U.aspx) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Kursusbeskrivelse og eksamensregler\Kursusbeskrivelse - ink. eksamensregler.url
+[2026-08-09 23:51:34.074]   - Item: Helle Zinner Henriksens Kontortid (Type: Page)
+[2026-08-09 23:51:34.385] Saving page: Helle Zinner Henriksens Kontortid -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Kursusbeskrivelse og eksamensregler\Page Helle Zinner Henriksens Kontortid.html
+[2026-08-09 23:51:34.732]   - Item: Pensumoversigt efterår2025.pdf (Type: File)
+[2026-08-09 23:51:34.926] Module file tracked: ind_org_Pensumoversigt_efterår2025.pdf (ID: 1652721)
+[2026-08-09 23:51:34.927] Processing Module: Opdateret Pensumoversigt inkl. Forår 2026 (ID: 323515)
+[2026-08-09 23:51:35.149] Found 4 items in module 'Opdateret Pensumoversigt inkl. Forår 2026'
+[2026-08-09 23:51:35.150]   - Item: E25_F26_HAIT_Organisationers opbygning.pdf (Type: File)
+[2026-08-09 23:51:35.309] Module file tracked: E25_F26_HAIT_Organisationers opbygning.pdf (ID: 1747622)
+[2026-08-09 23:51:35.309]   - Item: Manual for eksamensprojekt 2025-2026.pdf (Type: File)
+[2026-08-09 23:51:35.507] Module file tracked: Manual for eksamensprojekt 2025-2026.pdf (ID: 1748401)
+[2026-08-09 23:51:35.507]   - Item: Grupper til eksamensprojekt (Type: Page)
+[2026-08-09 23:51:35.738] Saving page: Grupper til eksamensprojekt -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Opdateret Pensumoversigt inkl. Forår 2026\Page Grupper til eksamensprojekt.html
+[2026-08-09 23:51:36.141]   - Item: Brug af AI i eksamensprojektet (Type: Page)
+[2026-08-09 23:51:36.408] Saving page: Brug af AI i eksamensprojektet -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Opdateret Pensumoversigt inkl. Forår 2026\Page Brug af AI i eksamensprojektet.html
+[2026-08-09 23:51:36.837] Processing Module: Introduktion til organisationsteori (ID: 305029)
+[2026-08-09 23:51:37.034] Found 5 items in module 'Introduktion til organisationsteori'
+[2026-08-09 23:51:37.034]   - Item: Carr, N.G. (2003). IT doesn’t matter, Harvard Business Review, May 2003, s. 5-12 (Type: File)
+[2026-08-09 23:51:37.205] Module file tracked: ITDoesntMatter.pdf (ID: 1560072)
+[2026-08-09 23:51:37.205]   - Item: Eksempel på gruppekontrakt (Type: File)
+[2026-08-09 23:51:37.368] Module file tracked: Eksempel på gruppekontrakt.docx (ID: 1559916)
+[2026-08-09 23:51:37.368]   - Item: Intro_uge 36_2025_slides.pdf (Type: File)
+[2026-08-09 23:51:37.574] Module file tracked: Intro_uge 36_2025_slides.pdf (ID: 1624231)
+[2026-08-09 23:51:37.574]   - Item: Øvelser_uge36_intro_2025.pptx (Type: File)
+[2026-08-09 23:51:37.746] Module file tracked: Øvelser_uge36_intro_2025.pptx (ID: 1624133)
+[2026-08-09 23:51:37.746]   - Item: Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-08-09 23:51:37.748] Creating Link: Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue) (https://www.computerworld.dk/art/226682/10-aar-efter-kontroversiel-artikel-er-it-stadig-ligegyldigt) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Introduktion til organisationsteori\Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue).url
+[2026-08-09 23:51:38.165] Processing Module: Tema 1: Formelle træk - mål og strategi (ID: 305030)
+[2026-08-09 23:51:38.361] Found 6 items in module 'Tema 1: Formelle træk - mål og strategi'
+[2026-08-09 23:51:38.361]   - Item: Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-08-09 23:51:38.363] Creating Link: Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1087340) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 1 Formelle træk - mål og strategi\Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.url
+[2026-08-09 23:51:38.715]   - Item: Slides_mål og strategi_del 1_E25.pdf (Type: File)
+[2026-08-09 23:51:38.878] Module file tracked: Slides_mål og strategi_del 1_E25.pdf (ID: 1620929)
+[2026-08-09 23:51:38.878]   - Item: Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-08-09 23:51:38.879] Creating Link: Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1088123) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 1 Formelle træk - mål og strategi\Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.url
+[2026-08-09 23:51:39.249]   - Item: Slides_mål og strategi_del 2_E25.pdf (Type: File)
+[2026-08-09 23:51:39.419] Module file tracked: Slides_mål og strategi_del 2_E25.pdf (ID: 1620930)
+[2026-08-09 23:51:39.419]   - Item: Quiz: mål og strategi i organisationer (Type: Quiz)
+[2026-08-09 23:51:39.420]   - Item: Øvelser_uge36B_mål_og_strategi_2025.pdf (Type: File)
+[2026-08-09 23:51:39.612] Module file tracked: Øvelser_uge36B_mål_og_strategi_2025.pdf (ID: 1627150)
+[2026-08-09 23:51:39.612] Processing Module: Tema 1: Formelle træk - organisationsstruktur (ID: 305031)
+[2026-08-09 23:51:39.853] Found 8 items in module 'Tema 1: Formelle træk - organisationsstruktur'
+[2026-08-09 23:51:39.854]   - Item: Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-08-09 23:51:39.856] Creating Link: Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052619) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 1 Formelle træk - organisationsstruktur\Forelæsningsvideo (1) formelle træk - organisationsstruktur 2025 37.url
+[2026-08-09 23:51:40.266]   - Item: Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-08-09 23:51:40.268] Creating Link: Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052620) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 1 Formelle træk - organisationsstruktur\Forelæsningsvideo (2) formelle træk - organisationsstruktur 2025 37.url
+[2026-08-09 23:51:40.600]   - Item: Quiz: Organisationsstruktur  (Type: Quiz)
+[2026-08-09 23:51:40.601]   - Item: Slides (1): formelle træk - organisationsstruktur 2025_37 (Type: File)
+[2026-08-09 23:51:40.770] Module file tracked: 2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx (ID: 1559993)
+[2026-08-09 23:51:40.771]   - Item: Slides (2): formelle træk - organisationsstruktur 2025_37 (Type: File)
+[2026-08-09 23:51:40.926] Module file tracked: 2024_Lektion uge 37_2 Struktur_upload.pptx (ID: 1560185)
+[2026-08-09 23:51:40.927]   - Item: Upload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk (Type: Discussion)
+[2026-08-09 23:51:40.927]   - Item: Øvelse uge 37 - Organisationsdiagram.pdf (Type: File)
+[2026-08-09 23:51:41.086] Module file tracked: Øvelse uge 37 - Organisationsdiagram.pdf (ID: 1628057)
+[2026-08-09 23:51:41.087]   - Item: Øvelser_uge37_struktur_2025.pdf (Type: File)
+[2026-08-09 23:51:41.251] Module file tracked: Øvelser_uge37_struktur_2025.pdf (ID: 1632239)
+[2026-08-09 23:51:41.252] Processing Module: Tema 1: Formelle træk - organisationsformer (ID: 305032)
+[2026-08-09 23:51:41.436] Found 8 items in module 'Tema 1: Formelle træk - organisationsformer'
+[2026-08-09 23:51:41.437]   - Item: Forelæsningsvideo (1): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-08-09 23:51:41.438] Creating Link: Forelæsningsvideo (1): formelle træk - organisationsformer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052628) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 1 Formelle træk - organisationsformer\Forelæsningsvideo (1) formelle træk - organisationsformer.url
+[2026-08-09 23:51:41.817]   - Item: Forelæsningsvideo (2): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-08-09 23:51:41.818] Creating Link: Forelæsningsvideo (2): formelle træk - organisationsformer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052629) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 1 Formelle træk - organisationsformer\Forelæsningsvideo (2) formelle træk - organisationsformer.url
+[2026-08-09 23:51:42.201]   - Item: Slides (1): formelle træk - organisationsformer_2025 (Type: File)
+[2026-08-09 23:51:42.378] Module file tracked: 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx (ID: 1560188)
+[2026-08-09 23:51:42.378]   - Item: Slides (2): formelle træk - organisationsformer_2025 (Type: File)
+[2026-08-09 23:51:42.557] Module file tracked: 2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pptx (ID: 1560186)
+[2026-08-09 23:51:42.558]   - Item: Resultat af øvelse: organisationsformer - oversigtstabel (Type: File)
+[2026-08-09 23:51:42.736] Module file tracked: Organisationsformer - oversigtstabel - udfyldt.pptx (ID: 1559923)
+[2026-08-09 23:51:42.736]   - Item: Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-08-09 23:51:42.737] Creating Link: Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue) (https://danskebank.com/about-us) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 1 Formelle træk - organisationsformer\Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue).url
+[2026-08-09 23:51:43.083]   - Item: Danske Bank investor præsentation (læs s. 3-10) (Type: ExternalUrl)
+[2026-08-09 23:51:43.085] Creating Link: Danske Bank investor præsentation (læs s. 3-10) (https://danskebank.com/-/media/danske-bank-com/file-cloud/2025/2/investor-presentation---q4-2024.pdf) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 1 Formelle træk - organisationsformer\Danske Bank investor præsentation (læs s. 3-10).url
+[2026-08-09 23:51:43.675]   - Item: Kristoffers Oplæg - Strategy in Danske Bank.pdf (Type: File)
+[2026-08-09 23:51:43.858] Module file tracked: Strategy in Danske Bank.pdf (ID: 1638534)
+[2026-08-09 23:51:43.858] Processing Module: Tema 2: Uformelle træk - organisationskultur (ID: 305033)
+[2026-08-09 23:51:44.104] Found 13 items in module 'Tema 2: Uformelle træk - organisationskultur'
+[2026-08-09 23:51:44.105]   - Item: Forelæsningsvideo (1): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-08-09 23:51:44.107] Creating Link: Forelæsningsvideo (1): Uformelletræk_organisationskultur (https://cbscanvas.instructure.com/courses/43660/modules/items/1102035) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 2 Uformelle træk - organisationskultur\Forelæsningsvideo (1) Uformelletræk_organisationskultur.url
+[2026-08-09 23:51:44.492]   - Item: Slides_kulturanalyse del 1_E25.pdf (Type: File)
+[2026-08-09 23:51:44.725] Module file tracked: Slides_kulturanalyse del 1_E25.pdf (ID: 1640813)
+[2026-08-09 23:51:44.726]   - Item: Forelæsningsvideo (2): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-08-09 23:51:44.727] Creating Link: Forelæsningsvideo (2): Uformelletræk_organisationskultur (https://cbscanvas.instructure.com/courses/43660/modules/items/1102050) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 2 Uformelle træk - organisationskultur\Forelæsningsvideo (2) Uformelletræk_organisationskultur.url
+[2026-08-09 23:51:45.117]   - Item: Slides_kulturanalyse del 2_E25.pdf (Type: File)
+[2026-08-09 23:51:45.308] Module file tracked: Slides_kulturanalyse del 2_E25.pdf (ID: 1640814)
+[2026-08-09 23:51:45.308]   - Item: Quiz: organisationskultur (Type: Quiz)
+[2026-08-09 23:51:45.309]   - Item: Video med respons på feedback og introduktion til et nyt initiativ i undervisningen (Type: ExternalTool)
+[2026-08-09 23:51:45.310] Creating Link: Video med respons på feedback og introduktion til et nyt initiativ i undervisningen (https://cbscanvas.instructure.com/courses/43660/modules/items/1103344) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 2 Uformelle træk - organisationskultur\Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.url
+[2026-08-09 23:51:45.650]   - Item: Øvelser_uge39_kultur_2025.pdf (Type: File)
+[2026-08-09 23:51:45.886] Module file tracked: Øvelser_uge39_kultur_2025.pdf (ID: 1643383)
+[2026-08-09 23:51:45.886]   - Item: Øvelser_uge39_kultur_E2025 upload.pptx (Type: File)
+[2026-08-09 23:51:46.071] Module file tracked: Øvelser_uge39_kultur_E2025 upload.pptx (ID: 1644211)
+[2026-08-09 23:51:46.071]   - Item: Martin Thorborg tiltrækker nye ansatte ved at lokke_artikel okt 2023 (Type: File)
+[2026-08-09 23:51:46.257] Module file tracked: Martin Thorborg tiltrækker nye ansatte ved at lokke_artikel okt 2023.pdf (ID: 1559932)
+[2026-08-09 23:51:46.258]   - Item: Case: Børnemøbler (Type: File)
+[2026-08-09 23:51:46.481] Module file tracked: Børnemøbler_ny version.pdf (ID: 1560154)
+[2026-08-09 23:51:46.482]   - Item: Spørgsmål til pensum i organisationskultur (Type: Discussion)
+[2026-08-09 23:51:46.482]   - Item: Supplerende literatur (Type: SubHeader)
+[2026-08-09 23:51:46.483]   - Item: Schein 1994_uddrag.pdf (Type: File)
+[2026-08-09 23:51:46.651] Module file tracked: Schein 1994_uddrag.pdf (ID: 1639375)
+[2026-08-09 23:51:46.652] Processing Module: Tema 2: Uformelle træk - sensemaking (ID: 305034)
+[2026-08-09 23:51:46.852] Found 11 items in module 'Tema 2: Uformelle træk - sensemaking'
+[2026-08-09 23:51:46.852]   - Item: Forelæsningsvideo 1 om Sensemaking (Type: ExternalTool)
+[2026-08-09 23:51:46.854] Creating Link: Forelæsningsvideo 1 om Sensemaking (https://cbscanvas.instructure.com/courses/43660/modules/items/1105837) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 2 Uformelle træk - sensemaking\Forelæsningsvideo 1 om Sensemaking.url
+[2026-08-09 23:51:47.234]   - Item: Sensemaking slides 1.pptx (Type: File)
+[2026-08-09 23:51:47.380] Module file tracked: Sensemaking slides 1.pptx (ID: 1658057)
+[2026-08-09 23:51:47.380]   - Item: Forelæsningsvideo 2 om Sensemaking (Type: ExternalTool)
+[2026-08-09 23:51:47.382] Creating Link: Forelæsningsvideo 2 om Sensemaking (https://cbscanvas.instructure.com/courses/43660/modules/items/1105840) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 2 Uformelle træk - sensemaking\Forelæsningsvideo 2 om Sensemaking.url
+[2026-08-09 23:51:47.775]   - Item: Sensemaking slides 2.pptx (Type: File)
+[2026-08-09 23:51:47.930] Module file tracked: Sensemaking slides 2.pptx (ID: 1658058)
+[2026-08-09 23:51:47.931]   - Item: Weick, K. E., Sutcliffe, K. M., & Obstfeld, D. (2005). Organizing and the Process of Sensemaking. Organization Science 16(4), 409–421. https://doi.org/10.1287/orsc.1050.0133 (kan også findes via. CBS libsearch) (Type: SubHeader)
+[2026-08-09 23:51:47.931]   - Item: Weick (1995) Sensemaking in organization kap. 2 (.pdf (Type: File)
+[2026-08-09 23:51:48.105] Module file tracked: Sensemaking in org (weick 1995).pdf (ID: 1643073)
+[2026-08-09 23:51:48.106]   - Item: Supplerende literatur (Type: SubHeader)
+[2026-08-09 23:51:48.106]   - Item: Øvelser_uge39_sensemaking_2025.pdf (Type: File)
+[2026-08-09 23:51:48.283] Module file tracked: Øvelser_uge39_sensemaking_2025.pdf (ID: 1659237)
+[2026-08-09 23:51:48.283]   - Item: Spørgsmål til oplægsholder: Jens Christian Finnerup, Systematic (Type: Discussion)
+[2026-08-09 23:51:48.284]   - Item: Sensemaking slides 1.pdf (Type: File)
+[2026-08-09 23:51:48.436] Module file tracked: Sensemaking slides 1.pdf (ID: 1668216)
+[2026-08-09 23:51:48.436]   - Item: Sensemaking slides 2.pdf (Type: File)
+[2026-08-09 23:51:48.625] Module file tracked: Sensemaking slides 2.pdf (ID: 1668217)
+[2026-08-09 23:51:48.626] Processing Module: Tema 2: Uformelle træk - magt og konflikt (ID: 305035)
+[2026-08-09 23:51:48.834] Found 11 items in module 'Tema 2: Uformelle træk - magt og konflikt'
+[2026-08-09 23:51:48.835]   - Item: Forelæsningsvideo (1): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-08-09 23:51:48.836] Creating Link: Forelæsningsvideo (1): uformelle træk - magt i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052657) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 2 Uformelle træk - magt og konflikt\Forelæsningsvideo (1) uformelle træk - magt i organisationer.url
+[2026-08-09 23:51:49.268]   - Item: Forelæsningsvideo (2): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-08-09 23:51:49.269] Creating Link: Forelæsningsvideo (2): uformelle træk - magt i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052658) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 2 Uformelle træk - magt og konflikt\Forelæsningsvideo (2) uformelle træk - magt i organisationer.url
+[2026-08-09 23:51:49.618]   - Item: Quiz: magt og konflikt (Type: Quiz)
+[2026-08-09 23:51:49.618]   - Item: Slides (1): uformelle træk - konflikt (Type: File)
+[2026-08-09 23:51:49.785] Module file tracked: 2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pptx (ID: 1559834)
+[2026-08-09 23:51:49.785]   - Item: Slides (2): uformelle træk - konflikt (Type: File)
+[2026-08-09 23:51:49.960] Module file tracked: 2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pptx (ID: 1560061)
+[2026-08-09 23:51:49.960]   - Item: Case genbesøg: Børnemøbler (Type: File)
+[2026-08-09 23:51:49.961]   Duplicate module link skipped (already saved in an earlier module): Case genbesøg: Børnemøbler
+[2026-08-09 23:51:49.961]   - Item: Spørgsmål til pensum: magt i organisationer (Type: Discussion)
+[2026-08-09 23:51:49.961]   - Item: Øvelser_uge41_magt_E25.pdf (Type: File)
+[2026-08-09 23:51:50.133] Module file tracked: Øvelser_uge41_magt_E25.pdf (ID: 1666882)
+[2026-08-09 23:51:50.134]   - Item: Jens Finnerup Systematik - culture.experiences.pdf (Type: File)
+[2026-08-09 23:51:50.322] Module file tracked: culture.experiences.pdf (ID: 1667723)
+[2026-08-09 23:51:50.323]   - Item: Invitation til deltagelse i forskningsprojekt / mulig case til forårsprojekt (Type: File)
+[2026-08-09 23:51:50.476] Module file tracked: 251009_Kom og vær med_Til Stig N.pptx (ID: 1669054)
+[2026-08-09 23:51:50.476]   - Item: From Algorithmic Management to Data-driven Labour Organising(27).pdf (Type: File)
+[2026-08-09 23:51:50.656] Module file tracked: From Algorithmic Management to Data-driven Labour Organising(27).pdf (ID: 1669058)
+[2026-08-09 23:51:50.656] Processing Module: Uge 42: Ingen undervisning (ID: 305036)
+[2026-08-09 23:51:50.811] Found 0 items in module 'Uge 42: Ingen undervisning'
+[2026-08-09 23:51:50.811] Processing Module: Tema 3: Individ, organisation og omverden - organisation og omgivelser (ID: 305040)
+[2026-08-09 23:51:51.056] Found 9 items in module 'Tema 3: Individ, organisation og omverden - organisation og omgivelser'
+[2026-08-09 23:51:51.057]   - Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-08-09 23:51:51.059] Creating Link: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052698) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 3 Individ, organisation og omverden - organisation og omgivelser\Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.url
+[2026-08-09 23:51:51.409]   - Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-08-09 23:51:51.411] Creating Link: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052699) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 3 Individ, organisation og omverden - organisation og omgivelser\Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.url
+[2026-08-09 23:51:51.809]   - Item: Slides (1) Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf (Type: File)
+[2026-08-09 23:51:51.985] Module file tracked: 2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf (ID: 1678067)
+[2026-08-09 23:51:51.986]   - Item: Slides (2)  Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf (Type: File)
+[2026-08-09 23:51:52.229] Module file tracked: 2025_Lektion uge 43_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf (ID: 1678066)
+[2026-08-09 23:51:52.230]   - Item: Quiz: omgivelser (Type: Quiz)
+[2026-08-09 23:51:52.230]   - Item: Case: Sundhedsdata på Rigshospitalet - Berlingske 2019 (Type: File)
+[2026-08-09 23:51:52.435] Module file tracked: Berlingske Case.pdf (ID: 1559936)
+[2026-08-09 23:51:52.436]   - Item: Upload af besvarelse af Rigshospitalscase (Type: Discussion)
+[2026-08-09 23:51:52.436]   - Item: Uge43_omgivelser_2025.pdf (Type: File)
+[2026-08-09 23:51:52.605] Module file tracked: Uge43_omgivelser_2025.pdf (ID: 1677945)
+[2026-08-09 23:51:52.605]   - Item: Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 (Type: ExternalTool)
+[2026-08-09 23:51:52.607] Creating Link: Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 (https://cbscanvas.instructure.com/courses/43660/modules/items/1117745) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 3 Individ, organisation og omverden - organisation og omgivelser\Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.url
+[2026-08-09 23:51:53.084] Processing Module: Tema 3: Individ, organisation og omverden - læring i organisationer (ID: 305037)
+[2026-08-09 23:51:53.576] Found 7 items in module 'Tema 3: Individ, organisation og omverden - læring i organisationer'
+[2026-08-09 23:51:53.576]   - Item: Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-08-09 23:51:53.578] Creating Link: Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052666) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 3 Individ, organisation og omverden - læring i organisationer\Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.url
+[2026-08-09 23:51:53.909]   - Item: Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-08-09 23:51:53.911] Creating Link: Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052667) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 3 Individ, organisation og omverden - læring i organisationer\Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.url
+[2026-08-09 23:51:54.251]   - Item: Slides (1): individ, organisation og omverden - læring & innovation_2025 (Type: File)
+[2026-08-09 23:51:54.400] Module file tracked: 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx (ID: 1560177)
+[2026-08-09 23:51:54.401]   - Item: Slides (2): individ, organisation og omverden - læring & innovation_2025 (Type: File)
+[2026-08-09 23:51:54.569] Module file tracked: 2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx (ID: 1560197)
+[2026-08-09 23:51:54.569]   - Item: Case: Shook J. (2010) How to change a culture, lessons from nummi (Type: File)
+[2026-08-09 23:51:54.748] Module file tracked: Shook J. (2010) How to change a culture, lessons from nummi.pdf (ID: 1559930)
+[2026-08-09 23:51:54.748]   - Item: Quiz: læring og innovation (Type: Quiz)
+[2026-08-09 23:51:54.749]   - Item: Øvelse uge 44 - Læring.pdf (Type: File)
+[2026-08-09 23:51:54.931] Module file tracked: Øvelse uge 44 - Læring.pdf (ID: 1682693)
+[2026-08-09 23:51:54.931] Processing Module: Tema 3: Individ, organisation og omverden- motivationsfaktorer (ID: 305038)
+[2026-08-09 23:51:55.123] Found 7 items in module 'Tema 3: Individ, organisation og omverden- motivationsfaktorer'
+[2026-08-09 23:51:55.124]   - Item: Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 (Type: ExternalTool)
+[2026-08-09 23:51:55.126] Creating Link: Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 (https://cbscanvas.instructure.com/courses/43660/modules/items/1121634) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 3 Individ, organisation og omverden- motivationsfaktorer\Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.url
+[2026-08-09 23:51:55.601]   - Item: Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 (Type: ExternalTool)
+[2026-08-09 23:51:55.603] Creating Link: Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 (https://cbscanvas.instructure.com/courses/43660/modules/items/1121635) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 3 Individ, organisation og omverden- motivationsfaktorer\Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.url
+[2026-08-09 23:51:56.026]   - Item: Slides (1) Motivationsfaktorer forelæsning 1.pptx (Type: File)
+[2026-08-09 23:51:56.187] Module file tracked: Slides (1) Motivationsfaktorer forelæsning 1.pptx (ID: 1686104)
+[2026-08-09 23:51:56.187]   - Item: Slides (2) Motivationsfaktorer forelæsning 2.pptx (Type: File)
+[2026-08-09 23:51:56.344] Module file tracked: Slides (2) Motivationsfaktorer forelæsning 2.pptx (ID: 1686105)
+[2026-08-09 23:51:56.345]   - Item: Quiz: motivationsfaktorer i organisationer (Type: Quiz)
+[2026-08-09 23:51:56.345]   - Item: Motivationsfaktorer - uge 45 2025.pdf (Type: File)
+[2026-08-09 23:51:56.540] Module file tracked: Motivationsfaktorer - uge 45 2025.pdf (ID: 1687664)
+[2026-08-09 23:51:56.540]   - Item: Slides - Henrik Stenmann - Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf (Type: File)
+[2026-08-09 23:51:56.699] Module file tracked: Slides - Henrik Stenmann - Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf (ID: 1690411)
+[2026-08-09 23:51:56.699] Processing Module: Tema 4: Ledelse og strategi - beslutninger i organisationer (ID: 305041)
+[2026-08-09 23:51:56.880] Found 7 items in module 'Tema 4: Ledelse og strategi - beslutninger i organisationer'
+[2026-08-09 23:51:56.880]   - Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-08-09 23:51:56.882] Creating Link: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052708) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 4 Ledelse og strategi - beslutninger i organisationer\Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.url
+[2026-08-09 23:51:57.301]   - Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-08-09 23:51:57.303] Creating Link: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052709) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 4 Ledelse og strategi - beslutninger i organisationer\Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.url
+[2026-08-09 23:51:57.651]   - Item: Slides (1): organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: File)
+[2026-08-09 23:51:57.883] Module file tracked: 2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx (ID: 1560230)
+[2026-08-09 23:51:57.883]   - Item: Slides (2): organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: File)
+[2026-08-09 23:51:58.218] Module file tracked: 2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pptx (ID: 1560070)
+[2026-08-09 23:51:58.218]   - Item: Quiz: Beslutninger i organisationer (Type: Quiz)
+[2026-08-09 23:51:58.219]   - Item: Beslutninger - Uge 46 2025.pdf (Type: File)
+[2026-08-09 23:51:58.476] Module file tracked: Beslutninger - Uge 46 2025.pdf (ID: 1693406)
+[2026-08-09 23:51:58.477]   - Item: Udfaldsrum beskrivelser (Type: File)
+[2026-08-09 23:51:58.686] Module file tracked: Udfaldsrum Beskrivelser.docx (ID: 1560193)
+[2026-08-09 23:51:58.687] Processing Module: Tema 4: Ledelse og strategi- forandringer i organisationer (ID: 305042)
+[2026-08-09 23:51:58.902] Found 13 items in module 'Tema 4: Ledelse og strategi- forandringer i organisationer'
+[2026-08-09 23:51:58.903]   - Item: Forelæsningsvideo (1): Forandringsledelse (Type: ExternalTool)
+[2026-08-09 23:51:58.905] Creating Link: Forelæsningsvideo (1): Forandringsledelse (https://cbscanvas.instructure.com/courses/43660/modules/items/1126004) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 4 Ledelse og strategi- forandringer i organisationer\Forelæsningsvideo (1) Forandringsledelse.url
+[2026-08-09 23:51:59.326]   - Item: Forandringsledelse slide (1) (Type: File)
+[2026-08-09 23:51:59.646] Module file tracked: Forandring i organisationer_video1_upload_2025.pptx (ID: 1694168)
+[2026-08-09 23:51:59.646]   - Item: Forelæsningsvideo (2): Forandringsledelse (Type: ExternalTool)
+[2026-08-09 23:51:59.648] Creating Link: Forelæsningsvideo (2): Forandringsledelse (https://cbscanvas.instructure.com/courses/43660/modules/items/1126008) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 4 Ledelse og strategi- forandringer i organisationer\Forelæsningsvideo (2) Forandringsledelse.url
+[2026-08-09 23:52:00.060]   - Item: Forandringsledelse slides (2) (Type: File)
+[2026-08-09 23:52:00.270] Module file tracked: Forandringsledelse slide del 2.pptx (ID: 1694170)
+[2026-08-09 23:52:00.270]   - Item: Quiz: Forandring i organisationer (Type: Quiz)
+[2026-08-09 23:52:00.271]   - Item: Forandring - uge 47 2025.pdf (Type: File)
+[2026-08-09 23:52:00.691] Module file tracked: Forandring - uge 47 2025.pdf (ID: 1695726)
+[2026-08-09 23:52:00.691]   - Item: Kotter, J.P. (1999). Ændring af organisationer: Hvorfor det mislykkes (kap 1) (Type: File)
+[2026-08-09 23:52:00.866] Module file tracked: 1999_Kotter_kap 1.pdf (ID: 1560208)
+[2026-08-09 23:52:00.866]   - Item: Kotter, J.P. (1999). Ændring af organisationer: Hvorfor det mislykkes (kap 2) (Type: File)
+[2026-08-09 23:52:01.022] Module file tracked: 1999_Kotter_kap 2.pdf (ID: 1559924)
+[2026-08-09 23:52:01.023]   - Item: Rick Maurer - Introduction to Change (Type: File)
+[2026-08-09 23:52:01.209] Module file tracked: Maurer_Introduction to Change.pdf (ID: 1559918)
+[2026-08-09 23:52:01.209]   - Item: Munster 2017_intro.pdf (Type: File)
+[2026-08-09 23:52:01.402] Module file tracked: Munster 2017_intro.pdf (ID: 1693022)
+[2026-08-09 23:52:01.402]   - Item: Munster 2017_kap 1.pdf (Type: File)
+[2026-08-09 23:52:01.557] Module file tracked: Munster 2017_kap 1.pdf (ID: 1693023)
+[2026-08-09 23:52:01.558]   - Item: Forberedelse til øvelstime (Type: SubHeader)
+[2026-08-09 23:52:01.558]   - Item: Case: børnemøbler (Type: File)
+[2026-08-09 23:52:01.559]   Duplicate module link skipped (already saved in an earlier module): Case: børnemøbler
+[2026-08-09 23:52:01.559] Processing Module: Tema 4: Ledelse og strategi - ledelse i organisationer (ID: 305043)
+[2026-08-09 23:52:01.806] Found 8 items in module 'Tema 4: Ledelse og strategi - ledelse i organisationer'
+[2026-08-09 23:52:01.806]   - Item: Forelæsningsvideo 1 Ledelse i organisationer 1 (Type: ExternalTool)
+[2026-08-09 23:52:01.808] Creating Link: Forelæsningsvideo 1 Ledelse i organisationer 1 (https://cbscanvas.instructure.com/courses/43660/modules/items/1128497) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 4 Ledelse og strategi - ledelse i organisationer\Forelæsningsvideo 1 Ledelse i organisationer 1.url
+[2026-08-09 23:52:02.185]   - Item: Forelæsningsvideo 2 Ledelse i organisationer 2 (Type: ExternalTool)
+[2026-08-09 23:52:02.187] Creating Link: Forelæsningsvideo 2 Ledelse i organisationer 2 (https://cbscanvas.instructure.com/courses/43660/modules/items/1128498) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 4 Ledelse og strategi - ledelse i organisationer\Forelæsningsvideo 2 Ledelse i organisationer 2.url
+[2026-08-09 23:52:02.551]   - Item: Quiz: ledelse i organisationer (Type: Quiz)
+[2026-08-09 23:52:02.552]   - Item: Slides (1) Ledelse i organisationer forelæsning 1.pptx (Type: File)
+[2026-08-09 23:52:02.705] Module file tracked: Slides (1) Ledelse i organisationer forelæsning 1.pptx (ID: 1698861)
+[2026-08-09 23:52:02.706]   - Item: Slides (2) Ledelse i organisationer forelæsning 2.pptx (Type: File)
+[2026-08-09 23:52:02.890] Module file tracked: Slides (2) Ledelse i organisationer forelæsning 2.pptx (ID: 1698862)
+[2026-08-09 23:52:02.891]   - Item: Oplæg: Saxo Merrild, Handyhand (Type: SubHeader)
+[2026-08-09 23:52:02.891]   - Item: Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse (Type: ExternalUrl)
+[2026-08-09 23:52:02.893] Creating Link: Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse (https://www.linkedin.com/in/saxo-merrild/recent-activity/all/) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Tema 4 Ledelse og strategi - ledelse i organisationer\Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse.url
+[2026-08-09 23:52:03.268]   - Item: Ledelse - uge 48.pdf (Type: File)
+[2026-08-09 23:52:03.434] Module file tracked: Ledelse - uge 48.pdf (ID: 1699643)
+[2026-08-09 23:52:03.434] Processing Module: Tema 4: Ledelse og strategi  - organisationsteori i et historisk perspektiv (ID: 319566)
+[2026-08-09 23:52:03.599] Found 1 items in module 'Tema 4: Ledelse og strategi  - organisationsteori i et historisk perspektiv'
+[2026-08-09 23:52:03.599]   - Item: Slides sidste forelæsning.pdf (Type: File)
+[2026-08-09 23:52:03.836] Module file tracked: Slides sidste forelæsning.pdf (ID: 1706588)
+[2026-08-09 23:52:03.836] Processing Module: Opsummering - hvad har vi lært? (ID: 305045)
+[2026-08-09 23:52:04.008] Found 3 items in module 'Opsummering - hvad har vi lært?'
+[2026-08-09 23:52:04.009]   - Item: Uge 6: pensum (Type: Page)
+[2026-08-09 23:52:04.287] Saving page: Uge 6: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Opsummering - hvad har vi lært\Page Uge 6 pensum.html
+[2026-08-09 23:52:04.620]   - Item: Uge 6: mål med undervisningen (Type: Page)
+[2026-08-09 23:52:04.948] Saving page: Uge 6: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Opsummering - hvad har vi lært\Page Uge 6 mål med undervisningen.html
+[2026-08-09 23:52:05.345]   - Item: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret (Type: File)
+[2026-08-09 23:52:05.509] Module file tracked: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx (ID: 1766952)
+[2026-08-09 23:52:05.510] Processing Module: Organisationsprojekt - vidensproduktion (ID: 305046)
+[2026-08-09 23:52:05.716] Found 7 items in module 'Organisationsprojekt - vidensproduktion'
+[2026-08-09 23:52:05.716]   - Item: Uge 8: pensum (Type: Page)
+[2026-08-09 23:52:05.939] Saving page: Uge 8: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - vidensproduktion\Page Uge 8 pensum.html
+[2026-08-09 23:52:06.329]   - Item: Uge 8: mål med undervisningen (Type: Page)
+[2026-08-09 23:52:06.546] Saving page: Uge 8: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - vidensproduktion\Page Uge 8 mål med undervisningen.html
+[2026-08-09 23:52:07.004]   - Item: Forelæsningsvideo (1): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-08-09 23:52:07.007] Creating Link: Forelæsningsvideo (1): organisationsprojekt - vidensproduktion (https://cbscanvas.instructure.com/courses/43660/modules/items/1052745) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - vidensproduktion\Forelæsningsvideo (1) organisationsprojekt - vidensproduktion.url
+[2026-08-09 23:52:07.361]   - Item: Forelæsningsvideo (2): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-08-09 23:52:07.363] Creating Link: Forelæsningsvideo (2): organisationsprojekt - vidensproduktion (https://cbscanvas.instructure.com/courses/43660/modules/items/1052746) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - vidensproduktion\Forelæsningsvideo (2) organisationsprojekt - vidensproduktion.url
+[2026-08-09 23:52:07.711]   - Item: Slides (1): organisationsprojekt - vidensproduktion (Type: File)
+[2026-08-09 23:52:07.905] Module file tracked: Organisationsprojekt_vidensproduktion_1_upload.pptm (ID: 1560231)
+[2026-08-09 23:52:07.905]   - Item: Slides (2): organisationsprojekt - vidensproduktion (Type: File)
+[2026-08-09 23:52:08.076] Module file tracked: Organisationsprojekt_vidensproduktion_2_upload.pptm (ID: 1560232)
+[2026-08-09 23:52:08.076]   - Item: Øvelsesslides - Intro.pptx (Type: File)
+[2026-08-09 23:52:08.238] Module file tracked: Øvelsesslides - Intro.pptx (ID: 1777888)
+[2026-08-09 23:52:08.238] Processing Module: Organisationsprojekt - problemformulering (ID: 305047)
+[2026-08-09 23:52:08.427] Found 8 items in module 'Organisationsprojekt - problemformulering'
+[2026-08-09 23:52:08.428]   - Item: Uge 9: pensum (Type: Page)
+[2026-08-09 23:52:08.675] Saving page: Uge 9: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - problemformulering\Page Uge 9 pensum.html
+[2026-08-09 23:52:09.038]   - Item: Uge 9: mål med undervisningen (Type: Page)
+[2026-08-09 23:52:09.295] Saving page: Uge 9: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - problemformulering\Page Uge 9 mål med undervisningen.html
+[2026-08-09 23:52:09.696]   - Item: Forelæsningsvideo (1): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-08-09 23:52:09.698] Creating Link: Forelæsningsvideo (1): organisationsprojekt - problemformulering (https://cbscanvas.instructure.com/courses/43660/modules/items/1052753) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - problemformulering\Forelæsningsvideo (1) organisationsprojekt - problemformulering.url
+[2026-08-09 23:52:10.069]   - Item: Forelæsningsvideo (2): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-08-09 23:52:10.071] Creating Link: Forelæsningsvideo (2): organisationsprojekt - problemformulering (https://cbscanvas.instructure.com/courses/43660/modules/items/1052754) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - problemformulering\Forelæsningsvideo (2) organisationsprojekt - problemformulering.url
+[2026-08-09 23:52:10.411]   - Item: Slides (1): organisationsprojekt - problemformulering (Type: File)
+[2026-08-09 23:52:10.619] Module file tracked: Organisationsprojekt_problemformulering_1-upload.pptm (ID: 1559949)
+[2026-08-09 23:52:10.619]   - Item: Slides (2): organisationsprojekt - problemformulering (Type: File)
+[2026-08-09 23:52:10.791] Module file tracked: Organisationsprojekt_problemformulering-2_upload.pptm (ID: 1560069)
+[2026-08-09 23:52:10.792]   - Item: Øvelsesslides XA: problemformulering (Type: File)
+[2026-08-09 23:52:11.092] Module file tracked: Øvelse_uge9_problemformulering_XA_upload.pptx (ID: 1560225)
+[2026-08-09 23:52:11.092]   - Item: Øvelsesslides XB: problemformulering (Type: File)
+[2026-08-09 23:52:11.258] Module file tracked: Øvelse_uge9_problemformulering_XB_UPLOAD.pptx (ID: 1783488)
+[2026-08-09 23:52:11.259] Processing Module: Organisationsprojekt - undersøgelsesdesign (ID: 305048)
+[2026-08-09 23:52:11.460] Found 7 items in module 'Organisationsprojekt - undersøgelsesdesign'
+[2026-08-09 23:52:11.460]   - Item: Uge 10: pensum (Type: Page)
+[2026-08-09 23:52:11.768] Saving page: Uge 10: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - undersøgelsesdesign\Page Uge 10 pensum.html
+[2026-08-09 23:52:12.163]   - Item: Uge 10: mål med undervisningen (Type: Page)
+[2026-08-09 23:52:12.412] Saving page: Uge 10: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - undersøgelsesdesign\Page Uge 10 mål med undervisningen.html
+[2026-08-09 23:52:12.764]   - Item: Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign (Type: ExternalTool)
+[2026-08-09 23:52:12.766] Creating Link: Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign (https://cbscanvas.instructure.com/courses/43660/modules/items/1052762) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - undersøgelsesdesign\Forelæsningsvideo (1) organisationsprojekt - Undersøgelsesdesign.url
+[2026-08-09 23:52:13.278]   - Item: Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker (Type: ExternalTool)
+[2026-08-09 23:52:13.281] Creating Link: Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker (https://cbscanvas.instructure.com/courses/43660/modules/items/1052763) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - undersøgelsesdesign\Forelæsningsvideo (2) organisationsprojekt - Dataindsamlingsteknikker.url
+[2026-08-09 23:52:13.854]   - Item: Slides (1): organisationsprojekt - Undersøgelsesdesign (Type: File)
+[2026-08-09 23:52:14.038] Module file tracked: 2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pptx (ID: 1560227)
+[2026-08-09 23:52:14.039]   - Item: Slides (2): organisationsprojekt - Dataindsamlingsteknikker (Type: File)
+[2026-08-09 23:52:14.203] Module file tracked: 2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (ID: 1560220)
+[2026-08-09 23:52:14.203]   - Item: Øvelsesslides: Undersøgelsesdesign (Type: File)
+[2026-08-09 23:52:14.367] Module file tracked: Uge 10 Undersøgelsesdesign UPLOAD.pptx (ID: 1785168)
+[2026-08-09 23:52:14.367] Processing Module: Klyngevejledning 1 (ID: 305049)
+[2026-08-09 23:52:14.616] Found 11 items in module 'Klyngevejledning 1'
+[2026-08-09 23:52:14.617]   - Item: Uge 11: formål med klyngevejledningen (Type: Page)
+[2026-08-09 23:52:14.927] Saving page: Uge 11: formål med klyngevejledningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1\Page Uge 11 formål med klyngevejledningen.html
+[2026-08-09 23:52:15.339]   - Item: Skabelon til klyngevejledning - UDFYLDT SKABELON UPLOADES I JERES GRUPPERUM (angiv venligst gruppenr i filnavnet) (Type: File)
+[2026-08-09 23:52:15.514] Module file tracked: SKABELON_KLYNGEVEJLEDNING_1_2025.docx (ID: 1560226)
+[2026-08-09 23:52:15.514]   - Item: KLYNGEVEJLEDNING: HVOR SKAL JEG UPLOADE SKABELONEN? (Type: File)
+[2026-08-09 23:52:15.715] Module file tracked: Klyngevejledning - Upload.pptx (ID: 1785191)
+[2026-08-09 23:52:15.716]   - Item: Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx (Type: File)
+[2026-08-09 23:52:15.883] Module file tracked: Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx (ID: 1790530)
+[2026-08-09 23:52:15.884]   - Item: Filer til Klynge 1 (Type: Page)
+[2026-08-09 23:52:16.160] Saving page: Filer til Klynge 1 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1\Page Filer til Klynge 1.html
+[2026-08-09 23:52:16.538]   - Item: Filer til Klynge 2 (Type: Page)
+[2026-08-09 23:52:16.823] Saving page: Filer til Klynge 2 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1\Page Filer til Klynge 2.html
+[2026-08-09 23:52:17.189]   - Item: Filer til Klynge 3 (Type: Page)
+[2026-08-09 23:52:17.425] Saving page: Filer til Klynge 3 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1\Page Filer til Klynge 3.html
+[2026-08-09 23:52:17.840]   - Item: Filer til Klynge 4 (Type: Page)
+[2026-08-09 23:52:18.137] Saving page: Filer til Klynge 4 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1\Page Filer til Klynge 4.html
+[2026-08-09 23:52:18.480]   - Item: Filer til Klynge 5 (Type: Page)
+[2026-08-09 23:52:18.813] Saving page: Filer til Klynge 5 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1\Page Filer til Klynge 5.html
+[2026-08-09 23:52:19.215]   - Item: Filer til Klynge 6 (Type: Page)
+[2026-08-09 23:52:19.478] Saving page: Filer til Klynge 6 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1\Page Filer til Klynge 6.html
+[2026-08-09 23:52:19.865]   - Item: Filer til Klynge 7 (Type: Page)
+[2026-08-09 23:52:20.196] Saving page: Filer til Klynge 7 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1\Page Filer til Klynge 7.html
+[2026-08-09 23:52:20.564] Processing Module: Organisationsprojekt - operationalisering af teori (ID: 305050)
+[2026-08-09 23:52:20.773] Found 9 items in module 'Organisationsprojekt - operationalisering af teori'
+[2026-08-09 23:52:20.774]   - Item: Uge 12: pensum (Type: Page)
+[2026-08-09 23:52:20.985] Saving page: Uge 12: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - operationalisering af teori\Page Uge 12 pensum.html
+[2026-08-09 23:52:21.372]   - Item: Uge 12: mål med undervisningen (Type: Page)
+[2026-08-09 23:52:21.591] Saving page: Uge 12: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - operationalisering af teori\Page Uge 12 mål med undervisningen.html
+[2026-08-09 23:52:21.932]   - Item: Forelæsningsvideo (1): organisationsprojekt - operationalisering (Type: ExternalTool)
+[2026-08-09 23:52:21.934] Creating Link: Forelæsningsvideo (1): organisationsprojekt - operationalisering (https://cbscanvas.instructure.com/courses/43660/modules/items/1052773) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - operationalisering af teori\Forelæsningsvideo (1) organisationsprojekt - operationalisering.url
+[2026-08-09 23:52:22.305]   - Item: Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation (Type: ExternalTool)
+[2026-08-09 23:52:22.308] Creating Link: Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation (https://cbscanvas.instructure.com/courses/43660/modules/items/1052774) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - operationalisering af teori\Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.url
+[2026-08-09 23:52:22.680]   - Item: Slides (1): organisationsprojekt_operationalisering (Type: File)
+[2026-08-09 23:52:22.863] Module file tracked: Organisationsprojekt_operationalisering_upload_.pptm (ID: 1560067)
+[2026-08-09 23:52:22.864]   - Item: Slides (2): organisationsprojekt - akademisk argumentation (Type: File)
+[2026-08-09 23:52:23.022] Module file tracked: Organisationsprojekt_argumentation_2_upload.pptm (ID: 1560068)
+[2026-08-09 23:52:23.023]   - Item: Observationsskema (Type: File)
+[2026-08-09 23:52:23.225] Module file tracked: Observationsskema.docx (ID: 1560219)
+[2026-08-09 23:52:23.225]   - Item: Upload af besvarelse Interviewguide (husk at notér XA og XB) (Type: Discussion)
+[2026-08-09 23:52:23.225]   - Item: Øvelsesslides - uge 12 (Type: File)
+[2026-08-09 23:52:23.399] Module file tracked: Øvelsesslides - uge 12.pptx (ID: 1795567)
+[2026-08-09 23:52:23.400] Processing Module: Organisationsprojekt - klargøring af data til analyse (ID: 305051)
+[2026-08-09 23:52:23.686] Found 10 items in module 'Organisationsprojekt - klargøring af data til analyse'
+[2026-08-09 23:52:23.686]   - Item: Uge 13: pensum (Type: Page)
+[2026-08-09 23:52:23.993] Saving page: Uge 13: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - klargøring af data til analyse\Page Uge 13 pensum.html
+[2026-08-09 23:52:24.398]   - Item: Uge 13: mål med undervisningen (Type: Page)
+[2026-08-09 23:52:24.606] Saving page: Uge 13: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - klargøring af data til analyse\Page Uge 13 mål med undervisningen.html
+[2026-08-09 23:52:24.973]   - Item: Forelæsningsvideo (1): organisationsprojekt - klargøring af data (Type: ExternalTool)
+[2026-08-09 23:52:24.975] Creating Link: Forelæsningsvideo (1): organisationsprojekt - klargøring af data (https://cbscanvas.instructure.com/courses/43660/modules/items/1052783) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - klargøring af data til analyse\Forelæsningsvideo (1) organisationsprojekt - klargøring af data.url
+[2026-08-09 23:52:25.347]   - Item: Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data (Type: ExternalTool)
+[2026-08-09 23:52:25.350] Creating Link: Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data (https://cbscanvas.instructure.com/courses/43660/modules/items/1052784) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt - klargøring af data til analyse\Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.url
+[2026-08-09 23:52:25.838]   - Item: Slides (1): organisationsprojekt - klargøring af data (Type: File)
+[2026-08-09 23:52:26.038] Module file tracked: Organisationsprojekt_klargøring af data_upload.pptm (ID: 1560235)
+[2026-08-09 23:52:26.038]   - Item: Slides (2): organisationsprojekt - klargøring af data (eksempel) (Type: File)
+[2026-08-09 23:52:26.242] Module file tracked: Organisationsprojekt_klargøring af data_eksempel_upload.pptx (ID: 1560236)
+[2026-08-09 23:52:26.242]   - Item: Kodning øvelse - interview transskribering (Type: File)
+[2026-08-09 23:52:26.417] Module file tracked: Kodning øvelse - interview transskribering.docx (ID: 1560228)
+[2026-08-09 23:52:26.418]   - Item: Kodning øvelse - kodning skabelon (Type: File)
+[2026-08-09 23:52:26.592] Module file tracked: Kodning øvelse - kodning skabelon.xlsx (ID: 1560161)
+[2026-08-09 23:52:26.592]   - Item: Kodning øvelse - UDFYLDT kodning tabel (struktureret) (Type: File)
+[2026-08-09 23:52:26.792] Module file tracked: Kodning øvelse - kodning tabel (struktureret).xlsx (ID: 1559952)
+[2026-08-09 23:52:26.792]   - Item: Øvelsesslides: analyse & tolkning (Type: File)
+[2026-08-09 23:52:26.958] Module file tracked: Øvelser_uge13_analyse og tolkning_UPLOAD.pptx (ID: 1800485)
+[2026-08-09 23:52:26.959] Processing Module: Sammenfatning og evaluering af organisationsfaget (ID: 305052)
+[2026-08-09 23:52:27.138] Found 4 items in module 'Sammenfatning og evaluering af organisationsfaget'
+[2026-08-09 23:52:27.138]   - Item: Uge 15: pensum (Type: Page)
+[2026-08-09 23:52:27.387] Saving page: Uge 15: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Sammenfatning og evaluering af organisationsfaget\Page Uge 15 pensum.html
+[2026-08-09 23:52:27.732]   - Item: Uge 15: mål med undervisningen (Type: Page)
+[2026-08-09 23:52:27.948] Saving page: Uge 15: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Sammenfatning og evaluering af organisationsfaget\Page Uge 15 mål med undervisningen.html
+[2026-08-09 23:52:28.299]   - Item: Slides: Lektion_sammenfatning af faget (Type: File)
+[2026-08-09 23:52:28.464] Module file tracked: Lektion_sammenfatning af faget_2026.pptx (ID: 1805051)
+[2026-08-09 23:52:28.465]   - Item: Uge 15 - Formidling.pptx (Type: File)
+[2026-08-09 23:52:28.675] Module file tracked: Uge 15 - Formidling.pptx (ID: 1805700)
+[2026-08-09 23:52:28.676] Processing Module: Øvelser i uge 16 (ID: 305053)
+[2026-08-09 23:52:28.845] Found 3 items in module 'Øvelser i uge 16'
+[2026-08-09 23:52:28.845]   - Item: Uge 16: mål med øvelserne (Type: Page)
+[2026-08-09 23:52:29.096] Saving page: Uge 16: mål med øvelserne -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelser i uge 16\Page Uge 16 mål med øvelserne.html
+[2026-08-09 23:52:29.541]   - Item: Øvelsesslides: ad hoc vejledning og forberedelse til klynge    (Type: File)
+[2026-08-09 23:52:29.712] Module file tracked: Øvelser_uge16_klynge_upload.pptx (ID: 1809393)
+[2026-08-09 23:52:29.712]   - Item: Svarark - Gode råd til projektet.docx (Type: File)
+[2026-08-09 23:52:29.884] Module file tracked: Svarark - Gode råd til projektet.docx (ID: 1816004)
+[2026-08-09 23:52:29.884] Processing Module: Klyngevejledning 2 (ID: 305054)
+[2026-08-09 23:52:30.143] Found 11 items in module 'Klyngevejledning 2'
+[2026-08-09 23:52:30.144]   - Item: Uge 17: formål med klyngevejledningen (Type: Page)
+[2026-08-09 23:52:30.373] Saving page: Uge 17: formål med klyngevejledningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 2\Page Uge 17 formål med klyngevejledningen.html
+[2026-08-09 23:52:30.732]   - Item: Skabelon til klyngevejledning 2 (Type: File)
+[2026-08-09 23:52:30.905] Module file tracked: Skabelon til klyngevejledning 2.docx (ID: 1560149)
+[2026-08-09 23:52:30.906]   - Item: Klyngevejledning_2_Program_ 21 april 2026.pdf (Type: File)
+[2026-08-09 23:52:31.067] Module file tracked: Klyngevejledning_2_Program_ 21 april 2026.pdf (ID: 1811688)
+[2026-08-09 23:52:31.067]   - Item: Filer til Klynge 1 (Type: Page)
+[2026-08-09 23:52:31.323] Saving page: Filer til Klynge 1 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 2\Page Filer til Klynge 1.html
+[2026-08-09 23:52:31.741]   - Item: Filer til Klynge 2 (Type: Page)
+[2026-08-09 23:52:32.009] Saving page: Filer til Klynge 2 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 2\Page Filer til Klynge 2.html
+[2026-08-09 23:52:32.366]   - Item: Filer til Klynge 3 (Type: Page)
+[2026-08-09 23:52:32.813] Saving page: Filer til Klynge 3 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 2\Page Filer til Klynge 3.html
+[2026-08-09 23:52:33.199]   - Item: Filer til Klynge 4 (Type: Page)
+[2026-08-09 23:52:33.444] Saving page: Filer til Klynge 4 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 2\Page Filer til Klynge 4.html
+[2026-08-09 23:52:33.799]   - Item: Filer til Klynge 5 (Type: Page)
+[2026-08-09 23:52:34.049] Saving page: Filer til Klynge 5 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 2\Page Filer til Klynge 5.html
+[2026-08-09 23:52:34.474]   - Item: Filer til Klynge 6 (Type: Page)
+[2026-08-09 23:52:34.807] Saving page: Filer til Klynge 6 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 2\Page Filer til Klynge 6.html
+[2026-08-09 23:52:35.141]   - Item: Filer til Klynge 7 (Type: Page)
+[2026-08-09 23:52:35.412] Saving page: Filer til Klynge 7 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 2\Page Filer til Klynge 7.html
+[2026-08-09 23:52:35.924]   - Item: Filer til Klynge 8 (Type: Page)
+[2026-08-09 23:52:36.188] Saving page: Filer til Klynge 8 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 2\Page Filer til Klynge 8.html
+[2026-08-09 23:52:36.551] Processing Module: Øvelser i uge 18 (ID: 305055)
+[2026-08-09 23:52:36.716] Found 3 items in module 'Øvelser i uge 18'
+[2026-08-09 23:52:36.716]   - Item: Svarark - Gode råd til projektet.docx (Type: File)
+[2026-08-09 23:52:36.886] Module file tracked: Svarark - Gode råd til projektet.docx (ID: 1560056)
+[2026-08-09 23:52:36.886]   - Item: Øvelsesslides: Afslutning 2025 (Type: File)
+[2026-08-09 23:52:37.049] Module file tracked: Øvelser_uge18_eksamen og afslutning_opdateret_upload.pptx (ID: 1560057)
+[2026-08-09 23:52:37.050]   - Item: Svarark - Gode råd til projektet.docx (Type: File)
+[2026-08-09 23:52:37.050]   Duplicate module link skipped (already saved in an earlier module): Svarark - Gode råd til projektet.docx
+[2026-08-09 23:52:37.058] Skipping existing file: ind_org_Pensumoversigt_efterår2025.pdf
+[2026-08-09 23:52:37.061] Skipping existing file: E25_F26_HAIT_Organisationers opbygning.pdf
+[2026-08-09 23:52:37.064] Skipping existing file: Manual for eksamensprojekt 2025-2026.pdf
+[2026-08-09 23:52:37.068] Skipping existing file: ITDoesntMatter.pdf
+[2026-08-09 23:52:37.072] Skipping existing file: Eksempel på gruppekontrakt.docx
+[2026-08-09 23:52:37.075] Skipping existing file: Intro_uge 36_2025_slides.pdf
+[2026-08-09 23:52:37.078] Skipping existing file: Øvelser_uge36_intro_2025.pptx
+[2026-08-09 23:52:37.082] Skipping existing file: Slides_mål og strategi_del 1_E25.pdf
+[2026-08-09 23:52:37.085] Skipping existing file: Slides_mål og strategi_del 2_E25.pdf
+[2026-08-09 23:52:37.089] Skipping existing file: Øvelser_uge36B_mål_og_strategi_2025.pdf
+[2026-08-09 23:52:37.092] Skipping existing file: 2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx
+[2026-08-09 23:52:37.098] Skipping existing file: 2024_Lektion uge 37_2 Struktur_upload.pptx
+[2026-08-09 23:52:37.101] Skipping existing file: Øvelser_uge37_struktur_2025.pdf
+[2026-08-09 23:52:37.105] Skipping existing file: Øvelse uge 37 - Organisationsdiagram.pdf
+[2026-08-09 23:52:37.110] Skipping existing file: 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx
+[2026-08-09 23:52:37.114] Skipping existing file: 2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pptx
+[2026-08-09 23:52:37.117] Skipping existing file: Organisationsformer - oversigtstabel - udfyldt.pptx
+[2026-08-09 23:52:37.121] Skipping existing file: Strategy in Danske Bank.pdf
+[2026-08-09 23:52:37.125] Skipping existing file: Slides_kulturanalyse del 2_E25.pdf
+[2026-08-09 23:52:37.129] Skipping existing file: Slides_kulturanalyse del 1_E25.pdf
+[2026-08-09 23:52:37.133] Skipping existing file: Øvelser_uge39_kultur_2025.pdf
+[2026-08-09 23:52:37.137] Skipping existing file: Martin Thorborg tiltrækker nye ansatte ved at lokke_artikel okt 2023.pdf
+[2026-08-09 23:52:37.140] Skipping existing file: Børnemøbler_ny version.pdf
+[2026-08-09 23:52:37.143] Skipping existing file: Schein 1994_uddrag.pdf
+[2026-08-09 23:52:37.149] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 1.pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-08-09 23:52:37.150] Skipping existing file: Øvelser_uge39_kultur_E2025 upload.pptx
+[2026-08-09 23:52:37.155] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 2.pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-08-09 23:52:37.156] Skipping existing file: Sensemaking in org (weick 1995).pdf
+[2026-08-09 23:52:37.159] Skipping existing file: Øvelser_uge39_sensemaking_2025.pdf
+[2026-08-09 23:52:37.162] Skipping existing file: Sensemaking slides 1.pdf
+[2026-08-09 23:52:37.165] Skipping existing file: Sensemaking slides 2.pdf
+[2026-08-09 23:52:37.168] Skipping existing file: 2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pptx
+[2026-08-09 23:52:37.171] Skipping existing file: Øvelser_uge41_magt_E25.pdf
+[2026-08-09 23:52:37.174] Skipping existing file: 2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pptx
+[2026-08-09 23:52:37.177] Skipping existing file: culture.experiences.pdf
+[2026-08-09 23:52:37.180] Skipping existing file: 251009_Kom og vær med_Til Stig N.pptx
+[2026-08-09 23:52:37.183] Skipping existing file: From Algorithmic Management to Data-driven Labour Organising(27).pdf
+[2026-08-09 23:52:37.186] Skipping existing file: 2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf
+[2026-08-09 23:52:37.190] Skipping existing file: Berlingske Case.pdf
+[2026-08-09 23:52:37.194] Skipping existing file: 2025_Lektion uge 43_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf
+[2026-08-09 23:52:37.197] Skipping existing file: Uge43_omgivelser_2025.pdf
+[2026-08-09 23:52:37.200] Skipping existing file: 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx
+[2026-08-09 23:52:37.204] Skipping existing file: 2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx
+[2026-08-09 23:52:37.206] Skipping existing file: Shook J. (2010) How to change a culture, lessons from nummi.pdf
+[2026-08-09 23:52:37.209] Skipping existing file: Øvelse uge 44 - Læring.pdf
+[2026-08-09 23:52:37.212] Skipping existing file: Slides (2) Motivationsfaktorer forelæsning 2.pptx
+[2026-08-09 23:52:37.215] Skipping existing file: Motivationsfaktorer - uge 45 2025.pdf
+[2026-08-09 23:52:37.218] Skipping existing file: Slides - Henrik Stenmann - Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf
+[2026-08-09 23:52:37.221] Skipping existing file: 2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx
+[2026-08-09 23:52:37.224] Skipping existing file: 2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pptx
+[2026-08-09 23:52:37.228] Skipping existing file: Slides (1) Motivationsfaktorer forelæsning 1.pptx
+[2026-08-09 23:52:37.231] Skipping existing file: Udfaldsrum Beskrivelser.docx
+[2026-08-09 23:52:37.234] Skipping existing file: Beslutninger - Uge 46 2025.pdf
+[2026-08-09 23:52:37.237] Skipping existing file: Forandring i organisationer_video1_upload_2025.pptx
+[2026-08-09 23:52:37.241] Skipping existing file: Forandringsledelse slide del 2.pptx
+[2026-08-09 23:52:37.245] Skipping existing file: 1999_Kotter_kap 1.pdf
+[2026-08-09 23:52:37.248] Skipping existing file: Munster 2017_intro.pdf
+[2026-08-09 23:52:37.251] Skipping existing file: Maurer_Introduction to Change.pdf
+[2026-08-09 23:52:37.254] Skipping existing file: Forandring - uge 47 2025.pdf
+[2026-08-09 23:52:37.257] Skipping existing file: 1999_Kotter_kap 2.pdf
+[2026-08-09 23:52:37.260] Skipping existing file: Munster 2017_kap 1.pdf
+[2026-08-09 23:52:37.263] Skipping existing file: Slides (1) Ledelse i organisationer forelæsning 1.pptx
+[2026-08-09 23:52:37.266] Skipping existing file: Slides (2) Ledelse i organisationer forelæsning 2.pptx
+[2026-08-09 23:52:37.270] Skipping existing file: Ledelse - uge 48.pdf
+[2026-08-09 23:52:37.273] Skipping existing file: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx
+[2026-08-09 23:52:37.276] Skipping existing file: Organisationsprojekt_vidensproduktion_1_upload.pptm
+[2026-08-09 23:52:37.279] Skipping existing file: Organisationsprojekt_vidensproduktion_2_upload.pptm
+[2026-08-09 23:52:37.284] Skipping existing file: Organisationsprojekt_problemformulering_1-upload.pptm
+[2026-08-09 23:52:37.288] Skipping existing file: Øvelse_uge9_problemformulering_XA_upload.pptx
+[2026-08-09 23:52:37.291] Skipping existing file: Øvelse_uge9_problemformulering_XB_UPLOAD.pptx
+[2026-08-09 23:52:37.295] Skipping existing file: Slides sidste forelæsning.pdf
+[2026-08-09 23:52:37.298] Skipping existing file: Øvelsesslides - Intro.pptx
+[2026-08-09 23:52:37.301] Skipping existing file: Organisationsprojekt_problemformulering-2_upload.pptm
+[2026-08-09 23:52:37.304] Skipping existing file: 2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pptx
+[2026-08-09 23:52:37.307] Skipping existing file: Uge 10 Undersøgelsesdesign UPLOAD.pptx
+[2026-08-09 23:52:37.310] Skipping existing file: SKABELON_KLYNGEVEJLEDNING_1_2025.docx
+[2026-08-09 23:52:37.313] Skipping existing file: Klyngevejledning - Upload.pptx
+[2026-08-09 23:52:37.316] Skipping existing file: Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx
+[2026-08-09 23:52:37.319] Skipping existing file: Organisationsprojekt_operationalisering_upload_.pptm
+[2026-08-09 23:52:37.323] Skipping existing file: Organisationsprojekt_argumentation_2_upload.pptm
+[2026-08-09 23:52:37.326] Skipping existing file: Øvelsesslides - uge 12.pptx
+[2026-08-09 23:52:37.329] Skipping existing file: 2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx
+[2026-08-09 23:52:37.332] Skipping existing file: Observationsskema.docx
+[2026-08-09 23:52:37.336] Skipping existing file: Organisationsprojekt_klargøring af data_upload.pptm
+[2026-08-09 23:52:37.339] Skipping existing file: Organisationsprojekt_klargøring af data_eksempel_upload.pptx
+[2026-08-09 23:52:37.342] Skipping existing file: Kodning øvelse - interview transskribering.docx
+[2026-08-09 23:52:37.345] Skipping existing file: Kodning øvelse - kodning tabel (struktureret).xlsx
+[2026-08-09 23:52:37.349] Skipping existing file: Kodning øvelse - kodning skabelon.xlsx
+[2026-08-09 23:52:37.352] Skipping existing file: Uge 15 - Formidling.pptx
+[2026-08-09 23:52:37.355] Skipping existing file: Øvelser_uge16_klynge_upload.pptx
+[2026-08-09 23:52:37.358] Skipping existing file: Klyngevejledning_2_Program_ 21 april 2026.pdf
+[2026-08-09 23:52:37.361] Skipping existing file: Skabelon til klyngevejledning 2.docx
+[2026-08-09 23:52:37.365] Skipping existing file: Svarark - Gode råd til projektet.docx
+[2026-08-09 23:52:37.368] Skipping existing file: Øvelser_uge18_eksamen og afslutning_opdateret_upload.pptx
+[2026-08-09 23:52:37.371] Skipping existing file: Øvelser_uge13_analyse og tolkning_UPLOAD.pptx
+[2026-08-09 23:52:37.375] Skipping existing file: Lektion_sammenfatning af faget_2026.pptx
+[2026-08-09 23:52:37.378] Skipping existing file: Svarark - Gode råd til projektet.docx
+[2026-08-09 23:52:53.158] Starting Catch-All Phase for non-module files...
+[2026-08-09 23:52:54.714] Catch-All skipping module file: 1999_Kotter_kap+1.pdf (ID: 1560208)
+[2026-08-09 23:52:54.714] Catch-All skipping module file: 1999_Kotter_kap+2.pdf (ID: 1559924)
+[2026-08-09 23:52:54.714] Catch-All skipping module file: 2024_Lektion+uge+37_1+Formelle+tr%C3%A6k+-+Struktur+_+upload.pptx (ID: 1559993)
+[2026-08-09 23:52:54.714] Catch-All skipping module file: 2024_Lektion+uge+37_2+Struktur_upload.pptx (ID: 1560185)
+[2026-08-09 23:52:54.715] Catch-All skipping module file: 2024_Lektion+uge+38_1+2024+Formelle+tr%C3%A6k+-+Struktur+3+upload.pptx (ID: 1560188)
+[2026-08-09 23:52:54.715] Catch-All skipping module file: 2024_Lektion+uge+38_2+Formelle+tr%C3%A6k+-+Struktur+4+Upload.pptx (ID: 1560186)
+[2026-08-09 23:52:54.716] Catch-All skipping module file: 2024_Lektion+uge+41_1+Uformelle+tr%C3%A6k+-+Magt+og+konflikt+-+upload.pptx (ID: 1559834)
+[2026-08-09 23:52:54.716] Catch-All skipping module file: 2024_Lektion+uge+41_2+Uformelle+tr%C3%A6k+-+Magt+og+konflikt+-+upload.pptx (ID: 1560061)
+[2026-08-09 23:52:54.716] Catch-All skipping module file: 2024_Lektion+uge+43_1+Individ+og+Organisation+-+Innovation+og+laering+1+upload.pptx (ID: 1560177)
+[2026-08-09 23:52:54.716] Catch-All skipping module file: 2024_Lektion+uge+43_2+Individ+og+Organisation+-+Innovation+og+laering+2upload.pptx (ID: 1560197)
+[2026-08-09 23:52:54.717] Catch-All found new file: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx (ID: 1560205)
+[2026-08-09 23:52:54.717] Catch-All found new file: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx (ID: 1560011)
+[2026-08-09 23:52:54.718] Catch-All found new file: 2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx (ID: 1560012)
+[2026-08-09 23:52:54.718] Catch-All skipping module file: 2024_Lektion+uge+47_1+Organisationer+i+et+foranderligt+perspektiv+-+Beslutninger+-+1_upload.pptx (ID: 1560230)
+[2026-08-09 23:52:54.718] Catch-All skipping module file: 2024_Lektion+uge+47_2+Organisationer+i+et+foranderligt+perspektiv+-+Beslutninger+-+2_upload.pptx (ID: 1560070)
+[2026-08-09 23:52:54.719] Catch-All skipping module file: 2025+-+ny+unders%C3%B8gelsesdesign+og+dataindsamlingsteknikker+-+video+2_Upload.pptx (ID: 1560220)
+[2026-08-09 23:52:54.719] Catch-All skipping module file: 2025+-+unders%C3%B8gelsesdesign+og+dataindsamlingsteknikker+-+video+1_upload+Ida.pptx (ID: 1560227)
+[2026-08-09 23:52:54.719] Catch-All found new file: 2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (ID: 1560213)
+[2026-08-09 23:52:54.720] Catch-All skipping module file: 2025_Lektion+uge+43_1+Organisationer+i+et+foranderligt+perspektiv+-+Omgivelser+-+1.pdf (ID: 1678067)
+[2026-08-09 23:52:54.720] Catch-All found new file: 2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx (ID: 1678065)
+[2026-08-09 23:52:54.721] Catch-All skipping module file: 2025_Lektion+uge+43_2+Organisationer+i+et+foranderligt+perspektiv+-+Omgivelser+-+2.pdf (ID: 1678066)
+[2026-08-09 23:52:54.721] Catch-All skipping module file: 2026_Lektion+uge+6+-+opstart+pa%CC%8A+projektarbejde+og+overblik+over+semestret_publiceret.pptx (ID: 1766952)
+[2026-08-09 23:52:54.721] Catch-All skipping module file: 251009_Kom+og+v%C3%A6r+med_Til+Stig+N.pptx (ID: 1669054)
+[2026-08-09 23:52:54.722] Catch-All skipping module file: Berlingske+Case.pdf (ID: 1559936)
+[2026-08-09 23:52:54.722] Catch-All skipping module file: Beslutninger+-+Uge+46+2025.pdf (ID: 1693406)
+[2026-08-09 23:52:54.722] Catch-All found new file: BM0128_CBS_SolbjergPlads-2806 (1)-1-2.jpg (ID: 1560103)
+[2026-08-09 23:52:54.723] Catch-All found new file: BM0128_CBS_SolbjergPlads-2806 (1)-1.jpg (ID: 1559838)
+[2026-08-09 23:52:54.723] Catch-All found new file: BM0128_CBS_SolbjergPlads-2806 (1).jpg (ID: 1560083)
+[2026-08-09 23:52:54.723] Catch-All skipping module file: B%C3%B8rnem%C3%B8bler_ny+version.pdf (ID: 1560154)
+[2026-08-09 23:52:54.724] Catch-All found new file: CBS_SolbjergPlads_ImageHeader-1-1.jpg (ID: 1560087)
+[2026-08-09 23:52:54.724] Catch-All found new file: CBS_SolbjergPlads_ImageHeader-1.jpg (ID: 1559837)
+[2026-08-09 23:52:54.724] Catch-All found new file: CBS_SolbjergPlads_ImageHeader.jpg (ID: 1560082)
+[2026-08-09 23:52:54.725] Catch-All found new file: COLOURBOX53981090-1.jpg (ID: 1559898)
+[2026-08-09 23:52:54.725] Catch-All found new file: COLOURBOX53981090.jpg (ID: 1559897)
+[2026-08-09 23:52:54.725] Catch-All found new file: Corporate hierarchy.jpg (ID: 1559867)
+[2026-08-09 23:52:54.726] Catch-All skipping module file: culture.experiences.pdf (ID: 1667723)
+[2026-08-09 23:52:54.726] Catch-All skipping module file: E25_F26_HAIT_Organisationers+opbygning.pdf (ID: 1747622)
+[2026-08-09 23:52:54.726] Catch-All found new file: Eksempel - Gruppekontrakt.docx (ID: 1560051)
+[2026-08-09 23:52:54.727] Catch-All skipping module file: Eksempel+p%C3%A5+gruppekontrakt.docx (ID: 1559916)
+[2026-08-09 23:52:54.727] Catch-All found new file: F22_HAIT_Organisationers opbygning_2021-2022.pdf (ID: 1560180)
+[2026-08-09 23:52:54.727] Catch-All found new file: F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf (ID: 1559921)
+[2026-08-09 23:52:54.728] Catch-All skipping module file: Forandring+-+uge+47+2025.pdf (ID: 1695726)
+[2026-08-09 23:52:54.728] Catch-All skipping module file: Forandring+i+organisationer_video1_upload_2025.pptx (ID: 1694168)
+[2026-08-09 23:52:54.728] Catch-All skipping module file: Forandringsledelse+slide+del+2.pptx (ID: 1694170)
+[2026-08-09 23:52:54.728] Catch-All skipping module file: From+Algorithmic+Management+to+Data-driven+Labour+Organising%2827%29.pdf (ID: 1669058)
+[2026-08-09 23:52:54.729] Catch-All found new file: GenAI in Danske Bank_opdateret.pdf (ID: 1560171)
+[2026-08-09 23:52:54.729] Catch-All found new file: HA(it.)_grupper E2021.pdf (ID: 1560172)
+[2026-08-09 23:52:54.729] Catch-All found new file: Hildebrandt-1.pdf (ID: 1560191)
+[2026-08-09 23:52:54.730] Catch-All skipping module file: ind_org_Pensumoversigt_efter%C3%A5r2025.pdf (ID: 1652721)
+[2026-08-09 23:52:54.730] Catch-All found new file: Individ og organisation_motivation & belønning 1_upload.pptx (ID: 1560198)
+[2026-08-09 23:52:54.731] Catch-All found new file: Individ og organisation_motivation & belønning 2_upload.pptx (ID: 1560199)
+[2026-08-09 23:52:54.731] Catch-All found new file: Industrialsupply.pdf (ID: 1560157)
+[2026-08-09 23:52:54.731] Catch-All skipping module file: Intro_uge+36_2025_slides.pdf (ID: 1624231)
+[2026-08-09 23:52:54.732] Catch-All skipping module file: ITDoesntMatter.pdf (ID: 1560072)
+[2026-08-09 23:52:54.732] Catch-All skipping module file: Klyngevejledning+-+Upload.pptx (ID: 1785191)
+[2026-08-09 23:52:54.732] Catch-All found new file: Klyngevejledning 1_grp 10.docx (ID: 1559939)
+[2026-08-09 23:52:54.733] Catch-All found new file: Klyngevejledning 1_grp 14.pdf (ID: 1560064)
+[2026-08-09 23:52:54.733] Catch-All found new file: Klyngevejledning 1_grp 15.pdf (ID: 1560100)
+[2026-08-09 23:52:54.733] Catch-All found new file: Klyngevejledning 1_grp 25.pdf (ID: 1560145)
+[2026-08-09 23:52:54.733] Catch-All skipping module file: Klyngevejledning_1_Program_+12+marts+2026+KLYNGE+3+OPDATERET.docx (ID: 1790530)
+[2026-08-09 23:52:54.734] Catch-All found new file: Klyngevejledning_1_Program_2022.pdf (ID: 1559957)
+[2026-08-09 23:52:54.734] Catch-All found new file: Klyngevejledning_1_Program_2023.doc (ID: 1560037)
+[2026-08-09 23:52:54.735] Catch-All found new file: Klyngevejledning_1_Program_2024.pdf (ID: 1560065)
+[2026-08-09 23:52:54.735] Catch-All skipping module file: Klyngevejledning_2_Program_+21+april+2026.pdf (ID: 1811688)
+[2026-08-09 23:52:54.735] Catch-All skipping module file: Kodning+%C3%B8velse+-+interview+transskribering.docx (ID: 1560228)
+[2026-08-09 23:52:54.735] Catch-All skipping module file: Kodning+%C3%B8velse+-+kodning+skabelon.xlsx (ID: 1560161)
+[2026-08-09 23:52:54.736] Catch-All skipping module file: Kodning+%C3%B8velse+-+kodning+tabel+%28struktureret%29.xlsx (ID: 1559952)
+[2026-08-09 23:52:54.736] Catch-All skipping module file: Ledelse+-+uge+48.pdf (ID: 1699643)
+[2026-08-09 23:52:54.736] Catch-All skipping module file: Lektion_sammenfatning+af+faget_2026.pptx (ID: 1805051)
+[2026-08-09 23:52:54.737] Catch-All found new file: Manual for eksamensprojekt 2021-2022_.pdf (ID: 1559920)
+[2026-08-09 23:52:54.737] Catch-All skipping module file: Manual+for+eksamensprojekt+2025-2026.pdf (ID: 1748401)
+[2026-08-09 23:52:54.737] Catch-All skipping module file: Martin+Thorborg+tiltr%C3%A6kker+nye+ansatte+ved+at+lokke_artikel+okt+2023.pdf (ID: 1559932)
+[2026-08-09 23:52:54.738] Catch-All skipping module file: Motivationsfaktorer+-+uge+45+2025.pdf (ID: 1687664)
+[2026-08-09 23:52:54.738] Catch-All skipping module file: Munster+2017_intro.pdf (ID: 1693022)
+[2026-08-09 23:52:54.738] Catch-All skipping module file: Munster+2017_kap+1.pdf (ID: 1693023)
+[2026-08-09 23:52:54.738] Catch-All skipping module file: Observationsskema.docx (ID: 1560219)
+[2026-08-09 23:52:54.739] Catch-All found new file: Oplæg på CBS - sendt.pdf (ID: 1560194)
+[2026-08-09 23:52:54.739] Catch-All skipping module file: Organisationsformer+-+oversigtstabel+-+udfyldt.pptx (ID: 1559923)
+[2026-08-09 23:52:54.739] Catch-All skipping module file: Organisationsprojekt_argumentation_2_upload.pptm (ID: 1560068)
+[2026-08-09 23:52:54.740] Catch-All skipping module file: Organisationsprojekt_klarg%C3%B8ring+af+data_eksempel_upload.pptx (ID: 1560236)
+[2026-08-09 23:52:54.740] Catch-All skipping module file: Organisationsprojekt_klarg%C3%B8ring+af+data_upload.pptm (ID: 1560235)
+[2026-08-09 23:52:54.740] Catch-All skipping module file: Organisationsprojekt_operationalisering_upload_.pptm (ID: 1560067)
+[2026-08-09 23:52:54.741] Catch-All found new file: Organisationsprojekt_operationalisering_upload.pptm (ID: 1559942)
+[2026-08-09 23:52:54.741] Catch-All found new file: Organisationsprojekt_problemformulering_1-upload-1.pptm (ID: 1560125)
+[2026-08-09 23:52:54.741] Catch-All skipping module file: Organisationsprojekt_problemformulering_1-upload.pptm (ID: 1559949)
+[2026-08-09 23:52:54.741] Catch-All skipping module file: Organisationsprojekt_problemformulering-2_upload.pptm (ID: 1560069)
+[2026-08-09 23:52:54.742] Catch-All found new file: Organisationsprojekt_vidensproduktion_1_2022-upload.pptm (ID: 1560071)
+[2026-08-09 23:52:54.742] Catch-All skipping module file: Organisationsprojekt_vidensproduktion_1_upload.pptm (ID: 1560231)
+[2026-08-09 23:52:54.742] Catch-All skipping module file: Organisationsprojekt_vidensproduktion_2_upload.pptm (ID: 1560232)
+[2026-08-09 23:52:54.743] Catch-All found new file: Organisationsprojekt_vidensproduktion_2021-2_upload.pptm (ID: 1560128)
+[2026-08-09 23:52:54.743] Catch-All skipping module file: %C3%98velse+uge+37+-+Organisationsdiagram.pdf (ID: 1628057)
+[2026-08-09 23:52:54.743] Catch-All skipping module file: %C3%98velse+uge+44+-+L%C3%A6ring.pdf (ID: 1682693)
+[2026-08-09 23:52:54.744] Catch-All found new file: Øvelse_uge6_intro_2022_upload-1.pptx (ID: 1560038)
+[2026-08-09 23:52:54.744] Catch-All skipping module file: %C3%98velse_uge9_problemformulering_XA_upload.pptx (ID: 1560225)
+[2026-08-09 23:52:54.744] Catch-All skipping module file: %C3%98velse_uge9_problemformulering_XB_UPLOAD.pptx (ID: 1783488)
+[2026-08-09 23:52:54.744] Catch-All skipping module file: %C3%98velser_uge13_analyse+og+tolkning_UPLOAD.pptx (ID: 1800485)
+[2026-08-09 23:52:54.745] Catch-All skipping module file: %C3%98velser_uge16_klynge_upload.pptx (ID: 1809393)
+[2026-08-09 23:52:54.745] Catch-All skipping module file: %C3%98velser_uge18_eksamen+og+afslutning_opdateret_upload.pptx (ID: 1560057)
+[2026-08-09 23:52:54.745] Catch-All skipping module file: %C3%98velser_uge36_intro_2025.pptx (ID: 1624133)
+[2026-08-09 23:52:54.745] Catch-All skipping module file: %C3%98velser_uge36B_m%C3%A5l_og_strategi_2025.pdf (ID: 1627150)
+[2026-08-09 23:52:55.468] Catch-All skipping module file: %C3%98velser_uge37_struktur_2025.pdf (ID: 1632239)
+[2026-08-09 23:52:55.468] Catch-All found new file: Øvelser_uge38_organisationsformer_upload.pptx (ID: 1560137)
+[2026-08-09 23:52:55.469] Catch-All skipping module file: %C3%98velser_uge39_kultur_2025.pdf (ID: 1643383)
+[2026-08-09 23:52:55.469] Catch-All skipping module file: %C3%98velser_uge39_kultur_E2025+upload.pptx (ID: 1644211)
+[2026-08-09 23:52:55.469] Catch-All skipping module file: %C3%98velser_uge39_sensemaking_2025.pdf (ID: 1659237)
+[2026-08-09 23:52:55.470] Catch-All found new file: Øvelser_uge40_perspektiver_på_kultur_til upload.pptx (ID: 1560136)
+[2026-08-09 23:52:55.470] Catch-All skipping module file: %C3%98velser_uge41_magt_E25.pdf (ID: 1666882)
+[2026-08-09 23:52:55.470] Catch-All skipping module file: %C3%98velsesslides+-+Intro.pptx (ID: 1777888)
+[2026-08-09 23:52:55.470] Catch-All skipping module file: %C3%98velsesslides+-+uge+12.pptx (ID: 1795567)
+[2026-08-09 23:52:55.471] Catch-All found new file: Øvelsesslides formelle træk - organisationsformer-1.pptx (ID: 1560003)
+[2026-08-09 23:52:55.471] Catch-All found new file: Øvelsesslides formelle træk - organisationsformer.pptx (ID: 1560002)
+[2026-08-09 23:52:55.471] Catch-All found new file: Øvelsesslides_mål og strategi_XA-1.pptx (ID: 1560085)
+[2026-08-09 23:52:55.472] Catch-All skipping module file: Schein+1994_uddrag.pdf (ID: 1639375)
+[2026-08-09 23:52:55.472] Catch-All skipping module file: Sensemaking+in+org+%28weick+1995%29.pdf (ID: 1643073)
+[2026-08-09 23:52:55.472] Catch-All skipping module file: Sensemaking+slides+1.pdf (ID: 1668216)
+[2026-08-09 23:52:55.473] Catch-All found new file: Sensemaking slides 1.pptx (ID: 1655085)
+[2026-08-09 23:52:55.473] Catch-All skipping module file: Sensemaking+slides+2.pdf (ID: 1668217)
+[2026-08-09 23:52:55.473] Catch-All found new file: Sensemaking slides 2.pptx (ID: 1655086)
+[2026-08-09 23:52:55.474] Catch-All skipping module file: Shook+J.+%282010%29+How+to+change+a+culture%2C+lessons+from+nummi.pdf (ID: 1559930)
+[2026-08-09 23:52:55.474] Catch-All skipping module file: Skabelon+til+klyngevejledning+2.docx (ID: 1560149)
+[2026-08-09 23:52:55.474] Catch-All skipping module file: SKABELON_KLYNGEVEJLEDNING_1_2025.docx (ID: 1560226)
+[2026-08-09 23:52:55.475] Catch-All skipping module file: Slides+-+Henrik+Stenmann+-+Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf (ID: 1690411)
+[2026-08-09 23:52:55.475] Catch-All skipping module file: Slides+%281%29+Ledelse+i+organisationer+forel%C3%A6sning+1.pptx (ID: 1698861)
+[2026-08-09 23:52:55.475] Catch-All skipping module file: Slides+%281%29+Motivationsfaktorer+forel%C3%A6sning+1.pptx (ID: 1686104)
+[2026-08-09 23:52:55.476] Catch-All skipping module file: Slides+%282%29+Ledelse+i+organisationer+forel%C3%A6sning+2.pptx (ID: 1698862)
+[2026-08-09 23:52:55.476] Catch-All skipping module file: Slides+%282%29+Motivationsfaktorer+forel%C3%A6sning+2.pptx (ID: 1686105)
+[2026-08-09 23:52:55.476] Catch-All skipping module file: Slides+sidste+forel%C3%A6sning.pdf (ID: 1706588)
+[2026-08-09 23:52:55.476] Catch-All skipping module file: Slides_kulturanalyse+del+1_E25.pdf (ID: 1640813)
+[2026-08-09 23:52:55.477] Catch-All skipping module file: Slides_kulturanalyse+del+2_E25.pdf (ID: 1640814)
+[2026-08-09 23:52:55.477] Catch-All skipping module file: Slides_m%C3%A5l+og+strategi_del+1_E25.pdf (ID: 1620929)
+[2026-08-09 23:52:55.477] Catch-All skipping module file: Slides_m%C3%A5l+og+strategi_del+2_E25.pdf (ID: 1620930)
+[2026-08-09 23:52:55.478] Catch-All found new file: Søstrene Grene.pdf (ID: 1559928)
+[2026-08-09 23:52:55.478] Catch-All skipping module file: Strategy+in+Danske+Bank.pdf (ID: 1638534)
+[2026-08-09 23:52:55.478] Catch-All skipping module file: Svarark+-+Gode+ra%CC%8Ad+til+projektet.docx (ID: 1560056)
+[2026-08-09 23:52:55.478] Catch-All skipping module file: Svarark+-+Gode+r%C3%A5d+til+projektet.docx (ID: 1816004)
+[2026-08-09 23:52:55.479] Catch-All skipping module file: Udfaldsrum+Beskrivelser.docx (ID: 1560193)
+[2026-08-09 23:52:55.479] Catch-All skipping module file: Uge+10+Unders%C3%B8gelsesdesign+UPLOAD.pptx (ID: 1785168)
+[2026-08-09 23:52:55.479] Catch-All skipping module file: Uge+15+-+Formidling.pptx (ID: 1805700)
+[2026-08-09 23:52:55.480] Catch-All skipping module file: Uge43_omgivelser_2025.pdf (ID: 1677945)
+[2026-08-09 23:52:55.480] Catch-All found new file: Uge45_motivation og belønning_upload.pptx (ID: 1560202)
+[2026-08-09 23:52:55.481] Downloading 46 catch-all files...
+[2026-08-09 23:52:55.484] Skipping existing file: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx
+[2026-08-09 23:52:55.487] Skipping existing file: 2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx
+[2026-08-09 23:52:55.490] Skipping existing file: 2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx
+[2026-08-09 23:52:55.494] Skipping existing file: Individ og organisation_motivation & belønning 1_upload.pptx
+[2026-08-09 23:52:55.499] Skipping existing file: 2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx
+[2026-08-09 23:52:55.503] Skipping existing file: BM0128_CBS_SolbjergPlads-2806 (1)-1-2.jpg
+[2026-08-09 23:52:55.507] Skipping existing file: BM0128_CBS_SolbjergPlads-2806 (1).jpg
+[2026-08-09 23:52:55.512] Skipping existing file: BM0128_CBS_SolbjergPlads-2806 (1)-1.jpg
+[2026-08-09 23:52:55.518] Skipping existing file: CBS_SolbjergPlads_ImageHeader-1.jpg
+[2026-08-09 23:52:55.523] Skipping existing file: Individ og organisation_motivation & belønning 2_upload.pptx
+[2026-08-09 23:52:55.528] Skipping existing file: CBS_SolbjergPlads_ImageHeader.jpg
+[2026-08-09 23:52:55.533] Skipping existing file: COLOURBOX53981090-1.jpg
+[2026-08-09 23:52:55.536] Skipping existing file: Industrialsupply.pdf
+[2026-08-09 23:52:55.540] Skipping existing file: Klyngevejledning 1_grp 10.docx
+[2026-08-09 23:52:55.544] Skipping existing file: Eksempel - Gruppekontrakt.docx
+[2026-08-09 23:52:55.549] Skipping existing file: F22_HAIT_Organisationers opbygning_2021-2022.pdf
+[2026-08-09 23:52:55.553] Skipping existing file: GenAI in Danske Bank_opdateret.pdf
+[2026-08-09 23:52:55.556] Skipping existing file: F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf
+[2026-08-09 23:52:55.560] Skipping existing file: HA(it.)_grupper E2021.pdf
+[2026-08-09 23:52:55.564] Skipping existing file: Hildebrandt-1.pdf
+[2026-08-09 23:52:55.568] Skipping existing file: Klyngevejledning 1_grp 14.pdf
+[2026-08-09 23:52:55.571] Skipping existing file: 2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx
+[2026-08-09 23:52:55.574] Skipping existing file: Klyngevejledning 1_grp 15.pdf
+[2026-08-09 23:52:55.578] Skipping existing file: Klyngevejledning 1_grp 25.pdf
+[2026-08-09 23:52:55.581] Skipping existing file: Klyngevejledning_1_Program_2022.pdf
+[2026-08-09 23:52:55.584] Skipping existing file: Klyngevejledning_1_Program_2023.doc
+[2026-08-09 23:52:55.586] Skipping existing file: Klyngevejledning_1_Program_2024.pdf
+[2026-08-09 23:52:55.596] Skipping existing file: Manual for eksamensprojekt 2021-2022_.pdf
+[2026-08-09 23:52:55.599] Skipping existing file: CBS_SolbjergPlads_ImageHeader-1-1.jpg
+[2026-08-09 23:52:55.603] Skipping existing file: Oplæg på CBS - sendt.pdf
+[2026-08-09 23:52:55.606] Skipping existing file: COLOURBOX53981090.jpg
+[2026-08-09 23:52:55.609] Skipping existing file: Corporate hierarchy.jpg
+[2026-08-09 23:52:55.612] Skipping existing file: Organisationsprojekt_operationalisering_upload.pptm
+[2026-08-09 23:52:55.616] Skipping existing file: Organisationsprojekt_problemformulering_1-upload-1.pptm
+[2026-08-09 23:52:55.618] Skipping existing file: Organisationsprojekt_vidensproduktion_1_2022-upload.pptm
+[2026-08-09 23:52:55.622] Skipping existing file: Organisationsprojekt_vidensproduktion_2021-2_upload.pptm
+[2026-08-09 23:52:55.625] Skipping existing file: Øvelse_uge6_intro_2022_upload-1.pptx
+[2026-08-09 23:52:55.628] Skipping existing file: Øvelser_uge38_organisationsformer_upload.pptx
+[2026-08-09 23:52:55.631] Skipping existing file: Øvelser_uge40_perspektiver_på_kultur_til upload.pptx
+[2026-08-09 23:52:55.634] Skipping existing file: Øvelsesslides formelle træk - organisationsformer-1.pptx
+[2026-08-09 23:52:55.637] Skipping existing file: Øvelsesslides formelle træk - organisationsformer.pptx
+[2026-08-09 23:52:55.640] Skipping existing file: Øvelsesslides_mål og strategi_XA-1.pptx
+[2026-08-09 23:52:55.644] Skipping existing file: Sensemaking slides 1.pptx
+[2026-08-09 23:52:55.647] Skipping existing file: Sensemaking slides 2.pptx
+[2026-08-09 23:52:55.650] Skipping existing file: Søstrene Grene.pdf
+[2026-08-09 23:52:55.654] Skipping existing file: Uge45_motivation og belønning_upload.pptx
+[2026-08-09 23:53:04.578] --- Download Complete: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | 217 items | 0.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) ---
+==================================================
+[2026-08-09 23:53:05.441] === Course Finished: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | Downloaded: 217 items | Errors: 2 ===
+[2026-08-09 23:53:06.118] [INFO] [panopto.runner] Panopto batch start (pid=10672): 1 target(s) | model=tiny device=cuda lang=auto | engine_ready=True (outputs + layout resolved per target)
+[2026-08-09 23:53:07.571] === Panopto transcription engine diagnostics ===
+  faster_whisper: 1.2.1 (import OK)
+  ctranslate2: 4.8.0 (import OK)
+  onnxruntime: PRESENT BUT IMPORT FAILED -> ImportError: DLL load failed while importing onnxruntime_pybind11_state: Det lykkedes ikke at initialisere en DLL.
+  torch: not installed (fine - optional for inference)
+  backend_usable: YES
+================================================
+[2026-08-09 23:53:07.572] [INFO] [panopto.runner] Transcription engine: backend_usable=YES | torch=not installed (fine - optional for inference)
+[2026-08-09 23:53:07.572] [INFO] [panopto.runner] Transcription hardware: requested device=cuda | gpu_available=True gpu=NVIDIA GeForce GTX 1080 vram=8192MB | cpu=16 cores | status=gpu_ready
+[2026-08-09 23:53:07.577] [INFO] [panopto.runner] Discovering Panopto recordings in 'Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' (course id=43660)...
+[2026-08-09 23:53:10.333] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f69a6d8f-d703-49cf-9da7-b34700839cae (via url)
+[2026-08-09 23:53:10.449] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=01913573-0a7a-4fdb-bcdb-b1a3008d199d (via url)
+[2026-08-09 23:53:10.453] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=11e7ba5a-0ada-4780-b250-b1a30098565d (via url)
+[2026-08-09 23:53:10.503] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b58f9a14-6513-4ba6-9d3a-b34600ba6f34 (via url)
+[2026-08-09 23:53:10.517] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=c8b8a8d1-6e4e-45aa-9dc4-b1d301238290 (via url)
+[2026-08-09 23:53:10.728] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=dfb98470-ada0-463e-9c41-b1e300cba127 (via url)
+[2026-08-09 23:53:11.923] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=4a698f87-388c-4e87-a9c2-b35f00b478cf (via url)
+[2026-08-09 23:53:12.031] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=5faa984d-d76e-4462-94a8-b35f00dfccb3 (via url)
+[2026-08-09 23:53:12.068] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0074fde5-eba4-42a7-b226-b35f00c6be2c (via url)
+[2026-08-09 23:53:12.288] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2c2cbc41-5e08-4632-a907-b366014f267e (via url)
+[2026-08-09 23:53:12.295] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=1dba66ba-84e0-434c-81d5-b3660165409c (via url)
+[2026-08-09 23:53:12.442] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=5ba76e8d-6421-4861-8883-b1a400ba9ccd (via url)
+[2026-08-09 23:53:13.683] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f05d844b-c2c0-4acc-ae37-b1a8008b06bd (via url)
+[2026-08-09 23:53:13.749] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=d5bf4d12-bb2d-4787-a923-b1a400c0ec8a (via url)
+[2026-08-09 23:53:13.750] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=4e7d90eb-226a-4678-aade-b1a8008f85bf (via url)
+[2026-08-09 23:53:13.864] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=862d36b0-e512-4b45-aa5c-b37f0125fd68 (via url)
+[2026-08-09 23:53:13.924] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0c1d61e1-5788-4c94-8c3e-b1a400d76e9a (via url)
+[2026-08-09 23:53:14.060] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=1bad9dbd-7c6f-4309-ba52-b1a400e4f565 (via url)
+[2026-08-09 23:53:15.227] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=914641ae-c022-43b3-aabd-b1a80085fb1c (via url)
+[2026-08-09 23:53:15.244] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0d78cddd-c122-444c-a358-b389015d0350 (via url)
+[2026-08-09 23:53:15.376] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=281aef18-7f56-48b2-803b-b3890162e755 (via url)
+[2026-08-09 23:53:15.525] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=04652c96-a5cc-46ac-a087-b395008824e1 (via url)
+[2026-08-09 23:53:15.548] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=ead91896-cf78-4d53-a88a-b1a80081e11b (via url)
+[2026-08-09 23:53:15.617] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=c7202c34-2dfb-48cc-8f4d-b39500b2cd9e (via url)
+[2026-08-09 23:53:16.643] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=f5b07ec0-02dd-47ff-9ab6-b39e017157d0 (via url)
+[2026-08-09 23:53:17.083] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2e97ed4e-c381-496d-a1dd-b10b0155c62b (via url)
+[2026-08-09 23:53:17.140] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=25f87b63-5ecb-42d2-8386-b28c016b2c3f (via url)
+[2026-08-09 23:53:17.185] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=72399841-43f1-4e1b-999c-b10a016e41d4 (via url)
+[2026-08-09 23:53:17.315] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=06d68daf-238e-46ce-bc82-acd10160f141 (via url)
+[2026-08-09 23:53:17.335] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=0e1a9ca1-13c0-41d7-a774-b39e01715e4a (via url)
+[2026-08-09 23:53:18.280] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=bec7eb89-fb15-480c-87ca-b28f014f1971 (via url)
+[2026-08-09 23:53:18.635] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=088298c4-fe8b-4f1b-81ed-b28f0152aeb0 (via url)
+[2026-08-09 23:53:18.658] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=a4070dbb-3a80-4fb3-841e-b29f0174dcae (via url)
+[2026-08-09 23:53:18.829] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=2da3eec0-a094-417b-9200-ace001763a64 (via url)
+[2026-08-09 23:53:19.140] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b8c36f0d-6656-4969-88ae-b1350151c84f (via url)
+[2026-08-09 23:53:19.159] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=dfee0c49-93c7-4d20-a1a7-ace7015fa08f (via url)
+[2026-08-09 23:53:19.307] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - vidensproduktion' launch-resolves to 72399841-43f1-4e1b-999c-b10a016e41d4 - ignoring embedded stale id(s): 7f8ea4fc-a256-4bc0-8fcf-b10a01796155
+[2026-08-09 23:53:19.311] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - vidensproduktion' launch-resolves to 2e97ed4e-c381-496d-a1dd-b10b0155c62b - ignoring embedded stale id(s): a95f7ede-0fd8-498d-96da-b10b0162489f
+[2026-08-09 23:53:19.314] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - problemformulering' launch-resolves to 06d68daf-238e-46ce-bc82-acd10160f141 - ignoring embedded stale id(s): 7957ff53-56b3-4c87-9b3f-acd200a67a9e
+[2026-08-09 23:53:19.330] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation' launch-resolves to 2da3eec0-a094-417b-9200-ace001763a64 - ignoring embedded stale id(s): 5194533e-1be0-4932-9b9a-ace10170be66
+[2026-08-09 23:53:19.334] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (1): organisationsprojekt - klargøring af data' launch-resolves to b8c36f0d-6656-4969-88ae-b1350151c84f - ignoring embedded stale id(s): d69d18c5-1cfc-4fdd-ab49-b135015f6470
+[2026-08-09 23:53:19.337] [INFO] [panopto.discovery] Panopto: module link 'Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data' launch-resolves to dfee0c49-93c7-4d20-a1a7-ace7015fa08f - ignoring embedded stale id(s): 91f06a70-924b-4a17-ac2a-ace800ce49a1
+[2026-08-09 23:53:22.004] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=none
+[2026-08-09 23:53:22.007] [INFO] [panopto.auth] Panopto LTI: no session id resolved - landed on https://cbs.cloud.panopto.eu/Panopto/Pages/Sessions/List.aspx | unfollowed form: ./List.aspx | body: 123029 chars, 0 candidate id(s) | folder: a7cbd921-586f-4bf5-8869-b338008ffda1 | auth: cookies[cbs.cloud.panopto.eu]=.ASPXAUTH,csrfToken,sandboxCookie | markers=none
+[2026-08-09 23:53:22.047] [INFO] [panopto.discovery] Panopto api/v1 folder listing unavailable for a7cbd921-586f-4bf5-8869-b338008ffda1 (status 401) - will fall back to Data.svc/GetSessions.
+[2026-08-09 23:53:22.203] [INFO] [panopto.discovery] Panopto GetSessions: folder a7cbd921-586f-4bf5-8869-b338008ffda1 reports 0 session(s) (page 0 returned 0).
+[2026-08-09 23:53:22.204] [INFO] [panopto.discovery] Panopto GetSessions raw 'd' node for a7cbd921-586f-4bf5-8869-b338008ffda1: {"__type": "SessionResults:#Panopto.Data.DB.WebUI", "Results": [], "TotalNumber": 0, "ArchivedCount": null, "BookmarkedSessionCount": null, "CanAddSubfolder": false, "ContainsArchivedDeliveries": false, "FolderType": 0, "InProgressSessionCount": null, "ParentFolderId": null, "ScheduledRecordingCount": null, "Subfolders": []}
+[2026-08-09 23:53:22.265] [INFO] [panopto.discovery] Panopto GetFolders failed for folder a7cbd921-586f-4bf5-8869-b338008ffda1: HTTP 500: <Fault xmlns="http://schemas.microsoft.com/ws/2005/05/envelope/none"><Code><Value>Sender</Value></Code><Reason><Text xml:lang="en-US">User unified\<CANVAS_USER> is not in role (FolderEnumerate).</Text></Reason></Fault>
+[2026-08-09 23:53:22.323] [INFO] [panopto.discovery] Panopto GetFolderInfo probe for a7cbd921-586f-4bf5-8869-b338008ffda1 -> name='Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' sessions=? subfolders=?
+[2026-08-09 23:53:22.525] [INFO] [panopto.discovery] Panopto unscoped GetSessions probe -> TotalNumber=3082 (0 = the Panopto session holds NO content grants at all, i.e. the LTI cookie is effectively anonymous; >0 = auth works and the problem is folder-scoped)
+[2026-08-09 23:53:22.526] [INFO] [panopto.discovery] Panopto course-folder fallback: enumerated 0 session(s) in the course folder for course 43660 via a course-level launch (no content link required).
+[2026-08-09 23:53:23.680] [INFO] [panopto.runner] Discovered 36 recording(s) in 'Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' by source {'module': 36}
+[2026-08-09 23:53:25.105] [INFO] [panopto.auth] Panopto LTI handshake OK (2 redirect step(s)); host=https://cbs.cloud.panopto.eu, resolved_id=b58f9a14-6513-4ba6-9d3a-b34600ba6f34 (via url)
+[2026-08-09 23:53:25.105] [INFO] [panopto.runner] Panopto auth bootstrap attempt 1/36 via https://cbscanvas.instructure.com/api/v1/courses/43660/external_tools/sessionless_launch -> OK
+[2026-08-09 23:53:25.195] [INFO] [panopto.runner] Discovery complete: 36 found across 1 course(s); planned 0 download(s) (0 video), 28 transcription(s), 0 shortcut(s), 8 skipped (already on disk).
+[2026-08-09 23:53:25.198] [INFO] [panopto.runner] Transcription phase: 28 file(s) (model=tiny, device=cuda).
+[2026-08-09 23:53:25.204] [INFO] [panopto.runner] Transcribing [1/28] 'Video med respons på feedback og introduktion til et nyt initiativ i undervisningen' (device=cuda, source=Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3)...
+[2026-08-09 23:53:25.211] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=30932 device=cuda frozen=False file=Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3
+[2026-08-09 23:54:04.610] [INFO] [panopto.transcribe] Transcribe worker (pid=30932, Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=30932 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 13:23.155
+[INFO] [faster_whisper] VAD filter removed 00:15.056 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.87
+[INFO] [panopto.transcribe] Transcribing Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3: audio=803s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.mp3: 181 segments, lang=da, 39.1s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=30932 lang=da outputs=txt,srt
+[2026-08-09 23:54:04.610] [INFO] [panopto.transcribe] Transcribe worker (pid=30932) OK in 39.4s: txt, srt
+[2026-08-09 23:54:04.944] [INFO] [panopto.runner] Transcribing [2/28] 'Forelæsningsvideo 1 om Sensemaking' (device=cuda, source=Forelæsningsvideo 1 om Sensemaking.mp3)...
+[2026-08-09 23:54:04.948] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=5168 device=cuda frozen=False file=Forelæsningsvideo 1 om Sensemaking.mp3
+[2026-08-09 23:54:34.179] [INFO] [panopto.transcribe] Transcribe worker (pid=5168, Forelæsningsvideo 1 om Sensemaking.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=5168 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo 1 om Sensemaking.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 15:20.996
+[INFO] [faster_whisper] VAD filter removed 00:15.984 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo 1 om Sensemaking.mp3: audio=921s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo 1 om Sensemaking.mp3: 106 segments, lang=da, 29.0s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=5168 lang=da outputs=txt,srt
+[2026-08-09 23:54:34.179] [INFO] [panopto.transcribe] Transcribe worker (pid=5168) OK in 29.2s: txt, srt
+[2026-08-09 23:54:34.467] [INFO] [panopto.runner] Transcribing [3/28] 'Forelæsningsvideo 2 om Sensemaking' (device=cuda, source=Forelæsningsvideo 2 om Sensemaking.mp3)...
+[2026-08-09 23:54:34.471] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=30948 device=cuda frozen=False file=Forelæsningsvideo 2 om Sensemaking.mp3
+[2026-08-09 23:54:54.896] [INFO] [panopto.transcribe] Transcribe worker (pid=30948, Forelæsningsvideo 2 om Sensemaking.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=30948 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo 2 om Sensemaking.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 11:35.020
+[INFO] [faster_whisper] VAD filter removed 00:17.520 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.92
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo 2 om Sensemaking.mp3: audio=695s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo 2 om Sensemaking.mp3: 219 segments, lang=da, 20.2s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=30948 lang=da outputs=txt,srt
+[2026-08-09 23:54:54.897] [INFO] [panopto.transcribe] Transcribe worker (pid=30948) OK in 20.4s: txt, srt
+[2026-08-09 23:54:55.178] [INFO] [panopto.runner] Transcribing [4/28] 'Forelæsningsvideo (1): uformelle træk - magt i organisationer' (device=cuda, source=Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3)...
+[2026-08-09 23:54:55.182] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=10432 device=cuda frozen=False file=Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3
+[2026-08-09 23:55:18.545] [INFO] [panopto.transcribe] Transcribe worker (pid=10432, Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=10432 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 13:45.632
+[INFO] [faster_whisper] VAD filter removed 01:09.424 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.96
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3: audio=826s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) uformelle træk - magt i organisationer.mp3: 114 segments, lang=da, 23.1s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=10432 lang=da outputs=txt,srt
+[2026-08-09 23:55:18.545] [INFO] [panopto.transcribe] Transcribe worker (pid=10432) OK in 23.4s: txt, srt
+[2026-08-09 23:55:18.839] [INFO] [panopto.runner] Transcribing [5/28] 'Forelæsningsvideo (2): uformelle træk - magt i organisationer' (device=cuda, source=Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3)...
+[2026-08-09 23:55:18.842] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=29948 device=cuda frozen=False file=Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3
+[2026-08-09 23:55:29.459] [INFO] [panopto.transcribe] Transcribe worker (pid=29948, Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=29948 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 07:27.472
+[INFO] [faster_whisper] VAD filter removed 00:26.384 of audio
+[INFO] [faster_whisper] Detected language 'sv' with probability 0.52
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3: audio=447s, language=sv (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) uformelle træk - magt i organisationer.mp3: 84 segments, lang=sv, 10.4s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=29948 lang=sv outputs=txt,srt
+[2026-08-09 23:55:29.459] [INFO] [panopto.transcribe] Transcribe worker (pid=29948) OK in 10.6s: txt, srt
+[2026-08-09 23:55:29.733] [INFO] [panopto.runner] Transcribing [6/28] 'Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025' (device=cuda, source=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3)...
+[2026-08-09 23:55:29.737] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=8940 device=cuda frozen=False file=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3
+[2026-08-09 23:55:52.264] [INFO] [panopto.transcribe] Transcribe worker (pid=8940, Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=8940 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 13:06.019
+[INFO] [faster_whisper] VAD filter removed 00:29.104 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.96
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3: audio=786s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3: 96 segments, lang=da, 22.3s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=8940 lang=da outputs=txt,srt
+[2026-08-09 23:55:52.265] [INFO] [panopto.transcribe] Transcribe worker (pid=8940) OK in 22.5s: txt, srt
+[2026-08-09 23:55:52.536] [INFO] [panopto.runner] Transcribing [7/28] 'Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025' (device=cuda, source=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3)...
+[2026-08-09 23:55:52.540] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=15452 device=cuda frozen=False file=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3
+[2026-08-09 23:56:07.885] [INFO] [panopto.transcribe] Transcribe worker (pid=15452, Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=15452 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 08:15.909
+[INFO] [faster_whisper] VAD filter removed 00:20.389 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.99
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3: audio=496s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.mp3: 60 segments, lang=da, 15.1s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=15452 lang=da outputs=txt,srt
+[2026-08-09 23:56:07.886] [INFO] [panopto.transcribe] Transcribe worker (pid=15452) OK in 15.3s: txt, srt
+[2026-08-09 23:56:08.179] [INFO] [panopto.runner] Transcribing [8/28] 'Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09' (device=cuda, source=Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3)...
+[2026-08-09 23:56:08.182] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=6792 device=cuda frozen=False file=Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3
+[2026-08-09 23:56:20.027] [INFO] [panopto.transcribe] Transcribe worker (pid=6792, Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=6792 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 06:53.153
+[INFO] [faster_whisper] VAD filter removed 00:01.968 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.95
+[INFO] [panopto.transcribe] Transcribing Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3: audio=413s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.mp3: 45 segments, lang=da, 11.6s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=6792 lang=da outputs=txt,srt
+[2026-08-09 23:56:20.027] [INFO] [panopto.transcribe] Transcribe worker (pid=6792) OK in 11.8s: txt, srt
+[2026-08-09 23:56:20.360] [INFO] [panopto.runner] Transcribing [9/28] 'Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025' (device=cuda, source=Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3)...
+[2026-08-09 23:56:20.363] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=1132 device=cuda frozen=False file=Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3
+[2026-08-09 23:56:35.656] [INFO] [panopto.transcribe] Transcribe worker (pid=1132, Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=1132 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 10:41.683
+[INFO] [faster_whisper] VAD filter removed 00:42.752 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.88
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3: audio=642s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.mp3: 65 segments, lang=da, 15.0s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=1132 lang=da outputs=txt,srt
+[2026-08-09 23:56:35.656] [INFO] [panopto.transcribe] Transcribe worker (pid=1132) OK in 15.3s: txt, srt
+[2026-08-09 23:56:35.953] [INFO] [panopto.runner] Transcribing [10/28] 'Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025' (device=cuda, source=Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3)...
+[2026-08-09 23:56:35.956] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=31748 device=cuda frozen=False file=Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3
+[2026-08-09 23:56:51.173] [INFO] [panopto.transcribe] Transcribe worker (pid=31748, Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=31748 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 09:30.956
+[INFO] [faster_whisper] VAD filter removed 00:30.683 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.70
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3: audio=571s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.mp3: 68 segments, lang=da, 14.9s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=31748 lang=da outputs=txt,srt
+[2026-08-09 23:56:51.174] [INFO] [panopto.transcribe] Transcribe worker (pid=31748) OK in 15.2s: txt, srt
+[2026-08-09 23:56:51.522] [INFO] [panopto.runner] Transcribing [11/28] 'Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1' (device=cuda, source=Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3)...
+[2026-08-09 23:56:51.525] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=8276 device=cuda frozen=False file=Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3
+[2026-08-09 23:57:17.818] [INFO] [panopto.transcribe] Transcribe worker (pid=8276, Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=8276 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 15:04.022
+[INFO] [faster_whisper] VAD filter removed 00:23.360 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.92
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3: audio=904s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.mp3: 257 segments, lang=da, 26.0s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=8276 lang=da outputs=txt,srt
+[2026-08-09 23:57:17.818] [INFO] [panopto.transcribe] Transcribe worker (pid=8276) OK in 26.3s: txt, srt
+[2026-08-09 23:57:18.134] [INFO] [panopto.runner] Transcribing [12/28] 'Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2' (device=cuda, source=Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3)...
+[2026-08-09 23:57:18.138] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=31860 device=cuda frozen=False file=Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3
+[2026-08-09 23:57:43.386] [INFO] [panopto.transcribe] Transcribe worker (pid=31860, Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=31860 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 10:58.959
+[INFO] [faster_whisper] VAD filter removed 00:25.615 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.96
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3: audio=659s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.mp3: 76 segments, lang=da, 25.0s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=31860 lang=da outputs=txt,srt
+[2026-08-09 23:57:43.387] [INFO] [panopto.transcribe] Transcribe worker (pid=31860) OK in 25.3s: txt, srt
+[2026-08-09 23:57:43.661] [INFO] [panopto.runner] Transcribing [13/28] 'Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025' (device=cuda, source=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3)...
+[2026-08-09 23:57:43.664] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=808 device=cuda frozen=False file=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3
+[2026-08-09 23:58:02.342] [INFO] [panopto.transcribe] Transcribe worker (pid=808, Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=808 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 12:40.570
+[INFO] [faster_whisper] VAD filter removed 00:28.186 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.98
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3: audio=761s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3: 98 segments, lang=da, 18.4s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=808 lang=da outputs=txt,srt
+[2026-08-09 23:58:02.343] [INFO] [panopto.transcribe] Transcribe worker (pid=808) OK in 18.7s: txt, srt
+[2026-08-09 23:58:02.631] [INFO] [panopto.runner] Transcribing [14/28] 'Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025' (device=cuda, source=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3)...
+[2026-08-09 23:58:02.634] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=37352 device=cuda frozen=False file=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3
+[2026-08-09 23:58:23.402] [INFO] [panopto.transcribe] Transcribe worker (pid=37352, Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3) log:
+[INFO] [panopto.transcribe_worker] worker start: pid=37352 frozen=False routed_via=direct device=cuda want_txt=True want_srt=True file=Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3
+[INFO] [panopto.cuda_provision] Registered provisioned CUDA lib dir on DLL path: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\cuda_libs
+[INFO] [panopto.transcribe] Loaded transcription model (cuda, int8_float32) in 0.3s from G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\config\panopto_models\tiny
+[INFO] [faster_whisper] Processing audio with duration 13:16.700
+[INFO] [faster_whisper] VAD filter removed 00:47.836 of audio
+[INFO] [faster_whisper] Detected language 'da' with probability 0.98
+[INFO] [panopto.transcribe] Transcribing Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3: audio=797s, language=da (auto-detected)
+[INFO] [panopto.transcribe] Transcribed Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.mp3: 133 segments, lang=da, 20.5s -> txt, srt
+[INFO] [panopto.transcribe_worker] worker done: pid=37352 lang=da outputs=txt,srt
+[2026-08-09 23:58:23.403] [INFO] [panopto.transcribe] Transcribe worker (pid=37352) OK in 20.8s: txt, srt
+[2026-08-09 23:58:23.691] [INFO] [panopto.runner] Transcribing [15/28] 'Forelæsningsvideo (1): Forandringsledelse' (device=cuda, source=Forelæsningsvideo (1) Forandringsledelse.mp3)...
+[2026-08-09 23:58:23.694] [INFO] [panopto.transcribe] Transcribe worker spawned: pid=34220 device=cuda frozen=False file=Forelæsningsvideo (1) Forandringsledelse.mp3
+[2026-08-09 23:59:20.728] [INFO] [core.cancellation] Download cancellation requested (event set).
+[2026-08-09 23:59:20.821] [INFO] [core.cancellation] Download cancel event cleared (was set).
+[2026-08-09 23:59:20.868] [INFO] [panopto.runner] Transcription cancelled by user at [15/28] 'Forelæsningsvideo (1): Forandringsledelse'.

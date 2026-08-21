@@ -1,0 +1,561 @@
+
+=== lane free1 start 2026-08-09 23:08:53 ===
+{
+  "ok": 22,
+  "lane": "free1",
+  "run_id": "20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1",
+  "jobs": 22,
+  "failed": [],
+  "results": [
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43667,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\BINT 1st semester (LA E25 BINTS1SEMU)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s000"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s000",
+      "seconds": 24.5
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s002"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s002",
+      "seconds": 30.9
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s004"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s004",
+      "seconds": 27.6
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s006"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s006",
+      "seconds": 24.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s008"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s008",
+      "seconds": 13.8
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s010"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s010",
+      "seconds": 11.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s012"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s012",
+      "seconds": 20.1
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 45899,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s014"
+      },
+      "findings": 3,
+      "severities": {
+        "info": 3
+      },
+      "id": "s014",
+      "seconds": 285.3
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43667,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\BINT 1st semester (LA E25 BINTS1SEMU)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s016"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s016",
+      "seconds": 9.3
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 45899,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+      "landed_on": "sync",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s018"
+      },
+      "findings": 3,
+      "severities": {
+        "info": 3
+      },
+      "id": "s018",
+      "seconds": 295.3
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "sync",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s020"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s020",
+      "seconds": 20.4
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 45899,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s022"
+      },
+      "findings": 3,
+      "severities": {
+        "info": 3
+      },
+      "id": "s022",
+      "seconds": 319.5
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s024"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s024",
+      "seconds": 22.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s026"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s026",
+      "seconds": 25.6
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43667,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\BINT 1st semester (LA E25 BINTS1SEMU)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s028"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s028",
+      "seconds": 7.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s030"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s030",
+      "seconds": 13.9
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s032"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s032",
+      "seconds": 14.8
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s034"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s034",
+      "seconds": 16.0
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "sync",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s036"
+      },
+      "findings": 2,
+      "severities": {
+        "info": 2
+      },
+      "id": "s036",
+      "seconds": 17.8
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s038"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s038",
+      "seconds": 11.9
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s040"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s040",
+      "seconds": 14.3
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\evidence\\rows\\s042"
+      },
+      "findings": 1,
+      "severities": {
+        "info": 1
+      },
+      "id": "s042",
+      "seconds": 13.4
+    }
+  ]
+}

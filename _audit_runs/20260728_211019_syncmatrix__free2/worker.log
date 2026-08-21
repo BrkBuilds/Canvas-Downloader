@@ -1,0 +1,384 @@
+
+=== lane free2 start 2026-07-28 21:10:31 ===
+
+=== lane free2 start 2026-07-28 21:22:10 ===
+{
+  "ok": 14,
+  "lane": "free2",
+  "run_id": "20260728_211019_syncmatrix__free2",
+  "jobs": 14,
+  "failed": [],
+  "results": [
+    {
+      "id": "s001",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s004",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s007",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s010",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s013",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s016",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s019",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 45899,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\rows\\s022"
+      },
+      "findings": 4,
+      "severities": {
+        "high": 1,
+        "info": 3
+      },
+      "id": "s022",
+      "seconds": 377.1
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\rows\\s025"
+      },
+      "findings": 0,
+      "severities": {},
+      "id": "s025",
+      "seconds": 19.6
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43667,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\downloads\\BINT 1st semester (LA E25 BINTS1SEMU)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\rows\\s028"
+      },
+      "findings": 0,
+      "severities": {},
+      "id": "s028",
+      "seconds": 12.5
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\rows\\s031"
+      },
+      "findings": 2,
+      "severities": {
+        "medium": 2
+      },
+      "id": "s031",
+      "seconds": 26.5
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\rows\\s034"
+      },
+      "findings": 1,
+      "severities": {
+        "medium": 1
+      },
+      "id": "s034",
+      "seconds": 29.4
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "analyze",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\rows\\s037"
+      },
+      "findings": 4,
+      "severities": {
+        "critical": 2,
+        "medium": 2
+      },
+      "id": "s037",
+      "seconds": 27.1
+    },
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\rows\\s040"
+      },
+      "findings": 4,
+      "severities": {
+        "critical": 2,
+        "medium": 2
+      },
+      "id": "s040",
+      "seconds": 24.1
+    }
+  ]
+}
+
+=== lane free2 start 2026-07-28 21:33:35 ===
+{
+  "ok": 14,
+  "lane": "free2",
+  "run_id": "20260728_211019_syncmatrix__free2",
+  "jobs": 14,
+  "failed": [],
+  "results": [
+    {
+      "id": "s001",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s004",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s007",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s010",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s013",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s016",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s019",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s022",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s025",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s028",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s031",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s034",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s037",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s040",
+      "ok": true,
+      "skipped": "already done"
+    }
+  ]
+}
+
+=== lane free2 start 2026-07-28 21:35:10 ===
+{
+  "ok": 14,
+  "lane": "free2",
+  "run_id": "20260728_211019_syncmatrix__free2",
+  "jobs": 14,
+  "failed": [],
+  "results": [
+    {
+      "id": "s001",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s004",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s007",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s010",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s013",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s016",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s019",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s022",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s025",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s028",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s031",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s034",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s037",
+      "ok": true,
+      "skipped": "already done"
+    },
+    {
+      "id": "s040",
+      "ok": true,
+      "skipped": "already done"
+    }
+  ]
+}

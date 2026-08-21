@@ -1,0 +1,279 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free1\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-07-29T01:01:19",
+  "applied": [
+    {
+      "kind": "new_regular",
+      "count": 3
+    },
+    {
+      "kind": "deleted_on_canvas",
+      "count": 2
+    },
+    {
+      "kind": "renamed_ambiguous",
+      "count": 2
+    },
+    {
+      "kind": "moved_deep",
+      "count": 2
+    },
+    {
+      "kind": "long_path",
+      "count": 2
+    },
+    {
+      "kind": "foreign_content",
+      "count": 3
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 14,
+  "expected_categories": {
+    "new": 5,
+    "uptodate": 4,
+    "deleted_on_canvas": 2
+  },
+  "expected_untracked": [
+    "Min egen mappe/gamle noter/tanker.txt",
+    "Min egen mappe/mine noter.docx",
+    "Obligatoriske afleveringer forår 2026/zz flertydig 0.pdf",
+    "eksamensplan 2026.pdf",
+    "zz flertydig 1.pdf"
+  ],
+  "expected_missing_rows": [
+    "Announcement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf",
+    "My Notes/semester 0/week 3/reading/minefeltVEJL_js.txt",
+    "My Notes/semester 1/week 3/reading/Debug - grades - 1.txt",
+    "Obligatoriske afleveringer forår 2026/Assignment Godkendelsesopgave 7 - G7-Assignment.pdf",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Create_ILearn_tables_sql.txt",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/hints.md"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 215,
+    "files": 21821
+  },
+  "after": {
+    "rows": 212,
+    "files": 21823
+  },
+  "fixtures": [
+    {
+      "label": "new:g1 darts vejl_løsn_js.txt",
+      "kind": "new_regular",
+      "path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "match_name": "g1 darts vejl_løsn_js.txt",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1670371,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new:gk2 vejl_løsn_js.txt",
+      "kind": "new_regular",
+      "path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "match_name": "gk2 vejl_løsn_js.txt",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1598721,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new:Debug - shop - 1.txt",
+      "kind": "new_regular",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "match_name": "Debug - shop - 1.txt",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1700483,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-on-canvas:GhostFile_0_Debug - Inventory - 1.txt",
+      "kind": "deleted_on_canvas",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/GhostFile_0_Debug - Inventory - 1.txt",
+      "expect_category": "deleted_on_canvas",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/GhostFile_0_Debug - Inventory - 1.txt",
+      "match_name": "GhostFile_0_Debug - Inventory - 1.txt",
+      "why": "A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files.",
+      "canvas_file_id": 900000000,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-on-canvas:GhostFile_1_SQL Opgave Vejl_sql.txt",
+      "kind": "deleted_on_canvas",
+      "path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/GhostFile_1_SQL Opgave Vejl_sql.txt",
+      "expect_category": "deleted_on_canvas",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/GhostFile_1_SQL Opgave Vejl_sql.txt",
+      "match_name": "GhostFile_1_SQL Opgave Vejl_sql.txt",
+      "why": "A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files.",
+      "canvas_file_id": 900000001,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-ambiguous:zz flertydig 0.pdf",
+      "kind": "renamed_ambiguous",
+      "path": "Obligatoriske afleveringer forår 2026/zz flertydig 0.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Obligatoriske afleveringer forår 2026/Assignment Godkendelsesopgave 7 - G7-Assignment.pdf",
+      "match_name": "Assignment Godkendelsesopgave 7 - G7-Assignment.pdf",
+      "why": "Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.",
+      "canvas_file_id": 1808520,
+      "original_path": "Obligatoriske afleveringer forår 2026/Assignment Godkendelsesopgave 7 - G7-Assignment.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-ambiguous:zz flertydig 1.pdf",
+      "kind": "renamed_ambiguous",
+      "path": "zz flertydig 1.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Announcement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf",
+      "match_name": "Announcement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf",
+      "why": "Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.",
+      "canvas_file_id": 1808522,
+      "original_path": "Announcement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:minefeltVEJL_js.txt",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 0/week 3/reading/minefeltVEJL_js.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 0/week 3/reading/minefeltVEJL_js.txt",
+      "match_name": "minefeltVEJL_js.txt",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1685205,
+      "original_path": "Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:Debug - grades - 1.txt",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 1/week 3/reading/Debug - grades - 1.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 1/week 3/reading/Debug - grades - 1.txt",
+      "match_name": "Debug - grades - 1.txt",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1700471,
+      "original_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "longpath:Create_ILearn_tables_sql.txt",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Create_ILearn_tables_sql.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Create_ILearn_tables_sql.txt",
+      "match_name": "Create_ILearn_tables_sql.txt",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1789210,
+      "original_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Create_ILearn_tables_sql.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 383
+      }
+    },
+    {
+      "label": "longpath:hints.md",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/hints.md",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/hints.md",
+      "match_name": "hints.md",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1692936,
+      "original_path": "Uge 46 Forelæsning 10. Document Object Model (DOM)/hints.md",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 363
+      }
+    },
+    {
+      "label": "foreign:mine noter.docx",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/mine noter.docx",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/mine noter.docx",
+      "match_name": "mine noter.docx",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:tanker.txt",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/gamle noter/tanker.txt",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/gamle noter/tanker.txt",
+      "match_name": "tanker.txt",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:eksamensplan 2026.pdf",
+      "kind": "foreign_content",
+      "path": "eksamensplan 2026.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "eksamensplan 2026.pdf",
+      "match_name": "eksamensplan 2026.pdf",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

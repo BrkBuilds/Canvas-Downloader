@@ -1,0 +1,10 @@
+
+=== audit app start 2026-07-28 18:07:15 port=8800 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8800
+  Network URL: http://192.168.1.50:8800
+  External URL: http://188.183.232.43:8800
+
+Hybrid Fetch: Found 139 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 45899.

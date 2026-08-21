@@ -1,0 +1,45 @@
+--- Debug Log Started: 2026-07-31 20:26:02.811534 ---
+[2026-07-31 20:26:02.811] === Session Environment ===
+  App: Canvas Downloader v2.0.1 | frozen=False | pid=40636
+  OS: Windows 11 | Windows-11-10.0.26200-SP0 | arch=AMD64
+  Python: 3.13.1
+  CA bundle (certifi): ok
+  Context: Sync analysis
+===========================
+[2026-07-31 20:26:02.812] === Sync Analysis: syncfolder2 (ID: 47996) ===
+[2026-07-31 20:26:02.812] Mode: Analyze, Review & Sync
+[2026-07-31 20:26:02.813] Course Folder: G:/18 AI/ANTIGRAVITY WORKSPACES/Canvas Downloader/_audit_runs/_navperf/syncfolder2
+[2026-07-31 20:26:03.091] Connected to course: Computernetværk og distribuerede systemer (LA E26 BINTO2067U) (226 ms)
+[2026-07-31 20:26:03.284] Loaded local manifest: 0 tracked entrie(s) (2 ms)
+[2026-07-31 20:26:03.287] Secondary contract: source=session state (first sync) | enabled=[none] | isolate=yes
+[2026-07-31 20:26:04.399] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 1 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 47996.
+[2026-07-31 20:26:04.399] Fetched 1 files from Canvas (secondary: {}) (1061 ms)
+[2026-07-31 20:26:04.400]   ↳ fetch breakdown: bulk_files=203ms | pages=430ms (bulk‖pages wall-clock=431ms) | module_scan=628ms | secondary=0ms
+[2026-07-31 20:26:04.452] Manifest healed | DB was reset: False (0 ms)
+[2026-07-31 20:26:04.588] MD5 baseline backfill: repaired 0 entrie(s) (133 ms)
+[2026-07-31 20:26:04.644] Detected folder structure: flat
+[2026-07-31 20:26:04.646] Analysis complete (6 ms): 1 new | 0 clean updates | 0 locally-edited updates | 0 deleted on Canvas | 0 deleted locally
+[2026-07-31 20:26:04.647]   [NEW]           Course description including examination rules.url
+[2026-07-31 20:26:04.653] --- Review Mode Tally ---
+[2026-07-31 20:26:04.653] New: 1 | Clean updates: 0 | Locally-edited: 0 | Locally-deleted: 0 | Panopto: 0 | Total changes: 1
+[2026-07-31 20:26:04.654] → Routing to: review screen (user selects files)
+[2026-07-31 20:29:53.305] === Session Environment ===
+  App: Canvas Downloader v2.0.1 | frozen=False | pid=40636
+  OS: Windows 11 | Windows-11-10.0.26200-SP0 | arch=AMD64
+  Python: 3.13.1
+  CA bundle (certifi): ok
+  Context: Sync execution | 1 pair(s)
+===========================
+[2026-07-31 20:29:53.306] === Sync Execution: syncfolder2 | Mode: Analyze, Review & Sync ===
+[2026-07-31 20:29:53.306] Pair 1/1 | Folder: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\_navperf\syncfolder2
+[2026-07-31 20:29:53.307] Concurrency: 10 | Max file size: disabled
+[2026-07-31 20:29:53.487] Files queued: 1 (0.0 MB)
+[2026-07-31 20:29:53.489]   Secondary [module_item]: Course description including examination rules.url
+[2026-07-31 20:29:53.614] ✓ Shortcut (URL shortcut): Course description including examination rules.url
+[2026-07-31 20:29:53.741] --- Post-Processing: syncfolder2 ---
+[2026-07-31 20:29:53.742] Active converters: none
+[2026-07-31 20:29:53.742] Synced files available for conversion: 1
+[2026-07-31 20:29:54.044] === Sync Complete: syncfolder2 ===
+[2026-07-31 20:29:54.045] This pair: 1 files synced | Total across all pairs: 1 | Errors: 0 | PP failures: 0
+[2026-07-31 20:29:54.045]   [SYNCED] Course description including examination rules.url
+[2026-07-31 20:30:00.845] [WARNING] [core.sync_manager] Sync groups file has invalid root type: <class 'list'>

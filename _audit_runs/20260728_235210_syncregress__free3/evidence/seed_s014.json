@@ -1,0 +1,66 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_235210_syncregress__free3\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-07-29T00:02:26",
+  "applied": [
+    {
+      "kind": "long_path",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "uptodate": 2
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Debug - grades - 1.txt",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/minefeltVEJL_js.txt"
+  ],
+  "expected_md5_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 215,
+    "files": 21821
+  },
+  "after": {
+    "rows": 215,
+    "files": 21821
+  },
+  "fixtures": [
+    {
+      "label": "longpath:minefeltVEJL_js.txt",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/minefeltVEJL_js.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/minefeltVEJL_js.txt",
+      "match_name": "minefeltVEJL_js.txt",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1685205,
+      "original_path": "Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 373
+      }
+    },
+    {
+      "label": "longpath:Debug - grades - 1.txt",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Debug - grades - 1.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Debug - grades - 1.txt",
+      "match_name": "Debug - grades - 1.txt",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1700471,
+      "original_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 376
+      }
+    }
+  ]
+}

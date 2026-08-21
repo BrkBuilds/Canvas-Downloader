@@ -1,0 +1,303 @@
+{
+  "course_id": 43056,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "Kursus i akademisk redelighed (LA E25 BIMKU7025U)",
+  "course_code": "BIMKU7025U.LA_E25 (Kursus i akademisk redelighed)",
+  "fetched_at": "2026-07-28T14:52:32",
+  "folders": {
+    "366972": {
+      "id": 366972,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    },
+    "390092": {
+      "id": 390092,
+      "full_name": "course files/course_image",
+      "name": "course_image",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {},
+  "modules": [
+    {
+      "id": 306906,
+      "name": "INDFØRING",
+      "position": 1,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1062181,
+          "type": "Page",
+          "title": "FORSIDE",
+          "content_id": null,
+          "page_url": "forside",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062182,
+          "type": "Page",
+          "title": "VELKOMMEN",
+          "content_id": null,
+          "page_url": "velkommen",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062183,
+          "type": "Page",
+          "title": "OM DETTE KURSUS",
+          "content_id": null,
+          "page_url": "om-dette-kursus",
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306907,
+      "name": "INTRODUKTION",
+      "position": 2,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1062184,
+          "type": "Page",
+          "title": "AKADEMISK REDELIGHED",
+          "content_id": null,
+          "page_url": "akademisk-redelighed",
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306908,
+      "name": "UDFORDRINGER I DET AKADEMISKE ARBEJDE",
+      "position": 3,
+      "published": null,
+      "item_count": 10,
+      "items": [
+        {
+          "id": 1062185,
+          "type": "Page",
+          "title": "PLAGIERING",
+          "content_id": null,
+          "page_url": "plagiering",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062186,
+          "type": "Page",
+          "title": "CITATER OG PARAFRASER",
+          "content_id": null,
+          "page_url": "citater-og-parafraser",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062187,
+          "type": "Page",
+          "title": "HENVISNINGER OG REFERENCER",
+          "content_id": null,
+          "page_url": "henvisninger-og-referencer",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062188,
+          "type": "Page",
+          "title": "REFERENCESTANDARDER",
+          "content_id": null,
+          "page_url": "referencestandarder",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062189,
+          "type": "Page",
+          "title": "SELVPLAGIERING",
+          "content_id": null,
+          "page_url": "selvplagiering",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062190,
+          "type": "Page",
+          "title": "FORFALSKNING AF DATA",
+          "content_id": null,
+          "page_url": "forfalskning-af-data",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062191,
+          "type": "Page",
+          "title": "FABRIKATION AF DATA",
+          "content_id": null,
+          "page_url": "fabrikation-af-data",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062192,
+          "type": "Page",
+          "title": "LÅN & KØB AF INDHOLD",
+          "content_id": null,
+          "page_url": "lan-and-kob-af-indhold",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062193,
+          "type": "Page",
+          "title": "GENERATIV KUNSTIG INTELLIGENS",
+          "content_id": null,
+          "page_url": "generativ-kunstig-intelligens-2",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1062194,
+          "type": "Page",
+          "title": "DET ER DIT ANSVAR ...",
+          "content_id": null,
+          "page_url": "det-er-dit-ansvar-dot-dot-dot",
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 307011,
+      "name": "STUDENT PARTICIPATION POOL",
+      "position": 4,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1062717,
+          "type": "Page",
+          "title": "CBS STUDENT RESEARCH POOL",
+          "content_id": null,
+          "page_url": "cbs-student-research-pool",
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306909,
+      "name": "TEST",
+      "position": 5,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1062195,
+          "type": "Quiz",
+          "title": "AKADEMISK REDELIGHEDSTEST",
+          "content_id": 108124,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306910,
+      "name": "AFSLUTNING",
+      "position": 6,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1062196,
+          "type": "Page",
+          "title": "DU ER ANKOMMET",
+          "content_id": null,
+          "page_url": "du-er-ankommet",
+          "external_url": null,
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "Page": 16,
+    "Quiz": 1
+  },
+  "module_file_ids": [],
+  "only_in_modules": [],
+  "only_in_files_tab": [],
+  "files_tab_restricted": true,
+  "assignments": [
+    {
+      "id": 32692,
+      "name": "AKADEMISK REDELIGHEDSTEST",
+      "due_at": "2025-09-23T10:00:00Z",
+      "points": 10.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_quiz"
+      ]
+    }
+  ],
+  "quizzes": [],
+  "announcements": [
+    {
+      "id": 162502,
+      "title": "Studiestartsprøven 1. prøveforsøg lukker tirsdag d. 23. september 2025 kl. 12:00",
+      "posted_at": "2025-09-21T10:00:00Z"
+    },
+    {
+      "id": 166173,
+      "title": "Slides fra studiestartsprøve kick-off er nu tilgængelige",
+      "posted_at": "2025-09-11T10:00:07Z"
+    },
+    {
+      "id": 165299,
+      "title": "Optagelse af studiestartsprøve kick-off er nu tilgængelig ",
+      "posted_at": "2025-09-10T10:00:06Z"
+    },
+    {
+      "id": 162503,
+      "title": "Studiestartsprøve i akademisk redelighed er nu åben",
+      "posted_at": "2025-09-09T10:00:01Z"
+    }
+  ],
+  "discussions": [],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_file_ids": [
+    1632876
+  ],
+  "inline_only_file_ids": [
+    1632876
+  ],
+  "expected_file_ids": [
+    1632876
+  ],
+  "secondary_counts": {
+    "assignment": 1,
+    "quiz": 0,
+    "discussion": 0,
+    "announcement": 4,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "files_tab": "Forbidden: {\"status\":\"unauthorized\",\"errors\":[{\"message\":\"user not authorised to perform that action\"}]}",
+    "quizzes": "ResourceDoesNotExist: Not Found",
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 4.9
+}

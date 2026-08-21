@@ -1,0 +1,1 @@
+{"pid": 11796, "clean_exit": false, "phase": "done", "peak_self_mb": 0.0, "peak_tree_mb": 0.0, "children": [], "failures": {}, "webview_runtime": "", "uptime_s": 78, "env": {"app": "2.0.1", "frozen": false, "packaged": false, "os": "Windows 11", "build": "10.0.26200", "arch": "AMD64", "python": "3.13.1", "ram_gb": 31.9, "cpus": 16}}

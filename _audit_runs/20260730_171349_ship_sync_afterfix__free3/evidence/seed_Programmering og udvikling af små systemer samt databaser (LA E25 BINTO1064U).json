@@ -1,0 +1,626 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-07-30T17:25:32",
+  "applied": [
+    {
+      "kind": "new_regular",
+      "count": 3
+    },
+    {
+      "kind": "new_secondary",
+      "count": 2
+    },
+    {
+      "kind": "clean_update",
+      "count": 2
+    },
+    {
+      "kind": "edited_update",
+      "count": 2
+    },
+    {
+      "kind": "deleted_locally",
+      "count": 2
+    },
+    {
+      "kind": "deleted_on_canvas",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_intact",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    },
+    {
+      "kind": "renamed_ambiguous",
+      "count": 2
+    },
+    {
+      "kind": "moved_deep",
+      "count": 2
+    },
+    {
+      "kind": "duplicate_copy",
+      "count": 2
+    },
+    {
+      "kind": "readonly_target",
+      "count": 2
+    },
+    {
+      "kind": "long_path",
+      "count": 2
+    },
+    {
+      "kind": "foreign_content",
+      "count": 3
+    },
+    {
+      "kind": "partial_artifact",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 32,
+  "expected_categories": {
+    "uptodate": 8,
+    "new": 7,
+    "updated_clean": 4,
+    "updated_modified": 2,
+    "deleted_locally": 2,
+    "deleted_on_canvas": 2
+  },
+  "expected_untracked": [
+    "Min egen mappe/gamle noter/tanker.txt",
+    "Min egen mappe/mine noter.docx",
+    "My Notes/semester 0/week 3/reading/g3 opgave-bierOgBlomsterOO vejl_js.txt",
+    "My Notes/semester 1/week 3/reading/Insert_ILearn_data_sql.txt",
+    "Obligatoriske afleveringer forår 2026/zz flertydig 0.pdf",
+    "Tidligere eksamenssæt (de fleste med vejledende løsninger)/Fiktiv Eksamensopgave - copy for exam.pdf",
+    "Uge 10 Forelæsning 15. Database 1  Opsætning af database/Lecture 15 Database Design Exercises.pdf",
+    "Uge 11 Forelæsning 16. Database 2  Datamodifikation/løbeklub SQL.pdf",
+    "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/zz mine noter 0.txt",
+    "Uge 46 Forelæsning 10. Document Object Model (DOM)/Eksamen 2023E Ordinær Klasse opgave - copy for exam.pdf",
+    "Uge 47 Forelæsning 11. Asynkron programmering og event handling/zz mine noter 1.md",
+    "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/forelæsningsnoter 13 OO UML - mine noter 0.docx",
+    "Uge 9 Forelæsning 14. Design, Arkitektur/Biblioteks_SSD_vejl - mine noter 1.jpg",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/UMLanalyseopgaver.pdf",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/feedback ordinær.pdf",
+    "eksamensplan 2026.pdf",
+    "interrupted download.pdf.part",
+    "recording.part.mp4",
+    "zz flertydig 1.pdf"
+  ],
+  "expected_missing_rows": [
+    "Announcement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf",
+    "Obligatoriske afleveringer efterår 2025/g3 opgave-bierOgBlomsterOO vejl_js.txt",
+    "Obligatoriske afleveringer forår 2026/Assignment Godkendelsesopgave 7 - G7-Assignment.pdf",
+    "Skriftlig Eksamen/feedback ordinær.pdf",
+    "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Forelæsning 17 ILearn SQL Solutions_sql.txt",
+    "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Insert_ILearn_data_sql.txt",
+    "Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt",
+    "Uge 47 Forelæsning 11. Asynkron programmering og event handling/Øvelser_Kapitel11og15.md",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt",
+    "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/UMLanalyseopgaver.pdf",
+    "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/forelæsningsnoter 13 OO UML.docx",
+    "Uge 9 Forelæsning 14. Design, Arkitektur/Biblioteks_SSD_vejl.jpg"
+  ],
+  "expected_md5_drift": [
+    "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Create_ILearn_tables_sql.txt",
+    "Uge 46 Forelæsning 10. Document Object Model (DOM)/hints.md"
+  ],
+  "expected_size_drift": [
+    "Uge 10 Forelæsning 15. Database 1  Opsætning af database/Lecture 15 Database Design Exercises.pdf",
+    "Uge 11 Forelæsning 16. Database 2  Datamodifikation/løbeklub SQL.pdf",
+    "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Create_ILearn_tables_sql.txt",
+    "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/SQL Opgave Vejl_sql.txt",
+    "Uge 46 Forelæsning 10. Document Object Model (DOM)/hints.md",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt"
+  ],
+  "expected_partials": [
+    "interrupted download.pdf.part",
+    "recording.part.mp4"
+  ],
+  "before": {
+    "rows": 215,
+    "files": 21821
+  },
+  "after": {
+    "rows": 208,
+    "files": 21821
+  },
+  "fixtures": [
+    {
+      "label": "new:g1 darts vejl_løsn_js.txt",
+      "kind": "new_regular",
+      "path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "match_name": "g1 darts vejl_løsn_js.txt",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1670371,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new:gk2 vejl_løsn_js.txt",
+      "kind": "new_regular",
+      "path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "match_name": "gk2 vejl_løsn_js.txt",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1598721,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new:Debug - shop - 1.txt",
+      "kind": "new_regular",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "match_name": "Debug - shop - 1.txt",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1700483,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new-secondary:Quiz G4.md",
+      "kind": "new_secondary",
+      "path": "Obligatoriske afleveringer efterår 2025/Quiz G4.md",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/Quiz G4.md",
+      "match_name": "Quiz G4.md",
+      "why": "Canvas Content entity (quiz) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -50111380,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new-secondary:Assignment temp.md",
+      "kind": "new_secondary",
+      "path": "Assignment temp.md",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Assignment temp.md",
+      "match_name": "Assignment temp.md",
+      "why": "Canvas Content entity (assignment) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -10035533,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "clean-update:Debug - Inventory - 1.txt",
+      "kind": "clean_update",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+      "match_name": "Debug - Inventory - 1.txt",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1700478,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "clean-update:SQL Opgave Vejl_sql.txt",
+      "kind": "clean_update",
+      "path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/SQL Opgave Vejl_sql.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/SQL Opgave Vejl_sql.txt",
+      "match_name": "SQL Opgave Vejl_sql.txt",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1794807,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:Create_ILearn_tables_sql.txt",
+      "kind": "edited_update",
+      "path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Create_ILearn_tables_sql.txt",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Create_ILearn_tables_sql.txt",
+      "match_name": "Create_ILearn_tables_sql.txt",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1789210,
+      "original_path": "",
+      "edited_md5": "1e213dd35509b20426634e53c045d2b5",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:hints.md",
+      "kind": "edited_update",
+      "path": "Uge 46 Forelæsning 10. Document Object Model (DOM)/hints.md",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Uge 46 Forelæsning 10. Document Object Model (DOM)/hints.md",
+      "match_name": "hints.md",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1692936,
+      "original_path": "",
+      "edited_md5": "0cf8870de0858cf61b9f5d5652e39915",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:minefeltVEJL_js.txt",
+      "kind": "deleted_locally",
+      "path": "Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt",
+      "match_name": "minefeltVEJL_js.txt",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1685205,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:Debug - grades - 1.txt",
+      "kind": "deleted_locally",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt",
+      "match_name": "Debug - grades - 1.txt",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1700471,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-on-canvas:GhostFile_0_StudieTimerVejl_js.txt",
+      "kind": "deleted_on_canvas",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/GhostFile_0_StudieTimerVejl_js.txt",
+      "expect_category": "deleted_on_canvas",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/GhostFile_0_StudieTimerVejl_js.txt",
+      "match_name": "GhostFile_0_StudieTimerVejl_js.txt",
+      "why": "A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files.",
+      "canvas_file_id": 900000000,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-on-canvas:GhostFile_1_styling_opgave102_css.txt",
+      "kind": "deleted_on_canvas",
+      "path": "Uge 46 Forelæsning 10. Document Object Model (DOM)/GhostFile_1_styling_opgave102_css.txt",
+      "expect_category": "deleted_on_canvas",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 46 Forelæsning 10. Document Object Model (DOM)/GhostFile_1_styling_opgave102_css.txt",
+      "match_name": "GhostFile_1_styling_opgave102_css.txt",
+      "why": "A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files.",
+      "canvas_file_id": 900000001,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-intact:zz mine noter 0.txt",
+      "kind": "renamed_row_intact",
+      "path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/zz mine noter 0.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/zz mine noter 0.txt",
+      "match_name": "Forelæsning 17 ILearn SQL Solutions_sql.txt",
+      "why": "Renamed on disk, bytes untouched, manifest row still present. heal_manifest Tier 2 (original_md5 + exact size, both computed locally) must relocate the row so the file reads UP TO DATE. Offering it as New would put a second copy of the same content in the folder under the Canvas name.",
+      "canvas_file_id": 1793556,
+      "original_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Forelæsning 17 ILearn SQL Solutions_sql.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-intact:zz mine noter 1.md",
+      "kind": "renamed_row_intact",
+      "path": "Uge 47 Forelæsning 11. Asynkron programmering og event handling/zz mine noter 1.md",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 47 Forelæsning 11. Asynkron programmering og event handling/zz mine noter 1.md",
+      "match_name": "Øvelser_Kapitel11og15.md",
+      "why": "Renamed on disk, bytes untouched, manifest row still present. heal_manifest Tier 2 (original_md5 + exact size, both computed locally) must relocate the row so the file reads UP TO DATE. Offering it as New would put a second copy of the same content in the folder under the Canvas name.",
+      "canvas_file_id": 1696760,
+      "original_path": "Uge 47 Forelæsning 11. Asynkron programmering og event handling/Øvelser_Kapitel11og15.md",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:forelæsningsnoter 13 OO UML - mine noter 0.docx",
+      "kind": "renamed_row_dropped",
+      "path": "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/forelæsningsnoter 13 OO UML - mine noter 0.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/forelæsningsnoter 13 OO UML - mine noter 0.docx",
+      "match_name": "forelæsningsnoter 13 OO UML.docx",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1769666,
+      "original_path": "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/forelæsningsnoter 13 OO UML.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Biblioteks_SSD_vejl - mine noter 1.jpg",
+      "kind": "renamed_row_dropped",
+      "path": "Uge 9 Forelæsning 14. Design, Arkitektur/Biblioteks_SSD_vejl - mine noter 1.jpg",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 9 Forelæsning 14. Design, Arkitektur/Biblioteks_SSD_vejl - mine noter 1.jpg",
+      "match_name": "Biblioteks_SSD_vejl.jpg",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1781876,
+      "original_path": "Uge 9 Forelæsning 14. Design, Arkitektur/Biblioteks_SSD_vejl.jpg",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-ambiguous:zz flertydig 0.pdf",
+      "kind": "renamed_ambiguous",
+      "path": "Obligatoriske afleveringer forår 2026/zz flertydig 0.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Obligatoriske afleveringer forår 2026/Assignment Godkendelsesopgave 7 - G7-Assignment.pdf",
+      "match_name": "Assignment Godkendelsesopgave 7 - G7-Assignment.pdf",
+      "why": "Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.",
+      "canvas_file_id": 1808520,
+      "original_path": "Obligatoriske afleveringer forår 2026/Assignment Godkendelsesopgave 7 - G7-Assignment.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-ambiguous:zz flertydig 1.pdf",
+      "kind": "renamed_ambiguous",
+      "path": "zz flertydig 1.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Announcement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf",
+      "match_name": "Announcement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf",
+      "why": "Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.",
+      "canvas_file_id": 1808522,
+      "original_path": "Announcement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:g3 opgave-bierOgBlomsterOO vejl_js.txt",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 0/week 3/reading/g3 opgave-bierOgBlomsterOO vejl_js.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 0/week 3/reading/g3 opgave-bierOgBlomsterOO vejl_js.txt",
+      "match_name": "g3 opgave-bierOgBlomsterOO vejl_js.txt",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1700515,
+      "original_path": "Obligatoriske afleveringer efterår 2025/g3 opgave-bierOgBlomsterOO vejl_js.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:Insert_ILearn_data_sql.txt",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 1/week 3/reading/Insert_ILearn_data_sql.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 1/week 3/reading/Insert_ILearn_data_sql.txt",
+      "match_name": "Insert_ILearn_data_sql.txt",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1598646,
+      "original_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Insert_ILearn_data_sql.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "duplicate:Fiktiv Eksamensopgave - copy for exam.pdf",
+      "kind": "duplicate_copy",
+      "path": "Tidligere eksamenssæt (de fleste med vejledende løsninger)/Fiktiv Eksamensopgave - copy for exam.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Tidligere eksamenssæt (de fleste med vejledende løsninger)/Fiktiv Eksamensopgave - copy for exam.pdf",
+      "match_name": "Fiktiv Eksamensopgave - copy for exam.pdf",
+      "why": "A byte-identical copy the student made. The original stays claimed by its row; the copy must remain unclaimed and must never be counted as Canvas content or offered for anything.",
+      "canvas_file_id": 1598591,
+      "original_path": "Tidligere eksamenssæt (de fleste med vejledende løsninger)/Fiktiv Eksamensopgave.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "duplicate:Eksamen 2023E Ordinær Klasse opgave - copy for exam.pdf",
+      "kind": "duplicate_copy",
+      "path": "Uge 46 Forelæsning 10. Document Object Model (DOM)/Eksamen 2023E Ordinær Klasse opgave - copy for exam.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 46 Forelæsning 10. Document Object Model (DOM)/Eksamen 2023E Ordinær Klasse opgave - copy for exam.pdf",
+      "match_name": "Eksamen 2023E Ordinær Klasse opgave - copy for exam.pdf",
+      "why": "A byte-identical copy the student made. The original stays claimed by its row; the copy must remain unclaimed and must never be counted as Canvas content or offered for anything.",
+      "canvas_file_id": 1694147,
+      "original_path": "Uge 46 Forelæsning 10. Document Object Model (DOM)/Eksamen 2023E Ordinær Klasse opgave.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "readonly:Lecture 15 Database Design Exercises.pdf",
+      "kind": "readonly_target",
+      "path": "Uge 10 Forelæsning 15. Database 1  Opsætning af database/Lecture 15 Database Design Exercises.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Uge 10 Forelæsning 15. Database 1  Opsætning af database/Lecture 15 Database Design Exercises.pdf",
+      "match_name": "Lecture 15 Database Design Exercises.pdf",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1784716,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "readonly:løbeklub SQL.pdf",
+      "kind": "readonly_target",
+      "path": "Uge 11 Forelæsning 16. Database 2  Datamodifikation/løbeklub SQL.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Uge 11 Forelæsning 16. Database 2  Datamodifikation/løbeklub SQL.pdf",
+      "match_name": "løbeklub SQL.pdf",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1789978,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "longpath:feedback ordinær.pdf",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/feedback ordinær.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/feedback ordinær.pdf",
+      "match_name": "feedback ordinær.pdf",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1736380,
+      "original_path": "Skriftlig Eksamen/feedback ordinær.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 381
+      }
+    },
+    {
+      "label": "longpath:UMLanalyseopgaver.pdf",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/UMLanalyseopgaver.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/UMLanalyseopgaver.pdf",
+      "match_name": "UMLanalyseopgaver.pdf",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1768580,
+      "original_path": "Uge 7 Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)/UMLanalyseopgaver.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 382
+      }
+    },
+    {
+      "label": "foreign:mine noter.docx",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/mine noter.docx",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/mine noter.docx",
+      "match_name": "mine noter.docx",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:tanker.txt",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/gamle noter/tanker.txt",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/gamle noter/tanker.txt",
+      "match_name": "tanker.txt",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:eksamensplan 2026.pdf",
+      "kind": "foreign_content",
+      "path": "eksamensplan 2026.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "eksamensplan 2026.pdf",
+      "match_name": "eksamensplan 2026.pdf",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "partial:interrupted download.pdf.part",
+      "kind": "partial_artifact",
+      "path": "interrupted download.pdf.part",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "interrupted download.pdf.part",
+      "match_name": "interrupted download.pdf.part",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "partial:recording.part.mp4",
+      "kind": "partial_artifact",
+      "path": "recording.part.mp4",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "recording.part.mp4",
+      "match_name": "recording.part.mp4",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ],
+  "plan_path": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free3\\evidence\\seed_s017.json"
+}

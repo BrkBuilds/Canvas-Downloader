@@ -1,0 +1,428 @@
+{
+  "name": "m042",
+  "course_ids": [
+    43660,
+    45899
+  ],
+  "config": {
+    "pan_layout": "separate",
+    "mode": "modules",
+    "file_filter": "all",
+    "secondary_isolated": false,
+    "convert_zip": true,
+    "convert_excel": true,
+    "convert_code": false,
+    "convert_video": false,
+    "pan_master": true,
+    "pan_out_mp4": false,
+    "pan_out_txt": false,
+    "pan_out_srt": false,
+    "pan_out_mp3": true,
+    "max_file_size": null,
+    "convert_pptx": false,
+    "convert_word": false,
+    "convert_html": false,
+    "convert_urls": false,
+    "dl_assignments": false,
+    "dl_syllabus": false,
+    "dl_announcements": false,
+    "dl_discussions": false,
+    "dl_quizzes": false,
+    "dl_submissions": false
+  },
+  "select": {
+    "courses": [
+      43660,
+      45899
+    ],
+    "results": [
+      {
+        "course_id": 43660,
+        "ok": true
+      },
+      {
+        "course_id": 45899,
+        "ok": true
+      }
+    ]
+  },
+  "size_cap": {
+    "mb": null,
+    "toggle": {
+      "set": true,
+      "key": "temp_max_size_enabled",
+      "changed": false,
+      "checked": false
+    },
+    "dialog_closed": true,
+    "closed_with_escape": false,
+    "ok": true
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "all",
+      "mode": "modules",
+      "dl_assignments": false,
+      "dl_syllabus": false,
+      "dl_announcements": false,
+      "dl_discussions": false,
+      "dl_quizzes": false,
+      "dl_submissions": false,
+      "secondary_isolated": false,
+      "convert_zip": true,
+      "convert_pptx": false,
+      "convert_word": false,
+      "convert_excel": true,
+      "convert_html": false,
+      "convert_code": false,
+      "convert_urls": false,
+      "convert_video": false,
+      "pan_out_mp4": false,
+      "pan_out_mp3": true,
+      "pan_out_txt": false,
+      "pan_out_srt": false,
+      "pan_layout": "separate"
+    },
+    "failed": [],
+    "verified": {
+      "convert_zip": true,
+      "convert_pptx": false,
+      "convert_word": false,
+      "convert_excel": true,
+      "convert_html": false,
+      "convert_code": false,
+      "convert_urls": false,
+      "convert_video": false,
+      "dl_assignments": false,
+      "dl_syllabus": false,
+      "dl_announcements": false,
+      "dl_discussions": false,
+      "dl_quizzes": false,
+      "dl_submissions": false,
+      "pan_out_mp4": false,
+      "pan_out_mp3": true,
+      "pan_out_txt": false,
+      "pan_out_srt": false
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "m042_config",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__office\\evidence\\screenshots\\m042_config.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__office\\evidence\\ui\\m042_config.json",
+    "textLen": 1794,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "m042",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "DED\nPanopto Recordings\n·\n36 found across 1 course\n36\nDOWNLOADED\nCannot Be Downloaded\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n253 FILES\nPDF\n58\nPPTX\n49\nURL\n41\nMP3\n36\nOTHER FILES\n69\n\nOpen Folder\n\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n133 FILES\nPDF\n68\nPPTX\n20\nURL\n18\nZIP\n7\nOTHER FILES\n20\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 1289.6
+    },
+    "captures": [
+      "m042_phase_scan",
+      "m042_phase_download",
+      "m042_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "15:07:37",
+      "action": "select_courses",
+      "courses": [
+        43660,
+        45899
+      ],
+      "results": [
+        {
+          "course_id": 43660,
+          "ok": true
+        },
+        {
+          "course_id": 45899,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "15:07:38",
+      "action": "set_size_cap",
+      "mb": null,
+      "toggle": {
+        "set": true,
+        "key": "temp_max_size_enabled",
+        "changed": false,
+        "checked": false
+      },
+      "dialog_closed": true,
+      "closed_with_escape": false,
+      "ok": true
+    },
+    {
+      "t": "15:07:40",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "15:07:43",
+      "action": "expand_card",
+      "card": "toggle_card2",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "15:07:43",
+      "action": "set_toggle",
+      "key": "btn_dl_assignments",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:07:43",
+      "action": "set_toggle",
+      "key": "btn_dl_syllabus",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:07:43",
+      "action": "set_toggle",
+      "key": "btn_dl_announcements",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:07:43",
+      "action": "set_toggle",
+      "key": "btn_dl_discussions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:07:43",
+      "action": "set_toggle",
+      "key": "btn_dl_quizzes",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:07:43",
+      "action": "set_toggle",
+      "key": "btn_dl_submissions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:08:04",
+      "action": "expand_card",
+      "card": "toggle_card3",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "15:08:06",
+      "action": "set_toggle",
+      "key": "btn_convert_zip",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "15:08:06",
+      "action": "set_toggle",
+      "key": "btn_convert_pptx",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:08:06",
+      "action": "set_toggle",
+      "key": "btn_convert_word",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:08:06",
+      "action": "set_toggle",
+      "key": "btn_convert_excel",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "15:08:06",
+      "action": "set_toggle",
+      "key": "btn_convert_html",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:08:06",
+      "action": "set_toggle",
+      "key": "btn_convert_code",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:08:06",
+      "action": "set_toggle",
+      "key": "btn_convert_urls",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:08:06",
+      "action": "set_toggle",
+      "key": "btn_convert_video",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:08:07",
+      "action": "expand_card",
+      "card": "toggle_panopto",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "15:08:07",
+      "action": "set_toggle",
+      "key": "btn_pan_out_mp4",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:08:08",
+      "action": "set_toggle",
+      "key": "btn_pan_out_mp3",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "15:08:08",
+      "action": "set_toggle",
+      "key": "btn_pan_out_txt",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:08:08",
+      "action": "set_toggle",
+      "key": "btn_pan_out_srt",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:08:09",
+      "action": "configure",
+      "applied": {
+        "file_filter": "all",
+        "mode": "modules",
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": false,
+        "dl_discussions": false,
+        "dl_quizzes": false,
+        "dl_submissions": false,
+        "secondary_isolated": false,
+        "convert_zip": true,
+        "convert_pptx": false,
+        "convert_word": false,
+        "convert_excel": true,
+        "convert_html": false,
+        "convert_code": false,
+        "convert_urls": false,
+        "convert_video": false,
+        "pan_out_mp4": false,
+        "pan_out_mp3": true,
+        "pan_out_txt": false,
+        "pan_out_srt": false,
+        "pan_layout": "separate"
+      },
+      "failed": [],
+      "verified": {
+        "convert_zip": true,
+        "convert_pptx": false,
+        "convert_word": false,
+        "convert_excel": true,
+        "convert_html": false,
+        "convert_code": false,
+        "convert_urls": false,
+        "convert_video": false,
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": false,
+        "dl_discussions": false,
+        "dl_quizzes": false,
+        "dl_submissions": false,
+        "pan_out_mp4": false,
+        "pan_out_mp3": true,
+        "pan_out_txt": false,
+        "pan_out_srt": false
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "15:30:05",
+      "action": "confirm_and_run",
+      "name": "m042",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "DED\nPanopto Recordings\n·\n36 found across 1 course\n36\nDOWNLOADED\nCannot Be Downloaded\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n253 FILES\nPDF\n58\nPPTX\n49\nURL\n41\nMP3\n36\nOTHER FILES\n69\n\nOpen Folder\n\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n133 FILES\nPDF\n68\nPPTX\n20\nURL\n18\nZIP\n7\nOTHER FILES\n20\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 1289.6
+      },
+      "captures": [
+        "m042_phase_scan",
+        "m042_phase_download",
+        "m042_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

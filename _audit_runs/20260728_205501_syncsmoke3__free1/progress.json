@@ -1,0 +1,35 @@
+{
+  "rows": [
+    {
+      "id": "s000",
+      "ok": false,
+      "error": "BrowserError: Browser is not open. Run: python -m tests.audit browser open",
+      "traceback": "Traceback (most recent call last):\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 511, in run_lane\n    res = execute(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 557, in execute\n    return _execute_sync(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 676, in _execute_sync\n    with B.session(rp) as s:\n         ~~~~~~~~~^^^^\n  File \"C:\\Python313\\Lib\\contextlib.py\", line 141, in __enter__\n    return next(self.gen)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\browser.py\", line 169, in session\n    raise BrowserError(\"Browser is not open. Run: python -m tests.audit browser open\")\ntests.audit.harness.browser.BrowserError: Browser is not open. Run: python -m tests.audit browser open\n",
+      "seconds": 1.8
+    },
+    {
+      "ok": true,
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_205501_syncsmoke3__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_205501_syncsmoke3__free1\\evidence\\rows\\s005"
+      },
+      "findings": 2,
+      "severities": {
+        "high": 1,
+        "info": 1
+      },
+      "id": "s005",
+      "seconds": 47.4
+    }
+  ],
+  "current": "",
+  "updated": "2026-07-28T20:56:13"
+}

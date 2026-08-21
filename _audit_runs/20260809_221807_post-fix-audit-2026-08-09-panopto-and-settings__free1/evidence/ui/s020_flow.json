@@ -1,0 +1,101 @@
+{
+  "name": "s020",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "sync",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 3,
+        "id": "sync",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nInitializing sync engine...\n\nPlease wait a moment.",
+      "waited_s": 3.0
+    },
+    "capture": "s020_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "dded\n\n New Files Added (2)\nSlides fra KOMBIT.html\n\n​\n\n​\n\nDiscussions\nMidterm course evaluation.html\n\n​\n\n​\n\nQuizzes\n Modified Files Protected (2)\nSaved next to your copy, which was left untouched\nTrial Exam_Solutions_NewVersion.pdf\n\n​\n\n​\n\nModul 13 - Exam Preparation\n06_Enterprise & Functional BIS_NewVersion.pdf\n\n​\n\n​\n\nModule 6 - Managing, Acquiring, and Developing BIS\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 5.0
+    },
+    "capture": "s020_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "23:21:24",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "23:21:33",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "sync",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 3,
+          "id": "sync",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nInitializing sync engine...\n\nPlease wait a moment.",
+        "waited_s": 3.0
+      },
+      "capture": "s020_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "23:21:39",
+      "action": "wait_terminal",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "dded\n\n New Files Added (2)\nSlides fra KOMBIT.html\n\n​\n\n​\n\nDiscussions\nMidterm course evaluation.html\n\n​\n\n​\n\nQuizzes\n Modified Files Protected (2)\nSaved next to your copy, which was left untouched\nTrial Exam_Solutions_NewVersion.pdf\n\n​\n\n​\n\nModul 13 - Exam Preparation\n06_Enterprise & Functional BIS_NewVersion.pdf\n\n​\n\n​\n\nModule 6 - Managing, Acquiring, and Developing BIS\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 5.0
+      },
+      "capture": "s020_complete",
+      "ok": true
+    }
+  ]
+}

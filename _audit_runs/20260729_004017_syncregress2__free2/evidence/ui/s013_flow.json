@@ -1,0 +1,156 @@
+{
+  "name": "s013",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "he ones you don't need.\n0\nNew files\n2\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (all)\n\nPDF (all)\n\nSelect All\n\nDeselect All\n\n1.\nIntroduction to Information Systems (LA)\nIntroduction to Information Systems (LA E25 BINTO1078U)\n2 files pending sync\n48 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 9.1
+    },
+    "capture": "s013_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_update_43657"
+    ],
+    "capture": "s013_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\screenshots\\s013_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\ui\\s013_review.json",
+    "textLen": 825,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    }
+  ],
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": false,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!",
+      "waited_s": 10.0
+    },
+    "capture": "s013_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "00:54:59",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "00:55:15",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "he ones you don't need.\n0\nNew files\n2\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (all)\n\nPDF (all)\n\nSelect All\n\nDeselect All\n\n1.\nIntroduction to Information Systems (LA)\nIntroduction to Information Systems (LA E25 BINTO1078U)\n2 files pending sync\n48 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 9.1
+      },
+      "capture": "s013_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "00:55:16",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_43657"
+      ],
+      "capture": "s013_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\screenshots\\s013_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\ui\\s013_review.json",
+      "textLen": 825,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "00:55:16",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    },
+    {
+      "t": "00:55:16",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_43657"
+      ],
+      "capture": "s013_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\screenshots\\s013_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\ui\\s013_review.json",
+      "textLen": 825,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "00:55:29",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": false,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!",
+        "waited_s": 10.0
+      },
+      "capture": "s013_complete",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "run_id": "20260728_235210_syncregress",
+  "label": "syncregress",
+  "created": "2026-07-28T23:52:10",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "lanes": [
+    {
+      "lane": "free1",
+      "run_id": "20260728_235210_syncregress__free1",
+      "pid": 3800,
+      "log": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_235210_syncregress__free1\\worker.log"
+    },
+    {
+      "lane": "free2",
+      "run_id": "20260728_235210_syncregress__free2",
+      "pid": 20544,
+      "log": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_235210_syncregress__free2\\worker.log"
+    },
+    {
+      "lane": "free3",
+      "run_id": "20260728_235210_syncregress__free3",
+      "pid": 29172,
+      "log": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_235210_syncregress__free3\\worker.log"
+    }
+  ]
+}

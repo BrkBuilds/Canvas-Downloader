@@ -1,0 +1,602 @@
+{
+  "rows": [
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 44428,
+      "course_ids": [
+        44428
+      ],
+      "courses": [
+        {
+          "course_id": 44428,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Introduction to Information Systems (XB E25 BINTO1078U)",
+          "findings": 1,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m002"
+          }
+        }
+      ],
+      "findings": 1,
+      "drift": [],
+      "severities": {
+        "info": 1
+      },
+      "id": "m002",
+      "seconds": 68.6
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43657,
+      "course_ids": [
+        43657
+      ],
+      "courses": [
+        {
+          "course_id": 43657,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m004"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m004",
+      "seconds": 84.5
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m006"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "info": 5
+      },
+      "id": "m006",
+      "seconds": 585.2
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m011"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m011",
+      "seconds": 464.1
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 46396,
+      "course_ids": [
+        46396
+      ],
+      "courses": [
+        {
+          "course_id": 46396,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\IT-projektledelse (LA F26 BINTO1059U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m013"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m013",
+      "seconds": 209.4
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 44428,
+      "course_ids": [
+        44428
+      ],
+      "courses": [
+        {
+          "course_id": 44428,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Introduction to Information Systems (XB E25 BINTO1078U)",
+          "findings": 2,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m015"
+          }
+        }
+      ],
+      "findings": 2,
+      "drift": [],
+      "severities": {
+        "info": 2
+      },
+      "id": "m015",
+      "seconds": 42.0
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43657,
+      "course_ids": [
+        43657
+      ],
+      "courses": [
+        {
+          "course_id": 43657,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m017"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m017",
+      "seconds": 59.2
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43657,
+      "course_ids": [
+        43657
+      ],
+      "courses": [
+        {
+          "course_id": 43657,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m019"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m019",
+      "seconds": 57.7
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m021"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "info": 5
+      },
+      "id": "m021",
+      "seconds": 1026.3
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 46396,
+      "course_ids": [
+        46396,
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 46396,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\IT-projektledelse (LA F26 BINTO1059U)",
+          "findings": 2,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m031_c46396"
+          }
+        },
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m031_c43660"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "high": 1,
+        "info": 4
+      },
+      "id": "m031",
+      "seconds": 194.9
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43657,
+      "course_ids": [
+        43657
+      ],
+      "courses": [
+        {
+          "course_id": 43657,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m034"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m034",
+      "seconds": 61.6
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 7,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m036"
+          }
+        }
+      ],
+      "findings": 7,
+      "drift": [],
+      "severities": {
+        "high": 1,
+        "info": 4,
+        "medium": 2
+      },
+      "id": "m036",
+      "seconds": 534.9
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 31,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m055_c45899"
+          }
+        },
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m055_c43660"
+          }
+        }
+      ],
+      "findings": 35,
+      "drift": [],
+      "severities": {
+        "high": 2,
+        "info": 8,
+        "medium": 25
+      },
+      "id": "m055",
+      "seconds": 1369.7
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 28,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m060_c45899"
+          }
+        },
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m060_c43660"
+          }
+        }
+      ],
+      "findings": 31,
+      "drift": [],
+      "severities": {
+        "high": 1,
+        "info": 5,
+        "medium": 25
+      },
+      "id": "m060",
+      "seconds": 987.2
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m062"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "info": 5
+      },
+      "id": "m062",
+      "seconds": 799.8
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        46396
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m066_c45899"
+          }
+        },
+        {
+          "course_id": 46396,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\IT-projektledelse (LA F26 BINTO1059U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m066_c46396"
+          }
+        }
+      ],
+      "findings": 7,
+      "drift": [],
+      "severities": {
+        "high": 1,
+        "info": 6
+      },
+      "id": "m066",
+      "seconds": 715.6
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        46396
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 6,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m068_c45899"
+          }
+        },
+        {
+          "course_id": 46396,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\IT-projektledelse (LA F26 BINTO1059U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m068_c46396"
+          }
+        }
+      ],
+      "findings": 9,
+      "drift": [],
+      "severities": {
+        "high": 1,
+        "info": 8
+      },
+      "id": "m068",
+      "seconds": 556.0
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 2,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\rows\\m072"
+          }
+        }
+      ],
+      "findings": 2,
+      "drift": [],
+      "severities": {
+        "info": 2
+      },
+      "id": "m072",
+      "seconds": 151.0
+    }
+  ],
+  "current": "",
+  "updated": "2026-07-28T20:47:33"
+}

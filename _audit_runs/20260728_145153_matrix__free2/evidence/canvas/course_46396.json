@@ -1,0 +1,1260 @@
+{
+  "course_id": 46396,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "IT-projektledelse (LA F26 BINTO1059U)",
+  "course_code": "BINTO1059U.LA_F26 (IT-projektledelse)",
+  "fetched_at": "2026-07-28T18:58:11",
+  "folders": {
+    "421042": {
+      "id": 421042,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    },
+    "437563": {
+      "id": 437563,
+      "full_name": "course files/unfiled",
+      "name": "unfiled",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {
+    "1736071": {
+      "id": 1736071,
+      "filename": "1_ITP+boost+M%C3%A5lhieraki+og+milep%C3%A6lsplan.mp4",
+      "display_name": "1_ITP boost Målhieraki og milepælsplan.mp4",
+      "size": 82475035,
+      "content_type": "video/mp4",
+      "updated_at": "2026-05-12T08:27:03Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736067": {
+      "id": 1736067,
+      "filename": "2_ITP+boost+projekttrekanten+v.1.0.mp4",
+      "display_name": "2_ITP boost projekttrekanten v.1.0.mp4",
+      "size": 49144627,
+      "content_type": "video/mp4",
+      "updated_at": "2026-05-12T08:27:50Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736072": {
+      "id": 1736072,
+      "filename": "3_ITP+boost+Aktivitetsplanl%C3%A6g.mp4",
+      "display_name": "3_ITP boost Aktivitetsplanlæg.mp4",
+      "size": 108170002,
+      "content_type": "video/mp4",
+      "updated_at": "2026-05-12T08:28:14Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736068": {
+      "id": 1736068,
+      "filename": "4_ITP+boost+fremdriftsrapportering_SCRUM.mp4",
+      "display_name": "4_ITP boost fremdriftsrapportering_SCRUM.mp4",
+      "size": 57274625,
+      "content_type": "video/mp4",
+      "updated_at": "2026-05-12T08:28:37Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736069": {
+      "id": 1736069,
+      "filename": "4_ITP+boost+fremdriftsrapportering_vandfald.mp4",
+      "display_name": "4_ITP boost fremdriftsrapportering_vandfald.mp4",
+      "size": 85455136,
+      "content_type": "video/mp4",
+      "updated_at": "2026-05-12T08:29:09Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736070": {
+      "id": 1736070,
+      "filename": "5_ITP+boost+Interessenter+og+roller+i+projektet.mp4",
+      "display_name": "5_ITP boost Interessenter og roller i projektet.mp4",
+      "size": 65327184,
+      "content_type": "video/mp4",
+      "updated_at": "2026-05-12T08:29:40Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736075": {
+      "id": 1736075,
+      "filename": "2021+Eksempel+PERT.pdf",
+      "display_name": "2021 Eksempel PERT.pdf",
+      "size": 136788,
+      "content_type": "application/pdf",
+      "updated_at": "2026-02-15T17:12:34Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736074": {
+      "id": 1736074,
+      "filename": "2021+Estimeringsteknikker.pdf",
+      "display_name": "2021 Estimeringsteknikker.pdf",
+      "size": 303769,
+      "content_type": "application/pdf",
+      "updated_at": "2026-02-15T17:12:41Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736076": {
+      "id": 1736076,
+      "filename": "2021+Till%C3%A6g_estimering.pdf",
+      "display_name": "2021 Tillæg_estimering.pdf",
+      "size": 1159194,
+      "content_type": "application/pdf",
+      "updated_at": "2026-02-15T17:12:47Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736079": {
+      "id": 1736079,
+      "filename": "2022_21.marts+artikel_+EV+i+en+agil++verden-whitepaper.pdf",
+      "display_name": "2022_21.marts artikel_ EV i en agil  verden-whitepaper.pdf",
+      "size": 1980954,
+      "content_type": "application/pdf",
+      "updated_at": "2026-02-23T15:00:40Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736089": {
+      "id": 1736089,
+      "filename": "2025+7.lektion+31.marts+.pptx",
+      "display_name": "2025 7.lektion 31.marts .pptx",
+      "size": 12765342,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2026-04-07T05:18:51Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1768911": {
+      "id": 1768911,
+      "filename": "2026+1.lektion+ITP.pdf",
+      "display_name": "2026 1.lektion ITP.pdf",
+      "size": 1466428,
+      "content_type": "application/pdf",
+      "updated_at": "2026-02-10T08:51:19Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1772796": {
+      "id": 1772796,
+      "filename": "2026+2.lektion.pdf",
+      "display_name": "2026 2.lektion.pdf",
+      "size": 2552128,
+      "content_type": "application/pdf",
+      "updated_at": "2026-02-17T08:26:12Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1781529": {
+      "id": 1781529,
+      "filename": "2026+3.lektion.pdf",
+      "display_name": "2026 3.lektion.pdf",
+      "size": 1786567,
+      "content_type": "application/pdf",
+      "updated_at": "2026-02-23T16:11:57Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1798451": {
+      "id": 1798451,
+      "filename": "2026+Lektion+6.pdf",
+      "display_name": "2026 Lektion 6.pdf",
+      "size": 1155508,
+      "content_type": "application/pdf",
+      "updated_at": "2026-03-23T14:22:49Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1785772": {
+      "id": 1785772,
+      "filename": "2026_4.+lektion_IT-Projektledelse.pdf",
+      "display_name": "2026_4. lektion_IT-Projektledelse.pdf",
+      "size": 1120217,
+      "content_type": "application/pdf",
+      "updated_at": "2026-03-03T08:29:26Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1804295": {
+      "id": 1804295,
+      "filename": "2026_7.+lektion_IT-projektledelse.pdf",
+      "display_name": "2026_7. lektion_IT-projektledelse.pdf",
+      "size": 678802,
+      "content_type": "application/pdf",
+      "updated_at": "2026-04-07T06:38:08Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1791023": {
+      "id": 1791023,
+      "filename": "260311_Lektion+5_IT-Projektledelse.pdf",
+      "display_name": "260311_Lektion 5_IT-Projektledelse.pdf",
+      "size": 1588514,
+      "content_type": "application/pdf",
+      "updated_at": "2026-03-11T13:11:47Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1815125": {
+      "id": 1815125,
+      "filename": "260428_Lektion+8_IT-projektledelse.pdf",
+      "display_name": "260428_Lektion 8_IT-projektledelse.pdf",
+      "size": 679529,
+      "content_type": "application/pdf",
+      "updated_at": "2026-04-28T07:22:17Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1772120": {
+      "id": 1772120,
+      "filename": "Eksamensopgave+HA%28it%29_ITP+F26.pdf",
+      "display_name": "Eksamensopgave HA(it)_ITP F26.pdf",
+      "size": 145578,
+      "content_type": "application/pdf",
+      "updated_at": "2026-03-23T13:45:11Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1781657": {
+      "id": 1781657,
+      "filename": "G%C3%A6steforel%C3%A6sning+ITP+-+24.+Februar+2026.pdf",
+      "display_name": "Gæsteforelæsning ITP - 24. Februar 2026.pdf",
+      "size": 1015197,
+      "content_type": "application/pdf",
+      "updated_at": "2026-02-24T08:45:00Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1784615": {
+      "id": 1784615,
+      "filename": "Grupper+til+Klyngevejledning+1.docx",
+      "display_name": "Grupper til Klyngevejledning 1-1.docx",
+      "size": 16677,
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "updated_at": "2026-02-28T10:31:21Z",
+      "folder_id": 437563,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files/unfiled"
+    },
+    "1784620": {
+      "id": 1784620,
+      "filename": "Grupper+til+Klyngevejledning+1.pdf",
+      "display_name": "Grupper til Klyngevejledning 1-1.pdf",
+      "size": 35082,
+      "content_type": "application/pdf",
+      "updated_at": "2026-03-01T14:01:17Z",
+      "folder_id": 437563,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files/unfiled"
+    },
+    "1784614": {
+      "id": 1784614,
+      "filename": "Grupper+til+Klyngevejledning+1.docx",
+      "display_name": "Grupper til Klyngevejledning 1.docx",
+      "size": 15783,
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "updated_at": "2026-02-28T10:30:12Z",
+      "folder_id": 437563,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files/unfiled"
+    },
+    "1784616": {
+      "id": 1784616,
+      "filename": "Grupper+til+Klyngevejledning+1.pdf",
+      "display_name": "Grupper til Klyngevejledning 1.pdf",
+      "size": 35082,
+      "content_type": "application/pdf",
+      "updated_at": "2026-02-28T10:32:11Z",
+      "folder_id": 437563,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files/unfiled"
+    },
+    "1784795": {
+      "id": 1784795,
+      "filename": "Grupper+til+Klyngevejledning+1.pdf",
+      "display_name": "Grupper til Klyngevejledning 1.pdf",
+      "size": 35082,
+      "content_type": "application/pdf",
+      "updated_at": "2026-04-11T08:13:01Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1807289": {
+      "id": 1807289,
+      "filename": "Grupper+til+Klyngevejledning+2.pdf",
+      "display_name": "Grupper til Klyngevejledning 2.pdf",
+      "size": 62662,
+      "content_type": "application/pdf",
+      "updated_at": "2026-04-11T21:58:45Z",
+      "folder_id": 437563,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files/unfiled"
+    },
+    "1807290": {
+      "id": 1807290,
+      "filename": "Grupper+til+Klyngevejledning+2.pdf",
+      "display_name": "Grupper til Klyngevejledning 2.pdf",
+      "size": 62662,
+      "content_type": "application/pdf",
+      "updated_at": "2026-04-14T10:33:52Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": true,
+      "has_url": false,
+      "folder_path": "course files"
+    },
+    "1785682": {
+      "id": 1785682,
+      "filename": "Introduktion+til+estimering+og+kontrakter_2021.pdf",
+      "display_name": "Introduktion til estimering og kontrakter_2021.pdf",
+      "size": 1159194,
+      "content_type": "application/pdf",
+      "updated_at": "2026-03-03T08:28:45Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1785683": {
+      "id": 1785683,
+      "filename": "Introduktion+til+estimering_2021.pdf",
+      "display_name": "Introduktion til estimering_2021.pdf",
+      "size": 303769,
+      "content_type": "application/pdf",
+      "updated_at": "2026-03-03T08:29:10Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1785523": {
+      "id": 1785523,
+      "filename": "Introduktion+til+Prince2_IBM_2016.pdf",
+      "display_name": "Introduktion til Prince2_IBM_2016.pdf",
+      "size": 652349,
+      "content_type": "application/pdf",
+      "updated_at": "2026-03-02T23:04:10Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736395": {
+      "id": 1736395,
+      "filename": "IT+projektledelse+F26.pdf",
+      "display_name": "IT projektledelse F26.pdf",
+      "size": 368062,
+      "content_type": "application/pdf",
+      "updated_at": "2026-02-03T15:30:36Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1798453": {
+      "id": 1798453,
+      "filename": "IT+projektledelse_Lektionsplan_HA_IT_F26+%28NY%29.pdf",
+      "display_name": "IT projektledelse_Lektionsplan_HA_IT_F26 (NY).pdf",
+      "size": 371024,
+      "content_type": "application/pdf",
+      "updated_at": "2026-05-11T17:32:05Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1726984": {
+      "id": 1726984,
+      "filename": "IT+projektledelse_Lektionsplan_HA_IT_F26.pdf",
+      "display_name": "IT projektledelse_Lektionsplan_HA_IT_F26.pdf",
+      "size": 368768,
+      "content_type": "application/pdf",
+      "updated_at": "2026-01-07T13:02:12Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1772454": {
+      "id": 1772454,
+      "filename": "ITP-%C3%98velse-1%2C+17-02-2026.pptx",
+      "display_name": "ITP-Øvelse-1, 17-02-2026.pptx",
+      "size": 4405181,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2026-02-17T11:28:50Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1780803": {
+      "id": 1780803,
+      "filename": "ITP-%C3%98velse-2-2026.pptx",
+      "display_name": "ITP-Øvelse-2-2026.pptx",
+      "size": 8863075,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2026-02-23T14:59:49Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1790809": {
+      "id": 1790809,
+      "filename": "ITP-%C3%98velse-3-2026.pptx",
+      "display_name": "ITP-Øvelse-3-2026.pptx",
+      "size": 3698029,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2026-03-24T11:43:12Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1800678": {
+      "id": 1800678,
+      "filename": "ITP-%C3%98velse-4-2026.pptx",
+      "display_name": "ITP-Øvelse-4-2026.pptx",
+      "size": 4573488,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2026-03-26T09:27:37Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1806175": {
+      "id": 1806175,
+      "filename": "ITP-%C3%98velse-5-2026.pptx",
+      "display_name": "ITP-Øvelse-5-2026-1.pptx",
+      "size": 1635330,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2026-04-09T09:18:07Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1806174": {
+      "id": 1806174,
+      "filename": "ITP-%C3%98velse-5-2026.pptx",
+      "display_name": "ITP-Øvelse-5-2026.pptx",
+      "size": 1635330,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2026-04-09T09:08:45Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": true,
+      "has_url": false,
+      "folder_path": "course files"
+    },
+    "1782194": {
+      "id": 1782194,
+      "filename": "Klyngevejledning+-+Checkpunkter.xlsx",
+      "display_name": "Klyngevejledning - Checkpunkter.xlsx",
+      "size": 10607,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "updated_at": "2026-02-24T13:50:06Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1736093": {
+      "id": 1736093,
+      "filename": "Norlys+-+who+are+we+CBS+opl%C3%A6g.pdf",
+      "display_name": "Norlys - who are we CBS oplæg.pdf",
+      "size": 8197148,
+      "content_type": "application/pdf",
+      "updated_at": "2026-04-07T05:18:51Z",
+      "folder_id": 421042,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    }
+  },
+  "modules": [
+    {
+      "id": 312152,
+      "name": "Course description including examination rules",
+      "position": 1,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1086546,
+          "type": "ExternalUrl",
+          "title": "Course description including examination rules",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO1059U.aspx",
+          "published": null
+        },
+        {
+          "id": 1180863,
+          "type": "File",
+          "title": "IT projektledelse_Lektionsplan_HA_IT_F26",
+          "content_id": 1798453,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 326796,
+      "name": "Semesterprojekt ITP F26",
+      "position": 3,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1167685,
+          "type": "File",
+          "title": "Eksamensopgave HA(it)_ITP F26.pdf",
+          "content_id": 1772120,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1167682,
+          "type": "Assignment",
+          "title": "Første aflevering ITP F26",
+          "content_id": 35256,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1181995,
+          "type": "Assignment",
+          "title": "Aflevering af 2. klyngevejledning",
+          "content_id": 35602,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322411,
+      "name": "1.lektion",
+      "position": 4,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1165413,
+          "type": "File",
+          "title": "2026 1.lektion ITP.pdf",
+          "content_id": 1768911,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322412,
+      "name": "2.lektion",
+      "position": 5,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1168211,
+          "type": "File",
+          "title": "2026 2.lektion.pdf",
+          "content_id": 1772796,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145425,
+          "type": "File",
+          "title": "2021 Eksempel PERT.pdf",
+          "content_id": 1736075,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145428,
+          "type": "ExternalUrl",
+          "title": "SCRUM",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://youtu.be/XU0llRltyFM",
+          "published": null
+        },
+        {
+          "id": 1168035,
+          "type": "File",
+          "title": "ITP-Øvelse-1, 17-02-2026.pptx",
+          "content_id": 1772454,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322413,
+      "name": "3.lektion. Valg af procesmodel",
+      "position": 6,
+      "published": null,
+      "item_count": 5,
+      "items": [
+        {
+          "id": 1171107,
+          "type": "File",
+          "title": "2026 3.lektion.pdf",
+          "content_id": 1781529,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145432,
+          "type": "File",
+          "title": "2022_21.marts artikel_ EV i en agil  verden-whitepaper.pdf",
+          "content_id": 1736079,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1171202,
+          "type": "File",
+          "title": "IT Projektledelse i Praksis - Gæsteforelæsning - 24. Februar 2026.pdf",
+          "content_id": 1781657,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1171554,
+          "type": "File",
+          "title": "Klyngevejledning - Checkpunkter.xlsx",
+          "content_id": 1782194,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1170588,
+          "type": "File",
+          "title": "ITP-Øvelse-2-2026.pptx",
+          "content_id": 1780803,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322414,
+      "name": "4. lektion: Estimering, risikostyring, bemanding mv.",
+      "position": 7,
+      "published": null,
+      "item_count": 5,
+      "items": [
+        {
+          "id": 1173061,
+          "type": "File",
+          "title": "Grupper til Klyngevejledning 1.pdf",
+          "content_id": 1784795,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1173562,
+          "type": "File",
+          "title": "Introduktion til Prince2_IBM_2016.pdf",
+          "content_id": 1785523,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1173644,
+          "type": "File",
+          "title": "Introduktion til estimering og kontrakter_2021.pdf",
+          "content_id": 1785682,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1173645,
+          "type": "File",
+          "title": "Introduktion til estimering_2021.pdf",
+          "content_id": 1785683,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1173724,
+          "type": "File",
+          "title": "2026_4. lektion_IT-Projektledelse.pdf",
+          "content_id": 1785772,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322415,
+      "name": "5. lektion: Kvalitet, non-funktionelle krav og monitorering",
+      "position": 8,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1177161,
+          "type": "File",
+          "title": "ITP-Øvelse-3-2026.pptx",
+          "content_id": 1790809,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1177249,
+          "type": "File",
+          "title": "260311_Lektion 5_IT-Projektledelse.pdf",
+          "content_id": 1791023,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322416,
+      "name": "6.lektion Kvalitetssikring",
+      "position": 9,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1180862,
+          "type": "File",
+          "title": "2026 Lektion 6",
+          "content_id": 1798451,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1181994,
+          "type": "File",
+          "title": "ITP-Øvelse-4-2026.pptx",
+          "content_id": 1800678,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322417,
+      "name": "7. lektion: Den ”alternative” tilgang",
+      "position": 10,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1183870,
+          "type": "File",
+          "title": "2026_7. lektion_IT-projektledelse.pdf",
+          "content_id": 1804295,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322419,
+      "name": "8. lektion Spørgetime (online)",
+      "position": 12,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1145452,
+          "type": "ExternalUrl",
+          "title": "Spørgetime",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://teams.microsoft.com/meet/339448851300434?p=WPtrdua3S032I95h1c",
+          "published": null
+        },
+        {
+          "id": 1190405,
+          "type": "File",
+          "title": "260428_Lektion 8_IT-projektledelse.pdf",
+          "content_id": 1815125,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322420,
+      "name": "9.lektion online boost (2.-6.juni)",
+      "position": 13,
+      "published": null,
+      "item_count": 6,
+      "items": [
+        {
+          "id": 1145453,
+          "type": "File",
+          "title": "2_ITP boost projekttrekanten v.1.0.mp4",
+          "content_id": 1736067,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145454,
+          "type": "File",
+          "title": "4_ITP boost fremdriftsrapportering_SCRUM.mp4",
+          "content_id": 1736068,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145455,
+          "type": "File",
+          "title": "4_ITP boost fremdriftsrapportering_vandfald.mp4",
+          "content_id": 1736069,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145456,
+          "type": "File",
+          "title": "3_ITP boost Aktivitetsplanlæg.mp4",
+          "content_id": 1736072,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145457,
+          "type": "File",
+          "title": "1_ITP boost Målhieraki og milepælsplan.mp4",
+          "content_id": 1736071,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145458,
+          "type": "File",
+          "title": "5_ITP boost Interessenter og roller i projektet.mp4",
+          "content_id": 1736070,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "ExternalUrl": 3,
+    "File": 28,
+    "Assignment": 2
+  },
+  "module_file_ids": [
+    1736067,
+    1736068,
+    1736069,
+    1736070,
+    1736071,
+    1736072,
+    1736075,
+    1736079,
+    1768911,
+    1772120,
+    1772454,
+    1772796,
+    1780803,
+    1781529,
+    1781657,
+    1782194,
+    1784795,
+    1785523,
+    1785682,
+    1785683,
+    1785772,
+    1790809,
+    1791023,
+    1798451,
+    1798453,
+    1800678,
+    1804295,
+    1815125
+  ],
+  "only_in_modules": [],
+  "only_in_files_tab": [
+    1726984,
+    1736074,
+    1736076,
+    1736089,
+    1736093,
+    1736395,
+    1784614,
+    1784615,
+    1784616,
+    1784620,
+    1806174,
+    1806175,
+    1807289,
+    1807290
+  ],
+  "files_tab_restricted": false,
+  "assignments": [
+    {
+      "id": 35256,
+      "name": "Første aflevering ITP F26",
+      "due_at": "2026-02-26T22:00:00Z",
+      "points": 0.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_upload"
+      ]
+    },
+    {
+      "id": 35602,
+      "name": "Aflevering af 2. klyngevejledning",
+      "due_at": "2026-04-10T21:00:00Z",
+      "points": 0.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_upload"
+      ]
+    }
+  ],
+  "quizzes": [],
+  "announcements": [
+    {
+      "id": 180787,
+      "title": "Mulighed for spørgsmål til opgave og formalia",
+      "posted_at": "2026-04-28T08:44:53Z"
+    },
+    {
+      "id": 180677,
+      "title": "Online spørgetime tirsdag 28. april kl. 9:50 - 9:35: Adgang og ønskede emner",
+      "posted_at": "2026-04-24T09:29:46Z"
+    },
+    {
+      "id": 180027,
+      "title": "Klyngevejledning 2",
+      "posted_at": "2026-04-11T21:56:44Z"
+    },
+    {
+      "id": 178361,
+      "title": "Præcisering af pensum til forelæsning 5",
+      "posted_at": "2026-03-11T07:00:13Z"
+    },
+    {
+      "id": 177697,
+      "title": "Grupper og info - klyngevejledning 1",
+      "posted_at": "2026-03-01T14:00:00Z"
+    },
+    {
+      "id": 177614,
+      "title": "HUSK grupper nummer og øvelseshold på aflevering",
+      "posted_at": "2026-02-26T12:05:37Z"
+    },
+    {
+      "id": 177268,
+      "title": "VIGTIGT. Husk at tilmelde jeres gruppe inden 1. aflevering",
+      "posted_at": "2026-02-20T12:02:33Z"
+    },
+    {
+      "id": 177174,
+      "title": "Rettelse til lektion 2 side 4",
+      "posted_at": "2026-02-18T17:37:25Z"
+    },
+    {
+      "id": 176439,
+      "title": "Velkommen til IT projektledelse – og en opgave",
+      "posted_at": "2026-02-06T12:41:40Z"
+    },
+    {
+      "id": 176152,
+      "title": "Studievejledningen søger studerende til fortælle om HA(it) ved Åbent Hus 20. februar.",
+      "posted_at": "2026-02-03T09:17:31Z"
+    }
+  ],
+  "discussions": [
+    {
+      "id": 180676,
+      "title": "Sidste chance for spørgsmål: Hvad ønsker du, at Jacob & Ulrik fokuserer på?"
+    },
+    {
+      "id": 179516,
+      "title": "Burndown chart og Earned value. "
+    }
+  ],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_by_source": {
+    "announcement": [],
+    "assignment": [],
+    "discussion": [],
+    "syllabus": []
+  },
+  "inline_file_ids": [],
+  "embedded_only_file_ids": [],
+  "inline_only_file_ids": [],
+  "expected_file_ids": [
+    1726984,
+    1736067,
+    1736068,
+    1736069,
+    1736070,
+    1736071,
+    1736072,
+    1736074,
+    1736075,
+    1736076,
+    1736079,
+    1736089,
+    1736093,
+    1736395,
+    1768911,
+    1772120,
+    1772454,
+    1772796,
+    1780803,
+    1781529,
+    1781657,
+    1782194,
+    1784614,
+    1784615,
+    1784616,
+    1784620,
+    1784795,
+    1785523,
+    1785682,
+    1785683,
+    1785772,
+    1790809,
+    1791023,
+    1798451,
+    1798453,
+    1800678,
+    1804295,
+    1806174,
+    1806175,
+    1807289,
+    1807290,
+    1815125
+  ],
+  "secondary_counts": {
+    "assignment": 2,
+    "quiz": 0,
+    "discussion": 2,
+    "announcement": 10,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "quizzes": "ResourceDoesNotExist: Not Found",
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 6.6
+}

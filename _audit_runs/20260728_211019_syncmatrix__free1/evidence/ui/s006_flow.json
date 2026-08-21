@@ -1,0 +1,162 @@
+{
+  "name": "s006",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "ally\n2\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPDF (none)\n\nURL (all)\n\nSelect All\n\nDeselect All\n\n1.\nIntroduction to Information Systems (LA)\nIntroduction to Information Systems (LA E25 BINTO1078U)\n4 files pending sync\n40 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 6.1
+    },
+    "capture": "s006_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_43657",
+      "cat_deleted_local_43657",
+      "cat_ignored_43657"
+    ],
+    "capture": "s006_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free1\\evidence\\screenshots\\s006_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free1\\evidence\\ui\\s006_review.json",
+    "textLen": 1343,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "\n​\n\nCourse description including examination rules\nSustainability Video.url\n\n​\n\n​\n\nModule 12 - Trends in IS\n Locally-Deleted Files Restored (2)\nRe-downloaded because your local copy was missing\nCompulsory Assignment_Fall 2025.pdf\n\n​\n\n​\n\nCourse description including examination rules\nTimetable for presentations.pdf\n\n​\n\n​\n\nCourse description including examination rules\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 10.1
+    },
+    "capture": "s006_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "21:11:49",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "21:12:00",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "ally\n2\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPDF (none)\n\nURL (all)\n\nSelect All\n\nDeselect All\n\n1.\nIntroduction to Information Systems (LA)\nIntroduction to Information Systems (LA E25 BINTO1078U)\n4 files pending sync\n40 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 6.1
+      },
+      "capture": "s006_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "21:12:02",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43657",
+        "cat_deleted_local_43657",
+        "cat_ignored_43657"
+      ],
+      "capture": "s006_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free1\\evidence\\screenshots\\s006_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free1\\evidence\\ui\\s006_review.json",
+      "textLen": 1344,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "21:12:04",
+      "action": "select_category",
+      "category": "deleted_locally",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "21:12:04",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43657",
+        "cat_deleted_local_43657",
+        "cat_ignored_43657"
+      ],
+      "capture": "s006_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free1\\evidence\\screenshots\\s006_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free1\\evidence\\ui\\s006_review.json",
+      "textLen": 1343,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "21:12:17",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "\n​\n\nCourse description including examination rules\nSustainability Video.url\n\n​\n\n​\n\nModule 12 - Trends in IS\n Locally-Deleted Files Restored (2)\nRe-downloaded because your local copy was missing\nCompulsory Assignment_Fall 2025.pdf\n\n​\n\n​\n\nCourse description including examination rules\nTimetable for presentations.pdf\n\n​\n\n​\n\nCourse description including examination rules\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 10.1
+      },
+      "capture": "s006_complete",
+      "ok": true
+    }
+  ]
+}

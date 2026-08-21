@@ -1,0 +1,38 @@
+{
+  "name": "s013_analyzing",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\screenshots\\s013_analyzing.png",
+  "captured": "2026-07-29 00:55:05",
+  "screen": {
+    "url": "http://127.0.0.1:8880/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [],
+    "buttons": [],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "",
+    "textLen": 0
+  },
+  "wizard": [],
+  "dashboard": {
+    "present": false,
+    "header": "",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": ""
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

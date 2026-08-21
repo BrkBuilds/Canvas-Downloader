@@ -1,0 +1,83 @@
+{
+  "name": "p4_tx2",
+  "open": {
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "Select\nBy filetype\n\nURL (all)\n\nPANOPTO (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n8 files pending sync\n212 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 5 files + 3 recordings",
+      "waited_s": 24.2
+    },
+    "capture": "p4_tx2_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_43660",
+      "cat_update_43660",
+      "cat_ignored_43660"
+    ],
+    "capture": "p4_tx2_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\screenshots\\p4_tx2_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\ui\\p4_tx2_review.json",
+    "textLen": 3995,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "trace": [
+    {
+      "t": "13:21:42",
+      "action": "open_sync",
+      "screen": "sync"
+    },
+    {
+      "t": "13:22:10",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "Select\nBy filetype\n\nURL (all)\n\nPANOPTO (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n8 files pending sync\n212 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 5 files + 3 recordings",
+        "waited_s": 24.2
+      },
+      "capture": "p4_tx2_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "13:22:13",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43660",
+        "cat_update_43660",
+        "cat_ignored_43660"
+      ],
+      "capture": "p4_tx2_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\screenshots\\p4_tx2_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\ui\\p4_tx2_review.json",
+      "textLen": 3995,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_235210_syncregress__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-07-29T00:04:48",
+  "applied": [],
+  "skipped": {
+    "renamed_ambiguous": "no eligible candidate in this folder"
+  },
+  "fixture_count": 0,
+  "expected_categories": {},
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 50,
+    "files": 50
+  },
+  "after": {
+    "rows": 50,
+    "files": 50
+  },
+  "fixtures": []
+}

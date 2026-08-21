@@ -1,0 +1,118 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-07-30T17:27:44",
+  "applied": [
+    {
+      "kind": "moved_deep",
+      "count": 2
+    },
+    {
+      "kind": "foreign_content",
+      "count": 3
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 5,
+  "expected_categories": {
+    "uptodate": 2
+  },
+  "expected_untracked": [
+    "Min egen mappe/gamle noter/tanker.txt",
+    "Min egen mappe/mine noter.docx",
+    "My Notes/semester 0/week 3/reading/Compulsory Assignment_Fall 2025.pdf",
+    "My Notes/semester 1/week 3/reading/Timetable for presentations.pdf",
+    "eksamensplan 2026.pdf"
+  ],
+  "expected_missing_rows": [
+    "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+    "Course description including examination rules/Timetable for presentations.pdf"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 43,
+    "files": 42
+  },
+  "after": {
+    "rows": 43,
+    "files": 45
+  },
+  "fixtures": [
+    {
+      "label": "moved-deep:Compulsory Assignment_Fall 2025.pdf",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 0/week 3/reading/Compulsory Assignment_Fall 2025.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 0/week 3/reading/Compulsory Assignment_Fall 2025.pdf",
+      "match_name": "Compulsory Assignment_Fall 2025.pdf",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1637102,
+      "original_path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:Timetable for presentations.pdf",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 1/week 3/reading/Timetable for presentations.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 1/week 3/reading/Timetable for presentations.pdf",
+      "match_name": "Timetable for presentations.pdf",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1684097,
+      "original_path": "Course description including examination rules/Timetable for presentations.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:mine noter.docx",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/mine noter.docx",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/mine noter.docx",
+      "match_name": "mine noter.docx",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:tanker.txt",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/gamle noter/tanker.txt",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/gamle noter/tanker.txt",
+      "match_name": "tanker.txt",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:eksamensplan 2026.pdf",
+      "kind": "foreign_content",
+      "path": "eksamensplan 2026.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "eksamensplan 2026.pdf",
+      "match_name": "eksamensplan 2026.pdf",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

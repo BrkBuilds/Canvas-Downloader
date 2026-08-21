@@ -1,0 +1,142 @@
+--- Debug Log Started: 2026-07-28 20:20:28.822079 ---
+[2026-07-28 20:20:30.774] [WARNING] [core.canvas_logic] Hybrid Fetch: Found 3 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 46396.
+[2026-07-28 20:20:30.863] === Session Environment ===
+  App: Canvas Downloader v2.0.1 | frozen=False | pid=6532
+  OS: Windows 11 | Windows-11-10.0.26200-SP0 | arch=AMD64
+  Python: 3.13.1
+  CA bundle (certifi): ok
+  Context: Download mode | 1 course(s)
+===========================
+[2026-07-28 20:20:30.864] === Download Start: IT-projektledelse (LA F26 BINTO1059U) | Course 1/1 ===
+[2026-07-28 20:20:30.864] Mode: flat | Filter: study
+[2026-07-28 20:20:30.865] Post-processing: [video, excel]
+[2026-07-28 20:20:30.865] Secondary content: [none]
+[2026-07-28 20:20:32.505] 
+==================================================
+--- Download: IT-projektledelse (LA F26 BINTO1059U) (ID: 46396) Mode: flat ---
+==================================================
+[2026-07-28 20:20:32.505] Save Dir: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads
+[2026-07-28 20:20:32.505] Filter: study | Concurrency: 10 | Max file size: disabled | Estimated payload: 60 MB
+[2026-07-28 20:20:32.506] Canvas Content: [none] | isolate=no
+[2026-07-28 20:20:32.506] Post-processing: [video, excel]
+[2026-07-28 20:20:32.506] Starting Flat Download for IT-projektledelse (LA F26 BINTO1059U)
+[2026-07-28 20:20:33.189] Requesting URL: https://cbscanvas.instructure.com/files/1736075/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:33.190] Requesting URL: https://cbscanvas.instructure.com/files/1736074/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:33.191] Requesting URL: https://cbscanvas.instructure.com/files/1736076/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:33.192] Requesting URL: https://cbscanvas.instructure.com/files/1736079/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:33.193] Requesting URL: https://cbscanvas.instructure.com/files/1736089/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:33.194] Requesting URL: https://cbscanvas.instructure.com/files/1768911/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:33.194] Requesting URL: https://cbscanvas.instructure.com/files/1772796/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:33.195] Requesting URL: https://cbscanvas.instructure.com/files/1781529/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:33.196] Requesting URL: https://cbscanvas.instructure.com/files/1798451/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:33.197] Requesting URL: https://cbscanvas.instructure.com/files/1785772/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:33.199] ERROR [Locked File] IT-projektledelse (LA F26 BINTO1059U) :: Grupper til Klyngevejledning 2 (1).pdf :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is part of an unpublished module and is not available yet).
+[2026-07-28 20:20:33.205] ERROR [Locked File] IT-projektledelse (LA F26 BINTO1059U) :: ITP-Øvelse-5-2026.pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is part of an unpublished module and is not available yet).
+[2026-07-28 20:20:34.036] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:34.052] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:34.086] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:34.107] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:34.116] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:34.132] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 20:20:34.134] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:34.178] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:34.190] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:34.192] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:34.667] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2022_21.marts artikel_ EV i en agil  verden-whitepaper.pdf (1980954 bytes)
+[2026-07-28 20:20:34.700] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2021 Estimeringsteknikker.pdf (303769 bytes)
+[2026-07-28 20:20:34.701] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2021 Eksempel PERT.pdf (136788 bytes)
+[2026-07-28 20:20:34.904] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2026_4. lektion_IT-Projektledelse.pdf (1120217 bytes)
+[2026-07-28 20:20:35.019] Requesting URL: https://cbscanvas.instructure.com/files/1804295/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:35.063] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2026 Lektion 6.pdf (1155508 bytes)
+[2026-07-28 20:20:35.080] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2026 3.lektion.pdf (1786567 bytes)
+[2026-07-28 20:20:35.099] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2026 1.lektion ITP.pdf (1466428 bytes)
+[2026-07-28 20:20:35.121] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2021 Tillæg_estimering.pdf (1159194 bytes)
+[2026-07-28 20:20:35.134] Requesting URL: https://cbscanvas.instructure.com/files/1815125/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:35.278] Requesting URL: https://cbscanvas.instructure.com/files/1791023/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:35.382] Requesting URL: https://cbscanvas.instructure.com/files/1772120/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:35.493] Requesting URL: https://cbscanvas.instructure.com/files/1781657/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:35.676] Requesting URL: https://cbscanvas.instructure.com/files/1784620/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:35.798] Requesting URL: https://cbscanvas.instructure.com/files/1784616/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:35.819] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:35.952] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2026 2.lektion.pdf (2552128 bytes)
+[2026-07-28 20:20:35.955] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:36.017] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2026_7. lektion_IT-projektledelse.pdf (678802 bytes)
+[2026-07-28 20:20:36.035] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:36.147] Requesting URL: https://cbscanvas.instructure.com/files/1784795/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:36.240] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:36.351] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\Eksamensopgave HA(it)_ITP F26.pdf (145578 bytes)
+[2026-07-28 20:20:36.356] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\260311_Lektion 5_IT-Projektledelse.pdf (1588514 bytes)
+[2026-07-28 20:20:36.385] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:36.388] Requesting URL: https://cbscanvas.instructure.com/files/1807289/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:36.475] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:36.489] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\Grupper til Klyngevejledning 1-1.pdf (35082 bytes)
+[2026-07-28 20:20:36.521] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\2025 7.lektion 31.marts .pptx (12765342 bytes)
+[2026-07-28 20:20:36.575] Requesting URL: https://cbscanvas.instructure.com/files/1785682/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:36.608] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:36.626] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\Grupper til Klyngevejledning 1.pdf (35082 bytes)
+[2026-07-28 20:20:36.706] Requesting URL: https://cbscanvas.instructure.com/files/1785683/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:36.716] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\Gæsteforelæsning ITP - 24. Februar 2026.pdf (1015197 bytes)
+[2026-07-28 20:20:36.841] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\260428_Lektion 8_IT-projektledelse.pdf (679529 bytes)
+[2026-07-28 20:20:36.889] Requesting URL: https://cbscanvas.instructure.com/files/1785523/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:36.983] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:37.065] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\Grupper til Klyngevejledning 1 (1).pdf (35082 bytes)
+[2026-07-28 20:20:37.108] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:37.131] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\Grupper til Klyngevejledning 2.pdf (62662 bytes)
+[2026-07-28 20:20:37.230] Requesting URL: https://cbscanvas.instructure.com/files/1736395/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:37.332] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:37.484] Requesting URL: https://cbscanvas.instructure.com/files/1798453/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:37.485] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:37.555] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\Introduktion til estimering og kontrakter_2021.pdf (1159194 bytes)
+[2026-07-28 20:20:37.648] Requesting URL: https://cbscanvas.instructure.com/files/1726984/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:37.660] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:37.680] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\Introduktion til estimering_2021.pdf (303769 bytes)
+[2026-07-28 20:20:37.757] Requesting URL: https://cbscanvas.instructure.com/files/1780803/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:37.760] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\Introduktion til Prince2_IBM_2016.pdf (652349 bytes)
+[2026-07-28 20:20:37.920] Requesting URL: https://cbscanvas.instructure.com/files/1790809/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:37.990] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:38.056] Requesting URL: https://cbscanvas.instructure.com/files/1772454/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:38.109] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\IT projektledelse F26.pdf (368062 bytes)
+[2026-07-28 20:20:38.164] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:38.205] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\IT projektledelse_Lektionsplan_HA_IT_F26 (NY).pdf (371024 bytes)
+[2026-07-28 20:20:38.213] Requesting URL: https://cbscanvas.instructure.com/files/1800678/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:38.339] Requesting URL: https://cbscanvas.instructure.com/files/1806175/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:38.344] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:38.538] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\IT projektledelse_Lektionsplan_HA_IT_F26.pdf (368768 bytes)
+[2026-07-28 20:20:38.539] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 20:20:38.623] Requesting URL: https://cbscanvas.instructure.com/files/1736093/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 20:20:38.671] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 20:20:38.808] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 20:20:39.006] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 20:20:39.189] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 20:20:39.428] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 20:20:39.672] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\ITP-Øvelse-5-2026-1.pptx (1635330 bytes)
+[2026-07-28 20:20:40.244] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\ITP-Øvelse-2-2026.pptx (8863075 bytes)
+[2026-07-28 20:20:40.689] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\ITP-Øvelse-3-2026.pptx (3698029 bytes)
+[2026-07-28 20:20:40.996] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\ITP-Øvelse-1, 17-02-2026.pptx (4405181 bytes)
+[2026-07-28 20:20:41.203] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\ITP-Øvelse-4-2026.pptx (4573488 bytes)
+[2026-07-28 20:20:41.517] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__office\downloads\IT-projektledelse (LA F26 BINTO1059U)\Norlys - who are we CBS oplæg.pdf (8197148 bytes)
+[2026-07-28 20:20:42.819] Fallback Scan: Module Course description including examination rules (found 2 items)
+[2026-07-28 20:20:42.820]   Fallback Item: Course description including examination rules (Type: ExternalUrl)
+[2026-07-28 20:20:43.003] Fallback Scan: Module Semesterprojekt ITP F26 (found 3 items)
+[2026-07-28 20:20:43.003]   Fallback Item: Første aflevering ITP F26 (Type: Assignment)
+[2026-07-28 20:20:43.004]   Fallback Item: Aflevering af 2. klyngevejledning (Type: Assignment)
+[2026-07-28 20:20:43.160] Fallback Scan: Module 1.lektion (found 1 items)
+[2026-07-28 20:20:43.356] Fallback Scan: Module 2.lektion (found 4 items)
+[2026-07-28 20:20:43.357]   Fallback Item: SCRUM (Type: ExternalUrl)
+[2026-07-28 20:20:43.526] Fallback Scan: Module 3.lektion. Valg af procesmodel (found 5 items)
+[2026-07-28 20:20:43.724] Fallback Scan: Module 4. lektion: Estimering, risikostyring, bemanding mv. (found 5 items)
+[2026-07-28 20:20:43.915] Fallback Scan: Module 5. lektion: Kvalitet, non-funktionelle krav og monitorering (found 2 items)
+[2026-07-28 20:20:44.072] Fallback Scan: Module 6.lektion Kvalitetssikring (found 2 items)
+[2026-07-28 20:20:44.256] Fallback Scan: Module 7. lektion: Den ”alternative” tilgang (found 1 items)
+[2026-07-28 20:20:44.632] Fallback Scan: Module 8. lektion Spørgetime (online) (found 2 items)
+[2026-07-28 20:20:46.603]   Fallback Item: Spørgetime (Type: ExternalUrl)
+[2026-07-28 20:20:46.773] Fallback Scan: Module 9.lektion online boost (2.-6.juni) (found 6 items)
+[2026-07-28 20:20:46.774] Starting Catch-All Phase for non-module files...
+[2026-07-28 20:20:46.776] No partial/non-module files found.
+[2026-07-28 20:20:46.777] --- Download Complete: IT-projektledelse (LA F26 BINTO1059U) | 31 items | 60.4 MB downloaded ---
+
+==================================================
+--- Post-Processing: IT-projektledelse (LA F26 BINTO1059U) ---
+==================================================
+[2026-07-28 20:20:48.505] === Course Finished: IT-projektledelse (LA F26 BINTO1059U) | Downloaded: 31 items | Errors: 2 ===
+[2026-07-28 20:20:48.505] Post-processing ran: [video, excel]

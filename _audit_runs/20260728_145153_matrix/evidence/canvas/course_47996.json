@@ -1,0 +1,67 @@
+{
+  "course_id": 47996,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "Computernetværk og distribuerede systemer (LA E26 BINTO2067U)",
+  "course_code": "BINTO2067U.LA_E26 (Computernetværk og distribuerede systemer)",
+  "fetched_at": "2026-07-28T14:52:49",
+  "folders": {
+    "444591": {
+      "id": 444591,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {},
+  "modules": [
+    {
+      "id": 326253,
+      "name": "Course description including examination rules",
+      "position": 1,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1165927,
+          "type": "ExternalUrl",
+          "title": "Course description including examination rules",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2026-2027/BA-BINTO2067U.aspx",
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "ExternalUrl": 1
+  },
+  "module_file_ids": [],
+  "only_in_modules": [],
+  "only_in_files_tab": [],
+  "files_tab_restricted": false,
+  "assignments": [],
+  "quizzes": [],
+  "announcements": [],
+  "discussions": [],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_file_ids": [],
+  "inline_only_file_ids": [],
+  "expected_file_ids": [],
+  "secondary_counts": {
+    "assignment": 0,
+    "quiz": 0,
+    "discussion": 0,
+    "announcement": 0,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "quizzes": "ResourceDoesNotExist: Not Found",
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 2.8
+}

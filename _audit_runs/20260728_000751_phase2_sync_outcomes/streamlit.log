@@ -1,0 +1,14 @@
+
+=== audit app start 2026-07-28 00:10:43 port=8790 ===
+2026-07-28 00:10:44.389 Port 8790 is already in use
+
+=== audit app start 2026-07-28 00:18:17 port=8790 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8790
+  Network URL: http://192.168.1.50:8790
+  External URL: http://188.183.232.43:8790
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>

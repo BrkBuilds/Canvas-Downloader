@@ -1,0 +1,126 @@
+{
+  "name": "smoke_tiny",
+  "course_ids": [
+    43667
+  ],
+  "config": {
+    "mode": "modules",
+    "file_filter": "all"
+  },
+  "select": {
+    "courses": [
+      43667
+    ],
+    "results": [
+      {
+        "course_id": 43667,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "all",
+      "mode": "modules"
+    },
+    "failed": [],
+    "verified": {},
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "smoke_tiny_config",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260727_165705_bootstrap\\evidence\\screenshots\\smoke_tiny_config.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260727_165705_bootstrap\\evidence\\ui\\smoke_tiny_config.json",
+    "textLen": 669,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "smoke_tiny",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n1\nFILE DOWNLOADED\n0\nMB DOWNLOADED\nFolders Updated\nBINT 1st semester (LA E25 BINTS1SEMU)\n1 FILE\nURL\n1\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 0.0
+    },
+    "captures": [
+      "smoke_tiny_phase_scan",
+      "smoke_tiny_phase_download",
+      "smoke_tiny_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "18:38:40",
+      "action": "select_courses",
+      "courses": [
+        43667
+      ],
+      "results": [
+        {
+          "course_id": 43667,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "18:38:41",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "18:38:43",
+      "action": "configure",
+      "applied": {
+        "file_filter": "all",
+        "mode": "modules"
+      },
+      "failed": [],
+      "verified": {},
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "18:38:50",
+      "action": "confirm_and_run",
+      "name": "smoke_tiny",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n1\nFILE DOWNLOADED\n0\nMB DOWNLOADED\nFolders Updated\nBINT 1st semester (LA E25 BINTS1SEMU)\n1 FILE\nURL\n1\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 0.0
+      },
+      "captures": [
+        "smoke_tiny_phase_scan",
+        "smoke_tiny_phase_download",
+        "smoke_tiny_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

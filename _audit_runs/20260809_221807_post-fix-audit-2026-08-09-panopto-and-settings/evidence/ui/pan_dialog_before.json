@@ -1,0 +1,105 @@
+{
+  "name": "pan_dialog_before",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\\evidence\\screenshots\\pan_dialog_before.png",
+  "captured": "2026-08-09 22:51:41",
+  "screen": {
+    "url": "http://127.0.0.1:8798/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": true,
+    "dialogTitle": "​",
+    "headings": [],
+    "buttons": [
+      {
+        "key": "pan_back_to_settings",
+        "text": "← Back to Settings",
+        "disabled": false,
+        "gated": false,
+        "kind": "tertiary"
+      },
+      {
+        "key": "btn_dev_cpu",
+        "text": "CPU",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_dev_gpu",
+        "text": "GPU",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "pan_cuda_remove",
+        "text": "Remove CUDA libraries",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "pan_model_del_tiny",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "pan_model_dl_base",
+        "text": "Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      },
+      {
+        "key": "pan_model_dl_small",
+        "text": "Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      },
+      {
+        "key": "pan_model_dl_medium",
+        "text": "Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      },
+      {
+        "key": "pan_model_dl_large-v3",
+        "text": "Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      },
+      {
+        "key": "pan_model_dl_turbo",
+        "text": "Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      },
+      {
+        "key": "pan_dialog_done",
+        "text": "Done",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "​\n\n← Back to Settings\n\nPanopto Recordings: Transcription Configuration\nTranscription runs locally on your machine - nothing is uploaded. Pick a language and compute device, then download a model below.\nLanguage\nSelect the primary language spoken in the video recordings.\nAuto-detect\nCompute Device\nChoose CPU or GPU (recommended if available) for processing.\n\nCPU\n\nGPU\n\nDetected Hardware\nGPU\nNVIDIA GeForce GTX 1080 · 8 GB · Ready (CUDA) · INT8 (older card)\nCPU\n16-core CPU · Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz\nCanvas Downloader installed NVIDIA's CUDA libraries (cuBLAS + cuDNN) (cuda 12.9.79, cublas 12.9.2.10, cudnn 9.25.0.15) so transcription can run on your GPU instead of the CPU. Remove them below to reclaim about 1.3 GB - transcription keeps working, just on the CPU.\n\nRemove CUDA libraries\n\nAvailable Models\nDownload a model to enable transcription - bigger is more accurate but slower. Large v3 Turbo is recommended for NVIDIA GeForce GTX 1080 (8 GB VRAM).\nMODEL\nSIZE\nSPEED & ACCURACY\nTiny\nFastest, lowest accuracy. Good for quick tests.\n75 MB\nActive\nBase\nFast, modest accuracy.\n145 MB\n\nDownload\n\nSmall\nBalanced speed/accuracy, but noticeably weaker on non-English audio.\n484 MB\n\nDownload\n\nMedium\nStrong accuracy, slower on CPU.\n1.5 GB\n\nDownload\n\nLarge v3\nBest accuracy (notably better for Danish). Wants a GPU.\n3.0 GB\n\nDownload\n\nLarge v3 TurboRecommended\nNear-large accuracy, much faster. Excellent on GPU.\n1.6 GB\n\nDownload\n\nDone",
+    "textLen": 1447
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

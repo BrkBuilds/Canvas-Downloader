@@ -1,0 +1,197 @@
+{
+  "name": "pan_cancel_verify",
+  "course_ids": [
+    43660
+  ],
+  "config": {
+    "pan_out_url": false,
+    "pan_out_mp4": false,
+    "pan_out_mp3": true,
+    "pan_out_txt": true,
+    "pan_out_srt": true,
+    "pan_layout": "match"
+  },
+  "select": {
+    "courses": [
+      43660
+    ],
+    "results": [
+      {
+        "course_id": 43660,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "pan_out_url": false,
+      "pan_out_mp4": false,
+      "pan_out_mp3": true,
+      "pan_out_txt": true,
+      "pan_out_srt": true,
+      "pan_layout": "match"
+    },
+    "failed": [],
+    "verified": {
+      "pan_out_url": false,
+      "pan_out_mp4": false,
+      "pan_out_mp3": true,
+      "pan_out_txt": true,
+      "pan_out_srt": true
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "pan_cancel_verify_config",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\\evidence\\screenshots\\pan_cancel_verify_config.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\\evidence\\ui\\pan_cancel_verify_config.json",
+    "textLen": 1444,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "pan_cancel_verify",
+    "terminal": {
+      "done": true,
+      "complete": false,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 3,
+        "id": "download",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Cancelled\n\nDownload was cancelled.\n\nCancelled after 217 of 217 files.\n\nGo to front page",
+      "waited_s": 471.6
+    },
+    "captures": [
+      "pan_cancel_verify_phase_scan",
+      "pan_cancel_verify_phase_download",
+      "pan_cancel_verify_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "23:51:18",
+      "action": "select_courses",
+      "courses": [
+        43660
+      ],
+      "results": [
+        {
+          "course_id": 43660,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "23:51:20",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "23:51:21",
+      "action": "expand_card",
+      "card": "toggle_panopto",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "23:51:21",
+      "action": "set_toggle",
+      "key": "btn_pan_out_url",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "23:51:21",
+      "action": "set_toggle",
+      "key": "btn_pan_out_mp4",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "23:51:22",
+      "action": "set_toggle",
+      "key": "btn_pan_out_mp3",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "23:51:23",
+      "action": "set_toggle",
+      "key": "btn_pan_out_txt",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "23:51:24",
+      "action": "set_toggle",
+      "key": "btn_pan_out_srt",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "23:51:24",
+      "action": "configure",
+      "applied": {
+        "pan_out_url": false,
+        "pan_out_mp4": false,
+        "pan_out_mp3": true,
+        "pan_out_txt": true,
+        "pan_out_srt": true,
+        "pan_layout": "match"
+      },
+      "failed": [],
+      "verified": {
+        "pan_out_url": false,
+        "pan_out_mp4": false,
+        "pan_out_mp3": true,
+        "pan_out_txt": true,
+        "pan_out_srt": true
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "23:59:26",
+      "action": "confirm_and_run",
+      "name": "pan_cancel_verify",
+      "terminal": {
+        "done": true,
+        "complete": false,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 3,
+          "id": "download",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Cancelled\n\nDownload was cancelled.\n\nCancelled after 217 of 217 files.\n\nGo to front page",
+        "waited_s": 471.6
+      },
+      "captures": [
+        "pan_cancel_verify_phase_scan",
+        "pan_cancel_verify_phase_download",
+        "pan_cancel_verify_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,240 @@
+{
+  "name": "dupA2",
+  "course_ids": [
+    46396
+  ],
+  "config": {
+    "mode": "modules",
+    "file_filter": "all",
+    "secondary_isolated": false,
+    "dl_assignments": false,
+    "dl_syllabus": false,
+    "dl_announcements": true,
+    "dl_discussions": false,
+    "dl_quizzes": false,
+    "dl_submissions": false,
+    "convert_zip": false,
+    "convert_pptx": false,
+    "convert_word": false,
+    "convert_excel": false,
+    "convert_html": false,
+    "convert_code": false,
+    "convert_urls": false,
+    "convert_video": false
+  },
+  "select": {
+    "courses": [
+      46396
+    ],
+    "results": [
+      {
+        "course_id": 46396,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "all",
+      "mode": "modules",
+      "dl_assignments": false,
+      "dl_syllabus": false,
+      "dl_announcements": true,
+      "dl_discussions": false,
+      "dl_quizzes": false,
+      "dl_submissions": false,
+      "secondary_isolated": false
+    },
+    "failed": [],
+    "verified": {
+      "convert_zip": null,
+      "convert_pptx": null,
+      "convert_word": null,
+      "convert_excel": null,
+      "convert_html": null,
+      "convert_code": null,
+      "convert_urls": null,
+      "convert_video": null,
+      "dl_assignments": false,
+      "dl_syllabus": false,
+      "dl_announcements": true,
+      "dl_discussions": false,
+      "dl_quizzes": false,
+      "dl_submissions": false
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "dupA2_config",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_232643_dupfix\\evidence\\screenshots\\dupA2_config.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_232643_dupfix\\evidence\\ui\\dupA2_config.json",
+    "textLen": 958,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "dupA2",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nPartial Success\n1\nCOURSE DOWNLOADED\n53\nFILES DOWNLOADED\n0\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nError Details\nFolders Updated\nIT-projektledelse (LA F26 BINTO1059U)\n53 FILES\nPDF\n25\nHTML\n10\nPPTX\n6\nMP4\n6\nOTHER FILES\n6\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 25.1
+    },
+    "captures": [
+      "dupA2_phase_scan",
+      "dupA2_phase_download",
+      "dupA2_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "23:30:16",
+      "action": "select_courses",
+      "courses": [
+        46396
+      ],
+      "results": [
+        {
+          "course_id": 46396,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "23:30:17",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "23:30:20",
+      "action": "expand_card",
+      "card": "toggle_card2",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "23:30:20",
+      "action": "set_toggle",
+      "key": "btn_dl_assignments",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "23:30:20",
+      "action": "set_toggle",
+      "key": "btn_dl_syllabus",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "23:30:21",
+      "action": "set_toggle",
+      "key": "btn_dl_announcements",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "23:30:21",
+      "action": "set_toggle",
+      "key": "btn_dl_discussions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "23:30:21",
+      "action": "set_toggle",
+      "key": "btn_dl_quizzes",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "23:30:21",
+      "action": "set_toggle",
+      "key": "btn_dl_submissions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "23:30:22",
+      "action": "configure",
+      "applied": {
+        "file_filter": "all",
+        "mode": "modules",
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": true,
+        "dl_discussions": false,
+        "dl_quizzes": false,
+        "dl_submissions": false,
+        "secondary_isolated": false
+      },
+      "failed": [],
+      "verified": {
+        "convert_zip": null,
+        "convert_pptx": null,
+        "convert_word": null,
+        "convert_excel": null,
+        "convert_html": null,
+        "convert_code": null,
+        "convert_urls": null,
+        "convert_video": null,
+        "dl_assignments": false,
+        "dl_syllabus": false,
+        "dl_announcements": true,
+        "dl_discussions": false,
+        "dl_quizzes": false,
+        "dl_submissions": false
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "23:30:53",
+      "action": "confirm_and_run",
+      "name": "dupA2",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nPartial Success\n1\nCOURSE DOWNLOADED\n53\nFILES DOWNLOADED\n0\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nError Details\nFolders Updated\nIT-projektledelse (LA F26 BINTO1059U)\n53 FILES\nPDF\n25\nHTML\n10\nPPTX\n6\nMP4\n6\nOTHER FILES\n6\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 25.1
+      },
+      "captures": [
+        "dupA2_phase_scan",
+        "dupA2_phase_download",
+        "dupA2_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

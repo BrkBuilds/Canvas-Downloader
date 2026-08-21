@@ -1,0 +1,39 @@
+{
+  "run_id": "20260729_000133_dupflat",
+  "label": "dupflat",
+  "created": "2026-07-29T00:01:33",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {
+    "port": 8863,
+    "pid": 24140,
+    "url": "http://127.0.0.1:8863",
+    "log": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_000133_dupflat\\streamlit.log",
+    "started": 1785276096.016601,
+    "verified_owner": true
+  },
+  "ports_used": [
+    8863
+  ],
+  "browser": {
+    "cdp_port": 9463,
+    "pid": 31260,
+    "headed": true
+  },
+  "scope": [
+    {
+      "name": "flatA",
+      "flow": "download",
+      "course": "46396",
+      "config": "{\"mode\": \"flat\", \"file_filter\": \"all\", \"secondary_isolated\": false, \"dl_assignments\": false, \"dl_syllabus\": false, \"dl_announcements\": true, \"dl_discussions\": false, \"dl_quizzes\": false, \"dl_submissions\": false, \"convert_zip\": false, \"convert_pptx\": false, \"convert_word\": false, \"convert_excel\": fal",
+      "result": "ok"
+    },
+    {
+      "name": "flatA2",
+      "flow": "download",
+      "course": "46396",
+      "config": "{\"mode\": \"flat\", \"file_filter\": \"all\", \"secondary_isolated\": false, \"dl_assignments\": false, \"dl_syllabus\": false, \"dl_announcements\": true, \"dl_discussions\": false, \"dl_quizzes\": false, \"dl_submissions\": false, \"convert_zip\": false, \"convert_pptx\": false, \"convert_word\": false, \"convert_excel\": fal",
+      "result": "ok"
+    }
+  ]
+}

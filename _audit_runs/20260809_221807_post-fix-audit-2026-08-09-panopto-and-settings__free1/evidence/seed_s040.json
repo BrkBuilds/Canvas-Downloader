@@ -1,0 +1,68 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-08-09T23:29:10",
+  "applied": [
+    {
+      "kind": "edited_update",
+      "count": 2
+    }
+  ],
+  "skipped": {
+    "renamed_ambiguous": "no eligible candidate in this folder"
+  },
+  "fixture_count": 2,
+  "expected_categories": {
+    "updated_modified": 2
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [
+    "Compulsory Assignment_Fall 2025.pdf",
+    "Page Numbers for 6th and 5th Edition.docx"
+  ],
+  "expected_size_drift": [
+    "Compulsory Assignment_Fall 2025.pdf",
+    "Page Numbers for 6th and 5th Edition.docx"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 50,
+    "files": 50
+  },
+  "after": {
+    "rows": 50,
+    "files": 50
+  },
+  "fixtures": [
+    {
+      "label": "edited-update:Page Numbers for 6th and 5th Edition.docx",
+      "kind": "edited_update",
+      "path": "Page Numbers for 6th and 5th Edition.docx",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Page Numbers for 6th and 5th Edition.docx",
+      "match_name": "Page Numbers for 6th and 5th Edition.docx",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1627501,
+      "original_path": "",
+      "edited_md5": "f8ae78af8f311bf6e127e063ab6de8a7",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:Compulsory Assignment_Fall 2025.pdf",
+      "kind": "edited_update",
+      "path": "Compulsory Assignment_Fall 2025.pdf",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Compulsory Assignment_Fall 2025.pdf",
+      "match_name": "Compulsory Assignment_Fall 2025.pdf",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1637102,
+      "original_path": "",
+      "edited_md5": "87eb8a7ea89a53232f9b4017801c13b1",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

@@ -1,0 +1,3201 @@
+{
+  "course_id": 45899,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "course_code": "BINTO1064U.LA_E25 (Programmering og udvikling af små systemer samt databaser)",
+  "fetched_at": "2026-07-30T17:21:14",
+  "folders": {
+    "414777": {
+      "id": 414777,
+      "full_name": "course files/Quiz Files/Javascript+practice+quiz+5_63912",
+      "name": "Javascript+practice+quiz+5_63912",
+      "hidden": true,
+      "locked": false
+    },
+    "417582": {
+      "id": 417582,
+      "full_name": "course files/Quiz Files/Javascript+practice+quiz+6_64075",
+      "name": "Javascript+practice+quiz+6_64075",
+      "hidden": true,
+      "locked": false
+    },
+    "395718": {
+      "id": 395718,
+      "full_name": "course files/Quiz Files/Javascript+practice+quiz+chpt+4_62753",
+      "name": "Javascript+practice+quiz+chpt+4_62753",
+      "hidden": true,
+      "locked": false
+    },
+    "390930": {
+      "id": 390930,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    },
+    "395355": {
+      "id": 395355,
+      "full_name": "course files/course_image",
+      "name": "course_image",
+      "hidden": false,
+      "locked": false
+    },
+    "395381": {
+      "id": 395381,
+      "full_name": "course files/Quiz Files/qti+-+javascript+practice+quiz+1_62741",
+      "name": "qti+-+javascript+practice+quiz+1_62741",
+      "hidden": true,
+      "locked": false
+    },
+    "395383": {
+      "id": 395383,
+      "full_name": "course files/Quiz Files/qti+-+javascript+practice+quiz+2_62742",
+      "name": "qti+-+javascript+practice+quiz+2_62742",
+      "hidden": true,
+      "locked": false
+    },
+    "395384": {
+      "id": 395384,
+      "full_name": "course files/Quiz Files/qti+-+javascript+practice+quiz+3_62743",
+      "name": "qti+-+javascript+practice+quiz+3_62743",
+      "hidden": true,
+      "locked": false
+    },
+    "395356": {
+      "id": 395356,
+      "full_name": "course files/unfiled",
+      "name": "unfiled",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {},
+  "modules": [
+    {
+      "id": 309654,
+      "name": "Course description including examination rules",
+      "position": 1,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1075214,
+          "type": "ExternalUrl",
+          "title": "Course description including examination rules",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2024-2025/BA-BINTO1064U.aspx",
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309655,
+      "name": "Informationer",
+      "position": 2,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1075215,
+          "type": "SubHeader",
+          "title": "Eloquent JavaScript bog: https://eloquentjavascript.net (bemærk: 4. udgave)",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1136389,
+          "type": "SubHeader",
+          "title": "Bøger til foråret: se course readings",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1136390,
+          "type": "SubHeader",
+          "title": "køb: Ben-Gan, I. (2023) T-SQL fundamentals . Fourth edition. Redmond ;; London :, Microsoft Press ; Pearson Education Inc.",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 313790,
+      "name": "Andre ressourcer",
+      "position": 3,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1094071,
+          "type": "File",
+          "title": "Trin-for-trin Guide til VS Code og konsollen.pdf",
+          "content_id": 1598669,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309657,
+      "name": "Obligatoriske afleveringer efterår 2025",
+      "position": 4,
+      "published": null,
+      "item_count": 10,
+      "items": [
+        {
+          "id": 1103738,
+          "type": "Assignment",
+          "title": "Godkendelsesopgave 1",
+          "content_id": 33723,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1113632,
+          "type": "File",
+          "title": "Godkendelsesopgave 1 vejl_løsn.js",
+          "content_id": 1670371,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1116682,
+          "type": "Assignment",
+          "title": "Godkendelsesopgave 2",
+          "content_id": 34034,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1122454,
+          "type": "File",
+          "title": "G2 vejl_løsn.js",
+          "content_id": 1598721,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1122459,
+          "type": "File",
+          "title": "G2 fælles_feedback.pdf",
+          "content_id": 1687491,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1122624,
+          "type": "Assignment",
+          "title": "Godkendelsesopgave 3",
+          "content_id": 34156,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1125389,
+          "type": "File",
+          "title": "G3 opgave.bierOgBlomster analysevejledning.pdf",
+          "content_id": 1692940,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1129477,
+          "type": "File",
+          "title": "Fælles feedback G3 v2.pdf",
+          "content_id": 1700523,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1129472,
+          "type": "File",
+          "title": "g3 opgave-bierOgBlomsterOO vejl.js",
+          "content_id": 1700515,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1130229,
+          "type": "Quiz",
+          "title": "G4 ",
+          "content_id": 111380,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 326739,
+      "name": "Obligatoriske afleveringer forår 2026",
+      "position": 5,
+      "published": null,
+      "item_count": 5,
+      "items": [
+        {
+          "id": 1172699,
+          "type": "Assignment",
+          "title": "Godkendelsesopgave 5",
+          "content_id": 35381,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1180232,
+          "type": "File",
+          "title": "g5_fælles_feedback.pdf",
+          "content_id": 1796825,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1179354,
+          "type": "Assignment",
+          "title": "Godkendelsesopgave 6",
+          "content_id": 35494,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1186751,
+          "type": "Assignment",
+          "title": "Godkendelsesopgave 7",
+          "content_id": 35676,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1191569,
+          "type": "Quiz",
+          "title": "Godkendelsesopgave 8 - Quiz (Sidste frist for aflevering: onsdag 6. maj 23:59.)",
+          "content_id": 114664,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322481,
+      "name": "Skriftlig Eksamen",
+      "position": 6,
+      "published": null,
+      "item_count": 7,
+      "items": [
+        {
+          "id": 1145757,
+          "type": "SubHeader",
+          "title": "Ordinær eksamen med vejledende løsning",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145758,
+          "type": "File",
+          "title": "eksamen 2025E ordinær.pdf",
+          "content_id": 1736378,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145759,
+          "type": "File",
+          "title": "eksamen 2025 ord vejledende.zip",
+          "content_id": 1736379,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1145760,
+          "type": "File",
+          "title": "NB: feedback ordinær.pdf",
+          "content_id": 1736380,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1166973,
+          "type": "SubHeader",
+          "title": "Re-eksamen med vejledende løsning",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1166977,
+          "type": "File",
+          "title": "eksamen 2025E re-eksamen.pdf",
+          "content_id": 1770754,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1166979,
+          "type": "File",
+          "title": "eksamen 2025 re vejledende.zip",
+          "content_id": 1770755,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 326738,
+      "name": "Rapporteksamen",
+      "position": 7,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1167157,
+          "type": "File",
+          "title": "Rapporteksamen 2026 - Ejendomsinvesterings-app.pdf",
+          "content_id": 1771104,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309656,
+      "name": "Kursus-evaluering",
+      "position": 8,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1190444,
+          "type": "File",
+          "title": "Kursusevaluering",
+          "content_id": 1815182,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309658,
+      "name": "Uge 36: Forelæsning 1. Introduktion og overblik over kurset. Introduktion til digitalisering, computere, programmering, data, værdier, typer og operatorer.",
+      "position": 9,
+      "published": null,
+      "item_count": 8,
+      "items": [
+        {
+          "id": 1091594,
+          "type": "ExternalUrl",
+          "title": "Feedback til Ole (lect1)",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://app.sli.do/event/wQ4oH75RtvyKQDU862K3ny",
+          "published": null
+        },
+        {
+          "id": 1075216,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 1 ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1088337,
+          "type": "Quiz",
+          "title": "Javascript practice quiz 1",
+          "content_id": 108994,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075217,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1092580,
+          "type": "File",
+          "title": "forelæsning 1 25.pdf",
+          "content_id": 1626276,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1092581,
+          "type": "File",
+          "title": "forelæsning 1 25.pptx",
+          "content_id": 1626277,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075218,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1092739,
+          "type": "File",
+          "title": "øvelsessæt 1- Grundlæggende javascript 1.pdf",
+          "content_id": 1626486,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309659,
+      "name": "Uge 37: Forelæsning 2. Programstruktur: udtryk og sætninger. Introduktion til variable, funktioner, flow og betingelser.",
+      "position": 10,
+      "published": null,
+      "item_count": 8,
+      "items": [
+        {
+          "id": 1075219,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 2 ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1088338,
+          "type": "Quiz",
+          "title": "Javascript practice quiz 2",
+          "content_id": 108995,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075220,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1096612,
+          "type": "File",
+          "title": "forelæsning 2 25.pdf",
+          "content_id": 1632000,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1096613,
+          "type": "File",
+          "title": "forelæsning 2 25.pptx",
+          "content_id": 1632001,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075221,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1097002,
+          "type": "File",
+          "title": "øvelsessæt 2- Program - Struktur - Algoritmer.pdf",
+          "content_id": 1632558,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1096803,
+          "type": "ExternalUrl",
+          "title": "Feedback til Ole",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://app.sli.do/event/3sn9oZ5PHhhh19jrXt37y7",
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309660,
+      "name": "Uge 38: Forelæsning 3. Brugerdefinerede funktioner, virkefelter, stak.",
+      "position": 11,
+      "published": null,
+      "item_count": 7,
+      "items": [
+        {
+          "id": 1075222,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 3 ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1088339,
+          "type": "Quiz",
+          "title": "Javascript practice quiz 3",
+          "content_id": 108996,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075223,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1100532,
+          "type": "File",
+          "title": "forelæsning 3 25.pdf",
+          "content_id": 1637607,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1100533,
+          "type": "File",
+          "title": "forelæsning 3 25.pptx",
+          "content_id": 1637608,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075224,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1100510,
+          "type": "File",
+          "title": "øvelsessæt 3 - Datastrukturer Algoritmer funktioner virkefelter omgivelser og stak.pdf",
+          "content_id": 1637584,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309661,
+      "name": "Uge 39: Forelæsning 4. Datastrukturer - Objekter og arrays.",
+      "position": 12,
+      "published": null,
+      "item_count": 7,
+      "items": [
+        {
+          "id": 1075225,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 4 ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1088340,
+          "type": "Quiz",
+          "title": "Javascript practice quiz 4",
+          "content_id": 109007,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075226,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1103697,
+          "type": "File",
+          "title": "forelæsning 4 25.pptx",
+          "content_id": 1643465,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1103693,
+          "type": "File",
+          "title": "forelæsning 4 25.pdf",
+          "content_id": 1643462,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075227,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1103715,
+          "type": "File",
+          "title": "øvelsessæt 4.pdf",
+          "content_id": 1643483,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309662,
+      "name": "Uge 40: Forelæsning 5. Højere-ordens funktioner og rekursion",
+      "position": 13,
+      "published": null,
+      "item_count": 9,
+      "items": [
+        {
+          "id": 1075228,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 5",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1105073,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 3 (afsnit om rekursion)",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1104993,
+          "type": "Quiz",
+          "title": "Javascript practice quiz 5 incl. recursion ",
+          "content_id": 110475,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075229,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1107897,
+          "type": "File",
+          "title": "forelæsning 5 25.pptx",
+          "content_id": 1658577,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1107898,
+          "type": "File",
+          "title": "forelæsning 5 25.pdf",
+          "content_id": 1658578,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075230,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1107931,
+          "type": "File",
+          "title": "øvelsessæt 5.pdf",
+          "content_id": 1658625,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1107932,
+          "type": "File",
+          "title": "øvelsessæt 5 løsninger.pdf",
+          "content_id": 1658626,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309663,
+      "name": "Uge 41: Forelæsning 6. Objekt orientering, Polymorfi og Indkapsling.",
+      "position": 14,
+      "published": null,
+      "item_count": 10,
+      "items": [
+        {
+          "id": 1075231,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 6",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1109596,
+          "type": "Quiz",
+          "title": "Javascript practice quiz 6 ",
+          "content_id": 110777,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075232,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1111859,
+          "type": "File",
+          "title": "forelæsning 6 25.pdf",
+          "content_id": 1666624,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1111860,
+          "type": "File",
+          "title": "forelæsning 6 25.pptx",
+          "content_id": 1666625,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075233,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1111861,
+          "type": "File",
+          "title": "øvelsessæt 6.pdf",
+          "content_id": 1666626,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1111863,
+          "type": "File",
+          "title": "øvelsessæt 6 løsninger.pdf",
+          "content_id": 1666630,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075256,
+          "type": "File",
+          "title": "2022 - ordinær",
+          "content_id": 1598570,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1113615,
+          "type": "File",
+          "title": "eksamen 2023E ordinær.pdf",
+          "content_id": 1670338,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309664,
+      "name": "Uge 42: Efterårsferie",
+      "position": 15,
+      "published": null,
+      "item_count": 0,
+      "items": []
+    },
+    {
+      "id": 309665,
+      "name": "Uge 43: Forelæsning 7. Error-handling, Moduler",
+      "position": 16,
+      "published": null,
+      "item_count": 8,
+      "items": [
+        {
+          "id": 1075234,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 8, 10",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075235,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1116818,
+          "type": "File",
+          "title": "forelæsning 7 25.pdf",
+          "content_id": 1677087,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1116819,
+          "type": "File",
+          "title": "forelæsning 7 25.pptx",
+          "content_id": 1677089,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075236,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1116817,
+          "type": "File",
+          "title": "øvelsessæt 7.pdf",
+          "content_id": 1677085,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1116820,
+          "type": "File",
+          "title": "øvelsessæt 7 løsninger.pdf",
+          "content_id": 1677090,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1117856,
+          "type": "File",
+          "title": "Øvelser - fredag d. 24/10",
+          "content_id": 1679207,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309666,
+      "name": "Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1",
+      "position": 17,
+      "published": null,
+      "item_count": 8,
+      "items": [
+        {
+          "id": 1075237,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 13",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075238,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1119734,
+          "type": "File",
+          "title": "Forelæsning 8 - Intro til Web Teknologier.pdf",
+          "content_id": 1682843,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1119735,
+          "type": "File",
+          "title": "Forelæsning 8 - Intro til Web Teknologier.pptx",
+          "content_id": 1682844,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075239,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1120484,
+          "type": "File",
+          "title": "Hjælpeopgaver - fredag d. 31/10",
+          "content_id": 1684203,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1120501,
+          "type": "File",
+          "title": "Minefelt.pdf",
+          "content_id": 1684229,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1121099,
+          "type": "File",
+          "title": "minefeltVEJL.js",
+          "content_id": 1685205,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309667,
+      "name": "Uge 45: Forelæsning 9. HTML 2 og CSS",
+      "position": 18,
+      "published": null,
+      "item_count": 7,
+      "items": [
+        {
+          "id": 1075240,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 14 og 18",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075241,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1122894,
+          "type": "File",
+          "title": "Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx",
+          "content_id": 1688312,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075242,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1122503,
+          "type": "ExternalUrl",
+          "title": "Flexbox Froggy",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://flexboxfroggy.com/#da",
+          "published": null
+        },
+        {
+          "id": 1122526,
+          "type": "ExternalUrl",
+          "title": "CSS Diner",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://flukeout.github.io/",
+          "published": null
+        },
+        {
+          "id": 1123710,
+          "type": "File",
+          "title": "bondemand.pdf",
+          "content_id": 1690005,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309668,
+      "name": "Uge 46: Forelæsning 10. Document Object Model (DOM)",
+      "position": 19,
+      "published": null,
+      "item_count": 7,
+      "items": [
+        {
+          "id": 1075244,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1125356,
+          "type": "File",
+          "title": "2025 Forelæsning 10 - DOM, API'er og Eventhandlling.pptx",
+          "content_id": 1692896,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075245,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1125385,
+          "type": "File",
+          "title": "opgave 102 - hints.html",
+          "content_id": 1692936,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1125455,
+          "type": "File",
+          "title": "styling_opgave102.css",
+          "content_id": 1693079,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1126000,
+          "type": "File",
+          "title": "Eksamen 2023E Ordinær Klasse opgave.pdf",
+          "content_id": 1694147,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1126001,
+          "type": "File",
+          "title": "Eksamen 2024E Ordinær Klasse opgave.pdf",
+          "content_id": 1694158,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309669,
+      "name": "Uge 47: Forelæsning 11. Asynkron programmering og event handling ",
+      "position": 20,
+      "published": null,
+      "item_count": 8,
+      "items": [
+        {
+          "id": 1075246,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 11+15",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075247,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1127498,
+          "type": "File",
+          "title": "Asynkronitet og Events.pdf",
+          "content_id": 1696759,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075248,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1127499,
+          "type": "File",
+          "title": "Øvelser_Kapitel11og15.md",
+          "content_id": 1696760,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1128237,
+          "type": "File",
+          "title": "Opgavesæt uge 47.pdf",
+          "content_id": 1698072,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1128213,
+          "type": "File",
+          "title": "html terninger.pdf",
+          "content_id": 1598722,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1128211,
+          "type": "File",
+          "title": "Video gennemgang af terning opgaven",
+          "content_id": 1698028,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309670,
+      "name": "Uge 48: Forelæsning 12. Node.js og debugger samt eksamensforberedelse",
+      "position": 21,
+      "published": null,
+      "item_count": 10,
+      "items": [
+        {
+          "id": 1075249,
+          "type": "SubHeader",
+          "title": "Læs: Eloquent JavaScript – kap 20 ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075250,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1129460,
+          "type": "File",
+          "title": "NodeJs og Debugging.pdf",
+          "content_id": 1700490,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075251,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1129441,
+          "type": "File",
+          "title": "Debug - grades - 1.txt",
+          "content_id": 1700471,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1129448,
+          "type": "File",
+          "title": "Debug - Inventory - 1.txt",
+          "content_id": 1700478,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1129453,
+          "type": "File",
+          "title": "Debug - shop - 1.txt",
+          "content_id": 1700483,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1130063,
+          "type": "File",
+          "title": "Studietimers overblik - Opgave.pdf",
+          "content_id": 1701809,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1130358,
+          "type": "File",
+          "title": "StudieTimerVejl.js",
+          "content_id": 1702591,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1130091,
+          "type": "File",
+          "title": "JavaScript Objekter – Øvelser.pdf",
+          "content_id": 1701948,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 319198,
+      "name": "Uge 49: Øvelser",
+      "position": 22,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1130609,
+          "type": "File",
+          "title": "Gavelisten - Opgave.pdf",
+          "content_id": 1703058,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1130610,
+          "type": "File",
+          "title": "Juleværksted - Opgave.pdf",
+          "content_id": 1703059,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1130612,
+          "type": "File",
+          "title": "Mus - Opgave.docx",
+          "content_id": 1703063,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 309671,
+      "name": "Tidligere eksamenssæt (de fleste med vejledende løsninger)",
+      "position": 23,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1075252,
+          "type": "SubHeader",
+          "title": "Husk, at der også kan komme andre ting såsom switch-statements, loops igennem objekter, HTML osv. som ikke fremgår så ofte i tidligere eksamenssæt.",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1124809,
+          "type": "File",
+          "title": "Eksamens arkiv.zip",
+          "content_id": 1692058,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075266,
+          "type": "File",
+          "title": "Fiktiv Eksamensopgave.pdf",
+          "content_id": 1598591,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1075271,
+          "type": "File",
+          "title": "Fiktiv Eksamensopgave3.pdf",
+          "content_id": 1598593,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323358,
+      "name": "Uge 7: Forelæsning 13. Objekt orientering og Systemmodellering (use case model, domainModel)",
+      "position": 24,
+      "published": null,
+      "item_count": 12,
+      "items": [
+        {
+          "id": 1150021,
+          "type": "SubHeader",
+          "title": "Læs: ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150025,
+          "type": "ExternalTool",
+          "title": "UML @ Classroom : kap. 1,2,3,4",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4026745000005765",
+          "published": null
+        },
+        {
+          "id": 1150022,
+          "type": "SubHeader",
+          "title": "Kursorisk:",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150026,
+          "type": "ExternalTool",
+          "title": "UML Diagram Types Guide: Class diagram",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4026789100005765",
+          "published": null
+        },
+        {
+          "id": 1150027,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1166157,
+          "type": "File",
+          "title": "Forelæsning13.pdf",
+          "content_id": 1769713,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1166158,
+          "type": "File",
+          "title": "Forelæsning13.pptx",
+          "content_id": 1769714,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150028,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1165079,
+          "type": "File",
+          "title": "UMLanalyseopgaver.pdf",
+          "content_id": 1768580,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1165080,
+          "type": "File",
+          "title": "UMLcases.pdf",
+          "content_id": 1768581,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1165081,
+          "type": "File",
+          "title": "exercises system modelling - solutions.pdf",
+          "content_id": 1598710,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1166116,
+          "type": "File",
+          "title": "forelæsningsnoter 13 OO+UML.docx",
+          "content_id": 1769666,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323360,
+      "name": "Uge 8: Forelæsnigsfri",
+      "position": 25,
+      "published": null,
+      "item_count": 0,
+      "items": []
+    },
+    {
+      "id": 323359,
+      "name": "Uge 9: Forelæsning 14. Design, Arkitektur ",
+      "position": 26,
+      "published": null,
+      "item_count": 11,
+      "items": [
+        {
+          "id": 1150029,
+          "type": "SubHeader",
+          "title": "Læs: ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150036,
+          "type": "ExternalTool",
+          "title": "UML @ Classroom : kap. 5, (6), 7 ",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4026786270005765",
+          "published": null
+        },
+        {
+          "id": 1150033,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1170564,
+          "type": "File",
+          "title": "Forelæsning 14 OO+UML 2.pdf",
+          "content_id": 1780749,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1170565,
+          "type": "File",
+          "title": "Forelæsning 14 OO+UML 2.pptx",
+          "content_id": 1780750,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150034,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1170666,
+          "type": "File",
+          "title": "VRS_registrérKunde_vejl.pdf",
+          "content_id": 1780937,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1170567,
+          "type": "File",
+          "title": "opgave_bibliotekssystem.pdf",
+          "content_id": 1780752,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1170665,
+          "type": "File",
+          "title": "opgave_bibliotekssystem_vejl.pdf",
+          "content_id": 1780936,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1171371,
+          "type": "File",
+          "title": "Biblioteks_DSD_vejl.jpg",
+          "content_id": 1781875,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1171372,
+          "type": "File",
+          "title": "Biblioteks_SSD_vejl.jpg",
+          "content_id": 1781876,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323361,
+      "name": "Uge 10: Forelæsning 15. Database 1 | Opsætning af database",
+      "position": 27,
+      "published": null,
+      "item_count": 12,
+      "items": [
+        {
+          "id": 1150041,
+          "type": "SubHeader",
+          "title": "Læs: ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150046,
+          "type": "ExternalTool",
+          "title": "The Worlds of Database Systems. pp 1-13",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4031736100005765",
+          "published": null
+        },
+        {
+          "id": 1150047,
+          "type": "ExternalTool",
+          "title": "The relational model of data. pp 15-65",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4031736400005765",
+          "published": null
+        },
+        {
+          "id": 1150045,
+          "type": "SubHeader",
+          "title": "Kursorisk:",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150048,
+          "type": "ExternalTool",
+          "title": "Entity Relationship Modeling with UML",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4031736770005765",
+          "published": null
+        },
+        {
+          "id": 1150043,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1173157,
+          "type": "File",
+          "title": "Forelæsning 15 DB1.pdf",
+          "content_id": 1784973,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1173158,
+          "type": "File",
+          "title": "Forelæsning 15 DB1.pptx",
+          "content_id": 1784974,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150044,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1173004,
+          "type": "File",
+          "title": "Lecture 15 Database Design Exercises solutions.pdf",
+          "content_id": 1784717,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1173003,
+          "type": "File",
+          "title": "Lecture 15 Database Design Exercises.pdf",
+          "content_id": 1784716,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1173002,
+          "type": "File",
+          "title": "Guide til opsætning af database-2026.pdf",
+          "content_id": 1784715,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323362,
+      "name": "Uge 11: Forelæsning 16. Database 2 | Datamodifikation",
+      "position": 28,
+      "published": null,
+      "item_count": 6,
+      "items": [
+        {
+          "id": 1150056,
+          "type": "ExternalTool",
+          "title": "T-SQL fundamentals kap. 1, 2, 8",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4026742020005765",
+          "published": null
+        },
+        {
+          "id": 1176203,
+          "type": "File",
+          "title": "Forelæsning 16 - DB2.pptx",
+          "content_id": 1789277,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1176204,
+          "type": "File",
+          "title": "Forelæsning 16 - DB2.pdf",
+          "content_id": 1789278,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1176624,
+          "type": "File",
+          "title": "løbeklub SQL.pdf",
+          "content_id": 1789978,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1176167,
+          "type": "File",
+          "title": "Lecture 16 ER-RM exercises (solutions).pdf",
+          "content_id": 1789237,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1176210,
+          "type": "File",
+          "title": "Lecture 16 ER-RM Exercises.pdf",
+          "content_id": 1789236,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323363,
+      "name": "Uge 12: Forelæsning 17. Database 3 | Join og set operatorer",
+      "position": 29,
+      "published": null,
+      "item_count": 13,
+      "items": [
+        {
+          "id": 1150057,
+          "type": "SubHeader",
+          "title": "Læs: ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150065,
+          "type": "ExternalTool",
+          "title": "T-SQL fundamentals kap. 3, 6",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4026742020005765",
+          "published": null
+        },
+        {
+          "id": 1150059,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1178558,
+          "type": "File",
+          "title": "Forelæsning 17 - DB3.pdf",
+          "content_id": 1793427,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1178559,
+          "type": "File",
+          "title": "Forelæsning 17 - DB3.pptx",
+          "content_id": 1793428,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1178567,
+          "type": "File",
+          "title": "EKSTRA: DB-kapitelnoter-øvelser-løsninger.zip",
+          "content_id": 1793434,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150060,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1178564,
+          "type": "File",
+          "title": "Create_ILearn_tables.sql",
+          "content_id": 1789210,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1178565,
+          "type": "File",
+          "title": "Insert_ILearn_data.sql",
+          "content_id": 1598646,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1178560,
+          "type": "File",
+          "title": "Forelæsning 17 ILearn SQL Exercises.pdf",
+          "content_id": 1793429,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1178641,
+          "type": "File",
+          "title": "Forelæsning 17 ILearn SQL Solutions.sql",
+          "content_id": 1793556,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1179350,
+          "type": "File",
+          "title": "SQL-Opgave.pdf",
+          "content_id": 1794805,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1179352,
+          "type": "File",
+          "title": "SQL Opgave Vejl.sql",
+          "content_id": 1794807,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323364,
+      "name": "Uge 13: Forelæsning 18. Webserver & APIer",
+      "position": 30,
+      "published": null,
+      "item_count": 9,
+      "items": [
+        {
+          "id": 1150061,
+          "type": "SubHeader",
+          "title": "Læs: ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150084,
+          "type": "ExternalTool",
+          "title": "Express_Nodejs Introduction, mozilla.org",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4026766780005765",
+          "published": null
+        },
+        {
+          "id": 1150083,
+          "type": "ExternalTool",
+          "title": "Hello world example - ExpressJs",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4026764170005765",
+          "published": null
+        },
+        {
+          "id": 1150085,
+          "type": "ExternalTool",
+          "title": "Node.js - Express Framework",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4026771120005765",
+          "published": null
+        },
+        {
+          "id": 1150063,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1180541,
+          "type": "File",
+          "title": "Forelæsning 18 - Webserver og API.pptx",
+          "content_id": 1797870,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150064,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1181366,
+          "type": "File",
+          "title": "Webserver-opgave.pdf",
+          "content_id": 1799465,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1181623,
+          "type": "File",
+          "title": "Webserver-Opgave-Vejl.zip",
+          "content_id": 1799926,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323366,
+      "name": "Uge 14: Forelæsnigsfri (Påske)",
+      "position": 31,
+      "published": null,
+      "item_count": 0,
+      "items": []
+    },
+    {
+      "id": 323365,
+      "name": "Uge 15: Forelæsning 19. Webserver & Databaser",
+      "position": 32,
+      "published": null,
+      "item_count": 5,
+      "items": [
+        {
+          "id": 1150067,
+          "type": "SubHeader",
+          "title": "Læs: ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150069,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1180508,
+          "type": "File",
+          "title": "Forelæsning 19 - Webserver og Databaser.pptx",
+          "content_id": 1805046,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150070,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1184465,
+          "type": "File",
+          "title": "Forelæsning 19.zip",
+          "content_id": 1805047,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323368,
+      "name": "Uge 16: Forelæsning 20. Små systemer 1 | Testing - Teori og praksis",
+      "position": 33,
+      "published": null,
+      "item_count": 6,
+      "items": [
+        {
+          "id": 1150075,
+          "type": "SubHeader",
+          "title": "Læs: ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150088,
+          "type": "ExternalTool",
+          "title": "Certified Tester Foundation Level (CTFL) v4.0",
+          "content_id": 634,
+          "page_url": null,
+          "external_url": "https://kbdk-cbs.alma.exlibrisgroup.com/lti/v3/launch/45KBDK_CBS/LMS_CANVAS_1.3?citation_id=4026929730005765",
+          "published": null
+        },
+        {
+          "id": 1150077,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1186283,
+          "type": "File",
+          "title": "Uge 16 - Testing - Teori og praksis.pdf",
+          "content_id": 1807958,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150078,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1186488,
+          "type": "File",
+          "title": "Uge 16 - Jest.zip",
+          "content_id": 1808151,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323369,
+      "name": "Uge 18: Forelæsning 21. Små systemer 2 | Security 101, (authentification, authorization, audit)",
+      "position": 35,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1150089,
+          "type": "SubHeader",
+          "title": "Læs: ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150091,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1190099,
+          "type": "File",
+          "title": "Forelæsning 21 - Cloud & Security 101.pptx",
+          "content_id": 1814657,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150092,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323367,
+      "name": "uge 19: Forelæsning 22. Små systemer 3 | Arkitektur, Backend, MVC + fullstack",
+      "position": 36,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1150071,
+          "type": "SubHeader",
+          "title": "Læs: ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150073,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1191565,
+          "type": "File",
+          "title": "Uge 19 - System Arkitektur - 3 tier, Backend, MVC + fullstack.pdf",
+          "content_id": 1817698,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150074,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 323371,
+      "name": "Uge 20: Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse.",
+      "position": 38,
+      "published": null,
+      "item_count": 6,
+      "items": [
+        {
+          "id": 1150097,
+          "type": "SubHeader",
+          "title": "Læs: ",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150103,
+          "type": "ExternalUrl",
+          "title": "Kursusbeskrivelse og eksamensregler",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2024-2025/BA-BINTO1064U.aspx",
+          "published": null
+        },
+        {
+          "id": 1150098,
+          "type": "SubHeader",
+          "title": "Slides",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1194245,
+          "type": "File",
+          "title": "Forelæsning 23 - eksamensforberedelse.pptx",
+          "content_id": 1823174,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1194267,
+          "type": "File",
+          "title": "Forelæsning 23 - eksamensforberedelse.pdf",
+          "content_id": 1823208,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1150099,
+          "type": "SubHeader",
+          "title": "Øvelser",
+          "content_id": null,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "ExternalUrl": 6,
+    "SubHeader": 74,
+    "File": 115,
+    "Assignment": 6,
+    "Quiz": 8,
+    "ExternalTool": 12
+  },
+  "module_file_ids": [
+    1598570,
+    1598591,
+    1598593,
+    1598646,
+    1598669,
+    1598710,
+    1598721,
+    1598722,
+    1626276,
+    1626277,
+    1626486,
+    1632000,
+    1632001,
+    1632558,
+    1637584,
+    1637607,
+    1637608,
+    1643462,
+    1643465,
+    1643483,
+    1658577,
+    1658578,
+    1658625,
+    1658626,
+    1666624,
+    1666625,
+    1666626,
+    1666630,
+    1670338,
+    1670371,
+    1677085,
+    1677087,
+    1677089,
+    1677090,
+    1679207,
+    1682843,
+    1682844,
+    1684203,
+    1684229,
+    1685205,
+    1687491,
+    1688312,
+    1690005,
+    1692058,
+    1692896,
+    1692936,
+    1692940,
+    1693079,
+    1694147,
+    1694158,
+    1696759,
+    1696760,
+    1698028,
+    1698072,
+    1700471,
+    1700478,
+    1700483,
+    1700490,
+    1700515,
+    1700523,
+    1701809,
+    1701948,
+    1702591,
+    1703058,
+    1703059,
+    1703063,
+    1736378,
+    1736379,
+    1736380,
+    1768580,
+    1768581,
+    1769666,
+    1769713,
+    1769714,
+    1770754,
+    1770755,
+    1771104,
+    1780749,
+    1780750,
+    1780752,
+    1780936,
+    1780937,
+    1781875,
+    1781876,
+    1784715,
+    1784716,
+    1784717,
+    1784973,
+    1784974,
+    1789210,
+    1789236,
+    1789237,
+    1789277,
+    1789278,
+    1789978,
+    1793427,
+    1793428,
+    1793429,
+    1793434,
+    1793556,
+    1794805,
+    1794807,
+    1796825,
+    1797870,
+    1799465,
+    1799926,
+    1805046,
+    1805047,
+    1807958,
+    1808151,
+    1814657,
+    1815182,
+    1817698,
+    1823174,
+    1823208
+  ],
+  "only_in_modules": [
+    1598570,
+    1598591,
+    1598593,
+    1598646,
+    1598669,
+    1598710,
+    1598721,
+    1598722,
+    1626276,
+    1626277,
+    1626486,
+    1632000,
+    1632001,
+    1632558,
+    1637584,
+    1637607,
+    1637608,
+    1643462,
+    1643465,
+    1643483,
+    1658577,
+    1658578,
+    1658625,
+    1658626,
+    1666624,
+    1666625,
+    1666626,
+    1666630,
+    1670338,
+    1670371,
+    1677085,
+    1677087,
+    1677089,
+    1677090,
+    1679207,
+    1682843,
+    1682844,
+    1684203,
+    1684229,
+    1685205,
+    1687491,
+    1688312,
+    1690005,
+    1692058,
+    1692896,
+    1692936,
+    1692940,
+    1693079,
+    1694147,
+    1694158,
+    1696759,
+    1696760,
+    1698028,
+    1698072,
+    1700471,
+    1700478,
+    1700483,
+    1700490,
+    1700515,
+    1700523,
+    1701809,
+    1701948,
+    1702591,
+    1703058,
+    1703059,
+    1703063,
+    1736378,
+    1736379,
+    1736380,
+    1768580,
+    1768581,
+    1769666,
+    1769713,
+    1769714,
+    1770754,
+    1770755,
+    1771104,
+    1780749,
+    1780750,
+    1780752,
+    1780936,
+    1780937,
+    1781875,
+    1781876,
+    1784715,
+    1784716,
+    1784717,
+    1784973,
+    1784974,
+    1789210,
+    1789236,
+    1789237,
+    1789277,
+    1789278,
+    1789978,
+    1793427,
+    1793428,
+    1793429,
+    1793434,
+    1793556,
+    1794805,
+    1794807,
+    1796825,
+    1797870,
+    1799465,
+    1799926,
+    1805046,
+    1805047,
+    1807958,
+    1808151,
+    1814657,
+    1815182,
+    1817698,
+    1823174,
+    1823208
+  ],
+  "only_in_files_tab": [],
+  "files_tab_restricted": true,
+  "assignments": [
+    {
+      "id": 34034,
+      "name": "Godkendelsesopgave 2",
+      "due_at": "2025-10-31T22:59:59Z",
+      "points": 1.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_upload"
+      ]
+    },
+    {
+      "id": 34156,
+      "name": "Godkendelsesopgave 3",
+      "due_at": "2025-11-18T22:59:59Z",
+      "points": 1.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_upload"
+      ]
+    },
+    {
+      "id": 35381,
+      "name": "Godkendelsesopgave 5",
+      "due_at": "2026-03-13T22:59:59Z",
+      "points": 1.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_upload"
+      ]
+    },
+    {
+      "id": 35494,
+      "name": "Godkendelsesopgave 6",
+      "due_at": "2026-03-27T22:59:59Z",
+      "points": 1.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_upload"
+      ]
+    },
+    {
+      "id": 35533,
+      "name": "temp",
+      "due_at": null,
+      "points": 1.0,
+      "has_rubric": true,
+      "submission_types": [
+        "online_upload"
+      ]
+    },
+    {
+      "id": 35676,
+      "name": "Godkendelsesopgave 7",
+      "due_at": "2026-04-24T21:59:59Z",
+      "points": 1.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_upload"
+      ]
+    },
+    {
+      "id": 35872,
+      "name": "Godkendelsesopgave 8 - Quiz (Sidste frist for aflevering: onsdag 6. maj 23:59.)",
+      "due_at": "2026-05-06T21:59:59Z",
+      "points": 30.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_quiz"
+      ]
+    },
+    {
+      "id": 33059,
+      "name": "Javascript practice quiz 1",
+      "due_at": null,
+      "points": 20.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_quiz"
+      ]
+    },
+    {
+      "id": 33060,
+      "name": "Javascript practice quiz 2",
+      "due_at": null,
+      "points": 20.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_quiz"
+      ]
+    },
+    {
+      "id": 33061,
+      "name": "Javascript practice quiz 3",
+      "due_at": null,
+      "points": 20.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_quiz"
+      ]
+    },
+    {
+      "id": 33070,
+      "name": "Javascript practice quiz 4",
+      "due_at": null,
+      "points": 20.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_quiz"
+      ]
+    },
+    {
+      "id": 33723,
+      "name": "Godkendelsesopgave 1",
+      "due_at": "2025-10-03T21:59:59Z",
+      "points": 1.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_upload"
+      ]
+    },
+    {
+      "id": 33768,
+      "name": "Javascript practice quiz 5 incl. recursion ",
+      "due_at": null,
+      "points": 20.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_quiz"
+      ]
+    },
+    {
+      "id": 33856,
+      "name": "Javascript practice quiz 6",
+      "due_at": null,
+      "points": 20.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_quiz"
+      ]
+    },
+    {
+      "id": 34289,
+      "name": "G4",
+      "due_at": "2025-12-02T22:59:59Z",
+      "points": 30.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_quiz"
+      ]
+    }
+  ],
+  "quizzes": [
+    {
+      "id": 111380,
+      "title": "G4"
+    },
+    {
+      "id": 114664,
+      "title": "Godkendelsesopgave 8 - Quiz (Sidste frist for aflevering: onsdag 6. maj 23:59.)"
+    },
+    {
+      "id": 108994,
+      "title": "Javascript practice quiz 1"
+    },
+    {
+      "id": 108995,
+      "title": "Javascript practice quiz 2"
+    },
+    {
+      "id": 108996,
+      "title": "Javascript practice quiz 3"
+    },
+    {
+      "id": 109007,
+      "title": "Javascript practice quiz 4"
+    },
+    {
+      "id": 110475,
+      "title": "Javascript practice quiz 5 incl. recursion "
+    },
+    {
+      "id": 110777,
+      "title": "Javascript practice quiz 6"
+    }
+  ],
+  "announcements": [
+    {
+      "id": 181443,
+      "title": "NB angående krav til grundareal i eksamens projekt",
+      "posted_at": "2026-05-11T07:30:14Z"
+    },
+    {
+      "id": 181412,
+      "title": "NB: Ekstra projektstøtte på mandag",
+      "posted_at": "2026-05-08T11:58:12Z"
+    },
+    {
+      "id": 181262,
+      "title": "Reminder: Husk frist for G8 i dag 23:59",
+      "posted_at": "2026-05-06T08:14:43Z"
+    },
+    {
+      "id": 180789,
+      "title": "NB: Afleveringsfrist for projektopgaven rykket til 12/5 kl 12.00",
+      "posted_at": "2026-04-28T09:01:15Z"
+    },
+    {
+      "id": 180725,
+      "title": "G7 udvidet afleveringsfrist",
+      "posted_at": "2026-04-27T11:05:40Z"
+    },
+    {
+      "id": 180542,
+      "title": "NB: G7 er med gruppeaflevering",
+      "posted_at": "2026-04-22T09:45:18Z"
+    },
+    {
+      "id": 180533,
+      "title": "Erstatningsforelæsnig på mandag",
+      "posted_at": "2026-04-22T07:26:53Z"
+    },
+    {
+      "id": 180394,
+      "title": "Undervisning aflyst 20/4",
+      "posted_at": "2026-04-19T18:00:47Z"
+    },
+    {
+      "id": 180116,
+      "title": "G7 er på Canvas.",
+      "posted_at": "2026-04-14T06:30:39Z"
+    },
+    {
+      "id": 179386,
+      "title": "Forberedelse til API'er",
+      "posted_at": "2026-03-26T20:21:29Z"
+    },
+    {
+      "id": 179119,
+      "title": "Instruktor til efteråret",
+      "posted_at": "2026-03-24T11:25:00Z"
+    },
+    {
+      "id": 179116,
+      "title": "Vigtigt om G5-bedømmelser",
+      "posted_at": "2026-03-24T11:20:35Z"
+    },
+    {
+      "id": 178407,
+      "title": "OBS: Svar på konkrete spørgsmål i diskussionsforummet",
+      "posted_at": "2026-03-11T13:07:43Z"
+    },
+    {
+      "id": 177987,
+      "title": "Vigtigt! sæt  Azure og DataGrip op inden mandag",
+      "posted_at": "2026-03-04T12:43:56Z"
+    },
+    {
+      "id": 177654,
+      "title": "G5 er offentliggjort",
+      "posted_at": "2026-02-27T09:57:14Z"
+    },
+    {
+      "id": 176840,
+      "title": "Vejledende løsning for re-eksamen og projektopgaven er nu begge online",
+      "posted_at": "2026-02-13T10:19:01Z"
+    },
+    {
+      "id": 176684,
+      "title": "Forelæsningsslides fra i mandags er nu uploadet",
+      "posted_at": "2026-02-11T11:05:53Z"
+    },
+    {
+      "id": 175590,
+      "title": "Forelæsningen og bitlab i uge 6 udskudt til uge 7",
+      "posted_at": "2026-01-27T11:17:16Z"
+    },
+    {
+      "id": 174924,
+      "title": "Forelæsningsplan for foråret er offentliggjort.",
+      "posted_at": "2026-01-18T10:07:46Z"
+    },
+    {
+      "id": 174224,
+      "title": "Feedback til ordinær eksamen og råd til reeksamen",
+      "posted_at": "2026-01-12T07:41:39Z"
+    },
+    {
+      "id": 173148,
+      "title": "Vejledende løsning for eksamen og bøger til foråret ",
+      "posted_at": "2025-12-16T11:03:16Z"
+    },
+    {
+      "id": 171916,
+      "title": "NB: Spørgetime onsdag flyttet til: SP205 14:30-16:10",
+      "posted_at": "2025-12-02T08:55:20Z"
+    },
+    {
+      "id": 171765,
+      "title": "G4 frist udsat",
+      "posted_at": "2025-11-29T19:28:48Z"
+    },
+    {
+      "id": 171640,
+      "title": "NB: Sidste øvelsesgang og spørgetime",
+      "posted_at": "2025-11-26T13:26:07Z"
+    },
+    {
+      "id": 171629,
+      "title": "G3 feedback",
+      "posted_at": "2025-11-26T10:28:06Z"
+    },
+    {
+      "id": 170876,
+      "title": "NB: G3 aflevering udskudt",
+      "posted_at": "2025-11-13T06:48:54Z"
+    },
+    {
+      "id": 170362,
+      "title": "G2 feedback og vejledende løsning",
+      "posted_at": "2025-11-04T18:14:46Z"
+    },
+    {
+      "id": 170246,
+      "title": "Besøg eksamenslokalerne på Amager",
+      "posted_at": "2025-11-03T12:26:25Z"
+    },
+    {
+      "id": 169869,
+      "title": "G2 er med gruppeaflevering (opdateret).",
+      "posted_at": "2025-10-29T08:27:23Z"
+    },
+    {
+      "id": 168526,
+      "title": "Første øvelsesgang fredag d. 10/10",
+      "posted_at": "2025-10-08T15:07:54Z"
+    },
+    {
+      "id": 168059,
+      "title": "Practice quiz til kapitel 6 offentligjort.",
+      "posted_at": "2025-10-04T08:00:08Z"
+    },
+    {
+      "id": 167444,
+      "title": "Materialet til forelæsning 5",
+      "posted_at": "2025-09-26T09:59:00Z"
+    },
+    {
+      "id": 167004,
+      "title": "Invitation til late lecture med IT-specialster ",
+      "posted_at": "2025-09-22T09:36:51Z"
+    },
+    {
+      "id": 166171,
+      "title": "Kommentarer til feedback fra forelæsning 2",
+      "posted_at": "2025-09-11T06:57:00Z"
+    },
+    {
+      "id": 165528,
+      "title": "Follow up til første forelæsning!",
+      "posted_at": "2025-09-04T07:02:47Z"
+    },
+    {
+      "id": 164942,
+      "title": "Velkommen til programmeringskurset",
+      "posted_at": "2025-08-28T14:16:27Z"
+    }
+  ],
+  "discussions": [
+    {
+      "id": 177989,
+      "title": "Projektopgaven"
+    },
+    {
+      "id": 177766,
+      "title": "Generelle Spørgsmål / General Questions - 2. semester"
+    },
+    {
+      "id": 177656,
+      "title": "Godkendelsesopgave 5"
+    },
+    {
+      "id": 171865,
+      "title": "Eksamensregler"
+    },
+    {
+      "id": 165424,
+      "title": "Generelle Spørgsmål / General Questions - 1. semester"
+    }
+  ],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_by_source": {
+    "announcement": [
+      1641533,
+      1808522
+    ],
+    "assignment": [
+      1643513,
+      1676749,
+      1687690,
+      1688483,
+      1784207,
+      1793438,
+      1808520
+    ],
+    "discussion": [],
+    "syllabus": []
+  },
+  "inline_file_ids": [
+    1641533,
+    1643513,
+    1676749,
+    1687690,
+    1688483,
+    1784207,
+    1793438,
+    1808520,
+    1808522
+  ],
+  "embedded_only_file_ids": [],
+  "inline_only_file_ids": [
+    1641533,
+    1643513,
+    1676749,
+    1687690,
+    1688483,
+    1784207,
+    1793438,
+    1808520,
+    1808522
+  ],
+  "expected_file_ids": [
+    1598570,
+    1598591,
+    1598593,
+    1598646,
+    1598669,
+    1598710,
+    1598721,
+    1598722,
+    1626276,
+    1626277,
+    1626486,
+    1632000,
+    1632001,
+    1632558,
+    1637584,
+    1637607,
+    1637608,
+    1641533,
+    1643462,
+    1643465,
+    1643483,
+    1643513,
+    1658577,
+    1658578,
+    1658625,
+    1658626,
+    1666624,
+    1666625,
+    1666626,
+    1666630,
+    1670338,
+    1670371,
+    1676749,
+    1677085,
+    1677087,
+    1677089,
+    1677090,
+    1679207,
+    1682843,
+    1682844,
+    1684203,
+    1684229,
+    1685205,
+    1687491,
+    1687690,
+    1688312,
+    1688483,
+    1690005,
+    1692058,
+    1692896,
+    1692936,
+    1692940,
+    1693079,
+    1694147,
+    1694158,
+    1696759,
+    1696760,
+    1698028,
+    1698072,
+    1700471,
+    1700478,
+    1700483,
+    1700490,
+    1700515,
+    1700523,
+    1701809,
+    1701948,
+    1702591,
+    1703058,
+    1703059,
+    1703063,
+    1736378,
+    1736379,
+    1736380,
+    1768580,
+    1768581,
+    1769666,
+    1769713,
+    1769714,
+    1770754,
+    1770755,
+    1771104,
+    1780749,
+    1780750,
+    1780752,
+    1780936,
+    1780937,
+    1781875,
+    1781876,
+    1784207,
+    1784715,
+    1784716,
+    1784717,
+    1784973,
+    1784974,
+    1789210,
+    1789236,
+    1789237,
+    1789277,
+    1789278,
+    1789978,
+    1793427,
+    1793428,
+    1793429,
+    1793434,
+    1793438,
+    1793556,
+    1794805,
+    1794807,
+    1796825,
+    1797870,
+    1799465,
+    1799926,
+    1805046,
+    1805047,
+    1807958,
+    1808151,
+    1808520,
+    1808522,
+    1814657,
+    1815182,
+    1817698,
+    1823174,
+    1823208
+  ],
+  "secondary_counts": {
+    "assignment": 15,
+    "quiz": 8,
+    "discussion": 5,
+    "announcement": 36,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "files_tab": "Forbidden: {\"status\":\"unauthorized\",\"errors\":[{\"message\":\"user not authorised to perform that action\"}]}",
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 12.0
+}

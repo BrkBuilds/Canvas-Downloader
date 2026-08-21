@@ -1,0 +1,54 @@
+
+=== audit app start 2026-07-27 16:57:16 port=8790 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8790
+  Network URL: http://192.168.1.50:8790
+  External URL: http://188.183.232.43:8790
+
+Hybrid Fetch: Found 1 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43667.
+
+=== audit app start 2026-07-27 19:45:11 port=8790 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8790
+  Network URL: http://192.168.1.50:8790
+  External URL: http://188.183.232.43:8790
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>
+
+=== audit app start 2026-07-27 23:29:33 port=8790 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8790
+  Network URL: http://192.168.1.50:8790
+  External URL: http://188.183.232.43:8790
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>
+
+=== audit app start 2026-07-27 23:40:53 port=8790 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8790
+  Network URL: http://192.168.1.50:8790
+  External URL: http://188.183.232.43:8790
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>
+
+=== audit app start 2026-07-27 23:42:33 port=8790 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8790
+  Network URL: http://192.168.1.50:8790
+  External URL: http://188.183.232.43:8790
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>

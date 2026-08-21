@@ -1,0 +1,104 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_235210_syncregress__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-07-29T00:12:40",
+  "applied": [
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    },
+    {
+      "kind": "readonly_target",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 4,
+  "expected_categories": {
+    "uptodate": 2,
+    "updated_clean": 2
+  },
+  "expected_untracked": [
+    "Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf",
+    "Modul 13 - Exam Preparation/Trial Exam.pdf"
+  ],
+  "expected_missing_rows": [
+    "Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 0.pdf",
+    "Course description including examination rules/Timetable for presentations - mine noter 1.pdf"
+  ],
+  "expected_md5_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 43,
+    "files": 42
+  },
+  "after": {
+    "rows": 41,
+    "files": 42
+  },
+  "fixtures": [
+    {
+      "label": "renamed-row-dropped:Compulsory Assignment_Fall 2025 - mine noter 0.pdf",
+      "kind": "renamed_row_dropped",
+      "path": "Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 0.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 0.pdf",
+      "match_name": "Compulsory Assignment_Fall 2025.pdf",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1637102,
+      "original_path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Timetable for presentations - mine noter 1.pdf",
+      "kind": "renamed_row_dropped",
+      "path": "Course description including examination rules/Timetable for presentations - mine noter 1.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Course description including examination rules/Timetable for presentations - mine noter 1.pdf",
+      "match_name": "Timetable for presentations.pdf",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1684097,
+      "original_path": "Course description including examination rules/Timetable for presentations.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "readonly:Trial Exam.pdf",
+      "kind": "readonly_target",
+      "path": "Modul 13 - Exam Preparation/Trial Exam.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Modul 13 - Exam Preparation/Trial Exam.pdf",
+      "match_name": "Trial Exam.pdf",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1698205,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "readonly:Lektionsplan_HA(it.)_Intro to IS 2025.pdf",
+      "kind": "readonly_target",
+      "path": "Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf",
+      "match_name": "Lektionsplan_HA(it.)_Intro to IS 2025.pdf",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1618647,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    }
+  ]
+}

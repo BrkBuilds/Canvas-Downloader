@@ -1,0 +1,41 @@
+{
+    "parent":  "20260730_135829_ship_readiness_20260730",
+    "lanes":  [
+                  {
+                      "lane":  "office",
+                      "index":  0,
+                      "serial":  true,
+                      "parent":  "20260730_135829_ship_readiness_20260730",
+                      "run_id":  "20260730_135829_ship_readiness_20260730__office",
+                      "app_port":  8800,
+                      "cdp_port":  9400,
+                      "headless":  true,
+                      "count":  12,
+                      "spec":  "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__office\\lane_spec.json"
+                  },
+                  {
+                      "lane":  "free1",
+                      "index":  2,
+                      "serial":  false,
+                      "parent":  "20260730_135829_ship_readiness_20260730",
+                      "run_id":  "20260730_135829_ship_readiness_20260730__free1",
+                      "app_port":  8820,
+                      "cdp_port":  9420,
+                      "headless":  true,
+                      "count":  18,
+                      "spec":  "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free1\\lane_spec.json"
+                  },
+                  {
+                      "lane":  "free2",
+                      "index":  3,
+                      "serial":  false,
+                      "parent":  "20260730_135829_ship_readiness_20260730",
+                      "run_id":  "20260730_135829_ship_readiness_20260730__free2",
+                      "app_port":  8830,
+                      "cdp_port":  9430,
+                      "headless":  true,
+                      "count":  17,
+                      "spec":  "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\lane_spec.json"
+                  }
+              ]
+}

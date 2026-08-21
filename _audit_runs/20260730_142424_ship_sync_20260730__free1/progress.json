@@ -1,0 +1,29 @@
+{
+  "rows": [
+    {
+      "ok": true,
+      "unpaired": {
+        "pairs": 0,
+        "removed": 1
+      },
+      "kind": "sync",
+      "course_id": 43667,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_142424_ship_sync_20260730__free1\\downloads\\BINT 1st semester (LA E25 BINTS1SEMU)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_142424_ship_sync_20260730__free1\\evidence\\rows\\s000"
+      },
+      "findings": 0,
+      "severities": {},
+      "id": "s000",
+      "seconds": 35.7
+    }
+  ],
+  "current": "s003",
+  "updated": "2026-07-30T16:30:04"
+}

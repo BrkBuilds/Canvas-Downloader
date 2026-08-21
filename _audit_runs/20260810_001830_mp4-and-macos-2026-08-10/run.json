@@ -1,0 +1,28 @@
+{
+  "run_id": "20260810_001830_mp4-and-macos-2026-08-10",
+  "label": "mp4-and-macos-2026-08-10",
+  "created": "2026-08-10T00:18:30",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {},
+  "ports_used": [
+    8799
+  ],
+  "browser": {},
+  "scope": [
+    {
+      "name": "mp4_only",
+      "flow": "download",
+      "course": "43660",
+      "config": "{\"mode\": \"flat\", \"file_filter\": \"study\", \"pan_layout\": \"separate\", \"pan_out_mp4\": true, \"pan_out_url\": true, \"pan_out_mp3\": false, \"pan_out_txt\": false, \"pan_out_srt\": false, \"convert_urls\": true}",
+      "result": "ok"
+    },
+    {
+      "name": "mp4_real",
+      "flow": "download",
+      "course": "43660",
+      "config": "{\"mode\": \"flat\", \"file_filter\": \"study\", \"pan_layout\": \"separate\", \"pan_out_mp4\": true, \"pan_out_url\": true, \"pan_out_mp3\": false, \"pan_out_txt\": false, \"pan_out_srt\": false, \"convert_urls\": true}",
+      "result": "ok"
+    }
+  ]
+}

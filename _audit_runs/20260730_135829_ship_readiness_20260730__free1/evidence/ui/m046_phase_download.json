@@ -1,0 +1,120 @@
+{
+  "name": "m046_phase_download",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free1\\evidence\\screenshots\\m046_phase_download.png",
+  "captured": "2026-07-30 15:33:59",
+  "screen": {
+    "url": "http://127.0.0.1:8820/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Downloading...",
+      "IT-projektledelse (LA F26 BINTO1059U)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_active_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cancel_download_btn",
+        "text": "Cancel Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownloading...\n\nDOWNLOADING\n\nIT-projektledelse (LA F26 BINTO1059U)\n12%\nDOWNLOADED\n9.1 / 487.5 MB\nSPEED\n2.7 MB/s\nFILES\n5 / 40\nTIME REMAINING\n02:21\nDOWNLOADING\n2026 2.lektion.pdf\n2022_21.marts artikel_ EV i en agil verden-whitepaper.pdf\n2021 Eksempel PERT.pdf\n2021 Tillæg_estimering.pdf\n[IT-projektledelse (LA F26 BINTO1059U)] The teacher has locked this file on Canvas, so it cannot be downloaded (This file is part of an unpublished module and is not available yet).\n[IT-projektledelse (LA F26 BINTO1059U)] The teacher has locked this file on Canvas, so it cannot be downloaded (This file is part of an unpublished module and is not available yet).\n\nCancel Download",
+    "textLen": 750
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "active",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": true,
+    "header": "IT-projektledelse (LA F26 BINTO1059U)",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "DOWNLOADED | 9.1 / 487.5 MB | SPEED | 2.7 MB/s | FILES | 5 / 40 | TIME REMAINING | 02:21",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": "DOWNLOADING\n\nIT-projektledelse (LA F26 BINTO1059U)\n12%\nDOWNLOADED\n9.1 / 487.5 MB\nSPEED\n2.7 MB/s\nFILES\n5 / 40\nTIME REMAINING\n02:21\nDOWNLOADING\n2026 2.lektion.pdf\n2022_21.marts artikel_ EV i en agil verden-whitepaper.pdf\n2021 Eksempel PERT.pdf\n2021 Tillæg_estimering.pdf\n[IT-projektledelse (LA F26 BINTO1059U)] The teacher has locked this file on Canvas, so it cannot be downloaded (This file is part of an unpublished module and is not available yet).\n[IT-projektledelse (LA F26 BINTO1059U)] The teacher has locked this file on Canvas, so it cannot be downloaded (This file is part of an unpublished module and is not available yet)."
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

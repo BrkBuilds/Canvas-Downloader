@@ -1,0 +1,75 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-08-09T23:09:24",
+  "applied": [
+    {
+      "kind": "new_regular",
+      "count": 3
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 3,
+  "expected_categories": {
+    "new": 3
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_size_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 50,
+    "files": 50
+  },
+  "after": {
+    "rows": 47,
+    "files": 47
+  },
+  "fixtures": [
+    {
+      "label": "new:Page Numbers for 6th and 5th Edition.docx",
+      "kind": "new_regular",
+      "path": "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Course description including examination rules/Page Numbers for 6th and 5th Edition.docx",
+      "match_name": "Page Numbers for 6th and 5th Edition.docx",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1627501,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new:Compulsory Assignment_Fall 2025.pdf",
+      "kind": "new_regular",
+      "path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Course description including examination rules/Compulsory Assignment_Fall 2025.pdf",
+      "match_name": "Compulsory Assignment_Fall 2025.pdf",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1637102,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new:Timetable for presentations.pdf",
+      "kind": "new_regular",
+      "path": "Course description including examination rules/Timetable for presentations.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Course description including examination rules/Timetable for presentations.pdf",
+      "match_name": "Timetable for presentations.pdf",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1684097,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

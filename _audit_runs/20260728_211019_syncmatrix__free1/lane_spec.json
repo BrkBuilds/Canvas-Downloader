@@ -1,0 +1,341 @@
+{
+  "lane": "free1",
+  "index": 0,
+  "serial": false,
+  "parent": "20260728_211019_syncmatrix",
+  "run_id": "20260728_211019_syncmatrix__free1",
+  "app_port": 8850,
+  "cdp_port": 9450,
+  "headless": true,
+  "jobs": [
+    {
+      "id": "s000",
+      "kind": "sync",
+      "course_id": 43667,
+      "config": {
+        "sync_mode": "review",
+        "confirm": true
+      },
+      "name": "s000",
+      "course_ids": [
+        43667
+      ],
+      "snapshot": "c43667_base",
+      "seed_kinds": [],
+      "seed_counts": {},
+      "quick": false,
+      "confirm": true,
+      "note": "nothing-changed"
+    },
+    {
+      "id": "s003",
+      "kind": "sync",
+      "course_id": 43657,
+      "config": {
+        "sync_mode": "review",
+        "confirm": true
+      },
+      "name": "s003",
+      "course_ids": [
+        43657
+      ],
+      "snapshot": "c43657_study",
+      "seed_kinds": [
+        "new_secondary"
+      ],
+      "seed_counts": {},
+      "quick": false,
+      "confirm": true,
+      "note": "new_secondary"
+    },
+    {
+      "id": "s006",
+      "kind": "sync",
+      "course_id": 43657,
+      "config": {
+        "sync_mode": "review",
+        "confirm": true
+      },
+      "name": "s006",
+      "course_ids": [
+        43657
+      ],
+      "snapshot": "c43657_study",
+      "seed_kinds": [
+        "deleted_locally"
+      ],
+      "seed_counts": {},
+      "quick": false,
+      "confirm": true,
+      "note": "deleted_locally"
+    },
+    {
+      "id": "s009",
+      "kind": "sync",
+      "course_id": 43657,
+      "config": {
+        "sync_mode": "review",
+        "confirm": true
+      },
+      "name": "s009",
+      "course_ids": [
+        43657
+      ],
+      "snapshot": "c43657_study",
+      "seed_kinds": [
+        "renamed_row_dropped"
+      ],
+      "seed_counts": {},
+      "quick": false,
+      "confirm": true,
+      "note": "renamed_row_dropped"
+    },
+    {
+      "id": "s012",
+      "kind": "sync",
+      "course_id": 43657,
+      "config": {
+        "sync_mode": "review",
+        "confirm": true
+      },
+      "name": "s012",
+      "course_ids": [
+        43657
+      ],
+      "snapshot": "c43657_study",
+      "seed_kinds": [
+        "duplicate_copy"
+      ],
+      "seed_counts": {},
+      "quick": false,
+      "confirm": true,
+      "note": "duplicate_copy"
+    },
+    {
+      "id": "s015",
+      "kind": "sync",
+      "course_id": 43667,
+      "config": {
+        "sync_mode": "review",
+        "confirm": true
+      },
+      "name": "s015",
+      "course_ids": [
+        43667
+      ],
+      "snapshot": "c43667_base",
+      "seed_kinds": [
+        "foreign_content"
+      ],
+      "seed_counts": {},
+      "quick": false,
+      "confirm": true,
+      "note": "foreign_content"
+    },
+    {
+      "id": "s018",
+      "kind": "sync",
+      "course_id": 45899,
+      "config": {
+        "sync_mode": "quick",
+        "confirm": true
+      },
+      "name": "s018",
+      "course_ids": [
+        45899
+      ],
+      "snapshot": "c45899_base",
+      "seed_kinds": [
+        "new_regular",
+        "clean_update",
+        "deleted_locally",
+        "renamed_row_intact",
+        "renamed_ambiguous",
+        "duplicate_copy",
+        "long_path",
+        "partial_artifact"
+      ],
+      "seed_counts": {},
+      "quick": true,
+      "confirm": true,
+      "note": ""
+    },
+    {
+      "id": "s021",
+      "kind": "sync",
+      "course_id": 45899,
+      "config": {
+        "sync_mode": "review",
+        "confirm": true
+      },
+      "name": "s021",
+      "course_ids": [
+        45899
+      ],
+      "snapshot": "c45899_base",
+      "seed_kinds": [
+        "new_regular",
+        "deleted_on_canvas",
+        "renamed_ambiguous",
+        "moved_deep",
+        "long_path",
+        "foreign_content"
+      ],
+      "seed_counts": {},
+      "quick": false,
+      "confirm": true,
+      "note": ""
+    },
+    {
+      "id": "s024",
+      "kind": "sync",
+      "course_id": 43657,
+      "config": {
+        "sync_mode": "review",
+        "confirm": true
+      },
+      "name": "s024",
+      "course_ids": [
+        43657
+      ],
+      "snapshot": "c43657_study",
+      "seed_kinds": [
+        "new_secondary",
+        "renamed_ambiguous"
+      ],
+      "seed_counts": {},
+      "quick": false,
+      "confirm": true,
+      "note": ""
+    },
+    {
+      "id": "s027",
+      "kind": "sync",
+      "course_id": 43657,
+      "config": {
+        "sync_mode": "quick",
+        "confirm": true
+      },
+      "name": "s027",
+      "course_ids": [
+        43657
+      ],
+      "snapshot": "c43657_study",
+      "seed_kinds": [
+        "moved_deep",
+        "foreign_content"
+      ],
+      "seed_counts": {},
+      "quick": true,
+      "confirm": true,
+      "note": ""
+    },
+    {
+      "id": "s030",
+      "kind": "sync",
+      "course_id": 43657,
+      "config": {
+        "sync_mode": "review",
+        "confirm": false
+      },
+      "name": "s030",
+      "course_ids": [
+        43657
+      ],
+      "snapshot": "c43657_study",
+      "seed_kinds": [
+        "renamed_row_dropped",
+        "readonly_target"
+      ],
+      "seed_counts": {},
+      "quick": false,
+      "confirm": false,
+      "note": "triple"
+    },
+    {
+      "id": "s033",
+      "kind": "sync",
+      "course_id": 43657,
+      "config": {
+        "sync_mode": "quick",
+        "confirm": true
+      },
+      "name": "s033",
+      "course_ids": [
+        43657
+      ],
+      "snapshot": "c43657_study",
+      "seed_kinds": [
+        "edited_update",
+        "readonly_target"
+      ],
+      "seed_counts": {},
+      "quick": true,
+      "confirm": true,
+      "note": "triple"
+    },
+    {
+      "id": "s036",
+      "kind": "sync",
+      "course_id": 43657,
+      "config": {
+        "sync_mode": "quick",
+        "confirm": true
+      },
+      "name": "s036",
+      "course_ids": [
+        43657
+      ],
+      "snapshot": "c43657_study",
+      "seed_kinds": [
+        "renamed_ambiguous",
+        "readonly_target"
+      ],
+      "seed_counts": {},
+      "quick": true,
+      "confirm": true,
+      "note": "triple"
+    },
+    {
+      "id": "s039",
+      "kind": "sync",
+      "course_id": 43667,
+      "config": {
+        "sync_mode": "quick",
+        "confirm": true
+      },
+      "name": "s039",
+      "course_ids": [
+        43667
+      ],
+      "snapshot": "c43667_base",
+      "seed_kinds": [],
+      "seed_counts": {},
+      "quick": true,
+      "confirm": true,
+      "note": "triple"
+    },
+    {
+      "id": "s042",
+      "kind": "sync",
+      "course_id": 43657,
+      "config": {
+        "sync_mode": "quick",
+        "confirm": true
+      },
+      "name": "s042",
+      "course_ids": [
+        43657
+      ],
+      "snapshot": "c43657_study",
+      "seed_kinds": [
+        "renamed_row_dropped",
+        "readonly_target"
+      ],
+      "seed_counts": {},
+      "quick": true,
+      "confirm": true,
+      "note": "triple"
+    }
+  ]
+}

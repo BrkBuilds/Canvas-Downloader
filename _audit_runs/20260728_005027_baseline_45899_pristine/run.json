@@ -1,0 +1,21 @@
+{
+  "run_id": "20260728_005027_baseline_45899_pristine",
+  "label": "baseline_45899_pristine",
+  "created": "2026-07-28T00:50:27",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {},
+  "ports_used": [
+    8792
+  ],
+  "browser": {},
+  "scope": [
+    {
+      "name": "base45899",
+      "flow": "download",
+      "course": "45899",
+      "config": "{\"mode\": \"modules\", \"file_filter\": \"all\", \"secondary_isolated\": false, \"dl_assignments\": true, \"dl_syllabus\": true, \"dl_announcements\": true, \"dl_discussions\": true, \"dl_quizzes\": true, \"dl_submissions\": true, \"convert_zip\": true, \"convert_pptx\": true, \"convert_word\": true, \"convert_excel\": true, \"c",
+      "result": "ok"
+    }
+  ]
+}

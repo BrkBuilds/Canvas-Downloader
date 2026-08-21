@@ -1,0 +1,60 @@
+
+=== audit app start 2026-07-30 16:29:24 port=8920 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8920
+  Network URL: http://192.168.1.50:8920
+  External URL: http://188.183.232.43:8920
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>
+────────────────────────── Traceback (most recent call last) ───────────────────────────
+  C:\Users\birkl\AppData\Roaming\Python\Python313\site-packages\streamlit\runtime\scri  
+  ptrunner\exec_code.py:129 in exec_func_with_error_handling                            
+                                                                                        
+  C:\Users\birkl\AppData\Roaming\Python\Python313\site-packages\streamlit\runtime\scri  
+  ptrunner\script_runner.py:669 in code_to_exec                                         
+                                                                                        
+  G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\app.py:2529 in <module>             
+                                                                                        
+    2526 │   │   │   from ui.today_dashboard import render_today_dashboard              
+    2527 │   │   │   render_today_dashboard(fetch_courses)                              
+    2528 │   │   else:                                                                  
+  > 2529 │   │   │   render_sync_step4()                                                
+    2530                                                                                
+    2531                                                                                
+    2532 # ─── Deferred dialog hosts ─────────────────────────────────────────────────  
+                                                                                        
+  G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\sync_ui.py:2639 in                  
+  render_sync_step4                                                                     
+                                                                                        
+    2636 │   │   _advance_to_sync()                                                     
+    2637 │                                                                              
+    2638 │   elif status == 'syncing':                                                  
+  > 2639 │   │   _run_sync()                                                            
+    2640 │   elif status == 'sync_panopto':                                             
+    2641 │   │   _run_sync_panopto()                                                    
+    2642 │   elif status == 'sync_cancelled':                                           
+                                                                                        
+  G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\sync_ui.py:2676 in _run_sync        
+                                                                                        
+    2673                                                                                
+    2674 def _run_sync():                                                               
+    2675 │   """Delegate to sync.execution.run_sync."""                                 
+  > 2676 │   _run_sync_impl()                                                           
+    2677                                                                                
+    2678                                                                                
+    2679 def _run_sync_panopto():                                                       
+                                                                                        
+  G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\sync\execution.py:2272 in run_sync  
+                                                                                        
+    2269 │                                                                              
+    2270 │   _items = _from_archives({'.ppt', '.pptx', '.pptm', '.pot', '.potx'}, 'per  
+    2271 │   run_pptx_conversion(_items, pp_ui)                                         
+  > 2272 │   _attempts.append((run_pptx_conversion, _items))                            
+    2273 │                                                                              
+    2274 │   # HTML -> Markdown                                                         
+    2275 │   _items = _from_archives({'.html'}, 'persistent_convert_html')              
+────────────────────────────────────────────────────────────────────────────────────────
+NameError: name '_attempts' is not defined

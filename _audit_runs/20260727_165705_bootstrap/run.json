@@ -1,0 +1,32 @@
+{
+  "run_id": "20260727_165705_bootstrap",
+  "label": "bootstrap",
+  "created": "2026-07-27T16:57:05",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {},
+  "browser": {},
+  "scope": [
+    {
+      "name": "smoke_tiny",
+      "flow": "download",
+      "course": "43667",
+      "config": "{\"mode\": \"modules\", \"file_filter\": \"all\"}",
+      "result": "ok"
+    },
+    {
+      "name": "p1_allon_45899",
+      "flow": "download",
+      "course": "45899",
+      "config": "{\"mode\": \"modules\", \"file_filter\": \"all\", \"secondary_isolated\": false, \"dl_assignments\": true, \"dl_syllabus\": true, \"dl_announcements\": true, \"dl_discussions\": true, \"dl_quizzes\": true, \"dl_submissions\": true, \"convert_zip\": true, \"convert_pptx\": true, \"convert_word\": true, \"convert_excel\": true, \"c",
+      "result": "ok"
+    },
+    {
+      "name": "p2_sync_45899",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    }
+  ]
+}

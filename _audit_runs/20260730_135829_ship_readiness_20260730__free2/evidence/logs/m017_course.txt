@@ -1,0 +1,19 @@
+--- Download: BINT 1st semester (LA E25 BINTS1SEMU) (ID: 43667) Mode: modules ---
+==================================================
+[2026-07-30 14:45:52.181] Save Dir: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260730_135829_ship_readiness_20260730__free2\downloads
+[2026-07-30 14:45:52.181] Filter: all | Concurrency: 10 | Max file size: disabled | Estimated payload: 0 MB
+[2026-07-30 14:45:52.181] Canvas Content: [none] | isolate=no
+[2026-07-30 14:45:52.182] Post-processing: [urls]
+[2026-07-30 14:45:52.373] Processing Module: Course description including examination rules (ID: 297524)
+[2026-07-30 14:45:52.517] Found 1 items in module 'Course description including examination rules'
+[2026-07-30 14:45:52.517]   - Item: Course description including examination rules (Type: ExternalUrl)
+[2026-07-30 14:45:52.519] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTS1SEMU.aspx) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260730_135829_ship_readiness_20260730__free2\downloads\BINT 1st semester (LA E25 BINTS1SEMU)\Course description including examination rules\Course description including examination rules.url
+[2026-07-30 14:45:52.743] Starting Catch-All Phase for non-module files...
+[2026-07-30 14:45:52.991] No partial/non-module files found.
+[2026-07-30 14:45:52.991] --- Download Complete: BINT 1st semester (LA E25 BINTS1SEMU) | 1 items | 0.0 MB downloaded ---
+
+==================================================
+--- Post-Processing: BINT 1st semester (LA E25 BINTS1SEMU) ---
+==================================================
+[2026-07-30 14:45:53.644] === Course Finished: BINT 1st semester (LA E25 BINTS1SEMU) | Downloaded: 1 items | Errors: 0 ===
+[2026-07-30 14:45:53.644] Post-processing ran: [urls]

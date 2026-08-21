@@ -1,0 +1,15 @@
+{
+  "run_id": "20260728_182323_smokepan",
+  "label": "smokepan",
+  "created": "2026-07-28T18:23:23",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "lanes": [
+    {
+      "lane": "free1",
+      "run_id": "20260728_182323_smokepan__free1",
+      "pid": 30172,
+      "log": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_182323_smokepan__free1\\worker.log"
+    }
+  ]
+}

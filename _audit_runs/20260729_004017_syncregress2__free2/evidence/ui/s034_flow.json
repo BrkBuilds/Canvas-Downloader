@@ -1,0 +1,114 @@
+{
+  "name": "s034",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n0\nNew files\n2\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas",
+      "waited_s": 3.1
+    },
+    "capture": "s034_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_update_43657"
+    ],
+    "capture": "s034_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\screenshots\\s034_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\ui\\s034_review.json",
+    "textLen": 825,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    }
+  ],
+  "trace": [
+    {
+      "t": "01:04:07",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "01:04:14",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n0\nNew files\n2\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas",
+        "waited_s": 3.1
+      },
+      "capture": "s034_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "01:04:15",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_43657"
+      ],
+      "capture": "s034_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\screenshots\\s034_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\ui\\s034_review.json",
+      "textLen": 825,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "01:04:15",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 0,
+      "failed": [],
+      "ok": false
+    },
+    {
+      "t": "01:04:15",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_43657"
+      ],
+      "capture": "s034_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\screenshots\\s034_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free2\\evidence\\ui\\s034_review.json",
+      "textLen": 825,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

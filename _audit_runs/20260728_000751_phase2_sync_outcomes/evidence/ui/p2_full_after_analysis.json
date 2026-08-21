@@ -1,0 +1,958 @@
+{
+  "name": "p2_full_after_analysis",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_000751_phase2_sync_outcomes\\evidence\\screenshots\\p2_full_after_analysis.png",
+  "captured": "2026-07-28 00:20:28",
+  "screen": {
+    "url": "http://127.0.0.1:8790/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Review Changes",
+      "Smart Select"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_active_idlesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_idle_idlesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_docx",
+        "text": "DOCX (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_html",
+        "text": "HTML (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_jpg",
+        "text": "JPG (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_js",
+        "text": "JS (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_md",
+        "text": "MD (none)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_pdf",
+        "text": "PDF (12/18)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_sql",
+        "text": "SQL (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_txt",
+        "text": "TXT (3/7)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_select_all",
+        "text": "Select All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_deselect_all",
+        "text": "Deselect All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_new_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_new_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_new_45899",
+        "text": "",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1670371",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1598721",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1598722",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1700483",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1700478",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1703059",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1598593",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1768581",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1769666",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1781876",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1784717",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1789236",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1793429",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1794807",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1808522",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_1808520",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_-50111380",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_-50109007",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_-50110777",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_new_45899_-10035533",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_upd_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_upd_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_upd_45899",
+        "text": "",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_45899_1796825",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_45899_1702591",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_45899_1701948",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_upd_45899_1784207",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_updmod_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_updmod_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_updmod_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_45899_1692936",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_45899_1693079",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_updmod_45899_1789210",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "selhere_sync_locdel_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "clrhere_sync_locdel_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sweep_locdel_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1736380",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1637584",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1685205",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1694147",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1700471",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1598591",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1780937",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_locdel_45899_1768580",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restore_all_45899",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_45899_1694158",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_45899_1696760",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_45899_1780752",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_45899_1793556",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_sync_review_back",
+        "text": "Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_sync_selected",
+        "text": "Sync & Download 24 files",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [
+      {
+        "key": "cat_new_45899",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nNew Files"
+      },
+      {
+        "key": "cat_update_45899",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nUpdates Available"
+      },
+      {
+        "key": "cat_updmod_45899",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nUpdates Available — You've Edited These"
+      },
+      {
+        "key": "cat_deleted_local_45899",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nDeleted Locally"
+      },
+      {
+        "key": "cat_deleted_canvas_45899",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)"
+      },
+      {
+        "key": "cat_ignored_45899",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nIgnored Files"
+      }
+    ],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n20\nNew files\n7\nUpdates available\n3\nEdited locally\n8\nDeleted locally\n2\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (all)\n\nHTML (all)\n\nJPG (all)\n\nJS (all)\n\nMD (none)\n\nPDF (12/18)\n\nSQL (all)\n\nTXT (3/7)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n35 files pending sync\n176 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nkeyboard_arrow_right\n\nIgnored Files\n\n⚠️ 6 new files look like files you may already have\nThey are the same size and type as files already in your course folder, but the names are too different to be certain it is the same file, so it was not matched. For example, “html terninger.pdf” looks like “decoy 0 unrelated.pdf” in your folder. Hover the ⚠️ next to a file to see which of your files it resembles. You can leave it checked to download a fresh copy — your own files are never renamed, overwritten or deleted — uncheck it if you know you already have it, or use the eye icon to skip it for good.\n\nGo back\n\nSync & Download 24 files",
+    "textLen": 1461
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "active",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "idle",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "review": {
+    "courses": [
+      {
+        "course_id": "45899",
+        "categories": {
+          "new": {
+            "label": "keyboard_arrow_right\n\nNew Files",
+            "badge": "  (20 / 20 selected)",
+            "open": false,
+            "rowCount": 20,
+            "rows": [
+              {
+                "rowKey": "sync_row_new_45899_1670371",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1598721",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1598722",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1700483",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1700478",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1703059",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1598593",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1768581",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1769666",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1781876",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1784717",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1789236",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1793429",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1794807",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1808522",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_1808520",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_-50111380",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_-50109007",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_-50110777",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_new_45899_-10035533",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              }
+            ]
+          },
+          "updated_clean": {
+            "label": "keyboard_arrow_right\n\nUpdates Available",
+            "badge": "  (4 / 4 selected)",
+            "open": false,
+            "rowCount": 4,
+            "rows": [
+              {
+                "rowKey": "sync_row_upd_45899_1796825",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_upd_45899_1702591",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_upd_45899_1701948",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_upd_45899_1784207",
+                "checked": true,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              }
+            ]
+          },
+          "updated_modified": {
+            "label": "keyboard_arrow_right\n\nUpdates Available — You've Edited These",
+            "badge": "  (0 / 3 selected)",
+            "open": false,
+            "rowCount": 3,
+            "rows": [
+              {
+                "rowKey": "sync_row_updmod_45899_1692936",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_updmod_45899_1693079",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_updmod_45899_1789210",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              }
+            ]
+          },
+          "deleted_locally": {
+            "label": "keyboard_arrow_right\n\nDeleted Locally",
+            "badge": "  (0 / 8 selected)",
+            "open": false,
+            "rowCount": 8,
+            "rows": [
+              {
+                "rowKey": "sync_row_locdel_45899_1736380",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1637584",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1685205",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1694147",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1700471",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1598591",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1780937",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "sync_row_locdel_45899_1768580",
+                "checked": false,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              }
+            ]
+          },
+          "deleted_on_canvas": {
+            "label": "keyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)",
+            "badge": "  (2) kept locally",
+            "open": false,
+            "rowCount": 0,
+            "rows": []
+          },
+          "ignored": {
+            "label": "keyboard_arrow_right\n\nIgnored Files",
+            "badge": "  (4)",
+            "open": false,
+            "rowCount": 4,
+            "rows": [
+              {
+                "rowKey": "ign_restore_row_45899_1694158",
+                "checked": null,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "ign_restore_row_45899_1696760",
+                "checked": null,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "ign_restore_row_45899_1780752",
+                "checked": null,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              },
+              {
+                "rowKey": "ign_restore_row_45899_1793556",
+                "checked": null,
+                "name": "",
+                "stem": "",
+                "ext": "",
+                "text": ""
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "summaryCards": [],
+    "seen": {
+      "categoryContainers": 6,
+      "syncRows": 35,
+      "ignoredRows": 4,
+      "expanders": 6
+    },
+    "pageText": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n20\nNew files\n7\nUpdates available\n3\nEdited locally\n8\nDeleted locally\n2\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (all)\n\nHTML (all)\n\nJPG (all)\n\nJS (all)\n\nMD (none)\n\nPDF (12/18)\n\nSQL (all)\n\nTXT (3/7)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n35 files pending sync\n176 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nkeyboard_arrow_right\n\nIgnored Files\n\n⚠️ 6 new files look like files you may already have\nThey are the same size and type as files already in your course folder, but the names are too different to be certain it is the same file, so it was not matched. For example, “html terninger.pdf” looks like “decoy 0 unrelated.pdf” in your folder. Hover the ⚠️ next to a file to see which of your files it resembles. You can leave it checked to download a fresh copy — your own files are never renamed, overwritten or deleted — uncheck it if you know you already have it, or use the eye icon to skip it for good.\n\nGo back\n\nSync & Download 24 files"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

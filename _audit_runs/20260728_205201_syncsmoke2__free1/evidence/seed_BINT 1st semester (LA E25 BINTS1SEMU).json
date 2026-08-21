@@ -1,0 +1,21 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_205201_syncsmoke2__free1\\downloads\\BINT 1st semester (LA E25 BINTS1SEMU)",
+  "seeded_at": "2026-07-28T20:52:17",
+  "applied": [],
+  "skipped": {},
+  "fixture_count": 0,
+  "expected_categories": {},
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [],
+  "expected_partials": [],
+  "before": {
+    "rows": 1,
+    "files": 1
+  },
+  "after": {
+    "rows": 1,
+    "files": 1
+  },
+  "fixtures": []
+}

@@ -1,0 +1,123 @@
+{
+  "name": "p4_cancel3",
+  "open": {
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPANOPTO (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n3 files pending sync\n217 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 3 recordings",
+      "waited_s": 24.2
+    },
+    "capture": "p4_cancel3_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_43660",
+      "cat_ignored_43660"
+    ],
+    "capture": "p4_cancel3_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\screenshots\\p4_cancel3_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\ui\\p4_cancel3_review.json",
+    "textLen": 3386,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": false,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 3,
+        "id": "sync",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Cancelled\n\nSync was cancelled.\n\nCancelled during Course Analysis.\n\nGo to front page",
+      "waited_s": 20.1
+    },
+    "capture": "p4_cancel3_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "13:54:01",
+      "action": "open_sync",
+      "screen": "sync"
+    },
+    {
+      "t": "13:54:29",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPANOPTO (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n3 files pending sync\n217 files up to date\nkeyboard_arrow_right\n\nNew Files\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 3 recordings",
+        "waited_s": 24.2
+      },
+      "capture": "p4_cancel3_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "13:54:30",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43660",
+        "cat_ignored_43660"
+      ],
+      "capture": "p4_cancel3_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\screenshots\\p4_cancel3_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\ui\\p4_cancel3_review.json",
+      "textLen": 3386,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "13:54:53",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": false,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 3,
+          "id": "sync",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Cancelled\n\nSync was cancelled.\n\nCancelled during Course Analysis.\n\nGo to front page",
+        "waited_s": 20.1
+      },
+      "capture": "p4_cancel3_complete",
+      "ok": true
+    }
+  ]
+}

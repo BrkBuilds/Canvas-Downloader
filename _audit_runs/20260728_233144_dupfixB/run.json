@@ -1,0 +1,21 @@
+{
+  "run_id": "20260728_233144_dupfixB",
+  "label": "dupfixB",
+  "created": "2026-07-28T23:31:44",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {},
+  "ports_used": [
+    8861
+  ],
+  "browser": {},
+  "scope": [
+    {
+      "name": "dupB",
+      "flow": "download",
+      "course": "46396",
+      "config": "{\"mode\": \"modules\", \"file_filter\": \"all\", \"secondary_isolated\": true, \"dl_assignments\": false, \"dl_syllabus\": false, \"dl_announcements\": true, \"dl_discussions\": false, \"dl_quizzes\": false, \"dl_submissions\": false, \"convert_zip\": false, \"convert_pptx\": false, \"convert_word\": false, \"convert_excel\": f",
+      "result": "ok"
+    }
+  ]
+}

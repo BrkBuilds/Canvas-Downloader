@@ -1,0 +1,20 @@
+{
+  "rows": [
+    {
+      "id": "s000",
+      "ok": false,
+      "error": "FlowError: Review screen's sync action not clickable: {'clicked': False, 'key': 'btn_sync_selected', 'found': False, 'reason': 'no host for key btn_sync_selected'}",
+      "traceback": "Traceback (most recent call last):\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 511, in run_lane\n    res = execute(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 557, in execute\n    return _execute_sync(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 659, in _execute_sync\n    res[\"confirm\"] = f.confirm(job.name)\n                     ~~~~~~~~~^^^^^^^^^^\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\flows.py\", line 485, in confirm\n    raise FlowError(f\"Review screen's sync action not clickable: {r}\")\ntests.audit.harness.flows.FlowError: Review screen's sync action not clickable: {'clicked': False, 'key': 'btn_sync_selected', 'found': False, 'reason': 'no host for key btn_sync_selected'}\n",
+      "seconds": 18.1
+    },
+    {
+      "id": "s005",
+      "ok": false,
+      "error": "FlowError: Review screen's sync action not clickable: {'clicked': False, 'key': 'btn_sync_selected', 'error': 'TimeoutError: Locator.click: Timeout 20000ms exceeded.\\nCall log:\\n  - waiting for locator(\"[class*=\\\\\"st-key-btn_sync_selected\\\\\"]\").first.locator(\"button\").first\\n    - locator resolved to <button disabled aria-label=\"\" kind=\"primary\" data-testid=\"stBaseButton-primary\" class=\"st-emotion-cache-o29v59 etdmgzm1\">…</button>\\n  - attempting click action\\n    2 × waiting for element to be visible, enabled and stable\\n      - element is not enabled\\n    - retrying click action\\n    - waiting 20ms\\n    2 × waiting for element to be visible, enabled and stable\\n      - element is not enabled\\n    - retrying click action\\n      - waiting 100ms\\n    39 × waiting for element to be visible, enabled and stable\\n       - element is not enabled\\n     - retrying click action\\n       - waiting 500ms\\n'}",
+      "traceback": "Traceback (most recent call last):\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 511, in run_lane\n    res = execute(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 557, in execute\n    return _execute_sync(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 659, in _execute_sync\n    res[\"confirm\"] = f.confirm(job.name)\n                     ~~~~~~~~~^^^^^^^^^^\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\flows.py\", line 485, in confirm\n    raise FlowError(f\"Review screen's sync action not clickable: {r}\")\ntests.audit.harness.flows.FlowError: Review screen's sync action not clickable: {'clicked': False, 'key': 'btn_sync_selected', 'error': 'TimeoutError: Locator.click: Timeout 20000ms exceeded.\\nCall log:\\n  - waiting for locator(\"[class*=\\\\\"st-key-btn_sync_selected\\\\\"]\").first.locator(\"button\").first\\n    - locator resolved to <button disabled aria-label=\"\" kind=\"primary\" data-testid=\"stBaseButton-primary\" class=\"st-emotion-cache-o29v59 etdmgzm1\">…</button>\\n  - attempting click action\\n    2 × waiting for element to be visible, enabled and stable\\n      - element is not enabled\\n    - retrying click action\\n    - waiting 20ms\\n    2 × waiting for element to be visible, enabled and stable\\n      - element is not enabled\\n    - retrying click action\\n      - waiting 100ms\\n    39 × waiting for element to be visible, enabled and stable\\n       - element is not enabled\\n     - retrying click action\\n       - waiting 500ms\\n'}\n",
+      "seconds": 45.3
+    }
+  ],
+  "current": "",
+  "updated": "2026-07-28T20:49:37"
+}

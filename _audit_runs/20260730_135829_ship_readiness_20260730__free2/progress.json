@@ -1,0 +1,535 @@
+{
+  "rows": [
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m002"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "info": 5
+      },
+      "id": "m002",
+      "seconds": 825.8
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m006"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "info": 5
+      },
+      "id": "m006",
+      "seconds": 503.1
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43667,
+      "course_ids": [
+        43667
+      ],
+      "courses": [
+        {
+          "course_id": 43667,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\BINT 1st semester (LA E25 BINTS1SEMU)",
+          "findings": 0,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m008"
+          }
+        }
+      ],
+      "findings": 0,
+      "drift": [],
+      "severities": {},
+      "id": "m008",
+      "seconds": 41.4
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43667,
+      "course_ids": [
+        43667
+      ],
+      "courses": [
+        {
+          "course_id": 43667,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\BINT 1st semester (LA E25 BINTS1SEMU)",
+          "findings": 0,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m010"
+          }
+        }
+      ],
+      "findings": 0,
+      "drift": [],
+      "severities": {},
+      "id": "m010",
+      "seconds": 44.9
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43665,
+      "course_ids": [
+        43665
+      ],
+      "courses": [
+        {
+          "course_id": 43665,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m015"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m015",
+      "seconds": 92.8
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43667,
+      "course_ids": [
+        43667
+      ],
+      "courses": [
+        {
+          "course_id": 43667,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\BINT 1st semester (LA E25 BINTS1SEMU)",
+          "findings": 1,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m017"
+          }
+        }
+      ],
+      "findings": 1,
+      "drift": [],
+      "severities": {
+        "info": 1
+      },
+      "id": "m017",
+      "seconds": 937.3
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m019"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m019",
+      "seconds": 266.2
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43665,
+      "course_ids": [
+        43665
+      ],
+      "courses": [
+        {
+          "course_id": 43665,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m021"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m021",
+      "seconds": 98.1
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m023"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m023",
+      "seconds": 295.5
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m031"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m031",
+      "seconds": 113.3
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m035"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m035",
+      "seconds": 497.1
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m037"
+          }
+        }
+      ],
+      "findings": 3,
+      "drift": [],
+      "severities": {
+        "info": 3
+      },
+      "id": "m037",
+      "seconds": 572.0
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 6,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m040"
+          }
+        }
+      ],
+      "findings": 6,
+      "drift": [],
+      "severities": {
+        "info": 5,
+        "medium": 1
+      },
+      "id": "m040",
+      "seconds": 627.6
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 2,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m045_c45899"
+          }
+        },
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m045_c43660"
+          }
+        }
+      ],
+      "findings": 5,
+      "drift": [],
+      "severities": {
+        "info": 5
+      },
+      "id": "m045",
+      "seconds": 867.4
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        46396
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m047_c45899"
+          }
+        },
+        {
+          "course_id": 46396,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\IT-projektledelse (LA F26 BINTO1059U)",
+          "findings": 4,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m047_c46396"
+          }
+        }
+      ],
+      "findings": 9,
+      "drift": [],
+      "severities": {
+        "info": 9
+      },
+      "id": "m047",
+      "seconds": 637.1
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 2,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m052"
+          }
+        }
+      ],
+      "findings": 2,
+      "drift": [],
+      "severities": {
+        "info": 2
+      },
+      "id": "m052",
+      "seconds": 140.5
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899,
+        46396
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 5,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m054_c45899"
+          }
+        },
+        {
+          "course_id": 46396,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\downloads\\IT-projektledelse (LA F26 BINTO1059U)",
+          "findings": 3,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\rows\\m054_c46396"
+          }
+        }
+      ],
+      "findings": 8,
+      "drift": [],
+      "severities": {
+        "info": 8
+      },
+      "id": "m054",
+      "seconds": 653.6
+    }
+  ],
+  "current": "",
+  "updated": "2026-07-30T16:20:23"
+}

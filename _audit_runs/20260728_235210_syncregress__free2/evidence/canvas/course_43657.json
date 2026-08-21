@@ -1,0 +1,1083 @@
+{
+  "course_id": 43657,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "Introduction to Information Systems (LA E25 BINTO1078U)",
+  "course_code": "BINTO1078U.LA_E25 (Introduction to Information Systems)",
+  "fetched_at": "2026-07-29T00:04:13",
+  "folders": {
+    "382179": {
+      "id": 382179,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {
+    "1618644": {
+      "id": 1618644,
+      "filename": "01_Introduction+to+the+Course+%2B+Data+%26+Information.pdf",
+      "display_name": "01_Introduction to the Course + Data & Information.pdf",
+      "size": 2257725,
+      "content_type": "application/pdf",
+      "updated_at": "2025-08-26T14:11:57Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1628916": {
+      "id": 1628916,
+      "filename": "02_Introduction+to+BIS%2C+Hardware+and+Software.pdf",
+      "display_name": "02_Introduction to BIS, Hardware and Software.pdf",
+      "size": 1984512,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-06T16:25:47Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1634599": {
+      "id": 1634599,
+      "filename": "03_Networks+and+Internet.pdf",
+      "display_name": "03_Networks and Internet.pdf",
+      "size": 2296208,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-12T15:56:43Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1640515": {
+      "id": 1640515,
+      "filename": "04_Databases+and+Analytics.pdf",
+      "display_name": "04_Databases and Analytics.pdf",
+      "size": 2188082,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-29T09:52:24Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1663167": {
+      "id": 1663167,
+      "filename": "06_Enterprise+%26+Functional+BIS.pdf",
+      "display_name": "06_Enterprise & Functional BIS.pdf",
+      "size": 992368,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-05T14:19:04Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1663150": {
+      "id": 1663150,
+      "filename": "06_Enterprise+%26+Functional+BIS.pptx",
+      "display_name": "06_Enterprise & Functional BIS.pptx",
+      "size": 2853448,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2025-10-30T10:36:17Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1663166": {
+      "id": 1663166,
+      "filename": "06_Managing%2C+acquiring%2C+and+developing+BIS.pdf",
+      "display_name": "06_Managing, acquiring, and developing BIS.pdf",
+      "size": 1251412,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-05T14:18:56Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1676946": {
+      "id": 1676946,
+      "filename": "07_Developing+BIS.pdf",
+      "display_name": "07_Developing BIS.pdf",
+      "size": 1692111,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-29T09:52:57Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1679585": {
+      "id": 1679585,
+      "filename": "08_Systems+Analysis%2C+Design+%26+Implementation.pdf",
+      "display_name": "08_Systems Analysis, Design & Implementation.pdf",
+      "size": 1934965,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-25T13:39:06Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1686564": {
+      "id": 1686564,
+      "filename": "09a_IS+Strategy.pdf",
+      "display_name": "09a_IS Strategy.pdf",
+      "size": 1429661,
+      "content_type": "application/pdf",
+      "updated_at": "2026-01-20T08:14:26Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1686565": {
+      "id": 1686565,
+      "filename": "09b_IS+Management.pdf",
+      "display_name": "09b_IS Management.pdf",
+      "size": 1273096,
+      "content_type": "application/pdf",
+      "updated_at": "2026-01-20T08:14:39Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1695542": {
+      "id": 1695542,
+      "filename": "11_Managing+Information+Security%2C+Privacy%2C+and+Ethics.pdf",
+      "display_name": "11_Managing Information Security, Privacy, and Ethics.pdf",
+      "size": 1875346,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-29T09:53:59Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1695541": {
+      "id": 1695541,
+      "filename": "11_Managing+Information+Security%2C+Privacy%2C+and+Ethics.pptx",
+      "display_name": "11_Managing Information Security, Privacy, and Ethics.pptx",
+      "size": 5787344,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2025-12-02T13:15:03Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1700578": {
+      "id": 1700578,
+      "filename": "12_+Digital+Sustainability.pdf",
+      "display_name": "12_ Digital Sustainability.pdf",
+      "size": 3507946,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-26T12:12:57Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1700576": {
+      "id": 1700576,
+      "filename": "12_Plattform+Dominance.pdf",
+      "display_name": "12_Plattform Dominance.pdf",
+      "size": 1462649,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-29T09:42:49Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1700577": {
+      "id": 1700577,
+      "filename": "12_Quantum+Computing.pdf",
+      "display_name": "12_Quantum Computing.pdf",
+      "size": 1506100,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-26T12:12:28Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1705221": {
+      "id": 1705221,
+      "filename": "13_Course+Review.pdf",
+      "display_name": "13_Course Review.pdf",
+      "size": 1951913,
+      "content_type": "application/pdf",
+      "updated_at": "2025-12-03T09:40:27Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1694358": {
+      "id": 1694358,
+      "filename": "CBS+X+Celonis+X+Grundfos.pdf",
+      "display_name": "CBS X Celonis X Grundfos.pdf",
+      "size": 10121823,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-16T20:22:04Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1694357": {
+      "id": 1694357,
+      "filename": "CBS+x+Grundfos+Presentation.pdf",
+      "display_name": "CBS x Grundfos Presentation.pdf",
+      "size": 1579566,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-16T20:22:02Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1637102": {
+      "id": 1637102,
+      "filename": "Compulsory+Assignment_Fall+2025.pdf",
+      "display_name": "Compulsory Assignment_Fall 2025.pdf",
+      "size": 123830,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-01T19:41:54Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1735929": {
+      "id": 1735929,
+      "filename": "Example+solutions+Exam.pdf",
+      "display_name": "Example solutions Exam.pdf",
+      "size": 472925,
+      "content_type": "application/pdf",
+      "updated_at": "2026-01-12T12:48:30Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1785484": {
+      "id": 1785484,
+      "filename": "Example+solutions+RETAKE.pdf",
+      "display_name": "Example solutions RETAKE.pdf",
+      "size": 456585,
+      "content_type": "application/pdf",
+      "updated_at": "2026-03-03T12:14:47Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1618647": {
+      "id": 1618647,
+      "filename": "Lektionsplan_HA%28it.%29_Intro+to+IS+2025.pdf",
+      "display_name": "Lektionsplan_HA(it.)_Intro to IS 2025.pdf",
+      "size": 248817,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-05T14:43:44Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1627501": {
+      "id": 1627501,
+      "filename": "Page+Numbers+for+6th+and+5th+Edition.docx",
+      "display_name": "Page Numbers for 6th and 5th Edition.docx",
+      "size": 18634,
+      "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "updated_at": "2025-09-10T14:22:41Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1680432": {
+      "id": 1680432,
+      "filename": "PP_UHE_20251001.pdf",
+      "display_name": "PP_UHE_20251001.pdf",
+      "size": 15159199,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-29T09:52:32Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1632606": {
+      "id": 1632606,
+      "filename": "Quality+Board+Ha%28IT%29.pptx",
+      "display_name": "Quality Board Ha(IT).pptx",
+      "size": 1928124,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2025-09-10T14:27:18Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1692581": {
+      "id": 1692581,
+      "filename": "Sign-up+Academy+Environment.pdf",
+      "display_name": "Sign-up Academy Environment.pdf",
+      "size": 534792,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-12T08:34:54Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1684097": {
+      "id": 1684097,
+      "filename": "Timetable+for+presentations.pdf",
+      "display_name": "Timetable for presentations.pdf",
+      "size": 146809,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-31T07:24:39Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1698204": {
+      "id": 1698204,
+      "filename": "Trial+Exam_Solutions.pdf",
+      "display_name": "Trial Exam_Solutions.pdf",
+      "size": 723089,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-21T15:07:46Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1698205": {
+      "id": 1698205,
+      "filename": "Trial+Exam.pdf",
+      "display_name": "Trial Exam.pdf",
+      "size": 239211,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-21T15:06:35Z",
+      "folder_id": 382179,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    }
+  },
+  "modules": [
+    {
+      "id": 297514,
+      "name": "Course description including examination rules",
+      "position": 1,
+      "published": null,
+      "item_count": 5,
+      "items": [
+        {
+          "id": 1012338,
+          "type": "ExternalUrl",
+          "title": "Course description including examination rules",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO1078U.aspx",
+          "published": null
+        },
+        {
+          "id": 1085936,
+          "type": "File",
+          "title": "Lektionsplan_HA(it.)_Intro to IS 2025.pdf",
+          "content_id": 1618647,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1093442,
+          "type": "File",
+          "title": "Page Numbers for 6th and 5th Edition.docx",
+          "content_id": 1627501,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1100237,
+          "type": "File",
+          "title": "Compulsory Assignment_Fall 2025.pdf",
+          "content_id": 1637102,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1120434,
+          "type": "File",
+          "title": "Timetable for presentations.pdf",
+          "content_id": 1684097,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 312001,
+      "name": "Module 1 - Introduction to the Course",
+      "position": 2,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1085933,
+          "type": "File",
+          "title": "01_Introduction to the Course + Data & Information.pdf",
+          "content_id": 1618644,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 313857,
+      "name": "Module 2 - BIS; Hardware & Software",
+      "position": 3,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1094374,
+          "type": "File",
+          "title": "02_Introduction to BIS, Hardware and Software.pdf",
+          "content_id": 1628916,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1097036,
+          "type": "File",
+          "title": "Quality Board HA(it).pptx",
+          "content_id": 1632606,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 314421,
+      "name": "Module 3 - Internet and Networks",
+      "position": 4,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1098427,
+          "type": "File",
+          "title": "03_Networks and Internet.pdf",
+          "content_id": 1634599,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 315298,
+      "name": "Modele 4 - Databases and Analytics",
+      "position": 5,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1101911,
+          "type": "File",
+          "title": "04_Databases and Analytics.pdf",
+          "content_id": 1640515,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 316176,
+      "name": "Module 5 - Guest Talk by KOMBIT",
+      "position": 6,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1118449,
+          "type": "File",
+          "title": "Guest Lecture KOMBIT",
+          "content_id": 1680432,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 316529,
+      "name": "Module 6 - Managing, Acquiring, and Developing BIS",
+      "position": 7,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1109756,
+          "type": "Quiz",
+          "title": "Midterm course evaluation",
+          "content_id": 110782,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1109759,
+          "type": "File",
+          "title": "06_Managing, acquiring, and developing BIS.pdf",
+          "content_id": 1663166,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1109760,
+          "type": "File",
+          "title": "06_Enterprise & Functional BIS.pdf",
+          "content_id": 1663167,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 317579,
+      "name": "Module 7- Initiating System Development",
+      "position": 8,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1116726,
+          "type": "File",
+          "title": "07_Developing BIS.pdf",
+          "content_id": 1676946,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 317760,
+      "name": "Module 8 - System design, analysis and implementation",
+      "position": 9,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1118063,
+          "type": "File",
+          "title": "08_Systems Analysis, Design & Implementation.pdf",
+          "content_id": 1679585,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 318242,
+      "name": "Module 9 - IS Strategy & Management",
+      "position": 10,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1121880,
+          "type": "File",
+          "title": "09a_IS Strategy.pdf",
+          "content_id": 1686564,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1121881,
+          "type": "File",
+          "title": "09b_IS Management.pdf",
+          "content_id": 1686565,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 318566,
+      "name": "Module 10 - Guest talk Grundfos x Celonis",
+      "position": 11,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1125163,
+          "type": "File",
+          "title": "Sign-up Academy Environment.pdf",
+          "content_id": 1692581,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1126084,
+          "type": "File",
+          "title": "CBS x Grundfos Presentation.pdf",
+          "content_id": 1694357,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1126085,
+          "type": "File",
+          "title": "CBS X Celonis X Grundfos.pdf",
+          "content_id": 1694358,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 318760,
+      "name": "Module 11  - Managing Information Security, Privacy and Ethics",
+      "position": 12,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1126788,
+          "type": "File",
+          "title": "11_Managing Information Security, Privacy, and Ethics.pdf",
+          "content_id": 1695542,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 318917,
+      "name": "Module 12 - Trends in IS",
+      "position": 13,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1129501,
+          "type": "File",
+          "title": "12_Plattform Dominance.pdf",
+          "content_id": 1700576,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1129502,
+          "type": "File",
+          "title": "12_Quantum Computing.pdf",
+          "content_id": 1700577,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1129503,
+          "type": "File",
+          "title": "12_ Digital Sustainability.pdf",
+          "content_id": 1700578,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1129505,
+          "type": "ExternalUrl",
+          "title": "Sustainability Video",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://youtu.be/UFK4hqeRhIc",
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 318918,
+      "name": "Modul 13 - Exam Preparation",
+      "position": 14,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1128302,
+          "type": "File",
+          "title": "Trial Exam_Solutions.pdf",
+          "content_id": 1698204,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1128303,
+          "type": "File",
+          "title": "Trial Exam.pdf",
+          "content_id": 1698205,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1132022,
+          "type": "File",
+          "title": "13_Course Review.pdf",
+          "content_id": 1705221,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 322406,
+      "name": "Exam",
+      "position": 15,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1145366,
+          "type": "File",
+          "title": "Example solutions Exam.pdf",
+          "content_id": 1735929,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1173546,
+          "type": "File",
+          "title": "Example solutions RETAKE.pdf",
+          "content_id": 1785484,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "ExternalUrl": 2,
+    "File": 28,
+    "Quiz": 1
+  },
+  "module_file_ids": [
+    1618644,
+    1618647,
+    1627501,
+    1628916,
+    1632606,
+    1634599,
+    1637102,
+    1640515,
+    1663166,
+    1663167,
+    1676946,
+    1679585,
+    1680432,
+    1684097,
+    1686564,
+    1686565,
+    1692581,
+    1694357,
+    1694358,
+    1695542,
+    1698204,
+    1698205,
+    1700576,
+    1700577,
+    1700578,
+    1705221,
+    1735929,
+    1785484
+  ],
+  "only_in_modules": [],
+  "only_in_files_tab": [
+    1663150,
+    1695541
+  ],
+  "files_tab_restricted": false,
+  "assignments": [
+    {
+      "id": 34083,
+      "name": "Compulsory Assignment",
+      "due_at": "2025-11-09T11:00:00Z",
+      "points": 0.0,
+      "has_rubric": false,
+      "submission_types": [
+        "online_text_entry",
+        "online_url",
+        "media_recording",
+        "online_upload"
+      ]
+    }
+  ],
+  "quizzes": [
+    {
+      "id": 110782,
+      "title": "Midterm course evaluation"
+    }
+  ],
+  "announcements": [
+    {
+      "id": 179273,
+      "title": "Job Opportunity: Teaching Assistant",
+      "posted_at": "2026-03-25T13:56:45Z"
+    },
+    {
+      "id": 177870,
+      "title": "Retake",
+      "posted_at": "2026-03-02T14:51:30Z"
+    },
+    {
+      "id": 174195,
+      "title": "Exam grades",
+      "posted_at": "2026-01-10T16:15:05Z"
+    },
+    {
+      "id": 171381,
+      "title": "Feedback on assignment",
+      "posted_at": "2025-11-21T15:28:02Z"
+    },
+    {
+      "id": 171376,
+      "title": "Preparation for last lecture and exercise",
+      "posted_at": "2025-11-21T15:02:48Z"
+    },
+    {
+      "id": 170868,
+      "title": "Presentation of the assignment and different dates next weeks",
+      "posted_at": "2025-11-12T20:32:59Z"
+    },
+    {
+      "id": 170050,
+      "title": "Approaching Assignment",
+      "posted_at": "2025-10-31T07:22:53Z"
+    },
+    {
+      "id": 168221,
+      "title": "Open House in the Examinations Hall on 7th Oct & 20th Nov",
+      "posted_at": "2025-10-06T16:46:21Z"
+    },
+    {
+      "id": 166863,
+      "title": "Exercise 3 Preparation and Perplexity for Students",
+      "posted_at": "2025-09-18T18:54:57Z"
+    },
+    {
+      "id": 166834,
+      "title": "Group changes for elective students",
+      "posted_at": "2025-09-18T13:56:50Z"
+    },
+    {
+      "id": 166313,
+      "title": "Change of groups needed?",
+      "posted_at": "2025-09-12T08:07:04Z"
+    },
+    {
+      "id": 165602,
+      "title": "Groups have been assigned",
+      "posted_at": "2025-09-05T09:00:05Z"
+    },
+    {
+      "id": 164558,
+      "title": "Welcome to CBS and Introduction to Information Systems",
+      "posted_at": "2025-08-26T14:07:50Z"
+    }
+  ],
+  "discussions": [
+    {
+      "id": 171378,
+      "title": "Questions for last lecture"
+    },
+    {
+      "id": 168024,
+      "title": "Slides fra KOMBIT"
+    },
+    {
+      "id": 165476,
+      "title": "FAQ"
+    }
+  ],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_by_source": {
+    "announcement": [],
+    "assignment": [],
+    "discussion": [],
+    "syllabus": []
+  },
+  "inline_file_ids": [],
+  "embedded_only_file_ids": [],
+  "inline_only_file_ids": [],
+  "expected_file_ids": [
+    1618644,
+    1618647,
+    1627501,
+    1628916,
+    1632606,
+    1634599,
+    1637102,
+    1640515,
+    1663150,
+    1663166,
+    1663167,
+    1676946,
+    1679585,
+    1680432,
+    1684097,
+    1686564,
+    1686565,
+    1692581,
+    1694357,
+    1694358,
+    1695541,
+    1695542,
+    1698204,
+    1698205,
+    1700576,
+    1700577,
+    1700578,
+    1705221,
+    1735929,
+    1785484
+  ],
+  "secondary_counts": {
+    "assignment": 1,
+    "quiz": 1,
+    "discussion": 3,
+    "announcement": 13,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 5.5
+}

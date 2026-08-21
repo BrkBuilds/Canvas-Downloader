@@ -1,0 +1,62 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_235210_syncregress__free2\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+  "seeded_at": "2026-07-29T00:03:50",
+  "applied": [
+    {
+      "kind": "clean_update",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 2,
+  "expected_categories": {
+    "updated_clean": 2
+  },
+  "expected_untracked": [],
+  "expected_missing_rows": [],
+  "expected_md5_drift": [
+    "Compulsory Assignment_Fall 2025.pdf",
+    "Page Numbers for 6th and 5th Edition.docx"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 50,
+    "files": 50
+  },
+  "after": {
+    "rows": 50,
+    "files": 50
+  },
+  "fixtures": [
+    {
+      "label": "clean-update:Page Numbers for 6th and 5th Edition.docx",
+      "kind": "clean_update",
+      "path": "Page Numbers for 6th and 5th Edition.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Page Numbers for 6th and 5th Edition.docx",
+      "match_name": "Page Numbers for 6th and 5th Edition.docx",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1627501,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "clean-update:Compulsory Assignment_Fall 2025.pdf",
+      "kind": "clean_update",
+      "path": "Compulsory Assignment_Fall 2025.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Compulsory Assignment_Fall 2025.pdf",
+      "match_name": "Compulsory Assignment_Fall 2025.pdf",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1637102,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

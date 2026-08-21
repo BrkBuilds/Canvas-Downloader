@@ -1,0 +1,12 @@
+{
+  "run_id": "20260728_235210_syncregress__free1",
+  "label": "lane:free1",
+  "parent": "20260728_235210_syncregress",
+  "lane": "free1",
+  "created": "2026-07-28T23:52:18",
+  "app": {},
+  "ports_used": [
+    8870
+  ],
+  "browser": {}
+}

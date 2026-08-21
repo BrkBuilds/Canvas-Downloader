@@ -1,0 +1,119 @@
+{
+  "name": "s030_analyzing",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free1\\evidence\\screenshots\\s030_analyzing.png",
+  "captured": "2026-07-29 01:04:04",
+  "screen": {
+    "url": "http://127.0.0.1:8870/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Introduction to Information Systems (LA)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_active_idlesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_idle_idlesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_idle_idlesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cancel_analysis_btn",
+        "text": "Cancel Sync",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nANALYZING COURSE\n\nIntroduction to Information Systems (LA)\nAnalyzing…\nCOURSES\n0 / 1\nCHANGES FOUND\n0\nTIME REMAINING\n~00:04\nANALYZING\nFetching files from Canvas...\n\nCancel Sync",
+    "textLen": 259
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "active",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "idle",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "idle",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": true,
+    "header": "Introduction to Information Systems (LA)",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "COURSES | 0 / 1 | CHANGES FOUND | 0 | TIME REMAINING | ~00:04",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": "ANALYZING COURSE\n\nIntroduction to Information Systems (LA)\nAnalyzing…\nCOURSES\n0 / 1\nCHANGES FOUND\n0\nTIME REMAINING\n~00:04\nANALYZING\nFetching files from Canvas..."
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

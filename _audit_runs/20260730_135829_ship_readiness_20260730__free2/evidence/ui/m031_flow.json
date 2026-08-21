@@ -1,0 +1,382 @@
+{
+  "name": "m031",
+  "course_ids": [
+    43660
+  ],
+  "config": {
+    "pan_layout": "separate",
+    "pan_master": false,
+    "pan_out_mp4": false,
+    "pan_out_txt": false,
+    "pan_out_srt": false,
+    "pan_out_mp3": false,
+    "mode": "flat",
+    "file_filter": "study",
+    "secondary_isolated": false,
+    "max_file_size": 5,
+    "convert_zip": false,
+    "convert_pptx": false,
+    "convert_word": false,
+    "convert_excel": false,
+    "convert_html": false,
+    "convert_code": false,
+    "convert_urls": true,
+    "convert_video": false,
+    "dl_assignments": true,
+    "dl_syllabus": true,
+    "dl_announcements": false,
+    "dl_discussions": true,
+    "dl_quizzes": false,
+    "dl_submissions": false
+  },
+  "select": {
+    "courses": [
+      43660
+    ],
+    "results": [
+      {
+        "course_id": 43660,
+        "ok": true
+      }
+    ]
+  },
+  "size_cap": {
+    "mb": 5,
+    "toggle": {
+      "set": true,
+      "key": "temp_max_size_enabled",
+      "changed": true,
+      "checked": true,
+      "settle": {
+        "settled": true,
+        "ms": 668,
+        "n": 67,
+        "len": 1596
+      },
+      "verified": true
+    },
+    "dialog_closed": true,
+    "closed_with_escape": false,
+    "ok": true
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "study",
+      "mode": "flat",
+      "dl_assignments": true,
+      "dl_syllabus": true,
+      "dl_announcements": false,
+      "dl_discussions": true,
+      "dl_quizzes": false,
+      "dl_submissions": false,
+      "secondary_isolated": false,
+      "convert_zip": false,
+      "convert_pptx": false,
+      "convert_word": false,
+      "convert_excel": false,
+      "convert_html": false,
+      "convert_code": false,
+      "convert_urls": true,
+      "convert_video": false
+    },
+    "failed": [],
+    "verified": {
+      "convert_zip": false,
+      "convert_pptx": false,
+      "convert_word": false,
+      "convert_excel": false,
+      "convert_html": false,
+      "convert_code": false,
+      "convert_urls": true,
+      "convert_video": false,
+      "dl_assignments": true,
+      "dl_syllabus": true,
+      "dl_announcements": false,
+      "dl_discussions": true,
+      "dl_quizzes": false,
+      "dl_submissions": false,
+      "pan_out_mp4": null,
+      "pan_out_mp3": null,
+      "pan_out_txt": null,
+      "pan_out_srt": null
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "m031_config",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\screenshots\\m031_config.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_135829_ship_readiness_20260730__free2\\evidence\\ui\\m031_config.json",
+    "textLen": 1311,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "m031",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": " Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n102\nFILES DOWNLOADED\n150.8\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\n23 files skipped because they exceeded the 5 MB limit.\nCannot Be Downloaded\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n102 FILES\nPDF\n51\nPPTX\n33\nHTML\n7\nOTHER FILES\n11\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 65.1
+    },
+    "captures": [
+      "m031_phase_scan",
+      "m031_phase_download",
+      "m031_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "15:12:01",
+      "action": "select_courses",
+      "courses": [
+        43660
+      ],
+      "results": [
+        {
+          "course_id": 43660,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "15:12:04",
+      "action": "set_size_cap",
+      "mb": 5,
+      "toggle": {
+        "set": true,
+        "key": "temp_max_size_enabled",
+        "changed": true,
+        "checked": true,
+        "settle": {
+          "settled": true,
+          "ms": 668,
+          "n": 67,
+          "len": 1596
+        },
+        "verified": true
+      },
+      "dialog_closed": true,
+      "closed_with_escape": false,
+      "ok": true
+    },
+    {
+      "t": "15:12:06",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "15:12:10",
+      "action": "expand_card",
+      "card": "toggle_card2",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "15:12:11",
+      "action": "set_toggle",
+      "key": "btn_dl_assignments",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "15:12:11",
+      "action": "set_toggle",
+      "key": "btn_dl_syllabus",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "15:12:11",
+      "action": "set_toggle",
+      "key": "btn_dl_announcements",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:12:12",
+      "action": "set_toggle",
+      "key": "btn_dl_discussions",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "15:12:12",
+      "action": "set_toggle",
+      "key": "btn_dl_quizzes",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:12:12",
+      "action": "set_toggle",
+      "key": "btn_dl_submissions",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:12:14",
+      "action": "expand_card",
+      "card": "toggle_card3",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "15:12:14",
+      "action": "set_toggle",
+      "key": "btn_convert_zip",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:12:14",
+      "action": "set_toggle",
+      "key": "btn_convert_pptx",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:12:14",
+      "action": "set_toggle",
+      "key": "btn_convert_word",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:12:14",
+      "action": "set_toggle",
+      "key": "btn_convert_excel",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:12:14",
+      "action": "set_toggle",
+      "key": "btn_convert_html",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:12:14",
+      "action": "set_toggle",
+      "key": "btn_convert_code",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:12:15",
+      "action": "set_toggle",
+      "key": "btn_convert_urls",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "15:12:15",
+      "action": "set_toggle",
+      "key": "btn_convert_video",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "15:12:15",
+      "action": "configure",
+      "applied": {
+        "file_filter": "study",
+        "mode": "flat",
+        "dl_assignments": true,
+        "dl_syllabus": true,
+        "dl_announcements": false,
+        "dl_discussions": true,
+        "dl_quizzes": false,
+        "dl_submissions": false,
+        "secondary_isolated": false,
+        "convert_zip": false,
+        "convert_pptx": false,
+        "convert_word": false,
+        "convert_excel": false,
+        "convert_html": false,
+        "convert_code": false,
+        "convert_urls": true,
+        "convert_video": false
+      },
+      "failed": [],
+      "verified": {
+        "convert_zip": false,
+        "convert_pptx": false,
+        "convert_word": false,
+        "convert_excel": false,
+        "convert_html": false,
+        "convert_code": false,
+        "convert_urls": true,
+        "convert_video": false,
+        "dl_assignments": true,
+        "dl_syllabus": true,
+        "dl_announcements": false,
+        "dl_discussions": true,
+        "dl_quizzes": false,
+        "dl_submissions": false,
+        "pan_out_mp4": null,
+        "pan_out_mp3": null,
+        "pan_out_txt": null,
+        "pan_out_srt": null
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "15:13:39",
+      "action": "confirm_and_run",
+      "name": "m031",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": " Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n102\nFILES DOWNLOADED\n150.8\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\n23 files skipped because they exceeded the 5 MB limit.\nCannot Be Downloaded\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n102 FILES\nPDF\n51\nPPTX\n33\nHTML\n7\nOTHER FILES\n11\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 65.1
+      },
+      "captures": [
+        "m031_phase_scan",
+        "m031_phase_download",
+        "m031_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

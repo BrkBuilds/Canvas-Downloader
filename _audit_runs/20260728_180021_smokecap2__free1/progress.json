@@ -1,0 +1,62 @@
+{
+  "rows": [
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 44428,
+      "course_ids": [
+        44428
+      ],
+      "courses": [
+        {
+          "course_id": 44428,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_180021_smokecap2__free1\\downloads\\Introduction to Information Systems (XB E25 BINTO1078U)",
+          "findings": 0,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_180021_smokecap2__free1\\evidence\\rows\\s101"
+          }
+        }
+      ],
+      "findings": 0,
+      "drift": [],
+      "severities": {},
+      "id": "s101",
+      "seconds": 55.0
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 44428,
+      "course_ids": [
+        44428
+      ],
+      "courses": [
+        {
+          "course_id": 44428,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_180021_smokecap2__free1\\downloads\\Introduction to Information Systems (XB E25 BINTO1078U)",
+          "findings": 1,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_180021_smokecap2__free1\\evidence\\rows\\s102"
+          }
+        }
+      ],
+      "findings": 1,
+      "drift": [],
+      "severities": {
+        "info": 1
+      },
+      "id": "s102",
+      "seconds": 48.4
+    }
+  ],
+  "current": "",
+  "updated": "2026-07-28T18:02:18"
+}

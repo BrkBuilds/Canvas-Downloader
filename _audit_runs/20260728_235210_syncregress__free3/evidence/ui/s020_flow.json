@@ -1,0 +1,65 @@
+{
+  "name": "s020",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "complete",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 3,
+        "id": "sync",
+        "state": "active"
+      },
+      "dash": true,
+      "exceptions": 0,
+      "head": "Syncing...",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIntroduction to Information Systems (LA)\n50%\nDOWNLOADED\n0.0 / 1.6 MB\nSPEED\n0.0 MB/s\nFILES\n2 / 4\nTIME REMAINING\n~00:01\nDOWNLOADING\nTrial Exam_Solutions.pdf\nSlides fra KOMBIT.html\nMidterm course evaluation.html\n\nCancel Sync",
+      "waited_s": 6.1
+    },
+    "capture": "s020_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "ok": true,
+    "skipped": "already up to date",
+    "landed_on": "complete",
+    "capture": "s020_up_to_date"
+  },
+  "trace": [
+    {
+      "t": "00:10:59",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "00:11:11",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "complete",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 3,
+          "id": "sync",
+          "state": "active"
+        },
+        "dash": true,
+        "exceptions": 0,
+        "head": "Syncing...",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIntroduction to Information Systems (LA)\n50%\nDOWNLOADED\n0.0 / 1.6 MB\nSPEED\n0.0 MB/s\nFILES\n2 / 4\nTIME REMAINING\n~00:01\nDOWNLOADING\nTrial Exam_Solutions.pdf\nSlides fra KOMBIT.html\nMidterm course evaluation.html\n\nCancel Sync",
+        "waited_s": 6.1
+      },
+      "capture": "s020_after_analysis",
+      "ok": true
+    }
+  ]
+}

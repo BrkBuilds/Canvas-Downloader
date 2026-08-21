@@ -1,0 +1,12 @@
+{
+  "run_id": "20260728_145153_matrix__office",
+  "label": "lane:office",
+  "parent": "20260728_145153_matrix",
+  "lane": "office",
+  "created": "2026-07-28T18:34:36",
+  "app": {},
+  "ports_used": [
+    8800
+  ],
+  "browser": {}
+}

@@ -1,0 +1,654 @@
+{
+  "course_id": 46370,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "Matematik/Math Brush-up E25",
+  "course_code": "Matematik/Math E25",
+  "fetched_at": "2026-07-28T14:52:56",
+  "folders": {
+    "400893": {
+      "id": 400893,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {
+    "1628918": {
+      "id": 1628918,
+      "filename": "CBS+Mylab+Math+Brush+up+course+E25.pdf",
+      "display_name": "CBS Mylab Math Brush up course E25.pdf",
+      "size": 185718,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-06T09:21:38Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624913": {
+      "id": 1624913,
+      "filename": "Math+Brush-up+Teaser+E25+ENG+-+V01.pdf",
+      "display_name": "Math Brush-up Teaser E25 ENG - V01.pdf",
+      "size": 325794,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T15:29:05Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624917": {
+      "id": 1624917,
+      "filename": "MBU+-+Block+1+-+Problems+-+DK+v02.pdf",
+      "display_name": "MBU - Block 1 - Problems - DK v02.pdf",
+      "size": 79527,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T15:21:59Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624926": {
+      "id": 1624926,
+      "filename": "MBU+-+Block+1+-+Problems+-+ENG+v02.pdf",
+      "display_name": "MBU - Block 1 - Problems - ENG v02.pdf",
+      "size": 78962,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T15:50:01Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624921": {
+      "id": 1624921,
+      "filename": "MBU+-+Block+1+-+Solutions+-+DK+v02.pdf",
+      "display_name": "MBU - Block 1 - Solutions - DK v02.pdf",
+      "size": 173728,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T15:50:52Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624932": {
+      "id": 1624932,
+      "filename": "MBU+-+Block+1+-+Solutions+-+ENG+v04.pdf",
+      "display_name": "MBU - Block 1 - Solutions - ENG v04.pdf",
+      "size": 172569,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T21:06:01Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624918": {
+      "id": 1624918,
+      "filename": "MBU+-+Block+2+-+Problems+-+DK+v04.pdf",
+      "display_name": "MBU - Block 2 - Problems - DK v04.pdf",
+      "size": 54053,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T16:02:02Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624927": {
+      "id": 1624927,
+      "filename": "MBU+-+Block+2+-+Problems+-+ENG+v04.pdf",
+      "display_name": "MBU - Block 2 - Problems - ENG v04.pdf",
+      "size": 52824,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T16:06:23Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624922": {
+      "id": 1624922,
+      "filename": "MBU+-+Block+2+-+Solutions+-+DK+v04.pdf",
+      "display_name": "MBU - Block 2 - Solutions - DK v04.pdf",
+      "size": 56899,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T16:01:50Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624929": {
+      "id": 1624929,
+      "filename": "MBU+-+Block+2+-+Solutions+-+ENG+v04.pdf",
+      "display_name": "MBU - Block 2 - Solutions - ENG v04.pdf",
+      "size": 55556,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-02T07:43:57Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624919": {
+      "id": 1624919,
+      "filename": "MBU+-+Block+3+-+Problems+-+DK+v04.pdf",
+      "display_name": "MBU - Block 3 - Problems - DK v04.pdf",
+      "size": 97430,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T16:02:03Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624928": {
+      "id": 1624928,
+      "filename": "MBU+-+Block+3+-+Problems+-+ENG+v04.pdf",
+      "display_name": "MBU - Block 3 - Problems - ENG v04.pdf",
+      "size": 97038,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T21:06:46Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624923": {
+      "id": 1624923,
+      "filename": "MBU+-+Block+3+-+Solutions+-+DK+v04.pdf",
+      "display_name": "MBU - Block 3 - Solutions - DK v04.pdf",
+      "size": 102250,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T16:01:51Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624930": {
+      "id": 1624930,
+      "filename": "MBU+-+Block+3+-+Solutions+-+ENG+v04.pdf",
+      "display_name": "MBU - Block 3 - Solutions - ENG v04.pdf",
+      "size": 100641,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-03T13:32:45Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624916": {
+      "id": 1624916,
+      "filename": "MBU+-+Block+4+-+Problems+-+DK+v04.pdf",
+      "display_name": "MBU - Block 4 - Problems - DK v04.pdf",
+      "size": 90214,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T16:02:04Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624925": {
+      "id": 1624925,
+      "filename": "MBU+-+Block+4+-+Problems+-+ENG+v04.pdf",
+      "display_name": "MBU - Block 4 - Problems - ENG v04.pdf",
+      "size": 89309,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T21:07:13Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624920": {
+      "id": 1624920,
+      "filename": "MBU+-+Block+4+-+Solutions+-+DK+v04.pdf",
+      "display_name": "MBU - Block 4 - Solutions - DK v04.pdf",
+      "size": 90318,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T16:01:51Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624931": {
+      "id": 1624931,
+      "filename": "MBU+-+Block+4+-+Solutions+-+ENG+v04.pdf",
+      "display_name": "MBU - Block 4 - Solutions - ENG v04.pdf",
+      "size": 89111,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-03T13:32:52Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624915": {
+      "id": 1624915,
+      "filename": "MBU+-+Formula+Library+-+DK+v04.pdf",
+      "display_name": "MBU - Formula Library - DK v04.pdf",
+      "size": 103659,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T15:29:17Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1624914": {
+      "id": 1624914,
+      "filename": "MBU+-+Formula+Library+-+ENG+v04.pdf",
+      "display_name": "MBU - Formula Library - ENG v04.pdf",
+      "size": 103127,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-01T17:52:23Z",
+      "folder_id": 400893,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    }
+  },
+  "modules": [
+    {
+      "id": 311904,
+      "name": "Kurset/The course",
+      "position": 1,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1091232,
+          "type": "File",
+          "title": "Math Brush-up Teaser E25 ENG - V01.pdf",
+          "content_id": 1624913,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 313196,
+      "name": "Formelsamling / Formula Library",
+      "position": 2,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1091235,
+          "type": "File",
+          "title": "MBU - Formula Library - DK v04.pdf",
+          "content_id": 1624915,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091234,
+          "type": "File",
+          "title": "MBU - Formula Library - ENG v04.pdf",
+          "content_id": 1624914,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 313858,
+      "name": "MyLab Onboarding",
+      "position": 3,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1094375,
+          "type": "File",
+          "title": "MyLab registrering",
+          "content_id": 1628918,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 313199,
+      "name": "Opgaver (Dansk)",
+      "position": 4,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1091237,
+          "type": "File",
+          "title": "MBU - Block 1 - Problems - DK v02.pdf",
+          "content_id": 1624917,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091238,
+          "type": "File",
+          "title": "MBU - Block 2 - Problems - DK v04.pdf",
+          "content_id": 1624918,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091239,
+          "type": "File",
+          "title": "MBU - Block 3 - Problems - DK v04.pdf",
+          "content_id": 1624919,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091236,
+          "type": "File",
+          "title": "MBU - Block 4 - Problems - DK v04.pdf",
+          "content_id": 1624916,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 313200,
+      "name": "Løsninger (Dansk)",
+      "position": 5,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1091241,
+          "type": "File",
+          "title": "MBU - Block 1 - Solutions - DK v02.pdf",
+          "content_id": 1624921,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091242,
+          "type": "File",
+          "title": "MBU - Block 2 - Solutions - DK v04.pdf",
+          "content_id": 1624922,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091243,
+          "type": "File",
+          "title": "MBU - Block 3 - Solutions - DK v04.pdf",
+          "content_id": 1624923,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091240,
+          "type": "File",
+          "title": "MBU - Block 4 - Solutions - DK v04.pdf",
+          "content_id": 1624920,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 313197,
+      "name": "Exercises (English)",
+      "position": 6,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1091246,
+          "type": "File",
+          "title": "MBU - Block 1 - Problems - ENG v02.pdf",
+          "content_id": 1624926,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091247,
+          "type": "File",
+          "title": "MBU - Block 2 - Problems - ENG v04.pdf",
+          "content_id": 1624927,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091248,
+          "type": "File",
+          "title": "MBU - Block 3 - Problems - ENG v04.pdf",
+          "content_id": 1624928,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091245,
+          "type": "File",
+          "title": "MBU - Block 4 - Problems - ENG v04.pdf",
+          "content_id": 1624925,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 313198,
+      "name": "Solutions (English)",
+      "position": 7,
+      "published": null,
+      "item_count": 4,
+      "items": [
+        {
+          "id": 1091252,
+          "type": "File",
+          "title": "MBU - Block 1 - Solutions - ENG v04.pdf",
+          "content_id": 1624932,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091249,
+          "type": "File",
+          "title": "MBU - Block 2 - Solutions - ENG v04.pdf",
+          "content_id": 1624929,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091250,
+          "type": "File",
+          "title": "MBU - Block 3 - Solutions - ENG v04.pdf",
+          "content_id": 1624930,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1091251,
+          "type": "File",
+          "title": "MBU - Block 4 - Solutions - ENG v04.pdf",
+          "content_id": 1624931,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "File": 20
+  },
+  "module_file_ids": [
+    1624913,
+    1624914,
+    1624915,
+    1624916,
+    1624917,
+    1624918,
+    1624919,
+    1624920,
+    1624921,
+    1624922,
+    1624923,
+    1624925,
+    1624926,
+    1624927,
+    1624928,
+    1624929,
+    1624930,
+    1624931,
+    1624932,
+    1628918
+  ],
+  "only_in_modules": [],
+  "only_in_files_tab": [],
+  "files_tab_restricted": false,
+  "assignments": [],
+  "quizzes": [],
+  "announcements": [
+    {
+      "id": 165590,
+      "title": "MATH BRUSH-UP - UPDATES",
+      "posted_at": "2025-09-04T09:29:44Z"
+    },
+    {
+      "id": 165244,
+      "title": "MATH BRUSH-UP",
+      "posted_at": "2025-09-01T14:45:16Z"
+    }
+  ],
+  "discussions": [],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_file_ids": [
+    1624896,
+    1627414
+  ],
+  "inline_only_file_ids": [
+    1624896,
+    1627414
+  ],
+  "expected_file_ids": [
+    1624896,
+    1624913,
+    1624914,
+    1624915,
+    1624916,
+    1624917,
+    1624918,
+    1624919,
+    1624920,
+    1624921,
+    1624922,
+    1624923,
+    1624925,
+    1624926,
+    1624927,
+    1624928,
+    1624929,
+    1624930,
+    1624931,
+    1624932,
+    1627414,
+    1628918
+  ],
+  "secondary_counts": {
+    "assignment": 0,
+    "quiz": 0,
+    "discussion": 0,
+    "announcement": 2,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "quizzes": "ResourceDoesNotExist: Not Found",
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 4.4
+}

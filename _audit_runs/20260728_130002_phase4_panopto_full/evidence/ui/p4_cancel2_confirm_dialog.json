@@ -1,0 +1,42 @@
+{
+  "name": "p4_cancel2_confirm_dialog",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\screenshots\\p4_cancel2_confirm_dialog.png",
+  "captured": "2026-07-28 13:49:49",
+  "screen": {
+    "url": "http://127.0.0.1:8796/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": true,
+    "dialogTitle": "​",
+    "headings": [],
+    "buttons": [
+      {
+        "key": "cancel_sync_dialog_btn",
+        "text": "No, Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_start_sync",
+        "text": "Yes, Start Sync",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "​\n\nConfirm Sync\nYou are about to download 3 Panopto recordings to 1 folder.\nFiles:\n3 recordings\nTotal Size:\n0 B\nDestination:\nIndføring i organisationers opbygning og funktion (LA)\n0 B of 64.5 GB\nAvailable Disk Space: 64.5 GB\n\nNo, Go back\n\nYes, Start Sync",
+    "textLen": 254
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

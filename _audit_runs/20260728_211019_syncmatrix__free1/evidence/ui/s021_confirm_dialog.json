@@ -1,0 +1,42 @@
+{
+  "name": "s021_confirm_dialog",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free1\\evidence\\screenshots\\s021_confirm_dialog.png",
+  "captured": "2026-07-28 21:40:07",
+  "screen": {
+    "url": "http://127.0.0.1:8850/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": true,
+    "dialogTitle": "​",
+    "headings": [],
+    "buttons": [
+      {
+        "key": "cancel_sync_dialog_btn",
+        "text": "No, Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_start_sync",
+        "text": "Yes, Start Sync",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "​\n\nConfirm Sync\nYou are about to download 5 files (195.3 KB) to 1 folder.\nFiles:\n5 files\nTotal Size:\n195.3 KB\nDestination:\nProgrammering og udvikling af små systemer samt databaser (LA)\n195.3 KB of 74.0 GB\nAvailable Disk Space: 74.0 GB\n\nNo, Go back\n\nYes, Start Sync",
+    "textLen": 265
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

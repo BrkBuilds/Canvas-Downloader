@@ -1,0 +1,223 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free1\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-08-09T23:25:21",
+  "applied": [
+    {
+      "kind": "clean_update",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    },
+    {
+      "kind": "moved_deep",
+      "count": 2
+    },
+    {
+      "kind": "long_path",
+      "count": 2
+    },
+    {
+      "kind": "partial_artifact",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 10,
+  "expected_categories": {
+    "uptodate": 6,
+    "updated_clean": 2
+  },
+  "expected_untracked": [
+    "My Notes/semester 0/week 3/reading/minefeltVEJL_js.txt",
+    "My Notes/semester 1/week 3/reading/Debug - grades - 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1 - mine noter 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1 - mine noter 0.txt",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Create_ILearn_tables_sql.txt",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/SQL Opgave Vejl_sql.txt",
+    "interrupted download.pdf.part",
+    "recording.part.mp4"
+  ],
+  "expected_missing_rows": [
+    "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Create_ILearn_tables_sql.txt",
+    "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/SQL Opgave Vejl_sql.txt",
+    "Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt"
+  ],
+  "expected_md5_drift": [],
+  "expected_size_drift": [
+    "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+    "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt"
+  ],
+  "expected_partials": [
+    "interrupted download.pdf.part",
+    "recording.part.mp4"
+  ],
+  "before": {
+    "rows": 215,
+    "files": 21821
+  },
+  "after": {
+    "rows": 213,
+    "files": 21821
+  },
+  "fixtures": [
+    {
+      "label": "clean-update:g1 darts vejl_løsn_js.txt",
+      "kind": "clean_update",
+      "path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "match_name": "g1 darts vejl_løsn_js.txt",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1670371,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "clean-update:gk2 vejl_løsn_js.txt",
+      "kind": "clean_update",
+      "path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "match_name": "gk2 vejl_løsn_js.txt",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1598721,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Debug - shop - 1 - mine noter 0.txt",
+      "kind": "renamed_row_dropped",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1 - mine noter 0.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1 - mine noter 0.txt",
+      "match_name": "Debug - shop - 1.txt",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1700483,
+      "original_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Debug - Inventory - 1 - mine noter 1.txt",
+      "kind": "renamed_row_dropped",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1 - mine noter 1.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1 - mine noter 1.txt",
+      "match_name": "Debug - Inventory - 1.txt",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1700478,
+      "original_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:minefeltVEJL_js.txt",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 0/week 3/reading/minefeltVEJL_js.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 0/week 3/reading/minefeltVEJL_js.txt",
+      "match_name": "minefeltVEJL_js.txt",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1685205,
+      "original_path": "Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:Debug - grades - 1.txt",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 1/week 3/reading/Debug - grades - 1.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 1/week 3/reading/Debug - grades - 1.txt",
+      "match_name": "Debug - grades - 1.txt",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1700471,
+      "original_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "longpath:SQL Opgave Vejl_sql.txt",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/SQL Opgave Vejl_sql.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/SQL Opgave Vejl_sql.txt",
+      "match_name": "SQL Opgave Vejl_sql.txt",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1794807,
+      "original_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/SQL Opgave Vejl_sql.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 412
+      }
+    },
+    {
+      "label": "longpath:Create_ILearn_tables_sql.txt",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Create_ILearn_tables_sql.txt",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Create_ILearn_tables_sql.txt",
+      "match_name": "Create_ILearn_tables_sql.txt",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1789210,
+      "original_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Create_ILearn_tables_sql.txt",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 417
+      }
+    },
+    {
+      "label": "partial:interrupted download.pdf.part",
+      "kind": "partial_artifact",
+      "path": "interrupted download.pdf.part",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "interrupted download.pdf.part",
+      "match_name": "interrupted download.pdf.part",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "partial:recording.part.mp4",
+      "kind": "partial_artifact",
+      "path": "recording.part.mp4",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "recording.part.mp4",
+      "match_name": "recording.part.mp4",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

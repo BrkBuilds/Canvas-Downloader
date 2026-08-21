@@ -1,0 +1,39 @@
+{
+  "run_id": "20260728_211646_newversion2x",
+  "label": "newversion2x",
+  "created": "2026-07-28T21:16:46",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {
+    "port": 8840,
+    "pid": 13068,
+    "url": "http://127.0.0.1:8840",
+    "log": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211646_newversion2x\\streamlit.log",
+    "started": 1785266209.2308,
+    "verified_owner": true
+  },
+  "ports_used": [
+    8840
+  ],
+  "browser": {
+    "cdp_port": 9440,
+    "pid": 29100,
+    "headed": false
+  },
+  "scope": [
+    {
+      "name": "pass1",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "pass2",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    }
+  ]
+}

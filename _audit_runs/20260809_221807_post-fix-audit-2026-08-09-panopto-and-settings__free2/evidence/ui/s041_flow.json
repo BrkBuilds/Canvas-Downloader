@@ -1,0 +1,117 @@
+{
+  "name": "s041",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": " locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (none)\n\nPDF (2/3)\n\nSelect All\n\nDeselect All\n\n1.\nIntroduction to Information Systems (LA)\nIntroduction to Information Systems (LA E25 BINTO1078U)\n4 files pending sync\n46 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 6.1
+    },
+    "capture": "s041_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_update_43657",
+      "cat_updmod_43657"
+    ],
+    "capture": "s041_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free2\\evidence\\screenshots\\s041_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free2\\evidence\\ui\\s041_review.json",
+    "textLen": 1249,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "trace": [
+    {
+      "t": "23:30:24",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "23:30:34",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": " locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nDOCX (none)\n\nPDF (2/3)\n\nSelect All\n\nDeselect All\n\n1.\nIntroduction to Information Systems (LA)\nIntroduction to Information Systems (LA E25 BINTO1078U)\n4 files pending sync\n46 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 6.1
+      },
+      "capture": "s041_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "23:30:36",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_43657",
+        "cat_updmod_43657"
+      ],
+      "capture": "s041_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free2\\evidence\\screenshots\\s041_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free2\\evidence\\ui\\s041_review.json",
+      "textLen": 1250,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "23:30:37",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "23:30:38",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_43657",
+        "cat_updmod_43657"
+      ],
+      "capture": "s041_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free2\\evidence\\screenshots\\s041_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free2\\evidence\\ui\\s041_review.json",
+      "textLen": 1249,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

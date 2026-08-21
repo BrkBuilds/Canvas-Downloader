@@ -1,0 +1,65 @@
+{
+  "name": "s027",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "complete",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "c\n\n5. Complete\n\nSync Complete!\nQuick Sync done - everything up to date\n\nYour folders already match Canvas - nothing to download.\n\n⚠️ Quick Sync skipped 2 files outside this course's file-type filter.\nTo download them, run a normal 'Analyze, Review & Sync' and select them manually.\nℹ️\nSome files were skipped because you ignored them.\nYou can manage ignored files from the Sync Hub.\n\nGo to front page",
+      "waited_s": 3.0
+    },
+    "capture": "s027_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "ok": true,
+    "skipped": "already up to date",
+    "landed_on": "complete",
+    "capture": "s027_up_to_date"
+  },
+  "trace": [
+    {
+      "t": "17:27:46",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "17:27:53",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "complete",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "c\n\n5. Complete\n\nSync Complete!\nQuick Sync done - everything up to date\n\nYour folders already match Canvas - nothing to download.\n\n⚠️ Quick Sync skipped 2 files outside this course's file-type filter.\nTo download them, run a normal 'Analyze, Review & Sync' and select them manually.\nℹ️\nSome files were skipped because you ignored them.\nYou can manage ignored files from the Sync Hub.\n\nGo to front page",
+        "waited_s": 3.0
+      },
+      "capture": "s027_after_analysis",
+      "ok": true
+    }
+  ]
+}

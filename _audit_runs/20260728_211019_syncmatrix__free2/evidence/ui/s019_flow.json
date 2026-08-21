@@ -1,0 +1,120 @@
+{
+  "name": "s019",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "ect\nBy filetype\n\nDOCX (none)\n\nPDF (2/3)\n\nSelect All\n\nDeselect All\n\n1.\nIntroduction to Information Systems (LA)\nIntroduction to Information Systems (LA E25 BINTO1078U)\n4 files pending sync\n46 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 6.1
+    },
+    "capture": "s019_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_update_43657",
+      "cat_updmod_43657",
+      "cat_deleted_canvas_43657"
+    ],
+    "capture": "s019_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\screenshots\\s019_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\ui\\s019_review.json",
+    "textLen": 1503,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "select": [
+    {
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    }
+  ],
+  "trace": [
+    {
+      "t": "21:19:22",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "21:19:32",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "ect\nBy filetype\n\nDOCX (none)\n\nPDF (2/3)\n\nSelect All\n\nDeselect All\n\n1.\nIntroduction to Information Systems (LA)\nIntroduction to Information Systems (LA E25 BINTO1078U)\n4 files pending sync\n46 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 6.1
+      },
+      "capture": "s019_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "21:19:34",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_43657",
+        "cat_updmod_43657",
+        "cat_deleted_canvas_43657"
+      ],
+      "capture": "s019_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\screenshots\\s019_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\ui\\s019_review.json",
+      "textLen": 1504,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "21:19:36",
+      "action": "select_category",
+      "category": "updated_modified",
+      "want": true,
+      "touched": 2,
+      "failed": [],
+      "ok": true
+    },
+    {
+      "t": "21:19:36",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_43657",
+        "cat_updmod_43657",
+        "cat_deleted_canvas_43657"
+      ],
+      "capture": "s019_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\screenshots\\s019_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_211019_syncmatrix__free2\\evidence\\ui\\s019_review.json",
+      "textLen": 1503,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

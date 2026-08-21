@@ -1,0 +1,1595 @@
+<!doctype html><meta charset='utf-8'><title>Canvas Downloader live audit - 20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings</title><style>
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin:0; padding:32px; background:#0e1117; color:#e2e8f0;
+  font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+.wrap { max-width:1100px; margin:0 auto; }
+h1 { font-size:26px; margin:0 0 4px; color:#fff; letter-spacing:-.01em; }
+h2 { font-size:17px; margin:34px 0 12px; color:#fff; }
+.sub { color:#94a3b8; margin:0 0 24px; }
+.tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px; margin-bottom:28px; }
+.tile { background:#161b24; border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; padding:14px 16px; }
+.tile .n { font-size:26px; font-weight:700; line-height:1.1; }
+.tile .l { font-size:11px; text-transform:uppercase; letter-spacing:.07em;
+  color:#94a3b8; margin-top:4px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th,td { text-align:left; padding:7px 10px; border-bottom:1px solid rgba(255,255,255,.06);
+  vertical-align:top; }
+th { color:#94a3b8; font-weight:600; font-size:11px; text-transform:uppercase;
+  letter-spacing:.06em; }
+.f { border:1px solid rgba(255,255,255,.08); border-left-width:3px;
+  border-radius:8px; margin-bottom:10px; background:#141922; }
+.f > summary { cursor:pointer; padding:11px 14px; list-style:none;
+  display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; }
+.f > summary::-webkit-details-marker { display:none; }
+.f[open] > summary { border-bottom:1px solid rgba(255,255,255,.06); }
+.badge { font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.06em; padding:2px 7px; border-radius:4px; white-space:nowrap; }
+.title { font-weight:600; color:#fff; flex:1; min-width:260px; }
+.meta { font-size:11px; color:#94a3b8; }
+.body { padding:12px 14px 16px; }
+.detail { color:#cbd5e1; margin-bottom:10px; white-space:pre-wrap; }
+pre { background:#0b0e14; border:1px solid rgba(255,255,255,.06); border-radius:6px;
+  padding:10px 12px; overflow-x:auto; font-size:12px; color:#cbd5e1; margin:0; }
+code { background:rgba(255,255,255,.06); padding:1px 5px; border-radius:3px;
+  font-size:12px; }
+.oracle { display:inline-block; background:rgba(99,102,241,.14); color:#a5b4fc;
+  border:1px solid rgba(99,102,241,.3); border-radius:4px; padding:1px 6px;
+  font-size:10px; font-weight:600; margin-right:4px; }
+.synthetic { background:rgba(168,85,247,.14); color:#d8b4fe;
+  border:1px solid rgba(168,85,247,.3); border-radius:4px; padding:1px 6px;
+  font-size:10px; }
+.empty { padding:26px; text-align:center; color:#68d4a3;
+  background:rgba(104,212,163,.08); border:1px solid rgba(104,212,163,.25);
+  border-radius:10px; font-weight:600; }
+.legend { font-size:12px; color:#94a3b8; margin:6px 0 18px; }
+.legend b { color:#cbd5e1; }
+@media (max-width:640px){ body{padding:16px;} .title{min-width:0;} }
+</style><div class='wrap'><h1>Live audit report</h1><p class='sub'>Run <code>20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings</code> &middot; started 2026-08-09T22:18:08 &middot; rendered 2026-08-09 23:34</p><div class='tiles'><div class='tile'><div class='n' style='color:#fff'>7</div><div class='l'>defects</div></div><div class='tile'><div class='n' style='color:#475569'>0</div><div class='l'>critical</div></div><div class='tile'><div class='n' style='color:#fb923c'>2</div><div class='l'>high</div></div><div class='tile'><div class='n' style='color:#fbbf24'>2</div><div class='l'>medium</div></div><div class='tile'><div class='n' style='color:#475569'>0</div><div class='l'>low</div></div><div class='tile'><div class='n' style='color:#94a3b8'>79</div><div class='l'>info</div></div></div><p class='legend'>Every finding is a disagreement between two independent views of the same fact. <b>O1</b> UI (what the app tells the user). <b>O2</b> Debug log (what the app says it did). <b>O3</b> Disk (what actually exists). <b>O4</b> Sync manifest (what the app believes). <b>O5</b> Canvas API (what should exist).</p><h2>What ran</h2><table><tr><th>Scenario</th><th>Course</th><th>Configuration</th><th>Result</th></tr><tr><td><code>smoke43667</code></td><td>43667</td><td class='meta'>{}</td><td>ok</td></tr><tr><td><code>panopto_shortcut</code></td><td>43660</td><td class='meta'>{&quot;pan_out_url&quot;: true, &quot;pan_out_mp3&quot;: false, &quot;pan_out_mp4&quot;: false, &quot;pan_out_txt&quot;: false, &quot;pan_out_srt&quot;: false, &quot;pan_layout&quot;: &quot;match&quot;, &quot;convert_urls&quot;: true}</td><td>ok</td></tr><tr><td><code>panopto_shortcut2</code></td><td>43660</td><td class='meta'>{&quot;pan_out_url&quot;: true, &quot;pan_out_mp4&quot;: false, &quot;pan_out_mp3&quot;: false, &quot;pan_out_txt&quot;: false, &quot;pan_out_srt&quot;: false, &quot;pan_layout&quot;: &quot;match&quot;, &quot;convert_urls&quot;: true}</td><td>ok</td></tr><tr><td><code>churn_probe</code></td><td></td><td class='meta'>{}</td><td>ok</td></tr><tr><td><code>pan_mp3</code></td><td>43660</td><td class='meta'>{&quot;pan_out_url&quot;: false, &quot;pan_out_mp4&quot;: false, &quot;pan_out_mp3&quot;: true, &quot;pan_out_txt&quot;: false, &quot;pan_out_srt&quot;: false, &quot;pan_layout&quot;: &quot;match&quot;}</td><td>ok</td></tr><tr><td><code>pan_gpu_tx</code></td><td>43660</td><td class='meta'>{&quot;pan_out_url&quot;: true, &quot;pan_out_mp4&quot;: false, &quot;pan_out_mp3&quot;: true, &quot;pan_out_txt&quot;: true, &quot;pan_out_srt&quot;: true, &quot;pan_layout&quot;: &quot;match&quot;}</td><td>ok</td></tr><tr><td><code>pan_cpu_downgrade</code></td><td>43660</td><td class='meta'>{&quot;pan_out_url&quot;: false, &quot;pan_out_mp4&quot;: false, &quot;pan_out_mp3&quot;: true, &quot;pan_out_txt&quot;: true, &quot;pan_out_srt&quot;: true, &quot;pan_layout&quot;: &quot;match&quot;}</td><td>ok</td></tr></table><h2>Findings</h2><details class='f' style='border-left-color:#fb923c; background:rgba(251,146,60,.12)'><summary><span class='badge' style='background:#fb923c22;color:#fb923c'>high</span><span class='title'>1 content file(s) on disk with no manifest row</span><span class='oracle' title='Disk (what actually exists)'>O3</span><span class='oracle' title='Sync manifest (what the app believes)'>O4</span><span class='meta'>persistence · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>Each of these will be offered as a NEW file on every future sync unless the analyzer&#x27;s adoption tiers reclaim it. This is the &#x27;wrongfully shows up as new&#x27; failure.</div><pre>{
+  &quot;files&quot;: [
+    {
+      &quot;rel&quot;: &quot;Compiled_External_Links.txt&quot;,
+      &quot;size&quot;: 6284,
+      &quot;ext&quot;: &quot;.txt&quot;,
+      &quot;secondary_html&quot;: false,
+      &quot;new_version&quot;: false
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#fb923c; background:rgba(251,146,60,.12)'><summary><span class='badge' style='background:#fb923c22;color:#fb923c'>high</span><span class='title'>2 partial-write artifact(s) left on disk</span><span class='oracle' title='Disk (what actually exists)'>O3</span><span class='meta'>robustness · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>A `.part` file after the run means an atomic write was abandoned without cleanup. The next analysis must ignore it, and the user sees a junk file in their course folder.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Tema 2 Uformelle træk - organisationskultur/Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.srt.part&quot;,
+    &quot;Tema 2 Uformelle træk - organisationskultur/Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.txt.part&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#fbbf24; background:rgba(251,191,36,.10)'><summary><span class='badge' style='background:#fbbf2422;color:#fbbf24'>medium</span><span class='title'>Cancelling mid-transcription leaves .txt.part/.srt.part in the course folder for ever</span><span class='oracle' title='Debug log (what the app says it did)'>O2</span><span class='oracle' title='Disk (what actually exists)'>O3</span><span class='meta'>panopto · pan_cpu_downgrade · 43660</span></summary><div class='body'><div class='detail'>REPRODUCED. Phase 4&#x27;s requirement is &#x27;Cancel mid-transcription -&gt; no orphaned worker process, no .part files&#x27;. Orphaned workers: PASS (verified twice). .part files: FAIL when the cancel lands while a worker is actively WRITING. Evidence (O3): &#x27;Video med respons pa feedback...srt.part&#x27; (16536 B) and &#x27;.txt.part&#x27; (8416 B) remain on disk. Both are UNLOCKED (append-open succeeds), so they were removable. The recording&#x27;s .mp3 (12851541 B) sits at the same base path, so _clean_part_files would have derived the correct base. O2: the log shows &#x27;Transcribing [3/30] (device=cpu)&#x27; worker pid=31704 at 23:04:41 and the cancel at 23:07:07.633 - i.e. 2.5 min into that file - and contains NO .part cleanup line, success or failure. WHY IT MATTERS: panopto/runner.py&#x27;s own comment states the engine deliberately ignores .part artifacts everywhere (never healed onto a manifest row, never auto-discovered, never counted as study material), so &#x27;nothing would ever remove or even mention them again&#x27; - the leftovers are permanent clutter in the student&#x27;s course folder. Note the first cancel (GPU run, between recordings) left ZERO .part files, so the trigger is specifically cancelling mid-write. CANDIDATE MECHANISM (not proven): core.cancellation logged &#x27;cancel event set&#x27; at 23:07:07.633 and &#x27;cancel event cleared&#x27; at 23:07:07.753 - app.py:909-910 resets the flag on any rerun where download_status has left _active_dl_statuses. That 120ms window is SHORTER than the 0.3s is_cancelled() poll in panopto/transcribe.py:435, so the graceful cancel path at transcribe.py:448 - which is what calls _clean_part_files - can miss the flag entirely, while the workers are killed by another route. NOT FIXED: audit ground rule 2 (report, never fix), and a product change mid-run would invalidate the 43-row sync matrix that was executing.</div></div></details><details class='f' style='border-left-color:#fbbf24; background:rgba(251,191,36,.10)'><summary><span class='badge' style='background:#fbbf2422;color:#fbbf24'>medium</span><span class='title'>36 file(s) differ from their recorded md5</span><span class='oracle' title='Sync manifest (what the app believes)'>O4</span><span class='oracle' title='Disk (what actually exists)'>O3</span><span class='meta'>persistence · panopto_shortcut2 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>original_md5 is what classifies the next update as clean (overwrite) or modified (_NewVersion). A wrong baseline silently decides whether the user&#x27;s edits survive.</div><pre>{
+  &quot;rows&quot;: [
+    {
+      &quot;local_path&quot;: &quot;Tema 4 Ledelse og strategi - ledelse i organisationer/Forelæsningsvideo 2 Ledelse i organisationer 2.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 4 Ledelse og strategi - ledelse i organisationer/Forelæsningsvideo 1 Ledelse i organisationer 1.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 4 Ledelse og strategi- forandringer i organisationer/Forelæsningsvideo (2) Forandringsledelse.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 4 Ledelse og strategi- forandringer i organisationer/Forelæsningsvideo (1) Forandringsledelse.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 3 Individ, organisation og omverden- motivationsfaktorer/Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 3 Individ, organisation og omverden- motivationsfaktorer/Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 3 Individ, organisation og omverden - organisation og omgivelser/Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 2 Uformelle træk - sensemaking/Forelæsningsvideo 2 om Sensemaking.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 2 Uformelle træk - sensemaking/Forelæsningsvideo 1 om Sensemaking.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 2 Uformelle træk - organisationskultur/Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 2 Uformelle træk - organisationskultur/Forelæsningsvideo (2) Uformelletræk_organisationskultur.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 2 Uformelle træk - organisationskultur/Forelæsningsvideo (1) Uformelletræk_organisationskultur.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 1 Formelle træk - mål og strategi/Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Tema 1 Formelle træk - mål og strategi/Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.url&quot;
+    },
+    {
+      &quot;local_path&quot;: &quot;Organisationsprojekt - klargøring af data til analyse/Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.url&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>1 path(s) exceed 255 characters</span><span class='meta'>observation · s000 · BINT 1st semester (LA E25 BINTS1SEMU)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>1 path(s) exceed 255 characters</span><span class='meta'>observation · s016 · BINT 1st semester (LA E25 BINTS1SEMU)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>1 path(s) exceed 255 characters</span><span class='meta'>observation · s028 · BINT 1st semester (LA E25 BINTS1SEMU)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>1 path(s) exceed 255 characters</span><span class='meta'>observation · s015 · BINT 1st semester (LA E25 BINTS1SEMU)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>1 path(s) exceed 255 characters</span><span class='meta'>observation · s039 · BINT 1st semester (LA E25 BINTS1SEMU)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>10 path(s) exceed 255 characters</span><span class='meta'>observation · s019 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;My Notes/semester 0/week 3/reading/Example solutions Exam.pdf&quot;,
+    &quot;My Notes/semester 1/week 3/reading/Sign-up Academy Environment.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21630 file(s) unpacked from archives are untracked, as designed</span><span class='meta'>observation · s014 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>The manifest tracks the archive, not its contents.</div><pre>{
+  &quot;roots&quot;: [
+    &quot;Skriftlig Eksamen/eksamen 2025 ord vejledende&quot;,
+    &quot;Skriftlig Eksamen/eksamen 2025 re vejledende&quot;,
+    &quot;Tidligere eksamenssæt (de fleste med vejledende løsninger)/Eksamens arkiv&quot;,
+    &quot;Uge 12 Forelæsning 17. Database 3  Join og set operatorer/DB-kapitelnoter-øvelser-løsninger&quot;,
+    &quot;Uge 13 Forelæsning 18. Webserver &amp; APIer/Webserver-Opgave-Vejl&quot;,
+    &quot;Uge 15 Forelæsning 19. Webserver &amp; Databaser/Forelæsning 19&quot;,
+    &quot;Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis/Uge 16 - Jest&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21630 file(s) unpacked from archives are untracked, as designed</span><span class='meta'>observation · s018 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>The manifest tracks the archive, not its contents.</div><pre>{
+  &quot;roots&quot;: [
+    &quot;Skriftlig Eksamen/eksamen 2025 ord vejledende&quot;,
+    &quot;Skriftlig Eksamen/eksamen 2025 re vejledende&quot;,
+    &quot;Tidligere eksamenssæt (de fleste med vejledende løsninger)/Eksamens arkiv&quot;,
+    &quot;Uge 12 Forelæsning 17. Database 3  Join og set operatorer/DB-kapitelnoter-øvelser-løsninger&quot;,
+    &quot;Uge 13 Forelæsning 18. Webserver &amp; APIer/Webserver-Opgave-Vejl&quot;,
+    &quot;Uge 15 Forelæsning 19. Webserver &amp; Databaser/Forelæsning 19&quot;,
+    &quot;Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis/Uge 16 - Jest&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21630 file(s) unpacked from archives are untracked, as designed</span><span class='meta'>observation · s022 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>The manifest tracks the archive, not its contents.</div><pre>{
+  &quot;roots&quot;: [
+    &quot;Skriftlig Eksamen/eksamen 2025 ord vejledende&quot;,
+    &quot;Skriftlig Eksamen/eksamen 2025 re vejledende&quot;,
+    &quot;Tidligere eksamenssæt (de fleste med vejledende løsninger)/Eksamens arkiv&quot;,
+    &quot;Uge 12 Forelæsning 17. Database 3  Join og set operatorer/DB-kapitelnoter-øvelser-løsninger&quot;,
+    &quot;Uge 13 Forelæsning 18. Webserver &amp; APIer/Webserver-Opgave-Vejl&quot;,
+    &quot;Uge 15 Forelæsning 19. Webserver &amp; Databaser/Forelæsning 19&quot;,
+    &quot;Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis/Uge 16 - Jest&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21630 file(s) unpacked from archives are untracked, as designed</span><span class='meta'>observation · s001 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>The manifest tracks the archive, not its contents.</div><pre>{
+  &quot;roots&quot;: [
+    &quot;Skriftlig Eksamen/eksamen 2025 ord vejledende&quot;,
+    &quot;Skriftlig Eksamen/eksamen 2025 re vejledende&quot;,
+    &quot;Tidligere eksamenssæt (de fleste med vejledende løsninger)/Eksamens arkiv&quot;,
+    &quot;Uge 12 Forelæsning 17. Database 3  Join og set operatorer/DB-kapitelnoter-øvelser-løsninger&quot;,
+    &quot;Uge 13 Forelæsning 18. Webserver &amp; APIer/Webserver-Opgave-Vejl&quot;,
+    &quot;Uge 15 Forelæsning 19. Webserver &amp; Databaser/Forelæsning 19&quot;,
+    &quot;Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis/Uge 16 - Jest&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21630 file(s) unpacked from archives are untracked, as designed</span><span class='meta'>observation · s017 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>The manifest tracks the archive, not its contents.</div><pre>{
+  &quot;roots&quot;: [
+    &quot;Skriftlig Eksamen/eksamen 2025 ord vejledende&quot;,
+    &quot;Skriftlig Eksamen/eksamen 2025 re vejledende&quot;,
+    &quot;Tidligere eksamenssæt (de fleste med vejledende løsninger)/Eksamens arkiv&quot;,
+    &quot;Uge 12 Forelæsning 17. Database 3  Join og set operatorer/DB-kapitelnoter-øvelser-løsninger&quot;,
+    &quot;Uge 13 Forelæsning 18. Webserver &amp; APIer/Webserver-Opgave-Vejl&quot;,
+    &quot;Uge 15 Forelæsning 19. Webserver &amp; Databaser/Forelæsning 19&quot;,
+    &quot;Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis/Uge 16 - Jest&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21630 file(s) unpacked from archives are untracked, as designed</span><span class='meta'>observation · s021 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>The manifest tracks the archive, not its contents.</div><pre>{
+  &quot;roots&quot;: [
+    &quot;Skriftlig Eksamen/eksamen 2025 ord vejledende&quot;,
+    &quot;Skriftlig Eksamen/eksamen 2025 re vejledende&quot;,
+    &quot;Tidligere eksamenssæt (de fleste med vejledende løsninger)/Eksamens arkiv&quot;,
+    &quot;Uge 12 Forelæsning 17. Database 3  Join og set operatorer/DB-kapitelnoter-øvelser-løsninger&quot;,
+    &quot;Uge 13 Forelæsning 18. Webserver &amp; APIer/Webserver-Opgave-Vejl&quot;,
+    &quot;Uge 15 Forelæsning 19. Webserver &amp; Databaser/Forelæsning 19&quot;,
+    &quot;Uge 16 Forelæsning 20. Små systemer 1  Testing - Teori og praksis/Uge 16 - Jest&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21805 path(s) exceed 255 characters</span><span class='meta'>observation · s017 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Announcement 2025-08-28 - Velkommen til programmeringskurset.md&quot;,
+    &quot;Announcement 2025-09-04 - Follow up til første forelæsning!.md&quot;,
+    &quot;Announcement 2025-09-11 - Kommentarer til feedback fra forelæsning 2.md&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster - Late Lecture with DHH Slide.pdf&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster.md&quot;,
+    &quot;Announcement 2025-09-26 - Materialet til forelæsning 5.md&quot;,
+    &quot;Announcement 2025-10-04 - Practice quiz til kapitel 6 offentligjort.md&quot;,
+    &quot;Announcement 2025-10-08 - Første øvelsesgang fredag d. 1010.md&quot;,
+    &quot;Announcement 2025-10-29 - G2 er med gruppeaflevering (opdateret).md&quot;,
+    &quot;Announcement 2025-11-03 - Besøg eksamenslokalerne på Amager.md&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21807 path(s) exceed 255 characters</span><span class='meta'>observation · s014 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Announcement 2025-08-28 - Velkommen til programmeringskurset.md&quot;,
+    &quot;Announcement 2025-09-04 - Follow up til første forelæsning!.md&quot;,
+    &quot;Announcement 2025-09-11 - Kommentarer til feedback fra forelæsning 2.md&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster - Late Lecture with DHH Slide.pdf&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster.md&quot;,
+    &quot;Announcement 2025-09-26 - Materialet til forelæsning 5.md&quot;,
+    &quot;Announcement 2025-10-04 - Practice quiz til kapitel 6 offentligjort.md&quot;,
+    &quot;Announcement 2025-10-08 - Første øvelsesgang fredag d. 1010.md&quot;,
+    &quot;Announcement 2025-10-29 - G2 er med gruppeaflevering (opdateret).md&quot;,
+    &quot;Announcement 2025-11-03 - Besøg eksamenslokalerne på Amager.md&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21807 path(s) exceed 255 characters</span><span class='meta'>observation · s022 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Announcement 2025-08-28 - Velkommen til programmeringskurset.md&quot;,
+    &quot;Announcement 2025-09-04 - Follow up til første forelæsning!.md&quot;,
+    &quot;Announcement 2025-09-11 - Kommentarer til feedback fra forelæsning 2.md&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster - Late Lecture with DHH Slide.pdf&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster.md&quot;,
+    &quot;Announcement 2025-09-26 - Materialet til forelæsning 5.md&quot;,
+    &quot;Announcement 2025-10-04 - Practice quiz til kapitel 6 offentligjort.md&quot;,
+    &quot;Announcement 2025-10-08 - Første øvelsesgang fredag d. 1010.md&quot;,
+    &quot;Announcement 2025-10-29 - G2 er med gruppeaflevering (opdateret).md&quot;,
+    &quot;Announcement 2025-11-03 - Besøg eksamenslokalerne på Amager.md&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21808 path(s) exceed 255 characters</span><span class='meta'>observation · s018 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Announcement 2025-08-28 - Velkommen til programmeringskurset.md&quot;,
+    &quot;Announcement 2025-09-04 - Follow up til første forelæsning!.md&quot;,
+    &quot;Announcement 2025-09-11 - Kommentarer til feedback fra forelæsning 2.md&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster - Late Lecture with DHH Slide.pdf&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster.md&quot;,
+    &quot;Announcement 2025-09-26 - Materialet til forelæsning 5.md&quot;,
+    &quot;Announcement 2025-10-04 - Practice quiz til kapitel 6 offentligjort.md&quot;,
+    &quot;Announcement 2025-10-08 - Første øvelsesgang fredag d. 1010.md&quot;,
+    &quot;Announcement 2025-10-29 - G2 er med gruppeaflevering (opdateret).md&quot;,
+    &quot;Announcement 2025-11-03 - Besøg eksamenslokalerne på Amager.md&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21811 path(s) exceed 255 characters</span><span class='meta'>observation · s021 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Announcement 2025-08-28 - Velkommen til programmeringskurset.md&quot;,
+    &quot;Announcement 2025-09-04 - Follow up til første forelæsning!.md&quot;,
+    &quot;Announcement 2025-09-11 - Kommentarer til feedback fra forelæsning 2.md&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster - Late Lecture with DHH Slide.pdf&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster.md&quot;,
+    &quot;Announcement 2025-09-26 - Materialet til forelæsning 5.md&quot;,
+    &quot;Announcement 2025-10-04 - Practice quiz til kapitel 6 offentligjort.md&quot;,
+    &quot;Announcement 2025-10-08 - Første øvelsesgang fredag d. 1010.md&quot;,
+    &quot;Announcement 2025-10-29 - G2 er med gruppeaflevering (opdateret).md&quot;,
+    &quot;Announcement 2025-11-03 - Besøg eksamenslokalerne på Amager.md&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>21817 path(s) exceed 255 characters</span><span class='meta'>observation · s001 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Announcement 2025-08-28 - Velkommen til programmeringskurset.md&quot;,
+    &quot;Announcement 2025-09-04 - Follow up til første forelæsning!.md&quot;,
+    &quot;Announcement 2025-09-11 - Kommentarer til feedback fra forelæsning 2.md&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster - Late Lecture with DHH Slide.pdf&quot;,
+    &quot;Announcement 2025-09-22 - Invitation til late lecture med IT-specialster.md&quot;,
+    &quot;Announcement 2025-09-26 - Materialet til forelæsning 5.md&quot;,
+    &quot;Announcement 2025-10-04 - Practice quiz til kapitel 6 offentligjort.md&quot;,
+    &quot;Announcement 2025-10-08 - Første øvelsesgang fredag d. 1010.md&quot;,
+    &quot;Announcement 2025-10-29 - G2 er med gruppeaflevering (opdateret).md&quot;,
+    &quot;Announcement 2025-11-03 - Besøg eksamenslokalerne på Amager.md&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>24 path(s) exceed 255 characters</span><span class='meta'>observation · s030 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 0.pdf&quot;,
+    &quot;Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>24 path(s) exceed 255 characters</span><span class='meta'>observation · s023 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;,
+    &quot;Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>24 path(s) exceed 255 characters</span><span class='meta'>observation · s027 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf&quot;,
+    &quot;Modele 4 - Databases and Analytics/04_Databases and Analytics.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>25 manifest row(s) describe files a converter consumed</span><span class='meta'>observation · s014 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Expected: the engine&#x27;s bypass treats a missing source of a source-consuming converter as &#x27;converted away&#x27;. Listed so the rows are visible without being counted as defects.</div><pre>{
+  &quot;exts&quot;: [
+    &quot;.asm&quot;,
+    &quot;.avi&quot;,
+    &quot;.bash&quot;,
+    &quot;.bat&quot;,
+    &quot;.c&quot;,
+    &quot;.cfg&quot;,
+    &quot;.conf&quot;,
+    &quot;.cpp&quot;,
+    &quot;.cs&quot;,
+    &quot;.css&quot;,
+    &quot;.csv&quot;,
+    &quot;.dart&quot;,
+    &quot;.doc&quot;,
+    &quot;.env&quot;,
+    &quot;.go&quot;,
+    &quot;.gz&quot;,
+    &quot;.h&quot;,
+    &quot;.hpp&quot;,
+    &quot;.ini&quot;,
+    &quot;.java&quot;,
+    &quot;.js&quot;,
+    &quot;.json&quot;,
+    &quot;.jsx&quot;,
+    &quot;.kt&quot;,
+    &quot;.log&quot;,
+    &quot;.lua&quot;,
+    &quot;.m&quot;,
+    &quot;.m4v&quot;,
+    &quot;.mdx&quot;,
+    &quot;.mkv&quot;,
+    &quot;.mov&quot;,
+    &quot;.mp4&quot;,
+    &quot;.odt&quot;,
+    &quot;.php&quot;,
+    &quot;.pl&quot;,
+    &quot;.pm&quot;,
+    &quot;.pot&quot;,
+    &quot;.potx&quot;,
+    &quot;.ppt&quot;,
+    &quot;.pptm&quot;,
+    &quot;.pptx&quot;,
+    &quot;.ps1&quot;,
+    &quot;.py&quot;,
+    &quot;.r&quot;,
+    &quot;.rb&quot;,
+    &quot;.rmd&quot;,
+    &quot;.rs&quot;,
+    &quot;.rtf&quot;,
+    &quot;.scala&quot;,
+    &quot;.scss&quot;,
+    &quot;.sh&quot;,
+    &quot;.sql&quot;,
+    &quot;.svelte&quot;,
+    &quot;.swift&quot;,
+    &quot;.tar&quot;,
+    &quot;.toml&quot;,
+    &quot;.ts&quot;,
+    &quot;.tsv&quot;,
+    &quot;.tsx&quot;,
+    &quot;.url&quot;,
+    &quot;.vba&quot;,
+    &quot;.vue&quot;,
+    &quot;.webloc&quot;,
+    &quot;.xls&quot;,
+    &quot;.xlsm&quot;,
+    &quot;.xlsx&quot;,
+    &quot;.xml&quot;,
+    &quot;.yaml&quot;,
+    &quot;.yml&quot;,
+    &quot;.zip&quot;,
+    &quot;.zsh&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>25 manifest row(s) describe files a converter consumed</span><span class='meta'>observation · s022 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Expected: the engine&#x27;s bypass treats a missing source of a source-consuming converter as &#x27;converted away&#x27;. Listed so the rows are visible without being counted as defects.</div><pre>{
+  &quot;exts&quot;: [
+    &quot;.asm&quot;,
+    &quot;.avi&quot;,
+    &quot;.bash&quot;,
+    &quot;.bat&quot;,
+    &quot;.c&quot;,
+    &quot;.cfg&quot;,
+    &quot;.conf&quot;,
+    &quot;.cpp&quot;,
+    &quot;.cs&quot;,
+    &quot;.css&quot;,
+    &quot;.csv&quot;,
+    &quot;.dart&quot;,
+    &quot;.doc&quot;,
+    &quot;.env&quot;,
+    &quot;.go&quot;,
+    &quot;.gz&quot;,
+    &quot;.h&quot;,
+    &quot;.hpp&quot;,
+    &quot;.ini&quot;,
+    &quot;.java&quot;,
+    &quot;.js&quot;,
+    &quot;.json&quot;,
+    &quot;.jsx&quot;,
+    &quot;.kt&quot;,
+    &quot;.log&quot;,
+    &quot;.lua&quot;,
+    &quot;.m&quot;,
+    &quot;.m4v&quot;,
+    &quot;.mdx&quot;,
+    &quot;.mkv&quot;,
+    &quot;.mov&quot;,
+    &quot;.mp4&quot;,
+    &quot;.odt&quot;,
+    &quot;.php&quot;,
+    &quot;.pl&quot;,
+    &quot;.pm&quot;,
+    &quot;.pot&quot;,
+    &quot;.potx&quot;,
+    &quot;.ppt&quot;,
+    &quot;.pptm&quot;,
+    &quot;.pptx&quot;,
+    &quot;.ps1&quot;,
+    &quot;.py&quot;,
+    &quot;.r&quot;,
+    &quot;.rb&quot;,
+    &quot;.rmd&quot;,
+    &quot;.rs&quot;,
+    &quot;.rtf&quot;,
+    &quot;.scala&quot;,
+    &quot;.scss&quot;,
+    &quot;.sh&quot;,
+    &quot;.sql&quot;,
+    &quot;.svelte&quot;,
+    &quot;.swift&quot;,
+    &quot;.tar&quot;,
+    &quot;.toml&quot;,
+    &quot;.ts&quot;,
+    &quot;.tsv&quot;,
+    &quot;.tsx&quot;,
+    &quot;.url&quot;,
+    &quot;.vba&quot;,
+    &quot;.vue&quot;,
+    &quot;.webloc&quot;,
+    &quot;.xls&quot;,
+    &quot;.xlsm&quot;,
+    &quot;.xlsx&quot;,
+    &quot;.xml&quot;,
+    &quot;.yaml&quot;,
+    &quot;.yml&quot;,
+    &quot;.zip&quot;,
+    &quot;.zsh&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>25 manifest row(s) describe files a converter consumed</span><span class='meta'>observation · s001 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Expected: the engine&#x27;s bypass treats a missing source of a source-consuming converter as &#x27;converted away&#x27;. Listed so the rows are visible without being counted as defects.</div><pre>{
+  &quot;exts&quot;: [
+    &quot;.asm&quot;,
+    &quot;.avi&quot;,
+    &quot;.bash&quot;,
+    &quot;.bat&quot;,
+    &quot;.c&quot;,
+    &quot;.cfg&quot;,
+    &quot;.conf&quot;,
+    &quot;.cpp&quot;,
+    &quot;.cs&quot;,
+    &quot;.css&quot;,
+    &quot;.csv&quot;,
+    &quot;.dart&quot;,
+    &quot;.doc&quot;,
+    &quot;.env&quot;,
+    &quot;.go&quot;,
+    &quot;.gz&quot;,
+    &quot;.h&quot;,
+    &quot;.hpp&quot;,
+    &quot;.ini&quot;,
+    &quot;.java&quot;,
+    &quot;.js&quot;,
+    &quot;.json&quot;,
+    &quot;.jsx&quot;,
+    &quot;.kt&quot;,
+    &quot;.log&quot;,
+    &quot;.lua&quot;,
+    &quot;.m&quot;,
+    &quot;.m4v&quot;,
+    &quot;.mdx&quot;,
+    &quot;.mkv&quot;,
+    &quot;.mov&quot;,
+    &quot;.mp4&quot;,
+    &quot;.odt&quot;,
+    &quot;.php&quot;,
+    &quot;.pl&quot;,
+    &quot;.pm&quot;,
+    &quot;.pot&quot;,
+    &quot;.potx&quot;,
+    &quot;.ppt&quot;,
+    &quot;.pptm&quot;,
+    &quot;.pptx&quot;,
+    &quot;.ps1&quot;,
+    &quot;.py&quot;,
+    &quot;.r&quot;,
+    &quot;.rb&quot;,
+    &quot;.rmd&quot;,
+    &quot;.rs&quot;,
+    &quot;.rtf&quot;,
+    &quot;.scala&quot;,
+    &quot;.scss&quot;,
+    &quot;.sh&quot;,
+    &quot;.sql&quot;,
+    &quot;.svelte&quot;,
+    &quot;.swift&quot;,
+    &quot;.tar&quot;,
+    &quot;.toml&quot;,
+    &quot;.ts&quot;,
+    &quot;.tsv&quot;,
+    &quot;.tsx&quot;,
+    &quot;.url&quot;,
+    &quot;.vba&quot;,
+    &quot;.vue&quot;,
+    &quot;.webloc&quot;,
+    &quot;.xls&quot;,
+    &quot;.xlsm&quot;,
+    &quot;.xlsx&quot;,
+    &quot;.xml&quot;,
+    &quot;.yaml&quot;,
+    &quot;.yml&quot;,
+    &quot;.zip&quot;,
+    &quot;.zsh&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>25 manifest row(s) describe files a converter consumed</span><span class='meta'>observation · s021 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Expected: the engine&#x27;s bypass treats a missing source of a source-consuming converter as &#x27;converted away&#x27;. Listed so the rows are visible without being counted as defects.</div><pre>{
+  &quot;exts&quot;: [
+    &quot;.asm&quot;,
+    &quot;.avi&quot;,
+    &quot;.bash&quot;,
+    &quot;.bat&quot;,
+    &quot;.c&quot;,
+    &quot;.cfg&quot;,
+    &quot;.conf&quot;,
+    &quot;.cpp&quot;,
+    &quot;.cs&quot;,
+    &quot;.css&quot;,
+    &quot;.csv&quot;,
+    &quot;.dart&quot;,
+    &quot;.doc&quot;,
+    &quot;.env&quot;,
+    &quot;.go&quot;,
+    &quot;.gz&quot;,
+    &quot;.h&quot;,
+    &quot;.hpp&quot;,
+    &quot;.ini&quot;,
+    &quot;.java&quot;,
+    &quot;.js&quot;,
+    &quot;.json&quot;,
+    &quot;.jsx&quot;,
+    &quot;.kt&quot;,
+    &quot;.log&quot;,
+    &quot;.lua&quot;,
+    &quot;.m&quot;,
+    &quot;.m4v&quot;,
+    &quot;.mdx&quot;,
+    &quot;.mkv&quot;,
+    &quot;.mov&quot;,
+    &quot;.mp4&quot;,
+    &quot;.odt&quot;,
+    &quot;.php&quot;,
+    &quot;.pl&quot;,
+    &quot;.pm&quot;,
+    &quot;.pot&quot;,
+    &quot;.potx&quot;,
+    &quot;.ppt&quot;,
+    &quot;.pptm&quot;,
+    &quot;.pptx&quot;,
+    &quot;.ps1&quot;,
+    &quot;.py&quot;,
+    &quot;.r&quot;,
+    &quot;.rb&quot;,
+    &quot;.rmd&quot;,
+    &quot;.rs&quot;,
+    &quot;.rtf&quot;,
+    &quot;.scala&quot;,
+    &quot;.scss&quot;,
+    &quot;.sh&quot;,
+    &quot;.sql&quot;,
+    &quot;.svelte&quot;,
+    &quot;.swift&quot;,
+    &quot;.tar&quot;,
+    &quot;.toml&quot;,
+    &quot;.ts&quot;,
+    &quot;.tsv&quot;,
+    &quot;.tsx&quot;,
+    &quot;.url&quot;,
+    &quot;.vba&quot;,
+    &quot;.vue&quot;,
+    &quot;.webloc&quot;,
+    &quot;.xls&quot;,
+    &quot;.xlsm&quot;,
+    &quot;.xlsx&quot;,
+    &quot;.xml&quot;,
+    &quot;.yaml&quot;,
+    &quot;.yml&quot;,
+    &quot;.zip&quot;,
+    &quot;.zsh&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>25 path(s) exceed 255 characters</span><span class='meta'>observation · s006 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>25 path(s) exceed 255 characters</span><span class='meta'>observation · s024 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>25 path(s) exceed 255 characters</span><span class='meta'>observation · s042 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 0.pdf&quot;,
+    &quot;Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>25 path(s) exceed 255 characters</span><span class='meta'>observation · s003 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>25 path(s) exceed 255 characters</span><span class='meta'>observation · s009 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 0.pdf&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>25 path(s) exceed 255 characters</span><span class='meta'>observation · s033 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>259 path(s) exceed 255 characters</span><span class='meta'>observation · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx&quot;,
+    &quot;2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx&quot;,
+    &quot;2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx&quot;,
+    &quot;2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx&quot;,
+    &quot;2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx&quot;,
+    &quot;F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf&quot;,
+    &quot;Individ og organisation_motivation &amp; belønning 1_upload.pptx&quot;,
+    &quot;Individ og organisation_motivation &amp; belønning 2_upload.pptx&quot;,
+    &quot;Organisationsprojekt_operationalisering_upload.pptm&quot;,
+    &quot;Organisationsprojekt_problemformulering_1-upload-1.pptm&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>26 path(s) exceed 255 characters</span><span class='meta'>observation · s002 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>26 path(s) exceed 255 characters</span><span class='meta'>observation · s008 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;,
+    &quot;Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>26 path(s) exceed 255 characters</span><span class='meta'>observation · s032 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 1.pdf&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>26 path(s) exceed 255 characters</span><span class='meta'>observation · s036 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025_NewVersion.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>26 path(s) exceed 255 characters</span><span class='meta'>observation · s038 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025 - mine noter 1.pdf&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>26 path(s) exceed 255 characters</span><span class='meta'>observation · s011 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;,
+    &quot;Course description including examination rules/Lektionsplan_HA(it.)_Intro to IS 2025.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>26 path(s) exceed 255 characters</span><span class='meta'>observation · s035 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>26 path(s) exceed 255 characters</span><span class='meta'>observation · s041 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>27 manifest row(s) describe files a converter consumed</span><span class='meta'>observation · s018 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Expected: the engine&#x27;s bypass treats a missing source of a source-consuming converter as &#x27;converted away&#x27;. Listed so the rows are visible without being counted as defects.</div><pre>{
+  &quot;exts&quot;: [
+    &quot;.asm&quot;,
+    &quot;.avi&quot;,
+    &quot;.bash&quot;,
+    &quot;.bat&quot;,
+    &quot;.c&quot;,
+    &quot;.cfg&quot;,
+    &quot;.conf&quot;,
+    &quot;.cpp&quot;,
+    &quot;.cs&quot;,
+    &quot;.css&quot;,
+    &quot;.csv&quot;,
+    &quot;.dart&quot;,
+    &quot;.doc&quot;,
+    &quot;.env&quot;,
+    &quot;.go&quot;,
+    &quot;.gz&quot;,
+    &quot;.h&quot;,
+    &quot;.hpp&quot;,
+    &quot;.ini&quot;,
+    &quot;.java&quot;,
+    &quot;.js&quot;,
+    &quot;.json&quot;,
+    &quot;.jsx&quot;,
+    &quot;.kt&quot;,
+    &quot;.log&quot;,
+    &quot;.lua&quot;,
+    &quot;.m&quot;,
+    &quot;.m4v&quot;,
+    &quot;.mdx&quot;,
+    &quot;.mkv&quot;,
+    &quot;.mov&quot;,
+    &quot;.mp4&quot;,
+    &quot;.odt&quot;,
+    &quot;.php&quot;,
+    &quot;.pl&quot;,
+    &quot;.pm&quot;,
+    &quot;.pot&quot;,
+    &quot;.potx&quot;,
+    &quot;.ppt&quot;,
+    &quot;.pptm&quot;,
+    &quot;.pptx&quot;,
+    &quot;.ps1&quot;,
+    &quot;.py&quot;,
+    &quot;.r&quot;,
+    &quot;.rb&quot;,
+    &quot;.rmd&quot;,
+    &quot;.rs&quot;,
+    &quot;.rtf&quot;,
+    &quot;.scala&quot;,
+    &quot;.scss&quot;,
+    &quot;.sh&quot;,
+    &quot;.sql&quot;,
+    &quot;.svelte&quot;,
+    &quot;.swift&quot;,
+    &quot;.tar&quot;,
+    &quot;.toml&quot;,
+    &quot;.ts&quot;,
+    &quot;.tsv&quot;,
+    &quot;.tsx&quot;,
+    &quot;.url&quot;,
+    &quot;.vba&quot;,
+    &quot;.vue&quot;,
+    &quot;.webloc&quot;,
+    &quot;.xls&quot;,
+    &quot;.xlsm&quot;,
+    &quot;.xlsx&quot;,
+    &quot;.xml&quot;,
+    &quot;.yaml&quot;,
+    &quot;.yml&quot;,
+    &quot;.zip&quot;,
+    &quot;.zsh&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>27 path(s) exceed 255 characters</span><span class='meta'>observation · s012 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025 - copy for exam.pdf&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>28 path(s) exceed 255 characters</span><span class='meta'>observation · s005 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025_NewVersion.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>29 path(s) exceed 255 characters</span><span class='meta'>observation · s020 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Course description including examination rules.url&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>29 path(s) exceed 255 characters</span><span class='meta'>observation · s029 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025_NewVersion.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>30 path(s) exceed 255 characters</span><span class='meta'>observation · s026 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcements/2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcements/2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcements/2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcements/2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcements/2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcements/2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcements/2026-03-25 - Job Opportunity Teaching Assistant.html&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025.pdf&quot;,
+    &quot;Course description including examination rules/Compulsory Assignment_Fall 2025_NewVersion.pdf&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>33 manifest row(s) describe files a converter consumed</span><span class='meta'>observation · s017 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)</span></summary><div class='body'><div class='detail'>Expected: the engine&#x27;s bypass treats a missing source of a source-consuming converter as &#x27;converted away&#x27;. Listed so the rows are visible without being counted as defects.</div><pre>{
+  &quot;exts&quot;: [
+    &quot;.asm&quot;,
+    &quot;.avi&quot;,
+    &quot;.bash&quot;,
+    &quot;.bat&quot;,
+    &quot;.c&quot;,
+    &quot;.cfg&quot;,
+    &quot;.conf&quot;,
+    &quot;.cpp&quot;,
+    &quot;.cs&quot;,
+    &quot;.css&quot;,
+    &quot;.csv&quot;,
+    &quot;.dart&quot;,
+    &quot;.doc&quot;,
+    &quot;.env&quot;,
+    &quot;.go&quot;,
+    &quot;.gz&quot;,
+    &quot;.h&quot;,
+    &quot;.hpp&quot;,
+    &quot;.ini&quot;,
+    &quot;.java&quot;,
+    &quot;.js&quot;,
+    &quot;.json&quot;,
+    &quot;.jsx&quot;,
+    &quot;.kt&quot;,
+    &quot;.log&quot;,
+    &quot;.lua&quot;,
+    &quot;.m&quot;,
+    &quot;.m4v&quot;,
+    &quot;.mdx&quot;,
+    &quot;.mkv&quot;,
+    &quot;.mov&quot;,
+    &quot;.mp4&quot;,
+    &quot;.odt&quot;,
+    &quot;.php&quot;,
+    &quot;.pl&quot;,
+    &quot;.pm&quot;,
+    &quot;.pot&quot;,
+    &quot;.potx&quot;,
+    &quot;.ppt&quot;,
+    &quot;.pptm&quot;,
+    &quot;.pptx&quot;,
+    &quot;.ps1&quot;,
+    &quot;.py&quot;,
+    &quot;.r&quot;,
+    &quot;.rb&quot;,
+    &quot;.rmd&quot;,
+    &quot;.rs&quot;,
+    &quot;.rtf&quot;,
+    &quot;.scala&quot;,
+    &quot;.scss&quot;,
+    &quot;.sh&quot;,
+    &quot;.sql&quot;,
+    &quot;.svelte&quot;,
+    &quot;.swift&quot;,
+    &quot;.tar&quot;,
+    &quot;.toml&quot;,
+    &quot;.ts&quot;,
+    &quot;.tsv&quot;,
+    &quot;.tsx&quot;,
+    &quot;.url&quot;,
+    &quot;.vba&quot;,
+    &quot;.vue&quot;,
+    &quot;.webloc&quot;,
+    &quot;.xls&quot;,
+    &quot;.xlsm&quot;,
+    &quot;.xlsx&quot;,
+    &quot;.xml&quot;,
+    &quot;.yaml&quot;,
+    &quot;.yml&quot;,
+    &quot;.zip&quot;,
+    &quot;.zsh&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>4 file(s) are locked on Canvas and cannot be downloaded</span><span class='meta'>observation · panopto_shortcut2 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>The teacher has locked them. Permanent and Canvas-side - the app reports each one by name. Excluded from the discovery gap below so a real gap is not buried under a standing condition.</div><pre>{
+  &quot;locked&quot;: [
+    &quot;Sensemaking slides 1.pptx&quot;,
+    &quot;Sensemaking slides 2.pptx&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>5 manifest row(s) describe files a converter consumed</span><span class='meta'>observation · panopto_shortcut2 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>Expected: the engine&#x27;s bypass treats a missing source of a source-consuming converter as &#x27;converted away&#x27;. Listed so the rows are visible without being counted as defects.</div><pre>{
+  &quot;exts&quot;: [
+    &quot;.url&quot;,
+    &quot;.webloc&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>63 path(s) exceed 255 characters</span><span class='meta'>observation · panopto_shortcut2 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;Opsummering - hvad har vi lært/2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx&quot;,
+    &quot;Organisationsprojekt - klargøring af data til analyse/Forelæsningsvideo (1) organisationsprojekt - klargøring af data.url&quot;,
+    &quot;Organisationsprojekt - klargøring af data til analyse/Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.url&quot;,
+    &quot;Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - interview transskribering.docx&quot;,
+    &quot;Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - kodning tabel (struktureret).xlsx&quot;,
+    &quot;Organisationsprojekt - klargøring af data til analyse/Organisationsprojekt_klargøring af data_eksempel_upload.pptx&quot;,
+    &quot;Organisationsprojekt - klargøring af data til analyse/Organisationsprojekt_klargøring af data_upload.pptm&quot;,
+    &quot;Organisationsprojekt - operationalisering af teori/Forelæsningsvideo (1) organisationsprojekt - operationalisering.url&quot;,
+    &quot;Organisationsprojekt - operationalisering af teori/Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.url&quot;,
+    &quot;Organisationsprojekt - operationalisering af teori/Organisationsprojekt_operationalisering_upload_.pptm&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>8 path(s) exceed 255 characters</span><span class='meta'>observation · s004 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>8 path(s) exceed 255 characters</span><span class='meta'>observation · s010 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>8 path(s) exceed 255 characters</span><span class='meta'>observation · s034 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>8 path(s) exceed 255 characters</span><span class='meta'>observation · s040 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>8 path(s) exceed 255 characters</span><span class='meta'>observation · s007 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>8 path(s) exceed 255 characters</span><span class='meta'>observation · s013 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>8 path(s) exceed 255 characters</span><span class='meta'>observation · s025 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>8 path(s) exceed 255 characters</span><span class='meta'>observation · s031 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>8 path(s) exceed 255 characters</span><span class='meta'>observation · s037 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>Windows APIs without the \\?\ prefix fail at 260. The engine uses make_long_path, so this is recorded to confirm the guard is exercised rather than as a defect.</div><pre>{
+  &quot;files&quot;: [
+    &quot;11_Managing Information Security, Privacy, and Ethics.pptx&quot;,
+    &quot;Announcement 2025-08-26 - Welcome to CBS and Introduction to Information Systems.html&quot;,
+    &quot;Announcement 2025-09-18 - Exercise 3 Preparation and Perplexity for Students.html&quot;,
+    &quot;Announcement 2025-09-18 - Group changes for elective students.html&quot;,
+    &quot;Announcement 2025-10-06 - Open House in the Examinations Hall on 7th Oct &amp; 20th Nov.html&quot;,
+    &quot;Announcement 2025-11-12 - Presentation of the assignment and different dates next weeks.html&quot;,
+    &quot;Announcement 2025-11-21 - Preparation for last lecture and exercise.html&quot;,
+    &quot;Announcement 2026-03-25 - Job Opportunity Teaching Assistant.html&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Bridged INFO note containing &#x27;failed&#x27;: Panopto GetFolders failed for folder a7cbd921-586f-4bf5-8869-b338008ffda1: HTTP 500: &lt;Faul</span><span class='meta'>observation · panopto_shortcut2 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>Panopto GetFolders failed for folder a7cbd921-586f-4bf5-8869-b338008ffda1: HTTP 500: &lt;Fault xmlns=&quot;http://schemas.microsoft.com/ws/2005/05/envelope/none&quot;&gt;&lt;Code&gt;&lt;Value&gt;Sender&lt;/Value&gt;&lt;/Code&gt;&lt;Reason&gt;&lt;Text xml:lang=&quot;en-US&quot;&gt;User unified\<CANVAS_USER> is not in role (FolderEnumerate).&lt;/Text&gt;&lt;/Reason&gt;&lt;/Fault&gt;</div><pre>{
+  &quot;line&quot;: 793,
+  &quot;log&quot;: &quot;G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\\downloads\\debug_log.txt&quot;
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Bridged INFO note containing &#x27;failed&#x27;: Panopto GetFolders failed for folder a7cbd921-586f-4bf5-8869-b338008ffda1: HTTP 500: &lt;Faul</span><span class='meta'>observation · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>Panopto GetFolders failed for folder a7cbd921-586f-4bf5-8869-b338008ffda1: HTTP 500: &lt;Fault xmlns=&quot;http://schemas.microsoft.com/ws/2005/05/envelope/none&quot;&gt;&lt;Code&gt;&lt;Value&gt;Sender&lt;/Value&gt;&lt;/Code&gt;&lt;Reason&gt;&lt;Text xml:lang=&quot;en-US&quot;&gt;User unified\<CANVAS_USER> is not in role (FolderEnumerate).&lt;/Text&gt;&lt;/Reason&gt;&lt;/Fault&gt;</div><pre>{
+  &quot;line&quot;: 71,
+  &quot;log&quot;: &quot;G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\\debug_log.txt&quot;
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>CHECKER: &#x27;content file with no manifest row&#x27; flags Compiled_External_Links.txt when invariants run without an --expect config</span><span class='oracle' title='Disk (what actually exists)'>O3</span><span class='oracle' title='Sync manifest (what the app believes)'>O4</span><span class='meta'>observation · invariants · 43660</span></summary><div class='body'><div class='detail'>check invariants reported HIGH &#x27;1 content file(s) on disk with no manifest row&#x27; naming Compiled_External_Links.txt. NOT a product defect: that file is the convert_urls AGGREGATE product (many .url files compiled into one .txt), so there is no single manifest row to repoint it to. crosscheck.py already knows this - CONVERTERS[&#x27;convert_urls&#x27;] carries aggregate=&#x27;Compiled_External_Links.txt&#x27; (line 68) and the untracked filter does &#x27;exempt |= _conversion_aggregates(ev)&#x27; (line 333). The exemption reads the row&#x27;s EXPECT config, and &#x27;check invariants &lt;folder&gt;&#x27; is invoked without one, so _conversion_aggregates returns empty and the aggregate is reported as an orphan. Same shape as the md5 finding: the check is right, it just lacks the context in standalone mode. Worth teaching invariants to infer aggregates from the folder&#x27;s stored contract, or to accept --expect. (The neighbouring Panopto exemption worked correctly - all 36 mp3s and the transcripts were spared via db panopto_rows.)</div></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>CHECKER: md5-drift flags a path a converter consumed and the Panopto Shortcut output legitimately re-occupied</span><span class='oracle' title='Disk (what actually exists)'>O3</span><span class='oracle' title='Sync manifest (what the app believes)'>O4</span><span class='meta'>observation · panopto_shortcut2 · 43660</span></summary><div class='body'><div class='detail'>The download crosscheck reported &#x27;36 file(s) differ from their recorded md5&#x27; (medium). All 36 are Canvas ExternalTool link rows (NEGATIVE canvas_file_ids, written by _create_link). convert_urls compiled those .url files into Compiled_External_Links.txt and deleted them, freeing the names; the Panopto Shortcut output (pan_out_url) then wrote its own .url at 36 of them, so a file exists at the path with a different md5 than the row records. The checker already has a category for the missing-file version (&#x27;5 manifest row(s) describe files a converter consumed&#x27;) but not for a path something else legitimately took over. MEASURED CONSEQUENCE: none. A full sync afterwards left all 36 shortcuts produced-by-us (0 overwritten by Canvas links), did not re-create the Canvas .url files, and did not rewrite Compiled_External_Links.txt (mtime unchanged 22:26:06). The app does not clobber; state is stable across a sync. Recorded as a checker observation, NOT a product defect.</div></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Canvas exposes no md5 for any of this course&#x27;s 140 files</span><span class='meta'>observation · panopto_shortcut2 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>analyze_course&#x27;s adoption tier (b) - the content match - can therefore never fire here, leaving only tier (c) (unique size+extension) for a file whose manifest row is gone. Note this does NOT weaken ordinary renames: heal_manifest Tier 2 matches on original_md5, which the app computes locally from the bytes it wrote, and works with no Canvas hash at all. Recorded because the tier-(b) comment reads as though it were the primary mechanism.</div><pre>{
+  &quot;files_with_md5&quot;: 0,
+  &quot;files&quot;: 140
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 25% of lines</span><span class='meta'>observation · s036 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-09 23:28:43.732341 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 12,
+      &quot;text&quot;: &quot;Connected to course: Introduction to Information Systems (LA E25 BINTO1078U) (181 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;  ↳ fetch breakdown: bulk_files=634ms | pages=352ms (bulk‖pages wall-clock=634ms) | module_scan=1920ms | secondary=604ms&quot;
+    },
+    {
+      &quot;line&quot;: 19,
+      &quot;text&quot;: &quot;MD5 baseline backfill: repaired 0 entrie(s) (162 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 26,
+      &quot;text&quot;: &quot;Ignored (excluded from sync): 1 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 28,
+      &quot;text&quot;: &quot;Up to date (no action): 40 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 29,
+      &quot;text&quot;: &quot;--- Quick Sync Auto-Selection: Introduction to Information Systems (LA E25 BINTO1078U) ---&quot;
+    },
+    {
+      &quot;line&quot;: 30,
+      &quot;text&quot;: &quot;File filter: study | Selected: 0 new, 2 clean updates (Quick Sync always skips locally-deleted and locally-edited files)&quot;
+    },
+    {
+      &quot;line&quot;: 31,
+      &quot;text&quot;: &quot;Skipped: 0 locally-edited updates (require Review), 0 Canvas deletions (no action needed)&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 25% of lines</span><span class='meta'>observation · s013 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-09 23:17:18.618676 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 12,
+      &quot;text&quot;: &quot;Connected to course: Introduction to Information Systems (LA E25 BINTO1078U) (220 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;  ↳ fetch breakdown: bulk_files=647ms | pages=285ms (bulk‖pages wall-clock=648ms) | module_scan=1862ms | secondary=1629ms&quot;
+    },
+    {
+      &quot;line&quot;: 19,
+      &quot;text&quot;: &quot;MD5 baseline backfill: repaired 0 entrie(s) (178 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 24,
+      &quot;text&quot;: &quot;Up to date (no action): 48 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 25,
+      &quot;text&quot;: &quot;--- Review Mode Tally ---&quot;
+    },
+    {
+      &quot;line&quot;: 26,
+      &quot;text&quot;: &quot;New: 0 | Clean updates: 2 | Locally-edited: 0 | Locally-deleted: 0 | Panopto: 0 | Total changes: 2&quot;
+    },
+    {
+      &quot;line&quot;: 32,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 36,
+      &quot;text&quot;: &quot;Pair 1/1 | Folder: G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings__free2\\downloads\\Introduction to Information Systems (LA&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 26% of lines</span><span class='meta'>observation · s009 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-09 23:16:43.542834 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 12,
+      &quot;text&quot;: &quot;Connected to course: Introduction to Information Systems (LA E25 BINTO1078U) (171 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;  ↳ fetch breakdown: bulk_files=632ms | pages=285ms (bulk‖pages wall-clock=633ms) | module_scan=1924ms | secondary=595ms&quot;
+    },
+    {
+      &quot;line&quot;: 19,
+      &quot;text&quot;: &quot;MD5 baseline backfill: repaired 0 entrie(s) (256 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 26,
+      &quot;text&quot;: &quot;Ignored (excluded from sync): 1 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 28,
+      &quot;text&quot;: &quot;Up to date (no action): 42 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 29,
+      &quot;text&quot;: &quot;--- Review Mode Tally ---&quot;
+    },
+    {
+      &quot;line&quot;: 30,
+      &quot;text&quot;: &quot;New: 2 | Clean updates: 0 | Locally-edited: 0 | Locally-deleted: 0 | Panopto: 0 | Total changes: 2&quot;
+    },
+    {
+      &quot;line&quot;: 36,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 27% of lines</span><span class='meta'>observation · s006 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-09 23:10:25.839330 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 12,
+      &quot;text&quot;: &quot;Connected to course: Introduction to Information Systems (LA E25 BINTO1078U) (165 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;  ↳ fetch breakdown: bulk_files=646ms | pages=323ms (bulk‖pages wall-clock=646ms) | module_scan=1832ms | secondary=613ms&quot;
+    },
+    {
+      &quot;line&quot;: 19,
+      &quot;text&quot;: &quot;MD5 baseline backfill: repaired 0 entrie(s) (213 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 24,
+      &quot;text&quot;: &quot;  [LOCAL-DEL]     Compulsory Assignment_Fall 2025.pdf&quot;
+    },
+    {
+      &quot;line&quot;: 25,
+      &quot;text&quot;: &quot;  [LOCAL-DEL]     Timetable for presentations.pdf&quot;
+    },
+    {
+      &quot;line&quot;: 26,
+      &quot;text&quot;: &quot;Ignored (excluded from sync): 1 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 28,
+      &quot;text&quot;: &quot;Up to date (no action): 40 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 29,
+      &quot;text&quot;: &quot;--- Review Mode Tally ---&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 27% of lines</span><span class='meta'>observation · s012 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-09 23:11:13.385691 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 12,
+      &quot;text&quot;: &quot;Connected to course: Introduction to Information Systems (LA E25 BINTO1078U) (168 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;  ↳ fetch breakdown: bulk_files=629ms | pages=293ms (bulk‖pages wall-clock=630ms) | module_scan=1723ms | secondary=679ms&quot;
+    },
+    {
+      &quot;line&quot;: 19,
+      &quot;text&quot;: &quot;MD5 baseline backfill: repaired 0 entrie(s) (124 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 24,
+      &quot;text&quot;: &quot;Ignored (excluded from sync): 1 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 26,
+      &quot;text&quot;: &quot;Up to date (no action): 42 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 27,
+      &quot;text&quot;: &quot;--- Review Mode Tally ---&quot;
+    },
+    {
+      &quot;line&quot;: 28,
+      &quot;text&quot;: &quot;New: 2 | Clean updates: 0 | Locally-edited: 0 | Locally-deleted: 0 | Panopto: 0 | Total changes: 2&quot;
+    },
+    {
+      &quot;line&quot;: 34,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 27% of lines</span><span class='meta'>observation · s024 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-09 23:27:05.176103 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 12,
+      &quot;text&quot;: &quot;Connected to course: Introduction to Information Systems (LA E25 BINTO1078U) (177 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;  ↳ fetch breakdown: bulk_files=590ms | pages=294ms (bulk‖pages wall-clock=590ms) | module_scan=1934ms | secondary=660ms&quot;
+    },
+    {
+      &quot;line&quot;: 19,
+      &quot;text&quot;: &quot;MD5 baseline backfill: repaired 0 entrie(s) (115 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 26,
+      &quot;text&quot;: &quot;Ignored (excluded from sync): 1 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 28,
+      &quot;text&quot;: &quot;Up to date (no action): 40 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 29,
+      &quot;text&quot;: &quot;--- Review Mode Tally ---&quot;
+    },
+    {
+      &quot;line&quot;: 30,
+      &quot;text&quot;: &quot;New: 4 | Clean updates: 0 | Locally-edited: 0 | Locally-deleted: 0 | Panopto: 0 | Total changes: 4&quot;
+    },
+    {
+      &quot;line&quot;: 36,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 27% of lines</span><span class='meta'>observation · s003 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-09 23:15:36.343667 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 12,
+      &quot;text&quot;: &quot;Connected to course: Introduction to Information Systems (LA E25 BINTO1078U) (175 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;  ↳ fetch breakdown: bulk_files=608ms | pages=379ms (bulk‖pages wall-clock=608ms) | module_scan=1807ms | secondary=603ms&quot;
+    },
+    {
+      &quot;line&quot;: 19,
+      &quot;text&quot;: &quot;MD5 baseline backfill: repaired 0 entrie(s) (139 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 26,
+      &quot;text&quot;: &quot;Ignored (excluded from sync): 1 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 28,
+      &quot;text&quot;: &quot;Up to date (no action): 40 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 29,
+      &quot;text&quot;: &quot;--- Review Mode Tally ---&quot;
+    },
+    {
+      &quot;line&quot;: 30,
+      &quot;text&quot;: &quot;New: 4 | Clean updates: 0 | Locally-edited: 0 | Locally-deleted: 0 | Panopto: 0 | Total changes: 4&quot;
+    },
+    {
+      &quot;line&quot;: 36,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 28% of lines</span><span class='meta'>observation · s020 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-09 23:21:25.491958 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 12,
+      &quot;text&quot;: &quot;Connected to course: Introduction to Information Systems (LA E25 BINTO1078U) (183 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;  ↳ fetch breakdown: bulk_files=614ms | pages=336ms (bulk‖pages wall-clock=614ms) | module_scan=1865ms | secondary=1637ms&quot;
+    },
+    {
+      &quot;line&quot;: 19,
+      &quot;text&quot;: &quot;MD5 baseline backfill: repaired 0 entrie(s) (126 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 28,
+      &quot;text&quot;: &quot;  [UPDATE-EDIT]   Compulsory Assignment_Fall 2025.pdf&quot;
+    },
+    {
+      &quot;line&quot;: 29,
+      &quot;text&quot;: &quot;  [UPDATE-EDIT]   Page Numbers for 6th and 5th Edition.docx&quot;
+    },
+    {
+      &quot;line&quot;: 30,
+      &quot;text&quot;: &quot;Up to date (no action): 44 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 31,
+      &quot;text&quot;: &quot;--- Quick Sync Auto-Selection: Introduction to Information Systems (LA E25 BINTO1078U) ---&quot;
+    },
+    {
+      &quot;line&quot;: 32,
+      &quot;text&quot;: &quot;File filter: all | Selected: 2 new, 2 clean updates (Quick Sync always skips locally-deleted and locally-edited files)&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 30% of lines</span><span class='meta'>observation · s033 · Introduction to Information Systems (LA E25 BINTO1078U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-09 23:29:37.946911 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 12,
+      &quot;text&quot;: &quot;Connected to course: Introduction to Information Systems (LA E25 BINTO1078U) (185 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;  ↳ fetch breakdown: bulk_files=566ms | pages=347ms (bulk‖pages wall-clock=566ms) | module_scan=1721ms | secondary=588ms&quot;
+    },
+    {
+      &quot;line&quot;: 19,
+      &quot;text&quot;: &quot;MD5 baseline backfill: repaired 0 entrie(s) (322 ms)&quot;
+    },
+    {
+      &quot;line&quot;: 26,
+      &quot;text&quot;: &quot;  [UPDATE-EDIT]   Compulsory Assignment_Fall 2025.pdf&quot;
+    },
+    {
+      &quot;line&quot;: 27,
+      &quot;text&quot;: &quot;  [UPDATE-EDIT]   Timetable for presentations.pdf&quot;
+    },
+    {
+      &quot;line&quot;: 28,
+      &quot;text&quot;: &quot;Ignored (excluded from sync): 1 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 30,
+      &quot;text&quot;: &quot;Up to date (no action): 38 file(s)&quot;
+    },
+    {
+      &quot;line&quot;: 31,
+      &quot;text&quot;: &quot;--- Quick Sync Auto-Selection: Introduction to Information Systems (LA E25 BINTO1078U) ---&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Debug log parser missed 38% of lines</span><span class='meta'>observation · panopto_shortcut2 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>The log may have changed shape; log-derived checks could be silently under-reporting. Review the samples and extend PATTERNS in oracles/log.py.</div><pre>{
+  &quot;samples&quot;: [
+    {
+      &quot;line&quot;: 1,
+      &quot;text&quot;: &quot;--- Debug Log Started: 2026-08-09 22:28:12.472728 ---&quot;
+    },
+    {
+      &quot;line&quot;: 6,
+      &quot;text&quot;: &quot;  CA bundle (certifi): ok&quot;
+    },
+    {
+      &quot;line&quot;: 17,
+      &quot;text&quot;: &quot;--- Download: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) (ID: 43660) Mode: modules ---&quot;
+    },
+    {
+      &quot;line&quot;: 21,
+      &quot;text&quot;: &quot;Canvas Content: [none] | isolate=no&quot;
+    },
+    {
+      &quot;line&quot;: 25,
+      &quot;text&quot;: &quot;  - Item: Kursusbeskrivelse - ink. eksamensregler (Type: ExternalUrl)&quot;
+    },
+    {
+      &quot;line&quot;: 27,
+      &quot;text&quot;: &quot;  - Item: Helle Zinner Henriksens Kontortid (Type: Page)&quot;
+    },
+    {
+      &quot;line&quot;: 29,
+      &quot;text&quot;: &quot;  - Item: Pensumoversigt efterår2025.pdf (Type: File)&quot;
+    },
+    {
+      &quot;line&quot;: 30,
+      &quot;text&quot;: &quot;Module file tracked: ind_org_Pensumoversigt_efterår2025.pdf (ID: 1652721)&quot;
+    },
+    {
+      &quot;line&quot;: 33,
+      &quot;text&quot;: &quot;  - Item: E25_F26_HAIT_Organisationers opbygning.pdf (Type: File)&quot;
+    },
+    {
+      &quot;line&quot;: 34,
+      &quot;text&quot;: &quot;Module file tracked: E25_F26_HAIT_Organisationers opbygning.pdf (ID: 1747622)&quot;
+    }
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>Download finished with 2 error(s), all teacher-locked files</span><span class='oracle' title='Debug log (what the app says it did)'>O2</span><span class='meta'>observation · panopto_shortcut2 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)</span></summary><div class='body'><div class='detail'>Canvas refuses to serve these; nothing the app can do. Recorded so the count stays visible.</div><pre>{
+  &quot;course&quot;: &quot;Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)&quot;,
+  &quot;items&quot;: 217,
+  &quot;locked_files&quot;: [
+    &quot;Sensemaking slides 1.pptx&quot;,
+    &quot;Sensemaking slides 2.pptx&quot;
+  ]
+}</pre></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>HARNESS GAP (fixed in-run): the driver could not set pan_out_url, so the Shortcut-output checker could never fire</span><span class='oracle' title='UI (what the app tells the user)'>O1</span><span class='meta'>observation · harness</span></summary><div class='body'><div class='detail'>crosscheck.PANOPTO_OUTPUTS has carried &#x27;pan_out_url&#x27; (platform-aware via panopto.shortcut.kind_extension) since the Shortcut output shipped 2026-08-07, but flows.TOGGLES only mapped mp4/mp3/txt/srt - so no row could ever turn the Shortcut output on and the check for the newest Panopto output kind could not fire. Ground rule 7: a check that cannot fire is worse than none. Fixed in flows.py by adding &#x27;url&#x27; to the pan_out toggle map (a CHECKER change, allowed mid-run). matrix.py still has no Factor(&#x27;pan_out_url&#x27;), so the covering array does not cover it either - deliberately NOT added here, because adding a factor changes the covering array and row ids, which would make this run incomparable with previous ones. Recommend adding it when the next matrix plan is regenerated.</div></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>CONFIRMED GOOD: both branches of resolve_shortcut_path verified live (free name vs Canvas collision)</span><span class='oracle' title='Disk (what actually exists)'>O3</span><span class='meta'>panopto · panopto_shortcut2 · 43660</span></summary><div class='body'><div class='detail'>CLAUDE.md documents that a Panopto lecture IS a Canvas ExternalTool module item, so _create_link has usually already written a .url at the same name; the Shortcut output must ADOPT a link we produced, else take the first FREE name, else step over the foreign one to &#x27;&lt;title&gt; (Panopto).url&#x27;. Both branches exercised on the real course. BRANCH A (names free): convert_urls had compiled and consumed all 41 Canvas .url files first, so all 36 shortcuts took the PLAIN name; 36/36 carried the [CanvasDownloader] Source=Panopto marker and survived the URL compiler in the SAME run - the marker is the only thing preventing the app from deleting its own selected output. BRANCH B (names taken): a later run recreated the 41 Canvas links with convert_urls OFF, then pan_out_url ON produced 36 shortcuts - ALL 36 landed with the &#x27;(Panopto)&#x27; suffix, 0 took a plain name, and the 41 Canvas links were left untouched (77 .url total = 41 plain + 36 produced). Also verified: with pan_out_url OFF, the Canvas link phase legitimately reclaims those paths (36 produced -&gt; 0), which is correct - the user did not ask for shortcuts that run.</div></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>CONFIRMED GOOD: cancel mid-transcription leaves no orphaned worker and no .part files</span><span class='oracle' title='Disk (what actually exists)'>O3</span><span class='meta'>panopto · pan_gpu_tx · 43660</span></summary><div class='body'><div class='detail'>Cancelled during Phase 3 via cancel_panopto_btn (NOT cancel_download_btn - the Panopto phase has its own control; app.py:908 _active_dl_statuses includes &#x27;panopto&#x27; so the click is not swallowed). Python pids before: ...35020, 35512 (workers). After: both gone; the only surviving pythons were the app (18944) and six unrelated processes started hours earlier. Leftover .part/.tmp files: 0. The 6 already-completed txt/srt pairs were correctly KEPT.</div></div></details><details class='f' style='border-left-color:#94a3b8; background:rgba(148,163,184,.08)'><summary><span class='badge' style='background:#94a3b822;color:#94a3b8'>info</span><span class='title'>CONFIRMED GOOD: the CPU downgrade path works end to end - proven for the first time</span><span class='oracle' title='Debug log (what the app says it did)'>O2</span><span class='oracle' title='Disk (what actually exists)'>O3</span><span class='meta'>panopto · pan_cpu_downgrade · 43660</span></summary><div class='body'><div class='detail'>RUNBOOK ranked gap 1 said the audit had never proven this end to end, only that _is_vad_engine_error exists. Fault injected by replacing the run&#x27;s cuda_libs JUNCTION with a real dir of 14 zero-value stub DLLs (the developer&#x27;s real 1.8GB cuda_libs was verified intact at 14 files before and after, and the junction was restored). Settings still requested device=cuda, so the downgrade was genuinely exercised. Evidence chain from debug_log.txt: (1) &#x27;Transcribe worker spawned: pid=30320 device=cuda&#x27;; (2) &#x27;worker error: RuntimeError: Library cublas64_12.dll is not found or cannot be loaded&#x27; - exactly the injected fault; (3) failed FAST, 3.5s, no hang; (4) &#x27;GPU transcription failed (...); falling back to CPU FOR THE REST OF THE RUN&#x27; - the fallback is run-scoped, so it does not re-attempt a broken GPU on all 30 remaining recordings; (5) &#x27;Transcribing [1/30] (device=cpu)&#x27;; (6) two transcripts COMPLETED on CPU (srt 6-&gt;8). Measured cost: GPU 22.4/40.8/55.4s per recording vs CPU 104.7/129.8s (~3x). The downgrade does not merely log - it finishes the work.</div></div></details></div>

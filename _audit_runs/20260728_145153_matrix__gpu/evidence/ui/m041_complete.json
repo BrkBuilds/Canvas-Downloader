@@ -1,0 +1,138 @@
+{
+  "name": "m041_complete",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__gpu\\evidence\\screenshots\\m041_complete.png",
+  "captured": "2026-07-28 21:57:20",
+  "screen": {
+    "url": "http://127.0.0.1:8810/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Download Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_done_donesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "dl_open_0",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "dl_open_1",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nPartial Success\n2\nCOURSES DOWNLOADED\n326\nFILES DOWNLOADED\n221.8\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\n83 files skipped because they exceeded the 5 MB limit.\nSee 83 skipped files\nError Details\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n193 FILES\nPDF\n52\nURL\n41\nMD\n36\nPPTX\n33\nOTHER FILES\n31\n\nOpen Folder\n\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n133 FILES\nPDF\n74\nURL\n18\nMD\n17\nZIP\n5\nOTHER FILES\n19\n\nOpen Folder\n\nGo to front page",
+    "textLen": 607
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "done",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "active",
+      "label": "5. Complete"
+    }
+  ],
+  "completion": {
+    "folderCards": [
+      {
+        "key": "dl_fc_0",
+        "text": "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | 193 FILES | PDF | 52 | URL | 41 | MD | 36 | PPTX | 33 | OTHER FILES | 31 | Open Folder"
+      },
+      {
+        "key": "dl_fc_1",
+        "text": "Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | 133 FILES | PDF | 74 | URL | 18 | MD | 17 | ZIP | 5 | OTHER FILES | 19 | Open Folder"
+      }
+    ],
+    "dashboardInsideCard": false,
+    "strayDashboard": false,
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nPartial Success\n2\nCOURSES DOWNLOADED\n326\nFILES DOWNLOADED\n221.8\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\n83 files skipped because they exceeded the 5 MB limit.\nSee 83 skipped files\nError Details\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n193 FILES\nPDF\n52\nURL\n41\nMD\n36\nPPTX\n33\nOTHER FILES\n31\n\nOpen Folder\n\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n133 FILES\nPDF\n74\nURL\n18\nMD\n17\nZIP\n5\nOTHER FILES\n19\n\nOpen Folder\n\nGo to front page"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

@@ -1,0 +1,71 @@
+
+=== audit app start 2026-07-28 13:00:03 port=8796 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8796
+  Network URL: http://192.168.1.50:8796
+  External URL: http://188.183.232.43:8796
+
+Hybrid Fetch: Found 77 files in Modules that were missing from 'Files' tab. This suggests 'Files' tab access is restricted for course 43660.
+
+=== audit app start 2026-07-28 13:21:36 port=8796 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8796
+  Network URL: http://192.168.1.50:8796
+  External URL: http://188.183.232.43:8796
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>
+
+=== audit app start 2026-07-28 13:24:06 port=8796 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8796
+  Network URL: http://192.168.1.50:8796
+  External URL: http://188.183.232.43:8796
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>
+
+=== audit app start 2026-07-28 13:37:29 port=8796 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8796
+  Network URL: http://192.168.1.50:8796
+  External URL: http://188.183.232.43:8796
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>
+2026-07-28 13:38:02.368 Thread 'ThreadPoolExecutor-3_0': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-07-28 13:38:02.368 Thread 'ThreadPoolExecutor-3_0': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-07-28 13:38:02.368 Thread 'ThreadPoolExecutor-3_1': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-07-28 13:38:02.368 Thread 'ThreadPoolExecutor-3_1': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-07-28 13:38:02.368 Thread 'ThreadPoolExecutor-3_2': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2026-07-28 13:38:02.369 Thread 'ThreadPoolExecutor-3_2': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+
+=== audit app start 2026-07-28 13:49:00 port=8796 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8796
+  Network URL: http://192.168.1.50:8796
+  External URL: http://188.183.232.43:8796
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>
+
+=== audit app start 2026-07-28 13:53:41 port=8796 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8796
+  Network URL: http://192.168.1.50:8796
+  External URL: http://188.183.232.43:8796
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>

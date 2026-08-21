@@ -1,0 +1,32 @@
+{
+  "rows": [
+    {
+      "ok": true,
+      "kind": "sync",
+      "course_id": 43667,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_205657_syncsmoke4__free1\\downloads\\BINT 1st semester (LA E25 BINTS1SEMU)",
+      "landed_on": "complete",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_205657_syncsmoke4__free1\\evidence\\rows\\s000"
+      },
+      "findings": 0,
+      "severities": {},
+      "id": "s000",
+      "seconds": 21.9
+    },
+    {
+      "id": "s005",
+      "ok": false,
+      "error": "FlowError: btn_analyze_sync not clickable: {'clicked': False, 'key': 'btn_analyze_sync', 'error': 'TimeoutError: Locator.click: Timeout 20000ms exceeded.\\nCall log:\\n  - waiting for locator(\"[class*=\\\\\"st-key-btn_analyze_sync\\\\\"]\").first.locator(\"button\").first\\n    - locator resolved to <button disabled aria-label=\"\" kind=\"primary\" data-testid=\"stBaseButton-primary\" class=\"st-emotion-cache-o29v59 etdmgzm1\">…</button>\\n  - attempting click action\\n    2 × waiting for element to be visible, enabled and stable\\n      - element is not enabled\\n    - retrying click action\\n    - waiting 20ms\\n    2 × waiting for element to be visible, enabled and stable\\n      - element is not enabled\\n    - retrying click action\\n      - waiting 100ms\\n    39 × waiting for element to be visible, enabled and stable\\n       - element is not enabled\\n     - retrying click action\\n       - waiting 500ms\\n'}",
+      "traceback": "Traceback (most recent call last):\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 511, in run_lane\n    res = execute(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 557, in execute\n    return _execute_sync(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 679, in _execute_sync\n    res[\"analyze\"] = f.analyze(job.name, quick=job.quick)\n                     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\flows.py\", line 402, in analyze\n    raise FlowError(f\"{key} not clickable: {r}\")\ntests.audit.harness.flows.FlowError: btn_analyze_sync not clickable: {'clicked': False, 'key': 'btn_analyze_sync', 'error': 'TimeoutError: Locator.click: Timeout 20000ms exceeded.\\nCall log:\\n  - waiting for locator(\"[class*=\\\\\"st-key-btn_analyze_sync\\\\\"]\").first.locator(\"button\").first\\n    - locator resolved to <button disabled aria-label=\"\" kind=\"primary\" data-testid=\"stBaseButton-primary\" class=\"st-emotion-cache-o29v59 etdmgzm1\">…</button>\\n  - attempting click action\\n    2 × waiting for element to be visible, enabled and stable\\n      - element is not enabled\\n    - retrying click action\\n    - waiting 20ms\\n    2 × waiting for element to be visible, enabled and stable\\n      - element is not enabled\\n    - retrying click action\\n      - waiting 100ms\\n    39 × waiting for element to be visible, enabled and stable\\n       - element is not enabled\\n     - retrying click action\\n       - waiting 500ms\\n'}\n",
+      "seconds": 27.4
+    }
+  ],
+  "current": "",
+  "updated": "2026-07-28T20:57:53"
+}

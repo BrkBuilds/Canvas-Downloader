@@ -1,0 +1,65 @@
+{
+  "name": "s033",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "complete",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 3,
+        "id": "sync",
+        "state": "active"
+      },
+      "dash": true,
+      "exceptions": 0,
+      "head": "Syncing...",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIntroduction to Information Systems (LA)\n0%\nDOWNLOADED\n0.0 / 0.5 MB\nSPEED\n0.0 MB/s\nFILES\n0 / 2\nTIME REMAINING\n~00:01\nDOWNLOADING\nTrial Exam.pdf\nWaiting for files…\n\nCancel Sync",
+      "waited_s": 3.1
+    },
+    "capture": "s033_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "ok": true,
+    "skipped": "already up to date",
+    "landed_on": "complete",
+    "capture": "s033_up_to_date"
+  },
+  "trace": [
+    {
+      "t": "21:41:41",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "21:41:49",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "complete",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 3,
+          "id": "sync",
+          "state": "active"
+        },
+        "dash": true,
+        "exceptions": 0,
+        "head": "Syncing...",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSyncing...\nIntroduction to Information Systems (LA)\n0%\nDOWNLOADED\n0.0 / 0.5 MB\nSPEED\n0.0 MB/s\nFILES\n0 / 2\nTIME REMAINING\n~00:01\nDOWNLOADING\nTrial Exam.pdf\nWaiting for files…\n\nCancel Sync",
+        "waited_s": 3.1
+      },
+      "capture": "s033_after_analysis",
+      "ok": true
+    }
+  ]
+}

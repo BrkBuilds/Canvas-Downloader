@@ -1,0 +1,68 @@
+{
+  "rows": [
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 45899,
+      "course_ids": [
+        45899
+      ],
+      "courses": [
+        {
+          "course_id": 45899,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_180706_smokehard__free1\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+          "findings": 7,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_180706_smokehard__free1\\evidence\\rows\\s201"
+          }
+        }
+      ],
+      "findings": 7,
+      "drift": [],
+      "severities": {
+        "high": 1,
+        "info": 5,
+        "medium": 1
+      },
+      "id": "s201",
+      "seconds": 497.3
+    },
+    {
+      "ok": true,
+      "kind": "download",
+      "course_id": 43660,
+      "course_ids": [
+        43660
+      ],
+      "courses": [
+        {
+          "course_id": 43660,
+          "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_180706_smokehard__free1\\downloads\\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+          "findings": 30,
+          "harvest": {
+            "kept": [
+              ".canvas_sync.db"
+            ],
+            "removed": true,
+            "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_180706_smokehard__free1\\evidence\\rows\\s202"
+          }
+        }
+      ],
+      "findings": 30,
+      "drift": [],
+      "severities": {
+        "high": 2,
+        "info": 3,
+        "medium": 25
+      },
+      "id": "s202",
+      "seconds": 376.2
+    }
+  ],
+  "current": "",
+  "updated": "2026-07-28T18:21:51"
+}

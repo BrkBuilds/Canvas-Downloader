@@ -1,0 +1,197 @@
+{
+  "name": "pan_cpu_downgrade",
+  "course_ids": [
+    43660
+  ],
+  "config": {
+    "pan_out_url": false,
+    "pan_out_mp4": false,
+    "pan_out_mp3": true,
+    "pan_out_txt": true,
+    "pan_out_srt": true,
+    "pan_layout": "match"
+  },
+  "select": {
+    "courses": [
+      43660
+    ],
+    "results": [
+      {
+        "course_id": 43660,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "pan_out_url": false,
+      "pan_out_mp4": false,
+      "pan_out_mp3": true,
+      "pan_out_txt": true,
+      "pan_out_srt": true,
+      "pan_layout": "match"
+    },
+    "failed": [],
+    "verified": {
+      "pan_out_url": false,
+      "pan_out_mp4": false,
+      "pan_out_mp3": true,
+      "pan_out_txt": true,
+      "pan_out_srt": true
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "pan_cpu_downgrade_config",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\\evidence\\screenshots\\pan_cpu_downgrade_config.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings\\evidence\\ui\\pan_cpu_downgrade_config.json",
+    "textLen": 1444,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "pan_cpu_downgrade",
+    "terminal": {
+      "done": true,
+      "complete": false,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 3,
+        "id": "download",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Cancelled\n\nDownload was cancelled.\n\nCancelled after 217 of 217 files.\n\nGo to front page",
+      "waited_s": 465.7
+    },
+    "captures": [
+      "pan_cpu_downgrade_phase_scan",
+      "pan_cpu_downgrade_phase_download",
+      "pan_cpu_downgrade_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "22:59:09",
+      "action": "select_courses",
+      "courses": [
+        43660
+      ],
+      "results": [
+        {
+          "course_id": 43660,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "22:59:10",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "22:59:11",
+      "action": "expand_card",
+      "card": "toggle_panopto",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "22:59:11",
+      "action": "set_toggle",
+      "key": "btn_pan_out_url",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "22:59:12",
+      "action": "set_toggle",
+      "key": "btn_pan_out_mp4",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "22:59:12",
+      "action": "set_toggle",
+      "key": "btn_pan_out_mp3",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "22:59:13",
+      "action": "set_toggle",
+      "key": "btn_pan_out_txt",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "22:59:14",
+      "action": "set_toggle",
+      "key": "btn_pan_out_srt",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "22:59:14",
+      "action": "configure",
+      "applied": {
+        "pan_out_url": false,
+        "pan_out_mp4": false,
+        "pan_out_mp3": true,
+        "pan_out_txt": true,
+        "pan_out_srt": true,
+        "pan_layout": "match"
+      },
+      "failed": [],
+      "verified": {
+        "pan_out_url": false,
+        "pan_out_mp4": false,
+        "pan_out_mp3": true,
+        "pan_out_txt": true,
+        "pan_out_srt": true
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "23:07:11",
+      "action": "confirm_and_run",
+      "name": "pan_cpu_downgrade",
+      "terminal": {
+        "done": true,
+        "complete": false,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 3,
+          "id": "download",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Cancelled\n\nDownload was cancelled.\n\nCancelled after 217 of 217 files.\n\nGo to front page",
+        "waited_s": 465.7
+      },
+      "captures": [
+        "pan_cpu_downgrade_phase_scan",
+        "pan_cpu_downgrade_phase_download",
+        "pan_cpu_downgrade_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

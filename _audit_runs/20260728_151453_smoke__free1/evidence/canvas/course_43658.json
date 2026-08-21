@@ -1,0 +1,387 @@
+{
+  "course_id": 43658,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "How to Uni (LA E25 BINTU7005U)",
+  "course_code": "BINTU7005U.LA_E25 (How to Uni)",
+  "fetched_at": "2026-07-28T17:44:52",
+  "folders": {
+    "388438": {
+      "id": 388438,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    },
+    "388440": {
+      "id": 388440,
+      "full_name": "course files/course_image",
+      "name": "course_image",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {
+    "1579684": {
+      "id": 1579684,
+      "filename": "how+to+uni+banner-min.png",
+      "display_name": "how to uni banner-min.png",
+      "size": 368409,
+      "content_type": "image/png",
+      "updated_at": "2025-07-14T11:25:40Z",
+      "folder_id": 388440,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files/course_image"
+    },
+    "1572084": {
+      "id": 1572084,
+      "filename": "Learning-styles-photo.jpg",
+      "display_name": "Learning-styles-photo.jpg",
+      "size": 47076,
+      "content_type": "image/jpeg",
+      "updated_at": "2025-06-26T13:01:21Z",
+      "folder_id": 388440,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files/course_image"
+    }
+  },
+  "modules": [
+    {
+      "id": 297515,
+      "name": "Course description including examination rules",
+      "position": 1,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1012339,
+          "type": "ExternalUrl",
+          "title": "Course description including examination rules",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2025-2026/BA-BINTU7005U.aspx",
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 306225,
+      "name": "Study start on CBS campus",
+      "position": 7,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1058754,
+          "type": "Page",
+          "title": "Ready for the next step",
+          "content_id": null,
+          "page_url": "ready-for-the-next-step",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1058755,
+          "type": "Page",
+          "title": "Introduction week",
+          "content_id": null,
+          "page_url": "introduction-week",
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 307155,
+      "name": "Velkommen til How to Uni",
+      "position": 8,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1063572,
+          "type": "Page",
+          "title": "Velkommen til How to Uni",
+          "content_id": null,
+          "page_url": "velkommen-til-how-to-uni-2",
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 307158,
+      "name": "Fra elev til studerende",
+      "position": 9,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1063577,
+          "type": "Page",
+          "title": "Fra elev til studerende",
+          "content_id": null,
+          "page_url": "fra-elev-til-studerende",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1063580,
+          "type": "Page",
+          "title": "Tjek dit kommende semester eller quarter ud",
+          "content_id": null,
+          "page_url": "tjek-dit-kommende-semester-eller-quarter-ud",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1063582,
+          "type": "Discussion",
+          "title": "Refleksionsopgave: Dine kommende kurser",
+          "content_id": 162603,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 307164,
+      "name": "Studievaner",
+      "position": 10,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1063589,
+          "type": "Page",
+          "title": "Studievaner",
+          "content_id": null,
+          "page_url": "studievaner",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1063592,
+          "type": "Page",
+          "title": "Find dit skema",
+          "content_id": null,
+          "page_url": "find-dit-skema",
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 307168,
+      "name": "Din motivation",
+      "position": 11,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1063598,
+          "type": "Page",
+          "title": "Din motivation",
+          "content_id": null,
+          "page_url": "din-motivation",
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 307173,
+      "name": "Faglige fælleskaber",
+      "position": 12,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1063605,
+          "type": "Page",
+          "title": "Faglige fællesskaber",
+          "content_id": null,
+          "page_url": "faglige-faellesskaber",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1063610,
+          "type": "Discussion",
+          "title": "Refleksionsopgave: Fagligt fællesskab",
+          "content_id": 162600,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 307182,
+      "name": "Studiestart på CBS",
+      "position": 13,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1063620,
+          "type": "Page",
+          "title": "Klar til næste skridt",
+          "content_id": null,
+          "page_url": "klar-til-naeste-skridt",
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1063622,
+          "type": "Page",
+          "title": "Introduktionsuge ",
+          "content_id": null,
+          "page_url": "introduktionsuge",
+          "external_url": null,
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "ExternalUrl": 1,
+    "Page": 11,
+    "Discussion": 2
+  },
+  "module_file_ids": [],
+  "only_in_modules": [],
+  "only_in_files_tab": [
+    1572084,
+    1579684
+  ],
+  "files_tab_restricted": false,
+  "assignments": [],
+  "quizzes": [],
+  "announcements": [],
+  "discussions": [
+    {
+      "id": 162603,
+      "title": "Refleksionsopgave: Dine kommende kurser"
+    },
+    {
+      "id": 162600,
+      "title": "Refleksionsopgave: Fagligt fællesskab"
+    },
+    {
+      "id": 161946,
+      "title": "Reflection assignment: Courses in your programme"
+    },
+    {
+      "id": 161943,
+      "title": "Reflection assignment: Learning Community"
+    }
+  ],
+  "pages": [
+    {
+      "url": "check-out-your-upcoming-semester-or-quarter",
+      "title": "Check out your upcoming semester or quarter"
+    },
+    {
+      "url": "find-your-schedule",
+      "title": "Find your schedule"
+    },
+    {
+      "url": "introduction-week",
+      "title": "Introduction week"
+    },
+    {
+      "url": "ready-for-the-next-step",
+      "title": "Ready for the next step"
+    },
+    {
+      "url": "welcome-to-how-to-uni",
+      "title": "Welcome to How to Uni"
+    },
+    {
+      "url": "din-motivation",
+      "title": "Din motivation"
+    },
+    {
+      "url": "faglige-faellesskaber",
+      "title": "Faglige fællesskaber"
+    },
+    {
+      "url": "find-dit-skema",
+      "title": "Find dit skema"
+    },
+    {
+      "url": "fra-elev-til-studerende",
+      "title": "Fra elev til studerende"
+    },
+    {
+      "url": "introduktionsuge-og-bachelor-kick-off-2",
+      "title": "Introduktionsuge"
+    },
+    {
+      "url": "introduktionsuge",
+      "title": "Introduktionsuge "
+    },
+    {
+      "url": "klar-til-naeste-skridt-2",
+      "title": "Klar til næste skridt"
+    },
+    {
+      "url": "klar-til-naeste-skridt",
+      "title": "Klar til næste skridt"
+    },
+    {
+      "url": "studievaner",
+      "title": "Studievaner"
+    },
+    {
+      "url": "tjek-dit-kommende-semester-eller-quarter-ud",
+      "title": "Tjek dit kommende semester eller quarter ud"
+    },
+    {
+      "url": "velkommen-3",
+      "title": "Homepage"
+    },
+    {
+      "url": "velkommen-til-how-to-uni-2",
+      "title": "Velkommen til How to Uni"
+    }
+  ],
+  "pages_restricted": false,
+  "syllabus_present": false,
+  "inline_by_source": {
+    "announcement": [],
+    "assignment": [],
+    "discussion": [],
+    "syllabus": []
+  },
+  "inline_file_ids": [],
+  "embedded_only_file_ids": [
+    1579688
+  ],
+  "inline_only_file_ids": [],
+  "expected_file_ids": [
+    1572084,
+    1579684
+  ],
+  "secondary_counts": {
+    "assignment": 0,
+    "quiz": 0,
+    "discussion": 4,
+    "announcement": 0,
+    "page": 17,
+    "syllabus": 0
+  },
+  "notes": {
+    "quizzes": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 3.9
+}

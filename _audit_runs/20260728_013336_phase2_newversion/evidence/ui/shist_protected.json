@@ -1,0 +1,282 @@
+{
+  "name": "shist_protected",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_013336_phase2_newversion\\evidence\\screenshots\\shist_protected.png",
+  "captured": "2026-07-28 01:43:37",
+  "screen": {
+    "url": "http://127.0.0.1:8794/?mode=sync&step=1",
+    "mode": "sync",
+    "step": "1",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Canvas Courses to Sync"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_active_idlesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_idle_idlesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_idle_idlesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_idle_idlesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_hub_main",
+        "text": "Saved Groups & Pairs",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "save_pair_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "open_folder_0",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "edit_pair_0",
+        "text": "Edit",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ignored_btn_0",
+        "text": "Ignored Files",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "remove_pair_0",
+        "text": "Remove",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_add_folder",
+        "text": "Add Course",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_save_group_main",
+        "text": "Save as Group",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_analyze_sync",
+        "text": "Analyze, Review & Sync",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      },
+      {
+        "key": "btn_quick_sync",
+        "text": "Quick Sync",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      },
+      {
+        "key": "sync_history_toggle",
+        "text": "Sync History",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_hist_tab_all",
+        "text": "View All",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      },
+      {
+        "key": "sync_hist_tab_course",
+        "text": "By Course",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_sync_hist_clear",
+        "text": "Clear History",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "shist_btn_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_synchist_s_0_0_updated_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_synchist_s_0_0_updated_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_synchist_s_0_0_updated_1",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_synchist_s_0_0_updated_1",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_synchist_s_0_0_updated_2",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_synchist_s_0_0_updated_2",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_synchist_s_0_0_updated_3",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_synchist_s_0_0_updated_3",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_synchist_s_0_0_restored_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_synchist_s_0_0_restored_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_synchist_s_0_0_restored_1",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_synchist_s_0_0_restored_1",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_synchist_s_0_0_protected_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_synchist_s_0_0_protected_0",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_synchist_s_0_0_protected_1",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_synchist_s_0_0_protected_1",
+        "text": "​",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nCanvas Courses to Sync\nHelp\n\nSaved Groups & Pairs\n\nAdd the courses you want below, then choose whether to review the changes first or just fetch everything.\n\nCourse: Programmering og udvikling af små systemer samt databaser (LA)\n\n​\n\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\nLast synced: 6 minutes ago\n\nOpen Folder\n\nEdit\n\nIgnored Files\n\nRemove\n\nAdd Course\n\nSave as Group\n\nAnalyze, Review & Sync\n\nCompares with Canvas, then you pick what to download\nOR\n\nQuick Sync\n\nDownloads every new file and update in one click\n\nSync History\n\nView All\n\nBy Course\n\nClear History\n\n 6 MINUTES AGO\n\n​\n\nProgrammering og udvikling af små systemer samt databaser (LA)\nSuccess\nSynced 8 files\n•\nAnalyze, Review & Sync\n01:37\n Updates Overwritten (4)\nYour unedited local copies were replaced with the newer versions\ng1 darts vejl_løsn.js\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\ngk2 vejl_løsn.js\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\nCreate_ILearn_tables_sql.txt\n\n​\n\n​\n\nUge 12 Forelæsning 17. Database 3 Join og set operatorer\nSQL Opgave Vejl_sql.txt\n\n​\n\n​\n\nUge 12 Forelæsning 17. Database 3 Join og set operatorer\n Locally-Deleted Files Restored (2)\nRe-downloaded because your local copy was missing\nminefeltVEJL_js.txt\n\n​\n\n​\n\nUge 44 Forelæsning 8. JavaScript og Browseren, HTML 1\nDebug - grades - 1.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\n Modified Files Protected (2)\nSaved next to your copy, which was left untouched\nDebug - Inventory - 1_NewVersion.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\nDebug - shop - 1_NewVersion.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse",
+    "textLen": 1792
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

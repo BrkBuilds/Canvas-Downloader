@@ -1,0 +1,469 @@
+{
+  "name": "p2_full_complete",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_000751_phase2_sync_outcomes\\evidence\\screenshots\\p2_full_complete.png",
+  "captured": "2026-07-28 00:21:01",
+  "screen": {
+    "url": "http://127.0.0.1:8790/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Sync Complete!"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_done_donesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_done_donesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_active_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_0",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_0",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_1",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_1",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_2",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_2",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_3",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_3",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_4",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_4",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_5",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_5",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_6",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_6",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_7",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_7",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_8",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_8",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_9",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_9",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_10",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_10",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_11",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_11",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_12",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_12",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_13",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_13",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_14",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_14",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_15",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_15",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_16",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_16",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_17",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_17",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_18",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_18",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_new_19",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_new_19",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_updated_0",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_updated_0",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_updated_1",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_updated_1",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_protected_0",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_protected_0",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_open_sync_complete_0_protected_1",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "fileact_reveal_sync_complete_0_protected_1",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_complete_open_0",
+        "text": "Open Folder",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_front_page_sync_complete",
+        "text": "Go to front page",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [
+      {
+        "key": "sync_complete_fc_0",
+        "open": false,
+        "label": "keyboard_arrow_right\n\nFiles added"
+      }
+    ],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync Success\n1\nCOURSE UPDATED\n24\nFILES DOWNLOADED\n2.0\nMB DOWNLOADED\nℹ️\nSome files were skipped because you ignored them.\nYou can manage ignored files from the Sync Hub.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n24 FILES\nPDF\n12\nTXT\n6\nMD\n4\nDOCX\n1\nOTHER FILES\n1\nkeyboard_arrow_right\n\nFiles added\n\nOpen Folder\n\nGo to front page",
+    "textLen": 475
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "done",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "done",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "active",
+      "label": "5. Complete"
+    }
+  ],
+  "completion": {
+    "folderCards": [
+      {
+        "key": "sync_complete_fc_0",
+        "text": "Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | 24 FILES | PDF | 12 | TXT | 6 | MD | 4 | DOCX | 1 | OTHER FILES | 1 | keyboard_arrow_right | Files added | Open Folder"
+      }
+    ],
+    "dashboardInsideCard": false,
+    "strayDashboard": false,
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nSync Success\n1\nCOURSE UPDATED\n24\nFILES DOWNLOADED\n2.0\nMB DOWNLOADED\nℹ️\nSome files were skipped because you ignored them.\nYou can manage ignored files from the Sync Hub.\nFolders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n24 FILES\nPDF\n12\nTXT\n6\nMD\n4\nDOCX\n1\nOTHER FILES\n1\nkeyboard_arrow_right\n\nFiles added\n\nOpen Folder\n\nGo to front page"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

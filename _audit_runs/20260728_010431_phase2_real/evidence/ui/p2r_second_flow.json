@@ -1,0 +1,85 @@
+{
+  "name": "p2r_second",
+  "open": {
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "ing og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n6 files pending sync\n207 files up to date\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 0 files",
+      "waited_s": 24.2
+    },
+    "capture": "p2r_second_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_updmod_45899",
+      "cat_deleted_local_45899",
+      "cat_deleted_canvas_45899",
+      "cat_ignored_45899"
+    ],
+    "capture": "p2r_second_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_010431_phase2_real\\evidence\\screenshots\\p2r_second_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_010431_phase2_real\\evidence\\ui\\p2r_second_review.json",
+    "textLen": 1871,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "trace": [
+    {
+      "t": "01:16:42",
+      "action": "open_sync",
+      "screen": "sync"
+    },
+    {
+      "t": "01:17:10",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "ing og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n6 files pending sync\n207 files up to date\nkeyboard_arrow_right\n\nUpdates Available — You've Edited These\n\nkeyboard_arrow_right\n\nDeleted Locally\n\nkeyboard_arrow_right\n\nDeleted on Canvas (Kept Locally)\n\nkeyboard_arrow_right\n\nIgnored Files\n\nGo back\n\nSync & Download 0 files",
+        "waited_s": 24.2
+      },
+      "capture": "p2r_second_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "01:17:14",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_updmod_45899",
+        "cat_deleted_local_45899",
+        "cat_deleted_canvas_45899",
+        "cat_ignored_45899"
+      ],
+      "capture": "p2r_second_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_010431_phase2_real\\evidence\\screenshots\\p2r_second_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_010431_phase2_real\\evidence\\ui\\p2r_second_review.json",
+      "textLen": 1871,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "run_id": "20260728_175237_smoke3__free1",
+  "label": "lane:free1",
+  "parent": "20260728_175237_smoke3",
+  "lane": "free1",
+  "created": "2026-07-28T17:52:37",
+  "app": {},
+  "ports_used": [
+    8800
+  ],
+  "browser": {}
+}

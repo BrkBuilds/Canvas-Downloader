@@ -1,0 +1,23 @@
+
+=== audit app start 2026-07-30 17:14:06 port=8920 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8920
+  Network URL: http://192.168.1.50:8920
+  External URL: http://188.183.232.43:8920
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>
+
+=== audit app start 2026-07-30 17:16:05 port=8920 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8920
+  Network URL: http://192.168.1.50:8920
+  External URL: http://188.183.232.43:8920
+
+Sync groups file has invalid root type: <class 'list'>
+Sync groups file has invalid root type: <class 'list'>

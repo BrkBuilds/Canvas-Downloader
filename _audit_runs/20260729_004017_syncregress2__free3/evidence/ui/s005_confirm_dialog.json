@@ -1,0 +1,42 @@
+{
+  "name": "s005_confirm_dialog",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260729_004017_syncregress2__free3\\evidence\\screenshots\\s005_confirm_dialog.png",
+  "captured": "2026-07-29 00:42:31",
+  "screen": {
+    "url": "http://127.0.0.1:8890/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": true,
+    "dialogTitle": "​",
+    "headings": [],
+    "buttons": [
+      {
+        "key": "cancel_sync_dialog_btn",
+        "text": "No, Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_start_sync",
+        "text": "Yes, Start Sync",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "​\n\nConfirm Sync\nYou are about to download 2 files (139.1 KB) to 1 folder.\n✎ 2 of these are files you've edited locally - the new Canvas version will be saved alongside as _NewVersion so your edits are preserved.\nFiles:\n2 files\nTotal Size:\n139.1 KB\nDestination:\nIntroduction to Information Systems (LA)\n139.1 KB of 181.9 GB\nAvailable Disk Space: 181.9 GB\n\nNo, Go back\n\nYes, Start Sync",
+    "textLen": 383
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

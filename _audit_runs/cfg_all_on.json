@@ -1,0 +1,19 @@
+{
+  "mode": "modules",
+  "file_filter": "all",
+  "secondary_isolated": false,
+  "dl_assignments": true,
+  "dl_syllabus": true,
+  "dl_announcements": true,
+  "dl_discussions": true,
+  "dl_quizzes": true,
+  "dl_submissions": true,
+  "convert_zip": true,
+  "convert_pptx": true,
+  "convert_word": true,
+  "convert_excel": true,
+  "convert_html": true,
+  "convert_code": true,
+  "convert_urls": true,
+  "convert_video": true
+}

@@ -1,0 +1,62 @@
+{
+  "name": "t3_missing",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_010431_phase2_real\\evidence\\screenshots\\t3_missing.png",
+  "captured": "2026-07-28 02:15:19",
+  "today": {
+    "chips": [
+      {
+        "key": "today_chip_missing_0",
+        "missing": true,
+        "text": "Programmering og udvikling af små systemer samt databaser (LA)"
+      }
+    ],
+    "pairCards": [],
+    "offlist": "",
+    "hasOfflist": false,
+    "text": "Auto-download today's new files\nNOT ACTIVATED\n\nAdd your courses to the daily sync, and their new files are downloaded automatically each morning, first time you open the app - no need to check Canvas yourself.\n\nHelp\nCourses in your daily sync\n1\n\nManage\n\nProgrammering og udvikling af små systemer samt databaser (LA)\n\nToday's files\nNew downloads for your daily sync courses land here.\nNo new files today\nYou're all caught up.\nSync on demand\nDaily auto-sync runs each morning — trigger a manual Quick Sync any time to bring these courses up to date right now.\n\nQuick Sync now"
+  },
+  "screen": {
+    "url": "http://127.0.0.1:8793/?mode=today&step=1",
+    "mode": "today",
+    "step": "1",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [],
+    "buttons": [
+      {
+        "key": "today_manage_btn",
+        "text": "Manage",
+        "disabled": false,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "today_chip_missing_0",
+        "text": "Programmering og udvikling af små systemer samt databaser (LA)",
+        "disabled": true,
+        "gated": true,
+        "kind": "secondary"
+      },
+      {
+        "key": "today_sync_now_btn",
+        "text": "Quick Sync now",
+        "disabled": true,
+        "gated": true,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "Auto-download today's new files\nNOT ACTIVATED\n\nAdd your courses to the daily sync, and their new files are downloaded automatically each morning, first time you open the app - no need to check Canvas yourself.\n\nHelp\nCourses in your daily sync\n1\n\nManage\n\nProgrammering og udvikling af små systemer samt databaser (LA)\n\nToday's files\nNew downloads for your daily sync courses land here.\nNo new files today\nYou're all caught up.\nSync on demand\nDaily auto-sync runs each morning — trigger a manual Quick Sync any time to bring these courses up to date right now.\n\nQuick Sync now",
+    "textLen": 574
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

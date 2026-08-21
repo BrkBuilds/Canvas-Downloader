@@ -1,0 +1,125 @@
+{
+  "name": "s022",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "es\n2\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (all)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n213 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nGo back\n\nSync & Download 2 files",
+      "waited_s": 24.2
+    },
+    "capture": "s022_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_update_45899"
+    ],
+    "capture": "s022_review",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free2\\evidence\\screenshots\\s022_review.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free2\\evidence\\ui\\s022_review.json",
+    "textLen": 824,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "ders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 FILES\nTXT\n2\nkeyboard_arrow_down\n\nFiles added\n\n Updates Overwritten (2)\nYour unedited local copies were replaced with the newer versions\ng1 darts vejl_løsn_js.txt\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\ngk2 vejl_løsn_js.txt\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 10.1
+    },
+    "capture": "s022_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "17:26:44",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "17:27:12",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "es\n2\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nTXT (all)\n\nSelect All\n\nDeselect All\n\n1.\nProgrammering og udvikling af små systemer samt databaser (LA)\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 files pending sync\n213 files up to date\nkeyboard_arrow_right\n\nUpdates Available\n\nGo back\n\nSync & Download 2 files",
+        "waited_s": 24.2
+      },
+      "capture": "s022_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "17:27:13",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_update_45899"
+      ],
+      "capture": "s022_review",
+      "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free2\\evidence\\screenshots\\s022_review.png",
+      "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_171349_ship_sync_afterfix__free2\\evidence\\ui\\s022_review.json",
+      "textLen": 824,
+      "consoleErrors": 0,
+      "exceptions": 0
+    },
+    {
+      "t": "17:27:26",
+      "action": "confirm_sync",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "ders Updated\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n2 FILES\nTXT\n2\nkeyboard_arrow_down\n\nFiles added\n\n Updates Overwritten (2)\nYour unedited local copies were replaced with the newer versions\ng1 darts vejl_løsn_js.txt\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\ngk2 vejl_løsn_js.txt\n\n​\n\n​\n\nObligatoriske afleveringer efterår 2025\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 10.1
+      },
+      "capture": "s022_complete",
+      "ok": true
+    }
+  ]
+}

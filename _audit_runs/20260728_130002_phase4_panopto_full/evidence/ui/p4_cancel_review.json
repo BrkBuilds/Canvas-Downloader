@@ -1,0 +1,765 @@
+{
+  "name": "p4_cancel_review",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_130002_phase4_panopto_full\\evidence\\screenshots\\p4_cancel_review.png",
+  "captured": "2026-07-28 13:45:19",
+  "screen": {
+    "url": "http://127.0.0.1:8796/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Review Changes",
+      "Smart Select"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_done_donesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_active_idlesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_idle_idlesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "sync_filter_btn_panopto",
+        "text": "PANOPTO (all)",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_select_all",
+        "text": "Select All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_bulk_deselect_all",
+        "text": "Deselect All",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_pan_43660_0d78cddd-c122-444c-a358-b389015d0350",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_pan_43660_914641ae-c022-43b3-aabd-b1a80085fb1c",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "ign_pan_43660_04652c96-a5cc-46ac-a087-b395008824e1",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restore_all_43660",
+        "text": "Restore All Ignored Files",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_b58f9a14-6513-4ba6-9d3a-b34600ba6f34",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_f69a6d8f-d703-49cf-9da7-b34700839cae",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_dfb98470-ada0-463e-9c41-b1e300cba127",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_c8b8a8d1-6e4e-45aa-9dc4-b1d301238290",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_01913573-0a7a-4fdb-bcdb-b1a3008d199d",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_11e7ba5a-0ada-4780-b250-b1a30098565d",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_4a698f87-388c-4e87-a9c2-b35f00b478cf",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_0074fde5-eba4-42a7-b226-b35f00c6be2c",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_5faa984d-d76e-4462-94a8-b35f00dfccb3",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_2c2cbc41-5e08-4632-a907-b366014f267e",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_1dba66ba-84e0-434c-81d5-b3660165409c",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_5ba76e8d-6421-4861-8883-b1a400ba9ccd",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_d5bf4d12-bb2d-4787-a923-b1a400c0ec8a",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_f05d844b-c2c0-4acc-ae37-b1a8008b06bd",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_4e7d90eb-226a-4678-aade-b1a8008f85bf",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_862d36b0-e512-4b45-aa5c-b37f0125fd68",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_0c1d61e1-5788-4c94-8c3e-b1a400d76e9a",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_1bad9dbd-7c6f-4309-ba52-b1a400e4f565",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_281aef18-7f56-48b2-803b-b3890162e755",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_ead91896-cf78-4d53-a88a-b1a80081e11b",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_c7202c34-2dfb-48cc-8f4d-b39500b2cd9e",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_f5b07ec0-02dd-47ff-9ab6-b39e017157d0",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_0e1a9ca1-13c0-41d7-a774-b39e01715e4a",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_72399841-43f1-4e1b-999c-b10a016e41d4",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_2e97ed4e-c381-496d-a1dd-b10b0155c62b",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_06d68daf-238e-46ce-bc82-acd10160f141",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_25f87b63-5ecb-42d2-8386-b28c016b2c3f",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_bec7eb89-fb15-480c-87ca-b28f014f1971",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_088298c4-fe8b-4f1b-81ed-b28f0152aeb0",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_a4070dbb-3a80-4fb3-841e-b29f0174dcae",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_2da3eec0-a094-417b-9200-ace001763a64",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_b8c36f0d-6656-4969-88ae-b1350151c84f",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "restitem_pan_43660_dfee0c49-93c7-4d20-a1a7-ace7015fa08f",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_sync_review_back",
+        "text": "Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_sync_selected",
+        "text": "Sync & Download 3 recordings",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [
+      {
+        "key": "cat_new_43660",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nNew Files"
+      },
+      {
+        "key": "cat_ignored_43660",
+        "open": true,
+        "label": "keyboard_arrow_down\n\nIgnored Files"
+      }
+    ],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n3\nNew files\n0\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPANOPTO (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n3 files pending sync\n217 files up to date\nkeyboard_arrow_down\n\nNew Files\n\nPanopto Recordings\n\nForelæsningsvideo (1) Motivationsfaktorer i organisationer 1 TXT SRT\n\nForelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 TXT SRT\n\nForelæsningsvideo (1): Forandringsledelse TXT SRT\n\nkeyboard_arrow_down\n\nIgnored Files\n\nRestore All Ignored Files\n\nThese files are safely ignored and will not be synced.\n\nPanopto Recordings\nForelæsningsvideo (1): formelle træk - mål og strategi i organisationer\nTXT\nSRT\nForelæsningsvideo (2): formelle træk - mål og strategi i organisationer\nTXT\nSRT\nForelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37\nTXT\nSRT\nForelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37\nTXT\nSRT\nForelæsningsvideo (1): formelle træk - organisationsformer\nTXT\nSRT\nForelæsningsvideo (2): formelle træk - organisationsformer\nTXT\nSRT\nForelæsningsvideo (1): Uformelletræk_organisationskultur\nTXT\nSRT\nForelæsningsvideo (2): Uformelletræk_organisationskultur\nTXT\nSRT\nVideo med respons på feedback og introduktion til et nyt initiativ i undervisningen\nTXT\nSRT\nForelæsningsvideo 1 om Sensemaking\nTXT\nSRT\nForelæsningsvideo 2 om Sensemaking\nTXT\nSRT\nForelæsningsvideo (1): uformelle træk - magt i organisationer\nTXT\nSRT\nForelæsningsvideo (2): uformelle træk - magt i organisationer\nTXT\nSRT\nForelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025\nTXT\nSRT\nForelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025\nTXT\nSRT\nOmgivelser Opsamling Thursday, 23 October 2025 at 19.50.09\nTXT\nSRT\nForelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025\nTXT\nSRT\nForelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025\nTXT\nSRT\nForelæsningsvideo (2) Motivationsfaktorer i organisationer 2\nTXT\nSRT\nForelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025\nTXT\nSRT\nForelæsningsvideo (2): Forandringsledelse\nTXT\nSRT\nForelæsningsvideo 1 Ledelse i organisationer 1\nTXT\nSRT\nForelæsningsvideo 2 Ledelse i organisationer 2\nTXT\nSRT\nForelæsningsvideo (1): organisationsprojekt - vidensproduktion\nTXT\nSRT\nForelæsningsvideo (2): organisationsprojekt - vidensproduktion\nTXT\nSRT\nForelæsningsvideo (1): organisationsprojekt - problemformulering\nTXT\nSRT\nForelæsningsvideo (2): organisationsprojekt - problemformulering\nTXT\nSRT\nForelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign\nTXT\nSRT\nForelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker\nTXT\nSRT\nForelæsningsvideo (1): organisationsprojekt - operationalisering\nTXT\nSRT\nForelæsningsvideo (2): organisationsprojekt - akademisk argumentation\nTXT\nSRT\nForelæsningsvideo (1): organisationsprojekt - klargøring af data\nTXT\nSRT\nForelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data\nTXT\nSRT\n\nGo back\n\nSync & Download 3 recordings",
+    "textLen": 3386
+  },
+  "review": {
+    "courses": [
+      {
+        "course_id": "43660",
+        "categories": {
+          "new": {
+            "label": "keyboard_arrow_down\n\nNew Files",
+            "badge": "  (3 / 3 selected)",
+            "open": true,
+            "rowCount": 3,
+            "rows": [
+              {
+                "rowKey": "sync_row_pannew_43660_0d78cddd-c122-444c-a358-b389015d0350",
+                "checked": true,
+                "name": "Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 SRT",
+                "stem": "Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 TXT SRT"
+              },
+              {
+                "rowKey": "sync_row_pannew_43660_914641ae-c022-43b3-aabd-b1a80085fb1c",
+                "checked": true,
+                "name": "Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 SRT",
+                "stem": "Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 TXT SRT"
+              },
+              {
+                "rowKey": "sync_row_pannew_43660_04652c96-a5cc-46ac-a087-b395008824e1",
+                "checked": true,
+                "name": "Forelæsningsvideo (1): Forandringsledelse SRT",
+                "stem": "Forelæsningsvideo (1): Forandringsledelse SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): Forandringsledelse TXT SRT"
+              }
+            ]
+          },
+          "ignored": {
+            "label": "keyboard_arrow_down\n\nIgnored Files",
+            "badge": "",
+            "open": true,
+            "rowCount": 33,
+            "rows": [
+              {
+                "rowKey": "ign_restore_row_43660_pan_b58f9a14-6513-4ba6-9d3a-b34600ba6f34",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer SRT",
+                "stem": "Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_f69a6d8f-d703-49cf-9da7-b34700839cae",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer SRT",
+                "stem": "Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_dfb98470-ada0-463e-9c41-b1e300cba127",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 SRT",
+                "stem": "Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_c8b8a8d1-6e4e-45aa-9dc4-b1d301238290",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 SRT",
+                "stem": "Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_01913573-0a7a-4fdb-bcdb-b1a3008d199d",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): formelle træk - organisationsformer SRT",
+                "stem": "Forelæsningsvideo (1): formelle træk - organisationsformer SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): formelle træk - organisationsformer TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_11e7ba5a-0ada-4780-b250-b1a30098565d",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): formelle træk - organisationsformer SRT",
+                "stem": "Forelæsningsvideo (2): formelle træk - organisationsformer SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): formelle træk - organisationsformer TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_4a698f87-388c-4e87-a9c2-b35f00b478cf",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): Uformelletræk_organisationskultur SRT",
+                "stem": "Forelæsningsvideo (1): Uformelletræk_organisationskultur SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): Uformelletræk_organisationskultur TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_0074fde5-eba4-42a7-b226-b35f00c6be2c",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): Uformelletræk_organisationskultur SRT",
+                "stem": "Forelæsningsvideo (2): Uformelletræk_organisationskultur SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): Uformelletræk_organisationskultur TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_5faa984d-d76e-4462-94a8-b35f00dfccb3",
+                "checked": null,
+                "name": "Video med respons på feedback og introduktion til et nyt initiativ i undervisningen SRT",
+                "stem": "Video med respons på feedback og introduktion til et nyt initiativ i undervisningen SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Video med respons på feedback og introduktion til et nyt initiativ i undervisningen TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_2c2cbc41-5e08-4632-a907-b366014f267e",
+                "checked": null,
+                "name": "Forelæsningsvideo 1 om Sensemaking SRT",
+                "stem": "Forelæsningsvideo 1 om Sensemaking SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo 1 om Sensemaking TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_1dba66ba-84e0-434c-81d5-b3660165409c",
+                "checked": null,
+                "name": "Forelæsningsvideo 2 om Sensemaking SRT",
+                "stem": "Forelæsningsvideo 2 om Sensemaking SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo 2 om Sensemaking TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_5ba76e8d-6421-4861-8883-b1a400ba9ccd",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): uformelle træk - magt i organisationer SRT",
+                "stem": "Forelæsningsvideo (1): uformelle træk - magt i organisationer SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): uformelle træk - magt i organisationer TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_d5bf4d12-bb2d-4787-a923-b1a400c0ec8a",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): uformelle træk - magt i organisationer SRT",
+                "stem": "Forelæsningsvideo (2): uformelle træk - magt i organisationer SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): uformelle træk - magt i organisationer TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_f05d844b-c2c0-4acc-ae37-b1a8008b06bd",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 SRT",
+                "stem": "Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_4e7d90eb-226a-4678-aade-b1a8008f85bf",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 SRT",
+                "stem": "Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_862d36b0-e512-4b45-aa5c-b37f0125fd68",
+                "checked": null,
+                "name": "Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 SRT",
+                "stem": "Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_0c1d61e1-5788-4c94-8c3e-b1a400d76e9a",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 SRT",
+                "stem": "Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_1bad9dbd-7c6f-4309-ba52-b1a400e4f565",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 SRT",
+                "stem": "Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_281aef18-7f56-48b2-803b-b3890162e755",
+                "checked": null,
+                "name": "Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 SRT",
+                "stem": "Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_ead91896-cf78-4d53-a88a-b1a80081e11b",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 SRT",
+                "stem": "Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_c7202c34-2dfb-48cc-8f4d-b39500b2cd9e",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): Forandringsledelse SRT",
+                "stem": "Forelæsningsvideo (2): Forandringsledelse SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): Forandringsledelse TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_f5b07ec0-02dd-47ff-9ab6-b39e017157d0",
+                "checked": null,
+                "name": "Forelæsningsvideo 1 Ledelse i organisationer 1 SRT",
+                "stem": "Forelæsningsvideo 1 Ledelse i organisationer 1 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo 1 Ledelse i organisationer 1 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_0e1a9ca1-13c0-41d7-a774-b39e01715e4a",
+                "checked": null,
+                "name": "Forelæsningsvideo 2 Ledelse i organisationer 2 SRT",
+                "stem": "Forelæsningsvideo 2 Ledelse i organisationer 2 SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo 2 Ledelse i organisationer 2 TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_72399841-43f1-4e1b-999c-b10a016e41d4",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): organisationsprojekt - vidensproduktion SRT",
+                "stem": "Forelæsningsvideo (1): organisationsprojekt - vidensproduktion SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): organisationsprojekt - vidensproduktion TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_2e97ed4e-c381-496d-a1dd-b10b0155c62b",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): organisationsprojekt - vidensproduktion SRT",
+                "stem": "Forelæsningsvideo (2): organisationsprojekt - vidensproduktion SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): organisationsprojekt - vidensproduktion TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_06d68daf-238e-46ce-bc82-acd10160f141",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): organisationsprojekt - problemformulering SRT",
+                "stem": "Forelæsningsvideo (1): organisationsprojekt - problemformulering SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): organisationsprojekt - problemformulering TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_25f87b63-5ecb-42d2-8386-b28c016b2c3f",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): organisationsprojekt - problemformulering SRT",
+                "stem": "Forelæsningsvideo (2): organisationsprojekt - problemformulering SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): organisationsprojekt - problemformulering TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_bec7eb89-fb15-480c-87ca-b28f014f1971",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign SRT",
+                "stem": "Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_088298c4-fe8b-4f1b-81ed-b28f0152aeb0",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker SRT",
+                "stem": "Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_a4070dbb-3a80-4fb3-841e-b29f0174dcae",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): organisationsprojekt - operationalisering SRT",
+                "stem": "Forelæsningsvideo (1): organisationsprojekt - operationalisering SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): organisationsprojekt - operationalisering TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_2da3eec0-a094-417b-9200-ace001763a64",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation SRT",
+                "stem": "Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_b8c36f0d-6656-4969-88ae-b1350151c84f",
+                "checked": null,
+                "name": "Forelæsningsvideo (1): organisationsprojekt - klargøring af data SRT",
+                "stem": "Forelæsningsvideo (1): organisationsprojekt - klargøring af data SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (1): organisationsprojekt - klargøring af data TXT SRT"
+              },
+              {
+                "rowKey": "ign_restore_row_43660_pan_dfee0c49-93c7-4d20-a1a7-ace7015fa08f",
+                "checked": null,
+                "name": "Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data SRT",
+                "stem": "Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data SRT",
+                "ext": "txt",
+                "lookalike": false,
+                "text": "Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data TXT SRT"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "summaryCards": [],
+    "seen": {
+      "categoryContainers": 2,
+      "syncRows": 3,
+      "ignoredRows": 33,
+      "expanders": 2
+    },
+    "pageText": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nReview Changes\nHelp\nSelect the files you want to sync, and ignore the ones you don't need.\n3\nNew files\n0\nUpdates available\n0\nEdited locally\n0\nDeleted locally\n0\nDeleted on Canvas\nSmart Select\nBy filetype\n\nPANOPTO (all)\n\nSelect All\n\nDeselect All\n\n1.\nIndføring i organisationers opbygning og funktion (LA)\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n3 files pending sync\n217 files up to date\nkeyboard_arrow_down\n\nNew Files\n\nPanopto Recordings\n\nForelæsningsvideo (1) Motivationsfaktorer i organisationer 1 TXT SRT\n\nForelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 TXT SRT\n\nForelæsningsvideo (1): Forandringsledelse TXT SRT\n\nkeyboard_arrow_down\n\nIgnored Files\n\nRestore All Ignored Files\n\nThese files are safely ignored and will not be synced.\n\nPanopto Recordings\nForelæsningsvideo (1): formelle træk - mål og strategi i organisationer\nTXT\nSRT\nForelæsningsvideo (2): formelle træk - mål og strategi i organisationer\nTXT\nSRT\nForelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37\nTXT\nSRT\nForelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37\nTXT\nSRT\nForelæsningsvideo (1): formelle træk - organisationsformer\nTXT\nSRT\nForelæsningsvideo (2): formelle træk - organisationsformer\nTXT\nSRT\nForelæsningsvideo (1): Uformelletræk_organisationskultur\nTXT\nSRT\nForelæsningsvideo (2): Uformelletræk_organisationskultur\nTXT\nSRT\nVideo med respons på feedback og introduktion til et nyt initiativ i undervisningen\nTXT\nSRT\nForelæsningsvideo 1 om Sensemaking\nTXT\nSRT\nForelæsningsvideo 2 om Sensemaking\nTXT\nSRT\nForelæsningsvideo (1): uformelle træk - magt i organisationer\nTXT\nSRT\nForelæsningsvideo (2): uformelle træk - magt i organisationer\nTXT\nSRT\nForelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025\nTXT\nSRT\nForelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025\nTXT\nSRT\nOmgivelser Opsamling Thursday, 23 October 2025 at 19.50.09\nTXT\nSRT\nForelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025\nTXT\nSRT\nForelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025\nTXT\nSRT\nForelæsningsvideo (2) Motivationsfaktorer i organisationer 2\nTXT\nSRT\nForelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025\nTXT\nSRT\nForelæsningsvideo (2): Forandringsledelse\nTXT\nSRT\nForelæsningsvideo 1 Ledelse i organisationer 1\nTXT\nSRT\nForelæsningsvideo 2 Ledelse i organisationer 2\nTXT\nSRT\nForelæsningsvideo (1): organisationsprojekt - vidensproduktion\nTXT\nSRT\nForelæsningsvideo (2): organisationsprojekt - vidensproduktion\nTXT\nSRT\nForelæsningsvideo (1): organisationsprojekt - problemformulering\nTXT\nSRT\nForelæsningsvideo (2): organisationsprojekt - problemformulering\nTXT\nSRT\nForelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign\nTXT\nSRT\nForelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker\nTXT\nSRT\nForelæsningsvideo (1): organisationsprojekt - operationalisering\nTXT\nSRT\nForelæsningsvideo (2): organisationsprojekt - akademisk argumentation\nTXT\nSRT\nForelæsningsvideo (1): organisationsprojekt - klargøring af data\nTXT\nSRT\nForelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data\nTXT\nSRT\n\nGo back\n\nSync & Download 3 recordings"
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "done",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "active",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "idle",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

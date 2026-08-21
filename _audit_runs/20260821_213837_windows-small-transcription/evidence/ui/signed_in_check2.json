@@ -1,0 +1,27 @@
+{
+  "name": "signed_in_check2",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\\evidence\\screenshots\\signed_in_check2.png",
+  "captured": "2026-08-21 21:47:15",
+  "screen": {
+    "url": "about:blank",
+    "mode": "",
+    "step": "",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [],
+    "buttons": [],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "",
+    "textLen": 0
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": true
+  }
+}

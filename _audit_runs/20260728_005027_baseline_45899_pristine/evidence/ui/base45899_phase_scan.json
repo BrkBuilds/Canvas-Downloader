@@ -1,0 +1,120 @@
+{
+  "name": "base45899_phase_scan",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_005027_baseline_45899_pristine\\evidence\\screenshots\\base45899_phase_scan.png",
+  "captured": "2026-07-28 00:51:08",
+  "screen": {
+    "url": "http://127.0.0.1:8792/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Analyzing...",
+      "Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_active_idlesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_idle_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cancel_download_btn",
+        "text": "Cancel Analysis",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nAnalyzing...\n\nANALYZING COURSE\n\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n100%\nCOURSES\n0 / 1\nITEMS FOUND\n0\nSIZE\n0.0 MB\nTIME REMAINING\n~00:02\nANALYZING\nScanning module: Uge 20 Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse\n\nCancel Analysis",
+    "textLen": 382
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "active",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "idle",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": true,
+    "header": "Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "COURSES | 0 / 1 | ITEMS FOUND | 0 | SIZE | 0.0 MB | TIME REMAINING | ~00:02",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": "ANALYZING COURSE\n\nProgrammering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)\n100%\nCOURSES\n0 / 1\nITEMS FOUND\n0\nSIZE\n0.0 MB\nTIME REMAINING\n~00:02\nANALYZING\nScanning module: Uge 20 Spørgetime. Kursustilbageblik, mundtlig eksamen, eksamensforberedelse"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

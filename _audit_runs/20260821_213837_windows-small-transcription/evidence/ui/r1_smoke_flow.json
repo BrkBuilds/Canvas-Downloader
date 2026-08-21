@@ -1,0 +1,203 @@
+{
+  "name": "r1_smoke",
+  "course_ids": [
+    43667
+  ],
+  "config": {
+    "mode": "modules",
+    "file_filter": "all",
+    "secondary_isolated": false,
+    "dl_assignments": true,
+    "dl_announcements": true,
+    "dl_syllabus": true,
+    "convert_urls": true
+  },
+  "select": {
+    "courses": [
+      43667
+    ],
+    "results": [
+      {
+        "course_id": 43667,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "all",
+      "mode": "modules",
+      "dl_assignments": true,
+      "dl_syllabus": true,
+      "dl_announcements": true,
+      "secondary_isolated": false,
+      "convert_urls": true
+    },
+    "failed": [],
+    "verified": {
+      "convert_urls": true,
+      "dl_assignments": true,
+      "dl_syllabus": true,
+      "dl_announcements": true
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "r1_smoke_config",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\\evidence\\screenshots\\r1_smoke_config.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\\evidence\\ui\\r1_smoke_config.json",
+    "textLen": 1308,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "r1_smoke",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n1\nFILE DOWNLOADED\n0\nMB DOWNLOADED\nFolders Updated\nBINT 1st semester (LA E25 BINTS1SEMU)\n1 FILE\nURL\n1\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 0.0
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "captures": [
+      "r1_smoke_phase_scan",
+      "r1_smoke_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "21:48:50",
+      "action": "select_courses",
+      "courses": [
+        43667
+      ],
+      "results": [
+        {
+          "course_id": 43667,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "21:48:51",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "21:48:53",
+      "action": "expand_card",
+      "card": "toggle_card2",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "21:48:54",
+      "action": "set_toggle",
+      "key": "btn_dl_assignments",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "21:48:55",
+      "action": "set_toggle",
+      "key": "btn_dl_syllabus",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "21:48:55",
+      "action": "set_toggle",
+      "key": "btn_dl_announcements",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "21:48:57",
+      "action": "expand_card",
+      "card": "toggle_card3",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "21:48:58",
+      "action": "set_toggle",
+      "key": "btn_convert_urls",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "21:48:58",
+      "action": "configure",
+      "applied": {
+        "file_filter": "all",
+        "mode": "modules",
+        "dl_assignments": true,
+        "dl_syllabus": true,
+        "dl_announcements": true,
+        "secondary_isolated": false,
+        "convert_urls": true
+      },
+      "failed": [],
+      "verified": {
+        "convert_urls": true,
+        "dl_assignments": true,
+        "dl_syllabus": true,
+        "dl_announcements": true
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "21:49:05",
+      "action": "confirm_and_run",
+      "name": "r1_smoke",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n1\nFILE DOWNLOADED\n0\nMB DOWNLOADED\nFolders Updated\nBINT 1st semester (LA E25 BINTS1SEMU)\n1 FILE\nURL\n1\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 0.0
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "captures": [
+        "r1_smoke_phase_scan",
+        "r1_smoke_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

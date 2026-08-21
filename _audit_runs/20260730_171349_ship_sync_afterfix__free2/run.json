@@ -1,0 +1,12 @@
+{
+  "run_id": "20260730_171349_ship_sync_afterfix__free2",
+  "label": "lane:free2",
+  "parent": "20260730_171349_ship_sync_afterfix",
+  "lane": "free2",
+  "created": "2026-07-30T17:13:58",
+  "app": {},
+  "ports_used": [
+    8910
+  ],
+  "browser": {}
+}

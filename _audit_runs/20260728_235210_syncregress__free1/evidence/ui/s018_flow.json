@@ -1,0 +1,101 @@
+{
+  "name": "s018",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "sync",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 3,
+        "id": "sync",
+        "state": "active"
+      },
+      "dash": true,
+      "exceptions": 0,
+      "head": "Syncing...",
+      "tail": "...\n\nPOST-PROCESSING\n\nConverting Code/Data files to .TXT\n0%\nCONVERTED\n0 / 3\nTYPE\nCode/Data → TXT\nTIME REMAINING\n~00:01\nCONVERTING 3 CODE & DATA FILES TO TXT\nAssignment Godkendelsesopgave 7 - G7-Assignment.pdf\nAnnouncement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf\nDebug - shop - 1.txt\ngk2 vejl_løsn.js\nSQL Opgave Vejl.sql\nDebug - Inventory - 1.txt\ng1 darts vejl_løsn.js\n\nCancel Post-Processing",
+      "waited_s": 27.2
+    },
+    "capture": "s018_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": " shop - 1.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\n Updates Overwritten (2)\nYour unedited local copies were replaced with the newer versions\nSQL Opgave Vejl_sql.txt\n\n​\n\n​\n\nUge 12 Forelæsning 17. Database 3 Join og set operatorer\nDebug - Inventory - 1.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 5.0
+    },
+    "capture": "s018_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "00:03:01",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "00:03:33",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "sync",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 3,
+          "id": "sync",
+          "state": "active"
+        },
+        "dash": true,
+        "exceptions": 0,
+        "head": "Syncing...",
+        "tail": "...\n\nPOST-PROCESSING\n\nConverting Code/Data files to .TXT\n0%\nCONVERTED\n0 / 3\nTYPE\nCode/Data → TXT\nTIME REMAINING\n~00:01\nCONVERTING 3 CODE & DATA FILES TO TXT\nAssignment Godkendelsesopgave 7 - G7-Assignment.pdf\nAnnouncement 2026-04-14 - G7 er på Canvas - G7-Assignment.pdf\nDebug - shop - 1.txt\ngk2 vejl_løsn.js\nSQL Opgave Vejl.sql\nDebug - Inventory - 1.txt\ng1 darts vejl_løsn.js\n\nCancel Post-Processing",
+        "waited_s": 27.2
+      },
+      "capture": "s018_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "00:03:39",
+      "action": "wait_terminal",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": " shop - 1.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\n Updates Overwritten (2)\nYour unedited local copies were replaced with the newer versions\nSQL Opgave Vejl_sql.txt\n\n​\n\n​\n\nUge 12 Forelæsning 17. Database 3 Join og set operatorer\nDebug - Inventory - 1.txt\n\n​\n\n​\n\nUge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 5.0
+      },
+      "capture": "s018_complete",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "rows": [
+    {
+      "id": "s000",
+      "ok": false,
+      "error": "FlowError: Review screen's sync action not clickable: {'clicked': False, 'key': 'btn_sync_selected', 'found': False, 'reason': 'no host for key btn_sync_selected'}",
+      "traceback": "Traceback (most recent call last):\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 511, in run_lane\n    res = execute(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 557, in execute\n    return _execute_sync(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 703, in _execute_sync\n    res[\"confirm\"] = f.confirm(job.name)\n                     ~~~~~~~~~^^^^^^^^^^\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\flows.py\", line 502, in confirm\n    raise FlowError(f\"Review screen's sync action not clickable: {r}\")\ntests.audit.harness.flows.FlowError: Review screen's sync action not clickable: {'clicked': False, 'key': 'btn_sync_selected', 'found': False, 'reason': 'no host for key btn_sync_selected'}\n",
+      "seconds": 20.1
+    },
+    {
+      "ok": true,
+      "kind": "sync",
+      "course_id": 43657,
+      "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_205201_syncsmoke2__free1\\downloads\\Introduction to Information Systems (LA E25 BINTO1078U)",
+      "landed_on": "review",
+      "harvest": {
+        "kept": [
+          ".canvas_sync.db",
+          "debug_log.txt"
+        ],
+        "removed": true,
+        "evidence": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_205201_syncsmoke2__free1\\evidence\\rows\\s005"
+      },
+      "findings": 2,
+      "severities": {
+        "high": 1,
+        "info": 1
+      },
+      "id": "s005",
+      "seconds": 44.7
+    }
+  ],
+  "current": "",
+  "updated": "2026-07-28T20:53:25"
+}

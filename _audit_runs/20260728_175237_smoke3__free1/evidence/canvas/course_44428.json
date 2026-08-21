@@ -1,0 +1,728 @@
+{
+  "course_id": 44428,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "Introduction to Information Systems (XB E25 BINTO1078U)",
+  "course_code": "BINTO1078U.XB_E25 (Introduction to Information Systems)",
+  "fetched_at": "2026-07-28T17:53:39",
+  "folders": {
+    "382169": {
+      "id": 382169,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {
+    "1628929": {
+      "id": 1628929,
+      "filename": "01_Exercise+%281%29.pdf",
+      "display_name": "01_Exercise (1).pdf",
+      "size": 836240,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-06T16:19:59Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1625441": {
+      "id": 1625441,
+      "filename": "01_Exercise_vShared.pdf",
+      "display_name": "01_Exercise_vShared.pdf",
+      "size": 706744,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-02T15:25:18Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1632521": {
+      "id": 1632521,
+      "filename": "02_Exercise.pdf",
+      "display_name": "02_Exercise.pdf",
+      "size": 791148,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-12T07:46:18Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1639325": {
+      "id": 1639325,
+      "filename": "03_Exercise.pdf",
+      "display_name": "03_Exercise.pdf",
+      "size": 1042948,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-18T19:07:54Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1652670": {
+      "id": 1652670,
+      "filename": "04_Exercise.pptx",
+      "display_name": "04_Exercise.pptx",
+      "size": 3695853,
+      "content_type": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "updated_at": "2025-09-26T06:37:23Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1657204": {
+      "id": 1657204,
+      "filename": "05_Exercise_vLecture.pdf",
+      "display_name": "05_Exercise_vLecture.pdf",
+      "size": 690488,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-05T13:50:05Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1657203": {
+      "id": 1657203,
+      "filename": "05_Exercise_vShared.pdf",
+      "display_name": "05_Exercise_vShared.pdf",
+      "size": 588787,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-03T06:14:50Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1669797": {
+      "id": 1669797,
+      "filename": "06_Exercise_withAnswers.pdf",
+      "display_name": "06_Exercise_withAnswers.pdf",
+      "size": 1430850,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-21T17:51:16Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1669798": {
+      "id": 1669798,
+      "filename": "06_Exercise.pdf",
+      "display_name": "06_Exercise.pdf",
+      "size": 1566115,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-09T22:56:36Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1674582": {
+      "id": 1674582,
+      "filename": "07_Exercise.pdf",
+      "display_name": "07_Exercise.pdf",
+      "size": 604164,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-21T15:42:50Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1685283": {
+      "id": 1685283,
+      "filename": "08_Exercise_Answer.pdf",
+      "display_name": "08_Exercise_Answer.pdf",
+      "size": 863477,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-02T15:25:35Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1683969": {
+      "id": 1683969,
+      "filename": "08_Exercise.pdf",
+      "display_name": "08_Exercise.pdf",
+      "size": 649172,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-30T19:39:54Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1689336": {
+      "id": 1689336,
+      "filename": "09_Exercise.pdf",
+      "display_name": "09_Exercise.pdf",
+      "size": 597783,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-06T17:52:56Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1689839": {
+      "id": 1689839,
+      "filename": "09_ExerciseSolution.pdf",
+      "display_name": "09_ExerciseSolution.pdf",
+      "size": 769604,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-07T16:11:20Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1637104": {
+      "id": 1637104,
+      "filename": "Compulsory+Assignment_Fall+2025.pdf",
+      "display_name": "Compulsory Assignment_Fall 2025.pdf",
+      "size": 123830,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-16T16:23:53Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1634823": {
+      "id": 1634823,
+      "filename": "Exercise+2+Case+-+with+model+answers.pdf",
+      "display_name": "Exercise 2 Case - with model answers.pdf",
+      "size": 95340,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-13T12:17:03Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1653978": {
+      "id": 1653978,
+      "filename": "Exercise5_SQL.sec",
+      "display_name": "Exercise5_SQL.sec",
+      "size": 24576,
+      "content_type": "application/x-sqlite3",
+      "updated_at": "2025-10-03T06:13:53Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1653360": {
+      "id": 1653360,
+      "filename": "Group+Assignment+Example.pdf",
+      "display_name": "Group Assignment Example.pdf",
+      "size": 2466662,
+      "content_type": "application/pdf",
+      "updated_at": "2025-09-30T21:09:59Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1698199": {
+      "id": 1698199,
+      "filename": "Introduction+to+Information+Systems_Exam_with+solutions.pdf",
+      "display_name": "Introduction to Information Systems_Exam_with solutions.pdf",
+      "size": 647872,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-27T08:30:49Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1698198": {
+      "id": 1698198,
+      "filename": "Introduction+to+Information+Systems_Retake_with+solutions.pdf",
+      "display_name": "Introduction to Information Systems_Retake_with solutions.pdf",
+      "size": 430711,
+      "content_type": "application/pdf",
+      "updated_at": "2025-11-22T17:35:15Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    },
+    "1674581": {
+      "id": 1674581,
+      "filename": "Teaching+Case_+Design+and+Development+of+a+Special+Population+Res.pdf",
+      "display_name": "Teaching Case_ Design and Development of a Special Population Res.pdf",
+      "size": 446893,
+      "content_type": "application/pdf",
+      "updated_at": "2025-10-21T17:49:58Z",
+      "folder_id": 382169,
+      "md5": null,
+      "hidden": false,
+      "locked": false,
+      "locked_for_user": false,
+      "has_url": true,
+      "folder_path": "course files"
+    }
+  },
+  "modules": [
+    {
+      "id": 300888,
+      "name": "Course description including examination rules",
+      "position": 1,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1029834,
+          "type": "ExternalUrl",
+          "title": "Course description including examination rules",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO1078U.aspx",
+          "published": null
+        },
+        {
+          "id": 1100239,
+          "type": "File",
+          "title": "Compulsory Assignment_Fall 2025.pdf",
+          "content_id": 1637104,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 313288,
+      "name": "Exercise 1",
+      "position": 2,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1091775,
+          "type": "File",
+          "title": "01_Exercise_vShared.pdf",
+          "content_id": 1625441,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1094384,
+          "type": "File",
+          "title": "01_Exercise_with solutions",
+          "content_id": 1628929,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 314336,
+      "name": "Exercise 2",
+      "position": 3,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1096962,
+          "type": "File",
+          "title": "02_Exercise.pdf",
+          "content_id": 1632521,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1098551,
+          "type": "File",
+          "title": "02_Exercise_case - with model answers.pdf",
+          "content_id": 1634823,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 315217,
+      "name": "Exercise 3",
+      "position": 4,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1101395,
+          "type": "File",
+          "title": "03_Exercise.pdf",
+          "content_id": 1639325,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1105239,
+          "type": "File",
+          "title": "Group Assignment Example.pdf",
+          "content_id": 1653360,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 315787,
+      "name": "Exercise 4",
+      "position": 5,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1104973,
+          "type": "File",
+          "title": "04_Exercise.pptx",
+          "content_id": 1652670,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 315886,
+      "name": "Exercise 5",
+      "position": 6,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1105535,
+          "type": "File",
+          "title": "Exercise5_SQL.sec",
+          "content_id": 1653978,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1107040,
+          "type": "File",
+          "title": "05_Exercise_vShared.pdf",
+          "content_id": 1657203,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1107041,
+          "type": "File",
+          "title": "05_Exercise_vLecture.pdf",
+          "content_id": 1657204,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 316531,
+      "name": "Exercise 6",
+      "position": 7,
+      "published": null,
+      "item_count": 3,
+      "items": [
+        {
+          "id": 1113345,
+          "type": "File",
+          "title": "06_Exercise_withAnswers.pdf",
+          "content_id": 1669797,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1113346,
+          "type": "File",
+          "title": "06_Exercise.pdf",
+          "content_id": 1669798,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1109758,
+          "type": "Quiz",
+          "title": "Midterm course evaluation",
+          "content_id": 110784,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 317416,
+      "name": "Exercise 7",
+      "position": 8,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1115606,
+          "type": "File",
+          "title": "07_Exercise.pdf",
+          "content_id": 1674582,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1115605,
+          "type": "File",
+          "title": "Teaching Case_ Design and Development of a Special Population Res.pdf",
+          "content_id": 1674581,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 318051,
+      "name": "Exercise 8",
+      "position": 9,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1120375,
+          "type": "File",
+          "title": "08_Exercise.pdf",
+          "content_id": 1683969,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1121293,
+          "type": "File",
+          "title": "08_Exercise_Answer.pdf",
+          "content_id": 1685283,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 318413,
+      "name": "Exercise 9",
+      "position": 10,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1123514,
+          "type": "File",
+          "title": "09_Exercise.pdf",
+          "content_id": 1689336,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1123678,
+          "type": "File",
+          "title": "09_ExerciseSolution.pdf",
+          "content_id": 1689839,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    },
+    {
+      "id": 318916,
+      "name": "Last Year Exams",
+      "position": 11,
+      "published": null,
+      "item_count": 2,
+      "items": [
+        {
+          "id": 1128296,
+          "type": "File",
+          "title": "Introduction to Information Systems_Retake_with solutions.pdf",
+          "content_id": 1698198,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        },
+        {
+          "id": 1128297,
+          "type": "File",
+          "title": "Introduction to Information Systems_Exam_with solutions.pdf",
+          "content_id": 1698199,
+          "page_url": null,
+          "external_url": null,
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "ExternalUrl": 1,
+    "File": 21,
+    "Quiz": 1
+  },
+  "module_file_ids": [
+    1625441,
+    1628929,
+    1632521,
+    1634823,
+    1637104,
+    1639325,
+    1652670,
+    1653360,
+    1653978,
+    1657203,
+    1657204,
+    1669797,
+    1669798,
+    1674581,
+    1674582,
+    1683969,
+    1685283,
+    1689336,
+    1689839,
+    1698198,
+    1698199
+  ],
+  "only_in_modules": [],
+  "only_in_files_tab": [],
+  "files_tab_restricted": false,
+  "assignments": [],
+  "quizzes": [
+    {
+      "id": 110784,
+      "title": "Midterm course evaluation"
+    }
+  ],
+  "announcements": [],
+  "discussions": [],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_by_source": {
+    "announcement": [],
+    "assignment": [],
+    "discussion": [],
+    "syllabus": []
+  },
+  "inline_file_ids": [],
+  "embedded_only_file_ids": [],
+  "inline_only_file_ids": [],
+  "expected_file_ids": [
+    1625441,
+    1628929,
+    1632521,
+    1634823,
+    1637104,
+    1639325,
+    1652670,
+    1653360,
+    1653978,
+    1657203,
+    1657204,
+    1669797,
+    1669798,
+    1674581,
+    1674582,
+    1683969,
+    1685283,
+    1689336,
+    1689839,
+    1698198,
+    1698199
+  ],
+  "secondary_counts": {
+    "assignment": 0,
+    "quiz": 1,
+    "discussion": 0,
+    "announcement": 0,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 5.0
+}

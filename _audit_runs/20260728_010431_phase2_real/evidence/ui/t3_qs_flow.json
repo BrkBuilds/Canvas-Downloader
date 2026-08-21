@@ -1,0 +1,43 @@
+{
+  "name": "t3_qs",
+  "open": {
+    "capture": "today_open"
+  },
+  "sync": {
+    "terminal": {
+      "done": true,
+      "notice": false,
+      "active": null,
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": " Protected (2)\nSaved next to your copy, which was left untouched\nTrin-for-trin Guide til VS Code og konsollen_NewVersion.pdf\n\n​\n\n​\n\nAndre ressourcer\nOpgavesæt uge 47_NewVersion.pdf\n\n​\n\n​\n\nUge 47 Forelæsning 11. Asynkron programmering og event handling\nSync on demand\nDaily auto-sync runs each morning — trigger a manual Quick Sync any time to bring these courses up to date right now.\n\nQuick Sync now",
+      "waited_s": 0.1
+    },
+    "capture": "t3_qs_after",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "02:21:28",
+      "action": "open_today",
+      "capture": "today_open"
+    },
+    {
+      "t": "02:21:31",
+      "action": "today_quick_sync",
+      "terminal": {
+        "done": true,
+        "notice": false,
+        "active": null,
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": " Protected (2)\nSaved next to your copy, which was left untouched\nTrin-for-trin Guide til VS Code og konsollen_NewVersion.pdf\n\n​\n\n​\n\nAndre ressourcer\nOpgavesæt uge 47_NewVersion.pdf\n\n​\n\n​\n\nUge 47 Forelæsning 11. Asynkron programmering og event handling\nSync on demand\nDaily auto-sync runs each morning — trigger a manual Quick Sync any time to bring these courses up to date right now.\n\nQuick Sync now",
+        "waited_s": 0.1
+      },
+      "capture": "t3_qs_after",
+      "ok": true
+    }
+  ]
+}

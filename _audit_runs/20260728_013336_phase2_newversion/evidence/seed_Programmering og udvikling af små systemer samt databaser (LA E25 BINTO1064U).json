@@ -1,0 +1,178 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_013336_phase2_newversion\\downloads\\Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)",
+  "seeded_at": "2026-07-28T01:36:53",
+  "applied": [
+    {
+      "kind": "readonly_target",
+      "count": 2
+    },
+    {
+      "kind": "edited_update",
+      "count": 2
+    },
+    {
+      "kind": "clean_update",
+      "count": 2
+    },
+    {
+      "kind": "deleted_locally",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 8,
+  "expected_categories": {
+    "updated_clean": 4,
+    "updated_modified": 2,
+    "deleted_locally": 2
+  },
+  "expected_untracked": [
+    "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+    "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt"
+  ],
+  "expected_missing_rows": [
+    "Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt"
+  ],
+  "expected_md5_drift": [
+    "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Create_ILearn_tables_sql.txt",
+    "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/SQL Opgave Vejl_sql.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+    "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 215,
+    "files": 21821
+  },
+  "after": {
+    "rows": 215,
+    "files": 21819
+  },
+  "fixtures": [
+    {
+      "label": "readonly:g1 darts vejl_løsn_js.txt",
+      "kind": "readonly_target",
+      "path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/g1 darts vejl_løsn_js.txt",
+      "match_name": "g1 darts vejl_løsn_js.txt",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1670371,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "readonly:gk2 vejl_løsn_js.txt",
+      "kind": "readonly_target",
+      "path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Obligatoriske afleveringer efterår 2025/gk2 vejl_løsn_js.txt",
+      "match_name": "gk2 vejl_løsn_js.txt",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1598721,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true
+      }
+    },
+    {
+      "label": "edited-update:Debug - shop - 1.txt",
+      "kind": "edited_update",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - shop - 1.txt",
+      "match_name": "Debug - shop - 1.txt",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1700483,
+      "original_path": "",
+      "edited_md5": "2bf9d7c050c6e6a4ae7fe63d197b7774",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:Debug - Inventory - 1.txt",
+      "kind": "edited_update",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - Inventory - 1.txt",
+      "match_name": "Debug - Inventory - 1.txt",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1700478,
+      "original_path": "",
+      "edited_md5": "7fae25a7a4d09d49e9cabbebf77523f8",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "clean-update:SQL Opgave Vejl_sql.txt",
+      "kind": "clean_update",
+      "path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/SQL Opgave Vejl_sql.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/SQL Opgave Vejl_sql.txt",
+      "match_name": "SQL Opgave Vejl_sql.txt",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1794807,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "clean-update:Create_ILearn_tables_sql.txt",
+      "kind": "clean_update",
+      "path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Create_ILearn_tables_sql.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Uge 12 Forelæsning 17. Database 3  Join og set operatorer/Create_ILearn_tables_sql.txt",
+      "match_name": "Create_ILearn_tables_sql.txt",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1789210,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:minefeltVEJL_js.txt",
+      "kind": "deleted_locally",
+      "path": "Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Uge 44 Forelæsning 8. JavaScript og Browseren, HTML 1/minefeltVEJL_js.txt",
+      "match_name": "minefeltVEJL_js.txt",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1685205,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:Debug - grades - 1.txt",
+      "kind": "deleted_locally",
+      "path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt",
+      "match_name": "Debug - grades - 1.txt",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1700471,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}

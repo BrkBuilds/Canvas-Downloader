@@ -1,0 +1,46 @@
+{
+  "run_id": "20260728_010431_phase2_real",
+  "label": "phase2_real",
+  "created": "2026-07-28T01:04:31",
+  "repo_root": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader",
+  "steps": [],
+  "app": {
+    "port": 8793,
+    "pid": 4492,
+    "url": "http://127.0.0.1:8793",
+    "log": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_010431_phase2_real\\streamlit.log",
+    "started": 1785241707.6595583,
+    "verified_owner": true
+  },
+  "ports_used": [
+    8793
+  ],
+  "browser": {
+    "cdp_port": 9333,
+    "pid": 10264,
+    "headed": false
+  },
+  "scope": [
+    {
+      "name": "p2r",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "p2r_second",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    },
+    {
+      "name": "t3_qs",
+      "flow": "today",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
+    }
+  ]
+}

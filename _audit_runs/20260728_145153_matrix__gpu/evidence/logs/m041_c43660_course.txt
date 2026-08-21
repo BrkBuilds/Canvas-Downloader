@@ -1,0 +1,645 @@
+--- Download: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) (ID: 43660) Mode: flat ---
+==================================================
+[2026-07-28 21:54:01.208] Save Dir: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads
+[2026-07-28 21:54:01.208] Filter: all | Concurrency: 10 | Max file size: 5 MB | Estimated payload: 2196 MB
+[2026-07-28 21:54:01.208] Canvas Content: [assignments] | isolate=no
+[2026-07-28 21:54:01.208] Post-processing: [zip, html, word]
+[2026-07-28 21:54:01.209] Starting Flat Download for Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+[2026-07-28 21:54:03.314] Skipping 2024_Lektion uge 47_2 Organisationer i et foranderligt perspektiv - Beslutninger - 2_upload.pptx: 448.5 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.315] Skipping 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx: 8.8 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.316] Skipping Børnemøbler_ny version.pdf: 7.5 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.316] Skipping COLOURBOX53981090-1.jpg: 12.0 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.316] Skipping COLOURBOX53981090.jpg: 12.0 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.317] Skipping culture.experiences.pdf: 31.2 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.318] Skipping Forandringsledelse slide del 2.pptx: 6.7 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.319] Skipping Individ og organisation_motivation & belønning 2_upload.pptx: 5.2 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.321] Skipping Lektion_sammenfatning af faget_2026.pptx: 7.1 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.321] Skipping Munster 2017_kap 1.pdf: 7.9 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.323] Skipping Øvelse_uge6_intro_2022_upload-1.pptx: 9.1 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.323] Skipping Øvelse_uge9_problemformulering_XB_UPLOAD.pptx: 10.1 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.324] Skipping Øvelser_uge13_analyse og tolkning_UPLOAD.pptx: 9.4 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.324] Skipping Øvelser_uge16_klynge_upload.pptx: 9.4 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.324] Skipping Øvelser_uge18_eksamen og afslutning_opdateret_upload.pptx: 5.3 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.324] Skipping Øvelser_uge36_intro_2025.pptx: 5.9 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.325] Skipping Øvelser_uge39_kultur_E2025 upload.pptx: 5.8 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.325] Skipping Øvelser_uge40_perspektiver_på_kultur_til upload.pptx: 8.8 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.326] Skipping Øvelsesslides - Intro.pptx: 10.6 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.326] Skipping Øvelsesslides - uge 12.pptx: 9.1 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.327] Skipping Schein 1994_uddrag.pdf: 16.8 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.327] Skipping Sensemaking in org (weick 1995).pdf: 15.6 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.328] Skipping Uge 10 Undersøgelsesdesign UPLOAD.pptx: 8.8 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.328] Skipping Uge 15 - Formidling.pptx: 9.4 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.328] Skipping Uge45_motivation og belønning_upload.pptx: 5.2 MB exceeds user limit of 5 MB.
+[2026-07-28 21:54:03.329] Requesting URL: https://cbscanvas.instructure.com/files/1560208/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:03.330] Requesting URL: https://cbscanvas.instructure.com/files/1559924/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:03.331] Requesting URL: https://cbscanvas.instructure.com/files/1559993/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:03.332] Requesting URL: https://cbscanvas.instructure.com/files/1560185/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:03.332] Requesting URL: https://cbscanvas.instructure.com/files/1560188/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:03.333] Requesting URL: https://cbscanvas.instructure.com/files/1560186/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:03.334] Requesting URL: https://cbscanvas.instructure.com/files/1559834/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:03.334] Requesting URL: https://cbscanvas.instructure.com/files/1560061/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:03.335] Requesting URL: https://cbscanvas.instructure.com/files/1560177/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:03.336] Requesting URL: https://cbscanvas.instructure.com/files/1560197/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:04.359] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:04.364] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:04.385] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:04.439] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:04.439] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:04.440] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:04.459] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:04.470] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:04.512] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:04.550] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:05.525] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 37_1 Formelle træk - Struktur _ upload.pptx (3139143 bytes)
+[2026-07-28 21:54:05.678] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\1999_Kotter_kap 2.pdf (1519044 bytes)
+[2026-07-28 21:54:05.762] Requesting URL: https://cbscanvas.instructure.com/files/1560205/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:05.836] Requesting URL: https://cbscanvas.instructure.com/files/1560012/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:05.854] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pptx (1269599 bytes)
+[2026-07-28 21:54:05.920] Requesting URL: https://cbscanvas.instructure.com/files/1560230/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:05.923] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 37_2 Struktur_upload.pptx (2529047 bytes)
+[2026-07-28 21:54:05.972] Requesting URL: https://cbscanvas.instructure.com/files/1560011/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:05.973] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 41_1 Uformelle træk - Magt og konflikt - upload.pptx (2373946 bytes)
+[2026-07-28 21:54:06.068] Requesting URL: https://cbscanvas.instructure.com/files/1560220/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:06.095] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\1999_Kotter_kap 1.pdf (1386490 bytes)
+[2026-07-28 21:54:06.214] Requesting URL: https://cbscanvas.instructure.com/files/1560227/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:06.234] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 38_2 Formelle træk - Struktur 4 Upload.pptx (2004639 bytes)
+[2026-07-28 21:54:06.279] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx (2964205 bytes)
+[2026-07-28 21:54:06.308] Requesting URL: https://cbscanvas.instructure.com/files/1560213/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:06.353] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 43_2 Individ og Organisation - Innovation og laering 2upload.pptx (2062268 bytes)
+[2026-07-28 21:54:06.376] Requesting URL: https://cbscanvas.instructure.com/files/1678067/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:06.515] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:06.605] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:06.635] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx (2536110 bytes)
+[2026-07-28 21:54:06.691] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:06.742] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:06.915] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:06.979] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pptx (2223911 bytes)
+[2026-07-28 21:54:06.982] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:07.041] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:07.065] Requesting URL: https://cbscanvas.instructure.com/files/1678065/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:07.109] Requesting URL: https://cbscanvas.instructure.com/files/1678066/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:07.222] Requesting URL: https://cbscanvas.instructure.com/files/1669054/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:07.377] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:07.477] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pptx (2223911 bytes)
+[2026-07-28 21:54:07.575] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pdf (425245 bytes)
+[2026-07-28 21:54:07.598] Requesting URL: https://cbscanvas.instructure.com/files/1559936/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:07.711] Requesting URL: https://cbscanvas.instructure.com/files/1693406/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:08.177] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2025 - ny undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (2164141 bytes)
+[2026-07-28 21:54:08.184] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:08.187] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:08.187] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:08.535] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 47_1 Organisationer i et foranderligt perspektiv - Beslutninger - 1_upload.pptx (2592801 bytes)
+[2026-07-28 21:54:08.569] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\251009_Kom og vær med_Til Stig N.pptx (674098 bytes)
+[2026-07-28 21:54:08.609] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 1_upload Ida.pptx (2162221 bytes)
+[2026-07-28 21:54:08.638] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2025_Lektion uge 43_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2.pdf (788357 bytes)
+[2026-07-28 21:54:08.651] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2025 - undersøgelsesdesign og dataindsamlingsteknikker - video 2_Upload.pptx (2164141 bytes)
+[2026-07-28 21:54:08.665] Requesting URL: https://cbscanvas.instructure.com/files/1560103/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:08.718] Requesting URL: https://cbscanvas.instructure.com/files/1559838/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:08.753] Requesting URL: https://cbscanvas.instructure.com/files/1560083/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:08.787] Requesting URL: https://cbscanvas.instructure.com/files/1560087/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:08.851] Requesting URL: https://cbscanvas.instructure.com/files/1560082/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:08.863] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:08.917] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2025_Lektion uge 43_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1.pptx (2144525 bytes)
+[2026-07-28 21:54:08.962] Requesting URL: https://cbscanvas.instructure.com/files/1559837/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:09.082] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\2024_Lektion uge 46_2 Organisationer i et foranderligt perspektiv - Omgivelser - 2_upload.pptx (4124409 bytes)
+[2026-07-28 21:54:09.083] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Berlingske Case.pdf (851481 bytes)
+[2026-07-28 21:54:09.102] Requesting URL: https://cbscanvas.instructure.com/files/1559867/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:09.217] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:09.315] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Beslutninger - Uge 46 2025.pdf (618261 bytes)
+[2026-07-28 21:54:09.603] Response Status: 200 Content-Type: image/jpeg
+[2026-07-28 21:54:09.651] Requesting URL: https://cbscanvas.instructure.com/files/1747622/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:09.679] Response Status: 200 Content-Type: image/jpeg
+[2026-07-28 21:54:09.735] Requesting URL: https://cbscanvas.instructure.com/files/1560051/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:09.807] Response Status: 200 Content-Type: image/jpeg
+[2026-07-28 21:54:09.807] Response Status: 200 Content-Type: image/jpeg
+[2026-07-28 21:54:09.810] Response Status: 200 Content-Type: image/jpeg
+[2026-07-28 21:54:09.835] Requesting URL: https://cbscanvas.instructure.com/files/1559916/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:09.891] Response Status: 200 Content-Type: image/jpeg
+[2026-07-28 21:54:10.156] Response Status: 200 Content-Type: image/jpeg
+[2026-07-28 21:54:10.226] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Corporate hierarchy.jpg (89214 bytes)
+[2026-07-28 21:54:10.282] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\CBS_SolbjergPlads_ImageHeader.jpg (2032529 bytes)
+[2026-07-28 21:54:10.314] Requesting URL: https://cbscanvas.instructure.com/files/1560180/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:10.402] Requesting URL: https://cbscanvas.instructure.com/files/1559921/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:10.590] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:10.628] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\BM0128_CBS_SolbjergPlads-2806 (1)-1-2.jpg (2113362 bytes)
+[2026-07-28 21:54:10.640] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\BM0128_CBS_SolbjergPlads-2806 (1)-1.jpg (2113362 bytes)
+[2026-07-28 21:54:10.673] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\E25_F26_HAIT_Organisationers opbygning.pdf (344619 bytes)
+[2026-07-28 21:54:10.706] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\CBS_SolbjergPlads_ImageHeader-1.jpg (2032529 bytes)
+[2026-07-28 21:54:10.821] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\CBS_SolbjergPlads_ImageHeader-1-1.jpg (2032529 bytes)
+[2026-07-28 21:54:11.013] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:11.019] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Eksempel på gruppekontrakt.docx (16288 bytes)
+[2026-07-28 21:54:11.085] Requesting URL: https://cbscanvas.instructure.com/files/1695726/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:11.086] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:11.119] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\BM0128_CBS_SolbjergPlads-2806 (1).jpg (2113362 bytes)
+[2026-07-28 21:54:11.130] Requesting URL: https://cbscanvas.instructure.com/files/1694168/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:11.139] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\F22_HAIT_Organisationers opbygning_2021-2022.pdf (411974 bytes)
+[2026-07-28 21:54:11.151] Requesting URL: https://cbscanvas.instructure.com/files/1669058/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:11.166] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:11.170] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Eksempel - Gruppekontrakt.docx (14206 bytes)
+[2026-07-28 21:54:11.172] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:11.210] Requesting URL: https://cbscanvas.instructure.com/files/1560171/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:11.243] Requesting URL: https://cbscanvas.instructure.com/files/1560172/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:11.269] Requesting URL: https://cbscanvas.instructure.com/files/1560191/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:11.273] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf (255792 bytes)
+[2026-07-28 21:54:11.305] Requesting URL: https://cbscanvas.instructure.com/files/1652721/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:11.326] Requesting URL: https://cbscanvas.instructure.com/files/1560198/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:11.365] Requesting URL: https://cbscanvas.instructure.com/files/1624231/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:11.536] Requesting URL: https://cbscanvas.instructure.com/files/1560157/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:11.881] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:11.965] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:11.968] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:11.977] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:12.006] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forandring - uge 47 2025.pdf (476521 bytes)
+[2026-07-28 21:54:12.038] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:12.068] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\HA(it.)_grupper E2021.pdf (58570 bytes)
+[2026-07-28 21:54:12.071] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:12.071] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:12.151] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\From Algorithmic Management to Data-driven Labour Organising(27).pdf (448783 bytes)
+[2026-07-28 21:54:12.171] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:12.205] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:12.213] Requesting URL: https://cbscanvas.instructure.com/files/1560072/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:12.248] Requesting URL: https://cbscanvas.instructure.com/files/1785191/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:12.318] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:12.357] Requesting URL: https://cbscanvas.instructure.com/files/1559939/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:12.416] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\ind_org_Pensumoversigt_efterår2025.pdf (479504 bytes)
+[2026-07-28 21:54:12.482] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Industrialsupply.pdf (263664 bytes)
+[2026-07-28 21:54:12.511] Requesting URL: https://cbscanvas.instructure.com/files/1560064/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:12.571] Requesting URL: https://cbscanvas.instructure.com/files/1560100/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:12.934] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\GenAI in Danske Bank_opdateret.pdf (2329690 bytes)
+[2026-07-28 21:54:13.014] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Individ og organisation_motivation & belønning 1_upload.pptx (3071148 bytes)
+[2026-07-28 21:54:13.048] Requesting URL: https://cbscanvas.instructure.com/files/1560145/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:13.136] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Intro_uge 36_2025_slides.pdf (2510931 bytes)
+[2026-07-28 21:54:13.171] Requesting URL: https://cbscanvas.instructure.com/files/1790530/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:13.172] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:13.227] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:13.453] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:13.454] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:13.466] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning - Upload.pptx (456931 bytes)
+[2026-07-28 21:54:13.476] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\ITDoesntMatter.pdf (206424 bytes)
+[2026-07-28 21:54:13.482] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1_grp 14.pdf (199844 bytes)
+[2026-07-28 21:54:13.483] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1_grp 10.docx (35642 bytes)
+[2026-07-28 21:54:13.483] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:13.552] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forandring i organisationer_video1_upload_2025.pptx (3436721 bytes)
+[2026-07-28 21:54:13.687] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1_grp 15.pdf (550883 bytes)
+[2026-07-28 21:54:13.707] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Hildebrandt-1.pdf (2961287 bytes)
+[2026-07-28 21:54:13.968] Requesting URL: https://cbscanvas.instructure.com/files/1560037/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:14.018] Requesting URL: https://cbscanvas.instructure.com/files/1559957/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:14.041] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:14.051] Requesting URL: https://cbscanvas.instructure.com/files/1560065/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:14.086] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning 1_grp 25.pdf (83254 bytes)
+[2026-07-28 21:54:14.124] Requesting URL: https://cbscanvas.instructure.com/files/1560228/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:14.149] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:14.158] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx (46311 bytes)
+[2026-07-28 21:54:14.168] Requesting URL: https://cbscanvas.instructure.com/files/1560161/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:14.196] Requesting URL: https://cbscanvas.instructure.com/files/1811688/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:14.253] Requesting URL: https://cbscanvas.instructure.com/files/1559952/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:14.291] Requesting URL: https://cbscanvas.instructure.com/files/1699643/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:14.385] Requesting URL: https://cbscanvas.instructure.com/files/1559920/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:14.545] Requesting URL: https://cbscanvas.instructure.com/files/1559932/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:14.860] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:14.875] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning_1_Program_2024.pdf (91387 bytes)
+[2026-07-28 21:54:14.888] Response Status: 200 Content-Type: application/msword
+[2026-07-28 21:54:14.946] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning_1_Program_2023.doc (153600 bytes)
+[2026-07-28 21:54:14.988] Requesting URL: https://cbscanvas.instructure.com/files/1687664/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:15.007] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:15.030] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning_1_Program_2022.pdf (92744 bytes)
+[2026-07-28 21:54:15.123] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:15.127] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Kodning øvelse - interview transskribering.docx (18220 bytes)
+[2026-07-28 21:54:15.133] Requesting URL: https://cbscanvas.instructure.com/files/1748401/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:15.152] Requesting URL: https://cbscanvas.instructure.com/files/1693022/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:15.245] Requesting URL: https://cbscanvas.instructure.com/files/1560219/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:15.369] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:15.401] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Manual for eksamensprojekt 2021-2022_.pdf (223505 bytes)
+[2026-07-28 21:54:15.478] Requesting URL: https://cbscanvas.instructure.com/files/1560194/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:15.508] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-07-28 21:54:15.517] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Kodning øvelse - kodning tabel (struktureret).xlsx (12625 bytes)
+[2026-07-28 21:54:15.573] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+[2026-07-28 21:54:15.578] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Kodning øvelse - kodning skabelon.xlsx (10973 bytes)
+[2026-07-28 21:54:15.584] Requesting URL: https://cbscanvas.instructure.com/files/1560068/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:15.672] Requesting URL: https://cbscanvas.instructure.com/files/1559923/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:15.712] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:15.771] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Klyngevejledning_2_Program_ 21 april 2026.pdf (245100 bytes)
+[2026-07-28 21:54:15.869] Requesting URL: https://cbscanvas.instructure.com/files/1560236/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:15.879] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:16.003] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:16.012] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Martin Thorborg tiltrækker nye ansatte ved at lokke_artikel okt 2023.pdf (939935 bytes)
+[2026-07-28 21:54:16.157] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:16.207] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:16.225] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Observationsskema.docx (17986 bytes)
+[2026-07-28 21:54:16.231] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Manual for eksamensprojekt 2025-2026.pdf (205244 bytes)
+[2026-07-28 21:54:16.248] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:16.301] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:16.325] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:16.342] Requesting URL: https://cbscanvas.instructure.com/files/1560235/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:16.375] Requesting URL: https://cbscanvas.instructure.com/files/1559942/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:16.392] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Ledelse - uge 48.pdf (1017698 bytes)
+[2026-07-28 21:54:16.438] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:16.456] Requesting URL: https://cbscanvas.instructure.com/files/1560067/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:16.476] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-07-28 21:54:16.497] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Motivationsfaktorer - uge 45 2025.pdf (677897 bytes)
+[2026-07-28 21:54:16.552] Requesting URL: https://cbscanvas.instructure.com/files/1560125/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:16.600] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Oplæg på CBS - sendt.pdf (820945 bytes)
+[2026-07-28 21:54:16.631] Requesting URL: https://cbscanvas.instructure.com/files/1559949/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:16.667] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:16.817] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Munster 2017_intro.pdf (1845812 bytes)
+[2026-07-28 21:54:16.954] Requesting URL: https://cbscanvas.instructure.com/files/1560069/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:17.027] Requesting URL: https://cbscanvas.instructure.com/files/1560071/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:17.277] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_argumentation_2_upload.pptm (2502919 bytes)
+[2026-07-28 21:54:17.325] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-07-28 21:54:17.424] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-07-28 21:54:17.465] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-07-28 21:54:17.538] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-07-28 21:54:17.567] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-07-28 21:54:17.598] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsformer - oversigtstabel - udfyldt.pptx (2707111 bytes)
+[2026-07-28 21:54:17.612] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_klargøring af data_eksempel_upload.pptx (2976950 bytes)
+[2026-07-28 21:54:17.712] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_klargøring af data_upload.pptm (2260832 bytes)
+[2026-07-28 21:54:17.856] Requesting URL: https://cbscanvas.instructure.com/files/1560128/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:17.938] Requesting URL: https://cbscanvas.instructure.com/files/1628057/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:17.984] Requesting URL: https://cbscanvas.instructure.com/files/1560232/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:18.010] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-07-28 21:54:18.070] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-07-28 21:54:18.123] Requesting URL: https://cbscanvas.instructure.com/files/1560231/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:18.261] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_problemformulering-2_upload.pptm (381152 bytes)
+[2026-07-28 21:54:18.370] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_operationalisering_upload_.pptm (2923133 bytes)
+[2026-07-28 21:54:18.389] Requesting URL: https://cbscanvas.instructure.com/files/1682693/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:18.401] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_problemformulering_1-upload-1.pptm (2334476 bytes)
+[2026-07-28 21:54:18.475] Requesting URL: https://cbscanvas.instructure.com/files/1560225/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:18.588] Requesting URL: https://cbscanvas.instructure.com/files/1627150/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:18.621] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_vidensproduktion_1_2022-upload.pptm (2866372 bytes)
+[2026-07-28 21:54:18.889] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_problemformulering_1-upload.pptm (2332811 bytes)
+[2026-07-28 21:54:19.170] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-07-28 21:54:19.176] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroenabled.12
+[2026-07-28 21:54:19.177] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:19.177] Response Status: 200 Content-Type: application/vnd.ms-powerpoint.presentation.macroEnabled.12
+[2026-07-28 21:54:19.179] Requesting URL: https://cbscanvas.instructure.com/files/1632239/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:19.198] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelse uge 37 - Organisationsdiagram.pdf (166332 bytes)
+[2026-07-28 21:54:19.255] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:19.274] Requesting URL: https://cbscanvas.instructure.com/files/1560137/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:19.321] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_vidensproduktion_2_upload.pptm (574524 bytes)
+[2026-07-28 21:54:19.322] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_vidensproduktion_2021-2_upload.pptm (688928 bytes)
+[2026-07-28 21:54:19.381] Requesting URL: https://cbscanvas.instructure.com/files/1643383/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:19.422] Requesting URL: https://cbscanvas.instructure.com/files/1659237/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:19.501] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:19.529] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:19.555] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_operationalisering_upload.pptm (2910906 bytes)
+[2026-07-28 21:54:19.562] Requesting URL: https://cbscanvas.instructure.com/files/1666882/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:19.587] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Organisationsprojekt_vidensproduktion_1_upload.pptm (2089677 bytes)
+[2026-07-28 21:54:19.656] Requesting URL: https://cbscanvas.instructure.com/files/1560003/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:19.705] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelser_uge36B_mål_og_strategi_2025.pdf (620460 bytes)
+[2026-07-28 21:54:19.781] Requesting URL: https://cbscanvas.instructure.com/files/1560002/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:19.899] Requesting URL: https://cbscanvas.instructure.com/files/1560085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:19.958] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelse uge 44 - Læring.pdf (1102902 bytes)
+[2026-07-28 21:54:20.404] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:20.407] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:20.490] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelser_uge37_struktur_2025.pdf (911692 bytes)
+[2026-07-28 21:54:20.503] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelse_uge9_problemformulering_XA_upload.pptx (5242154 bytes)
+[2026-07-28 21:54:20.559] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelser_uge39_kultur_2025.pdf (674932 bytes)
+[2026-07-28 21:54:20.592] Requesting URL: https://cbscanvas.instructure.com/files/1668216/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:20.693] Requesting URL: https://cbscanvas.instructure.com/files/1655085/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:20.720] Requesting URL: https://cbscanvas.instructure.com/files/1668217/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:20.727] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:20.732] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:20.765] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:20.772] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:20.851] Requesting URL: https://cbscanvas.instructure.com/files/1655086/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:21.005] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:21.066] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:21.131] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelser_uge41_magt_E25.pdf (452042 bytes)
+[2026-07-28 21:54:21.229] Requesting URL: https://cbscanvas.instructure.com/files/1559930/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:21.339] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelser_uge39_sensemaking_2025.pdf (995647 bytes)
+[2026-07-28 21:54:21.592] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:21.850] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:21.866] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:21.867] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:21.945] Requesting URL: https://cbscanvas.instructure.com/files/1560149/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:22.003] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Sensemaking slides 1.pdf (657718 bytes)
+[2026-07-28 21:54:22.010] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Sensemaking slides 2.pdf (226136 bytes)
+[2026-07-28 21:54:22.091] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelser_uge38_organisationsformer_upload.pptx (4938852 bytes)
+[2026-07-28 21:54:22.092] Requesting URL: https://cbscanvas.instructure.com/files/1560226/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:22.172] Requesting URL: https://cbscanvas.instructure.com/files/1690411/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:22.201] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Sensemaking slides 2.pptx (119973 bytes)
+[2026-07-28 21:54:22.252] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:22.286] Requesting URL: https://cbscanvas.instructure.com/files/1698861/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:22.423] Requesting URL: https://cbscanvas.instructure.com/files/1686104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:22.471] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Shook J. (2010) How to change a culture, lessons from nummi.pdf (575008 bytes)
+[2026-07-28 21:54:22.511] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Sensemaking slides 1.pptx (2132067 bytes)
+[2026-07-28 21:54:22.559] Requesting URL: https://cbscanvas.instructure.com/files/1698862/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:22.680] Requesting URL: https://cbscanvas.instructure.com/files/1686105/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:22.890] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelsesslides_mål og strategi_XA-1.pptx (4199486 bytes)
+[2026-07-28 21:54:22.897] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelsesslides formelle træk - organisationsformer.pptx (5201724 bytes)
+[2026-07-28 21:54:23.318] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:23.320] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:23.321] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:23.321] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:23.344] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Skabelon til klyngevejledning 2.docx (22452 bytes)
+[2026-07-28 21:54:23.354] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\SKABELON_KLYNGEVEJLEDNING_1_2025.docx (20549 bytes)
+[2026-07-28 21:54:23.359] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Øvelsesslides formelle træk - organisationsformer-1.pptx (5201848 bytes)
+[2026-07-28 21:54:23.490] Requesting URL: https://cbscanvas.instructure.com/files/1706588/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:23.526] Requesting URL: https://cbscanvas.instructure.com/files/1640813/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:23.579] Requesting URL: https://cbscanvas.instructure.com/files/1640814/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:23.586] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:23.647] Requesting URL: https://cbscanvas.instructure.com/files/1620929/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:23.648] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Slides (1) Ledelse i organisationer forelæsning 1.pptx (2069905 bytes)
+[2026-07-28 21:54:23.665] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:23.701] Requesting URL: https://cbscanvas.instructure.com/files/1620930/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:23.711] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 21:54:23.796] Requesting URL: https://cbscanvas.instructure.com/files/1559928/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:23.868] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Slides - Henrik Stenmann - Motivation-Learning-and-Leadership-at-IIH-Nordic_Engelsk_06-11-2025.pdf (2949489 bytes)
+[2026-07-28 21:54:24.000] Requesting URL: https://cbscanvas.instructure.com/files/1638534/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:24.029] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Slides (1) Motivationsfaktorer forelæsning 1.pptx (1917653 bytes)
+[2026-07-28 21:54:24.214] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Slides (2) Ledelse i organisationer forelæsning 2.pptx (2085297 bytes)
+[2026-07-28 21:54:24.476] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Slides (2) Motivationsfaktorer forelæsning 2.pptx (2965062 bytes)
+[2026-07-28 21:54:24.483] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:24.529] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:24.554] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:24.586] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:24.624] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:24.657] Requesting URL: https://cbscanvas.instructure.com/files/1560056/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:24.725] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:24.755] Requesting URL: https://cbscanvas.instructure.com/files/1816004/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:24.825] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:24.826] Requesting URL: https://cbscanvas.instructure.com/files/1560193/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:25.269] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Slides_kulturanalyse del 2_E25.pdf (1028235 bytes)
+[2026-07-28 21:54:25.284] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Slides_mål og strategi_del 2_E25.pdf (1475540 bytes)
+[2026-07-28 21:54:25.356] Requesting URL: https://cbscanvas.instructure.com/files/1677945/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:25.648] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Slides_kulturanalyse del 1_E25.pdf (1728964 bytes)
+[2026-07-28 21:54:25.684] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Søstrene Grene.pdf (3028213 bytes)
+[2026-07-28 21:54:25.805] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Strategy in Danske Bank.pdf (2312708 bytes)
+[2026-07-28 21:54:25.849] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:25.867] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Svarark - Gode råd til projektet.docx (15814 bytes)
+[2026-07-28 21:54:25.885] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Slides sidste forelæsning.pdf (3322092 bytes)
+[2026-07-28 21:54:26.061] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Slides_mål og strategi_del 1_E25.pdf (1125604 bytes)
+[2026-07-28 21:54:26.289] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:26.327] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:26.336] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Svarark - Gode råd til projektet (1).docx (16881 bytes)
+[2026-07-28 21:54:26.388] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+[2026-07-28 21:54:26.398] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Udfaldsrum Beskrivelser.docx (17533 bytes)
+[2026-07-28 21:54:26.642] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Uge43_omgivelser_2025.pdf (664009 bytes)
+[2026-07-28 21:54:27.500] Fallback Scan: Module Kursusbeskrivelse og eksamensregler (found 3 items)
+[2026-07-28 21:54:27.501]   Fallback Item: Kursusbeskrivelse - ink. eksamensregler (Type: ExternalUrl)
+[2026-07-28 21:54:27.505] Creating Link: Kursusbeskrivelse - ink. eksamensregler (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO1060U.aspx) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Kursusbeskrivelse - ink. eksamensregler.url
+[2026-07-28 21:54:27.943]   Fallback Item: Helle Zinner Henriksens Kontortid (Type: Page)
+[2026-07-28 21:54:28.234] Saving page: Helle Zinner Henriksens Kontortid -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Helle Zinner Henriksens Kontortid.html
+[2026-07-28 21:54:28.559] Fallback Scan: Module Opdateret Pensumoversigt inkl. Forår 2026 (found 4 items)
+[2026-07-28 21:54:28.559]   Fallback Item: Grupper til eksamensprojekt (Type: Page)
+[2026-07-28 21:54:28.828] Saving page: Grupper til eksamensprojekt -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Grupper til eksamensprojekt.html
+[2026-07-28 21:54:28.982]   Fallback Item: Brug af AI i eksamensprojektet (Type: Page)
+[2026-07-28 21:54:29.223] Saving page: Brug af AI i eksamensprojektet -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Brug af AI i eksamensprojektet.html
+[2026-07-28 21:54:29.746] Fallback Scan: Module Introduktion til organisationsteori (found 5 items)
+[2026-07-28 21:54:29.747]   Fallback Item: Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-07-28 21:54:29.751] Creating Link: Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue) (https://www.computerworld.dk/art/226682/10-aar-efter-kontroversiel-artikel-er-it-stadig-ligegyldigt) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Opfølgning på Carr artiklen i 2013 i Computerworld (linket virker hvis I åbner det i et nyt vindue).url
+[2026-07-28 21:54:30.434] Fallback Scan: Module Tema 1: Formelle træk - mål og strategi (found 6 items)
+[2026-07-28 21:54:30.435]   Fallback Item: Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-07-28 21:54:30.438] Creating Link: Forelæsningsvideo (1): formelle træk - mål og strategi i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1087340) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) formelle træk - mål og strategi i organisationer.url
+[2026-07-28 21:54:30.634]   Fallback Item: Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer (Type: ExternalTool)
+[2026-07-28 21:54:30.639] Creating Link: Forelæsningsvideo (2): formelle træk - mål og strategi i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1088123) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) formelle træk - mål og strategi i organisationer.url
+[2026-07-28 21:54:30.768]   Fallback Item: Quiz: mål og strategi i organisationer (Type: Quiz)
+[2026-07-28 21:54:30.984] Fallback Scan: Module Tema 1: Formelle træk - organisationsstruktur (found 8 items)
+[2026-07-28 21:54:30.985]   Fallback Item: Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-07-28 21:54:30.988] Creating Link: Forelæsningsvideo (1): formelle træk - organisationsstruktur 2025 37 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052619) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) formelle træk - organisationsstruktur 2025 37.url
+[2026-07-28 21:54:31.144]   Fallback Item: Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 (Type: ExternalTool)
+[2026-07-28 21:54:31.148] Creating Link: Forelæsningsvideo (2): formelle træk - organisationsstruktur 2025 37 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052620) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) formelle træk - organisationsstruktur 2025 37.url
+[2026-07-28 21:54:31.260]   Fallback Item: Quiz: Organisationsstruktur  (Type: Quiz)
+[2026-07-28 21:54:31.260]   Fallback Item: Upload spørgsmål til Kristoffer Brodersen fra Danske Bank - formelle træk (Type: Discussion)
+[2026-07-28 21:54:31.445] Fallback Scan: Module Tema 1: Formelle træk - organisationsformer (found 8 items)
+[2026-07-28 21:54:31.445]   Fallback Item: Forelæsningsvideo (1): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-07-28 21:54:31.449] Creating Link: Forelæsningsvideo (1): formelle træk - organisationsformer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052628) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) formelle træk - organisationsformer.url
+[2026-07-28 21:54:31.645]   Fallback Item: Forelæsningsvideo (2): formelle træk - organisationsformer (Type: ExternalTool)
+[2026-07-28 21:54:31.650] Creating Link: Forelæsningsvideo (2): formelle træk - organisationsformer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052629) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) formelle træk - organisationsformer.url
+[2026-07-28 21:54:31.835]   Fallback Item: Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue) (Type: ExternalUrl)
+[2026-07-28 21:54:31.839] Creating Link: Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue) (https://danskebank.com/about-us) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Dansk bank strategi (linket virker hvis I åbner det i et nyt vindue).url
+[2026-07-28 21:54:32.001]   Fallback Item: Danske Bank investor præsentation (læs s. 3-10) (Type: ExternalUrl)
+[2026-07-28 21:54:32.005] Creating Link: Danske Bank investor præsentation (læs s. 3-10) (https://danskebank.com/-/media/danske-bank-com/file-cloud/2025/2/investor-presentation---q4-2024.pdf) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Danske Bank investor præsentation (læs s. 3-10).url
+[2026-07-28 21:54:32.459] Fallback Scan: Module Tema 2: Uformelle træk - organisationskultur (found 13 items)
+[2026-07-28 21:54:32.460]   Fallback Item: Forelæsningsvideo (1): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-07-28 21:54:32.464] Creating Link: Forelæsningsvideo (1): Uformelletræk_organisationskultur (https://cbscanvas.instructure.com/courses/43660/modules/items/1102035) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) Uformelletræk_organisationskultur.url
+[2026-07-28 21:54:32.609]   Fallback Item: Forelæsningsvideo (2): Uformelletræk_organisationskultur (Type: ExternalTool)
+[2026-07-28 21:54:32.614] Creating Link: Forelæsningsvideo (2): Uformelletræk_organisationskultur (https://cbscanvas.instructure.com/courses/43660/modules/items/1102050) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) Uformelletræk_organisationskultur.url
+[2026-07-28 21:54:32.802]   Fallback Item: Quiz: organisationskultur (Type: Quiz)
+[2026-07-28 21:54:32.802]   Fallback Item: Video med respons på feedback og introduktion til et nyt initiativ i undervisningen (Type: ExternalTool)
+[2026-07-28 21:54:32.807] Creating Link: Video med respons på feedback og introduktion til et nyt initiativ i undervisningen (https://cbscanvas.instructure.com/courses/43660/modules/items/1103344) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Video med respons på feedback og introduktion til et nyt initiativ i undervisningen.url
+[2026-07-28 21:54:32.935]   Fallback Item: Spørgsmål til pensum i organisationskultur (Type: Discussion)
+[2026-07-28 21:54:32.935]   Fallback Item: Supplerende literatur (Type: SubHeader)
+[2026-07-28 21:54:33.181] Fallback Scan: Module Tema 2: Uformelle træk - sensemaking (found 11 items)
+[2026-07-28 21:54:33.181]   Fallback Item: Forelæsningsvideo 1 om Sensemaking (Type: ExternalTool)
+[2026-07-28 21:54:33.185] Creating Link: Forelæsningsvideo 1 om Sensemaking (https://cbscanvas.instructure.com/courses/43660/modules/items/1105837) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo 1 om Sensemaking.url
+[2026-07-28 21:54:33.335]   Fallback Item: Sensemaking slides 1.pptx (Type: File)
+[2026-07-28 21:54:33.486]   Fallback Item: Forelæsningsvideo 2 om Sensemaking (Type: ExternalTool)
+[2026-07-28 21:54:33.490] Creating Link: Forelæsningsvideo 2 om Sensemaking (https://cbscanvas.instructure.com/courses/43660/modules/items/1105840) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo 2 om Sensemaking.url
+[2026-07-28 21:54:33.618]   Fallback Item: Sensemaking slides 2.pptx (Type: File)
+[2026-07-28 21:54:33.789]   Fallback Item: Weick, K. E., Sutcliffe, K. M., & Obstfeld, D. (2005). Organizing and the Process of Sensemaking. Organization Science 16(4), 409–421. https://doi.org/10.1287/orsc.1050.0133 (kan også findes via. CBS libsearch) (Type: SubHeader)
+[2026-07-28 21:54:33.790]   Fallback Item: Supplerende literatur (Type: SubHeader)
+[2026-07-28 21:54:33.790]   Fallback Item: Spørgsmål til oplægsholder: Jens Christian Finnerup, Systematic (Type: Discussion)
+[2026-07-28 21:54:33.993] Fallback Scan: Module Tema 2: Uformelle træk - magt og konflikt (found 11 items)
+[2026-07-28 21:54:33.993]   Fallback Item: Forelæsningsvideo (1): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-07-28 21:54:33.997] Creating Link: Forelæsningsvideo (1): uformelle træk - magt i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052657) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) uformelle træk - magt i organisationer.url
+[2026-07-28 21:54:34.160]   Fallback Item: Forelæsningsvideo (2): uformelle træk - magt i organisationer (Type: ExternalTool)
+[2026-07-28 21:54:34.164] Creating Link: Forelæsningsvideo (2): uformelle træk - magt i organisationer (https://cbscanvas.instructure.com/courses/43660/modules/items/1052658) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) uformelle træk - magt i organisationer.url
+[2026-07-28 21:54:34.335]   Fallback Item: Quiz: magt og konflikt (Type: Quiz)
+[2026-07-28 21:54:34.335]   Fallback Item: Spørgsmål til pensum: magt i organisationer (Type: Discussion)
+[2026-07-28 21:54:34.477] Fallback Scan: Module Uge 42: Ingen undervisning (found 0 items)
+[2026-07-28 21:54:34.676] Fallback Scan: Module Tema 3: Individ, organisation og omverden - organisation og omgivelser (found 9 items)
+[2026-07-28 21:54:34.676]   Fallback Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-07-28 21:54:34.680] Creating Link: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - omgivelser 2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052698) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - omgivelser 2025.url
+[2026-07-28 21:54:34.851]   Fallback Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 (Type: ExternalTool)
+[2026-07-28 21:54:34.855] Creating Link: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - omgivelser 2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052699) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - omgivelser 2025.url
+[2026-07-28 21:54:35.061]   Fallback Item: Quiz: omgivelser (Type: Quiz)
+[2026-07-28 21:54:35.061]   Fallback Item: Upload af besvarelse af Rigshospitalscase (Type: Discussion)
+[2026-07-28 21:54:35.061]   Fallback Item: Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 (Type: ExternalTool)
+[2026-07-28 21:54:35.066] Creating Link: Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09 (https://cbscanvas.instructure.com/courses/43660/modules/items/1117745) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Omgivelser Opsamling Thursday, 23 October 2025 at 19.50.09.url
+[2026-07-28 21:54:35.488] Fallback Scan: Module Tema 3: Individ, organisation og omverden - læring i organisationer (found 7 items)
+[2026-07-28 21:54:35.488]   Fallback Item: Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-07-28 21:54:35.492] Creating Link: Forelæsningsvideo (1): individ, organisation og omverden - læring & innovation_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052666) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) individ, organisation og omverden - læring & innovation_2025.url
+[2026-07-28 21:54:35.660]   Fallback Item: Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 (Type: ExternalTool)
+[2026-07-28 21:54:35.665] Creating Link: Forelæsningsvideo (2): individ, organisation og omverden - læring & innovation_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052667) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) individ, organisation og omverden - læring & innovation_2025.url
+[2026-07-28 21:54:35.844]   Fallback Item: Quiz: læring og innovation (Type: Quiz)
+[2026-07-28 21:54:36.031] Fallback Scan: Module Tema 3: Individ, organisation og omverden- motivationsfaktorer (found 7 items)
+[2026-07-28 21:54:36.032]   Fallback Item: Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 (Type: ExternalTool)
+[2026-07-28 21:54:36.036] Creating Link: Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1 (https://cbscanvas.instructure.com/courses/43660/modules/items/1121634) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) Motivationsfaktorer i organisationer 1.url
+[2026-07-28 21:54:36.171]   Fallback Item: Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 (Type: ExternalTool)
+[2026-07-28 21:54:36.175] Creating Link: Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2 (https://cbscanvas.instructure.com/courses/43660/modules/items/1121635) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) Motivationsfaktorer i organisationer 2.url
+[2026-07-28 21:54:36.369]   Fallback Item: Quiz: motivationsfaktorer i organisationer (Type: Quiz)
+[2026-07-28 21:54:36.608] Fallback Scan: Module Tema 4: Ledelse og strategi - beslutninger i organisationer (found 7 items)
+[2026-07-28 21:54:36.608]   Fallback Item: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-07-28 21:54:36.613] Creating Link: Forelæsningsvideo (1): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052708) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.url
+[2026-07-28 21:54:36.828]   Fallback Item: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (Type: ExternalTool)
+[2026-07-28 21:54:36.832] Creating Link: Forelæsningsvideo (2): Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025 (https://cbscanvas.instructure.com/courses/43660/modules/items/1052709) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) Organisationer i et foranderligt perspektiv - beslutninger i organisationer_2025.url
+[2026-07-28 21:54:36.996]   Fallback Item: Quiz: Beslutninger i organisationer (Type: Quiz)
+[2026-07-28 21:54:37.207] Fallback Scan: Module Tema 4: Ledelse og strategi- forandringer i organisationer (found 13 items)
+[2026-07-28 21:54:37.207]   Fallback Item: Forelæsningsvideo (1): Forandringsledelse (Type: ExternalTool)
+[2026-07-28 21:54:37.211] Creating Link: Forelæsningsvideo (1): Forandringsledelse (https://cbscanvas.instructure.com/courses/43660/modules/items/1126004) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) Forandringsledelse.url
+[2026-07-28 21:54:37.404]   Fallback Item: Forelæsningsvideo (2): Forandringsledelse (Type: ExternalTool)
+[2026-07-28 21:54:37.408] Creating Link: Forelæsningsvideo (2): Forandringsledelse (https://cbscanvas.instructure.com/courses/43660/modules/items/1126008) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) Forandringsledelse.url
+[2026-07-28 21:54:37.602]   Fallback Item: Quiz: Forandring i organisationer (Type: Quiz)
+[2026-07-28 21:54:37.602]   Fallback Item: Rick Maurer - Introduction to Change (Type: File)
+[2026-07-28 21:54:37.782]   Fallback Item: Forberedelse til øvelstime (Type: SubHeader)
+[2026-07-28 21:54:37.965] Fallback Scan: Module Tema 4: Ledelse og strategi - ledelse i organisationer (found 8 items)
+[2026-07-28 21:54:37.965]   Fallback Item: Forelæsningsvideo 1 Ledelse i organisationer 1 (Type: ExternalTool)
+[2026-07-28 21:54:37.970] Creating Link: Forelæsningsvideo 1 Ledelse i organisationer 1 (https://cbscanvas.instructure.com/courses/43660/modules/items/1128497) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo 1 Ledelse i organisationer 1.url
+[2026-07-28 21:54:38.112]   Fallback Item: Forelæsningsvideo 2 Ledelse i organisationer 2 (Type: ExternalTool)
+[2026-07-28 21:54:38.117] Creating Link: Forelæsningsvideo 2 Ledelse i organisationer 2 (https://cbscanvas.instructure.com/courses/43660/modules/items/1128498) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo 2 Ledelse i organisationer 2.url
+[2026-07-28 21:54:38.304]   Fallback Item: Quiz: ledelse i organisationer (Type: Quiz)
+[2026-07-28 21:54:38.304]   Fallback Item: Oplæg: Saxo Merrild, Handyhand (Type: SubHeader)
+[2026-07-28 21:54:38.305]   Fallback Item: Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse (Type: ExternalUrl)
+[2026-07-28 21:54:38.309] Creating Link: Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse (https://www.linkedin.com/in/saxo-merrild/recent-activity/all/) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Link til Saxo's linkedin profil, hvor han poster om Handyhand og sin tilgang til ledelse.url
+[2026-07-28 21:54:38.640] Fallback Scan: Module Tema 4: Ledelse og strategi  - organisationsteori i et historisk perspektiv (found 1 items)
+[2026-07-28 21:54:38.878] Fallback Scan: Module Opsummering - hvad har vi lært? (found 3 items)
+[2026-07-28 21:54:38.878]   Fallback Item: Uge 6: pensum (Type: Page)
+[2026-07-28 21:54:39.099] Saving page: Uge 6: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 6 pensum.html
+[2026-07-28 21:54:39.333]   Fallback Item: Uge 6: mål med undervisningen (Type: Page)
+[2026-07-28 21:54:39.566] Saving page: Uge 6: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 6 mål med undervisningen.html
+[2026-07-28 21:54:39.886] Fallback Scan: Module Organisationsprojekt - vidensproduktion (found 7 items)
+[2026-07-28 21:54:39.887]   Fallback Item: Uge 8: pensum (Type: Page)
+[2026-07-28 21:54:40.104] Saving page: Uge 8: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 8 pensum.html
+[2026-07-28 21:54:40.248]   Fallback Item: Uge 8: mål med undervisningen (Type: Page)
+[2026-07-28 21:54:40.493] Saving page: Uge 8: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 8 mål med undervisningen.html
+[2026-07-28 21:54:40.664]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-07-28 21:54:40.669] Creating Link: Forelæsningsvideo (1): organisationsprojekt - vidensproduktion (https://cbscanvas.instructure.com/courses/43660/modules/items/1052745) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) organisationsprojekt - vidensproduktion.url
+[2026-07-28 21:54:40.821]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - vidensproduktion (Type: ExternalTool)
+[2026-07-28 21:54:40.825] Creating Link: Forelæsningsvideo (2): organisationsprojekt - vidensproduktion (https://cbscanvas.instructure.com/courses/43660/modules/items/1052746) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) organisationsprojekt - vidensproduktion.url
+[2026-07-28 21:54:41.242] Fallback Scan: Module Organisationsprojekt - problemformulering (found 8 items)
+[2026-07-28 21:54:41.243]   Fallback Item: Uge 9: pensum (Type: Page)
+[2026-07-28 21:54:41.475] Saving page: Uge 9: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 9 pensum.html
+[2026-07-28 21:54:41.611]   Fallback Item: Uge 9: mål med undervisningen (Type: Page)
+[2026-07-28 21:54:41.927] Saving page: Uge 9: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 9 mål med undervisningen.html
+[2026-07-28 21:54:42.069]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-07-28 21:54:42.073] Creating Link: Forelæsningsvideo (1): organisationsprojekt - problemformulering (https://cbscanvas.instructure.com/courses/43660/modules/items/1052753) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) organisationsprojekt - problemformulering.url
+[2026-07-28 21:54:42.238]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - problemformulering (Type: ExternalTool)
+[2026-07-28 21:54:42.242] Creating Link: Forelæsningsvideo (2): organisationsprojekt - problemformulering (https://cbscanvas.instructure.com/courses/43660/modules/items/1052754) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) organisationsprojekt - problemformulering.url
+[2026-07-28 21:54:42.630] Fallback Scan: Module Organisationsprojekt - undersøgelsesdesign (found 7 items)
+[2026-07-28 21:54:42.631]   Fallback Item: Uge 10: pensum (Type: Page)
+[2026-07-28 21:54:42.922] Saving page: Uge 10: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 10 pensum.html
+[2026-07-28 21:54:43.194]   Fallback Item: Uge 10: mål med undervisningen (Type: Page)
+[2026-07-28 21:54:43.471] Saving page: Uge 10: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 10 mål med undervisningen.html
+[2026-07-28 21:54:43.615]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign (Type: ExternalTool)
+[2026-07-28 21:54:43.620] Creating Link: Forelæsningsvideo (1): organisationsprojekt - Undersøgelsesdesign (https://cbscanvas.instructure.com/courses/43660/modules/items/1052762) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) organisationsprojekt - Undersøgelsesdesign.url
+[2026-07-28 21:54:43.788]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker (Type: ExternalTool)
+[2026-07-28 21:54:43.793] Creating Link: Forelæsningsvideo (2): organisationsprojekt - Dataindsamlingsteknikker (https://cbscanvas.instructure.com/courses/43660/modules/items/1052763) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) organisationsprojekt - Dataindsamlingsteknikker.url
+[2026-07-28 21:54:44.187] Fallback Scan: Module Klyngevejledning 1 (found 11 items)
+[2026-07-28 21:54:44.187]   Fallback Item: Uge 11: formål med klyngevejledningen (Type: Page)
+[2026-07-28 21:54:44.444] Saving page: Uge 11: formål med klyngevejledningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 11 formål med klyngevejledningen.html
+[2026-07-28 21:54:44.628]   Fallback Item: Filer til Klynge 1 (Type: Page)
+[2026-07-28 21:54:44.942] Saving page: Filer til Klynge 1 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 1.html
+[2026-07-28 21:54:45.099]   Fallback Item: Filer til Klynge 2 (Type: Page)
+[2026-07-28 21:54:45.366] Saving page: Filer til Klynge 2 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 2.html
+[2026-07-28 21:54:45.515]   Fallback Item: Filer til Klynge 3 (Type: Page)
+[2026-07-28 21:54:45.859] Saving page: Filer til Klynge 3 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 3.html
+[2026-07-28 21:54:46.017]   Fallback Item: Filer til Klynge 4 (Type: Page)
+[2026-07-28 21:54:46.391] Saving page: Filer til Klynge 4 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 4.html
+[2026-07-28 21:54:46.556]   Fallback Item: Filer til Klynge 5 (Type: Page)
+[2026-07-28 21:54:47.176] Saving page: Filer til Klynge 5 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 5.html
+[2026-07-28 21:54:47.374]   Fallback Item: Filer til Klynge 6 (Type: Page)
+[2026-07-28 21:54:47.694] Saving page: Filer til Klynge 6 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 6.html
+[2026-07-28 21:54:47.883]   Fallback Item: Filer til Klynge 7 (Type: Page)
+[2026-07-28 21:54:48.223] Saving page: Filer til Klynge 7 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 7.html
+[2026-07-28 21:54:48.650] Fallback Scan: Module Organisationsprojekt - operationalisering af teori (found 9 items)
+[2026-07-28 21:54:48.650]   Fallback Item: Uge 12: pensum (Type: Page)
+[2026-07-28 21:54:48.869] Saving page: Uge 12: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 12 pensum.html
+[2026-07-28 21:54:49.003]   Fallback Item: Uge 12: mål med undervisningen (Type: Page)
+[2026-07-28 21:54:49.217] Saving page: Uge 12: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 12 mål med undervisningen.html
+[2026-07-28 21:54:49.423]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - operationalisering (Type: ExternalTool)
+[2026-07-28 21:54:49.428] Creating Link: Forelæsningsvideo (1): organisationsprojekt - operationalisering (https://cbscanvas.instructure.com/courses/43660/modules/items/1052773) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) organisationsprojekt - operationalisering.url
+[2026-07-28 21:54:49.646]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation (Type: ExternalTool)
+[2026-07-28 21:54:49.651] Creating Link: Forelæsningsvideo (2): organisationsprojekt - akademisk argumentation (https://cbscanvas.instructure.com/courses/43660/modules/items/1052774) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) organisationsprojekt - akademisk argumentation.url
+[2026-07-28 21:54:49.797]   Fallback Item: Upload af besvarelse Interviewguide (husk at notér XA og XB) (Type: Discussion)
+[2026-07-28 21:54:50.040] Fallback Scan: Module Organisationsprojekt - klargøring af data til analyse (found 10 items)
+[2026-07-28 21:54:50.040]   Fallback Item: Uge 13: pensum (Type: Page)
+[2026-07-28 21:54:50.264] Saving page: Uge 13: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 13 pensum.html
+[2026-07-28 21:54:50.414]   Fallback Item: Uge 13: mål med undervisningen (Type: Page)
+[2026-07-28 21:54:50.634] Saving page: Uge 13: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 13 mål med undervisningen.html
+[2026-07-28 21:54:50.773]   Fallback Item: Forelæsningsvideo (1): organisationsprojekt - klargøring af data (Type: ExternalTool)
+[2026-07-28 21:54:50.777] Creating Link: Forelæsningsvideo (1): organisationsprojekt - klargøring af data (https://cbscanvas.instructure.com/courses/43660/modules/items/1052783) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (1) organisationsprojekt - klargøring af data.url
+[2026-07-28 21:54:50.956]   Fallback Item: Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data (Type: ExternalTool)
+[2026-07-28 21:54:50.961] Creating Link: Forelæsningsvideo (2): organisationsprojekt - eksempel på klargøring af data (https://cbscanvas.instructure.com/courses/43660/modules/items/1052784) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Forelæsningsvideo (2) organisationsprojekt - eksempel på klargøring af data.url
+[2026-07-28 21:54:51.288] Fallback Scan: Module Sammenfatning og evaluering af organisationsfaget (found 4 items)
+[2026-07-28 21:54:51.289]   Fallback Item: Uge 15: pensum (Type: Page)
+[2026-07-28 21:54:51.516] Saving page: Uge 15: pensum -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 15 pensum.html
+[2026-07-28 21:54:51.673]   Fallback Item: Uge 15: mål med undervisningen (Type: Page)
+[2026-07-28 21:54:51.985] Saving page: Uge 15: mål med undervisningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 15 mål med undervisningen.html
+[2026-07-28 21:54:52.327] Fallback Scan: Module Øvelser i uge 16 (found 3 items)
+[2026-07-28 21:54:52.328]   Fallback Item: Uge 16: mål med øvelserne (Type: Page)
+[2026-07-28 21:54:52.591] Saving page: Uge 16: mål med øvelserne -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 16 mål med øvelserne.html
+[2026-07-28 21:54:52.987] Fallback Scan: Module Klyngevejledning 2 (found 11 items)
+[2026-07-28 21:54:52.987]   Fallback Item: Uge 17: formål med klyngevejledningen (Type: Page)
+[2026-07-28 21:54:53.226] Saving page: Uge 17: formål med klyngevejledningen -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Uge 17 formål med klyngevejledningen.html
+[2026-07-28 21:54:53.392]   Fallback Item: Filer til Klynge 1 (Type: Page)
+[2026-07-28 21:54:53.908] Saving page: Filer til Klynge 1 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 1 (1).html
+[2026-07-28 21:54:54.359]   Fallback Item: Filer til Klynge 2 (Type: Page)
+[2026-07-28 21:54:54.633] Saving page: Filer til Klynge 2 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 2 (1).html
+[2026-07-28 21:54:54.848]   Fallback Item: Filer til Klynge 3 (Type: Page)
+[2026-07-28 21:54:55.199] Saving page: Filer til Klynge 3 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 3 (1).html
+[2026-07-28 21:54:55.356]   Fallback Item: Filer til Klynge 4 (Type: Page)
+[2026-07-28 21:54:55.624] Saving page: Filer til Klynge 4 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 4 (1).html
+[2026-07-28 21:54:55.799]   Fallback Item: Filer til Klynge 5 (Type: Page)
+[2026-07-28 21:54:56.197] Saving page: Filer til Klynge 5 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 5 (1).html
+[2026-07-28 21:54:56.382]   Fallback Item: Filer til Klynge 6 (Type: Page)
+[2026-07-28 21:54:56.772] Saving page: Filer til Klynge 6 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 6 (1).html
+[2026-07-28 21:54:57.001]   Fallback Item: Filer til Klynge 7 (Type: Page)
+[2026-07-28 21:54:57.532] Saving page: Filer til Klynge 7 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 7 (1).html
+[2026-07-28 21:54:57.907]   Fallback Item: Filer til Klynge 8 (Type: Page)
+[2026-07-28 21:54:58.164] Saving page: Filer til Klynge 8 -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Page Filer til Klynge 8.html
+[2026-07-28 21:54:58.519] Fallback Scan: Module Øvelser i uge 18 (found 3 items)
+[2026-07-28 21:54:58.528] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 2 (1).pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-07-28 21:54:58.530] Requesting URL: https://cbscanvas.instructure.com/files/1559918/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 21:54:58.535] ERROR [Locked File] Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) :: Sensemaking slides 1 (1).pptx :: The teacher has locked this file on Canvas, so it cannot be downloaded (This file is currently locked).
+[2026-07-28 21:54:59.441] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 21:54:59.542] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Maurer_Introduction to Change.pdf (822315 bytes)
+[2026-07-28 21:54:59.742] Starting Catch-All Phase for non-module files...
+[2026-07-28 21:54:59.747] No partial/non-module files found.
+[2026-07-28 21:54:59.747] --- Canvas Content Phase: [assignments] ---
+[2026-07-28 21:54:59.747] === Starting Canvas Content Download ===
+[2026-07-28 21:54:59.751] Secondary: Fetching assignments...
+[2026-07-28 21:55:00.472] Saving assignment: Quiz: læring og innovation -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_145153_matrix__gpu\downloads\Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\Assignment Quiz læring og innovation.html
+[2026-07-28 21:55:00.765] === Canvas Content Download Complete ===
+[2026-07-28 21:55:00.765] --- Download Complete: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | 192 items | 163.1 MB downloaded ---
+
+==================================================
+--- Post-Processing: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) ---
+==================================================
+[2026-07-28 21:55:02.045] [INFO] [core.sync_manager] Updated manifest entry -10032347 to new file: Assignment Quiz læring og innovation.md
+[2026-07-28 21:55:02.362] [INFO] [core.sync_manager] Updated manifest entry -276816 to new file: Page Brug af AI i eksamensprojektet.md
+[2026-07-28 21:55:02.695] [INFO] [core.sync_manager] Updated manifest entry -280715 to new file: Page Filer til Klynge 1 (1).md
+[2026-07-28 21:55:03.037] [INFO] [core.sync_manager] Updated manifest entry -279274 to new file: Page Filer til Klynge 1.md
+[2026-07-28 21:55:03.370] [INFO] [core.sync_manager] Updated manifest entry -280716 to new file: Page Filer til Klynge 2 (1).md
+[2026-07-28 21:55:03.730] [INFO] [core.sync_manager] Updated manifest entry -279275 to new file: Page Filer til Klynge 2.md
+[2026-07-28 21:55:04.070] [INFO] [core.sync_manager] Updated manifest entry -280717 to new file: Page Filer til Klynge 3 (1).md
+[2026-07-28 21:55:04.397] [INFO] [core.sync_manager] Updated manifest entry -279276 to new file: Page Filer til Klynge 3.md
+[2026-07-28 21:55:04.720] [INFO] [core.sync_manager] Updated manifest entry -280718 to new file: Page Filer til Klynge 4 (1).md
+[2026-07-28 21:55:05.106] [INFO] [core.sync_manager] Updated manifest entry -279279 to new file: Page Filer til Klynge 4.md
+[2026-07-28 21:55:05.445] [INFO] [core.sync_manager] Updated manifest entry -280719 to new file: Page Filer til Klynge 5 (1).md
+[2026-07-28 21:55:05.762] [INFO] [core.sync_manager] Updated manifest entry -279280 to new file: Page Filer til Klynge 5.md
+[2026-07-28 21:55:06.137] [INFO] [core.sync_manager] Updated manifest entry -280720 to new file: Page Filer til Klynge 6 (1).md
+[2026-07-28 21:55:06.495] [INFO] [core.sync_manager] Updated manifest entry -279281 to new file: Page Filer til Klynge 6.md
+[2026-07-28 21:55:06.820] [INFO] [core.sync_manager] Updated manifest entry -280721 to new file: Page Filer til Klynge 7 (1).md
+[2026-07-28 21:55:07.120] [INFO] [core.sync_manager] Updated manifest entry -279282 to new file: Page Filer til Klynge 7.md
+[2026-07-28 21:55:07.479] [INFO] [core.sync_manager] Updated manifest entry -280722 to new file: Page Filer til Klynge 8.md
+[2026-07-28 21:55:07.905] [INFO] [core.sync_manager] Updated manifest entry -275155 to new file: Page Grupper til eksamensprojekt.md
+[2026-07-28 21:55:08.222] [INFO] [core.sync_manager] Updated manifest entry -261465 to new file: Page Helle Zinner Henriksens Kontortid.md
+[2026-07-28 21:55:08.529] [INFO] [core.sync_manager] Updated manifest entry -248343 to new file: Page Uge 10 mål med undervisningen.md
+[2026-07-28 21:55:08.937] [INFO] [core.sync_manager] Updated manifest entry -248344 to new file: Page Uge 10 pensum.md
+[2026-07-28 21:55:09.362] [INFO] [core.sync_manager] Updated manifest entry -248345 to new file: Page Uge 11 formål med klyngevejledningen.md
+[2026-07-28 21:55:09.679] [INFO] [core.sync_manager] Updated manifest entry -248346 to new file: Page Uge 12 mål med undervisningen.md
+[2026-07-28 21:55:09.996] [INFO] [core.sync_manager] Updated manifest entry -248347 to new file: Page Uge 12 pensum.md
+[2026-07-28 21:55:10.321] [INFO] [core.sync_manager] Updated manifest entry -248348 to new file: Page Uge 13 mål med undervisningen.md
+[2026-07-28 21:55:10.787] [INFO] [core.sync_manager] Updated manifest entry -248349 to new file: Page Uge 13 pensum.md
+[2026-07-28 21:55:11.171] [INFO] [core.sync_manager] Updated manifest entry -248350 to new file: Page Uge 15 mål med undervisningen.md
+[2026-07-28 21:55:11.487] [INFO] [core.sync_manager] Updated manifest entry -248351 to new file: Page Uge 15 pensum.md
+[2026-07-28 21:55:11.813] [INFO] [core.sync_manager] Updated manifest entry -280308 to new file: Page Uge 16 mål med øvelserne.md
+[2026-07-28 21:55:12.129] [INFO] [core.sync_manager] Updated manifest entry -248352 to new file: Page Uge 17 formål med klyngevejledningen.md
+[2026-07-28 21:55:12.463] [INFO] [core.sync_manager] Updated manifest entry -248381 to new file: Page Uge 6 mål med undervisningen.md
+[2026-07-28 21:55:12.839] [INFO] [core.sync_manager] Updated manifest entry -248382 to new file: Page Uge 6 pensum.md
+[2026-07-28 21:55:13.215] [INFO] [core.sync_manager] Updated manifest entry -248383 to new file: Page Uge 8 mål med undervisningen.md
+[2026-07-28 21:55:13.554] [INFO] [core.sync_manager] Updated manifest entry -248384 to new file: Page Uge 8 pensum.md
+[2026-07-28 21:55:13.896] [INFO] [core.sync_manager] Updated manifest entry -248385 to new file: Page Uge 9 mål med undervisningen.md
+[2026-07-28 21:55:14.246] [INFO] [core.sync_manager] Updated manifest entry -248386 to new file: Page Uge 9 pensum.md
+[2026-07-28 21:55:18.215] [INFO] [core.sync_manager] Updated manifest entry 1560037 to new file: Klyngevejledning_1_Program_2023.pdf
+[2026-07-28 21:55:20.606] === Course Finished: Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U) | Downloaded: 193 items | Errors: 2 ===
+[2026-07-28 21:55:20.607] Post-processing ran: [zip, html, word]
+[2026-07-28 21:55:20.666] === Download Start: Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U) | Course 2/2 ===
+[2026-07-28 21:55:20.667] Mode: flat | Filter: all
+[2026-07-28 21:55:20.668] Post-processing: [zip, html, word]
+[2026-07-28 21:55:20.668] Secondary content: [assignments]
+[2026-07-28 21:55:20.934] 
+==================================================
+[2026-07-28 21:56:33.076] [INFO] [panopto.runner] Discovering Panopto recordings in 'Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' (course id=43660)...
+[2026-07-28 21:56:47.685] [INFO] [panopto.runner] Discovered 36 recording(s) in 'Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)' by source {'module': 36}

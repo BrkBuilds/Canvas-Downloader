@@ -1,0 +1,120 @@
+{
+  "name": "m004_phase_download",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260728_145153_matrix__free2\\evidence\\screenshots\\m004_phase_download.png",
+  "captured": "2026-07-28 18:36:12",
+  "screen": {
+    "url": "http://127.0.0.1:8830/?mode=download&step=3",
+    "mode": "download",
+    "step": "3",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Downloading...",
+      "Introduction to Information Systems (LA E25 BINTO1078U)"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_download_0_select_st_done_donesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_1_configure_st_done_donesep",
+        "text": "2. Configure Download",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_2_analyze_st_done_donesep",
+        "text": "3. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_3_download_st_active_idlesep",
+        "text": "4. Downloading",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_download_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cancel_download_btn",
+        "text": "Cancel Download",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownloading...\n\nDOWNLOADING\n\nIntroduction to Information Systems (LA E25 BINTO1078U)\n3%\nDOWNLOADED\n0.0 / 64.8 MB\nSPEED\n0.0 MB/s\nFILES\n1 / 31\nTIME REMAINING\n~00:39\nDOWNLOADING\nCourse description including examination rules\nCourse description including examination rules\n\nCancel Download",
+    "textLen": 370
+  },
+  "wizard": [
+    {
+      "flow": "download",
+      "index": 0,
+      "id": "select",
+      "state": "done",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "download",
+      "index": 1,
+      "id": "configure",
+      "state": "done",
+      "label": "2. Configure Download"
+    },
+    {
+      "flow": "download",
+      "index": 2,
+      "id": "analyze",
+      "state": "done",
+      "label": "3. Analyzing"
+    },
+    {
+      "flow": "download",
+      "index": 3,
+      "id": "download",
+      "state": "active",
+      "label": "4. Downloading"
+    },
+    {
+      "flow": "download",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "dashboard": {
+    "present": true,
+    "header": "Introduction to Information Systems (LA E25 BINTO1078U)",
+    "barWidth": "",
+    "metrics": {},
+    "rawMetricsText": "DOWNLOADED | 0.0 / 64.8 MB | SPEED | 0.0 MB/s | FILES | 1 / 31 | TIME REMAINING | ~00:39",
+    "activeFile": "",
+    "logTail": "",
+    "cardText": "DOWNLOADING\n\nIntroduction to Information Systems (LA E25 BINTO1078U)\n3%\nDOWNLOADED\n0.0 / 64.8 MB\nSPEED\n0.0 MB/s\nFILES\n1 / 31\nTIME REMAINING\n~00:39\nDOWNLOADING\nCourse description including examination rules\nCourse description including examination rules"
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

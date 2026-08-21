@@ -1,0 +1,106 @@
+--- Debug Log Started: 2026-07-28 18:01:13.301768 ---
+[2026-07-28 18:01:15.050] === Session Environment ===
+  App: Canvas Downloader v2.0.1 | frozen=False | pid=12560
+  OS: Windows 11 | Windows-11-10.0.26200-SP0 | arch=AMD64
+  Python: 3.13.1
+  CA bundle (certifi): ok
+  Context: Download mode | 1 course(s)
+===========================
+[2026-07-28 18:01:15.051] === Download Start: Introduction to Information Systems (XB E25 BINTO1078U) | Course 1/1 ===
+[2026-07-28 18:01:15.051] Mode: flat | Filter: all
+[2026-07-28 18:01:15.051] Post-processing: [none]
+[2026-07-28 18:01:15.052] Secondary content: [none]
+[2026-07-28 18:01:15.323] 
+==================================================
+--- Download: Introduction to Information Systems (XB E25 BINTO1078U) (ID: 44428) Mode: flat ---
+==================================================
+[2026-07-28 18:01:15.351] Save Dir: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads
+[2026-07-28 18:01:15.351] Filter: all | Concurrency: 10 | Max file size: 5 MB | Estimated payload: 18 MB
+[2026-07-28 18:01:15.352] Canvas Content: [none] | isolate=no
+[2026-07-28 18:01:15.352] Post-processing: [none]
+[2026-07-28 18:01:15.629] Starting Flat Download for Introduction to Information Systems (XB E25 BINTO1078U)
+[2026-07-28 18:01:16.167] Requesting URL: https://cbscanvas.instructure.com/files/1628929/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:16.168] Requesting URL: https://cbscanvas.instructure.com/files/1625441/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:16.169] Requesting URL: https://cbscanvas.instructure.com/files/1632521/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:16.170] Requesting URL: https://cbscanvas.instructure.com/files/1639325/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:16.170] Requesting URL: https://cbscanvas.instructure.com/files/1652670/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:16.171] Requesting URL: https://cbscanvas.instructure.com/files/1657204/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:16.172] Requesting URL: https://cbscanvas.instructure.com/files/1657203/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:16.172] Requesting URL: https://cbscanvas.instructure.com/files/1669797/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:16.173] Requesting URL: https://cbscanvas.instructure.com/files/1674582/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:16.173] Requesting URL: https://cbscanvas.instructure.com/files/1669798/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:17.056] Response Status: 200 Content-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+[2026-07-28 18:01:17.085] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:17.117] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:17.127] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:17.139] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:17.148] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:17.156] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:17.157] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:17.163] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:17.276] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:17.662] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\05_Exercise_vShared.pdf (588787 bytes)
+[2026-07-28 18:01:17.798] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\05_Exercise_vLecture.pdf (690488 bytes)
+[2026-07-28 18:01:18.020] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\01_Exercise (1).pdf (836240 bytes)
+[2026-07-28 18:01:18.033] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\01_Exercise_vShared.pdf (706744 bytes)
+[2026-07-28 18:01:18.037] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\07_Exercise.pdf (604164 bytes)
+[2026-07-28 18:01:18.083] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\03_Exercise.pdf (1042948 bytes)
+[2026-07-28 18:01:18.094] Requesting URL: https://cbscanvas.instructure.com/files/1685283/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:18.123] Requesting URL: https://cbscanvas.instructure.com/files/1689336/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:18.171] Requesting URL: https://cbscanvas.instructure.com/files/1689839/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:18.182] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\02_Exercise.pdf (791148 bytes)
+[2026-07-28 18:01:18.209] Requesting URL: https://cbscanvas.instructure.com/files/1683969/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:18.245] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\04_Exercise.pptx (3695853 bytes)
+[2026-07-28 18:01:18.253] Requesting URL: https://cbscanvas.instructure.com/files/1637104/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:18.280] Requesting URL: https://cbscanvas.instructure.com/files/1634823/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:18.362] Requesting URL: https://cbscanvas.instructure.com/files/1653978/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:18.443] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\06_Exercise.pdf (1566115 bytes)
+[2026-07-28 18:01:18.490] Requesting URL: https://cbscanvas.instructure.com/files/1698199/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:18.641] Requesting URL: https://cbscanvas.instructure.com/files/1698198/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:18.743] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\06_Exercise_withAnswers.pdf (1430850 bytes)
+[2026-07-28 18:01:18.838] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:18.857] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:18.867] Requesting URL: https://cbscanvas.instructure.com/files/1653360/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:18.957] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:18.959] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:18.979] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:19.002] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Compulsory Assignment_Fall 2025.pdf (123830 bytes)
+[2026-07-28 18:01:19.074] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\08_Exercise_Answer.pdf (863477 bytes)
+[2026-07-28 18:01:19.112] Requesting URL: https://cbscanvas.instructure.com/files/1674581/download?download_frd=1&verifier=[REDACTED] (Attempt 1)
+[2026-07-28 18:01:19.122] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:19.146] Response Status: 200 Content-Type: application/x-sqlite3
+[2026-07-28 18:01:19.157] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise5_SQL.sec (24576 bytes)
+[2026-07-28 18:01:19.193] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\08_Exercise.pdf (649172 bytes)
+[2026-07-28 18:01:19.201] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Exercise 2 Case - with model answers.pdf (95340 bytes)
+[2026-07-28 18:01:19.222] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\09_Exercise.pdf (597783 bytes)
+[2026-07-28 18:01:19.310] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:19.368] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:19.473] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Introduction to Information Systems_Exam_with solutions.pdf (647872 bytes)
+[2026-07-28 18:01:19.493] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Introduction to Information Systems_Retake_with solutions.pdf (430711 bytes)
+[2026-07-28 18:01:19.583] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:19.586] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\09_ExerciseSolution.pdf (769604 bytes)
+[2026-07-28 18:01:19.993] Response Status: 200 Content-Type: application/pdf
+[2026-07-28 18:01:20.033] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Group Assignment Example.pdf (2466662 bytes)
+[2026-07-28 18:01:20.149] File Saved: G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Teaching Case_ Design and Development of a Special Population Res.pdf (446893 bytes)
+[2026-07-28 18:01:20.767] Fallback Scan: Module Course description including examination rules (found 2 items)
+[2026-07-28 18:01:20.768]   Fallback Item: Course description including examination rules (Type: ExternalUrl)
+[2026-07-28 18:01:20.773] Creating Link: Course description including examination rules (https://kursuskatalog.cbs.dk/2025-2026/BA-BINTO1078U.aspx) -> G:\18 AI\ANTIGRAVITY WORKSPACES\Canvas Downloader\_audit_runs\20260728_180021_smokecap2__free1\downloads\Introduction to Information Systems (XB E25 BINTO1078U)\Course description including examination rules.url
+[2026-07-28 18:01:21.121] Fallback Scan: Module Exercise 1 (found 2 items)
+[2026-07-28 18:01:21.285] Fallback Scan: Module Exercise 2 (found 2 items)
+[2026-07-28 18:01:21.475] Fallback Scan: Module Exercise 3 (found 2 items)
+[2026-07-28 18:01:21.649] Fallback Scan: Module Exercise 4 (found 1 items)
+[2026-07-28 18:01:21.893] Fallback Scan: Module Exercise 5 (found 3 items)
+[2026-07-28 18:01:22.089] Fallback Scan: Module Exercise 6 (found 3 items)
+[2026-07-28 18:01:22.089]   Fallback Item: Midterm course evaluation (Type: Quiz)
+[2026-07-28 18:01:22.243] Fallback Scan: Module Exercise 7 (found 2 items)
+[2026-07-28 18:01:22.400] Fallback Scan: Module Exercise 8 (found 2 items)
+[2026-07-28 18:01:22.565] Fallback Scan: Module Exercise 9 (found 2 items)
+[2026-07-28 18:01:22.746] Fallback Scan: Module Last Year Exams (found 2 items)
+[2026-07-28 18:01:22.746] Starting Catch-All Phase for non-module files...
+[2026-07-28 18:01:22.747] No partial/non-module files found.
+[2026-07-28 18:01:22.748] --- Download Complete: Introduction to Information Systems (XB E25 BINTO1078U) | 22 items | 18.2 MB downloaded ---
+
+==================================================
+--- Post-Processing: Introduction to Information Systems (XB E25 BINTO1078U) ---
+==================================================
+[2026-07-28 18:01:23.123] === Course Finished: Introduction to Information Systems (XB E25 BINTO1078U) | Downloaded: 22 items | Errors: 0 ===

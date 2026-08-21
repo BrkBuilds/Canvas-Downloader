@@ -1,0 +1,270 @@
+{
+  "name": "mp4_only",
+  "course_ids": [
+    43660
+  ],
+  "config": {
+    "mode": "flat",
+    "file_filter": "study",
+    "pan_layout": "separate",
+    "pan_out_mp4": true,
+    "pan_out_url": true,
+    "pan_out_mp3": false,
+    "pan_out_txt": false,
+    "pan_out_srt": false,
+    "convert_urls": true
+  },
+  "select": {
+    "courses": [
+      43660
+    ],
+    "results": [
+      {
+        "course_id": 43660,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "study",
+      "mode": "flat",
+      "convert_urls": true,
+      "pan_layout": "separate"
+    },
+    "failed": [
+      {
+        "factor": "pan_out_url",
+        "key": "btn_pan_out_url",
+        "ok": false,
+        "reason": "control not present (card collapsed?)"
+      },
+      {
+        "factor": "pan_out_mp4",
+        "key": "btn_pan_out_mp4",
+        "ok": false,
+        "reason": "control not present (card collapsed?)"
+      },
+      {
+        "factor": "pan_out_mp3",
+        "key": "btn_pan_out_mp3",
+        "ok": false,
+        "reason": "control not present (card collapsed?)"
+      },
+      {
+        "factor": "pan_out_txt",
+        "key": "btn_pan_out_txt",
+        "ok": false,
+        "reason": "control not present (card collapsed?)"
+      },
+      {
+        "factor": "pan_out_srt",
+        "key": "btn_pan_out_srt",
+        "ok": false,
+        "reason": "control not present (card collapsed?)"
+      }
+    ],
+    "verified": {
+      "convert_urls": true,
+      "pan_out_url": null,
+      "pan_out_mp4": null,
+      "pan_out_mp3": null,
+      "pan_out_txt": null,
+      "pan_out_srt": null
+    },
+    "drift": [],
+    "ok": false
+  },
+  "config_shot": {
+    "name": "mp4_only_config",
+    "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260810_001830_mp4-and-macos-2026-08-10\\evidence\\screenshots\\mp4_only_config.png",
+    "extract": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260810_001830_mp4-and-macos-2026-08-10\\evidence\\ui\\mp4_only_config.json",
+    "textLen": 1042,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "mp4_only",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n118\nFILES DOWNLOADED\n813.1\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nCannot Be Downloaded\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n118 FILES\nPDF\n56\nPPTX\n51\nOTHER FILES\n11\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 96.9
+    },
+    "captures": [
+      "mp4_only_phase_scan",
+      "mp4_only_phase_download",
+      "mp4_only_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "00:20:15",
+      "action": "select_courses",
+      "courses": [
+        43660
+      ],
+      "results": [
+        {
+          "course_id": 43660,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "00:20:16",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "00:20:19",
+      "action": "expand_card",
+      "card": "toggle_card3",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "00:20:20",
+      "action": "set_toggle",
+      "key": "btn_convert_urls",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "00:21:20",
+      "action": "expand_card",
+      "card": "toggle_panopto",
+      "open": true,
+      "ok": false
+    },
+    {
+      "t": "00:21:28",
+      "action": "set_toggle",
+      "key": "btn_pan_out_url",
+      "ok": false,
+      "reason": "control not present (card collapsed?)"
+    },
+    {
+      "t": "00:21:36",
+      "action": "set_toggle",
+      "key": "btn_pan_out_mp4",
+      "ok": false,
+      "reason": "control not present (card collapsed?)"
+    },
+    {
+      "t": "00:21:44",
+      "action": "set_toggle",
+      "key": "btn_pan_out_mp3",
+      "ok": false,
+      "reason": "control not present (card collapsed?)"
+    },
+    {
+      "t": "00:21:52",
+      "action": "set_toggle",
+      "key": "btn_pan_out_txt",
+      "ok": false,
+      "reason": "control not present (card collapsed?)"
+    },
+    {
+      "t": "00:22:00",
+      "action": "set_toggle",
+      "key": "btn_pan_out_srt",
+      "ok": false,
+      "reason": "control not present (card collapsed?)"
+    },
+    {
+      "t": "00:22:00",
+      "action": "configure",
+      "applied": {
+        "file_filter": "study",
+        "mode": "flat",
+        "convert_urls": true,
+        "pan_layout": "separate"
+      },
+      "failed": [
+        {
+          "factor": "pan_out_url",
+          "key": "btn_pan_out_url",
+          "ok": false,
+          "reason": "control not present (card collapsed?)"
+        },
+        {
+          "factor": "pan_out_mp4",
+          "key": "btn_pan_out_mp4",
+          "ok": false,
+          "reason": "control not present (card collapsed?)"
+        },
+        {
+          "factor": "pan_out_mp3",
+          "key": "btn_pan_out_mp3",
+          "ok": false,
+          "reason": "control not present (card collapsed?)"
+        },
+        {
+          "factor": "pan_out_txt",
+          "key": "btn_pan_out_txt",
+          "ok": false,
+          "reason": "control not present (card collapsed?)"
+        },
+        {
+          "factor": "pan_out_srt",
+          "key": "btn_pan_out_srt",
+          "ok": false,
+          "reason": "control not present (card collapsed?)"
+        }
+      ],
+      "verified": {
+        "convert_urls": true,
+        "pan_out_url": null,
+        "pan_out_mp4": null,
+        "pan_out_mp3": null,
+        "pan_out_txt": null,
+        "pan_out_srt": null
+      },
+      "drift": [],
+      "ok": false
+    },
+    {
+      "t": "00:23:47",
+      "action": "confirm_and_run",
+      "name": "mp4_only",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n118\nFILES DOWNLOADED\n813.1\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nCannot Be Downloaded\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n118 FILES\nPDF\n56\nPPTX\n51\nOTHER FILES\n11\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 96.9
+      },
+      "captures": [
+        "mp4_only_phase_scan",
+        "mp4_only_phase_download",
+        "mp4_only_complete"
+      ],
+      "ok": true
+    }
+  ]
+}

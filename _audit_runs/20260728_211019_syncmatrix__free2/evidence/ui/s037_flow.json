@@ -1,0 +1,101 @@
+{
+  "name": "s037",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": true,
+    "landed_on": "analyze",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 0,
+        "id": "select",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": " review the changes first or just fetch everything.\n\nCourse: Introduction to Information Systems (LA)\n\n​\n\nIntroduction to Information Systems (LA E25 BINTO1078U)\nNever synced\n\nOpen Folder\n\nEdit\n\nIgnored Files\n\nRemove\n\nAdd Course\n\nSave as Group\n\nAnalyze, Review & Sync\n\nCompares with Canvas, then you pick what to download\nOR\n\nQuick Sync\n\nDownloads every new file and update in one click\n\nSync History",
+      "waited_s": 0.0
+    },
+    "capture": "s037_after_analysis",
+    "ok": true
+  },
+  "confirm": {
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "sync",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Sync Complete!",
+      "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nQuick Sync done - everything up to date\n\nYour folders already match Canvas - nothing to download.\n\n⚠️ Quick Sync skipped 2 files you edited locally.\nTo download them, run a normal 'Analyze, Review & Sync' and select them manually.\n\nGo to front page",
+      "waited_s": 10.1
+    },
+    "capture": "s037_complete",
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "21:30:10",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "21:30:16",
+      "action": "analyze",
+      "quick": true,
+      "landed_on": "analyze",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 0,
+          "id": "select",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": " review the changes first or just fetch everything.\n\nCourse: Introduction to Information Systems (LA)\n\n​\n\nIntroduction to Information Systems (LA E25 BINTO1078U)\nNever synced\n\nOpen Folder\n\nEdit\n\nIgnored Files\n\nRemove\n\nAdd Course\n\nSave as Group\n\nAnalyze, Review & Sync\n\nCompares with Canvas, then you pick what to download\nOR\n\nQuick Sync\n\nDownloads every new file and update in one click\n\nSync History",
+        "waited_s": 0.0
+      },
+      "capture": "s037_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "21:30:27",
+      "action": "wait_terminal",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "sync",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Sync Complete!",
+        "tail": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes (skipped)\n\n4. Download & Sync\n\n5. Complete\n\nSync Complete!\nQuick Sync done - everything up to date\n\nYour folders already match Canvas - nothing to download.\n\n⚠️ Quick Sync skipped 2 files you edited locally.\nTo download them, run a normal 'Analyze, Review & Sync' and select them manually.\n\nGo to front page",
+        "waited_s": 10.1
+      },
+      "capture": "s037_complete",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "parent": "20260730_173725_gpu_transcription",
+  "lanes": [
+    {
+      "lane": "gpu",
+      "index": 0,
+      "serial": true,
+      "parent": "20260730_173725_gpu_transcription",
+      "run_id": "20260730_173725_gpu_transcription__gpu",
+      "app_port": 8940,
+      "cdp_port": 9540,
+      "headless": true,
+      "count": 2,
+      "spec": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260730_173725_gpu_transcription__gpu\\lane_spec.json"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "rows": [
+    {
+      "id": "s101",
+      "ok": false,
+      "error": "FlowError: Settings button not clickable: {'clicked': False, 'key': 'nav_btn_settings', 'found': False, 'reason': 'no host for key nav_btn_settings'}",
+      "traceback": "Traceback (most recent call last):\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 384, in run_lane\n    res = execute(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 428, in execute\n    return _execute_download(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 453, in _execute_download\n    res = f.run(job.name, list(job.course_ids), job.config)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\flows.py\", line 336, in run\n    out[\"size_cap\"] = self.set_size_cap(config.get(\"max_file_size\"))\n                      ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\flows.py\", line 148, in set_size_cap\n    raise FlowError(f\"Settings button not clickable: {opened}\")\ntests.audit.harness.flows.FlowError: Settings button not clickable: {'clicked': False, 'key': 'nav_btn_settings', 'found': False, 'reason': 'no host for key nav_btn_settings'}\n",
+      "seconds": 0.4
+    },
+    {
+      "id": "s102",
+      "ok": false,
+      "error": "FlowError: Settings button not clickable: {'clicked': False, 'key': 'nav_btn_settings', 'found': False, 'reason': 'no host for key nav_btn_settings'}",
+      "traceback": "Traceback (most recent call last):\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 384, in run_lane\n    res = execute(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 428, in execute\n    return _execute_download(rp, job)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\parallel.py\", line 453, in _execute_download\n    res = f.run(job.name, list(job.course_ids), job.config)\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\flows.py\", line 336, in run\n    out[\"size_cap\"] = self.set_size_cap(config.get(\"max_file_size\"))\n                      ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\tests\\audit\\harness\\flows.py\", line 148, in set_size_cap\n    raise FlowError(f\"Settings button not clickable: {opened}\")\ntests.audit.harness.flows.FlowError: Settings button not clickable: {'clicked': False, 'key': 'nav_btn_settings', 'found': False, 'reason': 'no host for key nav_btn_settings'}\n",
+      "seconds": 0.4
+    }
+  ],
+  "current": "",
+  "updated": "2026-07-28T17:59:43"
+}

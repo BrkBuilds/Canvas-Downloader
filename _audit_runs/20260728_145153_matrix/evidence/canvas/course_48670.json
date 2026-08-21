@@ -1,0 +1,67 @@
+{
+  "course_id": 48670,
+  "api_url": "https://cbscanvas.instructure.com",
+  "name": "Virksomhedens økonomiske styring (3): Finansiering (XB E26 BINTO1051U)",
+  "course_code": "BINTO1051U.XB_E26 (Virksomhedens økonomiske styring (3): Finansiering)",
+  "fetched_at": "2026-07-28T14:52:35",
+  "folders": {
+    "444661": {
+      "id": 444661,
+      "full_name": "course files",
+      "name": "course files",
+      "hidden": false,
+      "locked": false
+    }
+  },
+  "files_tab": {},
+  "modules": [
+    {
+      "id": 327227,
+      "name": "Course description including examination rules",
+      "position": 1,
+      "published": null,
+      "item_count": 1,
+      "items": [
+        {
+          "id": 1169025,
+          "type": "ExternalUrl",
+          "title": "Course description including examination rules",
+          "content_id": null,
+          "page_url": null,
+          "external_url": "https://kursuskatalog.cbs.dk/2026-2027/BA-BINTO1051U.aspx",
+          "published": null
+        }
+      ]
+    }
+  ],
+  "module_item_types": {
+    "ExternalUrl": 1
+  },
+  "module_file_ids": [],
+  "only_in_modules": [],
+  "only_in_files_tab": [],
+  "files_tab_restricted": false,
+  "assignments": [],
+  "quizzes": [],
+  "announcements": [],
+  "discussions": [],
+  "pages": [],
+  "pages_restricted": true,
+  "syllabus_present": false,
+  "inline_file_ids": [],
+  "inline_only_file_ids": [],
+  "expected_file_ids": [],
+  "secondary_counts": {
+    "assignment": 0,
+    "quiz": 0,
+    "discussion": 0,
+    "announcement": 0,
+    "page": 0,
+    "syllabus": 0
+  },
+  "notes": {
+    "quizzes": "ResourceDoesNotExist: Not Found",
+    "pages": "ResourceDoesNotExist: Not Found"
+  },
+  "elapsed_s": 3.0
+}
