@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Reveal-on-scroll is gated on this class. Without JavaScript nothing is
+       hidden, so a non-rendering fetch (several assistant crawlers do not run
+       scripts) gets the page's text instead of opacity: 0. The class also
+       means "the mechanism that reveals this content exists", so a browser
+       without IntersectionObserver shows the page rather than a blank one. -->
+  <script>if('IntersectionObserver' in window)document.documentElement.classList.add('js');</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Under the Hood - Canvas Downloader</title>
@@ -137,6 +143,12 @@
 
     .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.55s ease, transform 0.55s ease; }
     .reveal.vis { opacity: 1; transform: none; }
+
+    /* No JavaScript: show everything. Additive on purpose - the rules above
+       are untouched, and with JS present html.js matches so this one never
+       applies, which is what makes the animated path byte-identical. Beats
+       the .reveal above on specificity (0,2,1 vs 0,1,0) without !important. */
+    html:not(.js) .reveal { opacity: 1; transform: none; }
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       .reveal { opacity: 1; transform: none; transition: none; }
