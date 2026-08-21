@@ -816,6 +816,121 @@ Every `claude.ai/code/artifact/<uuid>` link handed to this operator has 404'd in
 - **Where to put it**: alongside the work it belongs to, in a purpose-named folder (`video/walkthrough-script.html` for the launch walkthrough), and say plainly that it is untracked so the operator can delete or gitignore it. Never leave the only copy in the session scratchpad - that is temp, session-scoped, and gone by the next conversation.
 - **The one test that tells the operator which half is broken**, if they want to recover artifact links at all: open `claude.ai/code/artifacts` (the gallery) in the same browser. Gallery loads and lists the document -> the direct link is the problem, open it from the gallery. Gallery also 404s or is empty -> that browser session is not signed in as the artifact's owner account, which is the reading this evidence favours. Either way it is an account/surface question on their side, so **it is not a blocker for delivering the work** - the file on disk already did that.
 
+## `result.new_files` was rebuilt from a dict keyed by FILENAME (2026-08-21)
+Canvas keeps **one `filename`** when a file is uploaded twice and disambiguates
+only the `display_name` (`X.pptx`, `X-1.pptx`). `analyze_course` built
+`new_name_map` so the teacher-re-upload check could look a new file up by name,
+and then rebuilt `result.new_files` **from that map's values** - and a dict keyed
+by name cannot hold two files that share one. The loser of the `setdefault` was
+dropped from the offer entirely: **not new, not up to date, not deleted on
+Canvas, not deleted locally - absent from every category the review screen can
+show.**
+- **`_match_key` UNQUOTES, which is what makes it reachable with ordinary data.**
+  Canvas's `+`-encoded upload name and the plain display name of the same file
+  collapse to ONE key, so the copy whose `display_name` still equals its
+  `filename` has a single key while its sibling has two. If the sibling is listed
+  first that key is already taken - **so which copy vanishes is decided by the
+  order Canvas happened to list them in**, which is why it looked arbitrary.
+- **It self-heals on the NEXT sync** (the offered copy gains a manifest row and
+  stops competing for the key), which is exactly why it was carried for ten days
+  as *"re-offered one per sync, not both"* with its mechanism unestablished. The
+  cost is real anyway: until the user syncs a second time, a file Canvas is
+  offering is one the app never mentions.
+- **The inspection that stalled the previous pass was right as far as it went.**
+  The file DOES reach `raw_new_files` and no auto-discovery tier defers it; the
+  drop is ~120 lines further down, in a loop whose comment says *"Deduplicate new
+  files that were registered under two name keys"* - written to undo a DOUBLE
+  registration, and discarding single ones too.
+- **The fix keeps the map as a lookup index only.** The re-upload branch records
+  what it takes over in `_reupload_consumed` **by identity** - the whole point is
+  that names collide - and `_unique_new` is every regular new file that set does
+  not name, in Canvas order. Both halves of the map's key registration are
+  load-bearing and a test pins each: an OLD manifest row records the raw Canvas
+  `filename`, a new one records the display-derived on-disk name, and they are
+  different strings whenever a teacher curated the display name.
+- **Measured twice against the real product**, not against a mock: ids 1560011 /
+  1560205 driven through the real `SyncManager` against an APFS clone of the real
+  course folder and its real 262-row manifest with the run's own O5 Canvas
+  metadata (`new=1`, 1560011 nowhere -> `new=2`, both offered); and the
+  `CBS_SolbjergPlads_ImageHeader.jpg` TRIPLE (2 of 3 -> 3 of 3), where the
+  missing copy is exactly the one whose display_name equals its filename, as the
+  live run had shown. **NOT yet seen on the review SCREEN** - that needs a live
+  sync matrix.
+- `tests/test_new_files_are_not_name_keyed.py` (14);
+  `scripts/_mutate_new_files_name_key.py` **7/7 caught**, so re-run the mutation
+  pass rather than just the suite. Three mutants survived the first version of
+  the tests and each was a real gap.
+
+## An audit oracle that is BLIND does not under-report - it INVENTS (2026-08-21)
+The audit's log oracle named three tags the app has never emitted
+(`UPDATE-MODIFIED` / `DELETED-CANVAS` / `DELETED-LOCAL` against the app's
+`UPDATE-EDIT` / `CANVAS-DEL` / `LOCAL-DEL`, which it has written since
+2026-06-02, two months before the oracle was authored). So every per-file row for
+three of the six analysis categories was dropped on the floor, silently, from the
+suite's first day. **This entry is about what was built ON that, because that is
+the part that cost a session.**
+- **A defect in the audit was written down as a fact about the PRODUCT.** A later
+  session measured the effect - *"a run whose analysis reported 2
+  deleted-on-Canvas and 2 ignored: the log contained zero rows for either"* - and
+  recorded the conclusion in `crosscheck._LOG_DETAILED_CATS` as the app only
+  logging two categories per file. The app's own source says the opposite two
+  lines above the loop (*"One line per file, for EVERY category the analyzer
+  produced"*). That false premise then routed four of six categories to the
+  review screen as their ONLY witness.
+- **And the review screen does not exist on a Quick Sync row.** Which is how a
+  43-row sync matrix produced **14 HIGH "was not offered" findings** - across
+  `updated_modified` and `deleted_on_canvas`, the categories that decide whether
+  a student's edited file is protected - against an app that had classified every
+  one of them correctly and named the files in its own log.
+- **The blind guard covered ONE oracle** (`oracle == "O2"`), so an O1 verdict
+  with no rows asserted that O1 *"listed other files under X and this was not
+  among them"* - unchecked - and filled `peers_in_category` from the LOG, i.e.
+  from the oracle it had not consulted. For O1-only categories that list is empty
+  by construction, so the finding's own evidence contradicted its sentence and an
+  empty list read as *"there simply were none"*.
+- **"No rows" is TWO OPPOSITE VERDICTS and the rows cannot tell them apart**: the
+  app placed nothing there (so "not offered" is right), or the oracle could not
+  see what it placed (so it is a fabrication). The arbiter is the app's own
+  `Analysis complete` tally, written by the same function in the same run - which
+  is also the guard the suite now runs on every row
+  (`_log_tally_matches_its_own_rows`): `candel: 2` with zero parsed rows would
+  have fired on day one.
+- **A vocabulary written twice drifts, so it is now written once**: `_LOG_CAT` is
+  imported from `oracles.log.ANALYSIS_ROW_TAGS`, `_LOG_DETAILED_CATS` is derived
+  from its values, and `tests/test_audit_log_tag_vocabulary.py` reads the tags
+  straight out of `sync/analysis.py` so an app-side rename fails the SUITE in the
+  commit that makes it. Same lesson as `make_long_path`'s duplicate in
+  `core/sync_manager.py` and the three AppleScript escapers.
+- **The audit's comparison primitives were weaker than the code they audit.**
+  `core.sync_manager._path_key` folds to NFC; `crosscheck._norm`/`_stem`/`_key`
+  did not. Measured inside a SINGLE log line: the app wrote the Canvas display
+  name `Svarark - Gode råd til projektet.docx` as **NFD** and the local path of
+  the same file as **NFC**, while the seed plan is NFC throughout. Danish `å`
+  decomposes and `ø`/`æ` do not, which is why it presents as random.
+- **A re-check must be fed exactly what the live pass was fed.** `recheck` fell
+  back from the review capture to the COMPLETION capture for sync rows; the probe
+  runs its review extraction against whatever screen is showing, so a completion
+  capture carries `review: {courses: [], seen: {categoryContainers: 0}}` -
+  truthy, structurally empty, and an impostor to anything that only tests for
+  truthiness. 29 HIGH on re-check against 20 live. `_selected_stems` had the
+  mirror of it, answering `set()` ("ticked nothing") where its contract demands
+  `None` ("unknown") - the direction that HIDES defects. Its test passed for a
+  year because it fed a hand-made capture rather than one the harness had
+  written; the real ones were on disk the whole time.
+- **The result: 29 HIGH -> 13, ZERO new findings**, on both the sync matrix and
+  the 275-finding download matrix. The 13 that survived were a REAL defect (see
+  the section above), which is the argument for fixing a blind oracle BEFORE
+  running a matrix: while it was blind, the one genuine finding in its categories
+  was indistinguishable from the fourteen it had invented.
+- **`RUNBOOK.md` checker defect 26 had already found the tag mismatch on
+  2026-08-08, prescribed the exact safe fix order, and said "fix it BEFORE the
+  next sync matrix". The matrix ran first.** The delay is not what it cost: a
+  blind oracle makes every other finding in its categories unfalsifiable, so the
+  43-row run had to be re-adjudicated by hand afterwards - more work than the fix.
+  Defect 26 also judged it *"not a false-finding source today"*, on the reasoning
+  that the checker "correctly falls back to the review screen". That fallback is
+  only correct when a review screen exists.
+
 ## Auditing this app: two playbooks, and the one input that matters
 - **THIS FILE IS THE CROSS-MACHINE MEMORY, and that is why it is enormous.** The operator works from at least three checkouts (laptop, main desktop, and a rented macOS audit box) and any per-session assistant memory lives OUTSIDE the repo, so it does not travel and does not survive a machine being reimaged - which the audit box periodically is. Anything durable therefore belongs here, in `tests/audit/AUDIT_FINDINGS.md`, `tests/audit/MAC_RUNBOOK.md` or `AUDIT_PLAYBOOK.md`, written mechanism-first (what breaks, the measurement, why the obvious fix is wrong) rather than as a summary. Assistant memory is for facts about the PERSON and the working relationship; anything the repo should own goes in the repo, and goes in the same commit as the fix.
 - **Marketing, SEO and the launch live in `marketing/`, not here.** Same rule and same reason as the audit documents above: a website change, a search-visibility finding or a positioning decision is durable, so it belongs in the repo and travels between machines. `marketing/README.md` is the index; **`FINDINGS.md`** is the register (every defect found, its evidence, its status, and why anything deferred was deferred); **`STRATEGY.md`** holds the SETTLED decisions; **`SITE_RUNBOOK.md`** is what to read before touching `docs/`; **`PLAYBOOK.md`** is the off-site plan; **`CHANGELOG.md`** records what exists now. Four facts from it that bite ENGINEERING and not just copy: (a) the website must advertise the newest shipped **TAG**, never `version.py`, which `tests/test_version_leads_tags.py` deliberately keeps AHEAD of every tag - the homepage advertised a 2.0.2 nobody could download; (b) a `<button>` that receives a scripted `.href` is a **dead control**, and that shipped - both download buttons on `/releases.html` did nothing for six days after three `<a href="#">` were converted to buttons and only one got a handler; (c) `preload="none"` is **ignored while `autoplay` is present**, so deferring a video means withholding the `src`, which took mobile LCP from 5300 ms to 2764 ms; (d) student-facing copy says **"Canvas", never "LMS"** - a product-owner ruling that overrides SEO instinct and applies to app strings too, not only the website.

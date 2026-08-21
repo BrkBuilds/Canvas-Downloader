@@ -862,24 +862,74 @@ def test_absence_from_one_oracle_is_not_absence_from_all():
     assert "but absent from" in src, "the two-oracle disagreement needs its own"
     # matched on a fragment that survives the source line-wrap; the full
     # sentence is split across two f-string pieces
-    assert "oracle can see that category this run" in src, (
-        "a log with no rows for the wanted category is BLIND, not evidence of "
-        "absence - that must be an observation, not a high")
+    assert "cannot see that category this run" in src, (
+        "an oracle with no rows for the wanted category is BLIND, not evidence "
+        "of absence - that must be an observation, not a high")
 
 
 def test_the_blind_case_is_not_reported_as_a_defect():
-    """`_LOG_DETAILED_CATS` exists because the log writes per-file rows for only
-    two categories. Where it wrote none at all, absence proves nothing."""
+    """Where the chosen oracle wrote no rows at all, absence proves nothing.
+
+    The docstring here used to justify this by `_LOG_DETAILED_CATS` existing
+    "because the log writes per-file rows for only two categories". That was
+    never true of the app - it writes one row per file for all six - it was a
+    property of the OSCILLATOR reading the log, whose tag vocabulary named three
+    tags the app has never emitted. See `oracles.log.ANALYSIS_ROW_TAGS`.
+    """
     import ast
     src = (REPO / "tests" / "audit" / "harness" / "crosscheck.py").read_text(
         encoding="utf-8")
     fn = next(n for n in ast.walk(ast.parse(src))
               if isinstance(n, ast.FunctionDef) and n.name == "_categories_match")
     body = ast.unparse(fn)
-    i = body.index("no oracle can see that category this run")
+    i = body.index("cannot see that category this run")
     # the nearest constructor before it must be `observation(`, not a disagreement
     assert "observation(" in body[max(0, i - 400):i], (
         "the blind case must be an observation")
+
+
+def test_the_blind_guard_is_not_scoped_to_one_oracle():
+    """It was `oracle == "O2" and not rows`, so it protected HALF the branch.
+
+    When O1 was the chosen oracle - which `_LOG_DETAILED_CATS` forced for four
+    of the six categories - a review screen with no rows fell straight through
+    to "was not offered", whose detail asserts that the oracle "listed other
+    files under {want} and this was not among them". Nothing had checked that,
+    and on a Quick Sync row there is no review screen to list anything.
+    """
+    import ast
+    src = (REPO / "tests" / "audit" / "harness" / "crosscheck.py").read_text(
+        encoding="utf-8")
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "_categories_match")
+    assign = next(n for n in ast.walk(fn)
+                  if isinstance(n, ast.Assign)
+                  and any(getattr(t, "id", "") == "blind" for t in n.targets))
+    expr = ast.unparse(assign.value)
+    assert '"O2"' not in expr and "'O2'" not in expr, (
+        f"the blind guard still names one oracle: {expr}")
+    assert "_own_rows" in expr, (
+        "it must ask the oracle that was actually consulted")
+
+
+def test_the_peer_list_comes_from_the_oracle_that_was_consulted():
+    """The finding said "O1 listed other files"; the evidence quoted the LOG.
+
+    For the four categories O1 was chosen for, the log's list was empty by
+    construction - so every one of those findings shipped a peer list that
+    contradicted its own sentence, and the contradiction was invisible because
+    an empty list reads as "there simply were none".
+    """
+    import ast
+    src = (REPO / "tests" / "audit" / "harness" / "crosscheck.py").read_text(
+        encoding="utf-8")
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "_categories_match")
+    body = ast.unparse(fn)
+    i = body.index("peers_in_category")
+    window = body[i:i + 200]
+    assert "_own_rows" in window, (
+        "peers must be read from the consulted oracle, not from `rows`")
 
 
 # ---------------------------------------------------------------------------

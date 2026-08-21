@@ -32,6 +32,56 @@ from pathlib import Path
 
 TS = r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\]"
 
+# The tags `sync/analysis.py:_row` actually writes, mapped to the audit's
+# category names. THIS IS THE ONLY PLACE THE VOCABULARY IS SPELLED, and it is
+# the audit's single most load-bearing constant: it decides which of the six
+# analysis categories oracle O2 can speak about at all.
+#
+# It was wrong for the whole life of the suite, in the way that is hardest to
+# see - three of the six tags named something the app has never emitted. The
+# app has written `UPDATE-EDIT`, `CANVAS-DEL` and `LOCAL-DEL` since 2026-06-02;
+# the oracle was written on 2026-07-29 expecting `UPDATE-MODIFIED`,
+# `DELETED-CANVAS` and `DELETED-LOCAL` - names invented rather than read off a
+# log. So every per-file row for `updated_modified`, `deleted_on_canvas` and
+# `deleted_locally` was dropped on the floor, silently, from day one.
+#
+# What makes that worse than a missed parse is what was built ON it. A later
+# session measured the effect - "a run whose analysis reported 2
+# deleted-on-Canvas and 2 ignored: the log contained zero rows for either" -
+# and wrote the conclusion into `crosscheck._LOG_DETAILED_CATS` as a FACT ABOUT
+# THE PRODUCT: that the app only logs two categories per file. The app's own
+# source says the opposite two lines above the loop ("One line per file, for
+# EVERY category the analyzer produced"). That false premise routed four of six
+# categories to the review screen as their only witness, and the review screen
+# does not exist on a Quick Sync row - which is how the 2026-08-21 sync matrix
+# produced 14 HIGH "was not offered" findings against an app whose log named
+# every one of those files, in the right category, on the line above.
+#
+# `tests/test_audit_log_tag_vocabulary.py` reads the tags straight out of
+# `sync/analysis.py` and fails the SUITE when the two drift, so a rename in the
+# app can never again be discovered by a six-hour audit.
+ANALYSIS_ROW_TAGS: dict[str, str] = {
+    "NEW": "new",
+    "UPDATE-CLEAN": "updated_clean",
+    "UPDATE-EDIT": "updated_modified",
+    "CANVAS-DEL": "deleted_on_canvas",
+    "LOCAL-DEL": "deleted_locally",
+    "IGNORED": "ignored",
+}
+
+# `_row` appends "   -> <local path>" only where the local basename DIFFERS
+# from the Canvas display name - which is exactly the case a plain `(?P<name>.+)`
+# gets wrong, because it swallows the arrow and the path into the filename.
+# Both halves are legitimate spellings of the same file (a display name may
+# carry no extension at all: `Eksempel - Gruppekontrakt` on disk is
+# `Eksempel - Gruppekontrakt.docx`), so both are captured and both are offered
+# for matching. The separator is TWO-OR-MORE spaces before the arrow, matching
+# what `_row` writes, so a filename that legitimately contains " -> " is not
+# split.
+_ANALYSIS_ROW_RE = re.compile(
+    r"^\s+\[(?P<cat>" + "|".join(map(re.escape, ANALYSIS_ROW_TAGS)) + r")\]"
+    r"\s+(?P<name>.+?)(?:\s{2,}->\s*(?P<local>.+))?$")
+
 PATTERNS: list[tuple[str, re.Pattern]] = [
     # -- download ------------------------------------------------------
     ("download_start", re.compile(
@@ -128,10 +178,13 @@ PATTERNS: list[tuple[str, re.Pattern]] = [
         r"^Analysis complete \([^)]*\): (?P<new>\d+) new \| (?P<clean>\d+) clean updates "
         r"\| (?P<modified>\d+) locally-edited updates \| (?P<candel>\d+) deleted on Canvas "
         r"\| (?P<locdel>\d+) deleted locally$")),
-    ("analysis_row", re.compile(
-        r"^\s+\[(?P<cat>NEW|UPDATE-CLEAN|UPDATE-MODIFIED|DELETED-CANVAS|DELETED-LOCAL|IGNORED)\]\s+(?P<name>.+)$")),
+    ("analysis_row", _ANALYSIS_ROW_RE),
     ("qs_select", re.compile(
-        r"^\s+\[QS-SELECT-(?P<cat>NEW|UPDATE)\]\s+(?P<name>.+)$")),
+        r"^\s+\[QS-SELECT-(?P<cat>NEW|UPDATE)\]\s+(?P<name>.+?)"
+        r"(?:\s{2,}->\s*(?P<local>.+))?$")),
+    ("qs_skip", re.compile(
+        r"^\s+\[QS-SKIP-(?P<cat>EDITED|LOCDEL|CANDEL)\]\s+(?P<name>.+?)"
+        r"(?:\s{2,}->\s*(?P<local>.+))?$")),
     ("qs_summary", re.compile(
         r"^Quick Sync summary: (?P<queued>\d+) files queued \| skipped (?P<edited>\d+) "
         r"edited, (?P<locdel>\d+) locally-deleted, (?P<candel>\d+) Canvas-deleted$")),
@@ -500,6 +553,7 @@ def summarize(pl: ParsedLog) -> dict:
              "mb": float(e.data["mb"])} for e in pl.of("download_complete")],
         "analysis": (analysis.data if analysis else None),
         "analysis_rows": _rows_by_cat(pl),
+        "analysis_row_detail": _row_detail(pl),
         "sync_planned": [e.data for e in pl.of("sync_plan_row")],
         "sync_ok": [e.data["name"] for e in pl.of("sync_ok")],
         "sync_synced": [e.data["name"] for e in pl.of("sync_synced")],
@@ -541,11 +595,49 @@ def summarize(pl: ParsedLog) -> dict:
 
 
 def _rows_by_cat(pl: ParsedLog) -> dict:
+    """Every spelling of every classified file, keyed by the app's own tag.
+
+    A row carries up to two names - the Canvas DISPLAY name and, where it
+    differs, the LOCAL path - and both are returned, because a consumer
+    matching a fixture cannot know which one the app happened to use. The two
+    are the same file in the same category, so a duplicate key can never invent
+    an ambiguity; it only widens what will match.
+
+    Use `analysis_row_detail` when you need one entry PER ROW (counting), and
+    this when you need every name that identifies a row (matching). Conflating
+    them double-counts every row that carries a path.
+    """
     out: dict[str, list[str]] = {}
     for e in pl.of("analysis_row"):
-        out.setdefault(e.data["cat"], []).append(e.data["name"])
+        bucket = out.setdefault(e.data["cat"], [])
+        for v in (e.data.get("name"), e.data.get("local")):
+            if v and v not in bucket:
+                bucket.append(v)
     for e in pl.of("qs_select"):
-        out.setdefault("QS-" + e.data["cat"], []).append(e.data["name"])
+        bucket = out.setdefault("QS-" + e.data["cat"], [])
+        for v in (e.data.get("name"), e.data.get("local")):
+            if v and v not in bucket:
+                bucket.append(v)
+    for e in pl.of("qs_skip"):
+        bucket = out.setdefault("QS-SKIP-" + e.data["cat"], [])
+        for v in (e.data.get("name"), e.data.get("local")):
+            if v and v not in bucket:
+                bucket.append(v)
+    return out
+
+
+def _row_detail(pl: ParsedLog) -> dict:
+    """One entry per analysis ROW: ``{tag: [{"display", "local"}, ...]}``.
+
+    The counting view. `_rows_by_cat` returns every NAME, which is two per row
+    wherever the local path differs - so counting that would report twice the
+    files the app said it classified, and the counts-vs-rows invariant that
+    guards this oracle would fire on every healthy run.
+    """
+    out: dict[str, list[dict]] = {}
+    for e in pl.of("analysis_row"):
+        out.setdefault(e.data["cat"], []).append(
+            {"display": e.data.get("name") or "", "local": e.data.get("local") or ""})
     return out
 
 

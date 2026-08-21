@@ -102,12 +102,76 @@ def test_a_sync_row_is_rechecked_against_its_review_capture(tmp_path, monkeypatc
     the completion capture, the selection is unknown, the flip never happens,
     and the app is reported for restoring exactly what it was asked to restore.
     """
+    # ANCHORED ON THE PROPERTY, VIA THE AST - never on the two statements being
+    # adjacent. The first version matched `'if job.kind == "sync":\n' + the
+    # assignment` as one literal, so documenting the rule directly above the
+    # assignment made this fail with `substring not found`, which reads exactly
+    # like the guard having been deleted. `CLAUDE.md` records that trap twice
+    # already; this is the third instance.
+    import ast
     src = (REPO / "tests" / "audit" / "harness" / "parallel.py").read_text(encoding="utf-8")
-    sync_pref = src.index('if job.kind == "sync":\n                ui = _ui_capture(lrp, f"{job.name}_review")')
-    assert sync_pref > 0, "a sync row must prefer its review capture"
-    # and the download branch must keep preferring the completion screen
-    dl_pref = src.index('ui = _ui_capture(lrp, f"{job.name}_complete")', sync_pref)
-    assert dl_pref > sync_pref
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "recheck")
+    branch = next(n for n in ast.walk(fn)
+                  if isinstance(n, ast.If)
+                  and '"sync"' in ast.unparse(n.test).replace("'", '"')
+                  and n.orelse)
+    sync_arm, other_arm = ast.unparse(branch.body), ast.unparse(branch.orelse)
+    assert "_review" in sync_arm, "a sync row must be re-checked on its review capture"
+    assert "_complete" in other_arm, "a download row is judged on its completion screen"
+
+
+def test_a_sync_row_has_NO_completion_fallback(tmp_path, monkeypatch):
+    """The live pass reads `{name}_review` and nothing else, so neither may this.
+
+    A fallback is not a harmless widening here. The probe runs its review
+    extraction against whatever screen is showing, so a COMPLETION capture
+    carries a `review` key holding `courses: []` and zero category containers -
+    truthy, structurally empty, and a perfect impostor for anything that only
+    tests it for truthiness. A Quick Sync row never renders a review screen, so
+    every one of them fell through to that husk.
+
+    Measured 2026-08-21 on the sync matrix: the re-check reported 29 HIGH
+    findings against a live pass that reported 20, and all 9 extras were Quick
+    Sync rows whose `updated_modified` / `deleted_on_canvas` fixtures the app
+    had classified correctly and named in its own log.
+    """
+    import ast
+    src = (REPO / "tests" / "audit" / "harness" / "parallel.py").read_text(encoding="utf-8")
+    fn = next(n for n in ast.walk(ast.parse(src))
+              if isinstance(n, ast.FunctionDef) and n.name == "recheck")
+    branch = next(n for n in ast.walk(fn)
+                  if isinstance(n, ast.If)
+                  and '"sync"' in ast.unparse(n.test).replace("'", '"')
+                  and n.orelse)
+    sync_arm = ast.unparse(branch.body)
+    assert "_complete" not in sync_arm, (
+        "a sync row must not fall back to its completion capture:\n" + sync_arm)
+    # and the live pass it has to agree with reads exactly one capture
+    live = next(n for n in ast.walk(ast.parse(src))
+                if isinstance(n, ast.FunctionDef) and n.name == "_execute_sync")
+    calls = [ast.unparse(c) for c in ast.walk(live)
+             if isinstance(c, ast.Call) and ast.unparse(c.func) == "_ui_capture"]
+    assert calls and all("_review" in c for c in calls), (
+        f"the live pass no longer reads only the review capture: {calls}")
+
+
+def test_the_completion_capture_really_does_impersonate_a_review(tmp_path):
+    """The reason the fallback was dangerous, stated against the checker.
+
+    Kept separate from the fixtures above because it is the fact that makes the
+    rule necessary rather than merely tidy - and because the ORIGINAL test for
+    this fed a hand-made `{"screen": ...}` dict, which is not what the harness
+    writes and does not exhibit the problem.
+    """
+    from tests.audit.harness import crosscheck
+    completion_like = {"courses": [], "summaryCards": [],
+                       "seen": {"categoryContainers": 0, "syncRows": 0},
+                       "pageText": "Sync Complete!"}
+    assert bool(completion_like), "it is truthy - that is the whole trap"
+    assert crosscheck._selected_stems(completion_like) is None, (
+        "a completion capture must read as UNKNOWN selection, never as "
+        "'the user ticked nothing'")
 
 
 def test_the_review_capture_is_what_carries_the_ticks():

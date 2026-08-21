@@ -314,102 +314,79 @@ cost the most time:
 
 ---
 
-# RESUME HERE — the sync matrix adjudication (written 2026-08-21, mid-session)
+# RESOLVED — the sync matrix adjudication (closed 2026-08-21, sixth session)
 
-Everything below is state that existed only in a conversation. Read this before
-touching the sync findings; it assumes no memory of that conversation.
+*This section replaces the "RESUME HERE" brief. Nothing here is open.*
 
-## Where the evidence is
+## Outcome
 
-| thing | where |
-|---|---|
-| sync matrix run | `_audit_runs/20260821_113342_sync-matrix` (+ `__free1/2/3` lanes) |
-| download matrix | `_audit_runs/20260821_022815_macos26-full-night` (+ 3 lanes) |
-| packaged maximal | `_audit_runs/20260821_night_pkg`, folder at `/tmp/audit_night/downloads/...` |
-| CLEAN sync fixture | snapshot `c43660_postfix_clean` — post-fix, conversions ran |
-| PRE-FIX fixture | snapshot `c43660_panopto_maximal` — carries the 63 stale Office rows |
-| per-row seed plan | `_audit_runs/…__free1/evidence/seed_s018.json` (one per row) |
-| per-row review DOM | `_audit_runs/…__free1/evidence/ui/s018_after_analysis.json` |
+**All 14 unadjudicated findings were FABRICATED by the audit, and the 13 that
+looked known were a REAL product defect.** Both are fixed.
 
-Both snapshots are of course **43660**. The clean one is the right fixture for
-new work; the pre-fix one exists only to demonstrate the repoint defect.
-
-## The sync matrix result, and how the 29 highs break down
-
-**43/43 rows, 0 row failures.** 29 high findings, which collapse by fingerprint
-to 5 register entries. Adjudicated by comparing each fixture's expected name
-against `evidence.peers_in_category` (the files the app really put in that
-category), on EXACT stems:
-
-| n | group | verdict |
+| | before | after |
 |---|---|---|
-| 13 | `renamed-ambiguous:zz flertydig 0.pdf` | **KNOWN** — register `fp:5c1dc682e36c`, "Two orphaned Canvas files of identical size are re-offered one per sync". Severity of the BEHAVIOUR is low and self-healing; the HIGH is a checker artefact (one finding per fixture per row). Now reproduced on a second, independent pair — see that entry. |
-| 2 | `new:Svarark - Gode råd til projektet.docx` | **CHECKER MISS** — the exact stem IS in the app's `new` list. |
-| 14 | `edited-update` / `clean-update` / `readonly` / `deleted-on-canvas`, all on `Eksempel - Gruppekontrakt.docx` and `Svarark - Gode råd til projektet.docx` | **NOT ADJUDICATED — this is the open work.** Genuinely absent from the expected category. |
+| sync matrix HIGH (`20260821_113342_sync-matrix`) | 29 | **13** |
+| download matrix (`20260821_022815_macos26-full-night`) | 277 findings | **276**, 0 new |
+| suite | 4085 | **4139** |
 
-## The 14: why they matter and how to start
+The 13 that remain are the register's `fp:5c1dc682e36c` and they will PERSIST on
+any re-check of that run's evidence, correctly: the app really did offer one of
+the pair. They clear on the next LIVE sync matrix.
 
-They touch `updated_modified`, `updated_clean` and `deleted_on_canvas` — the
-categories that decide whether **a student's edited file is protected**. That is
-where a real defect would hide, so they get the full treatment, not a verdict.
+## What the 14 actually were
 
-Start by reading one row's evidence end to end rather than reasoning:
+Five audit defects in one chain, each documented in `RUNBOOK.md` (defect 26,
+now marked fixed, plus new 32-35) and in `CLAUDE.md` ("An audit oracle that is
+BLIND does not under-report - it INVENTS"):
 
-```bash
-R=_audit_runs/20260821_113342_sync-matrix
-python - <<'PY'
-import json
-rows=[json.loads(l) for l in open("_audit_runs/20260821_113342_sync-matrix/findings.jsonl",encoding="utf-8") if l.strip()]
-d=next(x for x in rows if x["severity"]=="high" and "edited-update" in x["title"])
-print(json.dumps(d, indent=1, ensure_ascii=False)[:3000])
-PY
-```
+1. the log oracle named three tags the app has never emitted, so O2 was
+   structurally blind to `updated_modified` / `deleted_on_canvas` /
+   `deleted_locally`;
+2. that blindness was measured and written into `_LOG_DETAILED_CATS` as a fact
+   about the PRODUCT, routing four of six categories to O1 alone;
+3. O1 is the review screen, which **a Quick Sync row never renders**;
+4. the blind guard covered only `oracle == "O2"`, and the peer list was read
+   from the log whichever oracle decided;
+5. `recheck` fell back to the completion capture, whose `review` key is a
+   truthy-but-empty impostor - the 20-live vs 29-recheck gap, exactly.
 
-Then the row's `seed_<id>.json` (what was planted) and `ui/<id>_after_analysis.json`
-(what the screen showed). The seeder plants SEVERAL fixtures per row on the same
-two docx files, so identify fixtures by `canvas_file_id`, never by name.
+Plus a sixth, found on the way: the audit's `_norm`/`_stem`/`_key` did not
+Unicode-fold, while the app's own `_path_key` does. Danish `å` decomposes.
 
-## TWO TRAPS THIS SESSION PAID FOR — do not repeat them
+## The product defect the blindness was hiding
 
-1. **Substring name matching inverts the answer.** A first triage used
-   `want in peer or peer in want`, which makes `…Upload` match `…Upload-1` —
-   a DIFFERENT Canvas file — and reported 16 checker-misses where the exact-stem
-   comparison reports 2. Compare exact stems.
+`fp:5c1dc682e36c`, mechanism established and fixed. `analyze_course` rebuilt
+`result.new_files` from a dict keyed by FILENAME, so of two Canvas files sharing
+a `filename` the loser of a `setdefault` was dropped from every category. Order
+of Canvas's listing decided which. Reproduced against the real folder + real
+262-row manifest, and against the register's independent `ImageHeader` triple.
 
-2. **Two attempts to "fix" `crosscheck._name_candidates` were NO-OPS, and both
-   were reverted.** The reasoning that looked right and was not:
-   * `ui_cat` is keyed by `_stem(token)` (no extension); `log_cat` is keyed by
-     `_norm(n)` (WITH the extension).
-   * `_DEDUP_SUFFIX` is `[ _-]\(?\d{1,3}\)?$` — anchored at the end — so on a
-     log key it never fires: `upload-1.pptx` strips to itself.
-   * `want in _LOG_DETAILED_CATS` sends `new` and `updated_clean` to the LOG
-     oracle first, so the screen's existing dedup aliasing is not consulted for
-     exactly the categories the seeder asserts most.
-   Adding a stem-aware alias to `log_cat` STILL changed nothing measurable
-   (recheck stayed at 29 high). So the alias is not the missing piece; do not
-   re-derive this hypothesis a third time without instrumenting the actual
-   lookup first.
+## The one thing NOT verified, and how to close it
 
-   Note also: the LIVE pass reported 20 highs and `matrix recheck` reports 29
-   from the same evidence with the SAME checker. That gap is itself unexplained
-   and is worth one look — `RUNBOOK.md` says a recheck reaching a different
-   verdict than the live pass is a checker defect by definition.
+**The review SCREEN showing both rows.** Everything above is verified against the
+real `SyncManager` with real data, but not through the browser, because no Canvas
+token is saved on this machine any more (the matrix used isolated config dirs
+that were cleaned up). The register's own note records that O1 and O2 agreed on
+this question in the live run, so the risk is low.
 
-3. **The register already warns about this finding family.** `fp:2e38f73c0857`
-   is an `invalid` twin of the renamed-ambiguous finding, closed as an audit
-   MATCHER defect; and `fp:5c1dc682e36c` carries an explicit note that a
-   previous session mis-diagnosed the app as "CORRECT" by **confusing the two
-   fixtures** (fixture 0 was found, fixture 1 genuinely was not). Read both
-   before concluding anything about a "not offered" finding.
+To close it: log the app in, then run one sync row against
+`snapshot c43660_postfix_clean` seeded with `renamed_ambiguous`, and confirm the
+review screen lists BOTH `...Upload.pptx` and `...Upload-1.pptx`. A full sync
+matrix re-run would close it and re-validate all five checker fixes end to end.
 
-## Product state, so it is not re-derived
+## Traps recorded from this session
 
-* Suite **4085 passed / 26 skipped**; architecture audit **0 violations**.
-* `main` now contains the whole audit branch (merge `c32a582`), pushed. Not tagged.
-* Post-fix fixture verified: conversions ran (121 PDFs, 0 Office sources left),
-  **0 stale manifest rows** — against 63 in the pre-fix packaged run.
-* Panopto/Canvas `.webloc` collision proven in BOTH directions: with
-  `convert_urls` OFF all 41 Canvas links survive and all 36 Panopto shortcuts
-  divert to `(Panopto)`, 0 shared paths. Last night's "Panopto took the plain
-  name" observation was an ORDERING interaction (convert_urls deletes the
-  unmarked Canvas links first), not an overwrite.
+* **`ast.unparse` normalises string literals to SINGLE quotes**, so a test that
+  greps its output for a double-quoted literal matches nothing.
+* **An adjacency anchor reads like a missing guard.** Documenting the rule above
+  an assignment broke `test_a_sync_row_is_rechecked_against_its_review_capture`,
+  which matched `if ...:\n<assignment>` as one literal. Third instance in this
+  repo; both re-anchored on the AST.
+* **A probe that omits the checker's own guards will mis-measure.** A first sweep
+  predicted 7 new mismatches from the tag fix; the real checker's `ambiguous`
+  guard suppresses every one, and the real re-check produced **0**. Measure with
+  the real thing before believing a replay.
+* **`recheck` lost the course NAME** (pre-existing): `Evidence.course` defaults to
+  `folder.name`, and a re-check points `folder` at the harvested evidence
+  directory, so a finding registered as `m012` instead of the course. Fixed via
+  the disk scan's `root`.
