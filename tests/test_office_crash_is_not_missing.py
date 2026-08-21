@@ -411,3 +411,24 @@ def test_an_ordinary_error_is_still_other():
     assert AB._classify_stderr(
         "execution error: Parameter error. (-50)") == "other"
     assert AB._classify_stderr("execution error: something odd") == "other"
+
+
+def test_the_NUMBER_alone_carries_a_dead_connection_on_a_localised_mac():
+    """On a Danish macOS every wording clause matches nothing.
+
+    This repo already learned that once: three of four clauses in this function
+    were locale-dead and only the numeric companions kept them working, which is
+    why `app_missing` losing its number mattered more than it looked. So the
+    number must classify -609 on its own, with no English in the message.
+
+    The mutation pass is what forced this test: with only an English message in
+    the suite, deleting `'-609' in err_msg` SURVIVED, because the wording clause
+    beside it rescued the very case the number exists for.
+    """
+    assert AB._classify_stderr(
+        "1022:1028: eksekveringsfejl: Microsoft PowerPoint fik en fejl. (-609)"
+    ) == "app_crashed"
+
+
+def test_the_NUMBER_alone_carries_the_frontmost_guard_too():
+    assert AB._classify_stderr("eksekveringsfejl: (-30001)") == "app_crashed"
