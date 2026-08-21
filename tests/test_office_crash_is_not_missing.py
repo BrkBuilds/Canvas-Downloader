@@ -336,3 +336,78 @@ def test_the_apostrophe_is_normalised_once_not_per_clause():
     assert "’" not in body, (
         "a clause still spells the typographic apostrophe inline; normalise it "
         "in one place instead so the next clause added cannot miss it")
+
+
+# ---------------------------------------------------------------------------
+# ...and neither is a connection that died, nor our own frontmost guard.
+#
+# Found by the live macOS audit, 2026-08-21, matrix row m032 - the largest
+# Office batch in the plan (~88 files across two courses). Three files failed,
+# each surrounded by dozens of successes:
+#
+#   02:42:24  PowerPoint failed (other): ... the frontmost presentation is not
+#             the one Canvas Downloader opened (-30001)
+#   02:45:56  PowerPoint failed (other): ... Connection is invalid. (-609)
+#
+# Both are TRANSIENT and both fell to `other`, which gets no retry. They were
+# recovered only by `retry_failed_conversions` sweeping the phase afterwards -
+# and because that late sweep re-resolves the destination, each one also left a
+# duplicate `<stem> (n).pdf` beside the real product.
+#
+# -609 is `connectionInvalid`: the app was there when we addressed it and is
+# gone now, which is -600 one step earlier. This module's own docstring already
+# cited it as the signature of PowerPoint being torn down mid-conversion.
+#
+# -30001 is OUR OWN guard, and retrying it is safe BY CONSTRUCTION: the guard
+# exists to refuse a document we do not own, so a retry can never convert
+# something it should not.
+# ---------------------------------------------------------------------------
+
+TRANSIENT_MESSAGES = [
+    ("connection invalid, numeric",
+     "1022:1028: execution error: Microsoft PowerPoint got an error: "
+     "Connection is invalid. (-609)"),
+    ("connection invalid, wording only",
+     "execution error: Microsoft Word got an error: Connection is invalid."),
+    ("our frontmost guard",
+     "1022:1028: execution error: the frontmost presentation is not the one "
+     "Canvas Downloader opened (-30001)"),
+]
+
+
+@pytest.mark.parametrize("why,msg", TRANSIENT_MESSAGES,
+                         ids=[w for w, _ in TRANSIENT_MESSAGES])
+def test_a_transient_office_failure_is_recoverable_not_other(why, msg):
+    got = AB._classify_stderr(msg)
+    assert got == "app_crashed", (
+        f"{why}: classified {got!r}, so it gets no retry and the file fails "
+        "outright for a condition that clears on the next attempt")
+
+
+@pytest.mark.parametrize("why,msg", TRANSIENT_MESSAGES,
+                         ids=[w for w, _ in TRANSIENT_MESSAGES])
+def test_a_transient_office_failure_is_never_fatal(why, msg):
+    assert AB._classify_stderr(msg) not in AB.FATAL_CATEGORIES, (
+        f"{why}: a transient failure must not abort the phase - that is the "
+        "exact mistake -600 made when it was classified app_missing")
+
+
+def test_the_quiet_direction_genuine_absence_is_still_app_missing():
+    """A check that only ever fires is not a check."""
+    assert AB._classify_stderr(
+        'execution error: Can’t get application "Microsoft Word". (-1728)'
+    ) == "app_missing"
+    assert AB._classify_stderr("execution error: (-10810)") == "app_missing"
+
+
+def test_the_quiet_direction_permission_is_still_permission():
+    assert AB._classify_stderr(
+        "execution error: Not authorised to send Apple events to Microsoft "
+        "Word. (-1743)") == "permission"
+
+
+def test_an_ordinary_error_is_still_other():
+    """Widening must not swallow everything into 'retry me'."""
+    assert AB._classify_stderr(
+        "execution error: Parameter error. (-50)") == "other"
+    assert AB._classify_stderr("execution error: something odd") == "other"
