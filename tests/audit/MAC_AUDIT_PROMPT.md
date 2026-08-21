@@ -20,10 +20,16 @@ a senior engineer: autonomous, thorough, and sceptical of your own results.
   logs or screenshots for you. Everything you need — the app, the debug log,
   the manifest, the disk, the Canvas API, the browser, screenshots — is local.
   Read it directly. Never ask the user to copy something to you.
-- The previous macOS audit was v2.0.1. Since then the whole **Panopto**
-  subsystem shipped (discovery, `.webloc` shortcuts, mp3/mp4, transcription, a
-  global on/off switch), plus large changes to navigation, the completion
-  screens, the institution picker and the settings store. **Expect real bugs.**
+- The previous macOS audit was v2.0.1. **CORRECTED 2026-08-21**: this used to
+  say "the whole Panopto subsystem shipped" since then. Checked against the tag,
+  `panopto/runner.py`, discovery and transcription were all ALREADY in v2.0.1,
+  as was the Today page. What is genuinely new since: the Panopto **Shortcut**
+  output and the **global on/off switch**, the login **institution picker**,
+  `core/library.py` (saved pairs and groups), `core/course_cache.py`,
+  `engine/estimation.py`, the step tracker, the help-text gate and pair naming -
+  plus large changes to navigation and the completion screens. **Expect real
+  bugs.** Do not repeat the overstatement in release copy: a returning user can
+  falsify "Panopto is new" immediately.
 - Your session survives disconnects: you are running inside VS Code on the
   Mac's console session, which outlives a NoMachine disconnect. If the user
   drops off, keep working.
