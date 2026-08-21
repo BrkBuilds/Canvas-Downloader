@@ -216,7 +216,12 @@ are two files and `_path_key` would fold them to one key — merged manifest row
 and a mis-bound heal, the exact mirror of the macOS bug
 `_case_insensitive_volume` was added to fix.
 
-**Reachability is the question, and I could not answer it from a Mac.** It needs
+**ANSWERED 2026-08-21 on the real machine: WSL is installed, and Downloads,
+home and the repo all report case-sensitivity DISABLED** - so it is not
+reachable by default even with WSL present, and that is the evidence for not
+fixing it before the release. The original note follows.
+
+**Reachability was the question, and it could not be answered from a Mac.** It needs
 a user to have enabled per-directory case sensitivity on their *course folder*;
 WSL's own directories live under its VHDX root, not in Downloads. If you have a
 WSL install, `fsutil file queryCaseSensitiveInfo` on a normal Downloads folder

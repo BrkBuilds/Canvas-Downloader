@@ -1011,6 +1011,82 @@ the part that cost a session.**
   that the checker "correctly falls back to the review screen". That fallback is
   only correct when a review screen exists.
 
+## The tracked Office PID was a GUESS, and the watchdog force-kills it (2026-08-21)
+`find_new_office_pid` returned the FIRST process of its name that was not in the
+pre-dispatch snapshot, with nothing checking it was ours. Found by the Windows
+session (`fp:a41c7e0b93d2`), measured against `Application.Hwnd` ->
+`GetWindowThreadProcessId` as ground truth with two concurrent instances:
+
+    lane A   guessed = 2448   TRUE = 9816
+    lane B   guessed = 2448   TRUE = 2448
+
+- **This resolves BOTH loose ends the register carried since 2026-08-08.** *"The
+  app killed every instance it tracked"* is true because it tracked 2448 twice;
+  the 5h54m orphan appearing *"inside a row whose `convert_excel` was never
+  applied"* is because attribution was CROSS-LANE. **There is no special row -
+  the trigger is any two concurrent `_init_app` calls.**
+- **IT IS NOT HARNESS-ONLY, and that is why it was fixed rather than noted.**
+  One process, no harness: the user opens their own workbook, the app
+  dispatches, and `find_new_office_pid` returns THEIR pid. The 180 s watchdog
+  then `taskkill /F`s their unsaved document - the precise outcome this module's
+  own docstring says it exists to prevent. Window measured: **Excel 0.506 s,
+  Word 2.344 s, PowerPoint 2.357 s**, reopening on every conversion batch.
+- **The discriminator was already MEASURED, twice, and sitting in the register**:
+  a COM-activated Office is `EXCEL.EXE /automation -Embedding`, parent RPCSS -
+  *"COM-launched and headless, NOT a user's own Excel window"*. A document the
+  user double-clicked never carries it. So the fix applies an established fact
+  rather than a new heuristic; the answer had been written down for two weeks
+  next to the finding it solves.
+- **Two rules: only a COM-activated process can be ours; more than one candidate
+  is AMBIGUOUS -> `None`**, decided after a settle re-check so a racing sibling
+  cannot be missed by deciding on the first sighting.
+- **WHY IT SHIPS WITHOUT THE SECOND HALF, which is the transferable part.** The
+  Windows write-up said both halves must land together, because "stop guessing
+  when ambiguous" makes `kill_office_pid`'s broad `/IM` fallback more reachable.
+  That is true of an ambiguity rule ALONE. It is **not** true with the
+  `-Embedding` filter: for an ordinary single instance the candidate set is
+  exactly one whether or not the user has Office open - their process is
+  FILTERED OUT rather than making the answer ambiguous - so `None` does not
+  become more common and the fallback is no more reachable than before. Choosing
+  a discriminator that *excludes* rather than one that *confuses* is what
+  decoupled a "both halves or nothing" change into a shippable one.
+- **Pure `psutil`, no COM, deliberately.** The exact answer is the window
+  handle, and the Windows session proved it works - but
+  `tests/test_crash_vector_hardening.py` pins that everything between
+  `DispatchEx` and the PID capture is a window where a raise strands a real
+  process, and a property read on a build that refuses it is exactly such a
+  raise. A command line is readable from outside the process and adds nothing to
+  that window.
+- **The broad `/IM` fallback is a SEPARATE, pre-existing data-loss path and is
+  deliberately untouched.** It closes every instance of that app, the user's
+  documents included - but the kill is what unblocks the stalled COM call in the
+  main thread, so simply refusing turns a 180 s hang into an unbounded one, and
+  the daily auto-sync is unattended. A test pins it so it cannot be deleted as
+  "obviously wrong" without that trade being decided.
+- `tests/test_office_pid_attribution.py` (24, and they PASS on Windows - the
+  first Mac-written code to execute there); `scripts/_mutate_office_pid_attribution.py`
+  **10/10**. One survived first and was a real gap: every fixture let the
+  `-Embedding` filter do `pre_pids`' job, so nothing covered a **leaked orphan
+  from an earlier batch** - which is `-Embedding` too, and which only the
+  snapshot excludes. Without it the next init sees orphan + ours, calls it
+  ambiguous, tracks nothing, and **the leak compounds for the life of the
+  session**.
+
+### `_path_key`'s unconditional fold on Windows: MEASURED, and not reachable by default
+Left open on 2026-08-21 when the macOS session found that `_path_key` gates its
+case-sensitivity probe off on Windows (`if os.name != 'nt' and ...`), so the fold
+is unconditional there - wrong inside a directory made case-SENSITIVE with
+`fsutil file setCaseSensitiveInfo`, which WSL uses. **Answered the same day on
+the real machine: WSL is installed, and Downloads, the home directory and the
+repo all report case-sensitivity DISABLED.** So the asymmetry is not reachable
+by default even with WSL present.
+- **Do not "fix" it speculatively.** The fix means adding a `samefile` probe to
+  a hot comparison loop on the platform with ~94% of installs, to serve a state
+  a user must deliberately opt into per directory. The mirror-image macOS bug
+  WAS worth fixing because the default there is case-insensitive and the
+  probe answered wrongly at a mount point - i.e. it fired without the user
+  doing anything.
+
 ## A bundle's SEAL is only as stable as the least deterministic thing in it (2026-08-21)
 Both specs bundle the app's packages by DIRECTORY, so PyInstaller sweeps in
 whatever `__pycache__` the working tree holds - **75 stale `.pyc` measured** -
