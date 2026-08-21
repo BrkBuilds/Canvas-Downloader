@@ -196,3 +196,52 @@ needs either that registry value turned off on one machine (administrator plus a
 reboot, the operator's call) or a static guard promoted into the test suite; a
 static sweep meanwhile names the delete-family converters as the place to look
 first.
+
+---
+
+## Handoff - restoring the gate and re-running it
+
+Decided 2026-08-21: the operator will turn the registry key off rather than have
+the class covered statically. Everything below is what a later session needs so
+it does not re-derive this.
+
+**1. Restore the machine's ability to fail** (administrator, then REBOOT - the
+value is read at process start, so a running shell will not pick it up):
+
+```
+reg add "HKLM\SYSTEM\CurrentControlSet\Control\FileSystem" /v LongPathsEnabled /t REG_DWORD /d 0 /f
+```
+
+Likely cause of it being on in the first place: the Python installer and Git for
+Windows both offer to enable long paths during setup, so **re-check this key
+after any Python or Git upgrade on this machine** - otherwise the gate silently
+goes back to producing masked passes.
+
+**2. Re-take the positive control BEFORE running anything.** It is the whole
+premise, and it is two lines:
+
+```python
+open(str(long_path), "wb")               # MUST raise - path > 260 chars
+open(make_long_path(long_path), "wb")    # must succeed
+```
+
+If the unprefixed open succeeds, stop: the registry did not take (reboot?) and
+every row after that is worthless. Reference implementation and the exact fixture
+used here is in this session's scratchpad script `probe_longpath.py`; it builds
+the deep tree WITH the prefix so fixture creation cannot itself be the failure.
+
+**3. Point the run at area 3's table first**, in this order:
+
+- `converters/video.py` - three `Path(...).unlink(missing_ok=True)` sites. Most
+  likely to hide a failure, because `missing_ok=True` swallows the
+  `FileNotFoundError` an over-long path raises.
+- `converters/code.py`, `md.py`, `url.py` - read/write/delete on course-folder
+  paths with no prefix and no staging.
+- Then the brief's steps 2 to 4 as written (deep-destination download reconciled
+  O5 vs O3 vs O4, Panopto `.part` sweep with `url+mp3+txt+srt` and mp4 OFF, and
+  sync with `--select updated_modified,deleted_locally`).
+
+**4. Housekeeping already done here, do not repeat**: this machine's 133 audit
+runs are scrubbed and committed (`f7d64ab`), and `_audit_runs/` is in this
+clone's `.git/info/exclude`, so a new run will not stage 3,000+ files. That
+exclude is local and uncommitted - it will not exist on a fresh clone.
