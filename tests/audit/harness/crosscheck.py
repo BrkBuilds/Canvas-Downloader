@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import os
 import re
+import unicodedata
 from pathlib import Path, PurePosixPath
 
 from .findings import Finding, disagreement, observation
@@ -182,9 +183,61 @@ class Evidence:
 # always-on invariants
 # ==========================================================================
 
+def _log_tally_matches_its_own_rows(ev: Evidence) -> list[Finding]:
+    """O2's self-check: the "Analysis complete" counts vs the rows beneath them.
+
+    THE ORACLE'S OWN GUARD, and the reason this suite now has one. Both halves
+    are written by the same function in the same run - `sync/analysis.py` prints
+    the tally and then one row per file - so on a healthy log they agree
+    exactly, and any disagreement is a defect in the PARSER, not in the app.
+
+    It is the check that would have made a two-month blind spot self-announcing
+    on its first run. The oracle's `analysis_row` pattern named three tags the
+    app has never emitted (`UPDATE-MODIFIED`, `DELETED-CANVAS`,
+    `DELETED-LOCAL` against the app's `UPDATE-EDIT`, `CANVAS-DEL`,
+    `LOCAL-DEL`), so every per-file row for three of the six categories was
+    dropped. Nothing noticed, because a category with no rows is
+    indistinguishable from a category with no files - unless you ask the tally,
+    which was sitting on the line directly above saying `2 deleted on Canvas`.
+
+    Reported as a MEDIUM audit-defect rather than a product finding, and worded
+    to send the reader to the parser: an audit that cannot read the log has to
+    say so loudly and must never let that read as an app defect. `ignored` is
+    excluded because the summary line does not count it.
+    """
+    out: list[Finding] = []
+    tally = ev.log.get("analysis") or {}
+    if not tally:
+        return out
+    detail = ev.log.get("analysis_row_detail") or {}
+    for cat, field in _CAT_COUNT_FIELD.items():
+        said = _as_int(tally.get(field))
+        if said is None:
+            continue
+        tag = next((k for k, v in _LOG_CAT.items() if v == cat), None)
+        saw = len(detail.get(tag) or []) if tag else 0
+        if said == saw:
+            continue
+        out.append(ev._f(
+            title=f"AUDIT PARSER DEFECT: the log says {said} {cat} but the "
+                  f"oracle parsed {saw} row(s)",
+            severity="medium", category="observation", oracles=("O2",),
+            detail="The 'Analysis complete' tally and the per-file rows under it "
+                   "are written by the same function in the same run, so they "
+                   "cannot legitimately disagree. This is the log parser having "
+                   "lost rows - check `oracles.log.ANALYSIS_ROW_TAGS` against "
+                   "the tags `sync/analysis.py:_row` actually writes. Until it "
+                   "is fixed, every per-file verdict for this category is "
+                   "unfounded in both directions.",
+            evidence={"category": cat, "tag": tag, "tally": tally,
+                      "rows_parsed": saw, "log": ev.log.get("path")}))
+    return out
+
+
 def invariants(ev: Evidence) -> list[Finding]:
     out: list[Finding] = []
     disk, db, log = ev.disk, ev.db, ev.log
+    out.extend(_log_tally_matches_its_own_rows(ev))
 
     # -- the app crashed, or nearly did ------------------------------------
     if log.get("tracebacks"):
@@ -1510,19 +1563,81 @@ def sync_run(ev: Evidence, plan: dict, ui_review: dict | None = None,
     return out
 
 
-_LOG_CAT = {"NEW": "new", "UPDATE-CLEAN": "updated_clean",
-            "UPDATE-MODIFIED": "updated_modified",
-            "DELETED-CANVAS": "deleted_on_canvas",
-            "DELETED-LOCAL": "deleted_locally", "IGNORED": "ignored"}
+# IMPORTED, not restated. This map had a second, divergent copy here for the
+# whole life of the suite - and the copy named three tags the app has never
+# emitted, so O2 was structurally blind to `updated_modified`,
+# `deleted_on_canvas` and `deleted_locally`. See the long note beside
+# `ANALYSIS_ROW_TAGS`; the short version is that a vocabulary written twice is
+# a vocabulary one side is reading an old version of, which is the same lesson
+# `make_long_path` and the three AppleScript escapers already taught this repo.
+from .oracles.log import ANALYSIS_ROW_TAGS as _LOG_CAT      # noqa: E402
 
-# The debug log only writes PER-FILE rows for these two categories
-# (sync/analysis.py:247,250). The other five appear in the "Analysis complete"
-# counts and nowhere else, so absence from the log says nothing about them and
-# must never be read as a mis-classification. Measured on a run whose analysis
-# reported 2 deleted-on-Canvas and 2 ignored: the log contained zero rows for
-# either. For those categories the REVIEW SCREEN (O1) is the only per-file
-# evidence, so that is what they are checked against.
-_LOG_DETAILED_CATS = frozenset({"new", "updated_clean"})
+# THIS CONSTANT USED TO ENCODE A FALSE STATEMENT ABOUT THE PRODUCT, and the
+# statement was DERIVED FROM THE BUG ABOVE. It read:
+#
+#   "The debug log only writes PER-FILE rows for these two categories ...
+#    Measured on a run whose analysis reported 2 deleted-on-Canvas and 2
+#    ignored: the log contained zero rows for either."
+#
+# The measurement was real; the conclusion was not. The log contained those
+# rows - `sync/analysis.py` writes one line per file "for EVERY category the
+# analyzer produced", and says so directly above the loop - and the oracle
+# dropped them because it was matching invented tag names. A defect in the
+# audit was written down as a property of the app, and then four of the six
+# categories were routed to the review screen as their ONLY witness.
+#
+# The review screen does not exist on a Quick Sync row. That is how the
+# 2026-08-21 sync matrix produced 14 HIGH "was not offered" findings - covering
+# `updated_modified` and `deleted_on_canvas`, i.e. exactly the categories that
+# decide whether a student's edited file is protected - against an app whose
+# own log named every one of those files, in the right category, correctly.
+#
+# Derived now, so it cannot say something the parser does not.
+_LOG_DETAILED_CATS = frozenset(_LOG_CAT.values())
+
+# Which field of the "Analysis complete" summary line counts a category. That
+# line is the app's OWN tally, written by the same function that writes the
+# per-file rows, so it is the arbiter for the one question the absence of rows
+# cannot answer on its own: "did the app place NOTHING here, or did the oracle
+# fail to see it?" Those two look identical to a name lookup and they are
+# opposite verdicts - the first makes "was not offered" correct, the second
+# makes it a fabrication.
+_CAT_COUNT_FIELD = {"new": "new", "updated_clean": "clean",
+                    "updated_modified": "modified",
+                    "deleted_on_canvas": "candel", "deleted_locally": "locdel"}
+
+
+def _as_int(v) -> int | None:
+    """A tally field as an int, or None when it is missing or unparseable.
+
+    The counts arrive as STRINGS off a regex, and a check that decides whether
+    to assert must never raise inside the branch that exists to avoid a wrong
+    assertion.
+    """
+    try:
+        return int(str(v).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def _ui_rows_in(ui_review: dict | None, cat: str) -> list[str]:
+    """Every row the REVIEW SCREEN shows under *cat*, as displayed.
+
+    The O1 counterpart of the log's per-category rows, and it did not exist -
+    which is why a finding decided by O1 quoted the log's peer list. A list is
+    returned rather than a count because the peer names are the whole value of
+    the evidence: they are what lets a reader see at a glance that the app put
+    the file somewhere sensible, or that the matcher tripped on a spelling.
+    """
+    out: list[str] = []
+    for course in (ui_review or {}).get("courses", []) or []:
+        blob = (course.get("categories") or {}).get(cat) or {}
+        for row in blob.get("rows", []) or []:
+            label = row.get("name") or row.get("stem") or row.get("text") or ""
+            label = str(label).strip()
+            if label and label not in out:
+                out.append(label)
+    return out
 
 
 def _categories_match(ev: Evidence, plan: dict, ui_review: dict | None) -> list[Finding]:
@@ -1725,9 +1840,32 @@ def _categories_match(ev: Evidence, plan: dict, ui_review: dict | None) -> list[
             # How many rows the chosen oracle has for the category we WANT. If
             # it has none at all it cannot speak to this fixture, whatever the
             # category table says.
+            #
+            # "NO ROWS" IS TWO OPPOSITE VERDICTS AND THE ROWS CANNOT TELL THEM
+            # APART: either the app placed nothing in this category (so "not
+            # offered" is exactly right), or the oracle could not see what it
+            # placed (so "not offered" is a fabrication). The app's own
+            # "Analysis complete" tally settles it - same function, same run,
+            # written beside the rows it counts. A count of 0 means the category
+            # is genuinely empty and the HIGH stands; a positive count with no
+            # rows means the oracle is blind and nothing may be asserted.
             _log_key = next((k for k, v in _LOG_CAT.items() if v == want), None)
-            blind = (oracle == "O2"
-                     and not (rows.get(_log_key) if _log_key else None))
+            _log_rows = (rows.get(_log_key) or []) if _log_key else []
+            _ui_rows = _ui_rows_in(ui_review, want)
+            _tally = ev.log.get("analysis") or {}
+            _field = _CAT_COUNT_FIELD.get(want)
+            _placed = _as_int(_tally.get(_field)) if (_tally and _field) else None
+            _own_rows = _log_rows if oracle == "O2" else _ui_rows
+            # THE GUARD IS PER ORACLE, and covering only O2 is what let this
+            # branch make an unchecked claim. When O1 was the chosen oracle and
+            # the review screen held no rows at all - every Quick Sync row, which
+            # never renders one - the finding still asserted that "O1 listed
+            # other files under X and this was not among them", and then filled
+            # `peers_in_category` from the LOG, i.e. from the oracle it had not
+            # consulted. The evidence contradicted the sentence in the same
+            # object, and for the four O1-only categories that list was empty by
+            # construction, so nobody could see the contradiction either.
+            blind = (not _own_rows) and (_placed is None or _placed > 0)
             if other:
                 # The other oracle DID place it. That is a disagreement between
                 # two oracles, which is the one thing this suite exists to
@@ -1745,12 +1883,17 @@ def _categories_match(ev: Evidence, plan: dict, ui_review: dict | None) -> list[
                     scenario=ev.scenario, course=ev.course))
             elif blind:
                 out.append(observation(
-                    title=f"'{fx.get('label', name)}' expected as {want}, and no "
-                          f"oracle can see that category this run",
-                    detail=f"The debug log wrote no per-file rows for {want} at "
-                           "all, and the review screen was unavailable, so "
-                           "absence is not evidence. Not asserted.",
-                    evidence={"fixture": fx, "analysis": ev.log.get("analysis")},
+                    title=f"'{fx.get('label', name)}' expected as {want}, and "
+                          f"{oracle} cannot see that category this run",
+                    detail=f"{oracle} produced no per-file rows for {want} while "
+                           f"the app's own analysis tally reports "
+                           f"{'an unknown number of' if _placed is None else _placed} "
+                           f"file(s) in it, so absence is a gap in the evidence "
+                           f"rather than evidence of absence. Not asserted.",
+                    evidence={"fixture": fx, "analysis": ev.log.get("analysis"),
+                              "oracle": oracle,
+                              "log_rows": len(_log_rows),
+                              "ui_rows": len(_ui_rows)},
                     scenario=ev.scenario, course=ev.course))
             else:
                 out.append(ev._d("O5", oracle,
@@ -1763,8 +1906,13 @@ def _categories_match(ev: Evidence, plan: dict, ui_review: dict | None) -> list[
                     synthetic=True,
                     evidence={"fixture": fx, "analysis": ev.log.get("analysis"),
                               "via": oracle,
-                              "peers_in_category": (rows.get(_log_key) or [])[:20]
-                              if _log_key else []},
+                              # FROM THE ORACLE THAT WAS ACTUALLY CONSULTED. This
+                              # read the log unconditionally, so an O1 verdict
+                              # shipped with the log's peer list - empty, for
+                              # every category O1 was chosen for - and the
+                              # finding's own evidence silently contradicted its
+                              # claim to have looked.
+                              "peers_in_category": _own_rows[:20]},
                     scenario=ev.scenario, course=ev.course))
         elif observed and want == "uptodate":
             out.append(ev._d(oracle, "O5",
@@ -1828,19 +1976,35 @@ def _selected_stems(ui_review: dict | None) -> set[str] | None:
     None when there is no review capture, which is different from "nothing was
     selected" and must not be confused with it.
 
-    **The discriminator is the presence of the ``courses`` key, not whether the
-    dict is truthy.** Handed some OTHER screen's capture - a completion screen,
-    say - the old test passed it as a real review with nothing ticked, and every
-    caller then read "the user selected none of it". A review screen that
-    genuinely lists no courses still carries the key, so `set()` stays reachable
-    and means what it says.
+    **The discriminator has to be STRUCTURAL, and "does it carry a ``courses``
+    key" is not.** That was the rule here, on the stated reasoning that some
+    other screen's capture would not have the key - and the real captures
+    disprove it: the probe runs its review extraction on whatever screen is
+    showing, so a COMPLETION capture carries ``courses: []`` exactly like a
+    review screen with nothing on it. Measured 2026-08-21 on
+    `s007_complete.json`: this function answered ``set()`` where its own
+    contract demands ``None``.
 
-    This is the root of a defect measured 2026-07-29: a re-check fed the
-    completion capture reported 4 HIGHs against a live pass that reported none,
-    because `_sync_outcome` flips a fixture's expectation from 'absent' to
-    'restored' only for rows it can see were ticked.
+    That is the dangerous direction, because ``set()`` means "the user ticked
+    nothing" and `_sync_outcome` then downgrades every ``restored`` /
+    ``new_version`` expectation to ``unchanged`` - i.e. it stops asserting that
+    files arrived at all, silently, on a row where the evidence was simply
+    missing. A defect measured 2026-07-29 in the other direction (a re-check fed
+    the completion capture reported 4 HIGHs a live pass did not) is the same
+    confusion; only its sign differed.
+    ``seen.categoryContainers`` is what a review screen has and a completion
+    screen does not, and it is already the signal the probe-defect guard in
+    `_categories_match` trusts. An empty review screen is unreachable in the
+    product - with nothing to review the app goes straight to "Sync done -
+    everything up to date" - so requiring one container costs nothing real.
+
+    The test for this passed for years because it fed a HAND-MADE completion
+    capture (``{"screen": {...}}``) instead of one the harness had written.
     """
     if not ui_review or "courses" not in ui_review:
+        return None
+    if not ui_review.get("courses") \
+            and not (ui_review.get("seen") or {}).get("categoryContainers"):
         return None
     out: set[str] = set()
     for course in ui_review.get("courses", []):
@@ -2220,11 +2384,35 @@ def _key(p: str) -> str:
     ``_key(root) + "/"`` produced ``a\\b/`` and matched nothing, which is how
     21,631 archive files stayed in the orphan count after being exempted.
     """
-    return os.path.normcase(str(p)).replace("\\", "/").strip("/")
+    return os.path.normcase(_nfc(str(p))).replace("\\", "/").strip("/")
+
+
+def _nfc(s: str) -> str:
+    """Unicode-normalise to NFC before any name is compared.
+
+    THE SAME RULE THE APP ITSELF USES (`core.sync_manager._path_key`), and the
+    audit did not, so its comparison primitives were weaker than the code they
+    were auditing.
+
+    Danish `å` DECOMPOSES and `ø`/`æ` do not, which is exactly why this reads as
+    random rather than as an encoding bug: two filenames from the same course
+    fail differently. Measured 2026-08-21 on sync-matrix row s021, in a single
+    log line - the app wrote the Canvas display name `Svarark - Gode råd til
+    projektet.docx` as NFD (`a` + combining ring) and the local path of the SAME
+    FILE as NFC (precomposed `å`). They render identically, compare unequal, and
+    the seed plan is NFC throughout, so the fixture matched nothing and was
+    reported HIGH as "was not offered as new" while sitting in the log's own
+    `[NEW]` list.
+
+    Folding can only ever make two strings that render identically compare
+    equal, and no filesystem this app supports can hold both spellings as
+    separate files - so it cannot merge two real files, only reunite one.
+    """
+    return unicodedata.normalize("NFC", s)
 
 
 def _norm(name: str) -> str:
-    return os.path.normcase(Path(str(name).replace("\\", "/")).name.strip())
+    return os.path.normcase(_nfc(Path(str(name).replace("\\", "/")).name.strip()))
 
 
 # " (1)", " (2)" ... appended by the engine's own disk-conflict resolution.
@@ -2254,7 +2442,7 @@ def _stem(name: str) -> str:
     whichever the engine last wrote. The stem is the only part all of them agree
     on.
     """
-    return os.path.normcase(Path(str(name).replace("\\", "/")).stem.strip())
+    return os.path.normcase(_nfc(Path(str(name).replace("\\", "/")).stem.strip()))
 
 
 def _tokens(text: str) -> list[str]:

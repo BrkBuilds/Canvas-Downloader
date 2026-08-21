@@ -1323,6 +1323,26 @@ def expect_for(rp: RunPaths, job: Job) -> tuple[dict, list[str]]:
     return {k: v for k, v in job.config.items() if k not in bad}, bad
 
 
+def _course_label(scan: dict, fallback: str) -> str:
+    """The COURSE NAME a live row would have reported, recovered from the scan.
+
+    `Evidence.course` defaults to ``self.folder.name``, and the live pass points
+    `folder` at the real course folder - so its findings are attributed to
+    "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)".
+    A re-check points `folder` at the HARVESTED evidence directory, which is
+    named after the matrix row, so the same finding came back attributed to
+    "m012".
+
+    That is a parity break in its own right (the register fingerprints a finding
+    partly by where it happened, so one defect could register twice under two
+    spellings of the same course), and it makes a re-checked finding materially
+    harder to act on. The scan records the folder it walked, which is the one
+    thing in the harvested evidence that still knows the name.
+    """
+    root = (scan or {}).get("root") or ""
+    return Path(root).name if root else fallback
+
+
 def _recheck_sync(lrp: RunPaths, job: Job, ui: dict, ledger, skipped: list,
                   lane: str) -> int:
     """Re-derive one sync row's findings from its saved evidence."""
@@ -1362,7 +1382,8 @@ def _recheck_sync(lrp: RunPaths, job: Job, ui: dict, ledger, skipped: list,
         folder=Path(rows_p), scenario=job.id, disk=after, db=odb.read(rows_p),
         log=olog.parse_and_summarize(str(log_p)) if log_p.is_file() else {},
         ui=ui, canvas=ocanvas.snapshot(job.course_id, lrp.canvas),
-        expect=seed_expectations(plan))
+        expect=seed_expectations(plan),
+        course=_course_label(after, job.id))
     checks = crosscheck.invariants(ev)
     if plan:
         # `after` ONLY when a sync actually ran - the same gate the live row
@@ -1440,8 +1461,29 @@ def recheck(parent: RunPaths) -> dict:
             # harness had just asked it to restore. Measured: 4 fabricated HIGHs
             # on rows s001 and s006, against a live pass that reported none.
             if job.kind == "sync":
-                ui = _ui_capture(lrp, f"{job.name}_review") or \
-                    _ui_capture(lrp, f"{job.name}_complete")
+                # NO FALLBACK, and the absence is the point. The live pass reads
+                # `{name}_review` and nothing else (`_execute_sync`), so a
+                # fallback here makes the re-check judge a row on evidence the
+                # live row never saw - and `recheck`'s whole contract is that a
+                # finding is a function of (evidence, checker) with the evidence
+                # held fixed.
+                #
+                # It is not a harmless widening either. The probe runs its review
+                # extraction against whatever screen is showing, so a COMPLETION
+                # capture carries a `review` key holding `courses: []` with zero
+                # category containers - truthy, structurally empty, and
+                # indistinguishable from a working oracle to anything that only
+                # tests it for truthiness. A Quick Sync row never renders a
+                # review screen at all, so every one of them fell through to that
+                # husk. Measured 2026-08-21: the re-check reported 29 HIGH
+                # findings where the live pass reported 20, and all 9 of the
+                # extra ones were Quick Sync rows whose `updated_modified` and
+                # `deleted_on_canvas` fixtures the app had classified correctly.
+                #
+                # A missing review capture must therefore read as "this row has
+                # no O1 evidence", which is the truth, and which the checker
+                # already knows how to say.
+                ui = _ui_capture(lrp, f"{job.name}_review")
             else:
                 ui = _ui_capture(lrp, f"{job.name}_complete") or \
                     _ui_capture(lrp, f"{job.name}_review")
@@ -1484,9 +1526,11 @@ def recheck(parent: RunPaths) -> dict:
                             Path(lrp.logs) / f"{label}_course.txt"))
                     except Exception:
                         pass
+                _scan = json.loads(disk_p.read_text(encoding="utf-8"))
                 ev = crosscheck.Evidence(
                     folder=Path(rows_p), scenario=label,
-                    disk=json.loads(disk_p.read_text(encoding="utf-8")),
+                    course=_course_label(_scan, label),
+                    disk=_scan,
                     db=odb.read(rows_p),
                     log=olog.parse_and_summarize(str(log_p)) if log_p.is_file() else {},
                     batch_log=_row_log_summary(olog, str(row_log_p))

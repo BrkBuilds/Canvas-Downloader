@@ -985,6 +985,29 @@ inflated a number.** The blind one is the most important entry here.
       the samples were read.** Nothing else in the output could have shown it: a
       blind spot produces no finding to notice. Treat that monitor as a finding,
       not as noise.
+    - **FIXED 2026-08-21, in exactly the order prescribed above** - regex
+      repaired, corpus swept both directions per fixture BEFORE widening
+      (`0` verdicts changed except the ones being repaired), `_LOG_DETAILED_CATS`
+      widened and its comment refreshed in the same commit. `_LOG_CAT` is now
+      IMPORTED from `oracles.log.ANALYSIS_ROW_TAGS`, and
+      `tests/test_audit_log_tag_vocabulary.py` reads the tags straight out of
+      `sync/analysis.py` so a rename in the app fails the SUITE rather than a
+      six-hour audit six weeks later.
+    - **ONE JUDGEMENT ABOVE WAS WRONG, and it is the expensive half.** *"Not a
+      false-finding source today ... with the regex broken, `got_log` is None and
+      `_categories_match` correctly falls back to the review screen."* The
+      fallback is only correct when a review screen EXISTS, and **a Quick Sync
+      row never renders one**. Measured on `20260821_113342_sync-matrix`: **14
+      HIGH findings**, every one fabricated, covering `updated_modified`,
+      `deleted_on_canvas` and `updated_clean` - i.e. precisely "the category this
+      file calls the most consequential in the suite". The app had classified all
+      14 correctly and named every file in its own log, on the line above the one
+      the parser could not read.
+    - **And the deferral cost more than the delay.** This entry also said "Fix it
+      BEFORE the next sync matrix". The matrix ran first. A blind oracle does not
+      merely fail to report - it makes every OTHER finding in its categories
+      unfalsifiable, so the 43-row run had to be re-adjudicated by hand
+      afterwards, which is more work than the fix.
 
 27. **`matrix collect` appended instead of replacing, doubling every count.** It
     opens the parent ledger with mode `"a"` and dedupes only WITHIN one
@@ -1051,6 +1074,74 @@ inflated a number.** The blind one is the most important entry here.
     what the failure recorded (`gated: True, found: True, disabled: False`). Now
     polls `pointer-events` on the button itself, the property a user's pointer
     meets, rather than the attribute behind it.
+
+## Four more checker defects, and a product defect they were hiding (2026-08-21)
+
+Numbering continues from 31. All four were found while adjudicating the 14 HIGH
+findings checker defect 26 had fabricated - i.e. **the cost of a blind oracle is
+not the reports it misses, it is the reports it invents in their place**, and
+each of these is a different way the invention was made to look sound.
+
+32. **The blind guard protected ONE oracle.** `_categories_match` refuses to
+    assert when the chosen oracle has no rows for the wanted category - but the
+    test was `oracle == "O2" and not rows`. With O1 chosen (which defect 26's
+    `_LOG_DETAILED_CATS` forced for four of six categories) a review screen with
+    no rows fell straight through to *"was not offered"*, whose detail asserts
+    that the oracle *"listed other files under {want} and this was not among
+    them"*. Nothing had checked that. Now `blind` asks the oracle that was
+    actually consulted, and settles "empty category" vs "blind oracle" against
+    **the app's own `Analysis complete` tally** - the two look identical to a name
+    lookup and are opposite verdicts.
+
+33. **The finding quoted a peer list from the oracle it had NOT consulted.**
+    `peers_in_category` read `rows.get(_log_key)` - the LOG - whichever oracle
+    decided. For every category O1 was chosen for that list is empty by
+    construction, so each finding shipped evidence that contradicted its own
+    sentence, and an empty list reads as *"there simply were none"* rather than
+    as *"nobody looked"*.
+
+34. **`recheck` fed a sync row its COMPLETION capture when the review capture was
+    missing.** The live pass reads `{name}_review` and nothing else, so the
+    fallback broke the one contract `recheck` has. The probe runs its review
+    extraction against whatever screen is showing, so a completion capture
+    carries `review: {courses: [], seen: {categoryContainers: 0}}` - truthy,
+    structurally empty, a perfect impostor for anything that only tests it for
+    truthiness. Measured: **29 HIGH on re-check against 20 live**, all 9 extras
+    Quick Sync rows. `_selected_stems` had the mirror of the same confusion,
+    answering `set()` ("the user ticked nothing") where its own docstring demands
+    `None` ("unknown") - which silently DOWNGRADES outcome expectations, i.e. it
+    hides defects rather than inventing them. Its test passed for a year because
+    it fed a hand-made capture instead of one the harness had written.
+
+35. **The comparison primitives did not Unicode-fold, so the audit was weaker
+    than the code it audits.** `core.sync_manager._path_key` normalises to NFC;
+    `crosscheck._norm` / `_stem` / `_key` did not. Danish **`å` decomposes and
+    `ø`/`æ` do not**, which is why it reads as random. Measured inside a SINGLE
+    log line: the app wrote the Canvas display name `Svarark - Gode råd til
+    projektet.docx` as NFD and the local path of the SAME FILE as NFC, while the
+    seed plan is NFC throughout - so the fixture matched nothing and was reported
+    HIGH as *"was not offered as new"* while sitting in the log's own `[NEW]`
+    list. Fold direction is NFC, chosen to match the app, and a test pins that
+    rather than merely pinning "some consistent form".
+
+**The result: 29 HIGH -> 13, with ZERO new findings**, across both the sync
+matrix and the 275-finding download matrix. And the 13 that remained turned out
+to be a REAL product defect whose mechanism the register had carried as
+unestablished for ten days - see `fp:5c1dc682e36c`. That is the argument for
+fixing a blind oracle before running the matrix rather than after: while it was
+blind, the one genuine finding in its categories was indistinguishable from the
+14 it had invented.
+
+**A guard the suite now has, and should have had from the first sync run:**
+`crosscheck._log_tally_matches_its_own_rows` compares the log's `Analysis
+complete` counts against the per-file rows beneath them. Both halves are written
+by the same function in the same run, so a disagreement is always a PARSER
+defect - reported as `medium`/observation, worded to send the reader to
+`ANALYSIS_ROW_TAGS`. `candel: 2` with zero parsed rows would have fired on day
+one. Covered by `tests/test_audit_log_tag_vocabulary.py` (32) and
+`scripts/_mutate_log_tag_vocabulary.py` - **19/19 caught**; six of those mutants
+survived the first version of those tests, so re-run the pass, not just the suite.
+
 
 ### A register `invalid` can silence a DIFFERENT defect with the same sentence
 
