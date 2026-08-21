@@ -329,3 +329,71 @@ def strip_test_datas(datas):
             continue
         kept.append(entry)
     return kept
+
+
+def strip_bytecode_datas(datas):
+    """Drop ``__pycache__`` / ``.pyc`` from an ``Analysis.datas`` TOC.
+
+    Both specs bundle the app's own packages by DIRECTORY (``('core', 'core')``,
+    ``('panopto', 'panopto')``, …). PyInstaller expands a directory tuple into
+    every file underneath it, so a developer's ``__pycache__`` goes into the
+    bundle with the source - measured on this tree, **75 stale ``.pyc`` files**
+    across the eight app packages.
+
+    That is not merely dead weight, and on macOS it is the difference between a
+    recoverable first run and a dead end:
+
+    * ``codesign`` SEALS whatever is on disk, so those ``.pyc`` files become
+      part of the signature. Anything that later removes them - a cleanup, a
+      packaging step, an antivirus quarantine - breaks the seal.
+    * A broken seal changes Gatekeeper's verdict CLASS, not just its wording.
+      Measured on macOS 26.6.1 against two quarantined copies of the same
+      bundle::
+
+          valid ad-hoc seal   spctl -a -t exec  ->  "rejected"                      exit 3
+          __pycache__ removed spctl -a -t exec  ->  "a sealed resource is missing"   exit 1
+
+      Exit 3 is the not-notarized policy denial, which is the *"Apple could not
+      verify…"* dialog with the **Open Anyway** path that
+      ``docs/mac-setup.html`` walks the user through. Exit 1 is a signature
+      VALIDITY failure - the *"…is damaged and can't be opened"* dialog, which
+      has no Open Anyway path at all. The app ships unsigned by design, so that
+      one recoverable dialog is the entire macOS onboarding route; a bundle that
+      can lose its seal turns it into a wall.
+
+    REACHABILITY, MEASURED - do not overstate this. The shipped **v2.0.1 DMG was
+    downloaded and inspected**: it carries exactly ONE ``__pycache__`` (a
+    third-party ``dist-info/licenses`` folder) and none of the app's own. Release
+    DMGs are built by ``.github/workflows/build-macos.yml`` from a fresh
+    checkout, which has no ``__pycache__`` to sweep in - so this has never
+    affected a shipped build, and the exit-1 verdict above was produced on a
+    LOCAL build. It is fixed anyway for two reasons that do not depend on that: a
+    local build should be byte-comparable to the CI one when you are debugging a
+    release, and a seal is only as stable as the least deterministic thing inside
+    it. Applied to ``a.datas`` AFTER ``Analysis`` in both specs.
+
+    THE ONE THAT DID SHIP, found by inspecting that same DMG: v2.0.1's bundle
+    fails ``codesign --verify`` outright, because ``pync`` vendors a nested
+    ``terminal-notifier`` app whose ``__dot__`` directory names PyInstaller
+    cannot seal. Already fixed - ``pync`` is gone from the current spec and a
+    fresh build verifies exit 0. Note it did NOT produce the exit-1 Gatekeeper
+    verdict: the shipped v2.0.1 app still assesses as **exit 3**, because
+    ``spctl`` does not descend into that subcomponent. So a failing ``codesign``
+    and a "damaged" dialog are NOT the same thing, and only a top-level sealed-
+    resource failure produces the unrecoverable one.
+
+    Bytecode-only, so it can never make an import fail: the ``.py`` sources are
+    kept and CPython simply recompiles what it needs. Matching is on a whole
+    ``__pycache__`` **directory component** (never a substring), for the same
+    reason ``strip_test_datas`` matches that way.
+    """
+    kept = []
+    for entry in datas:
+        dest = str(entry[0]).replace("\\", "/")
+        parts = dest.split("/")
+        if "__pycache__" in parts[:-1]:
+            continue
+        if parts[-1].endswith((".pyc", ".pyo")):
+            continue
+        kept.append(entry)
+    return kept
