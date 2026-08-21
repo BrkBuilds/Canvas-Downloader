@@ -5134,7 +5134,7 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 ### find_new_office_pid can adopt the USER'S OWN Office process, so a watchdog timeout kills their unsaved document - and our real instance is the one that leaks
 <!-- fp:a41c7e0b93d2 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: high
 **Category**: data-loss
 **Oracles**: live-observation,O3
@@ -5149,6 +5149,7 @@ PINS THE TRIGGER behind fp:6759ff4ce798 and fp:b79fd1dd2b22 (the EXCEL.EXE that 
 
 RECOMMENDED FIX (NOT APPLIED - this touches process-killing semantics where a wrong choice destroys unsaved work, and CLAUDE.md records the structurally identical macOS ownership decision being deferred for exactly that reason): (1) return None when more than one candidate appears, instead of picking one - fails safe; (2) land that together with removing _on_timeout's broad /IM degradation, which becomes reachable more often once (1) is in and is worse than doing nothing; (3) where ground truth exists, take it - Excel and PowerPoint expose Application.Hwnd, so GetWindowThreadProcessId gives the pid exactly. Word's Application has no Hwnd (only ActiveWindow.Hwnd, which needs an open document), so Word still needs (1)+(2).
 
-**Notes**: Full method, probes and measurements in tests/audit/WINDOWS_FINDINGS_2026-08.md, area 5.
+**Notes**: Full method, probes and measurements in tests/audit/WINDOWS_FINDINGS_2026-08.md, area 5.  
+> FIXED in faa927d (engine/office_pid.find_new_office_pid) and VERIFIED ON WINDOWS 2026-08-21 against the two probes that originally exposed it. The data-loss case: with the user's own workbook open, find_new_office_pid now returns OUR instance (true pid 31076) rather than theirs (12972). The race case: two concurrent lanes both answer None and log 'Not tracking a PID - a leaked headless instance is recoverable, force-killing the wrong process is not', and both instances still exited cleanly. Corroborated by a second, independent instrument in the same seconds - a process watcher recorded the user's Excel as com=False and ours as com=True, i.e. the -Embedding discriminator the fix keys on, observed from outside the code under test. tests/test_office_pid_attribution.py 24/24 pass on Windows. NOTE the probes' own PASS/FAIL wording is now STALE: they test guessed==true_pid, so they print MISATTRIBUTED for the correct None and claim 'lanes that would kill the WRONG process', which is false - _kill_app is guarded by `if self._com_pid:` and kills nothing. Read the values, not the labels. Residual, and it is the accepted trade rather than a defect: in the ambiguous case neither instance is tracked, so if Quit() ALSO failed both would leak - deliberate, because a leaked headless process is recoverable and a wrongly force-killed one is not.
 
 ---

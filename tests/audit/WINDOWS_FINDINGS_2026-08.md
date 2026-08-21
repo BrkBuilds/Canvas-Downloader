@@ -396,6 +396,27 @@ clean with 0 exceptions.
    mean the Windows suite is not green, so a future regression in
    `test_conversion_repoint_spelling.py` would land in an already-red file.
 
+> **THREE OF THOSE FOUR ARE NOW CLOSED - read this list as the state at the
+> end of the OFFLINE pass, then read on.**
+>
+> 1. **Fixed and verified.** `faa927d` rewrote `find_new_office_pid`; verified
+>    on Windows against both original probes (see Row 2 below). The macOS
+>    session found a better discriminator than the ambiguity rule I proposed:
+>    filtering on `-Embedding` removes the user's process from the candidate
+>    set instead of making the answer ambiguous, so `None` does not become
+>    more common and the `/IM` half genuinely decouples. My "both halves must
+>    land together" was right about an ambiguity rule and did not apply to
+>    theirs.
+> 2. **STILL OPEN.** The one thing this machine cannot answer.
+> 3. **Closed.** Four live rows against real Canvas - see the live audit below.
+> 4. **Closed.** Both guards fixed; Windows is 4211 passed / 30 skipped / 0
+>    failed, and both conditions are false on macOS so that platform is
+>    unchanged.
+
+**So the single residual risk for Windows is item 2**, and it is being handed
+to a machine with `LongPathsEnabled` at its default 0.
+
+
 # Live audit - 2026-08-21 (run `20260821_213837_windows-small-transcription`)
 
 Closes the biggest gap in the offline pass above: no live Canvas download or
@@ -587,3 +608,88 @@ is set up for Slides & PDFs, so its folder is not a complete copy of Canvas."*
 **Note for the next scrub**: this run's `findings.jsonl` now carries the
 operator's Canvas login inside that Panopto fault string (`unified\<user>`), so
 `scripts/scrub_audit_pii.py` must run again before these artifacts are committed.
+
+## Row 4 - sync with seeded fixtures on the 43665 folder - **PASS**
+
+The Office folder was snapshotted first (`win_43665_office`, 174 files, 126
+manifest rows, integrity ok) so the precondition is reusable. Then 15 fixtures
+across 8 kinds: `readonly_target, edited_update, deleted_locally,
+unicode_rename, renamed_ambiguous, duplicate_copy, decoy_same_size_ext,
+long_path`. Synced with `--select updated_modified,deleted_locally`, because
+those two are unchecked by default and without them the `_NewVersion` and
+restore paths are never exercised at all.
+
+"Sync Complete!", **0 exceptions**. Crosscheck against the seed plan: 2
+findings, **both INFO** (64 paths over 255 characters, 2 converter-consumed
+rows). The checker compares actual against the plan's per-fixture expectations,
+so zero violations means all 15 behaved as specified.
+
+### The locked-target `_NewVersion` fallback - the Windows-only path
+
+`fp:8e7fc38cea3d` records this as **unreachable on macOS**: `os.replace`
+succeeds onto a read-only file there, so the `except PermissionError` branch
+cannot be entered. Windows is the only platform that can verify it.
+
+Four `_NewVersion` siblings were produced, and they split exactly right:
+
+| source | fixture | outcome |
+|---|---|---|
+| `Øvelse forelæsningen - Opgaven formuleret i Word.docx` | `readonly_target` | original **read-only and untouched**, sibling created |
+| `VØS1matquiz-02.txt` | `readonly_target` | original **read-only and untouched**, sibling created |
+| `FO-opgave.docx` | `edited_update` | locally edited, forked |
+| `ForelæsningsopgaveA.docx` | `edited_update` | locally edited, forked |
+
+So both fork paths - locked destination and local edit - work on Windows.
+
+**A result I checked before believing it**: the `readonly_target` siblings are
+**byte-identical** to their originals. That is correct by construction, not a
+defect. The fixture's own definition says `expect_category: updated_clean`,
+`expect_after: new_version` and - decisively - **`posix_no_fork: false`**, i.e.
+a fork IS expected on Windows. The "update" is synthetic: the manifest is
+drifted while the file on disk holds pristine Canvas content, so the engine
+re-downloads the same bytes and, unable to replace a read-only original, writes
+them beside it. Identical content is the expected outcome of that setup.
+
+`seed unlock` restored both read-only fixtures afterwards (`restored: 2`).
+
+---
+
+## Teardown
+
+App and browser stopped, read-only fixtures unlocked, and the mandatory check:
+**no `EXCEL.EXE` / `WINWORD.EXE` / `POWERPNT.EXE` orphans** after any row. The
+one stray `EXCEL.EXE /automation -Embedding` seen in this session came from my
+own hard abort of the first row-2 attempt (the app was killed before `_kill_app`
+could run), not from the product.
+
+## The one thing I went back and double-checked - O2's coverage
+
+Every row's crosscheck raised an INFO note that the **debug log parser missed
+34-57% of lines**, and `CLAUDE.md` is emphatic that a blind oracle does not
+under-report, it INVENTS - a blind O2 once produced 14 fabricated HIGH findings.
+If O2 were partly blind here, "every finding was INFO" would be worth much less
+than it looks. So it was checked rather than assumed.
+
+**It is not blind on anything a check consumes.** The missed lines are
+enumeration: `  - Item: X (Type: File)`, `Module file tracked: ...`, the log
+header, the CA-bundle line. `PATTERNS` in `oracles/log.py` covers every
+decision-relevant emitter - `file_saved`, `file_placed` and `catchall_defer`
+(the documented "a placed file is a real write with no File Saved line" cases),
+the `Analysis complete (...)` tally that arbitrates a row against its own rows,
+`error`, and all six `ANALYSIS_ROW_TAGS`. `tests/test_audit_log_tag_vocabulary.py`
+(31 passed) reads those tags straight out of `sync/analysis.py`, so an app-side
+rename fails the suite rather than silently blinding the oracle.
+
+### A real limitation of running rows as `flow` rather than `matrix`
+
+Found while checking the above: **the app clears a stale debug log once per
+session**, and I restarted the app between rows, so `downloads/debug_log.txt` now
+holds only the last session (55 bytes). `evidence/logs/` is empty because
+per-row log capture is a **matrix** feature - `flow` does not do it.
+
+Each crosscheck ran against a live, intact log at the time, so the findings
+recorded in `findings.jsonl` are sound. What is lost is the ability to
+**re-derive** them later, which is what `matrix recheck` exists for. If a future
+session wants re-checkable download rows on Windows, run them through
+`matrix`/lanes rather than standalone `flow`, or copy `debug_log.txt` aside
+after each row.
