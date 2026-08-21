@@ -1877,3 +1877,85 @@ the user gets the chime AND a correctly-attributed Notification Centre entry.
 inference.** The app has no entry there even after delivering, so "not in
 ncprefs" is not evidence that nothing was posted. Use the usernoted delivery DB
 above, which answers the question directly.
+
+## The fifth macOS session (2026-08-21) - traps, and one real defect
+
+### `open --env` is NOT sticky, and an unisolated lane looks exactly like an isolated one
+The packaged app is driven with `open --env CANVAS_DL_CONFIG_DIR=... -a "dist/Canvas Downloader.app"`.
+That works - **for the instance it launches**. Any *second* launch (a Dock
+click, a stray `open`, the operator opening the app to look at something)
+starts an instance with **no override at all**, and because the single-instance
+lock lives INSIDE the config dir the two instances cannot see each other, so
+both run happily.
+
+Measured this session: the first instance ended cleanly at 02:10:32 and a second
+started at 02:10:35 on the operator's REAL config. The audit attached to
+whichever answered port 8501 and ran a full 152-file download of course 43660
+against the developer's own settings and `~/Downloads`. **Nothing looked wrong.**
+The only tell was that the run's own `downloads/` directory stayed empty.
+
+The fix is a launcher that PROVES the override rather than assuming it:
+`tests/audit/harness/pkgdrive.launch()` reads `CANVAS_DL_CONFIG_DIR` back off the
+running process with `ps -Eww` and raises rather than returning a pid it cannot
+vouch for. It also refuses to launch when an instance is already up. Use it
+instead of a bare `open`.
+
+Corollary worth knowing: **the Office Automation grants SURVIVE an ad-hoc
+rebuild.** A bundle rebuilt and re-signed at 02:06 still carried the
+`kTCCServiceAppleEvents` rows written at 01:40, so the three Office prompts did
+NOT re-arm. Do not plan a session around re-answering them; check the TCC rows
+first (`select service,client,auth_value,datetime(last_modified,'unixepoch','localtime')
+from access where client='com.canvasdownloader.app'`).
+
+### Two non-findings, so nobody re-chases them
+* **`fda=True` with no grant in the user TCC.db.** Full Disk Access is a
+  **system**-level grant and lives in `/Library/Application Support/com.apple.TCC/TCC.db`,
+  not the per-user one. A user-db query finds nothing and that is correct.
+  Consequence for a session: once FDA is granted to the app the **FDA nudge
+  cannot render** and the powerbox stops re-arming per process, so both of those
+  surfaces become untestable until it is revoked.
+* **`packaged=False` in `health.log` on a genuinely packaged `.app`.** Known,
+  MSIX-related, and technically correct. Not a defect.
+
+### `estimated_cost_mb` is a SCHEDULING cost, not a byte forecast
+`matrix build` priced the 56-row plan at **127 GB** and the real download is
+about **30 GB**. The difference is not an error: `REC_COST_MB['transcribe']` is
+a *wall-time* figure converted into MB-equivalents at the link rate, precisely so
+the scheduler can weigh a transcription row against a download row. Read as
+bytes it will talk a session out of running a matrix that fits comfortably.
+
+Two more ways to mis-read that plan, both paid for this session:
+* a row's Panopto cost belongs to `_course_ids`, **not** `_course_id` - 15 of 56
+  rows carry two courses, so a row whose primary course has 0 recordings can
+  legitimately show a large media cost;
+* a Canvas snapshot has no `files` key. It is `files_tab` (a dict),
+  `module_file_ids`, and `expected_file_ids`. Reading `d['files']` reports every
+  course as empty.
+
+### Course 43660's Pages are now API-restricted
+The snapshot records `pages: []` with `pages_restricted: True`, where earlier
+runbook entries describe 35 Pages. That is a Canvas-side permission change, not
+a regression - but any checker still expecting 35 Pages will produce a false
+finding.
+
+### The defect: an Office conversion's manifest repoint depended on path SPELLING
+Full mechanism in `CLAUDE.md` ("…and the repoint must not depend on how the path
+is SPELLED"). In short: 62 of 63 Office conversions in a real packaged run left
+their manifest row on the source the converter had just deleted, because
+`converters/pdf.py` and `converters/word.py` `resolve()` the path they return
+while `sm.local_path` keeps the configured spelling, and the course folder was
+reached through a symlink. Fixed in `8338cf1`.
+
+**How to see it again**: point the download destination at a path containing a
+symlink (`/tmp/...` is one on macOS), download a course with `.pptx`, and count
+manifest rows whose `local_path` does not exist:
+
+```python
+con = sqlite3.connect(course/".canvas_sync.db")
+[p for (p,) in con.execute("select local_path from sync_manifest")
+   if not (course/p).exists()]        # local_path is RELATIVE to the course dir
+```
+
+That last point is its own trap: `local_path` is **relative**, so an
+`os.path.exists(p)` check reports every row as missing and looks like total
+corruption.
