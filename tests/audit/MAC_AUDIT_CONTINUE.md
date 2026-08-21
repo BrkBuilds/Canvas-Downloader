@@ -311,3 +311,105 @@ cost the most time:
   off this machine.
 * FDA is now GRANTED to the app, so the FDA nudge and the per-session powerbox
   re-arm are untestable until it is revoked.
+
+---
+
+# RESUME HERE — the sync matrix adjudication (written 2026-08-21, mid-session)
+
+Everything below is state that existed only in a conversation. Read this before
+touching the sync findings; it assumes no memory of that conversation.
+
+## Where the evidence is
+
+| thing | where |
+|---|---|
+| sync matrix run | `_audit_runs/20260821_113342_sync-matrix` (+ `__free1/2/3` lanes) |
+| download matrix | `_audit_runs/20260821_022815_macos26-full-night` (+ 3 lanes) |
+| packaged maximal | `_audit_runs/20260821_night_pkg`, folder at `/tmp/audit_night/downloads/...` |
+| CLEAN sync fixture | snapshot `c43660_postfix_clean` — post-fix, conversions ran |
+| PRE-FIX fixture | snapshot `c43660_panopto_maximal` — carries the 63 stale Office rows |
+| per-row seed plan | `_audit_runs/…__free1/evidence/seed_s018.json` (one per row) |
+| per-row review DOM | `_audit_runs/…__free1/evidence/ui/s018_after_analysis.json` |
+
+Both snapshots are of course **43660**. The clean one is the right fixture for
+new work; the pre-fix one exists only to demonstrate the repoint defect.
+
+## The sync matrix result, and how the 29 highs break down
+
+**43/43 rows, 0 row failures.** 29 high findings, which collapse by fingerprint
+to 5 register entries. Adjudicated by comparing each fixture's expected name
+against `evidence.peers_in_category` (the files the app really put in that
+category), on EXACT stems:
+
+| n | group | verdict |
+|---|---|---|
+| 13 | `renamed-ambiguous:zz flertydig 0.pdf` | **KNOWN** — register `fp:5c1dc682e36c`, "Two orphaned Canvas files of identical size are re-offered one per sync". Severity of the BEHAVIOUR is low and self-healing; the HIGH is a checker artefact (one finding per fixture per row). Now reproduced on a second, independent pair — see that entry. |
+| 2 | `new:Svarark - Gode råd til projektet.docx` | **CHECKER MISS** — the exact stem IS in the app's `new` list. |
+| 14 | `edited-update` / `clean-update` / `readonly` / `deleted-on-canvas`, all on `Eksempel - Gruppekontrakt.docx` and `Svarark - Gode råd til projektet.docx` | **NOT ADJUDICATED — this is the open work.** Genuinely absent from the expected category. |
+
+## The 14: why they matter and how to start
+
+They touch `updated_modified`, `updated_clean` and `deleted_on_canvas` — the
+categories that decide whether **a student's edited file is protected**. That is
+where a real defect would hide, so they get the full treatment, not a verdict.
+
+Start by reading one row's evidence end to end rather than reasoning:
+
+```bash
+R=_audit_runs/20260821_113342_sync-matrix
+python - <<'PY'
+import json
+rows=[json.loads(l) for l in open("_audit_runs/20260821_113342_sync-matrix/findings.jsonl",encoding="utf-8") if l.strip()]
+d=next(x for x in rows if x["severity"]=="high" and "edited-update" in x["title"])
+print(json.dumps(d, indent=1, ensure_ascii=False)[:3000])
+PY
+```
+
+Then the row's `seed_<id>.json` (what was planted) and `ui/<id>_after_analysis.json`
+(what the screen showed). The seeder plants SEVERAL fixtures per row on the same
+two docx files, so identify fixtures by `canvas_file_id`, never by name.
+
+## TWO TRAPS THIS SESSION PAID FOR — do not repeat them
+
+1. **Substring name matching inverts the answer.** A first triage used
+   `want in peer or peer in want`, which makes `…Upload` match `…Upload-1` —
+   a DIFFERENT Canvas file — and reported 16 checker-misses where the exact-stem
+   comparison reports 2. Compare exact stems.
+
+2. **Two attempts to "fix" `crosscheck._name_candidates` were NO-OPS, and both
+   were reverted.** The reasoning that looked right and was not:
+   * `ui_cat` is keyed by `_stem(token)` (no extension); `log_cat` is keyed by
+     `_norm(n)` (WITH the extension).
+   * `_DEDUP_SUFFIX` is `[ _-]\(?\d{1,3}\)?$` — anchored at the end — so on a
+     log key it never fires: `upload-1.pptx` strips to itself.
+   * `want in _LOG_DETAILED_CATS` sends `new` and `updated_clean` to the LOG
+     oracle first, so the screen's existing dedup aliasing is not consulted for
+     exactly the categories the seeder asserts most.
+   Adding a stem-aware alias to `log_cat` STILL changed nothing measurable
+   (recheck stayed at 29 high). So the alias is not the missing piece; do not
+   re-derive this hypothesis a third time without instrumenting the actual
+   lookup first.
+
+   Note also: the LIVE pass reported 20 highs and `matrix recheck` reports 29
+   from the same evidence with the SAME checker. That gap is itself unexplained
+   and is worth one look — `RUNBOOK.md` says a recheck reaching a different
+   verdict than the live pass is a checker defect by definition.
+
+3. **The register already warns about this finding family.** `fp:2e38f73c0857`
+   is an `invalid` twin of the renamed-ambiguous finding, closed as an audit
+   MATCHER defect; and `fp:5c1dc682e36c` carries an explicit note that a
+   previous session mis-diagnosed the app as "CORRECT" by **confusing the two
+   fixtures** (fixture 0 was found, fixture 1 genuinely was not). Read both
+   before concluding anything about a "not offered" finding.
+
+## Product state, so it is not re-derived
+
+* Suite **4085 passed / 26 skipped**; architecture audit **0 violations**.
+* `main` now contains the whole audit branch (merge `c32a582`), pushed. Not tagged.
+* Post-fix fixture verified: conversions ran (121 PDFs, 0 Office sources left),
+  **0 stale manifest rows** — against 63 in the pre-fix packaged run.
+* Panopto/Canvas `.webloc` collision proven in BOTH directions: with
+  `convert_urls` OFF all 41 Canvas links survive and all 36 Panopto shortcuts
+  divert to `(Panopto)`, 0 shared paths. Last night's "Panopto took the plain
+  name" observation was an ORDERING interaction (convert_urls deletes the
+  unmarked Canvas links first), not an overwrite.

@@ -9,13 +9,73 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260821_022815_macos26-full-night` on 2026-08-21.
+Last updated by run `20260821_113342_sync-matrix` on 2026-08-21.
 
-**22 open** · 156 total · 23 accepted · 79 fixed · 31 invalid · 1 wontfix
+**12 open** · 160 total · 29 accepted · 87 fixed · 31 invalid · 1 wontfix
 
 ---
 
-### 'renamed-ambiguous:zz flertydig 1.jpg' was not offered as new in this run
+### 'deleted-on-canvas:GhostFile_1_Svarark - Gode råd til projektet.docx' was not offered as deleted_on_canvas in this run
+<!-- fp:0cfaabfe6c27 -->
+
+**Status**: open
+**Severity**: high
+**Category**: classification
+**Oracles**: O5,O1
+**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Occurrences**: 4
+**Scenario**: s025 · s025
+
+**Detail**:
+
+A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files. O1 listed other files under deleted_on_canvas and this was not among them, so it was genuinely not offered rather than merely unseen.
+
+**Notes**: 
+
+---
+
+### 'edited-update:Eksempel - Gruppekontrakt.docx' was not offered as updated_modified in this run
+<!-- fp:d7b76427b413 -->
+
+**Status**: open
+**Severity**: high
+**Category**: classification
+**Oracles**: O5,O1
+**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Occurrences**: 5
+**Scenario**: s020 · s020
+
+**Detail**:
+
+Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched. O1 listed other files under updated_modified and this was not among them, so it was genuinely not offered rather than merely unseen.
+
+**Notes**: 
+
+---
+
+### 'readonly:Eksempel - Gruppekontrakt.docx' was not offered as updated_clean in this run
+<!-- fp:681bc9bdade0 -->
+
+**Status**: open
+**Severity**: high
+**Category**: classification
+**Oracles**: O5,O2
+**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Occurrences**: 1
+**Scenario**: s036 · s036
+
+**Detail**:
+
+A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error. O2 listed other files under updated_clean and this was not among them, so it was genuinely not offered rather than merely unseen.
+
+**Notes**: 
+
+---
+
+### 'renamed-ambiguous:zz flertydig 0.pdf' was not offered as new in this run
 <!-- fp:650084e0245d -->
 
 **Status**: open
@@ -23,9 +83,9 @@ Last updated by run `20260821_022815_macos26-full-night` on 2026-08-21.
 **Category**: classification
 **Oracles**: O5,O2
 **First seen**: 2026-08-11 (20260811_155557_macos-26-v2.0.2)
-**Last seen**: 2026-08-12 (20260811_155557_macos-26-v2.0.2)
-**Occurrences**: 4
-**Scenario**: it5b · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Occurrences**: 19
+**Scenario**: s038 · s038
 
 **Detail**:
 
@@ -72,191 +132,27 @@ GUARDED so staging cannot be narrowed and silently re-open it:
 `tests/test_office_staging_short_names.py` gains a line-break parametrisation,
 a test pinning the escaper's sharp edge, and an AST test asserting ALL THREE
 converters escape the STAGED path rather than the real one. Both mutations are
-caught (converter escapes `src`; staging preserves `src.name`).  
-> Not observed in the latest run.
+caught (converter escapes `src`; staging preserves `src.name`).
 
 ---
 
-### Unexpected bridged_error in debug log: Forelæsning 15 DB1_x.pptx  Conversion failed - 1022:1028: execution error: Microsoft Power
-<!-- fp:957a3679286c -->
+### 'readonly:Eksempel - Gruppekontrakt.docx' placed as updated_clean by O1 but absent from O2
+<!-- fp:d445541f6268 -->
 
-**Status**: accepted
+**Status**: open
 **Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+**Category**: ui-truth
+**Oracles**: O1,O2
+**First seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Last seen**: 2026-08-21 (20260821_113342_sync-matrix)
+**Occurrences**: 4
+**Scenario**: s034 · s034
 
 **Detail**:
 
-Forelæsning 15 DB1_x.pptx  Conversion failed - 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error. The two oracles disagree about whether this file was offered at all, so neither can be trusted for it until that is resolved.
 
-**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
-
----
-
-### Unexpected bridged_error in debug log: Organisationsprojekt_vidensproduktion_2021-2_upload.pptm  Conversion failed - 1022:1028: e
-<!-- fp:03bf667f17a1 -->
-
-**Status**: accepted
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-Organisationsprojekt_vidensproduktion_2021-2_upload.pptm  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
-
-**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
-
----
-
-### Unexpected bridged_error in debug log: [AppleScript] Excel failed (other): 1424:1430: execution error: Microsoft Excel got an err
-<!-- fp:9086db677dd1 -->
-
-**Status**: fixed
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m048_c43665 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
-
-**Detail**:
-
-[AppleScript] Excel failed (other): 1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)
-
-**Notes**:   Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.
-
----
-
-### Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint 
-<!-- fp:39d13fe4271b -->
-
-**Status**: accepted
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
-
-**Detail**:
-
-[AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
-
-**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
-
----
-
-### Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 1022:1028: execution error: the frontmost present
-<!-- fp:5107b8603d66 -->
-
-**Status**: accepted
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-[AppleScript] PowerPoint failed (other): 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
-
-**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
-
----
-
-### Unexpected bridged_error in debug log: Øvelse 9 - VL.xlsx  1424:1430: execution error: Microsoft Excel got an error: Connection i
-<!-- fp:99180da2531f -->
-
-**Status**: fixed
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m048_c43665 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
-
-**Detail**:
-
-Øvelse 9 - VL.xlsx  1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)
-
-**Notes**:   Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.
-
----
-
-### A part-way Office conversion left a 64 KB partial PDF that passed pdf_looks_real and was promoted
-<!-- fp:8517df378146 -->
-
-**Status**: fixed
-**Severity**: medium
-**Category**: conversion
-**Oracles**: O3,O4
-**First seen**: 2026-08-21 (20260821_night_pkg)
-**Last seen**: 2026-08-21 (20260821_night_pkg)
-**Occurrences**: 1
-**Scenario**: m048 · 43665
-
-**Detail**:
-
-Matrix row m048. Excel's PDF export died mid-write with 'Connection is invalid. (-609)' and left 'Øvelse 9 - VL.pdf' at EXACTLY 65,536 bytes - one 64 KB buffer. Correct %PDF magic and 128x the 512-byte floor, so it passed pdf_looks_real, was promoted out of the Office container into the folder, and sat there UNTRACKED beside the .xlsx that had not been deleted. Canvas has no file of that name in 43665 (only the .xlsx), so it can only have come from the failed conversion; the audit checker independently flagged it as '1 content file on disk with no manifest row'. Two costs: it occupies the destination so the retry diverts to '<stem> (1).pdf' (the source of that run's duplicate PDFs), and pdf_looks_real is ALSO the gate in front of deleting the user's only copy of a legacy .doc/.xls/.ppt - a partial passing it is the dangerous direction, and only the -609 being reported as a failure kept the source this time. FIXED: pdf_looks_real now requires a %%EOF trailer within the last 4 KB. Verified against all 121 PDFs the audit produced (Canvas downloads and Word/Excel/PowerPoint conversions) - every one carries %%EOF inside the last 2 KB. tests/test_pdf_trailer_gate.py (14), 6/6 mutations caught.
-
-**Notes**:     Fixed 2026-08-21: pdf_looks_real now requires a %%EOF trailer within the last 4 KB. Verified against all 121 PDFs the audit produced - Canvas downloads and Word/Excel/PowerPoint conversions alike - every one carries it. tests/test_pdf_trailer_gate.py (14), 6/6 mutations caught.
-> Not observed in the latest run.
-
----
-
-### 62 of 63 Office conversions left the manifest row on the deleted source - the repoint depends on path SPELLING
-<!-- fp:793f45d38c39 -->
-
-**Status**: fixed
-**Severity**: medium
-**Category**: delivery
-**Oracles**: O3,O4
-**First seen**: 2026-08-21 (20260821_night_pkg)
-**Last seen**: 2026-08-21 (20260821_night_pkg)
-**Occurrences**: 1
-**Scenario**: pkg_maximal · 43660
-
-**Detail**:
-
-converters/pdf.py and converters/word.py return str(dst.resolve().absolute()) from their macOS branch; converters/excel.py returns str(dst). sm.local_path carries the configured spelling. Where the course folder is reached through a symlink (/tmp -> /private/tmp, or a course folder linked onto an external drive) the two disagree, Path.relative_to raises, and _update_manifest_path returned in silence. Measured in a real packaged run of course 43660: 68 manifest rows pointed at files not on disk (51 .pptx, 11 .pptm, 1 .doc consumed by conversion, plus 5 .webloc compiled by convert_urls), and only 2 repoints happened - both Excel. Consequence: a row naming a deleted source is re-offered as a RESTORE every sync; its PDF is untracked; a re-download plus re-conversion overwrites that PDF, losing a student's annotations. The same mismatch in _resolve_conversion_target loses the own-product ownership check that diverts to _NewVersion on local edits. FIXED in 8338cf1 via _course_relative (one primitive, realpath fallback) plus course-relative parent comparison; both silent paths now log. tests/test_conversion_repoint_spelling.py (12), 8/8 mutations caught.
-
-**Notes**:     Fixed 2026-08-21 in 8338cf1: _course_relative is the one primitive both call sites use (try as given, then compare realpaths), plus a course-relative parent comparison in _resolve_conversion_target that the mutation pass exposed as still broken. Both previously-silent paths now log. Verified end to end with the real PowerPoint converter on a symlinked root, and by tests/test_conversion_repoint_spelling.py (12) with 8/8 mutations caught.
-> Not observed in the latest run.
-
----
-
-### HARNESS: a matrix row needing BOTH office and gpu let the two lanes drive Office concurrently
-<!-- fp:64421c5a2c1f -->
-
-**Status**: fixed
-**Severity**: medium
-**Category**: regression-guard
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_night_pkg)
-**Last seen**: 2026-08-21 (20260821_night_pkg)
-**Occurrences**: 1
-**Scenario**: matrix
-
-**Detail**:
-
-HARNESS DEFECT, not product. parallel.classify() returns a single lane name; a row with transcription AND Office conversion answers 'gpu', lands in the gpu lane, and drives Word/Excel/PowerPoint while the office lane does the same - the arrangement the module docstring says must never happen. Measured on the 56-row plan: 7 of 9 gpu rows also convert Office. This audit escaped it only because the gpu lane was started by hand after the office lane finished; a plain 'matrix launch' would have run them together and produced -609/-30001 failures that read exactly like product defects. FIXED in e20c085: new resources() reports every resource a row needs, and split_lanes merges office+gpu into one serial lane when any dual-need row exists. classify() is unchanged so the deliberate 'gpu outranks office' trade is preserved. Negative control confirms the new tests fail against the old placement at 3, 4 and 8 lanes.
-
-**Notes**:     Fixed 2026-08-21 in e20c085: parallel.resources() reports every resource a row needs, and split_lanes merges office+gpu into ONE serial lane when any dual-need row exists. classify() unchanged, so the deliberate 'gpu outranks office' trade is preserved. Negative control confirms the tests fail against the old placement at 3, 4 and 8 lanes.
-> Not observed in the latest run.
+**Notes**: 
 
 ---
 
@@ -323,86 +219,6 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 ---
 
-### Unexpected bridged_warning in debug log: PDF conversion failed for Forelæsning 15 DB1_x.pptx: 1022:1028: execution error: Microsoft
-<!-- fp:afeb72dfc506 -->
-
-**Status**: accepted
-**Severity**: medium
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
-
-**Detail**:
-
-PDF conversion failed for Forelæsning 15 DB1_x.pptx: 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
-
-**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
-
----
-
-### Unexpected bridged_warning in debug log: PDF conversion failed for Organisationsprojekt_vidensproduktion_2021-2_upload.pptm: 1022:1
-<!-- fp:03f60d5442de -->
-
-**Status**: accepted
-**Severity**: medium
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-PDF conversion failed for Organisationsprojekt_vidensproduktion_2021-2_upload.pptm: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
-
-**Notes**:   Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
-
----
-
-### Unexpected bridged_warning in debug log: [AppleScript] Excel was not usable (1424:1430: execution error: Microsoft Excel got an err
-<!-- fp:7877415c8e20 -->
-
-**Status**: fixed
-**Severity**: medium
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: m001_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-[AppleScript] Excel was not usable (1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)) - it most likely crashed or was torn down mid-conversion; relaunching and retrying src_2198d4.xlsx once
-
-**Notes**:   Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.
-
----
-
-### CONFIRMED CONSEQUENCE: the stale Office rows render as '63 Deleted locally' on the next sync
-<!-- fp:849a3169faa3 -->
-
-**Status**: fixed
-**Severity**: medium
-**Category**: ui-truth
-**Oracles**: O1,O3,O4
-**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
-**Occurrences**: 1
-**Scenario**: stale_rows_probe · 43660
-
-**Detail**:
-
-Live sync analysis of the packaged maximal run's folder (restored from snapshot c43660_panopto_maximal, 405 files). The review screen reports '63 Deleted locally' - 0/63 selected - and Smart Select offers them by filetype as DOC / PPTM / PPTX. Those are EXACTLY the 63 Office sources the conversion consumed (51 pptx + 11 pptm + 1 doc), whose manifest rows were never repointed because that bundle predates the spelling fix. Header reads '63 files pending sync, 199 files up to date'. The user never deleted any of them. Nothing re-downloads silently (the boxes default unchecked), so this is a reporting defect rather than data loss - but it recurs on EVERY sync, and 'Select All here' is the natural response to being told 63 files are missing, which re-downloads ~180 MB of PowerPoints and then overwrites the PDFs the user already has. This closes the causal chain for the repoint finding: manifest (O4) -> disk (O3) -> the app's own review screen (O1).
-
-**Notes**:   Not a separate defect - this IS the consequence of the repoint finding, measured on the app's own review screen. Closed with that fix (8338cf1).
-
----
-
 ### Two orphaned Canvas files of identical size are re-offered one per sync, not both
 <!-- fp:5c1dc682e36c -->
 
@@ -460,11 +276,9 @@ fixture 1 (`...ImageHeader.jpg`) genuinely was not. The checker's misleading
 "no oracle placed it in any category" wording is what produced the wrong
 conclusion; it has been fixed (479cd29).
 
-**Notes**:   
+**Notes**: **2026-08-21 (fifth macOS session)**: REPRODUCED on a second, independent file pair, which generalises it beyond the `CBS_SolbjergPlads_ImageHeader.jpg` triple. On the first CONVERTED sync fixture (`c43660_postfix_clean`), the seeder orphaned Canvas ids **1560011** and **1560205** - both displayed `2024_Lektion uge 46_1 ... Omgivelser - 1 _ Upload`, both `.pptx` converted to `.pdf` locally, identical extension and size class. The review offered `...Upload-1.pptx` and NOT `...Upload.pptx`: one of the two, exactly as recorded. It surfaced **13 times across a 43-row sync matrix**, at HIGH, because the checker raises one finding per fixture per row - so the severity of the REPORT is a checker artefact while the BEHAVIOUR is the low-severity one described above. The mechanism is still not established; note it is not specific to Files-tab jpgs, and now reproduces on module .pptx files whose local form is a conversion product.  
 > Not observed in the latest run.
-  
 
-**2026-08-21 (fifth macOS session)**: REPRODUCED on a second, independent file pair, which generalises it beyond the `CBS_SolbjergPlads_ImageHeader.jpg` triple. On the first CONVERTED sync fixture (`c43660_postfix_clean`), the seeder orphaned Canvas ids **1560011** and **1560205** - both displayed `2024_Lektion uge 46_1 ... Omgivelser - 1 _ Upload`, both `.pptx` converted to `.pdf` locally, identical extension and size class. The review offered `...Upload-1.pptx` and NOT `...Upload.pptx`: one of the two, exactly as recorded. It surfaced **13 times across a 43-row sync matrix**, at HIGH, because the checker raises one finding per fixture per row - so the severity of the REPORT is a checker artefact while the BEHAVIOUR is the low-severity one described above. The mechanism is still not established; note it is not specific to Files-tab jpgs, and now reproduces on module .pptx files whose local form is a conversion product.
 ---
 
 ### A folder's Panopto formats can only be changed by running a Download, and that run silently narrows them - the sync side shows the contract but cannot edit it
@@ -491,27 +305,6 @@ That overwrite is the documented design and it is what makes the download run th
 Recorded as an observation rather than a defect: every individual behaviour here is deliberate and documented in CLAUDE.md, including the specific warning that a Panopto gate placed inside the runner would let a download write an all-off contract over every folder it touched. The gap is that the contract is presented as visible state with no editor, and the one thing that rewrites it does so without saying so.
 
 **Notes**:   
-> Not observed in the latest run.
-
----
-
-### A transient Office failure (-609 connectionInvalid) was classified 'other', so it got no retry
-<!-- fp:9cca51fdfbd8 -->
-
-**Status**: fixed
-**Severity**: low
-**Category**: conversion
-**Oracles**: O2,O3
-**First seen**: 2026-08-21 (20260821_night_pkg)
-**Last seen**: 2026-08-21 (20260821_night_pkg)
-**Occurrences**: 1
-**Scenario**: m032 · 43660
-
-**Detail**:
-
-Matrix row m032, the largest Office batch in the plan (~88 files across 43660+45899): three files failed transiently, each surrounded by dozens of successes - two with -30001 (our own frontmost-document guard) and one with 'Connection is invalid. (-609)'. _classify_stderr recognised only -600 as recoverable, so all three fell to 'other', which gets no per-file retry. They were recovered only because retry_failed_conversions sweeps the phase afterwards, and because that late sweep re-resolves the destination each also minted a duplicate '<stem> (n).pdf'. -609 is connectionInvalid - the app was there when addressed and is gone now, i.e. -600 one step earlier - and engine/applescript_bridge's OWN docstring already cited it as the signature of PowerPoint being torn down mid-conversion. FIXED in 247a734: -609 now classifies app_crashed (per-file, retried once, never fatal). -30001 deliberately left as 'other' (fix 1f0a…): it is our own guard and the app is running perfectly, so app_crashed's 'stopped running while converting' would be false - recorded as needing its own category if ever made retryable. 12/12 mutations caught.
-
-**Notes**:     Fixed 2026-08-21 in 247a734: -609 and the 'Connection is invalid' wording now classify as app_crashed (per-file, retried once, never fatal). -30001 deliberately left as 'other' - it is our own frontmost guard and app_crashed's message would misdescribe a running app. Verified live: row m001 logged 'Excel recovered after a crash; src_2198d4.xlsx converted on the retry' four seconds after the failure that row m048 (pre-fix) reported as a dead loss. 12/12 mutations caught.
 > Not observed in the latest run.
 
 ---
@@ -1261,7 +1054,8 @@ Each of these will be offered as a NEW file on every future sync unless the anal
 
 The audit's own exemption for this existed and never fired: it read `expect["converters"]` while `check download` is handed a FLAT config. The same shape mismatch was also reporting the 25 consumed `.url` rows as a broken manifest. Both now read the `sync_contract` the app stored in the folder, which is what the engine itself obeys.
 
-Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.
+Verified on a fresh, never-seeded download of 45899 with every converter on: 0 defects. Guarded by tests/test_audit_converter_evidence.py, including a control proving the exemption still reports a genuinely missing .pdf.  
+> Not observed in the latest run.
 
 ---
 
@@ -1608,7 +1402,7 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 
 ---
 
-### ~~Unexpected bridged_error in debug log: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx ~~
+### ~~Unexpected bridged_error in debug log: 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx~~
 <!-- fp:1dc7bf542396 -->
 
 **Status**: fixed
@@ -1624,7 +1418,8 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 
 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
 
-**Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
+**Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.  
+> Not observed in the latest run.
 
 ---
 
@@ -1687,6 +1482,27 @@ Failed to convert code file gk2 vejl_løsn.js: [Errno 13] Permission denied: 'G:
 Forandring i organisationer_video1_upload_2025.pptx  Conversion failed - 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
 
 **Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_error in debug log: Forelæsning 15 DB1_x.pptx  Conversion failed - 1022:1028: execution error: Microsoft Power~~
+<!-- fp:957a3679286c -->
+
+**Status**: accepted
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+Forelæsning 15 DB1_x.pptx  Conversion failed - 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
 > Not observed in the latest run.
 
 ---
@@ -1798,6 +1614,27 @@ OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s
 
 ---
 
+### ~~Unexpected bridged_error in debug log: Organisationsprojekt_vidensproduktion_2021-2_upload.pptm  Conversion failed - 1022:1028: e~~
+<!-- fp:03bf667f17a1 -->
+
+**Status**: accepted
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Organisationsprojekt_vidensproduktion_2021-2_upload.pptm  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
+> Not observed in the latest run.
+
+---
+
 ### ~~Unexpected bridged_error in debug log: Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopped respond~~
 <!-- fp:bacba60611c0 -->
 
@@ -1862,6 +1699,27 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
+### ~~Unexpected bridged_error in debug log: [AppleScript] Excel failed (other): 1424:1430: execution error: Microsoft Excel got an err~~
+<!-- fp:9086db677dd1 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m048_c43665 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+
+**Detail**:
+
+[AppleScript] Excel failed (other): 1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)
+
+**Notes**: Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.  
+> Not observed in the latest run.
+
+---
+
 ### ~~Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (app_missing): 710:716: execution error: Microsoft PowerPo~~
 <!-- fp:e05c7d6a0ca4 -->
 
@@ -1879,6 +1737,48 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 [AppleScript] PowerPoint failed (app_missing): 710:716: execution error: Microsoft PowerPoint got an error: Application isn’t running. (-600)
 
 **Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint~~
+<!-- fp:39d13fe4271b -->
+
+**Status**: accepted
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+[AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 1022:1028: execution error: the frontmost present~~
+<!-- fp:5107b8603d66 -->
+
+**Status**: accepted
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+[AppleScript] PowerPoint failed (other): 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
 > Not observed in the latest run.
 
 ---
@@ -2096,6 +1996,27 @@ g1 darts vejl_løsn.js  Conversion failed
 gk2 vejl_løsn.js  Conversion failed
 
 **Notes**: NOT A PRODUCT DEFECT - the app correctly reporting a failure the audit caused. The `readonly_target` fixture had made a conversion OUTPUT read-only, so the converter genuinely could not write it and said so, in download_errors.txt and in the completion screen's post-processing warning. The fixture is fixed (see the _NewVersion entry). The underlying asymmetry it exposed - graceful fallback on a locked download target, hard failure on a locked conversion target - is recorded separately as its own low finding.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_error in debug log: Øvelse 9 - VL.xlsx  1424:1430: execution error: Microsoft Excel got an error: Connection i~~
+<!-- fp:99180da2531f -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m048_c43665 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+
+**Detail**:
+
+Øvelse 9 - VL.xlsx  1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)
+
+**Notes**: Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.  
 > Not observed in the latest run.
 
 ---
@@ -2369,6 +2290,27 @@ two, `.doc` intact (153,600 B), no stub PDF, 0 staged dirs.
 
 ---
 
+### ~~A part-way Office conversion left a 64 KB partial PDF that passed pdf_looks_real and was promoted~~
+<!-- fp:8517df378146 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: conversion
+**Oracles**: O3,O4
+**First seen**: 2026-08-21 (20260821_night_pkg)
+**Last seen**: 2026-08-21 (20260821_night_pkg)
+**Occurrences**: 1
+**Scenario**: m048 · 43665
+
+**Detail**:
+
+Matrix row m048. Excel's PDF export died mid-write with 'Connection is invalid. (-609)' and left 'Øvelse 9 - VL.pdf' at EXACTLY 65,536 bytes - one 64 KB buffer. Correct %PDF magic and 128x the 512-byte floor, so it passed pdf_looks_real, was promoted out of the Office container into the folder, and sat there UNTRACKED beside the .xlsx that had not been deleted. Canvas has no file of that name in 43665 (only the .xlsx), so it can only have come from the failed conversion; the audit checker independently flagged it as '1 content file on disk with no manifest row'. Two costs: it occupies the destination so the retry diverts to '<stem> (1).pdf' (the source of that run's duplicate PDFs), and pdf_looks_real is ALSO the gate in front of deleting the user's only copy of a legacy .doc/.xls/.ppt - a partial passing it is the dangerous direction, and only the -609 being reported as a failure kept the source this time. FIXED: pdf_looks_real now requires a %%EOF trailer within the last 4 KB. Verified against all 121 PDFs the audit produced (Canvas downloads and Word/Excel/PowerPoint conversions) - every one carries %%EOF inside the last 2 KB. tests/test_pdf_trailer_gate.py (14), 6/6 mutations caught.
+
+**Notes**: Fixed 2026-08-21: pdf_looks_real now requires a %%EOF trailer within the last 4 KB. Verified against all 121 PDFs the audit produced - Canvas downloads and Word/Excel/PowerPoint conversions alike - every one carries it. tests/test_pdf_trailer_gate.py (14), 6/6 mutations caught.  
+> Not observed in the latest run.
+
+---
+
 ### ~~Files extracted from archives are never converted (root cause: explicit_files excludes extraction output)~~
 <!-- fp:815c4edf0cb8 -->
 
@@ -2570,6 +2512,27 @@ engine/progress_dashboard._pct exists because the value goes into `width: N%`, w
 
 ---
 
+### ~~62 of 63 Office conversions left the manifest row on the deleted source - the repoint depends on path SPELLING~~
+<!-- fp:793f45d38c39 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: delivery
+**Oracles**: O3,O4
+**First seen**: 2026-08-21 (20260821_night_pkg)
+**Last seen**: 2026-08-21 (20260821_night_pkg)
+**Occurrences**: 1
+**Scenario**: pkg_maximal · 43660
+
+**Detail**:
+
+converters/pdf.py and converters/word.py return str(dst.resolve().absolute()) from their macOS branch; converters/excel.py returns str(dst). sm.local_path carries the configured spelling. Where the course folder is reached through a symlink (/tmp -> /private/tmp, or a course folder linked onto an external drive) the two disagree, Path.relative_to raises, and _update_manifest_path returned in silence. Measured in a real packaged run of course 43660: 68 manifest rows pointed at files not on disk (51 .pptx, 11 .pptm, 1 .doc consumed by conversion, plus 5 .webloc compiled by convert_urls), and only 2 repoints happened - both Excel. Consequence: a row naming a deleted source is re-offered as a RESTORE every sync; its PDF is untracked; a re-download plus re-conversion overwrites that PDF, losing a student's annotations. The same mismatch in _resolve_conversion_target loses the own-product ownership check that diverts to _NewVersion on local edits. FIXED in 8338cf1 via _course_relative (one primitive, realpath fallback) plus course-relative parent comparison; both silent paths now log. tests/test_conversion_repoint_spelling.py (12), 8/8 mutations caught.
+
+**Notes**: Fixed 2026-08-21 in 8338cf1: _course_relative is the one primitive both call sites use (try as given, then compare realpaths), plus a course-relative parent comparison in _resolve_conversion_target that the mutation pass exposed as still broken. Both previously-silent paths now log. Verified end to end with the real PowerPoint converter on a symlinked root, and by tests/test_conversion_repoint_spelling.py (12) with 8/8 mutations caught.  
+> Not observed in the latest run.
+
+---
+
 ### ~~The LTI-stream verdict was written TWICE and both copies dropped .m4v, so a streamed video was reported as a hard failure~~
 <!-- fp:924e500e49c7 -->
 
@@ -2729,6 +2692,27 @@ original_md5 is what classifies the next update as clean (overwrite) or modified
 **Scenario**: m051_c43660 · m051_c43660
 
 **Notes**: Fixed 2026-07-29, flat mode only (decided with the user; modules mode deliberately unchanged - a module Page belongs with its module, and that path carries legacy_sync_id back-compat machinery precisely because page keying moved once before). In FLAT mode there is no module folder, so 'module placement' degenerates to the course root and the isolate setting is the only instruction left. TWO halves had to move together: the writer (_download_flat_async -> isolate_pages) and the analyzer's expectation (_get_files_from_modules emits 'Pages/<name>.html', because analyze_course only fills target_paths in modules mode and preferred_disk_name passes a name_locked negative-id name through verbatim). If they disagree nothing crashes - every page just reads as new on every sync for ever. VERIFIED IN THE REAL APP: flat+isolate download of course 43660 -> 28 module scans, 35 pages, all 35 in Pages/, no Processing Error; then TWO sync runs, both 'Sync done - everything up to date, Checked 152 files'. Guarded by tests/test_page_isolation_flat_mode.py.  
+> Not observed in the latest run.
+
+---
+
+### ~~HARNESS: a matrix row needing BOTH office and gpu let the two lanes drive Office concurrently~~
+<!-- fp:64421c5a2c1f -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: regression-guard
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_night_pkg)
+**Last seen**: 2026-08-21 (20260821_night_pkg)
+**Occurrences**: 1
+**Scenario**: matrix
+
+**Detail**:
+
+HARNESS DEFECT, not product. parallel.classify() returns a single lane name; a row with transcription AND Office conversion answers 'gpu', lands in the gpu lane, and drives Word/Excel/PowerPoint while the office lane does the same - the arrangement the module docstring says must never happen. Measured on the 56-row plan: 7 of 9 gpu rows also convert Office. This audit escaped it only because the gpu lane was started by hand after the office lane finished; a plain 'matrix launch' would have run them together and produced -609/-30001 failures that read exactly like product defects. FIXED in e20c085: new resources() reports every resource a row needs, and split_lanes merges office+gpu into one serial lane when any dual-need row exists. classify() is unchanged so the deliberate 'gpu outranks office' trade is preserved. Negative control confirms the new tests fail against the old placement at 3, 4 and 8 lanes.
+
+**Notes**: Fixed 2026-08-21 in e20c085: parallel.resources() reports every resource a row needs, and split_lanes merges office+gpu into ONE serial lane when any dual-need row exists. classify() unchanged, so the deliberate 'gpu outranks office' trade is preserved. Negative control confirms the tests fail against the old placement at 3, 4 and 8 lanes.  
 > Not observed in the latest run.
 
 ---
@@ -2919,7 +2903,7 @@ PDF conversion failed for 2025 7.lektion 31.marts .pptx: 710:716: execution erro
 
 ---
 
-### ~~Unexpected bridged_warning in debug log: PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over ~~
+### ~~Unexpected bridged_warning in debug log: PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over~~
 <!-- fp:721e4990f066 -->
 
 **Status**: fixed
@@ -2935,7 +2919,8 @@ PDF conversion failed for 2025 7.lektion 31.marts .pptx: 710:716: execution erro
 
 PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og overblik over semestret_publiceret.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
 
-**Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.
+**Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.  
+> Not observed in the latest run.
 
 ---
 
@@ -2956,6 +2941,27 @@ PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og ove
 PDF conversion failed for Forandring i organisationer_video1_upload_2025.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
 
 **Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_warning in debug log: PDF conversion failed for Forelæsning 15 DB1_x.pptx: 1022:1028: execution error: Microsoft~~
+<!-- fp:afeb72dfc506 -->
+
+**Status**: accepted
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+PDF conversion failed for Forelæsning 15 DB1_x.pptx: 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
+
+**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
 > Not observed in the latest run.
 
 ---
@@ -3002,6 +3008,27 @@ PDF conversion failed for Forelæsning 9 - HTML, CSS Og DOM _ updated.pptx: 710:
 
 ---
 
+### ~~Unexpected bridged_warning in debug log: PDF conversion failed for Organisationsprojekt_vidensproduktion_2021-2_upload.pptm: 1022:1~~
+<!-- fp:03f60d5442de -->
+
+**Status**: accepted
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m032_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for Organisationsprojekt_vidensproduktion_2021-2_upload.pptm: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
+> Not observed in the latest run.
+
+---
+
 ### ~~Unexpected bridged_warning in debug log: PDF conversion failed for Slides (2) Motivationsfaktorer forelæsning 2.pptx: 710:716: exec~~
 <!-- fp:5a8a4afe9135 -->
 
@@ -3040,6 +3067,27 @@ PDF conversion failed for Slides (2) Motivationsfaktorer forelæsning 2.pptx: 71
 PDF conversion failed for Øvelsesslides_mål og strategi_XA-1.pptx: Microsoft PowerPoint is not installed or could not be launched.
 
 **Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_warning in debug log: [AppleScript] Excel was not usable (1424:1430: execution error: Microsoft Excel got an err~~
+<!-- fp:7877415c8e20 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: m001_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+[AppleScript] Excel was not usable (1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)) - it most likely crashed or was torn down mid-conversion; relaunching and retrying src_2198d4.xlsx once
+
+**Notes**: Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.  
 > Not observed in the latest run.
 
 ---
@@ -3215,6 +3263,27 @@ That is the wrong statement. The quiz has content; Canvas will not serve it to a
 Measured on course 43660: 10 quizzes saved via the quiz path all explain themselves properly; the one quiz that also sits in a module as an Assignment item is the only one that produced a second, misleading file.
 
 **Notes**: Fixed 2026-07-28 and verified against the live API. TWO defects, one root: questions were fetched in exactly ONE of the five places a quiz can be saved, and that one caught the wrong exception - `Forbidden` is a SIBLING of `Unauthorized` under `CanvasException`, not a subclass, so the informative handler was dead code for every student. Now one `quiz_body_html` helper at all three quiz sites and `assignment_body_html` at all three assignment sites, with copy that states the truth. NOTE: the first version of the fix was wrong and only the live API caught it - `get_questions()` returns a lazy PaginatedList, so guarding the CALL catches nothing; the iteration must be inside the try. 21 unit tests passed against an eagerly-raising double. Guarded by tests/test_quiz_body.py, whose fixtures now raise on iteration.  
+> Not observed in the latest run.
+
+---
+
+### ~~CONFIRMED CONSEQUENCE: the stale Office rows render as '63 Deleted locally' on the next sync~~
+<!-- fp:849a3169faa3 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: ui-truth
+**Oracles**: O1,O3,O4
+**First seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Last seen**: 2026-08-21 (20260821_022815_macos26-full-night)
+**Occurrences**: 1
+**Scenario**: stale_rows_probe · 43660
+
+**Detail**:
+
+Live sync analysis of the packaged maximal run's folder (restored from snapshot c43660_panopto_maximal, 405 files). The review screen reports '63 Deleted locally' - 0/63 selected - and Smart Select offers them by filetype as DOC / PPTM / PPTX. Those are EXACTLY the 63 Office sources the conversion consumed (51 pptx + 11 pptm + 1 doc), whose manifest rows were never repointed because that bundle predates the spelling fix. Header reads '63 files pending sync, 199 files up to date'. The user never deleted any of them. Nothing re-downloads silently (the boxes default unchecked), so this is a reporting defect rather than data loss - but it recurs on EVERY sync, and 'Select All here' is the natural response to being told 63 files are missing, which re-downloads ~180 MB of PowerPoints and then overwrites the PDFs the user already has. This closes the causal chain for the repoint finding: manifest (O4) -> disk (O3) -> the app's own review screen (O1).
+
+**Notes**: Not a separate defect - this IS the consequence of the repoint finding, measured on the app's own review screen. Closed with that fix (8338cf1).  
 > Not observed in the latest run.
 
 ---
@@ -3519,6 +3588,27 @@ osascript's result, set to the exact stderr macOS produced at 20:49:20:
 
 The "without" column reproduces the packaged run's measured behaviour exactly,
 which is what makes the "with" column mean something.  
+> Not observed in the latest run.
+
+---
+
+### ~~A transient Office failure (-609 connectionInvalid) was classified 'other', so it got no retry~~
+<!-- fp:9cca51fdfbd8 -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: conversion
+**Oracles**: O2,O3
+**First seen**: 2026-08-21 (20260821_night_pkg)
+**Last seen**: 2026-08-21 (20260821_night_pkg)
+**Occurrences**: 1
+**Scenario**: m032 · 43660
+
+**Detail**:
+
+Matrix row m032, the largest Office batch in the plan (~88 files across 43660+45899): three files failed transiently, each surrounded by dozens of successes - two with -30001 (our own frontmost-document guard) and one with 'Connection is invalid. (-609)'. _classify_stderr recognised only -600 as recoverable, so all three fell to 'other', which gets no per-file retry. They were recovered only because retry_failed_conversions sweeps the phase afterwards, and because that late sweep re-resolves the destination each also minted a duplicate '<stem> (n).pdf'. -609 is connectionInvalid - the app was there when addressed and is gone now, i.e. -600 one step earlier - and engine/applescript_bridge's OWN docstring already cited it as the signature of PowerPoint being torn down mid-conversion. FIXED in 247a734: -609 now classifies app_crashed (per-file, retried once, never fatal). -30001 deliberately left as 'other' (fix 1f0a…): it is our own guard and the app is running perfectly, so app_crashed's 'stopped running while converting' would be false - recorded as needing its own category if ever made retryable. 12/12 mutations caught.
+
+**Notes**: Fixed 2026-08-21 in 247a734: -609 and the 'Connection is invalid' wording now classify as app_crashed (per-file, retried once, never fatal). -30001 deliberately left as 'other' - it is our own frontmost guard and app_crashed's message would misdescribe a running app. Verified live: row m001 logged 'Excel recovered after a crash; src_2198d4.xlsx converted on the retry' four seconds after the failure that row m048 (pre-fix) reported as a dead loss. 12/12 mutations caught.  
 > Not observed in the latest run.
 
 ---
