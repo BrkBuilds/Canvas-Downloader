@@ -5153,3 +5153,62 @@ RECOMMENDED FIX (NOT APPLIED - this touches process-killing semantics where a wr
 > FIXED in faa927d (engine/office_pid.find_new_office_pid) and VERIFIED ON WINDOWS 2026-08-21 against the two probes that originally exposed it. The data-loss case: with the user's own workbook open, find_new_office_pid now returns OUR instance (true pid 31076) rather than theirs (12972). The race case: two concurrent lanes both answer None and log 'Not tracking a PID - a leaked headless instance is recoverable, force-killing the wrong process is not', and both instances still exited cleanly. Corroborated by a second, independent instrument in the same seconds - a process watcher recorded the user's Excel as com=False and ours as com=True, i.e. the -Embedding discriminator the fix keys on, observed from outside the code under test. tests/test_office_pid_attribution.py 24/24 pass on Windows. NOTE the probes' own PASS/FAIL wording is now STALE: they test guessed==true_pid, so they print MISATTRIBUTED for the correct None and claim 'lanes that would kill the WRONG process', which is false - _kill_app is guarded by `if self._com_pid:` and kills nothing. Read the values, not the labels. Residual, and it is the accepted trade rather than a defect: in the ambiguous case neither instance is tracked, so if Quit() ALSO failed both would leak - deliberate, because a leaked headless process is recoverable and a wrongly force-killed one is not.
 
 ---
+### No machine in the fleet can detect a forgotten make_long_path any more - the laptop is now LongPathsEnabled=1 too
+<!-- fp:5bac506d210f -->
+
+**Status**: open
+**Severity**: high
+**Category**: audit-coverage
+**Oracles**: live-observation
+**First seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Last seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Occurrences**: 1
+**Scenario**: Windows 11 26200, LAPTOP-KE2TQ36T (ASUS ExpertBook L1500CDA), 4 cores, 13.9 GB RAM
+
+**Detail**:
+
+BLOCKS the long-path gate this laptop was briefed for, and the consequence is wider than one blocked job. The brief's premise was that this machine sits at the Windows default, which is what makes an unprefixed >260-character path FAIL and therefore makes a forgotten make_long_path detectable. It does not any more. MEASURED, not merely read out of the registry: registry LongPathsEnabled=1, python.exe carries longPathAware, and against a 321-character target built from real directories, `open(str(target), 'wb')` WITHOUT the prefix SUCCEEDED and wrote normally (the prefixed form also succeeded). Per the brief's own stop condition, any download / sync / Office / Panopto / archive row run here would be a MASKED PASS - the same result the desktop already produced. WHY IT MATTERS BEYOND THIS SESSION: CLAUDE.md records TWO long-path defects that survived precisely because a dev box had this enabled (office_safe_path's own I/O, and the panopto/transcribe.py .part delete, where an over-long path raises FileNotFoundError and the retry loop reads it as 'already gone' - no removal, no retry, no log), and in both cases the stated remedy was 'when a path-length fix cannot be reproduced, check that registry key first'. The implicit mitigation was that SOME machine in the fleet still had it off. As of today none does: the desktop has it on, this laptop has it on, and macOS has no such concept at all (make_long_path is a documented no-op there). This class is currently undetectable by running the product anywhere. NOT ACTED ON: turning the key off needs administrator rights and a reboot on the operator's own machine, and the reboot ends the session - that is the operator's call. The alternative is to promote a static guard into the suite so the question stops depending on one machine's registry (see the sibling finding on the delete-family converters).
+
+**Notes**: Method, probe output and the full reasoning in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 2.
+
+---
+
+### The PII scrubber silently skipped 46 of its own in-scope files - git C-quotes non-ASCII paths, so it reported CLEAN for files it never opened
+<!-- fp:22f933d4e544 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: privacy-tooling
+**Oracles**: live-observation
+**First seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Last seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Occurrences**: 1
+**Scenario**: Windows, scripts/scrub_audit_pii.py over 133 local audit runs
+
+**Detail**:
+
+Found while reconciling a suffix census against the scrubber's own file count, during Job 1. `git ls-files` C-quotes any path holding a non-ASCII byte and core.quotepath is unset (defaults to true), so a course folder named '...smaa systemer...' came back as '"..._audit_runs/.../seed_...sm\303\245 systemer....json"'. tracked_audit_files() built `REPO / line.strip()` from that, Path.is_file() answered False, and the filter dropped the entry WITHOUT A WORD. The arithmetic closes exactly: 6,764 staged blobs - 6,677 the scrubber saw = 87, being the 41 binaries it correctly excludes by suffix plus these 46 quoted paths; 37 of the 46 were in-scope text types it was supposed to open. It fails in the worst available direction for a privacy tool - the report says CLEAN for a file it never opened - and every Danish course name in this operator's runs hits it, so on this repo it is not an edge case. NOTHING WAS ACTUALLY EXPOSED: an independent scan of all 6,764 staged blobs (its own patterns, its own file list, every suffix including binaries) found no email, token, JWT or bearer string, and its positive control matched 6,293 blobs so that 'none' can say yes. FIX: read the list NUL-delimited (`git ls-files -z`, bytes rather than text=True), which git does not quote; coverage went 6,677 -> 6,714 and a re-run over the now-complete set is still clean.
+
+**Notes**: FIXED in f7d64ab. Control run in a throwaway repo proves both directions - the pre-fix form sees only the ASCII sibling, the fixed form sees both; the ASCII sibling IS the control, since without it a scanner reaching nothing at all would have 'passed'. Pinned by tests/test_scrub_audit_pii.py (11 tests) which asserts REACH as well as redaction, because reach is the half that fails silently; the regression test was confirmed to FAIL against the pre-fix code, restoring from an in-memory snapshot rather than git checkout since a second session may be in this tree. Narrative in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 1a.
+
+---
+
+### STATIC ONLY, unconfirmed: four delete-family converters do all their course-folder I/O without make_long_path
+<!-- fp:2af59c761f0c -->
+
+**Status**: open
+**Severity**: medium
+**Category**: correctness
+**Oracles**: static-analysis
+**First seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Last seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Occurrences**: 1
+**Scenario**: AST sweep of the app tree; NOT reproduced - this machine cannot fail on long paths
+
+**Detail**:
+
+Recorded as a POINTER FOR THE NEXT DYNAMIC RUN, not as a confirmed defect. With the dynamic gate unavailable (see the LongPathsEnabled finding), the same question was asked of the source: an AST scan for filesystem calls whose path expression never passes through make_long_path / office_safe_path. It returns 329 raw hits, which is far too many to all be real - most are config-dir, temp or app-owned paths that are short by construction, and the instrument has no provenance analysis, so that number must NOT be quoted as a defect count. The subset worth a dynamic run is CLAUDE.md's delete family, because those operate on course-folder paths (arbitrary depth under a user-chosen root) and delete the file they converted from: converters/code.py (3 unprefixed FS calls), md.py (3), url.py (4), video.py (3 unlink sites), pdf.py (1) - none of which reference make_long_path at all; excel.py and archive.py do. pdf.py and word.py are partly covered in practice by office_container_stage, which stages to a short src_<hex> path; code, md, url and video have no such staging. PREDICTED behaviour at LongPathsEnabled=0, FROM READING THE CODE AND NOT MEASURED: code.py reads at line 44, writes, verifies exists()+st_size, and only then unlinks the source, so an over-long path raises at the READ and the outer handler returns None with the source intact - the ordering is fail-safe and the delete-family discipline holds. The expected symptom is therefore degradation rather than data loss: files in deeply-nested course folders silently never convert, and the logged reason is '[Errno 2] No such file or directory' about a file that is plainly there, which actively misleads diagnosis. POINT A DYNAMIC RUN AT converters/video.py FIRST: its three Path(...).unlink(missing_ok=True) sites swallow FileNotFoundError, which is exactly what an over-long path raises - the mechanism behind the transcribe.py .part leak ('no removal, no retry, no log'). Severity and even reachability are UNCONFIRMED, because confirming them needs the machine that can fail.
+
+**Notes**: Table and method in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 3. Treat as where to look, not as a findings list.
+
+---
