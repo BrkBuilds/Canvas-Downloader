@@ -600,7 +600,24 @@
          So: if the API call fails, do nothing. Never replace working
          markup with an error state.
 
-         ── TO PUBLISH A NEW VERSION, EDIT EXACTLY THESE SIX THINGS ──
+         ── TO PUBLISH A NEW VERSION, RUN THE SCRIPT ──
+
+             python scripts/sync_release_page.py --check   # see the drift
+             python scripts/sync_release_page.py           # rewrite
+             python -m pytest tests/test_website_advertises_shipped_version.py -q
+
+         It derives every fact below from the ACTUAL GitHub release -
+         tag, real asset names, real byte sizes, real publish date - so
+         none of it is typed. Asset names are READ, never constructed:
+         the Windows build emits Canvas_Downloader_Setup_<ver>.exe while
+         the release carries Canvas_Downloader_v<ver>_Windows.exe, and
+         the macOS workflow emits _macOS.dmg while v2.0.1's asset is
+         _MacOS.dmg. A template would be wrong on both counts, which is
+         how the v2.0.1 notes came to name a file not attached to them.
+
+         tests/test_release_page_sync.py fails if any anchor below moves,
+         so you find out in the commit that moved it and not on release
+         day. The six things it maintains, for reference:
 
          (A) The two version pills:  <span class="ver-pill" id="win-ver">
              and id="mac-ver". Format is "v2.0.1" - leading v, no spaces.
