@@ -163,6 +163,35 @@ than another clean matrix — the 2026-08-08 note says it appeared inside a row
 whose `convert_excel` toggle was never even applied, so the spawning path is not
 yet understood.
 
+### 5b · One asymmetry already found from macOS — low, but yours to judge
+
+Swept from the Mac before you started, by driving the real functions with `nt`
+semantics. **Everything passed**: `make_long_path` gets all five shapes right
+(UNC → `\\?\UNC\...`, forward slashes normalised, dot-dot resolved,
+drive-relative root correctly left alone, idempotent); `core/sync_manager`'s
+wrapper agrees with the shared one on 9 of 9 probes including Danish characters;
+`office_safe_path` still yields UNPREFIXED paths while using the prefix for its
+own I/O, which is the whole point of it; and nothing hand-rolls the prefix
+outside `make_long_path` itself. So do not re-derive that surface.
+
+The one thing that is NOT symmetric: `_path_key` gates its case-sensitivity
+probe off on Windows (`if os.name != 'nt' and _case_insensitive_volume(s)`), so
+on Windows the case fold is **unconditional** — Windows is assumed
+case-insensitive everywhere. Since Windows 10 1803 that is not strictly true:
+`fsutil file setCaseSensitiveInfo <dir> enable` makes a directory
+case-SENSITIVE, and WSL uses it. In such a folder `Notes.pdf` and `notes.pdf`
+are two files and `_path_key` would fold them to one key — merged manifest rows
+and a mis-bound heal, the exact mirror of the macOS bug
+`_case_insensitive_volume` was added to fix.
+
+**Reachability is the question, and I could not answer it from a Mac.** It needs
+a user to have enabled per-directory case sensitivity on their *course folder*;
+WSL's own directories live under its VHDX root, not in Downloads. If you have a
+WSL install, `fsutil file queryCaseSensitiveInfo` on a normal Downloads folder
+answers it in seconds. **Do not "fix" it speculatively** — the fix means adding
+a `samefile` probe to a hot comparison loop on the majority platform, days
+before a release, to serve a case nobody has been shown to hit.
+
 ### 6 · Then, if there is time: a real matrix
 
 `python -m tests.audit` — see `RUNBOOK.md`. Prefer **more lanes over fewer
