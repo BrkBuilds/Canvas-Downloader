@@ -462,7 +462,9 @@ conclusion; it has been fixed (479cd29).
 
 **Notes**:   
 > Not observed in the latest run.
+  
 
+**2026-08-21 (fifth macOS session)**: REPRODUCED on a second, independent file pair, which generalises it beyond the `CBS_SolbjergPlads_ImageHeader.jpg` triple. On the first CONVERTED sync fixture (`c43660_postfix_clean`), the seeder orphaned Canvas ids **1560011** and **1560205** - both displayed `2024_Lektion uge 46_1 ... Omgivelser - 1 _ Upload`, both `.pptx` converted to `.pdf` locally, identical extension and size class. The review offered `...Upload-1.pptx` and NOT `...Upload.pptx`: one of the two, exactly as recorded. It surfaced **13 times across a 43-row sync matrix**, at HIGH, because the checker raises one finding per fixture per row - so the severity of the REPORT is a checker artefact while the BEHAVIOUR is the low-severity one described above. The mechanism is still not established; note it is not specific to Files-tab jpgs, and now reproduces on module .pptx files whose local form is a conversion product.
 ---
 
 ### A folder's Panopto formats can only be changed by running a Download, and that run silently narrows them - the sync side shows the contract but cannot edit it
