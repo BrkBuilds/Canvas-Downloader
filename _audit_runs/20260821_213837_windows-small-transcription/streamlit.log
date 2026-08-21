@@ -13,3 +13,18 @@ C:\Users\birkl\AppData\Roaming\Python\Python313\site-packages\openpyxl\reader\dr
   warn("DrawingML support is incomplete and limited to charts and images only. Shapes and drawings will be lost.")
 C:\Users\birkl\AppData\Roaming\Python\Python313\site-packages\openpyxl\worksheet\_reader.py:329: UserWarning: Unknown extension is not supported and will be removed
   warn(msg)
+
+=== audit app start 2026-08-21 22:20:13 port=8801 ===
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8801
+  Network URL: http://192.168.1.54:8801
+  External URL: http://2.106.25.114:8801
+
+C:\Users\birkl\AppData\Roaming\Python\Python313\site-packages\openpyxl\reader\drawings.py:67: UserWarning: wmf image format is not supported so the image is being dropped
+  warn(msg)
+C:\Users\birkl\AppData\Roaming\Python\Python313\site-packages\openpyxl\reader\drawings.py:33: UserWarning: DrawingML support is incomplete and limited to charts and images only. Shapes and drawings will be lost.
+  warn("DrawingML support is incomplete and limited to charts and images only. Shapes and drawings will be lost.")
+C:\Users\birkl\AppData\Roaming\Python\Python313\site-packages\openpyxl\worksheet\_reader.py:329: UserWarning: Unknown extension is not supported and will be removed
+  warn(msg)

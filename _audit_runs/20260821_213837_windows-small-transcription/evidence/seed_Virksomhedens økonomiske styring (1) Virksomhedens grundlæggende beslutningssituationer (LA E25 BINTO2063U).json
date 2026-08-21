@@ -1,0 +1,329 @@
+{
+  "folder": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\\downloads\\Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+  "seeded_at": "2026-08-21T22:56:52",
+  "applied": [
+    {
+      "kind": "readonly_target",
+      "count": 2
+    },
+    {
+      "kind": "edited_update",
+      "count": 2
+    },
+    {
+      "kind": "deleted_locally",
+      "count": 2
+    },
+    {
+      "kind": "unicode_rename",
+      "count": 2
+    },
+    {
+      "kind": "renamed_ambiguous",
+      "count": 1
+    },
+    {
+      "kind": "duplicate_copy",
+      "count": 2
+    },
+    {
+      "kind": "decoy_same_size_ext",
+      "count": 2
+    },
+    {
+      "kind": "long_path",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 15,
+  "expected_categories": {
+    "uptodate": 4,
+    "new": 3,
+    "updated_clean": 2,
+    "updated_modified": 2,
+    "deleted_locally": 2
+  },
+  "expected_untracked": [
+    "Ekstra træning (træning i gl. eksamensopgaver)/læsning – uge 42 ✅ resumé.docx",
+    "Ekstra træning (træning i gl. eksamensopgaver)/zz flertydig 0.docx",
+    "Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/læsning – uge 42 ✅ resumé.docx",
+    "Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/øvesæt nr. 9 - copy for exam.docx",
+    "Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)/Øvelse 10 ufp - copy for exam.docx",
+    "Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/Øvelse forelæsningen - Opgaven formuleret i Word.docx",
+    "Test mm/VØS1matquiz-02.txt",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Opgavesæt nr. 2.docx",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/øvesæt nr. 8.docx",
+    "decoy 0 unrelated.docx",
+    "decoy 1 unrelated.docx"
+  ],
+  "expected_missing_rows": [
+    "Ekstra træning (træning i gl. eksamensopgaver)/HAit reeksamen 2020 (1).docx",
+    "Ekstra træning (træning i gl. eksamensopgaver)/HAit reeksamen 2020.docx",
+    "Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/øvesæt nr. 9 vejl. løsning.docx",
+    "Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)/Opgavesæt nr. 2.docx",
+    "Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)/opgave CS og PS - med VL.docx",
+    "Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)/opgave CS og PS.docx",
+    "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/øvesæt nr. 8.docx"
+  ],
+  "expected_md5_drift": [
+    "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/FO-opgave.docx",
+    "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/ForelæsningsopgaveA.docx"
+  ],
+  "expected_size_drift": [
+    "Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/Øvelse forelæsningen - Opgaven formuleret i Word.docx",
+    "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/FO-opgave.docx",
+    "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/ForelæsningsopgaveA.docx",
+    "Test mm/VØS1matquiz-02.txt"
+  ],
+  "expected_partials": [],
+  "before": {
+    "rows": 126,
+    "files": 173
+  },
+  "after": {
+    "rows": 123,
+    "files": 173
+  },
+  "fixtures": [
+    {
+      "label": "readonly:VØS1matquiz-02.txt",
+      "kind": "readonly_target",
+      "path": "Test mm/VØS1matquiz-02.txt",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Test mm/VØS1matquiz-02.txt",
+      "match_name": "VØS1matquiz-02.txt",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1633225,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true,
+        "posix_no_fork": false
+      }
+    },
+    {
+      "label": "readonly:Øvelse forelæsningen - Opgaven formuleret i Word.docx",
+      "kind": "readonly_target",
+      "path": "Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/Øvelse forelæsningen - Opgaven formuleret i Word.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "new_version",
+      "expect_path": "Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/Øvelse forelæsningen - Opgaven formuleret i Word.docx",
+      "match_name": "Øvelse forelæsningen - Opgaven formuleret i Word.docx",
+      "why": "A clean update whose destination is read-only. The engine must fall back to a _NewVersion sibling instead of failing the file, and must report neither a silent success nor a hard error for the run.",
+      "canvas_file_id": 1568639,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true,
+        "posix_no_fork": false
+      }
+    },
+    {
+      "label": "edited-update:ForelæsningsopgaveA.docx",
+      "kind": "edited_update",
+      "path": "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/ForelæsningsopgaveA.docx",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/ForelæsningsopgaveA.docx",
+      "match_name": "ForelæsningsopgaveA.docx",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1568769,
+      "original_path": "",
+      "edited_md5": "49d912b2f29557b267b46186c4fad6d7",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:FO-opgave.docx",
+      "kind": "edited_update",
+      "path": "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/FO-opgave.docx",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/FO-opgave.docx",
+      "match_name": "FO-opgave.docx",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1568786,
+      "original_path": "",
+      "edited_md5": "b3bfce78c0b696c8e65047f37dc34949",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:opgave CS og PS - med VL.docx",
+      "kind": "deleted_locally",
+      "path": "Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)/opgave CS og PS - med VL.docx",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)/opgave CS og PS - med VL.docx",
+      "match_name": "opgave CS og PS - med VL.docx",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1568689,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:opgave CS og PS.docx",
+      "kind": "deleted_locally",
+      "path": "Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)/opgave CS og PS.docx",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Module 8 - Uge 44 1xFO, 1xØV (Middel belastning)/opgave CS og PS.docx",
+      "match_name": "opgave CS og PS.docx",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1568625,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "unicode:læsning – uge 42 ✅ resumé.docx",
+      "kind": "unicode_rename",
+      "path": "Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/læsning – uge 42 ✅ resumé.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/læsning – uge 42 ✅ resumé.docx",
+      "match_name": "øvesæt nr. 9 vejl. løsning.docx",
+      "why": "Renamed to a name mixing Danish letters, an en dash, an emoji and a COMBINING acute accent (NFD). heal Tier 2 must still hash and match it, and nothing downstream may mangle the name in the UI, the log or the manifest.",
+      "canvas_file_id": 1568781,
+      "original_path": "Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/øvesæt nr. 9 vejl. løsning.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "unicode:læsning – uge 42 ✅ resumé.docx",
+      "kind": "unicode_rename",
+      "path": "Ekstra træning (træning i gl. eksamensopgaver)/læsning – uge 42 ✅ resumé.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Ekstra træning (træning i gl. eksamensopgaver)/læsning – uge 42 ✅ resumé.docx",
+      "match_name": "HAit reeksamen 2020.docx",
+      "why": "Renamed to a name mixing Danish letters, an en dash, an emoji and a COMBINING acute accent (NFD). heal Tier 2 must still hash and match it, and nothing downstream may mangle the name in the UI, the log or the manifest.",
+      "canvas_file_id": 1568801,
+      "original_path": "Ekstra træning (træning i gl. eksamensopgaver)/HAit reeksamen 2020.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-ambiguous:zz flertydig 0.docx",
+      "kind": "renamed_ambiguous",
+      "path": "Ekstra træning (træning i gl. eksamensopgaver)/zz flertydig 0.docx",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Ekstra træning (træning i gl. eksamensopgaver)/HAit reeksamen 2020 (1).docx",
+      "match_name": "HAit reeksamen 2020 (1).docx",
+      "why": "Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.",
+      "canvas_file_id": 1568802,
+      "original_path": "Ekstra træning (træning i gl. eksamensopgaver)/HAit reeksamen 2020 (1).docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "duplicate:Øvelse 10 ufp - copy for exam.docx",
+      "kind": "duplicate_copy",
+      "path": "Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)/Øvelse 10 ufp - copy for exam.docx",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)/Øvelse 10 ufp - copy for exam.docx",
+      "match_name": "Øvelse 10 ufp - copy for exam.docx",
+      "why": "A byte-identical copy the student made. The original stays claimed by its row; the copy must remain unclaimed and must never be counted as Canvas content or offered for anything.",
+      "canvas_file_id": 1568794,
+      "original_path": "Module 11 - Uge 47 1xFO, 1xØV (Middel belastning)/Øvelse 10 ufp.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "duplicate:øvesæt nr. 9 - copy for exam.docx",
+      "kind": "duplicate_copy",
+      "path": "Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/øvesæt nr. 9 - copy for exam.docx",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/øvesæt nr. 9 - copy for exam.docx",
+      "match_name": "øvesæt nr. 9 - copy for exam.docx",
+      "why": "A byte-identical copy the student made. The original stays claimed by its row; the copy must remain unclaimed and must never be counted as Canvas content or offered for anything.",
+      "canvas_file_id": 1568655,
+      "original_path": "Module 10 - Uge 46 1xFO, 1xØV (Svær belastning)/øvesæt nr. 9.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "decoy:decoy 0 unrelated.docx",
+      "kind": "decoy_same_size_ext",
+      "path": "decoy 0 unrelated.docx",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/opgavesæt nr. 4.docx",
+      "match_name": "opgavesæt nr. 4.docx",
+      "why": "The real file was removed and a same-size, same-extension file of unrelated content put in the folder. Tier (c) WILL bind these (Canvas exposes no md5 to disprove it), so the expectation records what the product actually promises: if the decoy is adopted, the user silently keeps junk in place of their file. Investigate whichever way this lands.",
+      "canvas_file_id": 1568640,
+      "original_path": "Module 5 - Uge 40 1xFO, 1xØV (Middel belastning)/opgavesæt nr. 4.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "decoy_size": 27373
+      }
+    },
+    {
+      "label": "decoy:decoy 1 unrelated.docx",
+      "kind": "decoy_same_size_ext",
+      "path": "decoy 1 unrelated.docx",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Ekstra træning (træning i gl. eksamensopgaver)/HAit 2020 ORD opgave.docx",
+      "match_name": "HAit 2020 ORD opgave.docx",
+      "why": "The real file was removed and a same-size, same-extension file of unrelated content put in the folder. Tier (c) WILL bind these (Canvas exposes no md5 to disprove it), so the expectation records what the product actually promises: if the decoy is adopted, the user silently keeps junk in place of their file. Investigate whichever way this lands.",
+      "canvas_file_id": 1568790,
+      "original_path": "Ekstra træning (træning i gl. eksamensopgaver)/HAit 2020 ORD opgave.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "decoy_size": 27842
+      }
+    },
+    {
+      "label": "longpath:Opgavesæt nr. 2.docx",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Opgavesæt nr. 2.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Opgavesæt nr. 2.docx",
+      "match_name": "Opgavesæt nr. 2.docx",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1568633,
+      "original_path": "Module 3 - Uge 38 2xFO, 1xØV (Svær belastning)/Opgavesæt nr. 2.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 413
+      }
+    },
+    {
+      "label": "longpath:øvesæt nr. 8.docx",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/øvesæt nr. 8.docx",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/øvesæt nr. 8.docx",
+      "match_name": "øvesæt nr. 8.docx",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1568695,
+      "original_path": "Module 9 - Uge 45 1xFO, 1xØV (Middel belastning)/øvesæt nr. 8.docx",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 410
+      }
+    }
+  ]
+}

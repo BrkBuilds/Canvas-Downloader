@@ -1,0 +1,42 @@
+{
+  "name": "r4_sync_confirm_dialog",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\\evidence\\screenshots\\r4_sync_confirm_dialog.png",
+  "captured": "2026-08-21 22:57:44",
+  "screen": {
+    "url": "http://127.0.0.1:8801/?mode=sync&step=4",
+    "mode": "sync",
+    "step": "4",
+    "quick": "",
+    "dialogOpen": true,
+    "dialogTitle": "​",
+    "headings": [],
+    "buttons": [
+      {
+        "key": "cancel_sync_dialog_btn",
+        "text": "No, Go back",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "page_nav_start_sync",
+        "text": "Yes, Start Sync",
+        "disabled": false,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "​\n\nConfirm Sync\nYou are about to download 9 files (150.2 KB) to 1 folder.\n✎ 2 of these are files you've edited locally - the new Canvas version will be saved alongside as _NewVersion so your edits are preserved.\nFiles:\n9 files\nTotal Size:\n150.2 KB\nDestination:\nVirksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA)\n150.2 KB of 154.6 GB\nAvailable Disk Space: 154.6 GB\n\nNo, Go back\n\nYes, Start Sync",
+    "textLen": 435
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}

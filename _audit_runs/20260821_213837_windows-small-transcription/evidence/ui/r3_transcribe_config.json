@@ -1,7 +1,7 @@
 {
-  "name": "r2_office_config",
-  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\\evidence\\screenshots\\r2_office_config.png",
-  "captured": "2026-08-21 22:21:12",
+  "name": "r3_transcribe_config",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\\evidence\\screenshots\\r3_transcribe_config.png",
+  "captured": "2026-08-21 22:29:16",
   "screen": {
     "url": "http://127.0.0.1:8801/?mode=download&step=2",
     "mode": "download",
@@ -153,14 +153,14 @@
       {
         "key": "btn_sec_org_inline",
         "text": "Match Course Folder structure",
-        "disabled": false,
+        "disabled": true,
         "gated": false,
         "kind": "secondary"
       },
       {
         "key": "btn_sec_org_subfolders",
         "text": "In Separate Folders",
-        "disabled": false,
+        "disabled": true,
         "gated": false,
         "kind": "secondary"
       },
@@ -172,71 +172,78 @@
         "kind": "secondary"
       },
       {
-        "key": "btn_convert_master",
+        "key": "toggle_panopto",
+        "text": "",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "pan_info_hdr",
+        "text": "Transcription ready – Tiny model",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "pan_open_dialog_btn",
+        "text": "Manage transcription models",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_pan_master",
         "text": "Select All",
         "disabled": false,
         "gated": false,
         "kind": "secondary"
       },
       {
-        "key": "btn_convert_zip",
-        "text": "Unpack Archives",
+        "key": "btn_pan_out_url",
+        "text": "Shortcut",
         "disabled": false,
         "gated": false,
         "kind": "secondary"
       },
       {
-        "key": "btn_convert_pptx",
-        "text": "PowerPoint ⭢ PDF",
+        "key": "btn_pan_out_mp4",
+        "text": "Video",
         "disabled": false,
         "gated": false,
         "kind": "secondary"
       },
       {
-        "key": "btn_convert_word",
-        "text": "Legacy Word Docs ⭢ PDF",
+        "key": "btn_pan_out_mp3",
+        "text": "Audio",
         "disabled": false,
         "gated": false,
         "kind": "secondary"
       },
       {
-        "key": "btn_convert_excel",
-        "text": "Excel ⭢ PDF & AI Data",
+        "key": "btn_pan_out_txt",
+        "text": "Transcript",
         "disabled": false,
         "gated": false,
         "kind": "secondary"
       },
       {
-        "key": "btn_convert_html",
-        "text": "Canvas Pages ⭢ Plain Text",
+        "key": "btn_pan_out_srt",
+        "text": "Subtitles",
         "disabled": false,
         "gated": false,
         "kind": "secondary"
       },
       {
-        "key": "btn_convert_code",
-        "text": "Code & Data ⭢ .txt",
+        "key": "btn_pan_layout_match",
+        "text": "Match Course Folder structure",
         "disabled": false,
         "gated": false,
         "kind": "secondary"
       },
       {
-        "key": "btn_convert_urls",
-        "text": "Gather Web Links in .txt",
-        "disabled": false,
-        "gated": false,
-        "kind": "secondary"
-      },
-      {
-        "key": "btn_convert_video",
-        "text": "Video ⭢ Audio",
-        "disabled": false,
-        "gated": false,
-        "kind": "secondary"
-      },
-      {
-        "key": "toggle_panopto",
-        "text": "",
+        "key": "btn_pan_layout_separate",
+        "text": "In Separate Folders",
         "disabled": false,
         "gated": false,
         "kind": "secondary"
@@ -268,8 +275,8 @@
     "expanders": [],
     "alerts": [],
     "exceptions": [],
-    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nCustom Download\nHelp\n\nSave Preset\n\nPresets\n\nCourse Files & Organization\n\nManage how teacher-uploaded files should be downloaded.\n\nChoose which files to download:\n\nAll Files (default)\n\nSlides & PDFs\n\nChoose how files should be organized:\n\nWith Subfolders\n\nAll in One Folder\n\nCanvas Content (Optional)\nON | 5 selected\n\nSave information, pages and other content from Canvas to your local Course folder.\n\nSelect All\n\nAssignments\n\nAnnouncements\n\nQuizzes\n\nSyllabus\n\nDiscussions\n\nSubmissions (Results)\n\nChoose how Canvas Content should be organized:\n\nMatch Course Folder structure\n\nIn Separate Folders\n\nOptimize for AI Tools (Optional)\nON | 7 selected\n\nAutomatically convert files into drag-and-drop ready formats, optimized for NotebookLM, ChatGPT, Claude, Gemini, and other AI tools.\n\nSelect All\n\nUnpack Archives\n\nPowerPoint ⭢ PDF\n\nLegacy Word Docs ⭢ PDF\n\nExcel ⭢ PDF & AI Data\n\nCanvas Pages ⭢ Plain Text\n\nCode & Data ⭢ .txt\n\nGather Web Links in .txt\n\nVideo ⭢ Audio\n\nPanopto Recordings (Optional)\nOFF\nVerify your download destination\ndownloads\nG:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\n\nChange folder\n\nCourses selected for download\n1\n\nGo back\n\nConfirm and Download",
-    "textLen": 1308
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nCustom Download\nHelp\n\nSave Preset\n\nPresets\n\nCourse Files & Organization\n\nManage how teacher-uploaded files should be downloaded.\n\nChoose which files to download:\n\nAll Files (default)\n\nSlides & PDFs\n\nChoose how files should be organized:\n\nWith Subfolders\n\nAll in One Folder\n\nCanvas Content (Optional)\nOFF | None selected\n\nSave information, pages and other content from Canvas to your local Course folder.\n\nSelect All\n\nAssignments\n\nAnnouncements\n\nQuizzes\n\nSyllabus\n\nDiscussions\n\nSubmissions (Results)\n\nChoose how Canvas Content should be organized:\n\nMatch Course Folder structure\n\nIn Separate Folders\n\nOptimize for AI Tools (Optional)\nOFF\nPanopto Recordings (Optional)\nON | 4 selected\n\nDownload your Canvas Panopto lecture recordings - as video, audio, transcripts or subtitles - saved into your course folders like every other file. Or save just a shortcut, so you can jump straight back to the lecture without downloading it.\n\nTranscription ready – Tiny model\n\nUsing the Tiny model. Transcript & Subtitles are available.\n\nManage transcription models\n\nChoose what to download (select one or more):\n\nSelect All\n\nShortcut\n\nVideo\n\nAudio\n\nTranscript\n\nSubtitles\n\nChoose how to organize Panopto Recordings:\n\nMatch Course Folder structure\n\nIn Separate Folders\n\nRecordings are saved for your personal study. You are responsible for following your institution's rules, and for not sharing or republishing them. Details\nVerify your download destination\ndownloads\nG:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\n\nChange folder\n\nCourses selected for download\n1\n\nGo back\n\nConfirm and Download",
+    "textLen": 1721
   },
   "console": {
     "console": [],

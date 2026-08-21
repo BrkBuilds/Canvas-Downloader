@@ -16,6 +16,27 @@
       "course": "43667",
       "config": "{\"mode\": \"modules\", \"file_filter\": \"all\", \"secondary_isolated\": false, \"dl_assignments\": true, \"dl_announcements\": true, \"dl_syllabus\": true, \"convert_urls\": true}",
       "result": "ok"
+    },
+    {
+      "name": "r2_office",
+      "flow": "download",
+      "course": "43665",
+      "config": "{\"mode\": \"modules\", \"file_filter\": \"all\", \"secondary_isolated\": false, \"dl_assignments\": true, \"dl_syllabus\": true, \"dl_announcements\": true, \"dl_discussions\": true, \"dl_quizzes\": true, \"convert_zip\": true, \"convert_pptx\": true, \"convert_word\": true, \"convert_excel\": true, \"convert_html\": true, \"con",
+      "result": "ok"
+    },
+    {
+      "name": "r3_transcribe",
+      "flow": "download",
+      "course": "43660",
+      "config": "{\"mode\": \"flat\", \"file_filter\": \"study\", \"secondary_isolated\": true, \"pan_master\": true, \"pan_layout\": \"separate\", \"pan_out_url\": true, \"pan_out_mp3\": true, \"pan_out_txt\": true, \"pan_out_srt\": true, \"pan_out_mp4\": false}",
+      "result": "ok"
+    },
+    {
+      "name": "r4_sync",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
     }
   ]
 }

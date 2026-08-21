@@ -1,7 +1,7 @@
 {
-  "name": "r2_office_phase_download",
-  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\\evidence\\screenshots\\r2_office_phase_download.png",
-  "captured": "2026-08-21 22:21:24",
+  "name": "r3_transcribe_phase_scan",
+  "screenshot": "G:\\18 AI\\ANTIGRAVITY WORKSPACES\\Canvas Downloader\\_audit_runs\\20260821_213837_windows-small-transcription\\evidence\\screenshots\\r3_transcribe_phase_scan.png",
+  "captured": "2026-08-21 22:29:28",
   "screen": {
     "url": "http://127.0.0.1:8801/?mode=download&step=3",
     "mode": "download",
@@ -11,7 +11,7 @@
     "dialogTitle": "",
     "headings": [
       "Downloading...",
-      "Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)"
+      "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)"
     ],
     "buttons": [
       {
@@ -62,8 +62,8 @@
     "expanders": [],
     "alerts": [],
     "exceptions": [],
-    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownloading...\n\nDOWNLOADING\n\nVirksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\n2%\nDOWNLOADED\n0.0 / 45.0 MB\nSPEED\n0.0 MB/s\nFILES\n3 / 124\nTIME REMAINING\n03:02\nDOWNLOADING\nhttps://cbstest.dk/app/\nhttps://cbstest.dk/app/\nIntroduktion til Managerial Economics\nCourse description including examination rules\n\nCancel Download",
-    "textLen": 462
+    "text": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownloading...\n\nDOWNLOADING\n\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n0%\nDOWNLOADED\n0.0 / 813.1 MB\nSPEED\n0.0 MB/s\nFILES\n0 / 118\nTIME REMAINING\n~04:10\nDOWNLOADING\n2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx\nWaiting for files…\n\nCancel Download",
+    "textLen": 395
   },
   "wizard": [
     {
@@ -104,13 +104,13 @@
   ],
   "dashboard": {
     "present": true,
-    "header": "Virksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)",
+    "header": "Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
     "barWidth": "",
     "metrics": {},
-    "rawMetricsText": "DOWNLOADED | 0.0 / 45.0 MB | SPEED | 0.0 MB/s | FILES | 3 / 124 | TIME REMAINING | 03:02",
+    "rawMetricsText": "DOWNLOADED | 0.0 / 813.1 MB | SPEED | 0.0 MB/s | FILES | 0 / 118 | TIME REMAINING | ~04:10",
     "activeFile": "",
     "logTail": "",
-    "cardText": "DOWNLOADING\n\nVirksomhedens økonomiske styring (1): Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)\n2%\nDOWNLOADED\n0.0 / 45.0 MB\nSPEED\n0.0 MB/s\nFILES\n3 / 124\nTIME REMAINING\n03:02\nDOWNLOADING\nhttps://cbstest.dk/app/\nhttps://cbstest.dk/app/\nIntroduktion til Managerial Economics\nCourse description including examination rules"
+    "cardText": "DOWNLOADING\n\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n0%\nDOWNLOADED\n0.0 / 813.1 MB\nSPEED\n0.0 MB/s\nFILES\n0 / 118\nTIME REMAINING\n~04:10\nDOWNLOADING\n2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx\nWaiting for files…"
   },
   "console": {
     "console": [],

@@ -447,3 +447,143 @@ Two other row-1 findings, both INFO and both expected: a manifest row describing
 a file a converter consumed (the engine's documented bypass), and *"Debug log
 parser missed 57% of lines"* - the audit's own O2 oracle, worth attention given
 `CLAUDE.md`'s rule that a blind oracle does not under-report, it INVENTS.
+
+## Row 2 - Office COM on 43665 - **PASS**, and it verifies the attribution fix in a live run
+
+Re-run from scratch on `faa927d` after the fix landed; the first attempt was
+aborted mid-flight precisely because it was exercising the old guessing code.
+
+`flow download r2_office --courses 43665`, all converters on, single lane.
+**174 files / 45.0 MB / 0 exceptions**, 6m44s. Outputs PDF 85 · TXT 49 ·
+DOCX 33 · MD 3.
+
+Delete-after-verify held across 85 real conversions:
+
+| | |
+|---|---|
+| legacy sources remaining (`.ppt .pptx .pptm .xls .xlsx .doc`) | **0** - every one consumed |
+| `.docx` remaining | 33 - correct, only legacy formats convert |
+| PDFs produced | 85 |
+| PDFs failing `pdf_looks_real` | **0** |
+| Office orphans after the row | **NONE** |
+
+Crosscheck: 4 findings, **all INFO, no defects** - the log parser's own coverage
+(34%), 2 manifest rows for converter-consumed files (the documented bypass), the
+403 Files tab (known for this course), and:
+
+> **59 path(s) exceed 255 characters** - *"the engine uses make_long_path, so
+> this is recorded to confirm the guard is exercised rather than as a defect."*
+
+That is live evidence for the long-path guard on real data, which the offline
+pass could only reach synthetically.
+
+### The attribution fix, verified on the platform it was written for
+
+`engine/office_pid.find_new_office_pid` was rewritten on macOS in response to the
+finding above. Re-running the two probes that originally exposed it, now against
+`faa927d`:
+
+**The data-loss case** - the user opens their own workbook inside the window:
+
+```
+pre-snapshot: []
+user's Excel now running: [12972]
+OUR instance TRUE pid   : 31076
+find_new_office_pid says: 31076      <- ours, not theirs
+```
+
+Independently corroborated by a separate instrument in the same seconds: the
+process watcher recorded pid **12972 `com=False`** (double-clicked by a user) and
+pid **31076 `com=True`** (COM-activated). That is the `-Embedding` discriminator
+the fix keys on, visible from outside the code under test.
+
+**The race case** - two concurrent instances:
+
+```
+Cannot attribute a EXCEL.EXE process to this run: 2 COM-launched candidates
+appeared ([500, 34784]). Not tracking a PID - a leaked headless instance is
+recoverable, force-killing the wrong process is not.
+```
+
+Both lanes answer `None` and say why. Both instances still exited cleanly, so
+nothing leaked.
+
+**A note on reading those probes: their PASS/FAIL labels are STALE.** They were
+written against the old behaviour and test `guessed == true_pid`, so they print
+`MISATTRIBUTED` for `guessed=None` and claim *"lanes that would kill the WRONG
+process: 2"*. Both are wrong now: `None` is the correct answer in the ambiguous
+case, and `_kill_app` is guarded by `if self._com_pid:` so it kills **nothing**.
+Reporting the probe's own wording would have been the "a defect in the audit
+written down as a fact about the product" trap this repo already documents.
+
+**The residual, which is the accepted trade, not a defect**: in the ambiguous
+case neither instance is tracked, so if `Quit()` ALSO failed both would leak.
+That is deliberate - a leaked headless process is recoverable, a wrongly
+force-killed one is not.
+
+24/24 of `tests/test_office_pid_attribution.py` pass on Windows (they drive a
+fake process table, so they were safe to run alongside a live row).
+
+### `_path_key`'s Windows asymmetry - the reachability question, ANSWERED
+
+The macOS session flagged that `_path_key` folds case unconditionally on Windows
+and asked whether per-directory case sensitivity makes that reachable. Measured
+here: **WSL is installed on this machine, and `fsutil file queryCaseSensitiveInfo`
+reports `disabled` for `Downloads`, the home directory AND the repo.** WSL's own
+directories live under its VHDX root, so installing it does not make ordinary
+Windows folders case-sensitive. Not reachable by default - which is the evidence
+for NOT adding a `samefile` probe to a hot loop on the majority platform days
+before a release.
+
+## Row 3 - Panopto + GPU transcription on 43660 - **PASS**
+
+`mode: flat`, `file_filter: study`, `secondary_isolated: true`, Panopto on with
+`url + mp3 + txt + srt` and **`mp4` deliberately OFF** - macOS has already
+proven the mp4 muxer path end to end, and the runbook's measured data shows mp4
+is where the bulk of a Panopto row's cost sits.
+
+Model `tiny` on `device: cuda` (GTX 1080, 8 GB, cuda_libs provisioned) - both
+already present, so no multi-GB model download interrupted the run.
+
+**26 minutes** end to end. **262 files / 2 GB / 0 exceptions.**
+`36 found · 36 DOWNLOADED · 36 TRANSCRIBED · 36 LINKS`.
+
+I had estimated 20-90 minutes for transcription alone, extrapolating from the
+macOS session's ~4.1 min/recording with `small` on an M4 CPU. That was far too
+pessimistic for `tiny` on a discrete GPU; the whole row, downloads included, came
+in under half the low end.
+
+### The part macOS explicitly cannot vouch for
+
+`_worker_command`'s sidecar routing and the `.part` sweep differ on Windows.
+Measured on disk after the run:
+
+| | |
+|---|---|
+| `.url` shortcuts | **36** (Windows form - `.webloc` count is 0) |
+| `.mp3` | 36 |
+| `.txt` | 36 |
+| `.srt` | 36 |
+| `.mp4` | 0 - correctly excluded |
+| **`.part` left on disk** | **0** - the sweep ran |
+| mp3 files missing a `.txt` sibling | **0** |
+| mp3 files missing a `.srt` sibling | **0** |
+| zero-byte transcripts | **0** |
+
+So every recording produced a shortcut, an audio file and both sidecars, each
+routed beside its own mp3, with no partial artifacts stranded.
+
+Crosscheck: 3 findings, **all INFO**:
+
+- a Panopto-side `GetFolders` **HTTP 500 - "User ... is not in role
+  (FolderEnumerate)"**. A permissions limit on the Panopto tenant, not an app
+  defect, and the app compensated - it still found all 36 recordings.
+- 8 paths over 255 characters, guard exercised.
+- 2 teacher-locked files Canvas refuses to serve - the documented case.
+
+The folder-scope notice rendered correctly on the completion screen: *"1 course
+is set up for Slides & PDFs, so its folder is not a complete copy of Canvas."*
+
+**Note for the next scrub**: this run's `findings.jsonl` now carries the
+operator's Canvas login inside that Panopto fault string (`unified\<user>`), so
+`scripts/scrub_audit_pii.py` must run again before these artifacts are committed.
