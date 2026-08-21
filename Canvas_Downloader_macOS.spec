@@ -159,6 +159,15 @@ a = Analysis(
 # of it numpy's). Data-only - this can never make an import fail.
 a.datas = _excl.strip_test_datas(a.datas)
 
+# The app's own packages are bundled by DIRECTORY, so a developer's __pycache__
+# ships with the source. codesign SEALS it, and anything that later removes a
+# .pyc breaks the seal - which on macOS downgrades Gatekeeper from the
+# recoverable "Apple could not verify..." dialog (exit 3) to "...is damaged and
+# can't be opened" (exit 1), a dialog with no Open Anyway path. The app ships
+# unsigned by design, so that one recoverable dialog is the whole onboarding
+# route. Measured on macOS 26.6.1; see strip_bytecode_datas.
+a.datas = _excl.strip_bytecode_datas(a.datas)
+
 pyz = PYZ(a.pure)
 
 exe = EXE(
