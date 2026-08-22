@@ -39,25 +39,25 @@ ICLOUD_DATALESS_MUTANTS = [
     # -- the walks must not touch bytes --------------------------------------
     ("the orphan walk reads each file while it is there",
      SYNC,
-     "                    try:\n"
-     "                        sz = filepath.stat().st_size\n",
-     "                    try:\n"
-     "                        filepath.read_bytes()\n"
-     "                        sz = filepath.stat().st_size\n"),
-    ("the analysis walk reads each file while it is there",
-     SYNC,
      "                try:\n"
-     "                    size = filepath.stat().st_size\n",
+     "                    sz = os.stat(make_long_path(filepath)).st_size\n",
      "                try:\n"
      "                    filepath.read_bytes()\n"
-     "                    size = filepath.stat().st_size\n"),
+     "                    sz = os.stat(make_long_path(filepath)).st_size\n"),
+    ("the analysis walk reads each file while it is there",
+     SYNC,
+     "            try:\n"
+     "                size = os.stat(make_long_path(filepath)).st_size\n",
+     "            try:\n"
+     "                filepath.read_bytes()\n"
+     "                size = os.stat(make_long_path(filepath)).st_size\n"),
 
     # -- candidate md5s must stay LAZY ---------------------------------------
     ("candidate md5s are computed eagerly instead of on demand",
      SYNC,
-     "                candidate = {'path': filepath, 'size': size, 'md5': None}",
-     "                candidate = {'path': filepath, 'size': size,\n"
-     "                             'md5': SyncManager.compute_local_md5(filepath)}"),
+     "            candidate = {'path': filepath, 'size': size, 'md5': None}",
+     "            candidate = {'path': filepath, 'size': size,\n"
+     "                         'md5': SyncManager.compute_local_md5(filepath)}"),
 
     # -- a failed materialisation must never read as CLEAN -------------------
     ("an unreadable file is treated as clean instead of preserved",

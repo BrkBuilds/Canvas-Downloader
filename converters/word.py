@@ -1,6 +1,7 @@
 import sys
 import logging
 from pathlib import Path
+from shared.helpers import make_long_path
 
 logger = logging.getLogger(__name__)
 
@@ -212,7 +213,7 @@ class WordToPDF:
                         f"{abs_doc_path.name} but {_why}; keeping the original."
                     )
                     return None
-                abs_doc_path.unlink(missing_ok=True)
+                Path(make_long_path(abs_doc_path)).unlink(missing_ok=True)
                 return str(abs_pdf_path.resolve())
             return None
 
@@ -273,7 +274,7 @@ class WordToPDF:
                     return None
 
                 # Delete the original legacy file (from the true long path)
-                abs_doc_path.unlink(missing_ok=True)
+                Path(make_long_path(abs_doc_path)).unlink(missing_ok=True)
 
                 # Return the true long-path PDF location (context manager moves it back)
                 return str(true_pdf.resolve().absolute())

@@ -28,12 +28,13 @@ def resolve_today_pairs() -> list[dict]:
     can never break the run - the dashboard flags them separately.
     """
     from pathlib import Path
+    from shared.helpers import path_exists
     from core.today_store import load_today_config
 
     cfg = load_today_config()
     return [
         p for p in cfg.get("pairs", [])
-        if p.get("local_folder") and Path(p["local_folder"]).exists()
+        if p.get("local_folder") and path_exists(Path(p["local_folder"]))
     ]
 
 
@@ -46,11 +47,12 @@ def unreachable_today_pairs() -> list[dict]:
     can decide whether that folder should be re-linked or the pair dropped.
     """
     from pathlib import Path
+    from shared.helpers import path_exists
     from core.today_store import load_today_config
 
     return [
         p for p in load_today_config().get("pairs", [])
-        if not (p.get("local_folder") and Path(p["local_folder"]).exists())
+        if not (p.get("local_folder") and path_exists(Path(p["local_folder"])))
     ]
 
 

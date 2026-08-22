@@ -37,6 +37,37 @@ import engine.applescript_bridge as AB  # noqa: E402
 
 LONG = "L" * 236                        # 240 bytes with the extension
 
+# ── long-path-safe fixture I/O ────────────────────────────────────────────
+# These tests deliberately build paths past Windows' 260-character limit, so
+# their OWN setup and assertions have to go through the prefix. Without it they
+# fail in the FIXTURE on a machine that enforces the limit, and pass vacuously
+# on one that does not (LongPathsEnabled=1) - which is how a suite about long
+# paths ends up never having exercised one. Measured 2026-08-22.
+from shared.helpers import make_long_path as _mlp
+
+
+def _put(p, data: bytes) -> None:
+    import os as _os
+    _os.makedirs(_mlp(Path(p).parent), exist_ok=True)
+    with open(_mlp(p), "wb") as fh:
+        fh.write(data)
+
+
+def _get(p) -> bytes:
+    with open(_mlp(p), "rb") as fh:
+        return fh.read()
+
+
+def _exists(p) -> bool:
+    import os as _os
+    return _os.path.exists(_mlp(p))
+
+
+def _mkdirs(p) -> None:
+    import os as _os
+    _os.makedirs(_mlp(p), exist_ok=True)
+
+
 
 @pytest.fixture
 def container(tmp_path, monkeypatch):
@@ -55,7 +86,7 @@ def container(tmp_path, monkeypatch):
 def test_the_staged_source_name_is_short_and_independent_of_the_real_one(
         container, tmp_path):
     src = tmp_path / (LONG + ".doc")
-    src.write_bytes(b"doc")
+    _put(src, b"doc")
     dst = tmp_path / (LONG + ".pdf")
 
     with AB.office_container_stage(src, dst, "Word") as (s_src, s_dst):
@@ -64,7 +95,7 @@ def test_the_staged_source_name_is_short_and_independent_of_the_real_one(
             f"~168, and a long name is exactly what staging must not preserve")
         assert len(s_dst.name) <= 16, f"staged dest name is {len(s_dst.name)}"
         assert LONG not in s_src.name and LONG not in s_dst.name
-        assert s_src.exists(), "the source must still be copied into the stage"
+        assert _exists(s_src), "the source must still be copied into the stage"
 
 
 def test_the_suffixes_are_preserved_because_office_picks_its_filter_from_them(
@@ -75,7 +106,7 @@ def test_the_suffixes_are_preserved_because_office_picks_its_filter_from_them(
     for ext, out in ((".doc", ".pdf"), (".xls", ".pdf"), (".ppt", ".pdf"),
                      (".rtf", ".pdf")):
         src = tmp_path / (LONG + ext)
-        src.write_bytes(b"x")
+        _put(src, b"x")
         dst = tmp_path / (LONG + out)
         with AB.office_container_stage(src, dst, "Word") as (s_src, s_dst):
             assert s_src.suffix == ext, f"{ext} lost its suffix: {s_src.name}"
@@ -95,15 +126,15 @@ REAL_PDF = b"%PDF-1.4\n" + b"%\xe2\xe3\xcf\xd3\n" + b"0" * 600 + b"\n%%EOF\n"
 def test_the_product_still_lands_under_the_REAL_long_name(container, tmp_path):
     """The whole point: Office writes a short name, the user gets the real one."""
     src = tmp_path / (LONG + ".doc")
-    src.write_bytes(b"doc")
+    _put(src, b"doc")
     dst = tmp_path / (LONG + ".pdf")
 
     with AB.office_container_stage(src, dst, "Word") as (s_src, s_dst):
-        s_dst.write_bytes(REAL_PDF)
+        _put(s_dst, REAL_PDF)
 
-    assert dst.exists(), "the product was not moved back to the real name"
-    assert dst.read_bytes() == REAL_PDF
-    assert not s_dst.exists(), "staging dir should be cleaned up"
+    assert _exists(dst), "the product was not moved back to the real name"
+    assert _get(dst) == REAL_PDF
+    assert not _exists(s_dst), "staging dir should be cleaned up"
 
 
 def test_two_concurrent_stagings_cannot_collide_on_the_fixed_basename(
@@ -114,12 +145,12 @@ def test_two_concurrent_stagings_cannot_collide_on_the_fixed_basename(
     a = tmp_path / ("A" * 200 + ".doc")
     b = tmp_path / ("B" * 200 + ".doc")
     for p in (a, b):
-        p.write_bytes(p.name[:1].encode())
+        _put(p, p.name[:1].encode())
 
     with AB.office_container_stage(a, tmp_path / "a.pdf", "Word") as (sa, _):
         with AB.office_container_stage(b, tmp_path / "b.pdf", "Word") as (sb, _):
             assert sa.parent != sb.parent, "two stagings shared a work dir"
-            assert sa.read_bytes() == b"A" and sb.read_bytes() == b"B"
+            assert _get(sa) == b"A" and _get(sb) == b"B"
 
 
 def test_staging_still_degrades_to_a_passthrough_with_no_container(tmp_path,
@@ -128,7 +159,7 @@ def test_staging_still_degrades_to_a_passthrough_with_no_container(tmp_path,
     'never worse than before' path, which is also how non-macOS behaves."""
     monkeypatch.setattr(AB, "_office_container_tmp", lambda *a, **k: None)
     src = tmp_path / (LONG + ".doc")
-    src.write_bytes(b"doc")
+    _put(src, b"doc")
     dst = tmp_path / (LONG + ".pdf")
     with AB.office_container_stage(src, dst, "Word") as (s_src, s_dst):
         assert s_src == src and s_dst == dst
@@ -169,7 +200,7 @@ LINE_BREAK_NAMES = ["Lec\rture.doc", "Lec\nture.doc", "a\r\nb.doc"]
 def test_a_line_break_in_the_name_never_reaches_the_applescript_literal(
         container, tmp_path, name):
     src = tmp_path / name
-    src.write_bytes(b"doc")
+    _put(src, b"doc")
     dst = src.with_suffix(".pdf")
 
     with AB.office_container_stage(src, dst, "Word") as (s_src, s_dst):

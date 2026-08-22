@@ -346,3 +346,97 @@ either a file-not-found error about a file that is plainly there, or nothing.
 sites. Not applied here because the operator had not asked for it, and a fix to
 the delete family deserves its own pass with the reproduce-fix-test-mutate cycle
 this repo runs on - which this machine can now actually complete.
+
+---
+
+## Area 5 - 2026-08-22: the long-path defect CLUSTER, and the audit of the fix
+
+Area 4 closed with the converters as "still open, nothing was fixed". Fixing
+them turned out to require fixing four other layers first, because each one was
+masking the next - the only way to find them was to fix one and re-run.
+
+### 5a. Five layers, and why they hid each other
+
+| # | layer | sites | effect at depth |
+|---|---|---|---|
+| 0 | `mkdir` | 10 | **crash, 0 files** - the download died before its own long-path-safe writes could run |
+| 1 | discovery | 4 | `_glob_files` returned `[]`, starving all nine converters at once, SILENTLY |
+| 2 | converter I/O | 14 | conversions fail per file; `url.py` logged nothing at all |
+| 3 | the run LEDGER | 2 | conversions ran but were scoped to nothing |
+| 4 | engine predicates | 49 | overwrite, re-download, and **lost edit protection** |
+| 5 | UI + daily sync | 24 | amber "folder missing" on a folder that is right there |
+
+**The measurement that pinned layer 3 is the transferable one.** After layers
+0-2 were fixed the download succeeded (123 files) and still converted almost
+nothing. Discovery was provably working - 50 Excel, 22 PowerPoint, 2 URL found
+at 266-270 characters. The LEDGER that scopes post-processing was built with an
+unprefixed `exists()`, and of **124 files exactly 1 passed it** (`FK.pdf`, 257
+chars) - which is precisely the one file the debug log shows being converted.
+Log, disk and mechanism agreed to the file.
+
+**Two findings are worse than the original crash**, both in layer 4:
+
+* `sync/execution.py` - `if is_update_modified and filepath.exists():`. At depth
+  that is False, so the `_NewVersion` diversion never fires and the download
+  **overwrites the student's edited file**. The app's headline promise, failing
+  silently.
+* `compute_local_md5` returned `""` for any file past 260 characters. That value
+  is the whole basis of edit protection, and `""` means MISSING - a different
+  verdict from unreadable.
+
+Plus `core/auto_sync.resolve_today_pairs`, which dropped deep folders, so **the
+daily sync silently skipped those courses** - the run nobody watches.
+
+### 5b. `walk_files_long` - and why a prefixed `os.walk` is the wrong fix
+
+`shared/helpers.walk_files_long` walks THROUGH the prefix and yields CLEAN
+paths. The clean half is not tidiness: the manifest walks feed `_path_key`,
+which compares against stored rows, so a leaked `\?\` would have mismatched
+every one of them - a "fix" that looks right and quietly corrupts the manifest.
+
+### 5c. THE ADVERSARIAL AUDIT OF THE FIX ITSELF
+
+25 checks written to BREAK the fix, not confirm it. Three results worth keeping:
+
+1. **`mkdir(parents=True)` through the prefix was an untested assumption under
+   all 10 mkdir fixes.** pathlib builds parents by walking `.parent`, and the
+   prefix changes what that yields near the drive root. Measured: full chain at
+   300 chars from a root with no existing parent, idempotent, and a file can be
+   written inside it. It holds - but nothing had checked.
+2. **A finding of mine was DISPROVED by measuring it.** `panopto/transcribe.py`
+   reads its source mp3 unprefixed while every write in that module is
+   prefixed - the exact asymmetry this repo keeps hitting, and I was about to
+   patch it. A real mp3 at **304 characters decodes fine**: `decode_audio` hands
+   the path to **ffmpeg as a subprocess argument**, and ffmpeg is a separate
+   process, so Python's MAX_PATH enforcement never applies. **A path handed to a
+   subprocess is that subprocess's problem** - which is also why Office COM
+   paths must stay UNPREFIXED (COM rejects the prefix; `office_safe_path` stages
+   instead). Verified afterwards that no subprocess argument was wrongly
+   prefixed.
+3. **The 16 mkdir sites deliberately NOT patched were measured, not assumed.**
+   With a 104-character username (the Windows maximum) the config-dir tree tops
+   out at **180 chars**, under both limits. Patching them would be churn - and
+   churn is how four of my own bugs got introduced today.
+
+**Prefix leakage is the one bug the FIX can introduce**, so it is pinned by a
+test: exactly 5 sites bind a prefixed path, each with a recorded reason.
+
+### 5d. Four of my own edits were caught by existing guards
+
+Recorded because it is the system working, and because each is a repeat of a
+class this file already documents:
+
+* `test_unbound_names` caught a `NameError` I introduced in `converters/excel.py`
+  (module-level `make_long_path` missing).
+* The crash-vector census caught me replacing `code.py`'s content gate with a
+  spelling it could not recognise. The right fix was the shared
+  `file_has_content` - better than what I had written.
+* I patched `converters/archive.py` where it was **already correct**
+  (`extract_dir` is rebound to the prefixed form upstream) and had to revert.
+* I broke `core/auto_sync.py`'s syntax by inserting an import at column 0 after
+  an INDENTED anchor.
+
+**Five brittle test anchors** reported live guards as missing after the renames -
+including the `_NewVersion` route and the iCloud contract. All re-anchored on the
+PROPERTY rather than the spelling. The iCloud test is now stronger than before:
+enumeration moved into a helper, so it follows it there.

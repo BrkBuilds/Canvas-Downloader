@@ -17,6 +17,7 @@ Comprehensive overhaul with:
 import base64
 import logging
 from pathlib import Path
+from shared.helpers import path_exists
 
 import streamlit as st
 from collections import defaultdict
@@ -766,7 +767,7 @@ def _sync_pairs_section(courses, course_names, course_options):
 
     # Pre-compute missing-folder state once; used by both per-pair save buttons and "Save as Group"
     _any_missing_folder = any(
-        not Path(p.get('local_folder', '')).exists()
+        not path_exists(Path(p.get('local_folder', '')))
         for p in sync_pairs
         if p.get('local_folder')
     )
@@ -962,7 +963,7 @@ def _sync_pairs_section(courses, course_names, course_options):
             for pair in sync_pairs:
                 local_folder = pair.get('local_folder')
                 course_id = pair.get('course_id')
-                if local_folder and Path(local_folder).exists():
+                if local_folder and path_exists(Path(local_folder)):
                     sm = SyncManager(local_folder, course_id, pair.get('course_name', ''))
                     ignored = sm.get_ignored_files()
                     ignored_pan = sm.get_ignored_panopto()
@@ -987,7 +988,7 @@ def _sync_pairs_section(courses, course_names, course_options):
             for _hi, _hp in enumerate(sync_pairs):
                 _hf = _hp.get('local_folder')
                 _hcontract = None
-                if _hf and Path(_hf).exists():
+                if _hf and path_exists(Path(_hf)):
                     try:
                         _hsm = SyncManager(_hf, _hp.get('course_id'), _hp.get('course_name', ''))
                         _hraw = _hsm._load_metadata('panopto_contract')
@@ -1048,7 +1049,7 @@ def _sync_pairs_section(courses, course_names, course_options):
                 col_card, col_open, col_edit, col_ignored, col_remove = st.columns([5, 1.5, 1.1, 1.5, 1.2], gap="small", vertical_alignment="center")
 
                 with col_card:
-                    folder_exists = Path(pair['local_folder']).exists()
+                    folder_exists = path_exists(Path(pair['local_folder']))
                     last_synced = pair.get('last_synced')
                     if not last_synced and folder_exists:
                         # Try to recover it from the folder database
@@ -1384,7 +1385,7 @@ def _resolve_pair_panopto_contract(p) -> dict:
     """
     import json as _json_tx
     folder = p.get('local_folder')
-    if folder and Path(folder).exists():
+    if folder and path_exists(Path(folder)):
         try:
             sm = SyncManager(folder, p.get('course_id'), p.get('course_name', ''))
             raw = sm._load_metadata('panopto_contract')
@@ -1750,7 +1751,7 @@ def render_sync_step1(fetch_courses_fn, main_placeholder=None):
         _missing_folder_names = []
         if sync_pairs:
             for p in sync_pairs:
-                if not Path(p['local_folder']).exists():
+                if not path_exists(Path(p['local_folder'])):
                     _has_missing_folders = True
                     _missing_folder_names.append(short_path(p['local_folder']))
 
@@ -2762,9 +2763,9 @@ def _render_sync_history():
                                             for gi, g in enumerate(synced_groups):
                                                 files = g.get('files') or []
                                                 course_root = g.get('local_folder') or ''
-                                                if course_root and not Path(course_root).exists():
+                                                if course_root and not path_exists(Path(course_root)):
                                                     _alt = current_folders.get(g.get('course_id'))
-                                                    if _alt and Path(_alt).exists():
+                                                    if _alt and path_exists(Path(_alt)):
                                                         course_root = _alt
                                                 if multi:
                                                     # Each course is a STATIC card mirroring the Today

@@ -24,6 +24,7 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from pathlib import Path
+from shared.helpers import path_exists
 
 import streamlit as st
 
@@ -786,7 +787,7 @@ def _render_today_files(groups: list[dict]) -> None:
             st.markdown(header_html, unsafe_allow_html=True)
             if is_open:
                 with st.container(border=True, key=f"shist_body_today_{gid}"):
-                    folder_exists = local_folder and Path(local_folder).exists()
+                    folder_exists = local_folder and path_exists(Path(local_folder))
                     col_btn_open, col_btn_all = st.columns(2)
                     with col_btn_open:
                         if st.button("Open Folder", key=f"open_folder_today_{gid}", use_container_width=True, disabled=not folder_exists,
@@ -1032,7 +1033,7 @@ def _import_courses_dialog():
     selectable, hidden_count = [], 0
     for g_idx, group in enumerate(groups):
         any_missing = any(
-            p.get("local_folder") and not Path(p["local_folder"]).exists()
+            p.get("local_folder") and not path_exists(Path(p["local_folder"]))
             for p in (group.get("pairs", []) or [])
         )
         if any_missing:

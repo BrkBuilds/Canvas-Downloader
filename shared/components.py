@@ -7,6 +7,7 @@ import re
 
 import streamlit as st
 from pathlib import Path
+from shared.helpers import path_exists
 from shared.helpers import (
     open_folder, open_file, reveal_in_folder, esc, short_path,
     declined_reason_sentence, split_delivery_errors,
@@ -1225,7 +1226,7 @@ def render_folder_cards(file_details: dict, folder_paths: dict,
                         "<div style='display:flex;flex-direction:column;gap:1px;'>" + "".join(rows) + "</div>",
                         unsafe_allow_html=True,
                     )
-            if folder_path and Path(folder_path).exists():
+            if folder_path and path_exists(Path(folder_path)):
                 _open_folder_button(folder_path, f"{key_prefix}_open_{idx}")
 
 
@@ -2391,7 +2392,7 @@ def folder_scope_limited_courses(mode: str) -> list[tuple[str, int]]:
 
             for pair in (st.session_state.get('sync_pairs') or []):
                 folder = pair.get('local_folder')
-                if not folder or not Path(folder).exists():
+                if not folder or not path_exists(Path(folder)):
                     continue
                 try:
                     _pk = pair_key(pair.get('course_id'), folder)
@@ -2668,7 +2669,7 @@ def panopto_disabled_courses(mode: str) -> list[str]:
             from core.pair_labels import pair_display_name
             for pair in (st.session_state.get('sync_pairs') or []):
                 folder = pair.get('local_folder')
-                if not folder or not Path(folder).exists():
+                if not folder or not path_exists(Path(folder)):
                     continue
                 try:
                     sm = SyncManager(folder, pair.get('course_id'),
@@ -3945,7 +3946,7 @@ def error_log_dialog(log_paths):
     with st.container(border=False, key="error_log_scroll_shared"):
         found_any = False
         for log_path in log_paths:
-            if log_path.exists():
+            if path_exists(log_path):
                 try:
                     content = log_path.read_text(encoding='utf-8').strip()
                     if content:

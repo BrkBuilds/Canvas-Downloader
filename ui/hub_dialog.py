@@ -15,6 +15,7 @@ Contains:
 from __future__ import annotations
 
 from pathlib import Path
+from shared.helpers import path_exists
 
 import streamlit as st
 
@@ -696,7 +697,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                         # by the "Added 'X' to sync list" toast, which must name
                         # it the same way the list about to show it will.
                         display_name = _label or _canvas
-                        folder_missing = not Path(pair.get('local_folder', '')).exists() if pair.get('local_folder') else True
+                        folder_missing = not path_exists(Path(pair.get('local_folder', ''))) if pair.get('local_folder') else True
 
                         # Title = the user's name when they chose one, otherwise
                         # the LIVE Canvas name. A pair saved by accepting the
@@ -795,7 +796,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     with st.container(border=True, key=f"hub_group_item_{g_idx}"):
                         pair_count = len(group.get('pairs', []))
                         course_word = 'course' if pair_count == 1 else 'courses'
-                        has_missing_folders = any(not Path(p.get('local_folder', '')).exists() for p in group.get('pairs', []))
+                        has_missing_folders = any(not path_exists(Path(p.get('local_folder', ''))) for p in group.get('pairs', []))
                         
                         top_right_html = "Group"
                         title_html = f"<img src='data:image/png;base64,{b64_groups}' style='width:24px; height:24px; vertical-align:middle; margin-right:8px; margin-top:-4px;' />{esc(group['group_name'])}"
@@ -878,7 +879,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                                     # Task 2: Folder existence pre-flight
                                     missing_indices = [
                                         i for i, p in enumerate(unique_pairs)
-                                        if not Path(p.get('local_folder', '')).exists()
+                                        if not path_exists(Path(p.get('local_folder', '')))
                                     ]
 
                                     if not missing_indices:
@@ -1227,7 +1228,7 @@ def saved_groups_hub_dialog_inner(courses, course_names):
                     with st.container(border=True, key=f"hub_pair_card_{p_idx}"):
                         _label, _canvas = pair_display(pair, fallback='Unknown')
                         display_name = _label or _canvas
-                        folder_exists = Path(pair.get('local_folder', '')).exists()
+                        folder_exists = path_exists(Path(pair.get('local_folder', '')))
 
                         # The Canvas name only earns its own line once the user's
                         # name has taken the title - otherwise it would print
@@ -1699,7 +1700,7 @@ def render_hub_config(pair: dict):
     course_id = pair.get('course_id', 0)
     db_path = Path(local_folder) / '.canvas_sync.db'
 
-    if not db_path.exists():
+    if not path_exists(db_path):
         from ui.amber_notice import render_amber_notice
         render_amber_notice("Not synced yet / No configuration found.", margin="0")
         return

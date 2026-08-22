@@ -28,7 +28,7 @@ from core.sync_manager import (
     preferred_disk_name, secondary_content_sig, secondary_id_type,
     secondary_raw_id,
 )
-from shared.helpers import make_long_path, _err_log_lock
+from shared.helpers import make_long_path, path_exists, _err_log_lock
 
 logger = logging.getLogger(__name__)
 
@@ -2691,7 +2691,7 @@ class CanvasManager:
             self._log_error(save_dir, error)
             return
         
-        base_path.mkdir(parents=True, exist_ok=True)
+        Path(make_long_path(base_path)).mkdir(parents=True, exist_ok=True)
 
         if check_cancellation and check_cancellation():
             if progress_callback: progress_callback('Download cancelled.')
@@ -2891,7 +2891,7 @@ class CanvasManager:
                             log_debug(f"Processing Module: {module.name} (ID: {module.id})", debug_file)
                             module_name = self._sanitize_filename(module.name)
                             target_path = base_path / module_name
-                            target_path.mkdir(parents=True, exist_ok=True)
+                            Path(make_long_path(target_path)).mkdir(parents=True, exist_ok=True)
 
                             items = list(module.get_module_items())
                             log_debug(f"Found {len(items)} items in module '{module.name}'", debug_file)
@@ -2981,7 +2981,7 @@ class CanvasManager:
                                             course_name=course.name, module_path=target_path, isolate=False, has_attachments=False, metadata_pairs=[],
                                             content_sig=compute_entity_content_sig('page', page_obj)
                                         )
-                                        if filepath and filepath.exists():
+                                        if filepath and path_exists(filepath):
                                             info = CanvasFileInfo(
                                                 id=-int(item.id) if hasattr(item, 'id') else 0,
                                                 filename=filepath.name,
@@ -3002,7 +3002,7 @@ class CanvasManager:
                                              self._log_error(save_dir, err)
                                              continue
                                         filepath = self._create_link(item.title, item.external_url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0, seen_paths=seen_target_paths)
-                                        if filepath and filepath.exists():
+                                        if filepath and path_exists(filepath):
                                             info = CanvasFileInfo(
                                                 id=-int(item.id) if hasattr(item, 'id') else 0,
                                                 filename=filepath.name,
@@ -3023,7 +3023,7 @@ class CanvasManager:
                                              self._log_error(save_dir, err)
                                              continue
                                         filepath = self._create_link(item.title, url, target_path, progress_callback, error_root_path=Path(save_dir), course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0, seen_paths=seen_target_paths)
-                                        if filepath and filepath.exists():
+                                        if filepath and path_exists(filepath):
                                             info = CanvasFileInfo(
                                                 id=-int(item.id) if hasattr(item, 'id') else 0,
                                                 filename=filepath.name,
@@ -4084,7 +4084,7 @@ class CanvasManager:
                                     course_name=course.name, module_path=base_path, isolate=isolate_pages, has_attachments=False, metadata_pairs=[],
                                     content_sig=compute_entity_content_sig('page', page_obj)
                                 )
-                                if filepath and filepath.exists():
+                                if filepath and path_exists(filepath):
                                     info = CanvasFileInfo(
                                         id=-int(item.id) if hasattr(item, 'id') else 0,
                                         filename=filepath.name,
@@ -4102,7 +4102,7 @@ class CanvasManager:
                                      url = getattr(item, 'html_url', None) or url
                                 if url:
                                     filepath = self._create_link(item.title, url, base_path, progress_callback, error_root_path=error_root_path, course_name=course.name, debug_file=debug_file, sync_manager=sync_manager, course_base_path=base_path, canvas_item_id=-int(item.id) if hasattr(item, 'id') else 0, seen_paths=seen_flat_paths)
-                                    if filepath and filepath.exists():
+                                    if filepath and path_exists(filepath):
                                         info = CanvasFileInfo(
                                             id=-int(item.id) if hasattr(item, 'id') else 0,
                                             filename=filepath.name,
@@ -4252,7 +4252,7 @@ class CanvasManager:
             src = Path(src)
             if src == Path(dest):
                 return None  # already in place; the exists-check above handles it
-            if not src.exists():
+            if not path_exists(src):
                 registry.pop(raw_id, None)  # moved/deleted since - fetch it properly
                 return None
             # Only ever claim within THIS course's folder. The registry lives on
@@ -4272,7 +4272,7 @@ class CanvasManager:
         shares_row = placed_row == int(getattr(file_obj, 'id', 0) or 0)
         verb = 'Moving' if shares_row else 'Copying'
         try:
-            dest.parent.mkdir(parents=True, exist_ok=True)
+            Path(make_long_path(dest.parent)).mkdir(parents=True, exist_ok=True)
             if shares_row:
                 await asyncio.to_thread(
                     os.replace, make_long_path(src), make_long_path(dest))
@@ -4403,10 +4403,10 @@ class CanvasManager:
                 filepath = self._handle_conflict(filepath)
                 filename = filepath.name
             # Re-check existence inside lock
-            if filepath.exists():
+            if path_exists(filepath):
                 try:
                     # We only skip if size matches. If size differs, we overwrite (update).
-                    if file_size_bytes > 0 and filepath.stat().st_size == file_size_bytes:
+                    if file_size_bytes > 0 and os.stat(make_long_path(filepath)).st_size == file_size_bytes:
                         log_debug(f"Skipping existing file: {filename}", debug_file)
                         # User Request: Remove skipped files from Total MB count (they don't need downloading)
                         if progress_callback:
@@ -4462,7 +4462,7 @@ class CanvasManager:
                             log_debug(
                                 f"File exists but size mismatch (local copy is the pristine "
                                 f"original). Canvas: {file_size_bytes}, Local: "
-                                f"{filepath.stat().st_size}. Overwriting in place.", debug_file)
+                                f"{os.stat(make_long_path(filepath)).st_size}. Overwriting in place.", debug_file)
                         else:
                             _diverted = self._handle_conflict(
                                 filepath.parent / f"{filepath.stem}_NewVersion{filepath.suffix}")
@@ -4877,14 +4877,14 @@ class CanvasManager:
             category_folder = base_path / routing['folder']
             if has_attachments:
                 entity_folder = category_folder / safe_name
-                entity_folder.mkdir(parents=True, exist_ok=True)
+                Path(make_long_path(entity_folder)).mkdir(parents=True, exist_ok=True)
                 return entity_folder, safe_name
             else:
-                category_folder.mkdir(parents=True, exist_ok=True)
+                Path(make_long_path(category_folder)).mkdir(parents=True, exist_ok=True)
                 return category_folder, safe_name
         else:
             target_dir = module_path if module_path else base_path
-            target_dir.mkdir(parents=True, exist_ok=True)
+            Path(make_long_path(target_dir)).mkdir(parents=True, exist_ok=True)
             prefixed_name = f"{routing['prefix']}: {safe_name}"
             return target_dir, prefixed_name
 
@@ -5135,7 +5135,7 @@ class CanvasManager:
             display_name = _safe if isolate else f"{_routing['prefix']}: {_safe}"
             target_dir = Path(explicit_dir)
             try:
-                target_dir.mkdir(parents=True, exist_ok=True)
+                Path(make_long_path(target_dir)).mkdir(parents=True, exist_ok=True)
             except OSError:
                 target_dir, display_name = self._resolve_secondary_path(
                     entity_type, entity_name, base_path,
@@ -5165,19 +5165,19 @@ class CanvasManager:
                 filepath = self._handle_conflict(filepath)
             _registry[str(filepath).lower()] = (entity_type, canvas_entity_id)
 
-        if preserve_existing and filepath.exists():
+        if preserve_existing and path_exists(filepath):
             # The user edited their local copy: never touch it. The fresh
             # render lands alongside as a _NewVersion sibling (mirroring the
             # regular-file modified-update routing).
             filepath = self._handle_conflict(
                 filepath.parent / f"{filepath.stem}_NewVersion{filepath.suffix}"
             )
-        elif filepath.exists():
+        elif path_exists(filepath):
             # Secondary entities are always regenerated from the Canvas API,
             # so overwrite in-place instead of creating (1) conflict copies.
             # This mirrors the clean-overwrite logic for regular file redownloads.
             try:
-                filepath.unlink()
+                Path(make_long_path(filepath)).unlink()
             except OSError:
                 # File locked (e.g. open in browser) - fall back to conflict copy
                 filepath = self._handle_conflict(filepath)
@@ -5197,10 +5197,10 @@ class CanvasManager:
                     os.fsync(f.fileno())
                 except OSError:
                     pass
-            os.replace(part_path, filepath)
+            os.replace(make_long_path(part_path), make_long_path(filepath))
         except Exception as e:
             try:
-                part_path.unlink(missing_ok=True)
+                Path(make_long_path(part_path)).unlink(missing_ok=True)
             except OSError:
                 pass
             err = DownloadError(
@@ -6919,20 +6919,20 @@ class CanvasManager:
             return None
 
     def _handle_conflict(self, filepath):
-        if not filepath.exists():
+        if not path_exists(filepath):
             return filepath
         base = filepath.stem
         ext = filepath.suffix
         parent = filepath.parent
         counter = 1
-        while filepath.exists() and counter < 1000:
+        while path_exists(filepath) and counter < 1000:
             new_name = f"{base} ({counter}){ext}"
             filepath = parent / new_name
             counter += 1
         if counter >= 1000:
             for _ in range(100):
                 candidate = parent / f"{base}_{uuid.uuid4().hex[:8]}{ext}"
-                if not candidate.exists():
+                if not path_exists(candidate):
                     filepath = candidate
                     break
             else:
@@ -6984,10 +6984,10 @@ class CanvasManager:
         if not base_path: return
         path = Path(base_path)
         log_file = path / "download_errors.txt"
-        if log_file.exists():
+        if path_exists(log_file):
             try:
                 with _err_log_lock:
-                    with open(log_file, "w", encoding="utf-8") as f:
+                    with open(make_long_path(log_file), "w", encoding="utf-8") as f:
                         f.write("")  # Truncate
             except Exception:
                 pass
@@ -7034,7 +7034,7 @@ class CanvasManager:
         if not base_path: return
         
         path = Path(base_path)
-        path.mkdir(parents=True, exist_ok=True)
+        Path(make_long_path(path)).mkdir(parents=True, exist_ok=True)
         log_file = path / "download_errors.txt"
         
         try:
@@ -7045,7 +7045,7 @@ class CanvasManager:
                 entry = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {error}"
                 
             with _err_log_lock:
-                with open(log_file, "a", encoding="utf-8") as f:
+                with open(make_long_path(log_file), "a", encoding="utf-8") as f:
                     f.write(entry + "\n")
         except Exception:
             # Last resort fallback if logging fails

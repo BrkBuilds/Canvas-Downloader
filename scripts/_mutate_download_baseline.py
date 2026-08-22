@@ -47,11 +47,11 @@ DOWNLOAD_BASELINE_MUTANTS = [
      SYNC,
      "        if not local_md5:\n"
      "            full_path = self.local_path / local_path\n"
-     "            if full_path.exists():\n"
+     "            if path_exists(full_path):\n"
      "                local_md5 = SyncManager.compute_local_md5(full_path) or \"\"",
      "        if False:\n"
      "            full_path = self.local_path / local_path\n"
-     "            if full_path.exists():\n"
+     "            if path_exists(full_path):\n"
      "                local_md5 = SyncManager.compute_local_md5(full_path) or \"\""),
     ("an explicitly supplied md5 is overridden by the stored row",
      SYNC,

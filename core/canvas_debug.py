@@ -29,21 +29,33 @@ def _sanitize(message: str) -> str:
     return _URL_TOKEN_RE.sub(r'\1[REDACTED]', message)
 
 
+def _lp(p) -> str:
+    """The long-path form of *p*. Lazy so this module keeps no app imports.
+
+    The debug log lives in the user's DOWNLOAD folder, not the config dir, so
+    its path is exactly as deep as the destination they chose - and a log that
+    cannot be written is the one thing that makes every other failure in this
+    file undiagnosable.
+    """
+    from shared.helpers import make_long_path
+    return make_long_path(p)
+
+
 def _rotate_if_needed(debug_file: str) -> None:
     """If the log file exceeds _MAX_LOG_BYTES, drop the oldest data and keep
     the most recent _KEEP_TAIL_BYTES so the file stays manageable."""
     try:
-        size = os.path.getsize(debug_file)
+        size = os.path.getsize(_lp(debug_file))
     except OSError:
         return
     if size < _MAX_LOG_BYTES:
         return
     try:
-        with open(debug_file, 'rb') as f:
+        with open(_lp(debug_file), 'rb') as f:
             f.seek(-_KEEP_TAIL_BYTES, 2)
             tail = f.read()
         marker = b'\n[... older log entries truncated to keep file under 5 MB ...]\n\n'
-        with open(debug_file, 'wb') as f:
+        with open(_lp(debug_file), 'wb') as f:
             f.write(marker)
             f.write(tail)
     except OSError:
@@ -136,7 +148,7 @@ def log_debug(message, debug_file=None):
         _rotate_if_needed(debug_file)
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         safe_message = _sanitize(str(message))
-        with open(debug_file, "a", encoding="utf-8") as f:
+        with open(_lp(debug_file), "a", encoding="utf-8") as f:
             f.write(f"[{timestamp}] {safe_message}\n")
     except Exception as e:
         print(f"Debug logging failed: {e}")
@@ -147,7 +159,7 @@ def clear_debug_log(debug_file=None):
     if not debug_file:
         return
     try:
-        with open(debug_file, "w", encoding="utf-8") as f:
+        with open(_lp(debug_file), "w", encoding="utf-8") as f:
             f.write(f"--- Debug Log Started: {datetime.now()} ---\n")
     except Exception:
         pass

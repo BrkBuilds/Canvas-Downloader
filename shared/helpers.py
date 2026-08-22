@@ -163,6 +163,52 @@ def path_exists(p: str | Path) -> bool:
         return False
 
 
+def walk_files_long(root: str | Path):
+    """Every file under ``root``, as CLEAN (unprefixed) ``Path`` objects.
+
+    The long-path counterpart of ``Path.rglob('*')``, and it exists because
+    rglob fails in TWO different silent ways past Windows' limit (both measured
+    2026-08-22, on a machine with ``LongPathsEnabled=0``):
+
+    * **The root itself over the limit** - ``rglob`` yields **nothing at all**,
+      because the walk cannot open a directory it cannot name.
+    * **The root reachable but a file past the limit** - ``rglob`` DOES yield
+      the entry, and then ``f.is_file()`` answers **False**, so every caller
+      that filters on it drops a file that is sitting right there.
+
+    Neither raises. Post-processing's ``_glob_files`` hit both, and because it
+    is the single discovery helper every converter goes through, one silent
+    ``[]`` starved all nine of them at once - a course downloaded into a deep
+    folder produced no PDFs, no compiled links and no message saying why.
+
+    **Yields clean paths on purpose.** Callers put these into manifest rows and
+    hand them to Office COM, and both reject a ``\\\\?\\`` prefix - the same
+    asymmetry ``office_safe_path`` documents. So the walk happens THROUGH the
+    prefix and each hit is mapped back onto the caller's own spelling of
+    ``root``; nothing is ever textually stripped, which would be the fragile way
+    to do it.
+
+    Directories are never yielded, matching the ``f.is_file()`` filter this
+    replaces. Symlinked directories are not followed, matching ``rglob``.
+    """
+    root = Path(root)
+    walk_root = make_long_path(str(root))
+    # No try around os.walk: it is a GENERATOR, so it cannot raise here, and
+    # during iteration its default `onerror=None` already swallows a directory
+    # it cannot read. That is the same behaviour as the os.walk loops this
+    # replaced - a missing or unreadable root yields nothing rather than
+    # raising, which every caller relies on (several iterate it inside a list
+    # comprehension with no handler of their own).
+    for dirpath, _dirnames, filenames in os.walk(walk_root):
+        try:
+            rel = os.path.relpath(dirpath, walk_root)
+        except ValueError:
+            continue
+        clean_dir = root if rel in ('.', '') else root / rel
+        for name in filenames:
+            yield clean_dir / name
+
+
 # ── Temp File Shadowing for Office COM APIs ────────────────────────────
 
 _MAX_PATH_THRESHOLD = 240  # 15-char safety margin below Win32 MAX_PATH (255)

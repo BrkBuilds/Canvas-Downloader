@@ -23,6 +23,14 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+# ── long-path awareness ──────────────────────────────────────────────────────
+# The ORACLES must see what the app sees. On a machine with LongPathsEnabled=0
+# a course folder past 260 characters answers False to Path.exists()/is_dir(),
+# and an oracle that cannot see a folder does not under-report - it INVENTS:
+# "the manifest is missing", "0 files on disk". Measured 2026-08-22: a real
+# .canvas_sync.db at 266 chars, 65,536 bytes, read as absent.
+from shared.helpers import make_long_path as _mlp  # noqa: E402
+
 from pathlib import Path
 
 DB_FILENAME = ".canvas_sync.db"
@@ -52,16 +60,45 @@ def entity_type(canvas_file_id: int) -> str:
 def read(folder: str | Path) -> dict:
     folder = Path(folder)
     db = folder / DB_FILENAME
-    if not db.is_file():
+    if not os.path.isfile(_mlp(db)):
         return {"folder": str(folder), "exists": False}
 
     # Read-only URI so an audit read can never take a write lock on a DB the
     # running app is using, and never modifies the file it is auditing.
-    uri = f"file:{db.as_posix()}?mode=ro"
+    # Read-only URI so an audit read can never take a write lock on a DB the
+    # running app is using, and never modifies the file it is auditing.
+    #
+    # SQLITE'S URI PARSER CANNOT EXPRESS AN EXTENDED-LENGTH PATH. Measured
+    # 2026-08-22 against a real manifest at 266 characters: every spelling of
+    # `file:` + `\?\...` fails - backslashes and forward slashes give "unable
+    # to open database file", and percent-encoding gives "invalid uri
+    # authority: %3F". Only a PLAIN prefixed filename opens it, and that form
+    # takes no `mode=ro`.
+    #
+    # So rather than trade the read-only guarantee for reach, a deep manifest is
+    # COPIED through the prefix to a short temp path and the COPY is opened
+    # read-only. The audited file is never opened read-write at all, which is a
+    # stronger guarantee than the URI gave - and the manifest is small (64 KB on
+    # the course this was measured against).
+    _tmp_copy = None
     try:
-        con = sqlite3.connect(uri, uri=True, timeout=15.0)
-    except sqlite3.Error as e:
-        return {"folder": str(folder), "exists": True, "error": str(e)}
+        con = sqlite3.connect(f"file:{db.as_posix()}?mode=ro", uri=True, timeout=15.0)
+    except sqlite3.Error:
+        try:
+            import shutil as _shutil
+            import tempfile as _tempfile
+            _fd, _tmp_copy = _tempfile.mkstemp(suffix=".canvas_sync_audit.db")
+            os.close(_fd)
+            _shutil.copyfile(_mlp(db), _tmp_copy)
+            con = sqlite3.connect(f"file:{Path(_tmp_copy).as_posix()}?mode=ro",
+                                  uri=True, timeout=15.0)
+        except (sqlite3.Error, OSError) as e:
+            if _tmp_copy:
+                try:
+                    os.unlink(_tmp_copy)
+                except OSError:
+                    pass
+            return {"folder": str(folder), "exists": True, "error": str(e)}
 
     out: dict = {"folder": str(folder), "exists": True, "db": str(db)}
     try:
@@ -114,6 +151,11 @@ def read(folder: str | Path) -> dict:
         out["panopto_ignored"] = ign
     finally:
         con.close()
+        if _tmp_copy:
+            try:
+                os.unlink(_tmp_copy)
+            except OSError:
+                pass
 
     out["by_entity"] = _tally(out.get("rows", []), "entity")
     out["ignored_count"] = sum(1 for r in out.get("rows", []) if r["is_ignored"])

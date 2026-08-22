@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from shared.shortcuts import read_shortcut, shortcut_extension
+from shared.helpers import make_long_path, path_exists, walk_files_long
 
 def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path | None, list[Path]]:
     """
@@ -30,8 +31,12 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
     # file that machine cannot even open to check, on behalf of a user who is
     # probably still using it on their Mac. Compile widely, delete narrowly.
     _own = shortcut_extension().lower()
-    shortcut_files = [p for pattern in ("*.url", "*.webloc")
-                      for p in course_path.rglob(pattern)]
+    # walk_files_long, not rglob: past Windows' limit rglob yields nothing for
+    # an over-limit root and drops over-limit files from a reachable one, so a
+    # deep course folder compiled ZERO links and said nothing at all.
+    _shortcut_exts = {".url", ".webloc"}
+    shortcut_files = [p for p in walk_files_long(course_path)
+                      if p.suffix.lower() in _shortcut_exts]
 
 
     if not shortcut_files:
@@ -43,9 +48,9 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
     existing_content = ""
     
     # 1. State Hydration
-    if output_path.exists():
+    if path_exists(output_path):
         try:
-            with open(output_path, 'r', encoding='utf-8') as f:
+            with open(make_long_path(output_path), 'r', encoding='utf-8') as f:
                 existing_content = f.read()
             for line in existing_content.splitlines():
                 if line.lower().startswith("http"):
@@ -118,19 +123,19 @@ def compile_urls_to_txt(course_dir: str | Path, course_name: str) -> tuple[Path 
 
     tmp_path = output_path.with_suffix('.tmp')
     try:
-        with open(tmp_path, 'w', encoding='utf-8') as f:
+        with open(make_long_path(tmp_path), 'w', encoding='utf-8') as f:
             f.write(full_content)
             f.flush()
             try:
                 _os.fsync(f.fileno())
             except OSError:
                 pass
-        _os.replace(str(tmp_path), str(output_path))
+        _os.replace(make_long_path(tmp_path), make_long_path(output_path))
     except OSError:
         # Clean up orphaned temp file on failure so it doesn't pollute the folder
         try:
-            if tmp_path.exists():
-                tmp_path.unlink()
+            if path_exists(tmp_path):
+                _os.remove(make_long_path(tmp_path))
         except OSError:
             pass
         raise

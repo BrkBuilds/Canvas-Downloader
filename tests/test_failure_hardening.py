@@ -631,21 +631,31 @@ class TestConversionOutputIsVerified:
         f.write_bytes(b"%PDF-1.4\n" + b"0" * 1024 + b"\n%%EOF\n")
         assert pdf_looks_real(f) == (True, "")
 
-    @pytest.mark.parametrize("module,deleter", [
-        ("converters/word.py", "abs_doc_path.unlink(missing_ok=True)"),
-        ("converters/excel.py", "src.unlink(missing_ok=True)"),
-        ("converters/pdf.py", "pptx_path.unlink()"),
+    @pytest.mark.parametrize("module,deleted_var", [
+        ("converters/word.py", "abs_doc_path"),
+        ("converters/excel.py", "src"),
+        ("converters/pdf.py", "pptx_path"),
     ])
-    def test_the_delete_is_guarded_by_the_check(self, module, deleter):
+    def test_the_delete_is_guarded_by_the_check(self, module, deleted_var):
         """Ordering, not adjacency: the verification must PRECEDE the delete on
-        the Windows COM success path."""
+        the Windows COM success path.
+
+        Parametrized on the VARIABLE, not on the whole delete expression. It
+        used to name the literal `abs_doc_path.unlink(missing_ok=True)`, which
+        stopped matching the moment those deletes became long-path safe
+        (`Path(make_long_path(abs_doc_path)).unlink(...)`) - reporting a missing
+        guard where the guard was untouched. Pin the ordering, not the spelling.
+        """
+        import re
         from pathlib import Path
         src = (Path(__file__).resolve().parent.parent / module).read_text(encoding="utf-8")
         assert "pdf_looks_real" in src, f"{module} does not verify its output"
         check = src.index("pdf_looks_real(")
         # the delete that follows the COM success path, not the macOS one
-        after = src.find(deleter, check)
-        assert after > check, f"{module} deletes the source before verifying the PDF"
+        m = re.search(rf"\b{re.escape(deleted_var)}\b[^\n]*?\.unlink\(", src[check:])
+        assert m, (
+            f"{module} has no delete of `{deleted_var}` after the pdf_looks_real "
+            f"check - either the guard moved or the source is no longer consumed")
 
 
 # ═══════════════════════════════════════════════════════════════════════

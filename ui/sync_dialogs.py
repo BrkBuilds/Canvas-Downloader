@@ -19,6 +19,7 @@ import os
 import urllib.parse
 from collections import defaultdict
 from pathlib import Path
+from shared.helpers import path_exists
 
 import streamlit as st
 
@@ -380,7 +381,7 @@ def show_course_ignored_files(course_name, course_id, course_data, pair_sig=None
             for rel in (_pan_manifest.get(vid) or {}).values():
                 try:
                     p = (_pan_root / rel) if _pan_root else None
-                    if p and p.exists():
+                    if p and path_exists(p):
                         total += p.stat().st_size
                 except OSError:
                     pass
@@ -882,7 +883,7 @@ def show_course_ignored_files(course_name, course_id, course_data, pair_sig=None
                         for _k, _rel in _pan_manifest.get(vid, {}).items():
                             try:
                                 _p = (_pan_root / _rel) if _pan_root else None
-                                if _p and _p.exists():
+                                if _p and path_exists(_p):
                                     _existing_kinds.append(_k)
                             except OSError:
                                 pass

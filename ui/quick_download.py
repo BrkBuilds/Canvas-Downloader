@@ -4,7 +4,9 @@ ui.quick_download - Quick Download preset picker (Step 2 lite).
 from __future__ import annotations
 
 import time
+import os
 from pathlib import Path
+from shared.helpers import make_long_path
 
 import streamlit as st
 
@@ -1170,10 +1172,16 @@ div.st-key-page_nav_quick_start button:active {{
 
             _dl_path = Path(st.session_state['download_path'])
             try:
-                _dl_path.mkdir(parents=True, exist_ok=True)
+                # Through the prefix: the DESTINATION is the user's own
+                # choice of depth, and an unprefixed probe on a deep but
+                # perfectly writable folder fails with WinError 206 and
+                # tells them it is unwritable - blocking the download
+                # before it starts. Measured: mkdir rejects at 248 chars.
+                Path(make_long_path(_dl_path)).mkdir(parents=True, exist_ok=True)
                 _probe = _dl_path / '.canvas_write_probe'
-                _probe.write_bytes(b'ok')
-                _probe.unlink()
+                with open(make_long_path(_probe), 'wb') as _pf:
+                    _pf.write(b'ok')
+                os.remove(make_long_path(_probe))
             except Exception as _wp_err:
                 from ui.amber_notice import render_error_notice
                 render_error_notice(
