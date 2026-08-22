@@ -612,14 +612,33 @@ def test_no_prefixed_path_is_stored_returned_or_appended():
     #: prefixed path the guard had never examined.
     path_wrappers = {"Path", "str", "join", "normpath", "abspath", "fspath",
                      "PurePath", "PureWindowsPath"}
+    offenders = _prefixed_bindings(allowed, path_wrappers)
+    assert not offenders, (
+        "a prefixed path is bound to a name without a recorded reason - if it "
+        "reaches a manifest row or an index, every later comparison against a "
+        "clean path silently fails:\n  " + "\n  ".join(offenders))
+
+
+def _prefixed_bindings(allowed, path_wrappers, source_map=None):
+    """Names bound to a `\\\\?\\`-prefixed path, minus the argued exemptions.
+
+    A function, not an inline loop, for the reason the census already is: a
+    guard that cannot be pointed at synthetic source cannot be shown to say NO,
+    and the mutation pass proved that - deleting `path_wrappers` SURVIVED,
+    because nothing exercised the wrapper branch.
+    """
     offenders = []
-    for py in sorted(REPO.rglob("*.py")):
-        if any(p in {"dist", "build", "tests", "scripts", ".git", "__pycache__",
-                     ".venv", "venv", "_audit_runs", "docs"} for p in py.parts):
-            continue
-        rel = py.relative_to(REPO).as_posix()
+    items = (list(source_map.items()) if source_map is not None else
+             [(py.relative_to(REPO).as_posix(), None)
+              for py in sorted(REPO.rglob("*.py"))
+              if not any(p in {"dist", "build", "tests", "scripts", ".git",
+                               "__pycache__", ".venv", "venv", "_audit_runs",
+                               "docs"} for p in py.parts)])
+    for rel, src in items:
         try:
-            tree = ast.parse(py.read_text(encoding="utf-8"))
+            if src is None:
+                src = (REPO / rel).read_text(encoding="utf-8")
+            tree = ast.parse(src)
         except (SyntaxError, UnicodeDecodeError):
             continue
         for node in ast.walk(tree):
@@ -650,11 +669,35 @@ def test_no_prefixed_path_is_stored_returned_or_appended():
             if (rel, key) in allowed:
                 continue
             offenders.append(f"{rel}:{node.lineno} {key} = {fname}(...)")
+    return offenders
 
-    assert not offenders, (
-        "a prefixed path is bound to a name without a recorded reason - if it "
-        "reaches a manifest row or an index, every later comparison against a "
-        "clean path silently fails:\n  " + "\n  ".join(offenders))
+
+def test_the_leak_guard_sees_the_wrapper_form():
+    """NEGATIVE CONTROL for the wrapper branch.
+
+    `x = Path(make_long_path(y))` is the form that actually carries a prefix
+    onward, and the first version of the guard could not see it. The mutation
+    pass caught that this was UNTESTED: deleting `path_wrappers` survived,
+    because every real wrapper-form binding is exempt, so nothing was left to
+    flag. Both directions, since a wrapper that yields an int cannot leak.
+    """
+    wrappers = {"Path", "str", "join", "normpath", "abspath", "fspath",
+                "PurePath", "PureWindowsPath"}
+
+    leaks = {"synthetic/leak.py": "root = Path(make_long_path(course))\n"}
+    assert _prefixed_bindings({}, wrappers, source_map=leaks), (
+        "the leak guard cannot see Path(make_long_path(x)) - the one wrapper "
+        "form that really does carry the prefix onward")
+
+    # An int can never carry a prefix, so flagging it would be crying wolf.
+    ints = {"synthetic/int.py": "n = os.path.getsize(make_long_path(p))\n"}
+    assert not _prefixed_bindings({}, wrappers, source_map=ints), (
+        "the leak guard flags a wrapper that returns an int")
+
+    # And the exemption must still work, or every real site would have to be
+    # rewritten rather than argued for.
+    assert not _prefixed_bindings({("synthetic/leak.py", "root"): "argued"},
+                                  wrappers, source_map=leaks)
 
 
 def test_the_census_exemptions_still_describe_real_code():
@@ -802,6 +845,19 @@ def test_the_half_fix_guard_can_actually_fail():
             "    total += os.stat(make_long_path(p)).st_size\n"}
     assert not _half_prefixed_sites(source_map=good), (
         "the half-fix guard flags a correctly prefixed follow-up")
+
+    # THE CASE THAT ACTUALLY HAPPENED. With a physical-line window, writing an
+    # explanation above the offending call pushes it out of reach and the guard
+    # goes quiet - which is how it passed against deliberately reverted code.
+    # The mutation pass proved this was untested: reverting the window to
+    # physical lines SURVIVED, because both cases above are adjacent lines.
+    documented = {"synthetic/documented.py":
+                  "if path_exists(p):\n"
+                  + "".join(f"    # explanation line {i}\n" for i in range(8))
+                  + "    total += p.stat().st_size\n"}
+    assert _half_prefixed_sites(source_map=documented), (
+        "a comment between the check and the follow-up blinds the guard - it "
+        "must count CODE lines, never physical ones")
 
 
 @needs_gate
