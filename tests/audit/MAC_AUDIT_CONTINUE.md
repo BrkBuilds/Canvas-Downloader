@@ -215,6 +215,39 @@ Ranked. The first is the one that would keep me up at night.
 
 ---
 
+## The v2.0.2 RELEASE ARTIFACT is verified (2026-08-22)
+
+The macOS side of the release gate is closed, on the **shipped** DMG from the
+GitHub Actions build - not a local one, which is the distinction that matters
+because v2.0.1's shipped bundle failed `codesign --verify` while local builds
+passed.
+
+Machine checks, on the artifact downloaded from the v2.0.2 prerelease:
+
+| check | result |
+|---|---|
+| `codesign --verify --deep --strict` | **rc 0** - the check v2.0.1 failed |
+| `spctl -a -t exec`, with a real `com.apple.quarantine` xattr | **rejected, exit 3** = "Apple could not verify" -> the Open Anyway route. **Not exit 1** ("damaged"), which has no path out |
+| `__pycache__` in the bundle | 0 |
+| pync / nested `__dot__` app | none |
+| `apple-events` entitlement | present |
+| floor check, in CI | 215 binaries, highest minimum **14.0** (`libonnxruntime`), matching the spec and the website |
+
+**Operator check, and it is the half a machine cannot do**: installed the
+prerelease DMG and ran it. Launch works; the Keychain notice appears on the auth
+screen, `Always Allow` signs in fast, and a full download completes. That closes
+the last item this brief listed as unproven for the packaged app, and it
+confirms the Keychain ACL fix end to end in a bundle - the failure that used to
+present as 90 s of empty window followed by an unexplained login page.
+
+**Still owed for the release**: the Windows installer. Build it with
+`python scripts/build_windows.py` on the Windows box - it now emits
+`Canvas_Downloader_v2.0.2_Windows.exe` directly, so there is no manual rename -
+attach it, promote the prerelease, then run `python scripts/sync_release_page.py`
+and only then bump `version.py`.
+
+---
+
 ## Cleanup owed before the machine is released
 
 Nothing on a rented box survives reimaging, but these are the operator's:

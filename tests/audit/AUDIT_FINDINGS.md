@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260822_145236_longpath-postfix-verify` on 2026-08-22.
 
-**3 open** · 180 total · 30 accepted · 98 fixed · 47 invalid · 2 wontfix
+**1 open** · 180 total · 30 accepted · 100 fixed · 47 invalid · 2 wontfix
 
 ---
 
@@ -86,7 +86,7 @@ Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full
 ### Office ownership is instance-blind, so one lane tears down another lane's in-flight conversion (harness-reachable only)
 <!-- fp:37cb30ec4fa7 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: live-observation,log
@@ -99,7 +99,8 @@ Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full
 
 The CanvasDownloaderTmp marker means 'some Canvas Downloader', not 'this instance', so a lane's teardown reads another lane's staged conversion document as ours-and-discardable, quits, waits 12s, then pkills the app mid-conversion. Measured 0.77s from free3's force-terminate to the office lane's -609. Requires two concurrent instances, which start.py's flock/mutex prevents for normal users and the harness creates by design - so this is recorded as a HARNESS-BLOCKING robustness gap, not a user-facing defect. Blocks trustworthy Office rows in any multi-lane matrix; workaround is to run the converting lane alone.
 
-**Notes**:   
+**Notes**: FIXED 2026-08-22 (`cfc1717`). The marker is now instance-scoped: staging goes to `CanvasDownloaderTmp-<per-process token>`, the two DESTRUCTIVE sites (`_idle_quit_script`, `_close_marker_docs_script`) match the narrow name, and the Recents purge (`_marker_in_value`, `_purge_securebookmarks`) keeps matching the broad prefix - which it must, or a crashed run's entries become unreachable and nothing else removes them. Those two look like the same question and are not: a stale Recents row is inert, a wrongly-closed document is not. THE TOKEN IS IN THE DIRECTORY NAME rather than a path segment, because Word reports an HFS COLON path while the others report POSIX, so a token separated by '/' could never match for Word - the same trap that made the old `full name contains "/"` fallback dead code there. The pgrep/pkill escalation also moved INSIDE the per-app lock; its comment said it could run outside because signalling is not driving, which is true and beside the point when the target is the app another instance is converting with. Staging siblings from dead runs are swept with rmdir ONLY, never rmtree - a non-empty sibling belongs to a live instance or holds a crashed run's evidence. tests/test_office_instance_scoping.py (9), both properties control-tested by reverting them. **NOT YET VERIFIED ON TWO LIVE INSTANCES** - that needs a real two-lane run on a Mac, and until it has been done the runbook's 'run Office rows in a single lane' instruction should stand.
+
 > Not observed in the latest run.
 
 ---
@@ -243,7 +244,7 @@ the actual complaint.
 ### A Panopto shortcut ADOPTED from a Canvas ExternalTool link leaves the sync_manifest md5 stale
 <!-- fp:80a5610550f0 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: low
 **Category**: persistence
 **Oracles**: O3,O4
@@ -266,7 +267,8 @@ NOT the register's fp:8a7f0ead05f4, which carries the same title but was invalid
 
 PRE-EXISTING: the adoption design shipped 2026-08-07, well before the long-path work this run was verifying.
 
-**Notes**: 
+**Notes**: FIXED 2026-08-22 (`54a7082`), and **THE MECHANISM RECORDED ABOVE IS WRONG** - which mattered, because it made the finding look benign. It says `resolve_shortcut_path` ADOPTED the Canvas link 'because shared/shortcuts.write_shortcut put our [CanvasDownloader] marker in it'. `_create_link` writes a bare `plistlib.dumps({'URL': url})` and never calls `write_shortcut`, so `is_produced_shortcut` is False for its output and adoption never happened. Tested directly against exactly what `_create_link` writes. WHAT ACTUALLY HAPPENS, confirmed by the phase order in app.py:1812 -> :1863 and by the run's own database: `_create_link` writes .webloc files for all 41 ExternalTool module items and records a row hashing each; post-processing's URL compiler compiles all 41 into Compiled_External_Links.txt and DELETES them (no marker); the Panopto pass then finds those names FREE and writes its own marked shortcut at the same paths. Measured: 36 paths present in BOTH sync_manifest and panopto_manifest - the 'two subsystems taking turns clobbering one path, for ever' state `resolve_shortcut_path`'s docstring says the design exists to prevent. SO IT IS NOT MERELY A STALE MD5: `_create_link` had no ownership check at all and would overwrite the user's selected Panopto output on the next run, surviving only because the compiler deleted it again and Panopto rewrote it - i.e. correctness resting on an unrelated converter toggle being on. Cancel the Panopto pass mid-run and the shortcut is lost. The rule was two-sided and written once: Panopto steps over Canvas's links, Canvas stepped on Panopto's artifacts. Fixed in both halves - `_create_link` skips writing over a produced shortcut (still recording the row, or the Canvas item reads as NEW for ever, and re-hashing heals existing folders), and `analyze_course` gains the second form of the URL Compiler bypass so a row whose file was REPLACED by a produced shortcut is up to date rather than 'modified'. Verified against the real artifacts: all 36 heal, while a genuine Canvas link, an ordinary file and a missing file still answer False. tests/test_shortcut_ownership.py (15); scripts/_mutate_shortcut_ownership.py 9/9 caught, after two survivors exposed real gaps in my own tests.
+
 
 ---
 
