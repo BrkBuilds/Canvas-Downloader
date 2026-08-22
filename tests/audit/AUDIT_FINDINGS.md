@@ -9,163 +9,31 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260821_144948_macos26-dl-matrix-short2` on 2026-08-21.
+Last updated by run `20260822_145236_longpath-postfix-verify` on 2026-08-22.
 
-**7 open** · 175 total · 29 accepted · 91 fixed · 47 invalid · 1 wontfix
-
-> Header corrected by hand 2026-08-21: it read *19 open · 35 invalid*, which
-> predates the sixth session's adjudication (the 14 fabricated sync findings
-> and the 5 Office-contention rows were all marked `invalid` afterwards, and
-> the summary line is only rewritten by a RUN). Counted from the entries
-> themselves. The line above is a cache, so re-count before quoting it -
-> "19 open" is the number a launch decision would have been made on.
+**9 open** · 180 total · 29 accepted · 94 fixed · 47 invalid · 1 wontfix
 
 ---
 
-### Unexpected bridged_error in debug log: 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx  Conve
-<!-- fp:3497d9e289e7 -->
+### STATIC ONLY, unconfirmed: four delete-family converters do all their course-folder I/O without make_long_path
+<!-- fp:2af59c761f0c -->
 
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Status**: open
+**Severity**: medium
+**Category**: correctness
+**Oracles**: static-analysis
+**First seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Last seen**: 2026-08-21 (laptop-longpath-2026-08-21)
 **Occurrences**: 1
-**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+**Scenario**: AST sweep of the app tree; NOT reproduced - this machine cannot fail on long paths
 
 **Detail**:
 
-2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+Recorded as a POINTER FOR THE NEXT DYNAMIC RUN, not as a confirmed defect. With the dynamic gate unavailable (see the LongPathsEnabled finding), the same question was asked of the source: an AST scan for filesystem calls whose path expression never passes through make_long_path / office_safe_path. It returns 329 raw hits, which is far too many to all be real - most are config-dir, temp or app-owned paths that are short by construction, and the instrument has no provenance analysis, so that number must NOT be quoted as a defect count. The subset worth a dynamic run is CLAUDE.md's delete family, because those operate on course-folder paths (arbitrary depth under a user-chosen root) and delete the file they converted from: converters/code.py (3 unprefixed FS calls), md.py (3), url.py (4), video.py (3 unlink sites), pdf.py (1) - none of which reference make_long_path at all; excel.py and archive.py do. pdf.py and word.py are partly covered in practice by office_container_stage, which stages to a short src_<hex> path; code, md, url and video have no such staging. PREDICTED behaviour at LongPathsEnabled=0, FROM READING THE CODE AND NOT MEASURED: code.py reads at line 44, writes, verifies exists()+st_size, and only then unlinks the source, so an over-long path raises at the READ and the outer handler returns None with the source intact - the ordering is fail-safe and the delete-family discipline holds. The expected symptom is therefore degradation rather than data loss: files in deeply-nested course folders silently never convert, and the logged reason is '[Errno 2] No such file or directory' about a file that is plainly there, which actively misleads diagnosis. POINT A DYNAMIC RUN AT converters/video.py FIRST: its three Path(...).unlink(missing_ok=True) sites swallow FileNotFoundError, which is exactly what an over-long path raises - the mechanism behind the transcribe.py .part leak ('no removal, no retry, no log'). Severity and even reachability are UNCONFIRMED, because confirming them needs the machine that can fail.
 
-**Notes**: 
-
----
-
-### Unexpected bridged_error in debug log: 251009_Kom og vær med_Til Stig N.pptx  Conversion failed - 1022:1028: execution error: the
-<!-- fp:ec3439926351 -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-251009_Kom og vær med_Til Stig N.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
-
-**Notes**: 
-
----
-
-### Unexpected bridged_error in debug log: Forelæsning 17 - DB3.pptx  Conversion failed - 1022:1028: execution error: Microsoft Power
-<!-- fp:f8e8cd4bc081 -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m025_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
-
-**Detail**:
-
-Forelæsning 17 - DB3.pptx  Conversion failed - 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
-
-**Notes**: 
-
----
-
-### Unexpected bridged_error in debug log: Opgavesæt 6-vejl.xlsx  1424:1430: execution error: Microsoft Excel got an error: Parameter
-<!-- fp:aeda030ca62e -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m014 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
-
-**Detail**:
-
-Opgavesæt 6-vejl.xlsx  1424:1430: execution error: Microsoft Excel got an error: Parameter error. (-50)
-
-**Notes**: 
-
----
-
-### Unexpected bridged_error in debug log: Sensemaking slides 2.pptx  Conversion failed - 1022:1028: execution error: the frontmost p
-<!-- fp:c0cf118df1f2 -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-Sensemaking slides 2.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
-
-**Notes**: 
-
----
-
-### Unexpected bridged_error in debug log: Øvelse 3 - VL.xls  1421:1427: execution error: Microsoft Excel got an error: Parameter err
-<!-- fp:2bb23c609df1 -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m014 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
-
-**Detail**:
-
-Øvelse 3 - VL.xls  1421:1427: execution error: Microsoft Excel got an error: Parameter error. (-50)
-
-**Notes**: 
-
----
-
-### Unexpected bridged_error in debug log: Øvelsesslides formelle træk - organisationsformer-1.pptx  Conversion failed - 1022:1028: e
-<!-- fp:056417648214 -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: high
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-Øvelsesslides formelle træk - organisationsformer-1.pptx  Conversion failed - 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
-
-**Notes**: 
+**Notes**: Table and method in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 3. Treat as where to look, not as a findings list.
+> NO LONGER STATIC - MEASURED 2026-08-22 on this laptop once LongPathsEnabled was set to 0, by driving the REAL converter functions against fixtures created through make_long_path (so a failure can only be about the converter's own I/O). Every prediction in the Detail above held, and the severity assessment holds with it: **all four fail SAFE - the user's source file survived in every case** - so this is degradation and misdiagnosis, NOT data loss, and it should not be escalated. convert_code_to_txt at 318 chars returned None, source intact, logged '[Errno 2] No such file or directory' about a file that is plainly there. convert_html_to_md at 349 chars returned None, source intact, logged 'Invalid HTML file path' - it fails at an exists() check before it ever opens anything. compile_urls_to_txt at 360 chars returned (None, []) with the .url file intact and **logged NOTHING AT ALL**, which makes it the worst of the four to diagnose: the glob simply matches nothing, so the course silently compiles no links. And the video.py mechanism is CONFIRMED: Path(...).unlink(missing_ok=True) on a real 323-character file returned normally and deleted nothing, while the identical call at a short path deletes correctly - missing_ok=True swallows the FileNotFoundError an over-long path raises, so 'too long' reads as 'already gone', the exact mechanism behind the transcribe.py .part leak. STILL OPEN because nothing was fixed: the remedy is make_long_path at those call sites, and the product-visible symptom today is that files in deeply-nested course folders silently never convert on a default Windows install.  
+> Not observed in the latest run.
 
 ---
 
@@ -227,7 +95,8 @@ Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full
 
 The CanvasDownloaderTmp marker means 'some Canvas Downloader', not 'this instance', so a lane's teardown reads another lane's staged conversion document as ours-and-discardable, quits, waits 12s, then pkills the app mid-conversion. Measured 0.77s from free3's force-terminate to the office lane's -609. Requires two concurrent instances, which start.py's flock/mutex prevents for normal users and the harness creates by design - so this is recorded as a HARNESS-BLOCKING robustness gap, not a user-facing defect. Blocks trustworthy Office rows in any multi-lane matrix; workaround is to run the converting lane alone.
 
-**Notes**: 
+**Notes**:   
+> Not observed in the latest run.
 
 ---
 
@@ -249,111 +118,6 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 **Notes**:   
 > Not observed in the latest run.
-
----
-
-### Unexpected bridged_warning in debug log: PDF conversion failed for 2024_Lektion uge 43_1 Individ og Organisation - Innovation og la
-<!-- fp:d0806804f019 -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: medium
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-PDF conversion failed for 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
-
-**Notes**: 
-
----
-
-### Unexpected bridged_warning in debug log: PDF conversion failed for 251009_Kom og vær med_Til Stig N.pptx: 1022:1028: execution erro
-<!-- fp:4dc5844aa221 -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: medium
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-PDF conversion failed for 251009_Kom og vær med_Til Stig N.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
-
-**Notes**: 
-
----
-
-### Unexpected bridged_warning in debug log: PDF conversion failed for Forelæsning 17 - DB3.pptx: 1022:1028: execution error: Microsoft
-<!-- fp:919cb2030055 -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: medium
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m025_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
-
-**Detail**:
-
-PDF conversion failed for Forelæsning 17 - DB3.pptx: 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
-
-**Notes**: 
-
----
-
-### Unexpected bridged_warning in debug log: PDF conversion failed for Sensemaking slides 2.pptx: 1022:1028: execution error: the front
-<!-- fp:dfbd12761e8d -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: medium
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-PDF conversion failed for Sensemaking slides 2.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
-
-**Notes**: 
-
----
-
-### Unexpected bridged_warning in debug log: PDF conversion failed for Øvelsesslides formelle træk - organisationsformer-1.pptx: 1022:1
-<!-- fp:f108b644b5d7 -->
-
-**Status**: invalid
-**Invalidated**: 2026-08-21 - AUDIT CONTAMINATION, not a product defect. Produced by rows m014/m025 of run 20260821_144948 while four other audit lanes were alive. A lane's teardown force-terminated the Office app the converting lane was using (measured: free3 `force-terminated Microsoft PowerPoint` 14:59:54.043 -> converting lane `-609` 14:59:54.812, **0.77s**). PROOF it is contamination: all five rows were re-run ALONE in 20260821_162842_macos26-dl-redo-contaminated and produced **22 findings, every one info** - zero Excel errors, zero PowerPoint errors, and the named files converted cleanly. Controls: m012 3->3 and m013 5->5 findings, so the drop is not the re-run simply reporting less. Root cause is the open finding "Office ownership is instance-blind"; the ONLY safe way to run Office rows until that is fixed is a single lane.
-**Severity**: medium
-**Category**: robustness
-**Oracles**: O2
-**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
-**Occurrences**: 1
-**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
-
-**Detail**:
-
-PDF conversion failed for Øvelsesslides formelle træk - organisationsformer-1.pptx: 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
-
-**Notes**: 
 
 ---
 
@@ -455,6 +219,36 @@ flag survives while the content changes underneath it - which reads as more
 confusing than the present honest-but-silent behaviour, and it does not address
 the actual complaint.  
 > Not observed in the latest run.
+
+---
+
+### A Panopto shortcut ADOPTED from a Canvas ExternalTool link leaves the sync_manifest md5 stale
+<!-- fp:80a5610550f0 -->
+
+**Status**: open
+**Severity**: low
+**Category**: persistence
+**Oracles**: O3,O4
+**First seen**: 2026-08-22 (20260822_145236_longpath-postfix-verify)
+**Last seen**: 2026-08-22 (20260822_145236_longpath-postfix-verify)
+**Occurrences**: 1
+**Scenario**: lp_verify_43660 · 43660
+
+**Detail**:
+
+MEASURED on macOS 2026-08-22, plain download of 43660 with pan_out_url on and NO seeded fixtures. All 36 sync_manifest rows whose file differs from original_md5 are .webloc, and the cause is the documented adoption design, not an edit and not the long-path work.
+
+Sequence: core/canvas_logic._create_link writes a .webloc for the ExternalTool module item (a Panopto lecture IS one) and records ITS md5 in sync_manifest. panopto/shortcut.resolve_shortcut_path then ADOPTS that exact path - correctly, because shared/shortcuts.write_shortcut put our [CanvasDownloader] marker in it - and rewrites it with the recording URL. The row's original_md5 still describes the pre-adoption Canvas link.
+
+Evidence: 36 weblocs on disk, 0 named '(Panopto)' (so adoption happened rather than collision resolution), 36 of 36 carry our marker, 36 of 36 point at panopto. The 36 differing rows are exactly those files.
+
+CONSEQUENCE, and it is small and in the SAFE direction: original_md5 is what _classify_local_modification consults, so if Canvas ever updates that module item the file reads as user-edited and forks to _NewVersion instead of being overwritten. A spurious sibling and a false 'you edited this', never an overwrite of real work. It does NOT re-offer on an unchanged sync - this run's analyze said 'everything up to date, checked 262 files and 36 recordings'.
+
+NOT the register's fp:8a7f0ead05f4, which carries the same title but was invalidated for a different cause entirely (seeded edited_update fixtures, where the divergence IS the user's edit). This run seeded nothing, so that reasoning does not transfer - same fingerprint, different mechanism.
+
+PRE-EXISTING: the adoption design shipped 2026-08-07, well before the long-path work this run was verifying.
+
+**Notes**: 
 
 ---
 
@@ -611,6 +405,28 @@ THE OTHER DIRECTION, verified separately and at least as important: this resolve
 sync/execution.py:2272 calls _attempts.append(...) but _attempts is never initialised anywhere in the file (used 7 times: appends at 2272/2277/2283/2303/2317/2322, read at 2325 retry_failed_conversions). Introduced by commit 4b98b2e (2026-07-29), which copied the conversion retry-pass pattern from converters/post_processing.py:run_all_conversions - where _attempts: list = [] IS declared at line 1125 - without copying the declaration. TRIGGER: unconditional. Unlike the download flow, which guards every append behind 'if pptx_files:', line 2272 runs on every sync that reaches post-processing, regardless of contract or file types. Confirmed on THREE different snapshots simultaneously (c43657_study, c43657_isolated, c45899_base); only the no-op 'nothing changed' row survived because it returns before post-processing. IMPACT: run_pptx_conversion at 2271 completes first - and it is source-consuming, so .pptx originals are deleted - then the NameError aborts the script run. Everything after 2272 never executes: HTML-to-MD, code-to-TXT, URL compilation, Word-to-PDF, Excel data+PDF, video-to-MP3, the retry pass, and the sidecar ledger injection at 2327. The user sees a Streamlit exception screen instead of a completion screen. 1951 unit tests pass against this; it is only reachable by running a real sync.
 
 **Notes**: Fixed 2026-07-30, same day, same session that found it. `_attempts: list = []` now declared in `run_sync` before the converter section (sync/execution.py), mirroring `run_all_conversions`. Introduced by 4b98b2e when the retry-pass was copied over WITHOUT its declaration; unconditional there (the download flow guards each append behind `if <files>:`), so it fired on every sync that transferred a file, on every contract shape - confirmed simultaneously on c43657_study, c43657_isolated and c45899_base. Only the no-op "nothing changed" row survived, because it returns before post-processing. VERIFIED by re-running the full 43-row sync matrix against the fix: 43/43 rows, **0 defects**, zero `NameError` in any lane log, and the `edited_update` critical fixture passing on 11 of 12 rows across all four contract shapes and both sync modes (the 12th was a 20s UI click timeout that the identical configuration passed elsewhere - transient, not a defect). GUARDED by `tests/test_undefined_names.py`, an AST checker asserting no function in 8 engine modules reads a name nothing binds. A test naming `_attempts` would not have caught the FIRST bug of this class (the `isolate` UnboundLocalError in CLAUDE.md) and would not catch the next; the guard validates in both directions and includes a case that strips the real declaration from the real file and asserts it still fires, so it cannot quietly die in a refactor.  
+> Not observed in the latest run.
+
+---
+
+### ~~No machine in the fleet can detect a forgotten make_long_path any more - the laptop is now LongPathsEnabled=1 too~~
+<!-- fp:5bac506d210f -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: audit-coverage
+**Oracles**: live-observation
+**First seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Last seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Occurrences**: 1
+**Scenario**: Windows 11 26200, LAPTOP-KE2TQ36T (ASUS ExpertBook L1500CDA), 4 cores, 13.9 GB RAM
+
+**Detail**:
+
+BLOCKS the long-path gate this laptop was briefed for, and the consequence is wider than one blocked job. The brief's premise was that this machine sits at the Windows default, which is what makes an unprefixed >260-character path FAIL and therefore makes a forgotten make_long_path detectable. It does not any more. MEASURED, not merely read out of the registry: registry LongPathsEnabled=1, python.exe carries longPathAware, and against a 321-character target built from real directories, `open(str(target), 'wb')` WITHOUT the prefix SUCCEEDED and wrote normally (the prefixed form also succeeded). Per the brief's own stop condition, any download / sync / Office / Panopto / archive row run here would be a MASKED PASS - the same result the desktop already produced. WHY IT MATTERS BEYOND THIS SESSION: CLAUDE.md records TWO long-path defects that survived precisely because a dev box had this enabled (office_safe_path's own I/O, and the panopto/transcribe.py .part delete, where an over-long path raises FileNotFoundError and the retry loop reads it as 'already gone' - no removal, no retry, no log), and in both cases the stated remedy was 'when a path-length fix cannot be reproduced, check that registry key first'. The implicit mitigation was that SOME machine in the fleet still had it off. As of today none does: the desktop has it on, this laptop has it on, and macOS has no such concept at all (make_long_path is a documented no-op there). This class is currently undetectable by running the product anywhere. NOT ACTED ON: turning the key off needs administrator rights and a reboot on the operator's own machine, and the reboot ends the session - that is the operator's call. The alternative is to promote a static guard into the suite so the question stops depending on one machine's registry (see the sibling finding on the delete-family converters).
+
+**Notes**: Method, probe output and the full reasoning in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 2.
+> RESOLVED 2026-08-22. The operator set LongPathsEnabled=0 and REBOOTED (confirmed: registry reads 0x0, LastBootUpTime 2026-08-22 00:04:01), so this laptop is once again the one machine in the fleet that can fail. VERIFIED EMPIRICALLY, not from the registry: an unprefixed open at 351 characters now raises FileNotFoundError errno=2 while the prefixed open succeeds - and note that error class, because it is exactly what `unlink(missing_ok=True)` swallows. The check is no longer a scratchpad probe that dies with its session: it is `scripts/check_longpath_gate.py`, tracked, with the fixture built THROUGH the prefix so fixture creation cannot be mistaken for the gate working, a prefixed-open CONTROL without which 'unprefixed raised' is equally explained by a file that was never written, exit 1 on a masked machine so CI cannot sail past it, and a clean not-applicable off Windows. It ships with `--self-test` because a check that can only ever say PASS proves nothing. Pinned by tests/test_longpath_gate_check.py (8 tests, 1 skipped off-platform); mutating verdict() so it can never report MASKED fails two of them, restored from an in-memory snapshot. RUN IT BEFORE BELIEVING ANY LONG-PATH ROW - and re-check the key after any Python or Git for Windows upgrade, since both installers offer to enable long paths during setup, which is the likely reason it was on.  
 > Not observed in the latest run.
 
 ---
@@ -1101,6 +917,30 @@ REFUSES a below-threshold `--files` for the states that depend on it.
 
 ---
 
+### ~~find_new_office_pid can adopt the USER'S OWN Office process, so a watchdog timeout kills their unsaved document - and our real instance is the one that leaks~~
+<!-- fp:a41c7e0b93d2 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: data-loss
+**Oracles**: live-observation,O3
+**First seen**: 2026-08-21 (windows-verification-2026-08-21)
+**Last seen**: 2026-08-21 (windows-verification-2026-08-21)
+**Occurrences**: 2
+**Scenario**: Windows 11 26200, single app instance, real Office COM
+
+**Detail**:
+
+PINS THE TRIGGER behind fp:6759ff4ce798 and fp:b79fd1dd2b22 (the EXCEL.EXE that outlived the 2026-08-08 audit by 5h54m), and escalates it: the same defect is reachable by a SINGLE-INSTANCE user and costs them unsaved work, not just memory. engine/office_pid.find_new_office_pid returns the FIRST process of that image name not in the pre-snapshot, with no test that it is the one we spawned; converters/word.py, excel.py and pdf.py all use it identically. Ground truth is available and was used to prove the misattribution - Application.Hwnd -> GetWindowThreadProcessId gives the true pid of our own instance. (a) TWO CONCURRENT LANES, each dispatching Excel as the app does: laneA guessed=2448 TRUE=9816, laneB guessed=2448 TRUE=2448 - pid 9816 tracked by NOBODY, and laneA would taskkill laneB's Excel. That is exactly the 2026-08-08 observation, and it resolves both loose ends in those entries: 'the app correctly killed every instance it tracked' (it tracked 2448 twice), and 'appeared inside m014's window, a row whose convert_excel toggle was never applied' (attribution is CROSS-LANE, so the creation time falls in one lane's window while another lane spawned it). There is no special row - the trigger is any two concurrent _init_app calls. (b) THE SINGLE-INSTANCE CASE, no harness: pre-snapshot [], the user opens their own workbook (pid 23236), the app dispatches (TRUE pid 23244), find_new_office_pid returns 23236 - THE USER'S EXCEL. _on_timeout then does taskkill /F /PID on it after a 180s hang, killing their unsaved workbook without saving, which is the precise thing office_pid.py's docstring says it exists to prevent; _kill_app does the same on a failed Quit(); and our real instance is tracked by nobody, so it leaks. pid_is_process does not help - it only confirms the pid is AN Excel, which the user's process also is. WINDOW WIDTH, measured per app (snapshot -> find_pid returning): Excel 0.506s, Word 2.344s, PowerPoint 2.357s, dominated by DispatchEx; the lookup itself is 0.002s. It reopens on every _init_app - once per converter per batch plus once per _ensure_app self-heal. WHY IT IS INTERMITTENT: with find_new_office_pid forced to return None, an ordinary convert still leaks nothing because Quit() succeeds on a healthy channel; the leak needs a lost/wrong pid AND a failed Quit(), i.e. the hung instance the watchdog exists for. ALSO: find_new_office_pid's docstring says 'callers must fall back to /IM kill in that case', and the two callers disagree - _kill_app does nothing when _com_pid is None, while _on_timeout's `_pid or 0` degrades to a broad /IM kill that closes every Excel the user has open.
+
+RECOMMENDED FIX (NOT APPLIED - this touches process-killing semantics where a wrong choice destroys unsaved work, and CLAUDE.md records the structurally identical macOS ownership decision being deferred for exactly that reason): (1) return None when more than one candidate appears, instead of picking one - fails safe; (2) land that together with removing _on_timeout's broad /IM degradation, which becomes reachable more often once (1) is in and is worse than doing nothing; (3) where ground truth exists, take it - Excel and PowerPoint expose Application.Hwnd, so GetWindowThreadProcessId gives the pid exactly. Word's Application has no Hwnd (only ActiveWindow.Hwnd, which needs an open document), so Word still needs (1)+(2).
+
+**Notes**: Full method, probes and measurements in tests/audit/WINDOWS_FINDINGS_2026-08.md, area 5.  
+> FIXED in faa927d (engine/office_pid.find_new_office_pid) and VERIFIED ON WINDOWS 2026-08-21 against the two probes that originally exposed it. The data-loss case: with the user's own workbook open, find_new_office_pid now returns OUR instance (true pid 31076) rather than theirs (12972). The race case: two concurrent lanes both answer None and log 'Not tracking a PID - a leaked headless instance is recoverable, force-killing the wrong process is not', and both instances still exited cleanly. Corroborated by a second, independent instrument in the same seconds - a process watcher recorded the user's Excel as com=False and ours as com=True, i.e. the -Embedding discriminator the fix keys on, observed from outside the code under test. tests/test_office_pid_attribution.py 24/24 pass on Windows. NOTE the probes' own PASS/FAIL wording is now STALE: they test guessed==true_pid, so they print MISATTRIBUTED for the correct None and claim 'lanes that would kill the WRONG process', which is false - _kill_app is guarded by `if self._com_pid:` and kills nothing. Read the values, not the labels. Residual, and it is the accepted trade rather than a defect: in the ambiguous case neither instance is tracked, so if Quit() ALSO failed both would leak - deliberate, because a leaked headless process is recoverable and a wrongly force-killed one is not.  
+> Not observed in the latest run.
+
+---
+
 ### ~~'deleted-locally:Debug - grades - 1.txt' should have been left alone but was written to Uge 48 Forelæsning 12. Node.js og debugger samt eksamensforberedelse/Debug - grades - 1.txt~~
 <!-- fp:91d640ef7d5a -->
 
@@ -1538,6 +1378,27 @@ REAL PRODUCT DEFECT, found by driving the real app: a download of course 43660 w
 
 ---
 
+### ~~The PII scrubber silently skipped 46 of its own in-scope files - git C-quotes non-ASCII paths, so it reported CLEAN for files it never opened~~
+<!-- fp:22f933d4e544 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: privacy-tooling
+**Oracles**: live-observation
+**First seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Last seen**: 2026-08-21 (laptop-longpath-2026-08-21)
+**Occurrences**: 1
+**Scenario**: Windows, scripts/scrub_audit_pii.py over 133 local audit runs
+
+**Detail**:
+
+Found while reconciling a suffix census against the scrubber's own file count, during Job 1. `git ls-files` C-quotes any path holding a non-ASCII byte and core.quotepath is unset (defaults to true), so a course folder named '...smaa systemer...' came back as '"..._audit_runs/.../seed_...sm\303\245 systemer....json"'. tracked_audit_files() built `REPO / line.strip()` from that, Path.is_file() answered False, and the filter dropped the entry WITHOUT A WORD. The arithmetic closes exactly: 6,764 staged blobs - 6,677 the scrubber saw = 87, being the 41 binaries it correctly excludes by suffix plus these 46 quoted paths; 37 of the 46 were in-scope text types it was supposed to open. It fails in the worst available direction for a privacy tool - the report says CLEAN for a file it never opened - and every Danish course name in this operator's runs hits it, so on this repo it is not an edge case. NOTHING WAS ACTUALLY EXPOSED: an independent scan of all 6,764 staged blobs (its own patterns, its own file list, every suffix including binaries) found no email, token, JWT or bearer string, and its positive control matched 6,293 blobs so that 'none' can say yes. FIX: read the list NUL-delimited (`git ls-files -z`, bytes rather than text=True), which git does not quote; coverage went 6,677 -> 6,714 and a re-run over the now-complete set is still clean.
+
+**Notes**: FIXED in f7d64ab. Control run in a throwaway repo proves both directions - the pre-fix form sees only the ASCII sibling, the fixed form sees both; the ASCII sibling IS the control, since without it a scanner reaching nothing at all would have 'passed'. Pinned by tests/test_scrub_audit_pii.py (11 tests) which asserts REACH as well as redaction, because reach is the half that fails silently; the regression test was confirmed to FAIL against the pre-fix code, restoring from an in-memory snapshot rather than git checkout since a second session may be in this tree. Narrative in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 1a.  
+> Not observed in the latest run.
+
+---
+
 ### ~~2 partial-write artifact(s) left on disk~~
 <!-- fp:62da7c0a9988 -->
 
@@ -1597,6 +1458,27 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3 upload.pptx  Conversion failed twice
 
 **Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_error in debug log: 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx  Conve~~
+<!-- fp:3497d9e289e7 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**:   
 > Not observed in the latest run.
 
 ---
@@ -1685,6 +1567,27 @@ A `.part` file after the run means an atomic write was abandoned without cleanup
 
 ---
 
+### ~~Unexpected bridged_error in debug log: 251009_Kom og vær med_Til Stig N.pptx  Conversion failed - 1022:1028: execution error: the~~
+<!-- fp:ec3439926351 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+251009_Kom og vær med_Til Stig N.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
 ### ~~Unexpected bridged_error in debug log: Failed to convert code file g1 darts vejl_løsn.js: [Errno 13] Permission denied: 'G:\\18 A~~
 <!-- fp:18cc3b9d802a -->
 
@@ -1765,6 +1668,27 @@ Forandring i organisationer_video1_upload_2025.pptx  Conversion failed - 710:716
 Forelæsning 15 DB1_x.pptx  Conversion failed - 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
 **Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_error in debug log: Forelæsning 17 - DB3.pptx  Conversion failed - 1022:1028: execution error: Microsoft Power~~
+<!-- fp:f8e8cd4bc081 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+Forelæsning 17 - DB3.pptx  Conversion failed - 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**:   
 > Not observed in the latest run.
 
 ---
@@ -1876,6 +1800,27 @@ OmkostningerAfsætning - Ekstra - LØSNING.xlsx  Conversion timed out after 180s
 
 ---
 
+### ~~Unexpected bridged_error in debug log: Opgavesæt 6-vejl.xlsx  1424:1430: execution error: Microsoft Excel got an error: Parameter~~
+<!-- fp:aeda030ca62e -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m014 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+
+**Detail**:
+
+Opgavesæt 6-vejl.xlsx  1424:1430: execution error: Microsoft Excel got an error: Parameter error. (-50)
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
 ### ~~Unexpected bridged_error in debug log: Organisationsprojekt_vidensproduktion_2021-2_upload.pptm  Conversion failed - 1022:1028: e~~
 <!-- fp:03bf667f17a1 -->
 
@@ -1915,6 +1860,27 @@ Productionanalysis - Eksempel.xlsx  Conversion timed out after 180s (Excel stopp
 
 **Notes**: AUDIT-ENVIRONMENTAL, not a product defect (2026-08-08). Caused by the harness running THREE lanes on a 13.9 GB machine (2.6-3.0 GB free); CO_E_SERVER_EXEC_FAILURE and headless Excel hangs are classic low-resource symptoms. Controlled comparison: m014 re-ran the SAME course 43665 over the SAME 50 workbooks ~3h later with 5+ GB free and logged ZERO timeouts. The app handled it correctly - detected each hang, force-killed that specific PID (a different pid each time), retried, recovered 3 of 4, kept the original of the one that failed twice (pdf_looks_real refusing to delete a source without a proven PDF), and reported '1 file could not be converted' with cause and remedy; O1, O3 and the log all agree at 1. Do not re-chase. This verdict does NOT cover the separate leaked-EXCEL.EXE entry, which stays open.  
 >  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_error in debug log: Sensemaking slides 2.pptx  Conversion failed - 1022:1028: execution error: the frontmost p~~
+<!-- fp:c0cf118df1f2 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Sensemaking slides 2.pptx  Conversion failed - 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**:   
 > Not observed in the latest run.
 
 ---
@@ -1977,7 +1943,8 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 [AppleScript] Excel failed (other): 1421:1427: execution error: Microsoft Excel got an error: Parameter error. (-50)
 
-**Notes**: Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.
+**Notes**: Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.  
+> Not observed in the latest run.
 
 ---
 
@@ -2002,7 +1969,7 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 ---
 
-### ~~Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint ~~
+### ~~Unexpected bridged_error in debug log: [AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint~~
 <!-- fp:39d13fe4271b -->
 
 **Status**: accepted
@@ -2018,7 +1985,8 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 [AppleScript] PowerPoint failed (other): 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
 
-**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
+**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
+> Not observed in the latest run.
 
 ---
 
@@ -2038,7 +2006,8 @@ VL - Ord2024.xlsx  COM Error: (-2147023174, &#x27;RPC-serveren er ikke til rådi
 
 [AppleScript] PowerPoint failed (other): 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
 
-**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.
+**Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
+> Not observed in the latest run.
 
 ---
 
@@ -2259,6 +2228,27 @@ gk2 vejl_løsn.js  Conversion failed
 
 ---
 
+### ~~Unexpected bridged_error in debug log: Øvelse 3 - VL.xls  1421:1427: execution error: Microsoft Excel got an error: Parameter err~~
+<!-- fp:2bb23c609df1 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m014 · Virksomhedens økonomiske styring (1) Virksomhedens grundlæggende beslutningssituationer (LA E25 BINTO2063U)
+
+**Detail**:
+
+Øvelse 3 - VL.xls  1421:1427: execution error: Microsoft Excel got an error: Parameter error. (-50)
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
 ### ~~Unexpected bridged_error in debug log: Øvelse 9 - VL.xlsx  1424:1430: execution error: Microsoft Excel got an error: Connection i~~
 <!-- fp:99180da2531f -->
 
@@ -2276,6 +2266,27 @@ gk2 vejl_løsn.js  Conversion failed
 Øvelse 9 - VL.xlsx  1424:1430: execution error: Microsoft Excel got an error: Connection is invalid. (-609)
 
 **Notes**: Fixed at the CAUSE 2026-08-21. This is one log line of the -609 transient-Office family: 247a734 classifies -609 as app_crashed so the bridge relaunches and retries the file (verified live - 'Excel recovered after a crash ... converted on the retry'), and the %%EOF trailer gate stops the part-way PDF being promoted into the folder. The log oracle now treats the retry's own warning as benign.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_error in debug log: Øvelsesslides formelle træk - organisationsformer-1.pptx  Conversion failed - 1022:1028: e~~
+<!-- fp:056417648214 -->
+
+**Status**: invalid
+**Severity**: high
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+Øvelsesslides formelle træk - organisationsformer-1.pptx  Conversion failed - 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**:   
 > Not observed in the latest run.
 
 ---
@@ -2984,16 +2995,15 @@ Nothing records that these were deliberately skipped, so the next sync lists the
 **Category**: persistence
 **Oracles**: O4,O3
 **First seen**: 2026-07-28 (20260728_010431_phase2_real)
-**Last seen**: 2026-08-09 (20260809_221807_post-fix-audit-2026-08-09-panopto-and-settings)
-**Occurrences**: 5
-**Scenario**: panopto_shortcut2 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+**Last seen**: 2026-08-22 (20260822_145236_longpath-postfix-verify)
+**Occurrences**: 6
+**Scenario**:  · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
 
 original_md5 is what classifies the next update as clean (overwrite) or modified (_NewVersion). A wrong baseline silently decides whether the user's edits survive.
 
-**Notes**: AUDIT DEFECT, fixed. These are the `edited_update` fixtures: bytes appended so the file no longer matches its recorded baseline, then left UNCHECKED on the review screen by design. The file therefore MUST still differ - that divergence is the user's edit, and preserving it is the product's data-safety guarantee. The audit was reporting that guarantee working as a persistence defect. Covered by the same `expected_md5_drift` declaration.  
-> Not observed in the latest run.
+**Notes**: AUDIT DEFECT, fixed. These are the `edited_update` fixtures: bytes appended so the file no longer matches its recorded baseline, then left UNCHECKED on the review screen by design. The file therefore MUST still differ - that divergence is the user's edit, and preserving it is the product's data-safety guarantee. The audit was reporting that guarantee working as a persistence defect. Covered by the same `expected_md5_drift` declaration.
 
 ---
 
@@ -3179,6 +3189,27 @@ PDF conversion failed for 2024_Lektion uge 38_1 2024 Formelle træk - Struktur 3
 
 ---
 
+### ~~Unexpected bridged_warning in debug log: PDF conversion failed for 2024_Lektion uge 43_1 Individ og Organisation - Innovation og la~~
+<!-- fp:d0806804f019 -->
+
+**Status**: invalid
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for 2024_Lektion uge 43_1 Individ og Organisation - Innovation og laering 1 upload.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
 ### ~~Unexpected bridged_warning in debug log: PDF conversion failed for 2024_Lektion uge 46_1 Organisationer i et foranderligt perspekti~~
 <!-- fp:3cca535595db -->
 
@@ -3242,6 +3273,27 @@ PDF conversion failed for 2026_Lektion uge 6 - opstart på projektarbejde og ove
 
 ---
 
+### ~~Unexpected bridged_warning in debug log: PDF conversion failed for 251009_Kom og vær med_Til Stig N.pptx: 1022:1028: execution erro~~
+<!-- fp:4dc5844aa221 -->
+
+**Status**: invalid
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for 251009_Kom og vær med_Til Stig N.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
 ### ~~Unexpected bridged_warning in debug log: PDF conversion failed for Forandring i organisationer_video1_upload_2025.pptx: 710:716: ex~~
 <!-- fp:8e9ab25f1ea4 -->
 
@@ -3280,6 +3332,27 @@ PDF conversion failed for Forandring i organisationer_video1_upload_2025.pptx: 7
 PDF conversion failed for Forelæsning 15 DB1_x.pptx: 1022:1028: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
 **Notes**: Accepted 2026-08-21, not a defect. -30001 is the app's OWN frontmost-document guard refusing to touch a presentation it did not open - which is correct, and is what happens when a document is open in PowerPoint while a run converts. The file is recovered by retry_failed_conversions at the end of the phase, and the partial-PDF side effect that used to follow it is closed by the %%EOF trailer gate. Deliberately NOT made retryable: app_crashed's message would tell the user the app 'stopped running', which is false. See tests/test_office_crash_is_not_missing.py.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_warning in debug log: PDF conversion failed for Forelæsning 17 - DB3.pptx: 1022:1028: execution error: Microsoft~~
+<!-- fp:919cb2030055 -->
+
+**Status**: invalid
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c45899 · Programmering og udvikling af små systemer samt databaser (LA E25 BINTO1064U)
+
+**Detail**:
+
+PDF conversion failed for Forelæsning 17 - DB3.pptx: 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**:   
 > Not observed in the latest run.
 
 ---
@@ -3347,6 +3420,27 @@ PDF conversion failed for Organisationsprojekt_vidensproduktion_2021-2_upload.pp
 
 ---
 
+### ~~Unexpected bridged_warning in debug log: PDF conversion failed for Sensemaking slides 2.pptx: 1022:1028: execution error: the front~~
+<!-- fp:dfbd12761e8d -->
+
+**Status**: invalid
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for Sensemaking slides 2.pptx: 1022:1028: execution error: the frontmost presentation is not the one Canvas Downloader opened (-30001)
+
+**Notes**:   
+> Not observed in the latest run.
+
+---
+
 ### ~~Unexpected bridged_warning in debug log: PDF conversion failed for Slides (2) Motivationsfaktorer forelæsning 2.pptx: 710:716: exec~~
 <!-- fp:5a8a4afe9135 -->
 
@@ -3364,6 +3458,27 @@ PDF conversion failed for Organisationsprojekt_vidensproduktion_2021-2_upload.pp
 PDF conversion failed for Slides (2) Motivationsfaktorer forelæsning 2.pptx: 710:716: execution error: Microsoft PowerPoint got an error: Connection is invalid. (-609)
 
 **Notes**: > 2026-08-13 reconciliation: ROOT CAUSE FIXED. This row is one of 23 log echoes from the single crashed-PowerPoint run on course 43660, not an independent defect. The chain, reproduced on demand: two app instances drove the ONE PowerPoint a macOS user session provides -> one instance's `open` landed between the other's `open` and `save` -> -609 / 'success but no output' / a raced destination -> PowerPoint crashed -> the next Apple event returned -600, which was misclassified `app_missing` (FATAL) -> the remaining 57 files were abandoned. Fixed by `9854a8d` (a per-app cross-process `flock` around one whole open/save/close, plus a per-conversion staged basename) and `2c11a0e` (-600 is now `app_crashed`: per-file, retried once, NOT fatal, still bounded by SYSTEMIC_REPEAT_THRESHOLD). After both, the identical concurrent run gave 8/8 and 8/8 with PowerPoint alive; an injected mid-batch kill gave 6/6 converted, with and without CPU+memory pressure. Left `fixed` rather than `invalid` deliberately - a reappearance of these lines IS a regression and should be reported as one.  
+> Not observed in the latest run.
+
+---
+
+### ~~Unexpected bridged_warning in debug log: PDF conversion failed for Øvelsesslides formelle træk - organisationsformer-1.pptx: 1022:1~~
+<!-- fp:f108b644b5d7 -->
+
+**Status**: invalid
+**Severity**: medium
+**Category**: robustness
+**Oracles**: O2
+**First seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Last seen**: 2026-08-21 (20260821_144948_macos26-dl-matrix-short2)
+**Occurrences**: 1
+**Scenario**: m025_c43660 · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+
+**Detail**:
+
+PDF conversion failed for Øvelsesslides formelle træk - organisationsformer-1.pptx: 1022:1028: execution error: Microsoft PowerPoint got an error: Parameter error. (-50)
+
+**Notes**:   
 > Not observed in the latest run.
 
 ---
@@ -5128,89 +5243,5 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 
 **Notes**: > 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.  
 > Not observed in the latest run.
-
----
-
-### find_new_office_pid can adopt the USER'S OWN Office process, so a watchdog timeout kills their unsaved document - and our real instance is the one that leaks
-<!-- fp:a41c7e0b93d2 -->
-
-**Status**: fixed
-**Severity**: high
-**Category**: data-loss
-**Oracles**: live-observation,O3
-**First seen**: 2026-08-21 (windows-verification-2026-08-21)
-**Last seen**: 2026-08-21 (windows-verification-2026-08-21)
-**Occurrences**: 2
-**Scenario**: Windows 11 26200, single app instance, real Office COM
-
-**Detail**:
-
-PINS THE TRIGGER behind fp:6759ff4ce798 and fp:b79fd1dd2b22 (the EXCEL.EXE that outlived the 2026-08-08 audit by 5h54m), and escalates it: the same defect is reachable by a SINGLE-INSTANCE user and costs them unsaved work, not just memory. engine/office_pid.find_new_office_pid returns the FIRST process of that image name not in the pre-snapshot, with no test that it is the one we spawned; converters/word.py, excel.py and pdf.py all use it identically. Ground truth is available and was used to prove the misattribution - Application.Hwnd -> GetWindowThreadProcessId gives the true pid of our own instance. (a) TWO CONCURRENT LANES, each dispatching Excel as the app does: laneA guessed=2448 TRUE=9816, laneB guessed=2448 TRUE=2448 - pid 9816 tracked by NOBODY, and laneA would taskkill laneB's Excel. That is exactly the 2026-08-08 observation, and it resolves both loose ends in those entries: 'the app correctly killed every instance it tracked' (it tracked 2448 twice), and 'appeared inside m014's window, a row whose convert_excel toggle was never applied' (attribution is CROSS-LANE, so the creation time falls in one lane's window while another lane spawned it). There is no special row - the trigger is any two concurrent _init_app calls. (b) THE SINGLE-INSTANCE CASE, no harness: pre-snapshot [], the user opens their own workbook (pid 23236), the app dispatches (TRUE pid 23244), find_new_office_pid returns 23236 - THE USER'S EXCEL. _on_timeout then does taskkill /F /PID on it after a 180s hang, killing their unsaved workbook without saving, which is the precise thing office_pid.py's docstring says it exists to prevent; _kill_app does the same on a failed Quit(); and our real instance is tracked by nobody, so it leaks. pid_is_process does not help - it only confirms the pid is AN Excel, which the user's process also is. WINDOW WIDTH, measured per app (snapshot -> find_pid returning): Excel 0.506s, Word 2.344s, PowerPoint 2.357s, dominated by DispatchEx; the lookup itself is 0.002s. It reopens on every _init_app - once per converter per batch plus once per _ensure_app self-heal. WHY IT IS INTERMITTENT: with find_new_office_pid forced to return None, an ordinary convert still leaks nothing because Quit() succeeds on a healthy channel; the leak needs a lost/wrong pid AND a failed Quit(), i.e. the hung instance the watchdog exists for. ALSO: find_new_office_pid's docstring says 'callers must fall back to /IM kill in that case', and the two callers disagree - _kill_app does nothing when _com_pid is None, while _on_timeout's `_pid or 0` degrades to a broad /IM kill that closes every Excel the user has open.
-
-RECOMMENDED FIX (NOT APPLIED - this touches process-killing semantics where a wrong choice destroys unsaved work, and CLAUDE.md records the structurally identical macOS ownership decision being deferred for exactly that reason): (1) return None when more than one candidate appears, instead of picking one - fails safe; (2) land that together with removing _on_timeout's broad /IM degradation, which becomes reachable more often once (1) is in and is worse than doing nothing; (3) where ground truth exists, take it - Excel and PowerPoint expose Application.Hwnd, so GetWindowThreadProcessId gives the pid exactly. Word's Application has no Hwnd (only ActiveWindow.Hwnd, which needs an open document), so Word still needs (1)+(2).
-
-**Notes**: Full method, probes and measurements in tests/audit/WINDOWS_FINDINGS_2026-08.md, area 5.  
-> FIXED in faa927d (engine/office_pid.find_new_office_pid) and VERIFIED ON WINDOWS 2026-08-21 against the two probes that originally exposed it. The data-loss case: with the user's own workbook open, find_new_office_pid now returns OUR instance (true pid 31076) rather than theirs (12972). The race case: two concurrent lanes both answer None and log 'Not tracking a PID - a leaked headless instance is recoverable, force-killing the wrong process is not', and both instances still exited cleanly. Corroborated by a second, independent instrument in the same seconds - a process watcher recorded the user's Excel as com=False and ours as com=True, i.e. the -Embedding discriminator the fix keys on, observed from outside the code under test. tests/test_office_pid_attribution.py 24/24 pass on Windows. NOTE the probes' own PASS/FAIL wording is now STALE: they test guessed==true_pid, so they print MISATTRIBUTED for the correct None and claim 'lanes that would kill the WRONG process', which is false - _kill_app is guarded by `if self._com_pid:` and kills nothing. Read the values, not the labels. Residual, and it is the accepted trade rather than a defect: in the ambiguous case neither instance is tracked, so if Quit() ALSO failed both would leak - deliberate, because a leaked headless process is recoverable and a wrongly force-killed one is not.
-
----
-### No machine in the fleet can detect a forgotten make_long_path any more - the laptop is now LongPathsEnabled=1 too
-<!-- fp:5bac506d210f -->
-
-**Status**: fixed
-**Severity**: high
-**Category**: audit-coverage
-**Oracles**: live-observation
-**First seen**: 2026-08-21 (laptop-longpath-2026-08-21)
-**Last seen**: 2026-08-21 (laptop-longpath-2026-08-21)
-**Occurrences**: 1
-**Scenario**: Windows 11 26200, LAPTOP-KE2TQ36T (ASUS ExpertBook L1500CDA), 4 cores, 13.9 GB RAM
-
-**Detail**:
-
-BLOCKS the long-path gate this laptop was briefed for, and the consequence is wider than one blocked job. The brief's premise was that this machine sits at the Windows default, which is what makes an unprefixed >260-character path FAIL and therefore makes a forgotten make_long_path detectable. It does not any more. MEASURED, not merely read out of the registry: registry LongPathsEnabled=1, python.exe carries longPathAware, and against a 321-character target built from real directories, `open(str(target), 'wb')` WITHOUT the prefix SUCCEEDED and wrote normally (the prefixed form also succeeded). Per the brief's own stop condition, any download / sync / Office / Panopto / archive row run here would be a MASKED PASS - the same result the desktop already produced. WHY IT MATTERS BEYOND THIS SESSION: CLAUDE.md records TWO long-path defects that survived precisely because a dev box had this enabled (office_safe_path's own I/O, and the panopto/transcribe.py .part delete, where an over-long path raises FileNotFoundError and the retry loop reads it as 'already gone' - no removal, no retry, no log), and in both cases the stated remedy was 'when a path-length fix cannot be reproduced, check that registry key first'. The implicit mitigation was that SOME machine in the fleet still had it off. As of today none does: the desktop has it on, this laptop has it on, and macOS has no such concept at all (make_long_path is a documented no-op there). This class is currently undetectable by running the product anywhere. NOT ACTED ON: turning the key off needs administrator rights and a reboot on the operator's own machine, and the reboot ends the session - that is the operator's call. The alternative is to promote a static guard into the suite so the question stops depending on one machine's registry (see the sibling finding on the delete-family converters).
-
-**Notes**: Method, probe output and the full reasoning in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 2.
-> RESOLVED 2026-08-22. The operator set LongPathsEnabled=0 and REBOOTED (confirmed: registry reads 0x0, LastBootUpTime 2026-08-22 00:04:01), so this laptop is once again the one machine in the fleet that can fail. VERIFIED EMPIRICALLY, not from the registry: an unprefixed open at 351 characters now raises FileNotFoundError errno=2 while the prefixed open succeeds - and note that error class, because it is exactly what `unlink(missing_ok=True)` swallows. The check is no longer a scratchpad probe that dies with its session: it is `scripts/check_longpath_gate.py`, tracked, with the fixture built THROUGH the prefix so fixture creation cannot be mistaken for the gate working, a prefixed-open CONTROL without which 'unprefixed raised' is equally explained by a file that was never written, exit 1 on a masked machine so CI cannot sail past it, and a clean not-applicable off Windows. It ships with `--self-test` because a check that can only ever say PASS proves nothing. Pinned by tests/test_longpath_gate_check.py (8 tests, 1 skipped off-platform); mutating verdict() so it can never report MASKED fails two of them, restored from an in-memory snapshot. RUN IT BEFORE BELIEVING ANY LONG-PATH ROW - and re-check the key after any Python or Git for Windows upgrade, since both installers offer to enable long paths during setup, which is the likely reason it was on.
-
----
-
-### The PII scrubber silently skipped 46 of its own in-scope files - git C-quotes non-ASCII paths, so it reported CLEAN for files it never opened
-<!-- fp:22f933d4e544 -->
-
-**Status**: fixed
-**Severity**: high
-**Category**: privacy-tooling
-**Oracles**: live-observation
-**First seen**: 2026-08-21 (laptop-longpath-2026-08-21)
-**Last seen**: 2026-08-21 (laptop-longpath-2026-08-21)
-**Occurrences**: 1
-**Scenario**: Windows, scripts/scrub_audit_pii.py over 133 local audit runs
-
-**Detail**:
-
-Found while reconciling a suffix census against the scrubber's own file count, during Job 1. `git ls-files` C-quotes any path holding a non-ASCII byte and core.quotepath is unset (defaults to true), so a course folder named '...smaa systemer...' came back as '"..._audit_runs/.../seed_...sm\303\245 systemer....json"'. tracked_audit_files() built `REPO / line.strip()` from that, Path.is_file() answered False, and the filter dropped the entry WITHOUT A WORD. The arithmetic closes exactly: 6,764 staged blobs - 6,677 the scrubber saw = 87, being the 41 binaries it correctly excludes by suffix plus these 46 quoted paths; 37 of the 46 were in-scope text types it was supposed to open. It fails in the worst available direction for a privacy tool - the report says CLEAN for a file it never opened - and every Danish course name in this operator's runs hits it, so on this repo it is not an edge case. NOTHING WAS ACTUALLY EXPOSED: an independent scan of all 6,764 staged blobs (its own patterns, its own file list, every suffix including binaries) found no email, token, JWT or bearer string, and its positive control matched 6,293 blobs so that 'none' can say yes. FIX: read the list NUL-delimited (`git ls-files -z`, bytes rather than text=True), which git does not quote; coverage went 6,677 -> 6,714 and a re-run over the now-complete set is still clean.
-
-**Notes**: FIXED in f7d64ab. Control run in a throwaway repo proves both directions - the pre-fix form sees only the ASCII sibling, the fixed form sees both; the ASCII sibling IS the control, since without it a scanner reaching nothing at all would have 'passed'. Pinned by tests/test_scrub_audit_pii.py (11 tests) which asserts REACH as well as redaction, because reach is the half that fails silently; the regression test was confirmed to FAIL against the pre-fix code, restoring from an in-memory snapshot rather than git checkout since a second session may be in this tree. Narrative in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 1a.
-
----
-
-### STATIC ONLY, unconfirmed: four delete-family converters do all their course-folder I/O without make_long_path
-<!-- fp:2af59c761f0c -->
-
-**Status**: open
-**Severity**: medium
-**Category**: correctness
-**Oracles**: static-analysis
-**First seen**: 2026-08-21 (laptop-longpath-2026-08-21)
-**Last seen**: 2026-08-21 (laptop-longpath-2026-08-21)
-**Occurrences**: 1
-**Scenario**: AST sweep of the app tree; NOT reproduced - this machine cannot fail on long paths
-
-**Detail**:
-
-Recorded as a POINTER FOR THE NEXT DYNAMIC RUN, not as a confirmed defect. With the dynamic gate unavailable (see the LongPathsEnabled finding), the same question was asked of the source: an AST scan for filesystem calls whose path expression never passes through make_long_path / office_safe_path. It returns 329 raw hits, which is far too many to all be real - most are config-dir, temp or app-owned paths that are short by construction, and the instrument has no provenance analysis, so that number must NOT be quoted as a defect count. The subset worth a dynamic run is CLAUDE.md's delete family, because those operate on course-folder paths (arbitrary depth under a user-chosen root) and delete the file they converted from: converters/code.py (3 unprefixed FS calls), md.py (3), url.py (4), video.py (3 unlink sites), pdf.py (1) - none of which reference make_long_path at all; excel.py and archive.py do. pdf.py and word.py are partly covered in practice by office_container_stage, which stages to a short src_<hex> path; code, md, url and video have no such staging. PREDICTED behaviour at LongPathsEnabled=0, FROM READING THE CODE AND NOT MEASURED: code.py reads at line 44, writes, verifies exists()+st_size, and only then unlinks the source, so an over-long path raises at the READ and the outer handler returns None with the source intact - the ordering is fail-safe and the delete-family discipline holds. The expected symptom is therefore degradation rather than data loss: files in deeply-nested course folders silently never convert, and the logged reason is '[Errno 2] No such file or directory' about a file that is plainly there, which actively misleads diagnosis. POINT A DYNAMIC RUN AT converters/video.py FIRST: its three Path(...).unlink(missing_ok=True) sites swallow FileNotFoundError, which is exactly what an over-long path raises - the mechanism behind the transcribe.py .part leak ('no removal, no retry, no log'). Severity and even reachability are UNCONFIRMED, because confirming them needs the machine that can fail.
-
-**Notes**: Table and method in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 3. Treat as where to look, not as a findings list.
-> NO LONGER STATIC - MEASURED 2026-08-22 on this laptop once LongPathsEnabled was set to 0, by driving the REAL converter functions against fixtures created through make_long_path (so a failure can only be about the converter's own I/O). Every prediction in the Detail above held, and the severity assessment holds with it: **all four fail SAFE - the user's source file survived in every case** - so this is degradation and misdiagnosis, NOT data loss, and it should not be escalated. convert_code_to_txt at 318 chars returned None, source intact, logged '[Errno 2] No such file or directory' about a file that is plainly there. convert_html_to_md at 349 chars returned None, source intact, logged 'Invalid HTML file path' - it fails at an exists() check before it ever opens anything. compile_urls_to_txt at 360 chars returned (None, []) with the .url file intact and **logged NOTHING AT ALL**, which makes it the worst of the four to diagnose: the glob simply matches nothing, so the course silently compiles no links. And the video.py mechanism is CONFIRMED: Path(...).unlink(missing_ok=True) on a real 323-character file returned normally and deleted nothing, while the identical call at a short path deletes correctly - missing_ok=True swallows the FileNotFoundError an over-long path raises, so 'too long' reads as 'already gone', the exact mechanism behind the transcribe.py .part leak. STILL OPEN because nothing was fixed: the remedy is make_long_path at those call sites, and the product-visible symptom today is that files in deeply-nested course folders silently never convert on a default Windows install.
 
 ---
