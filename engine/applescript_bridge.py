@@ -43,6 +43,31 @@ _CONTAINER_IDS = {
 # for our temp files, without ever touching a real user document.
 _CANVAS_TMP_MARKER = "CanvasDownloaderTmp"
 
+#: The same marker, scoped to THIS PROCESS.
+#:
+#: ``_CANVAS_TMP_MARKER`` means "some Canvas Downloader", and two places treated
+#: a match as licence to act destructively: the idle-quit gate (a document whose
+#: path carries it is `pristine`, so the quit goes out `saving no`) and the
+#: marker force-close. With two instances running, one lane's teardown therefore
+#: read the OTHER lane's staged conversion as ours-and-discardable, quit, waited
+#: 12s, then pkilled the app mid-conversion. Measured 0.77s from one lane's
+#: force-terminate to the other's -609.
+#:
+#: THE TOKEN IS PART OF THE DIRECTORY NAME, not a path segment, and that is not
+#: cosmetic: Word reports an HFS COLON path (`Macintosh HD:Users:...`) while the
+#: others report POSIX, so a token separated by `/` could never match for Word -
+#: the same trap that made the old `full name contains "/"` fallback dead code
+#: for Word. A name-embedded token contains no separator, so one substring test
+#: works in both spellings.
+#:
+#: The broad marker stays a strict PREFIX of this one, which is what lets the
+#: Recents purge go on matching every instance's entries - including a crashed
+#: run's, which nothing else would ever clean up. A stale Recents row is inert;
+#: a wrongly-closed document is not. The two questions differ, so they get
+#: different markers.
+_INSTANCE_TOKEN = uuid.uuid4().hex[:8]
+_INSTANCE_MARKER = f"{_CANVAS_TMP_MARKER}-{_INSTANCE_TOKEN}"
+
 
 def _office_container_tmp(app_name: str) -> Path | None:
     """Return a writable staging dir inside the Office app's sandbox container.
@@ -63,9 +88,22 @@ def _office_container_tmp(app_name: str) -> Path | None:
     # Under Data/tmp so it can never be caught by iCloud Drive sync (which only
     # touches the container's Documents folder). The Office app has full
     # sandbox access to everything under its own Data dir.
-    tmp = base / "tmp" / _CANVAS_TMP_MARKER
+    tmp = base / "tmp" / _INSTANCE_MARKER
     try:
         tmp.mkdir(parents=True, exist_ok=True)
+        # Opportunistically remove EMPTY staging dirs left by earlier runs.
+        # rmdir only, never rmtree: a non-empty sibling belongs to a live
+        # instance mid-conversion, or holds a crashed run's evidence, and
+        # deleting either is the exact class of damage this change is about.
+        try:
+            for sib in tmp.parent.iterdir():
+                if sib != tmp and sib.is_dir() and sib.name.startswith(_CANVAS_TMP_MARKER):
+                    try:
+                        sib.rmdir()
+                    except OSError:
+                        pass          # not empty, or in use - leave it alone
+        except Exception:
+            pass
         return tmp
     except Exception:
         return None
@@ -1965,11 +2003,11 @@ def _close_marker_docs_script(app: str, collection: str) -> str:
                     repeat with d in ({collection} as list)
                         set hit to false
                         try
-                            if (full name of d as text) contains "{_CANVAS_TMP_MARKER}" then set hit to true
+                            if (full name of d as text) contains "{_INSTANCE_MARKER}" then set hit to true
                         end try
                         if not hit then
                             try
-                                if (path of d as text) contains "{_CANVAS_TMP_MARKER}" then set hit to true
+                                if (path of d as text) contains "{_INSTANCE_MARKER}" then set hit to true
                             end try
                         end if
                         if hit then
@@ -2210,14 +2248,14 @@ def _idle_quit_script(app: str, collection: str,
                         tell application "{app}" to set p to (path of d as text)
                         set pathKnown to true
                         if p is not "" then set hasPath to true
-                        if p contains "{_CANVAS_TMP_MARKER}" then set isOurs to true
+                        if p contains "{_INSTANCE_MARKER}" then set isOurs to true
                     end try
                     if not hasPath or not isOurs then
                         try
                             tell application "{app}" to set fn to (full name of d as text)
                             set pathKnown to true
                             if fn contains "/" or fn contains ":" then set hasPath to true
-                            if fn contains "{_CANVAS_TMP_MARKER}" then set isOurs to true
+                            if fn contains "{_INSTANCE_MARKER}" then set isOurs to true
                         end try
                     end if
                     set isSaved to true
@@ -2381,8 +2419,6 @@ def quit_idle_office_apps() -> None:
         import time as _t
         try:
             # Office automation - same lock as every other `tell application`.
-            # The pgrep/pkill escalation below is not, and deliberately runs
-            # outside it: signalling a process is not driving it.
             with _office_app_lock(app):
                 subprocess.run(
                     ['osascript', '-e', f'tell application "{app}" to quit saving no'],
@@ -2392,14 +2428,21 @@ def quit_idle_office_apps() -> None:
             pass
         _t.sleep(1.0)
         try:
-            still = subprocess.run(['pgrep', '-x', app], capture_output=True, timeout=10)
-            if still.returncode == 0:
-                subprocess.run(['pkill', '-x', app], capture_output=True, timeout=10)
-                logger.info(
-                    "[OfficeQuit] force-terminated %s (no user documents open)", app)
-            else:
-                logger.info(
-                    "[OfficeQuit] %s exited on the final 'quit saving no'", app)
+            # ALSO inside the lock. The comment here used to say the escalation
+            # could run outside it because "signalling a process is not driving
+            # it" - which is true and beside the point. Killing the app another
+            # instance is mid-conversion with is the most destructive act
+            # available, and 'not driving it' is no comfort to the lane whose
+            # -609 lands 0.77s later. Measured 2026-08-21.
+            with _office_app_lock(app):
+                still = subprocess.run(['pgrep', '-x', app], capture_output=True, timeout=10)
+                if still.returncode == 0:
+                    subprocess.run(['pkill', '-x', app], capture_output=True, timeout=10)
+                    logger.info(
+                        "[OfficeQuit] force-terminated %s (no user documents open)", app)
+                else:
+                    logger.info(
+                        "[OfficeQuit] %s exited on the final 'quit saving no'", app)
         except Exception as e:
             logger.info("[OfficeQuit] force-terminate of %s failed: %s", app, e)
 
