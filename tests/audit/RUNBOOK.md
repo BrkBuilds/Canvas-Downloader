@@ -687,6 +687,64 @@ believing a duplicate: identity lives in the entity id, never in the name.
 What IS real in that folder is the finding filed beside it - pages ignore the
 isolation setting, so all 35 sit at the course root.
 
+## Do NOT report: two screens the HARNESS causes, not the app (2026-08-22)
+
+Both were spotted by the operator watching a live run, both look like product
+defects, and both are artifacts of how the harness runs the app. Neither
+reproduces for a real user.
+
+### "First-time macOS setup: macOS will ask you to allow control of Word / Excel…"
+
+Appears on **every** harness download, while **no dialogs ever appear** and the
+conversions run fine.
+
+`first_run_permission_setup` returns True when an Office app's Automation prompt
+"has never been answered", and answered apps are recorded in
+`macos_permission_setup.json` **IN THE CONFIG DIR**. Its docstring says
+"one-time per machine"; it is really one-time per CONFIG DIR, and the harness
+gives every run a fresh isolated one. So the record starts empty, the app
+believes nothing has been answered, shows the heads-up and batches the three
+apps - while the real TCC grants live at the OS level against the CALLING
+BINARY, which the operator granted long ago, so macOS approves silently.
+
+Confirmed by comparing: the operator's real config dir has all three apps
+`true` (no notice in the real app); each run's isolated dir starts empty and is
+all-`true` by the END of the run, which is the batch having run.
+
+**Worth knowing, not worth fixing here**: the record is a PROXY for OS state and
+the two can diverge in the dangerous direction too - record says "answered"
+while macOS has forgotten (a `tccutil reset`, an OS upgrade, or a re-signed
+ad-hoc bundle, i.e. potentially every app update). Then the prompts are NOT
+batched and ambush a later conversion mid-run, which is the `-1712` /
+skipped-files failure the batching exists to prevent. The app cannot query TCC
+without prompting, which is why a record exists at all; the analogue of the
+Keychain fix would be `AEDeterminePermissionToAutomateTarget(…,
+askUserIfNeeded=false)`. Not built - recorded so the option is not re-derived.
+
+### "Some files were skipped because you ignored them"
+
+`seed.py`'s `ignored(n=2)` runs `UPDATE sync_manifest SET is_ignored=1` on two
+real rows to test the review screen's bucketing. Any folder descended from a
+seeded run carries those flags, and cloning a folder forward between runs
+carries them with it.
+
+Two traps inside this one:
+
+* **The count can DROP between runs with nobody touching anything.**
+  `record_downloaded_file(clear_ignored=True)` adds `is_ignored = 0` to its
+  upsert, so re-downloading a file clears its flag. Observed 2 -> 1 across
+  runs purely from a re-download.
+* **`is_ignored` is NOT only set by the UI.** `ui/sync_review.py` has the two
+  obvious writers, and `sync/execution.py` also calls `ignore_file` for a file
+  that exceeds the size limit ("so future syncs don't surface these as new").
+  Asserting "only a human click can set this" is wrong, and was asserted here
+  before being checked.
+
+**The control that settles it**: a clean unseeded download into an EMPTY folder
+gives **0 ignored rows** and no notice on the sync completion screen - verified
+2026-08-22, run `20260822_202351_clean-noseed-verify`, 300 files / 1.3 GB / 36
+recordings. If you see the notice, check the folder's provenance before the app.
+
 ## Traps this harness already knows about
 
 - Streamlit **lowercases widget keys** in the DOM class; every lookup lowercases.
