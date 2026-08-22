@@ -4,22 +4,11 @@
   "created": "2026-08-22T20:23:51",
   "repo_root": "/Users/m1/Canvas_Downloader",
   "steps": [],
-  "app": {
-    "port": 8805,
-    "pid": 36138,
-    "url": "http://127.0.0.1:8805",
-    "log": "/Users/m1/Canvas_Downloader/_audit_runs/20260822_202351_clean-noseed-verify/streamlit.log",
-    "started": 1787423042.105196,
-    "verified_owner": false
-  },
+  "app": {},
   "ports_used": [
     8805
   ],
-  "browser": {
-    "cdp_port": 9335,
-    "pid": 36194,
-    "headed": true
-  },
+  "browser": {},
   "scope": [
     {
       "name": "clean",
