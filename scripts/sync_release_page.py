@@ -79,6 +79,46 @@ def fetch_releases() -> list[dict]:
     return [r for r in rels if not r.get("draft")]
 
 
+def newest_shipped_version() -> str | None:
+    """THE definition of "shipped" for this project, or None if undeterminable.
+
+    The newest release a visitor can actually download: not a draft, and **not a
+    PRERELEASE**. Three things need this answer and they must not each decide it
+    for themselves:
+
+    * ``ui/update_banner.py`` asks GitHub for ``/releases/latest``, which
+      excludes drafts and prereleases by definition;
+    * this script, when it rewrites the download page;
+    * ``tests/test_website_advertises_shipped_version.py``, which guards that
+      the page states it.
+
+    The test used to answer it with a bare ``git tag``, which knows nothing about
+    prerelease status - so on 2026-08-22 a v2.0.2 PRERELEASE (macOS DMG only,
+    published while the Windows installer was still being built) turned five
+    guards red against a website that was correct, and would have "fixed" them by
+    advertising a Windows download that does not exist. Same divergent-primitive
+    shape as ``make_long_path`` having a second copy in ``core/sync_manager.py``.
+
+    Returns None rather than raising when ``gh`` is missing or fails: "I cannot
+    reach GitHub" is not evidence of a mistake, and the caller decides what to do
+    about not knowing.
+    """
+    try:
+        rels = fetch_releases()
+    except (SystemExit, OSError, ValueError):
+        # SystemExit: fetch_releases' own `gh api failed` exit, which is right
+        # for the CLI and wrong for a caller that can carry on without an answer.
+        # OSError: gh is not installed. ValueError: covers json.JSONDecodeError.
+        return None
+    for r in rels:
+        if r.get("prerelease"):
+            continue
+        tag = (r.get("tag_name") or "").lstrip("vV").strip()
+        if tag:
+            return tag
+    return None
+
+
 def pick_asset(rel: dict, pattern: re.Pattern) -> dict | None:
     for a in rel.get("assets", []):
         if pattern.search(a.get("name", "")):
