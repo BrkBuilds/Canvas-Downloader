@@ -210,12 +210,18 @@ def self_test() -> int:
     return 0 if ok else 1
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    """*argv* defaults to ``sys.argv[1:]``; pass a list to call this in-process.
+
+    It has to be a parameter. Without one, ``parse_args()`` reads ``sys.argv``,
+    and a test that calls ``main()`` therefore parses PYTEST's arguments and
+    dies on ``-q``. That is not hypothetical - it is how this was found.
+    """
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--root", help="volume or directory to probe (default: temp)")
     ap.add_argument("--self-test", action="store_true",
                     help="prove the detector can return every verdict, then exit")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     if args.self_test:
         return self_test()
