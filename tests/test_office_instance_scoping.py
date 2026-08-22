@@ -137,3 +137,20 @@ def test_the_staging_sweep_can_only_remove_EMPTY_directories():
     assert "rmtree" not in body, (
         "the sweep uses rmtree - that deletes a live instance's staged "
         "conversion, which is worse than the leak it fixes")
+
+
+def test_force_close_with_an_unknown_app_name_warns_instead_of_doing_nothing(caplog):
+    """`only_app` is a FULL name ("Microsoft Word"); _QUIT_TARGETS holds those and
+    the one production caller passes them straight through. A name that matches
+    nothing used to skip the loop, close nothing, log nothing and return
+    successfully - which read as a working call during the 2026-08-22
+    two-instance verification and cost a debugging cycle. Every other silence in
+    that function was already made loud for exactly this reason."""
+    import logging
+
+    import engine.applescript_bridge as br
+
+    with caplog.at_level(logging.WARNING, logger="engine.applescript_bridge"):
+        br._force_close_canvas_docs_sync("Word")          # not a full app name
+    assert "not one of" in caplog.text, (
+        f"a name matching no target closed nothing and said nothing: {caplog.text!r}")
