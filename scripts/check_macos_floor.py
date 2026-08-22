@@ -71,6 +71,89 @@ def _version_tuple(text: str) -> tuple:
     return tuple(parts)
 
 
+# A macOS version is one or two digits today (26 at the time of writing). A
+# parsed "floor" in the hundreds or thousands is not a newer macOS - it is a
+# PARSE FAILURE, and the whole point of this guard is that it must not fail
+# confidently. Anything above this is reported as a broken parse naming the
+# line, rather than silently blocking a release. See parse_minos.
+_PLAUSIBLE_MAX_MAJOR = 99
+
+
+def parse_minos(otool_output: str) -> str | None:
+    """The minimum macOS recorded by ``otool -l`` output, or None if absent.
+
+    Kept separate from the subprocess call so it can be tested without a Mach-O
+    binary or an ``otool`` - which is the only reason this ever gets exercised
+    off macOS, and this parser has already shipped one release-blocking bug
+    because nothing ran it anywhere.
+
+    THE TRAP THIS EXISTS TO AVOID. Only two load commands record a minimum OS:
+
+        LC_BUILD_VERSION        ->  minos 11.0
+        LC_VERSION_MIN_MACOSX   ->  version 10.9
+
+    but the token ``version`` appears in several OTHER places in the same
+    output, and one of them is *inside LC_BUILD_VERSION itself*::
+
+            cmd LC_BUILD_VERSION
+        platform 1
+           minos 11.0            <- the floor
+             sdk 26.5
+          ntools 1
+            tool 3               <- TOOL_LD
+         version 1267.0          <- the LINKER's version, not an OS
+
+    A line-wise regex for ``minos|version`` therefore reads ld64's version as a
+    macOS floor. Measured 2026-08-22: every modern binary carries one, so the
+    check failed on 214 of 215 binaries and reported "requires macOS 1267.0".
+    LC_SOURCE_VERSION and LC_LOAD_DYLIB's ``current version`` are the same
+    hazard in milder form.
+
+    So this tracks which load command it is inside and reads ``minos`` ONLY
+    under LC_BUILD_VERSION and ``version`` ONLY under LC_VERSION_MIN_MACOSX.
+    A fat binary lists one command per slice - the max wins, since every slice
+    has to load.
+    """
+    best = None
+    cmd = None
+    platform_is_macos = True  # absent platform line -> assume macOS (see below)
+
+    for raw in otool_output.splitlines():
+        line = raw.strip()
+        # 'cmdsize 16' does not match: its fifth character is 's', not a space.
+        if line.startswith("cmd "):
+            cmd = line[4:].strip()
+            platform_is_macos = True
+            continue
+        if cmd == "LC_BUILD_VERSION":
+            if line.startswith("platform "):
+                tok = line.split()[1]
+                # PLATFORM_MACOS is 1; newer otool may spell it out. Anything
+                # else (MACCATALYST, iOS, a simulator) is a different OS's
+                # numbering and must never be read as a macOS floor.
+                platform_is_macos = tok in ("1", "MACOS", "macos")
+                continue
+            # Every other field of this command - sdk, ntools, tool, and the
+            # linker's own `version` - is not a floor. `continue` here rather
+            # than falling through, or the platform line above reaches the
+            # `cand` check with nothing bound (an UnboundLocalError this repo
+            # has been bitten by before, and which the tests caught here).
+            if not (line.startswith("minos ") and platform_is_macos):
+                continue
+            cand = line.split()[1]
+        elif cmd == "LC_VERSION_MIN_MACOSX" and line.startswith("version "):
+            cand = line.split()[1]
+        else:
+            continue
+
+        if not re.fullmatch(r"[0-9][0-9.]*", cand):
+            continue
+        if best is None or _version_tuple(cand) > _version_tuple(best):
+            best = cand
+
+    return best
+
+
 def _minos_of(path: Path) -> str | None:
     """The minimum macOS this binary was built for, or None if not recorded."""
     try:
@@ -80,17 +163,14 @@ def _minos_of(path: Path) -> str | None:
         ).stdout
     except (OSError, subprocess.SubprocessError):
         return None
-
-    # LC_BUILD_VERSION records `minos 14.0`; the older LC_VERSION_MIN_MACOSX
-    # records `version 11.0`. A fat binary lists one per slice - take the max,
-    # since every slice has to load.
-    found = re.findall(r"^\s+(?:minos|version)\s+([0-9][0-9.]*)", out, re.M)
-    if not found:
-        return None
-    return max(found, key=_version_tuple)
+    return parse_minos(out)
 
 
-def main(argv: list) -> int:
+def main(argv: list, minos_reader=_minos_of) -> int:
+    """``minos_reader`` is injectable so the pass/fail decision itself can be
+    tested without a Mach-O bundle or an ``otool``. The reason that matters:
+    this script's own regression was a parse bug, and a test that only covers
+    the parser would not have caught a comparison that never fires."""
     if len(argv) < 2:
         print(__doc__)
         return 2
@@ -112,14 +192,25 @@ def main(argv: list) -> int:
         print(f"::error::found no Mach-O binaries inside {app}")
         return 2
 
-    worst, worst_file, unreadable = None, None, 0
+    # One read per binary. The previous version called otool a second time to
+    # rank the offenders, i.e. twice per binary on a 215-binary bundle.
+    found = []           # [(minos, path)]
+    unreadable = 0
     for b in binaries:
-        mv = _minos_of(b)
+        mv = minos_reader(b)
         if mv is None:
             unreadable += 1
             continue
-        if worst is None or _version_tuple(mv) > _version_tuple(worst):
-            worst, worst_file = mv, b
+        if _version_tuple(mv)[0] > _PLAUSIBLE_MAX_MAJOR:
+            print(f"::error::parsed a minimum of {mv!r} for {b.name}, which is "
+                  f"not a macOS version. That is a bug in this checker's "
+                  f"parsing, not a real floor - see parse_minos. Refusing to "
+                  f"pass or fail the build on a number this script does not "
+                  f"understand.")
+            return 2
+        found.append((mv, b))
+
+    worst, worst_file = max(found, key=lambda r: _version_tuple(r[0]), default=(None, None))
 
     print(f"Info.plist LSMinimumSystemVersion : {declared}")
     print(f"binaries inspected                : {len(binaries)}"
@@ -139,12 +230,11 @@ def main(argv: list) -> int:
               f"or pin the offending dependency to a wheel built for "
               f"macOS {declared}.")
         # Name the worst few so the offender is obvious without a rebuild.
-        ranked = []
-        for b in binaries:
-            mv = _minos_of(b)
-            if mv and _version_tuple(mv) > _version_tuple(declared):
-                ranked.append((mv, b.name))
-        ranked.sort(key=lambda r: _version_tuple(r[0]), reverse=True)
+        ranked = sorted(
+            ((mv, b.name) for mv, b in found
+             if _version_tuple(mv) > _version_tuple(declared)),
+            key=lambda r: _version_tuple(r[0]), reverse=True,
+        )
         print(f"\n{len(ranked)} binaries exceed the declared floor:")
         for mv, name in ranked[:15]:
             print(f"    macOS {mv:6s}  {name}")
