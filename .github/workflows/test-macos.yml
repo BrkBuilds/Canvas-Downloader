@@ -78,7 +78,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$CANVAS_DL_CONFIG_DIR"
-          python -m pytest -q -p no:cacheprovider
+          # -rs prints the reason for every skip. A skipped test is not a
+          # passing test, and the skip SET is environment-dependent - this
+          # runner has no Office, no Canvas token and a different volume than
+          # any dev machine. Without this the job reports "N passed" and hides
+          # which guards did not actually run here, which is the whole failure
+          # mode it was built to prevent.
+          python -m pytest -q -rs -p no:cacheprovider
 
       - name: Architecture audit
         run: |
