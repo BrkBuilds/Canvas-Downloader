@@ -1,6 +1,7 @@
 import os
 import logging
 from pathlib import Path
+from shared.helpers import make_long_path, path_exists
 from bs4 import BeautifulSoup
 import markdownify
 
@@ -19,7 +20,7 @@ def convert_html_to_md(html_path: Path | str, dst: Path | str | None = None) -> 
     """
     try:
         html_path = Path(html_path)
-        if not html_path.exists() or html_path.suffix.lower() != '.html':
+        if not path_exists(html_path) or html_path.suffix.lower() != '.html':
             logger.warning(f"Invalid HTML file path: {html_path}")
             return None
             
@@ -27,7 +28,7 @@ def convert_html_to_md(html_path: Path | str, dst: Path | str | None = None) -> 
         md_path = Path(dst) if dst is not None else html_path.with_suffix('.md')
         
         # Enforce UTF-8 encoding for reading
-        with open(html_path, 'r', encoding='utf-8', errors='replace') as f:
+        with open(make_long_path(html_path), 'r', encoding='utf-8', errors='replace') as f:
             html_content = f.read()
             
         # Parse HTML
@@ -62,7 +63,7 @@ def convert_html_to_md(html_path: Path | str, dst: Path | str | None = None) -> 
         # Enforce UTF-8 encoding for writing, then fsync so the data is
         # durable on disk before we delete the original HTML.  Without fsync
         # a power-loss between close() and remove() can lose the file.
-        with open(md_path, 'w', encoding='utf-8', errors='replace') as f:
+        with open(make_long_path(md_path), 'w', encoding='utf-8', errors='replace') as f:
             f.write(md_content)
             f.flush()
             try:
@@ -87,7 +88,7 @@ def convert_html_to_md(html_path: Path | str, dst: Path | str | None = None) -> 
 
         # Delete original HTML file
         try:
-            os.remove(html_path)
+            os.remove(make_long_path(html_path))
             logger.debug(f"Deleted original HTML file: {html_path}")
         except OSError as e:
             logger.warning(f"Failed to delete original HTML file {html_path}: {e}")

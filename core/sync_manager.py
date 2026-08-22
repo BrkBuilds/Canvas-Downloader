@@ -157,7 +157,7 @@ def _probe_case_insensitive(directory: str) -> bool:
     deeper the old probe was already correct.
     """
     try:
-        entries = os.listdir(directory)
+        entries = os.listdir(make_long_path(directory))
     except OSError:
         entries = []
     for entry in entries:
@@ -165,8 +165,9 @@ def _probe_case_insensitive(directory: str) -> bool:
         if flipped_entry == entry:
             continue            # nothing to flip - no evidence either way
         try:
-            return os.path.samefile(os.path.join(directory, entry),
-                                    os.path.join(directory, flipped_entry))
+            return os.path.samefile(
+                make_long_path(os.path.join(directory, entry)),
+                make_long_path(os.path.join(directory, flipped_entry)))
         except OSError:
             return False        # flipped name absent => case-sensitive
         except Exception:       # noqa: BLE001 - never let a probe break a sync
@@ -203,7 +204,8 @@ def _probe_case_insensitive(directory: str) -> bool:
     if flipped == directory:
         return False
     try:
-        return os.path.samefile(directory, flipped)
+        return os.path.samefile(make_long_path(directory),
+                                make_long_path(flipped))
     except OSError:
         return False        # flipped name absent => case-sensitive, or unreadable
     except Exception:       # noqa: BLE001 - never let a probe break a sync
@@ -241,7 +243,7 @@ def _case_insensitive_volume(path: str) -> bool:
         for cand in (d, *d.parents):
             if cand == root:
                 return False
-            if cand.is_dir():
+            if os.path.isdir(make_long_path(cand)):
                 return _probe_case_insensitive(str(cand))
     except Exception:       # noqa: BLE001
         pass
@@ -544,6 +546,28 @@ def make_long_path(p: str | Path) -> str:
     return _shared_make_long_path(p)
 
 
+def path_exists(p: str | Path) -> bool:
+    """``exists()`` that is correct past Windows' limit. Alias, same reason.
+
+    Function-scoped import for the same reason ``make_long_path`` above uses
+    one: ``shared.helpers`` imports ``format_file_size`` FROM this module, so a
+    module-level import here is a cycle.
+    """
+    from shared.helpers import path_exists as _shared_path_exists
+    return _shared_path_exists(p)
+
+
+def walk_files_long(root: str | Path):
+    """Every file under *root* as CLEAN Paths, reachable past the limit.
+
+    The clean-path guarantee is what lets the manifest walks keep using
+    ``_path_key`` against stored rows - a ``\\\\?\\`` prefix leaking in here
+    would mismatch every one of them.
+    """
+    from shared.helpers import walk_files_long as _shared_walk_files_long
+    return _shared_walk_files_long(root)
+
+
 def make_secondary_id(entity_type: str, raw_id: int) -> int:
     """Generate a unique negative canvas_file_id for a synthetic entity.
 
@@ -680,7 +704,7 @@ class SyncManager:
         """
         try:
             db_path = Path(local_path) / DB_FILENAME
-            if not db_path.exists():
+            if not path_exists(db_path):
                 return None
             
             row = None
@@ -716,7 +740,7 @@ class SyncManager:
         """
         try:
             db_path = Path(local_path) / DB_FILENAME
-            if not db_path.exists():
+            if not path_exists(db_path):
                 return None
             
             row = None
@@ -751,7 +775,7 @@ class SyncManager:
         """
         try:
             db_path = Path(local_path) / DB_FILENAME
-            if not db_path.exists():
+            if not path_exists(db_path):
                 return True
             
             for attempt in range(3):
@@ -785,7 +809,7 @@ class SyncManager:
     def peek_last_synced(local_path: str | Path) -> str | None:
         """Peek at the last_synced timestamp bound to this folder."""
         db_path = Path(local_path) / ".canvas_sync.db"
-        if not db_path.exists():
+        if not path_exists(db_path):
             return None
         try:
             for attempt in range(3):
@@ -835,7 +859,7 @@ class SyncManager:
         # raw traceback on the sync page instead of a handled "folder is
         # unreachable" state.
         try:
-            self.local_path.mkdir(parents=True, exist_ok=True)
+            Path(make_long_path(self.local_path)).mkdir(parents=True, exist_ok=True)
         except OSError as mkdir_err:
             logger.error(
                 f"Could not create/reach sync folder {self.local_path}: {mkdir_err}"
@@ -972,7 +996,7 @@ class SyncManager:
                     cand = self.db_path.with_name(
                         '.canvas_sync_corrupted.db' if _n == 0
                         else f'.canvas_sync_corrupted_{_n + 1}.db')
-                    if not cand.exists():
+                    if not path_exists(cand):
                         corrupted_path = cand
                         break
                 if corrupted_path is None:
@@ -983,7 +1007,8 @@ class SyncManager:
                     self._db_init_failed = True
                     return
                 try:
-                    self.db_path.rename(corrupted_path)
+                    os.replace(make_long_path(self.db_path),
+                               make_long_path(corrupted_path))
                     logger.info(f"Corrupted database backed up to {corrupted_path}")
                 except OSError as rename_err:
                     # Do NOT fall back to deleting it. A corrupt manifest can
@@ -1167,7 +1192,7 @@ class SyncManager:
         """Remove hidden attribute from a file on Windows."""
         if os.name != 'nt':
             return
-        if not filepath.exists():
+        if not path_exists(filepath):
             return
         try:
             import ctypes
@@ -1183,7 +1208,7 @@ class SyncManager:
         """Set hidden attribute on a file on Windows."""
         if os.name != 'nt':
             return
-        if not filepath.exists():
+        if not path_exists(filepath):
             return
         try:
             import ctypes
@@ -1213,7 +1238,7 @@ class SyncManager:
                 continue
             
             local_path = self.local_path / file_info.get('local_path', '')
-            if not local_path.exists():
+            if not path_exists(local_path):
                 missing_entries[file_id] = file_info
         
         if not missing_entries:
@@ -1231,27 +1256,31 @@ class SyncManager:
         }
         
         orphaned_files = []
-        for root, _, files in os.walk(self.local_path):
-            for filename in files:
-                if (filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME)
-                        or filename in _APP_GENERATED_FILES
-                        or filename.startswith('.canvas_sync')
-                        or _is_partial_artifact(filename)):
-                    continue
-                filepath = Path(root) / filename
-                norm_str = _path_key(filepath)
-                if norm_str not in tracked_local_paths:
-                    try:
-                        sz = filepath.stat().st_size
-                        orphaned_files.append({
-                            'path': filepath,
-                            'name': filename,
-                            'norm_name': _match_key(filename),
-                            'size': sz,
-                            'md5': None # Lazy compute
-                        })
-                    except OSError:
-                        pass
+        # walk_files_long, not os.walk: a course folder past Windows' limit
+        # enumerates NOTHING, so every tracked file would read as missing and
+        # every local file as untracked. It yields CLEAN paths, which is
+        # load-bearing - _path_key compares these against manifest rows, and an
+        # extended-length prefix here would mismatch every single one.
+        for filepath in walk_files_long(self.local_path):
+            filename = filepath.name
+            if (filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME)
+                    or filename in _APP_GENERATED_FILES
+                    or filename.startswith('.canvas_sync')
+                    or _is_partial_artifact(filename)):
+                continue
+            norm_str = _path_key(filepath)
+            if norm_str not in tracked_local_paths:
+                try:
+                    sz = os.stat(make_long_path(filepath)).st_size
+                    orphaned_files.append({
+                        'path': filepath,
+                        'name': filename,
+                        'norm_name': _match_key(filename),
+                        'size': sz,
+                        'md5': None # Lazy compute
+                    })
+                except OSError:
+                    pass
 
         if not orphaned_files:
             return manifest
@@ -1420,22 +1449,22 @@ class SyncManager:
         all_local_files = []  # Flat list for accurate untracked counting
         claimed_paths: set = set()  # M-4: a local file backs at most one canvas id
 
-        for root, _, files in os.walk(self.local_path):
-            for filename in files:
-                if (filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME)
-                        or filename in _APP_GENERATED_FILES
-                        or filename.startswith('.')
-                        or _is_partial_artifact(filename)):
-                    continue
-                filepath = Path(root) / filename
-                try:
-                    size = filepath.stat().st_size
-                except OSError:
-                    continue
-                candidate = {'path': filepath, 'size': size, 'md5': None}
-                local_by_name.setdefault(_match_key(filename), []).append(candidate)
-                local_by_size.setdefault(size, []).append(candidate)
-                all_local_files.append(filepath)
+        # See heal_manifest: clean paths, and reachable past the limit.
+        for filepath in walk_files_long(self.local_path):
+            filename = filepath.name
+            if (filename in (MANIFEST_FILENAME, DB_FILENAME, SYNC_PAIRS_FILENAME, SYNC_HISTORY_FILENAME)
+                    or filename in _APP_GENERATED_FILES
+                    or filename.startswith('.')
+                    or _is_partial_artifact(filename)):
+                continue
+            try:
+                size = os.stat(make_long_path(filepath)).st_size
+            except OSError:
+                continue
+            candidate = {'path': filepath, 'size': size, 'md5': None}
+            local_by_name.setdefault(_match_key(filename), []).append(candidate)
+            local_by_size.setdefault(size, []).append(candidate)
+            all_local_files.append(filepath)
 
         def _candidate_md5(cand: dict) -> str:
             """Lazily compute (and cache) a local candidate's md5."""
@@ -1729,7 +1758,7 @@ class SyncManager:
                     c_file._target_local_path = calc_path
                     _origin_category = 'new_files'
                     _original_item = c_file
-                elif not local_path.exists():
+                elif not path_exists(local_path):
                     # Local file is gone: respect the user's deletion regardless
                     # of Canvas's update timestamp. (Was previously split across
                     # a dedicated "Phase 1 Existence Guard" and the post-update
@@ -1809,7 +1838,7 @@ class SyncManager:
                     local_path = self.local_path / entry.get('local_path', '')
                     
                     # 1. ALWAYS check local existence unconditionally first!
-                    if not local_path.exists():
+                    if not path_exists(local_path):
                         # URL Compiler Bypass (Step 5)
                         if convert_urls_enabled and str(entry.get('local_path', '')).lower().endswith(('.url', '.webloc')):
                             pass # Pure deletion bypass
@@ -2012,7 +2041,7 @@ class SyncManager:
                 if not _lp2:
                     continue
                 try:
-                    if not (self.local_path / _lp2).exists():
+                    if not path_exists(self.local_path / _lp2):
                         continue
                 except OSError:
                     continue
@@ -2137,8 +2166,8 @@ class SyncManager:
                     return 'modules'
         
         # 3. Filesystem heuristic
-        if self.local_path.exists():
-            for item in self.local_path.iterdir():
+        if path_exists(self.local_path):
+            for item in Path(make_long_path(self.local_path)).iterdir():
                 if item.is_dir() and not item.name.startswith('.'):
                     return 'modules'
         return 'flat'
@@ -2238,10 +2267,10 @@ class SyncManager:
             if not rel:
                 continue
             full = self.local_path / rel
-            if not full.exists():
+            if not path_exists(full):
                 continue
             try:
-                actual_size = full.stat().st_size
+                actual_size = os.stat(make_long_path(full)).st_size
             except OSError:
                 continue
             try:
@@ -2355,7 +2384,7 @@ class SyncManager:
                 local_md5 = _prev[0]
         if not local_md5:
             full_path = self.local_path / local_path
-            if full_path.exists():
+            if path_exists(full_path):
                 local_md5 = SyncManager.compute_local_md5(full_path) or ""
         info = {
             'canvas_file_id': canvas_file_id,
@@ -2601,7 +2630,7 @@ class SyncManager:
         computed (locked/unreadable file) we bias to ``'modified'`` so the local
         copy is always preserved.
         """
-        if not local_path.exists():
+        if not path_exists(local_path):
             return 'clean'
         if not original_md5:
             return 'modified'
@@ -2645,7 +2674,7 @@ class SyncManager:
         # the DB always gets a string (NULL causes type ambiguity on read-back).
         if not local_md5:
             full_path = self.local_path / local_path
-            if full_path.exists():
+            if path_exists(full_path):
                 local_md5 = SyncManager.compute_local_md5(full_path) or ""
 
         entry = {
@@ -2746,11 +2775,11 @@ class SyncManager:
         """
         
         full_new_path = self.local_path / new_file_path
-        if not full_new_path.exists():
+        if not path_exists(full_new_path):
             logger.warning(f"Converted file not found for DB update: {full_new_path}")
             return False
         
-        new_size = full_new_path.stat().st_size
+        new_size = os.stat(make_long_path(full_new_path)).st_size
         new_md5 = SyncManager.compute_local_md5(full_new_path) or ""
         
         max_retries = 3
@@ -3483,11 +3512,14 @@ def compute_local_md5(filepath: Path) -> str | None:
     same way (``if not result``).  Callers that need to distinguish a missing
     file from an unreadable one should check ``result is None``.
     """
-    if not filepath.exists():
+    # path_exists: an over-limit file answers False here, which this function
+    # reports as "" = MISSING - and _classify_local_modification treats missing
+    # very differently from unreadable. Edit protection rests on this value.
+    if not path_exists(filepath):
         return ""
     h = hashlib.md5()
     try:
-        with open(filepath, 'rb') as f:
+        with open(make_long_path(filepath), 'rb') as f:
             for chunk in iter(lambda: f.read(1024 * 1024), b""):
                 h.update(chunk)
         return h.hexdigest()

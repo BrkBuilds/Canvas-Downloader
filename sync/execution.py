@@ -46,6 +46,7 @@ from core.sync_manager import (
     _path_key,
 )
 from shared.helpers import (
+    path_exists,
     esc,
     learned_transfer_priors,
     remember_transfer_priors,
@@ -150,7 +151,7 @@ def _redownload_target(local_path: Path, recorded_rel: str, filename: str):
     parent no longer exists (caller falls back to the canonical calc_path).
     """
     recorded = local_path / Path(recorded_rel)
-    if str(recorded.parent) == '.' or not recorded.parent.exists():
+    if str(recorded.parent) == '.' or not path_exists(recorded.parent):
         return None, None
     if recorded.suffix.lower() == Path(filename).suffix.lower():
         return recorded, recorded.parent
@@ -251,11 +252,16 @@ def _build_synced_groups(sync_selections, synced_details, synced_actual_rels=Non
         if course_root is not None:
             try:
                 root_str = str(course_root)
-                for dirpath, _dirnames, filenames in os.walk(root_str):
+                # Walk THROUGH the prefix, and take the relative path against
+                # the prefixed root too, so `rel` still comes out clean. A deep
+                # course folder enumerates NOTHING under a bare os.walk, and
+                # every synced file would then fail to resolve.
+                _root_lp = make_long_path(root_str)
+                for dirpath, _dirnames, filenames in os.walk(_root_lp):
                     for fn in filenames:
                         if fn.startswith('._') or fn == '.canvas_sync.db':
                             continue
-                        rel = os.path.relpath(os.path.join(dirpath, fn), root_str).replace('\\', '/')
+                        rel = os.path.relpath(os.path.join(dirpath, fn), _root_lp).replace('\\', '/')
                         # Key on the NFC-normalized basename so the lookup below
                         # is resilient to NFC/NFD mismatches between disk and the
                         # Canvas-supplied filename.
@@ -292,7 +298,7 @@ def _build_synced_groups(sync_selections, synced_details, synced_actual_rels=Non
             rel = None
             candidates = None
             if _act_rel and course_root is not None:
-                if os.path.isfile(os.path.join(str(course_root), _act_rel)):
+                if os.path.isfile(make_long_path(os.path.join(str(course_root), _act_rel))):
                     # Still on disk exactly where it was written - done. This is
                     # what makes display-name/on-disk-name divergence (module
                     # Pages: "X.html" recorded, "Page X (1).html" written)
@@ -345,7 +351,8 @@ def _build_synced_groups(sync_selections, synced_details, synced_actual_rels=Non
                     try:
                         rel = max(
                             pool,
-                            key=lambda r: os.path.getmtime(os.path.join(str(course_root), r)),
+                            key=lambda r: os.path.getmtime(
+                                make_long_path(os.path.join(str(course_root), r))),
                         )
                     except Exception:
                         rel = pool[0]
@@ -1332,7 +1339,7 @@ def run_sync():
                         if (is_update_clean or is_update_modified) and _upd_info is not None \
                                 and getattr(_upd_info, 'local_path', ''):
                             _healed = local_path / Path(_upd_info.local_path)
-                            if _healed.exists():
+                            if path_exists(_healed):
                                 _dl_ext = Path(filename).suffix.lower()
                                 if _healed.suffix.lower() == _dl_ext:
                                     # Same type → the user's file IS the target
@@ -1411,7 +1418,7 @@ def run_sync():
                         #    as `_NewVersion` so annotations survive.
                         #  - LOCALLY-DELETED redownload: clean overwrite of the
                         #    recorded path (not on disk by definition).
-                        if is_update_modified and filepath.exists():
+                        if is_update_modified and path_exists(filepath):
                             base = filepath.stem
                             ext = filepath.suffix
                             # Place _NewVersion alongside the original, not at course root
@@ -1424,7 +1431,7 @@ def run_sync():
                             # single step; a locked target falls back to _NewVersion
                             # at the os.replace site.
                             pass
-                        elif filepath.exists():
+                        elif path_exists(filepath):
                             filepath = cm._handle_conflict(filepath)
 
                         _file_id_val = getattr(file, 'id', 0)
@@ -1465,12 +1472,12 @@ def run_sync():
                                 if (is_update_clean or is_update_modified) and _upd_info is not None \
                                         and getattr(_upd_info, 'local_path', ''):
                                     _sec_old_path = local_path / Path(_upd_info.local_path)
-                                    if _sec_old_path.parent.exists():
+                                    if path_exists(_sec_old_path.parent):
                                         _sec_explicit_dir = _sec_old_path.parent
                                 elif is_redownload and _redl_info is not None \
                                         and getattr(_redl_info, 'local_path', ''):
                                     _redl_parent = (local_path / Path(_redl_info.local_path)).parent
-                                    if str(_redl_parent) != '.' and _redl_parent.exists():
+                                    if str(_redl_parent) != '.' and path_exists(_redl_parent):
                                         _sec_explicit_dir = _redl_parent
 
                                 # H-8: cancel check before blocking Canvas API call
@@ -1520,10 +1527,10 @@ def run_sync():
                                     # path that no longer exists. Reproduced
                                     # 2026-08-10; see _path_key's docstring.
                                     if (is_update_clean and _sec_old_path is not None
-                                            and _sec_old_path.exists()
+                                            and path_exists(_sec_old_path)
                                             and _path_key(_sec_old_path) != _path_key(sec_filepath)):
                                         try:
-                                            _sec_old_path.unlink()
+                                            Path(make_long_path(_sec_old_path)).unlink()
                                             if _debug_file:
                                                 log_debug(f"  Superseded old copy removed: {_sec_old_path.name}", _debug_file)
                                         except OSError:
@@ -1577,7 +1584,7 @@ def run_sync():
                                             )
                                             if _manifest_entry:
                                                 _existing_path = local_path / _manifest_entry.get('local_path', '')
-                                                if _existing_path.exists():
+                                                if path_exists(_existing_path):
                                                     continue  # Already on disk - skip re-queue
 
                                             # Guard against cross-queue and intra-document duplicates
@@ -2166,7 +2173,15 @@ def run_sync():
                 all_suffixes = ''.join(rel_path.suffixes).lower()
                 if rel_path.suffix.lower() in target_exts or all_suffixes in target_exts:
                     m = sm.local_path / rel_path
-                    if m.is_file() and not m.name.startswith('._') and "__MACOSX" not in m.parts:
+                    # os.path.isfile(make_long_path(...)), NOT Path.is_file():
+                    # past Windows' limit is_file() answers False rather than
+                    # raising, so every file in a deep course folder dropped out
+                    # of the conversion list SILENTLY - the sync-side twin of the
+                    # download ledger bug measured on 2026-08-22 (1 of 124 files
+                    # survived the equivalent check there).
+                    if (os.path.isfile(make_long_path(m))
+                            and not m.name.startswith('._')
+                            and "__MACOSX" not in m.parts):
                         results.append((m, sm, pair_idx))
         return results
 
@@ -2357,7 +2372,7 @@ def run_sync():
         _should_compile = _contract.get('convert_urls', st.session_state.get('persistent_convert_urls', False))
         if _should_compile:
             _sm = sel.get('res_data', {}).get('sync_manager')
-            if _sm and _sm.local_path.exists() and _sm.local_path not in _processed_roots:
+            if _sm and path_exists(_sm.local_path) and _sm.local_path not in _processed_roots:
                 _processed_roots.add(_sm.local_path)
                 _url_folders.append((_sm.local_path, _sm.course_name))
     run_url_compilation(_url_folders, pp_ui)
@@ -2396,7 +2411,7 @@ def run_sync():
         _pair_lookup = {}
         for sel in sync_selections:
             _sm = sel.get('res_data', {}).get('sync_manager')
-            if _sm and _sm.local_path.exists():
+            if _sm and path_exists(_sm.local_path):
                 _pair_lookup[str(_sm.local_path.resolve())] = sel['pair_idx']
 
         for sp in _sidecar_paths:

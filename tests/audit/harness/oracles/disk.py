@@ -21,6 +21,14 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+# ── long-path awareness ──────────────────────────────────────────────────────
+# The ORACLES must see what the app sees. On a machine with LongPathsEnabled=0
+# a course folder past 260 characters answers False to Path.exists()/is_dir(),
+# and an oracle that cannot see a folder does not under-report - it INVENTS:
+# "the manifest is missing", "0 files on disk". Measured 2026-08-22: a real
+# .canvas_sync.db at 266 chars, 65,536 bytes, read as absent.
+from shared.helpers import make_long_path as _mlp  # noqa: E402
+
 import re
 from pathlib import Path
 
@@ -66,7 +74,7 @@ def quick_sig(p: Path, size: int) -> str:
     h = hashlib.md5()
     h.update(str(size).encode())
     try:
-        with p.open("rb") as f:
+        with open(_mlp(p), "rb") as f:
             h.update(f.read(CHUNK))
             if size > CHUNK * 2:
                 f.seek(-CHUNK, os.SEEK_END)
@@ -79,7 +87,7 @@ def quick_sig(p: Path, size: int) -> str:
 def full_md5(p: Path) -> str:
     h = hashlib.md5()
     try:
-        with p.open("rb") as f:
+        with open(_mlp(p), "rb") as f:
             for blk in iter(lambda: f.read(1 << 20), b""):
                 h.update(blk)
     except OSError as e:
@@ -89,18 +97,21 @@ def full_md5(p: Path) -> str:
 
 def scan(root: str | Path, full_hash: bool = True) -> dict:
     root = Path(root)
-    if not root.is_dir():
+    if not os.path.isdir(_mlp(root)):
         return {"root": str(root), "exists": False, "files": [], "count": 0}
 
     files, dirs = [], []
-    for dirpath, dirnames, filenames in os.walk(root):
-        d = Path(dirpath)
+    # Walk THROUGH the prefix and map each hit back onto the caller's own
+    # spelling of root, so every `rel` below stays clean and comparable.
+    _root_lp = _mlp(root)
+    for dirpath, dirnames, filenames in os.walk(_root_lp):
+        d = root if os.path.relpath(dirpath, _root_lp) == "." else root / os.path.relpath(dirpath, _root_lp)
         if d != root:
             dirs.append(str(d.relative_to(root)).replace("\\", "/"))
         for fn in filenames:
             p = d / fn
             try:
-                st = p.stat()
+                st = os.stat(_mlp(p))
             except OSError:
                 continue
             rel = str(p.relative_to(root)).replace("\\", "/")

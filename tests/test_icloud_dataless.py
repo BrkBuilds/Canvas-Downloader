@@ -159,10 +159,20 @@ def test_the_folder_walks_stat_and_never_read(course):
     """
     src = (REPO / "core" / "sync_manager.py").read_text(encoding="utf-8")
     tree = ast.parse(src)
+
+    def _iter_name(node):
+        f = getattr(node.iter, "func", None)
+        return getattr(f, "attr", None) or getattr(f, "id", None)
+
+    # Both spellings count. The scans were `os.walk` until 2026-08-22, when they
+    # moved to `walk_files_long` so a course folder past Windows' 260-character
+    # limit could be enumerated at all - under a bare os.walk such a folder
+    # yields NOTHING, and every tracked file reads as missing.
     walks = [n for n in ast.walk(tree)
              if isinstance(n, ast.For) and isinstance(n.iter, ast.Call)
-             and getattr(n.iter.func, "attr", None) == "walk"]
-    assert walks, "no os.walk loops found - has the scan been rewritten?"
+             and _iter_name(n) in ("walk", "walk_files_long")]
+    assert walks, "no folder-walk loops found - has the scan been rewritten?"
+
     banned = {"read_bytes", "read_text", "open"}
     for w in walks:
         called = {getattr(c.func, "attr", getattr(c.func, "id", None))
@@ -172,6 +182,18 @@ def test_the_folder_walks_stat_and_never_read(course):
             f"a folder walk calls {sorted(leaked)} - that materialises every "
             f"evicted file it touches")
         assert "stat" in called, "the walk no longer sizes files with stat()"
+
+    # The enumeration now happens one level down, so the guarantee has to be
+    # checked THERE too - otherwise moving a read into the helper would satisfy
+    # every assertion above while materialising the whole folder.
+    helper_src = (REPO / "shared" / "helpers.py").read_text(encoding="utf-8")
+    helper = next(n for n in ast.walk(ast.parse(helper_src))
+                  if isinstance(n, ast.FunctionDef) and n.name == "walk_files_long")
+    helper_calls = {getattr(c.func, "attr", getattr(c.func, "id", None))
+                    for c in ast.walk(helper) if isinstance(c, ast.Call)}
+    assert not (banned & helper_calls), (
+        f"walk_files_long itself calls {sorted(banned & helper_calls)} - it is "
+        f"used by every folder scan, so a read here materialises everything")
 
 
 def test_an_unreadable_file_is_preserved_not_overwritten(tmp_path):

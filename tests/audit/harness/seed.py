@@ -51,6 +51,14 @@ from __future__ import annotations
 
 import json
 import os
+# ── long-path awareness ──────────────────────────────────────────────────────
+# The ORACLES must see what the app sees. On a machine with LongPathsEnabled=0
+# a course folder past 260 characters answers False to Path.exists()/is_dir(),
+# and an oracle that cannot see a folder does not under-report - it INVENTS:
+# "the manifest is missing", "0 files on disk". Measured 2026-08-22: a real
+# .canvas_sync.db at 266 chars, 65,536 bytes, read as absent.
+from shared.helpers import make_long_path as _mlp  # noqa: E402
+
 import random
 import shutil
 import sqlite3
@@ -91,7 +99,7 @@ class Seeder:
     def __init__(self, folder: str | Path, seed: int = 20260727):
         self.folder = Path(folder).resolve()
         self.db_path = self.folder / odb.DB_FILENAME
-        if not self.db_path.is_file():
+        if not os.path.isfile(_mlp(self.db_path)):
             raise SystemExit(f"No {odb.DB_FILENAME} in {self.folder} - "
                              "download this course first.")
         self.rng = random.Random(seed)
@@ -164,7 +172,11 @@ class Seeder:
 
     def _con(self):
         try:
-            return sqlite3.connect(str(self.db_path), timeout=15.0)
+            # Prefixed: a manifest inside a deep course folder cannot be
+            # opened by its plain path once Windows enforces MAX_PATH.
+            # sqlite accepts an extended-length path as a PLAIN filename
+            # (measured) - it is only the file: URI parser that cannot.
+            return sqlite3.connect(_mlp(self.db_path), timeout=15.0)
         except sqlite3.OperationalError as e:
             raise SystemExit(f"Cannot write {self.db_path}: {e}\n"
                              "Is the app mid-run against this folder?")

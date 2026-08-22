@@ -4,6 +4,8 @@ import zipfile
 import tarfile
 from pathlib import Path
 
+from shared.helpers import make_long_path, path_exists
+
 # Module level, NOT inside the except handler where it used to live: a function
 # that does `import logging` anywhere in its body makes `logging` a LOCAL name
 # for the WHOLE function, so any earlier reference raises UnboundLocalError -
@@ -38,7 +40,7 @@ def _decline(extract_dir) -> bool:
     never delete a real extraction.
     """
     try:
-        os.rmdir(extract_dir)
+        os.rmdir(make_long_path(extract_dir))
     except OSError:
         pass
     return False
@@ -86,9 +88,20 @@ def extract_archive(archive_path: str | Path,
     many very small files sails through: one real course unpacked 21,630 files,
     which is both a surprise and the source of the deepest paths in the folder.
     """
-    # Do NOT apply \\?\ to abs_archive - tarfile.open() rejects it on Python < 3.12.
-    # The archive file itself won't hit MAX_PATH; only extracted contents can.
+    # The archive is OPENED through a file object, not by path. Both of the
+    # claims that used to stand here were wrong, and each was load-bearing:
+    #
+    #   "the archive file itself won't hit MAX_PATH" - measured 2026-08-22, a
+    #   zip downloaded into a deep course folder sat at 280 characters and could
+    #   not be opened at all, so extraction failed outright;
+    #   "tarfile.open() rejects the prefix on Python < 3.12" - true once, and a
+    #   version dependency this module has no reason to carry.
+    #
+    # A file object settles both: Python's own open() handles the prefix, and
+    # zipfile/tarfile never see a path. `abs_archive` stays CLEAN because it is
+    # what names the extraction folder, the log lines and the delete.
     abs_archive = Path(archive_path).resolve().absolute()
+    abs_archive_lp = make_long_path(abs_archive)   # for OPENING only
 
     # Determine the extraction folder name (strip .zip or .tar.gz)
     if abs_archive.name.lower().endswith('.tar.gz'):
@@ -102,13 +115,12 @@ def extract_archive(archive_path: str | Path,
     # take the "UNC\" form for a network share and needs backslash separators,
     # neither of which a bare "\\?\" + str(...) does.
     if os.name == 'nt':
-        from shared.helpers import make_long_path as _mlp
-        extract_dir = Path(_mlp(extract_dir))
+        extract_dir = Path(make_long_path(extract_dir))
         
 
     
     try:
-        archive_size = abs_archive.stat().st_size
+        archive_size = os.stat(make_long_path(abs_archive)).st_size
         
         # Create extraction directory
         extract_dir.mkdir(parents=True, exist_ok=True)
@@ -121,7 +133,8 @@ def extract_archive(archive_path: str | Path,
             # UTF-8 content. metadata_encoding='utf-8' in 3.11+ forces UTF-8 on ALL
             # entries, which corrupts legitimately CP437-encoded filenames. Instead we
             # always use the per-member flag approach: re-decode only untagged entries.
-            with zipfile.ZipFile(abs_archive, 'r') as zip_ref:
+            with open(abs_archive_lp, 'rb') as _afh, \
+                    zipfile.ZipFile(_afh, 'r') as zip_ref:
                 mutated_members = []
                 for info in zip_ref.infolist():
                     if info.flag_bits & 0x800 == 0:  # UTF-8 flag not set → try CP437→UTF-8
@@ -162,7 +175,8 @@ def extract_archive(archive_path: str | Path,
                     zip_ref.extract(info, path=extract_dir)
         elif abs_archive.name.lower().endswith(('.tar.gz', '.tar')):
             mode = 'r:gz' if abs_archive.name.lower().endswith('.gz') else 'r:'
-            with tarfile.open(abs_archive, mode) as tar_ref:
+            with open(abs_archive_lp, 'rb') as _afh, \
+                    tarfile.open(fileobj=_afh, mode=mode) as tar_ref:
                 # Cache members once - streaming .tar.gz archives cannot rewind,
                 # so a second getmembers() call would return an empty list.
                 tar_members = tar_ref.getmembers()
@@ -217,7 +231,7 @@ def extract_archive(archive_path: str | Path,
             _decline(extract_dir)          # remove the empty folder we made
             return None
 
-        abs_archive.unlink(missing_ok=True)
+        Path(make_long_path(abs_archive)).unlink(missing_ok=True)
 
         return True
         

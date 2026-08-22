@@ -19,6 +19,7 @@ import logging
 import time
 import traceback
 from pathlib import Path
+from shared.helpers import path_exists
 from urllib.parse import unquote_plus
 
 import streamlit as st
@@ -624,7 +625,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
         try:
             local_folder = pair.get('local_folder')
             requested_id = pair.get('course_id')
-            if not local_folder or not Path(local_folder).exists():
+            if not local_folder or not path_exists(Path(local_folder)):
                 continue  # downstream loop handles missing folder
             bound_id = SyncManager.peek_bound_course_id(local_folder)
             from core.sync_manager import DB_UNREADABLE
@@ -720,7 +721,7 @@ def run_analysis(sync_pairs, main_placeholder=None):
             break
 
         # Folder-not-found guard
-        if not Path(pair['local_folder']).exists():
+        if not path_exists(Path(pair['local_folder'])):
             from ui.amber_notice import render_amber_notice
             render_amber_notice(
                 f"Folder not found: {pair['local_folder']}",

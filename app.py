@@ -18,7 +18,7 @@ from pathlib import Path
 from sync_ui import render_sync_step1, render_sync_step4
 from shared.helpers import (
     esc, learned_transfer_priors, remember_transfer_priors, render_download_wizard,
-    split_delivery_errors,
+    split_delivery_errors, path_exists,
 )
 from shared.components import (
     render_completion_card, render_folder_cards,
@@ -1747,7 +1747,7 @@ with st.container():
                 # Inject course header into the global debug log (append, never overwrite)
                 if debug_file:
                     try:
-                        with open(debug_file, "a", encoding="utf-8") as f:
+                        with open(make_long_path(debug_file), "a", encoding="utf-8") as f:
                             f.write(f"\n{'='*50}\n--- Post-Processing: {esc(course.name)} ---\n{'='*50}\n")
                     except Exception:
                         pass
@@ -1756,7 +1756,7 @@ with st.container():
                 course_name_sanitized = cm._sanitize_filename(course.name)
                 course_folder = Path(st.session_state['download_path']) / course_name_sanitized
 
-                if course_folder.exists():
+                if path_exists(course_folder):
                     if _has_pp:
                         st.session_state['is_post_processing'] = True
                         cancel_placeholder.empty()
@@ -1793,7 +1793,14 @@ with st.container():
                             _lp = Path(_lf)
                             if not _lp.is_absolute():
                                 _lp = course_folder / _lp
-                            if _lp.exists():
+                            # path_exists, NOT Path.exists(): this ledger is what
+                            # scopes post-processing, and an over-limit path answers
+                            # False rather than raising. Measured 2026-08-22 on a real
+                            # download of course 43665 into a deep folder: 1 of 124
+                            # files survived this check, so the ledger held one entry
+                            # and exactly one file was converted - every Excel,
+                            # PowerPoint and .url in the course was silently skipped.
+                            if path_exists(_lp):
                                 _run_files.append(str(_lp))
                         except (OSError, ValueError):
                             continue
@@ -1869,9 +1876,9 @@ with st.container():
                     try:
                         from pathlib import Path
                         root_path = Path(st.session_state['download_path'])
-                        root_path.mkdir(parents=True, exist_ok=True)
+                        Path(make_long_path(root_path)).mkdir(parents=True, exist_ok=True)
                         session_log = root_path / "session_errors.txt"
-                        with open(session_log, "w", encoding="utf-8") as f:
+                        with open(make_long_path(session_log), "w", encoding="utf-8") as f:
                             f.write(f"Session Error Log - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
                             f.write("===================================================\n")
                             for err in st.session_state['download_errors_list']:
@@ -2138,7 +2145,7 @@ with st.container():
                     course_name_sanitized = cm._sanitize_filename(course.name)
                     course_folder = Path(st.session_state['download_path']) / course_name_sanitized
     
-                    if course_folder.exists():
+                    if path_exists(course_folder):
                         contract = build_conversion_contract()
     
                         if any(contract.values()):
@@ -2229,9 +2236,9 @@ with st.container():
                         # Guardrail 3: Safe Directory Resolution (fallback to course folder if err_filepath missing)
                         save_dir = Path(err_filepath).parent if err_filepath else Path(st.session_state['download_path']) / temp_cm._sanitize_filename(c_name)
                         log_file = save_dir / "download_errors.txt"
-                        if log_file.exists() and st.session_state.get('error_log_enabled', False):
+                        if path_exists(log_file) and st.session_state.get('error_log_enabled', False):
                             try:
-                                with open(log_file, "a", encoding="utf-8") as f:
+                                with open(make_long_path(log_file), "a", encoding="utf-8") as f:
                                     f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [RESOLVED] Successfully downloaded: {err_item_name}\n")
                             except Exception as e:
                                 logger.error(f"Failed to write [RESOLVED] log: {e}")

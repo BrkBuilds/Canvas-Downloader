@@ -20,7 +20,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Optional
 
 from shared import theme
-from shared.helpers import esc, make_long_path
+from shared.helpers import esc, make_long_path, path_exists, walk_files_long
 from shared.shortcuts import is_produced_shortcut
 from engine.estimation import stepwise_estimator
 from engine.progress_dashboard import (
@@ -256,7 +256,7 @@ def _product_locally_edited(prod_path: Path, recorded_md5: str) -> bool:
     worse surprise than the one being fixed. They gain the guard as soon as one
     conversion has run under this version.
     """
-    if not recorded_md5 or not prod_path.exists():
+    if not recorded_md5 or not path_exists(prod_path):
         return False
     try:
         from core.sync_manager import SyncManager
@@ -270,7 +270,7 @@ def _new_version_name(path: Path) -> Path:
     """``<stem>_NewVersion<ext>``, free, beside the file it protects."""
     cand = path.parent / f"{path.stem}_NewVersion{path.suffix}"
     n = 1
-    while cand.exists():
+    while path_exists(cand):
         cand = path.parent / f"{path.stem}_NewVersion ({n}){path.suffix}"
         n += 1
     return cand
@@ -350,12 +350,12 @@ def _resolve_conversion_target(sm, src_path, target_ext: str,
             except Exception as e:
                 logger.debug(f"_resolve_conversion_target ownership lookup failed: {e}")
 
-    if not default.exists():
+    if not path_exists(default):
         return default
     n = 1
     while True:
         cand = default.parent / f"{default.stem} ({n}){default.suffix}"
-        if not cand.exists():
+        if not path_exists(cand):
             logger.info(
                 f"Conversion target '{default.name}' exists and is not this file's "
                 f"own product - diverting to '{cand.name}' (H-7)."
@@ -467,12 +467,12 @@ def _is_locked(path: Path) -> bool:
     the probe itself, and a missing file is NOT locked - it is simply absent.
     """
     try:
-        if not path.is_file():
+        if not os.path.isfile(make_long_path(path)):
             return False
         # Binary append: the probe writes nothing and reads nothing, so no text
         # decoder should be involved - and a file whose bytes are not valid
         # UTF-8 must still be probeable.
-        with open(path, "ab"):
+        with open(make_long_path(path), "ab"):
             return False
     except OSError:
         return True
@@ -490,8 +490,13 @@ def _locked_sibling(src: Path) -> Path | None:
     than guessing at a cause.
     """
     try:
-        for sib in src.parent.glob(glob.escape(src.stem) + "*"):
-            if sib.is_file() and sib != src and _is_locked(sib):
+        # Glob the PREFIXED parent so a deep folder is reachable, then map
+        # each hit back onto the clean parent - `sib` is compared against
+        # `src` and returned to the caller, which puts its name on screen.
+        parent = src.parent
+        for _sib_lp in Path(make_long_path(parent)).glob(glob.escape(src.stem) + "*"):
+            sib = parent / _sib_lp.name
+            if os.path.isfile(make_long_path(sib)) and sib != src and _is_locked(sib):
                 return sib
     except OSError:
         pass
@@ -645,7 +650,7 @@ def _still_present(item) -> bool:
         p = item[0] if not isinstance(item, (str, Path)) else item
         if not p or not str(p).strip():
             return False
-        return Path(p).is_file()
+        return os.path.isfile(make_long_path(p))
     except (OSError, IndexError, TypeError):
         return False
 
@@ -658,9 +663,9 @@ def _log_error_to_file(error_log_path: Path | None, filename: str, error_msg: st
     from shared.helpers import _err_log_lock
     err_file = error_log_path / "download_errors.txt"
     try:
-        error_log_path.mkdir(parents=True, exist_ok=True)
+        Path(make_long_path(error_log_path)).mkdir(parents=True, exist_ok=True)
         with _err_log_lock:
-            with open(err_file, "a", encoding="utf-8") as f:
+            with open(make_long_path(err_file), "a", encoding="utf-8") as f:
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 f.write(f"[{timestamp}] [Post-Processing] {filename}: {error_msg}\n")
     except OSError as e:
@@ -835,7 +840,7 @@ def run_archive_extraction(files, ui: UIBridge) -> list:
                 root = archive_file.with_name(old_name[:-7])
             else:
                 root = archive_file.with_suffix('')
-            if root.is_dir():
+            if os.path.isdir(make_long_path(root)):
                 # The companion values (sync manager, and course name or pair
                 # index depending on the caller) ride along so the SYNC flow can
                 # rebuild its own (path, sm, pair_idx) tuples without having to
@@ -1033,7 +1038,7 @@ def run_url_compilation(folders, ui: UIBridge):
             _emit(ui, 'divider', "Process cancelled by user")
             break
 
-        if course_folder.exists():
+        if path_exists(course_folder):
             try:
                 compiled_path, processed_shortcuts = compile_urls_to_txt(course_folder, course_name)
             except Exception as e:
@@ -1049,7 +1054,7 @@ def run_url_compilation(folders, ui: UIBridge):
             # already in the file (deduplication handled inside compile_urls_to_txt).
             for shortcut in processed_shortcuts:
                 try:
-                    shortcut.unlink(missing_ok=True)
+                    Path(make_long_path(shortcut)).unlink(missing_ok=True)
                 except Exception as e:
                     logger.warning(f"Failed to purely delete shortcut {shortcut.name}: {e}")
                     _log_error_to_file(ui.error_log_path, shortcut.name, f"Shortcut deletion failed: {e}")
@@ -1286,7 +1291,13 @@ def _glob_files(course_folder: Path, extensions: set, explicit_files: list = Non
     exclusion needs no rule of its own - which is why it holds for a folder
     unpacked by an earlier run too, not just this one.
     """
-    if not course_folder.exists():
+    # path_exists / walk_files_long, never Path.exists() + rglob: past Windows'
+    # limit both answer "nothing here" instead of raising, and this is the ONE
+    # discovery helper every converter goes through - so a deep course folder
+    # starved all nine of them at once, silently. Measured 2026-08-22: a folder
+    # over the limit returned 0 entries, and a reachable folder holding an
+    # over-limit file returned the entry but failed is_file().
+    if not path_exists(course_folder):
         return []
 
     explicit_set = {Path(p).resolve() for p in explicit_files} if explicit_files else None
@@ -1302,9 +1313,8 @@ def _glob_files(course_folder: Path, extensions: set, explicit_files: list = Non
         return f.resolve() in explicit_set
 
     return [
-        f for f in course_folder.rglob('*')
-        if f.is_file()
-        and not f.name.startswith('._')
+        f for f in walk_files_long(course_folder)
+        if not f.name.startswith('._')
         and not f.name.startswith('~$')
         and "__MACOSX" not in f.parts
         and not _PACKAGE_DIRS.intersection(f.parts)
@@ -1350,12 +1360,12 @@ def run_all_conversions(course_folder: Path, sm, contract: dict, ui: UIBridge, c
         # Also catch .tar.gz by full name (since .gz alone may match other files)
         explicit_set = {Path(p).resolve() for p in explicit_files} if explicit_files else None
         extra_targz = [
-            f for f in course_folder.rglob('*')
-            if f.is_file() and f.name.lower().endswith('.tar.gz')
+            f for f in walk_files_long(course_folder)
+            if f.name.lower().endswith('.tar.gz')
             and not f.name.startswith('._') and "__MACOSX" not in f.parts
             and f not in archive_files
             and (not explicit_set or f.resolve() in explicit_set)
-        ] if course_folder.exists() else []
+        ] if path_exists(course_folder) else []
         archive_files.extend(extra_targz)
         if archive_files:
             # The return value is deliberately dropped. Extraction is the only

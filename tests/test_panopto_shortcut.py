@@ -164,7 +164,13 @@ def test_a_shortcut_survives_a_path_over_max_path(tmp_path):
     deep = tmp_path
     while len(str(deep)) < 250:
         deep = deep / ("d" * 40)
-    deep.mkdir(parents=True, exist_ok=True)
+    # The FIXTURE has to go through the prefix too. Built unprefixed it
+    # raises WinError 206 on a machine that enforces MAX_PATH, and
+    # succeeds on one that does not - so this test, whose own docstring
+    # is about that exact trap, could never run where it matters.
+    import os as _o
+    from shared.helpers import make_long_path as _mlp
+    _o.makedirs(_mlp(deep), exist_ok=True)
     p = deep / "Lecture.url"
     assert len(str(p)) > 260
     SH.write_shortcut(p, VIEWER, source=SH.SOURCE_PANOPTO)

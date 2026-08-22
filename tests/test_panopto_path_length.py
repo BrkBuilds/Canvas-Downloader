@@ -27,6 +27,37 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+# ── long-path-safe fixture I/O ────────────────────────────────────────────
+# These tests deliberately build paths past Windows' 260-character limit, so
+# their OWN setup and assertions have to go through the prefix. Without it they
+# fail in the FIXTURE on a machine that enforces the limit, and pass vacuously
+# on one that does not (LongPathsEnabled=1) - which is how a suite about long
+# paths ends up never having exercised one. Measured 2026-08-22.
+from shared.helpers import make_long_path as _mlp
+
+
+def _put(p, data: bytes) -> None:
+    import os as _os
+    _os.makedirs(_mlp(Path(p).parent), exist_ok=True)
+    with open(_mlp(p), "wb") as fh:
+        fh.write(data)
+
+
+def _get(p) -> bytes:
+    with open(_mlp(p), "rb") as fh:
+        return fh.read()
+
+
+def _exists(p) -> bool:
+    import os as _os
+    return _os.path.exists(_mlp(p))
+
+
+def _mkdirs(p) -> None:
+    import os as _os
+    _os.makedirs(_mlp(p), exist_ok=True)
+
+
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
@@ -104,9 +135,9 @@ def test_a_folder_written_by_an_older_version_is_adopted_not_re_downloaded(tmp_p
     expensive wrong answer this app can give.
     """
     out = tmp_path / "Panopto Recordings" / LONG_TITLE
-    out.mkdir(parents=True)
+    _mkdirs(out)
     legacy = out / (LONG_TITLE + ".mp4")
-    legacy.write_bytes(b"old naming")
+    _put(legacy, b"old naming")
 
     found = [c for c in recording_base_candidates(out, LONG_TITLE, SEPARATE)
              if path_exists(Path(str(c) + ".mp4"))]
@@ -116,7 +147,7 @@ def test_a_folder_written_by_an_older_version_is_adopted_not_re_downloaded(tmp_p
 def test_a_new_recording_still_gets_the_short_name(tmp_path):
     """The legacy name is adopted only where it EXISTS; nothing creates it."""
     out = tmp_path / "Panopto Recordings" / LONG_TITLE
-    out.mkdir(parents=True)
+    _mkdirs(out)
     found = [c for c in recording_base_candidates(out, LONG_TITLE, SEPARATE)
              if path_exists(Path(str(c) + ".mp4"))]
     assert not found

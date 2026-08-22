@@ -4,6 +4,7 @@ import sys
 import time
 import logging
 from pathlib import Path
+from shared.helpers import make_long_path
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +240,7 @@ class ExcelToPDF:
                         f"but {_why}; keeping the original."
                     )
                     return None, f"Excel reported success but {_why}"
-                src.unlink(missing_ok=True)
+                Path(make_long_path(src)).unlink(missing_ok=True)
                 return str(dst), ""
             from engine.applescript_bridge import get_last_error
             _last = get_last_error()
@@ -322,7 +323,7 @@ class ExcelToPDF:
                     return None, f"Excel reported success but {_why}"
 
                 # Remove the original spreadsheet (from the true long path)
-                src.unlink(missing_ok=True)
+                Path(make_long_path(src)).unlink(missing_ok=True)
                 # Return the true long-path PDF location (context manager moves it back)
                 return str(true_pdf), ""
 
@@ -553,7 +554,7 @@ class ExcelToData:
             return None, "No sheets with data found in workbook."
 
         try:
-            with open(str(dst), 'w', encoding='utf-8', newline='') as f:
+            with open(make_long_path(dst), 'w', encoding='utf-8', newline='') as f:
                 f.write(self._META_CONTEXT + "\n\n")
                 for sheet_name, rows in sheet_sections:
                     f.write(f"### Sheet: {sheet_name}\n")

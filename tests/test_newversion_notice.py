@@ -114,7 +114,17 @@ def test_the_locked_target_route_records_a_new_version():
 
 
 def test_the_locally_edited_route_records_a_new_version():
-    block = EXECUTION.split("is_update_modified and filepath.exists()", 1)[1][:600]
+    """Anchored on `is_update_modified` alone, NOT on the whole condition.
+
+    It used to match the literal `is_update_modified and filepath.exists()`,
+    which broke the moment that predicate became long-path safe
+    (`path_exists(filepath)`) - reporting the _NewVersion route as MISSING when
+    it was right there. Same brittle-anchor trap this repo has hit before: pin
+    the branch, not the spelling of its condition.
+    """
+    m = re.search(r"if is_update_modified and [^\n:]*filepath[^\n:]*:", EXECUTION)
+    assert m, "the locally-edited branch moved; update this guard"
+    block = EXECUTION[m.end():m.end() + 600]
     assert "_register_new_version(" in block
 
 

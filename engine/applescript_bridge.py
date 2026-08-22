@@ -373,12 +373,18 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
     # 15 characters total, so the ~255-byte staged-path budget below is
     # untouched (and `tests/test_office_staging_short_names.py` still asserts
     # <= 16).
+    # Function-scoped on purpose: this module must keep NO module-level app
+    # imports - shared.helpers reaches back into it, so a top-level import
+    # here would be a cycle. Long paths are a no-op on macOS (where this
+    # branch actually runs); they matter because the tests force it on.
+    from shared.helpers import make_long_path, path_exists
+
     _tok = work.name[-6:]
     staged_src = work / (f"src_{_tok}" + src.suffix)
     staged_dst = work / (f"out_{_tok}" + dst.suffix)
     try:
         work.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, staged_src)
+        shutil.copy2(make_long_path(src), staged_src)
     except Exception as e:
         # WARNING, not debug: the app's debug log captures INFO and above
         # (measured - a real run with debug mode ON contained 0 DEBUG lines),
@@ -391,7 +397,7 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
         yield from _direct_passthrough(src, dst, app_name)
         return
 
-    dst_existed = dst.exists()
+    dst_existed = path_exists(dst)
     try:
         yield staged_src, staged_dst
         # Relocate the produced PDF back to its real destination - but ONLY if
@@ -414,14 +420,14 @@ def office_container_stage(src: Path, dst: Path, app_name: str):
         # shape. A fourth converter gets it for free.
         if staged_dst.exists() and _product_is_real(staged_dst):
             try:
-                dst.parent.mkdir(parents=True, exist_ok=True)
-                if dst.exists():
-                    dst.unlink()
-                shutil.move(str(staged_dst), str(dst))
+                Path(make_long_path(dst.parent)).mkdir(parents=True, exist_ok=True)
+                if path_exists(dst):
+                    Path(make_long_path(dst)).unlink()
+                shutil.move(str(staged_dst), make_long_path(dst))
             except Exception as e:
                 # Last-ditch copy so a same-volume move quirk can't lose output.
                 try:
-                    shutil.copy2(staged_dst, dst)
+                    shutil.copy2(staged_dst, make_long_path(dst))
                 except Exception:
                     logger.warning(
                         f"[AppleScript] converted file produced in container but could "

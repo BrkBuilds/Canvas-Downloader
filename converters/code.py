@@ -2,6 +2,7 @@ import os
 import shutil
 import logging
 from pathlib import Path
+from shared.helpers import make_long_path, path_exists
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ def convert_code_to_txt(file_path: str | Path, dst=None) -> str | None:
     
     try:
         # Read the original file safely, replacing bad characters
-        with open(original_path, 'r', encoding='utf-8', errors='replace') as f:
+        with open(make_long_path(original_path), 'r', encoding='utf-8', errors='replace') as f:
             content = f.read()
 
         # Add a small header so NotebookLM knows what this is
@@ -50,7 +51,7 @@ def convert_code_to_txt(file_path: str | Path, dst=None) -> str | None:
         # Write to the new .txt file forcing UTF-8 encoding, then fsync so the
         # data is durable on disk before we delete the original.  Without
         # fsync a power-loss between close() and unlink() can lose the file.
-        with open(txt_path, 'w', encoding='utf-8') as f:
+        with open(make_long_path(txt_path), 'w', encoding='utf-8') as f:
             f.write(header + content)
             f.flush()
             try:
@@ -59,23 +60,29 @@ def convert_code_to_txt(file_path: str | Path, dst=None) -> str | None:
                 pass
 
         # Verify the output exists and is non-empty before deleting the source.
-        if not txt_path.exists() or txt_path.stat().st_size == 0:
+        # file_has_content, not a hand-rolled size check: it is the shared gate
+        # the whole delete family uses, it is already long-path safe, and it
+        # reports WHY - which a bare `== 0` cannot. tests/test_crash_vector_
+        # hardening.py counts these, so a private spelling reads as no gate.
+        from converters.verify import file_has_content
+        _ok, _why = file_has_content(txt_path, what="text file")
+        if not _ok:
             logger.error(
-                f"Code converter wrote zero-byte output for {original_path.name}; "
-                "keeping original file."
+                f"Code converter reported success for {original_path.name} "
+                f"but {_why}; keeping original file."
             )
             return None
 
         # Delete the original code file
-        original_path.unlink(missing_ok=True)
+        Path(make_long_path(original_path)).unlink(missing_ok=True)
 
         return str(txt_path)
     except Exception as e:
         logger.error(f"Failed to convert code file {original_path.name}: {e}")
         # Clean up a partial .txt if the write started but failed mid-way.
         try:
-            if txt_path.exists() and txt_path.stat().st_size == 0:
-                txt_path.unlink(missing_ok=True)
+            if path_exists(txt_path) and os.path.getsize(make_long_path(txt_path)) == 0:
+                Path(make_long_path(txt_path)).unlink(missing_ok=True)
         except OSError:
             pass
         return None

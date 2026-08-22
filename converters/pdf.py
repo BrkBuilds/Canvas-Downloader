@@ -19,6 +19,8 @@ import shutil
 import logging
 import subprocess
 from pathlib import Path
+from shared.helpers import make_long_path
+from shared.helpers import path_exists
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -223,7 +225,7 @@ class PowerPointToPDF:
                     )
                     return None
                 try:
-                    pptx_path.unlink()
+                    Path(make_long_path(pptx_path)).unlink()
                 except OSError as e:
                     logger.warning(f"Converted to PDF but could not delete original: {pptx_path} - {e}")
                 logger.info(f"Converted: {pptx_path.name} → {pdf_path.name}")
@@ -293,7 +295,7 @@ class PowerPointToPDF:
 
                 # Delete the original PPTX (from the true long path)
                 try:
-                    pptx_path.unlink()
+                    Path(make_long_path(pptx_path)).unlink()
                 except OSError as e:
                     logger.warning(f"Converted to PDF but could not delete original: {pptx_path} - {e}")
 
@@ -318,9 +320,9 @@ class PowerPointToPDF:
                 _log_conversion_error(self.error_log_path, pptx_path.name, friendly_msg)
 
                 # Clean up partial PDF at the safe path (if any)
-                if safe_pdf.exists():
+                if path_exists(safe_pdf):
                     try:
-                        safe_pdf.unlink()
+                        Path(make_long_path(safe_pdf)).unlink()
                     except OSError:
                         pass
 
@@ -359,9 +361,9 @@ def _log_conversion_error(error_log_path: Path | None, filename: str, message: s
 
     from shared.helpers import _err_log_lock
     try:
-        error_log_path.mkdir(parents=True, exist_ok=True)
+        Path(make_long_path(error_log_path)).mkdir(parents=True, exist_ok=True)
         with _err_log_lock:
-            with open(error_file, "a", encoding="utf-8") as f:
+            with open(make_long_path(error_file), "a", encoding="utf-8") as f:
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 f.write(f"[{timestamp}] PDF Conversion Error - {filename}: {message}\n")
     except OSError as e:

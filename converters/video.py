@@ -2,6 +2,7 @@ import sys
 import os
 import logging
 from pathlib import Path
+from shared.helpers import make_long_path, path_exists
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 # PyInstaller FFmpeg fix - wrapped in try/except: get_ffmpeg_exe() raises if the
@@ -138,7 +139,7 @@ def convert_video_to_mp3(video_path: str | Path, dst: str | Path | None = None) 
                 f"but {_why}; keeping the original video."
             )
             try:
-                Path(abs_mp3).unlink(missing_ok=True)   # drop the stub
+                Path(make_long_path(abs_mp3)).unlink(missing_ok=True)   # drop the stub
             except OSError:
                 pass
             return None
@@ -150,7 +151,7 @@ def convert_video_to_mp3(video_path: str | Path, dst: str | Path | None = None) 
         logger.error(f"Failed to convert video {abs_video}: {e}")
         # Remove any partial .mp3 that write_audiofile may have created before failing.
         try:
-            Path(abs_mp3).unlink(missing_ok=True)
+            Path(make_long_path(abs_mp3)).unlink(missing_ok=True)
         except Exception:
             pass
         return None
@@ -169,6 +170,6 @@ def convert_video_to_mp3(video_path: str | Path, dst: str | Path | None = None) 
         # Delete original video file to save space only if extraction succeeded
         if conversion_success:
             try:
-                Path(abs_video).unlink(missing_ok=True)
+                Path(make_long_path(abs_video)).unlink(missing_ok=True)
             except Exception as cleanup_err:
                 logger.warning(f"Could not delete original video {abs_video}: {cleanup_err}")
