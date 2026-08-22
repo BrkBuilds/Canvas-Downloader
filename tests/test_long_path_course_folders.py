@@ -304,6 +304,24 @@ def _mkdir_receivers(path: Path):
     return out
 
 
+#: Module-level directory creators, where the path is an ARGUMENT rather than
+#: the receiver. `os.makedirs(course_folder / 'sub')` is not a `.mkdir` call on
+#: anything, so the first version of this census - which only matched
+#: `<expr>.mkdir(...)` - could not see it AT ALL.
+#:
+#: That blindness was latent, not live: no such call existed in these modules,
+#: so the census passed and read as protection. Which is precisely why it had to
+#: be closed - the guard would have stayed green while the first `os.makedirs`
+#: anyone added inside a course folder crashed the download at depth. Found by
+#: auditing the guard instead of the code it guards.
+#:
+#: It also removes a FALSE positive in the other direction: `os.mkdir(...)` does
+#: match `attr == "mkdir"`, and its receiver is the bare module `os`, which can
+#: never contain `make_long_path` - so a correctly-prefixed `os.mkdir` was
+#: reported as an offender.
+_MODULE_MKDIRS = {("os", "makedirs"), ("os", "mkdir")}
+
+
 def _unprefixed_mkdirs(rel: str, source: str | None = None):
     """The census, as a function so it can be pointed at synthetic source.
 
@@ -316,15 +334,24 @@ def _unprefixed_mkdirs(rel: str, source: str | None = None):
     offenders = []
     for node in ast.walk(tree):
         if not (isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Attribute)
-                and node.func.attr == "mkdir"):
+                and isinstance(node.func, ast.Attribute)):
             continue
         receiver = ast.unparse(node.func.value)
-        if "make_long_path" in receiver or "_mlp" in receiver:
+        attr = node.func.attr
+        if (receiver, attr) in _MODULE_MKDIRS:
+            # os.makedirs(<path>) / os.mkdir(<path>) - the path is arg 0.
+            checked = ast.unparse(node.args[0]) if node.args else ""
+            label = f"{receiver}.{attr}({checked})"
+        elif attr == "mkdir":
+            checked = receiver
+            label = f"{receiver}.mkdir(...)"
+        else:
             continue
-        if (rel, receiver) in MKDIR_EXEMPT:
+        if "make_long_path" in checked or "_mlp" in checked:
             continue
-        offenders.append(f"{rel}:{node.lineno} {receiver}.mkdir(...)")
+        if (rel, checked) in MKDIR_EXEMPT:
+            continue
+        offenders.append(f"{rel}:{node.lineno} {label}")
     return offenders
 
 
@@ -426,6 +453,26 @@ def test_the_census_can_actually_fail():
             "Path(make_long_path('x')).mkdir(parents=True)\n")
     assert not _unprefixed_mkdirs("synthetic/good.py", source=good), (
         "the census flags a correctly prefixed mkdir - it would cry wolf")
+
+
+def test_the_census_sees_module_level_directory_creators():
+    """`os.makedirs` is not a `.mkdir` call, and the census used to miss it.
+
+    A guard is only worth what it can say NO to, so this asserts the new branch
+    fires rather than trusting that it exists. Both directions, because the same
+    change also fixed a false POSITIVE: `os.mkdir` does match `attr == "mkdir"`,
+    and its receiver is the bare module `os`, which can never contain
+    `make_long_path` - so a correctly prefixed `os.mkdir` was being reported.
+    """
+    for bad in ("import os\nos.makedirs(course / 'sub', exist_ok=True)\n",
+                "import os\nos.mkdir(course / 'sub')\n"):
+        assert _unprefixed_mkdirs("synthetic/bad.py", source=bad), (
+            f"the census cannot see this directory creator:\n{bad}")
+
+    for good in ("import os\nos.makedirs(make_long_path(course), exist_ok=True)\n",
+                 "import os\nos.mkdir(make_long_path(course))\n"):
+        assert not _unprefixed_mkdirs("synthetic/good.py", source=good), (
+            f"the census cries wolf on a correctly prefixed creator:\n{good}")
 
 
 def test_the_census_covers_the_modules_whose_fixes_are_load_bearing():
@@ -542,7 +589,29 @@ def test_no_prefixed_path_is_stored_returned_or_appended():
             "passed to open() only, so zipfile/tarfile get a file OBJECT and "
             "never a path; abs_archive stays clean and is what names the "
             "extraction folder, the log lines and the delete",
+        # --- the WRAPPER form, `x = Path(make_long_path(y))` ---------------
+        ("converters/archive.py", "extract_dir"):
+            "rebound in place under `if os.name == 'nt'` and consumed entirely "
+            "within this function: mkdir, zipfile/tarfile extraction targets, "
+            "and the zip-slip guard - which compares extract_dir.resolve() "
+            "against (extract_dir / member).resolve(), so BOTH sides carry the "
+            "prefix and commonpath compares like for like (measured: resolve() "
+            "keeps the prefix, benign member INSIDE, traversal BLOCKED). "
+            "extract_archive returns a bool, never a path.",
+        ("converters/verify.py", "p"):
+            "a local in file_has_content / pdf_looks_real; only ever reaches "
+            "exists(), stat() and open(), and both functions return "
+            "(bool, reason) - no path leaves them",
     }
+    #: Wrappers that turn a prefixed string back into a PATH, and so can carry
+    #: the prefix onward. `x = os.path.getsize(make_long_path(p))` is an int and
+    #: cannot leak; `x = Path(make_long_path(p))` very much can - and the first
+    #: version of this guard, which only matched a BARE make_long_path call,
+    #: could not see the wrapped form at all. Nine such bindings existed; eight
+    #: were ints or bare names, one (archive.py's extract_dir) was a real
+    #: prefixed path the guard had never examined.
+    path_wrappers = {"Path", "str", "join", "normpath", "abspath", "fspath",
+                     "PurePath", "PureWindowsPath"}
     offenders = []
     for py in sorted(REPO.rglob("*.py")):
         if any(p in {"dist", "build", "tests", "scripts", ".git", "__pycache__",
@@ -564,7 +633,20 @@ def test_no_prefixed_path_is_stored_returned_or_appended():
                 continue
             fname = getattr(call.func, "id", None) or getattr(call.func, "attr", None)
             if fname not in ("make_long_path", "_mlp", "_lp"):
-                continue
+                # The WRAPPER form: Path(make_long_path(x)) and friends. Only
+                # wrappers that yield a PATH count - getsize() returns an int,
+                # listdir() returns bare names, and neither can carry a prefix.
+                if fname not in path_wrappers:
+                    continue
+                if not any(
+                    isinstance(n, ast.Call)
+                    and (getattr(n.func, "id", None)
+                         or getattr(n.func, "attr", None))
+                    in ("make_long_path", "_mlp", "_lp")
+                    for n in ast.walk(call)
+                ):
+                    continue
+                fname = f"{fname}(make_long_path"
             if (rel, key) in allowed:
                 continue
             offenders.append(f"{rel}:{node.lineno} {key} = {fname}(...)")
@@ -607,3 +689,134 @@ def test_the_gate_script_exists_and_is_the_one_probe():
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     assert mod.VALID == 0 and mod.MASKED != 0
+
+
+# ------------------------------------------------- the HALF-FIX shape
+
+#: `path_exists(x)` and then an unprefixed operation on the same `x`.
+#:
+#: This is the shape a long-path fix ACTUALLY regresses into, and it is worse
+#: than a plain miss because the existence check passes: the file is reported
+#: present and the very next line raises FileNotFoundError, which every handler
+#: in this repo reads as "absent". Two live instances were found by pointing
+#: this at the tree on 2026-08-22, both introduced by a fix that prefixed the
+#: check and stopped there:
+#:
+#:   * `shared/components.py` error_log_dialog - the engine WRITES
+#:     download_errors.txt through make_long_path and this read it back without,
+#:     so at depth the app could not read a log it had just written. The error
+#:     dialog is the one screen a user opens when something already went wrong.
+#:   * `ui/sync_dialogs.py` - sized an ignored Panopto recording, so the dialog
+#:     reported 0 bytes for recordings plainly on disk.
+#:
+#: Neither is data loss; both are the app lying about its own files. The value
+#: of this guard is that it generalises - the third instance fails a test
+#: instead of shipping.
+_HALF_FIX_OPS = ("stat", "open", "read_text", "read_bytes", "write_text",
+                 "write_bytes", "unlink", "touch", "iterdir", "glob", "rglob",
+                 "rename", "replace", "is_file", "is_dir", "getsize",
+                 "getmtime", "listdir", "scandir", "remove")
+
+#: (module, variable) pairs where the follow-up genuinely needs no prefix.
+HALF_FIX_EXEMPT: dict[tuple[str, str], str] = {}
+
+
+def _half_prefixed_sites(root: Path | None = None, source_map=None):
+    """Every `path_exists(x)` followed within 6 lines by an unprefixed op on x.
+
+    Line-based rather than AST, deliberately: the defect is about two ADJACENT
+    statements agreeing, and the window is what makes it precise instead of
+    flagging every later use of a long-lived name.
+
+    THE WINDOW COUNTS CODE LINES, NOT PHYSICAL ONES, and that is not a detail.
+    The first version counted physical lines, so writing an eight-line comment
+    ABOVE the fixed read pushed it out of the window - and the guard then passed
+    against deliberately reverted code, reporting a live defect as absent. Found
+    by running the control, not by reading. It is the same trap this repo already
+    records for the transcription sweep: "documenting the fix pushed the call out
+    of the window, so the tests reported it as missing when it was right there."
+    A guard whose reach shrinks when someone explains the code is worse than
+    none, because the explaining is exactly what a good fix comes with.
+    """
+    import re
+    root = root or REPO
+    skip = {"dist", "build", "tests", "scripts", ".git", "__pycache__",
+            ".venv", "venv", "_audit_runs", "docs"}
+    op_re = re.compile(r"\.\s*(" + "|".join(_HALF_FIX_OPS) + r")\b")
+    items = (source_map.items() if source_map is not None else
+             ((py.relative_to(root).as_posix(), None)
+              for py in sorted(root.rglob("*.py"))
+              if not any(p in skip for p in py.parts)))
+    offenders = []
+    for rel, src in items:
+        if src is None:
+            src = (root / rel).read_text(encoding="utf-8")
+        if "path_exists" not in src:
+            continue
+        # Comments and blank lines are dropped BEFORE windowing, so the reach
+        # of the guard does not depend on how well the code is documented.
+        code = [(n + 1, ln) for n, ln in enumerate(src.splitlines())
+                if ln.strip() and not ln.lstrip().startswith("#")]
+        for i, (lineno, line) in enumerate(code):
+            m = re.search(r"path_exists\(\s*([A-Za-z_][A-Za-z0-9_.]*)\s*\)", line)
+            if not m:
+                continue
+            var = m.group(1)
+            if (rel, var) in HALF_FIX_EXEMPT:
+                continue
+            for nxt_no, nxt in code[i + 1:i + 7]:
+                if ("make_long_path" in nxt or "_mlp(" in nxt
+                        or "path_exists" in nxt):
+                    continue
+                bare = re.search(re.escape(var) + r"\s*" + op_re.pattern, nxt)
+                wrapped = re.search(
+                    r"\b(getsize|getmtime|listdir|scandir|remove|open|stat)\(\s*"
+                    + re.escape(var) + r"\s*[,)]", nxt)
+                if bare or wrapped:
+                    offenders.append(
+                        f"{rel}:{lineno} checks {var} with the prefix, then "
+                        f"line {nxt_no} uses it without: {nxt.strip()[:70]}")
+                    break
+    return offenders
+
+
+def test_no_existence_check_is_prefixed_while_its_follow_up_is_not():
+    """THE GUARD THAT GENERALISES. See _half_prefixed_sites for the two live
+    instances it found."""
+    offenders = _half_prefixed_sites()
+    assert not offenders, (
+        "path_exists() says the file is there and the next line cannot open "
+        "it - at depth this reports a present file as missing:\n  "
+        + "\n  ".join(offenders))
+
+
+def test_the_half_fix_guard_can_actually_fail():
+    """NEGATIVE CONTROL - a guard that only ever says yes is not a guard."""
+    bad = {"synthetic/bad.py":
+           "if path_exists(p):\n    total += p.stat().st_size\n"}
+    assert _half_prefixed_sites(source_map=bad), (
+        "the half-fix guard no longer reports the shape it exists for")
+
+    good = {"synthetic/good.py":
+            "if path_exists(p):\n"
+            "    total += os.stat(make_long_path(p)).st_size\n"}
+    assert not _half_prefixed_sites(source_map=good), (
+        "the half-fix guard flags a correctly prefixed follow-up")
+
+
+@needs_gate
+def test_a_course_folder_error_log_can_be_read_back(deep_dir):
+    """The engine writes download_errors.txt prefixed; the dialog must read it
+    the same way. Measured: unprefixed read_text raised FileNotFoundError on a
+    275-character log that path_exists reported as present."""
+    log = deep_dir / "download_errors.txt"
+    with open(make_long_path(log), "w", encoding="utf-8") as fh:
+        fh.write("[2026-08-22] Processing Error: something went wrong\n")
+
+    assert path_exists(log), "the fixture did not actually create the log"
+    content = Path(make_long_path(log)).read_text(encoding="utf-8").strip()
+    assert "Processing Error" in content
+
+    # The control: without the prefix this is exactly what the dialog used to do.
+    with pytest.raises(OSError):
+        log.read_text(encoding="utf-8")

@@ -19,7 +19,7 @@ import os
 import urllib.parse
 from collections import defaultdict
 from pathlib import Path
-from shared.helpers import path_exists
+from shared.helpers import make_long_path, path_exists
 
 import streamlit as st
 
@@ -381,8 +381,13 @@ def show_course_ignored_files(course_name, course_id, course_data, pair_sig=None
             for rel in (_pan_manifest.get(vid) or {}).values():
                 try:
                     p = (_pan_root / rel) if _pan_root else None
+                    # BOTH calls need the prefix, not just the existence check.
+                    # A recording inside a deep course folder answered True here
+                    # and then raised on the stat, which the handler below
+                    # swallows - so the dialog reported 0 bytes for recordings
+                    # that are plainly on disk. Half a fix reads as a whole one.
                     if p and path_exists(p):
-                        total += p.stat().st_size
+                        total += os.stat(make_long_path(p)).st_size
                 except OSError:
                     pass
             return total

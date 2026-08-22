@@ -130,8 +130,48 @@ LONG_PATH_COURSE_FOLDER_MUTANTS = [
      "    for rel in COURSE_FOLDER_MODULES[:1]:\n        checked.append(rel)"),
     ("the mkdir census treats every receiver as exempt",
      "tests/test_long_path_course_folders.py",
-     '        if (rel, receiver) in MKDIR_EXEMPT:\n            continue',
+     '        if (rel, checked) in MKDIR_EXEMPT:\n            continue',
      "        if True:\n            continue"),
+    # The census used to match only `<expr>.mkdir(...)`, so os.makedirs was
+    # invisible to it. Deleting the module-level branch restores that blindness.
+    ("the mkdir census goes blind to os.makedirs again",
+     "tests/test_long_path_course_folders.py",
+     '_MODULE_MKDIRS = {("os", "makedirs"), ("os", "mkdir")}',
+     "_MODULE_MKDIRS = set()"),
+
+    # -- the HALF-FIX shape: prefixed check, unprefixed follow-up ------------
+    # Both were live defects on 2026-08-22, found by auditing the fixes rather
+    # than the code. Each reverts to exactly what shipped.
+    ("the error-log dialog reads a course-folder log without the prefix",
+     "shared/components.py",
+     "content = Path(make_long_path(log_path)).read_text(\n"
+     "                        encoding='utf-8').strip()",
+     "content = log_path.read_text(encoding='utf-8').strip()"),
+    ("the ignored-recordings dialog sizes a recording without the prefix",
+     "ui/sync_dialogs.py",
+     "total += os.stat(make_long_path(p)).st_size",
+     "total += p.stat().st_size"),
+    # The guard's OWN failure mode, and it actually happened: counting physical
+    # lines meant an explanatory comment above the fixed call pushed it out of
+    # the window, so the guard passed against deliberately reverted code.
+    ("the half-fix guard counts physical lines again, so a comment blinds it",
+     "tests/test_long_path_course_folders.py",
+     'code = [(n + 1, ln) for n, ln in enumerate(src.splitlines())\n'
+     '                if ln.strip() and not ln.lstrip().startswith("#")]',
+     "code = [(n + 1, ln) for n, ln in enumerate(src.splitlines())]"),
+    ("the half-fix guard exempts everything",
+     "tests/test_long_path_course_folders.py",
+     "            if (rel, var) in HALF_FIX_EXEMPT:\n                continue",
+     "            if True:\n                continue"),
+
+    # -- the prefix-LEAK guard ------------------------------------------------
+    # It only saw a bare `x = make_long_path(...)`, so `x = Path(make_long_path(
+    # ...))` - the form that actually carries a prefix onward - was invisible.
+    ("the leak guard goes blind to the Path(make_long_path(x)) wrapper form",
+     "tests/test_long_path_course_folders.py",
+     '    path_wrappers = {"Path", "str", "join", "normpath", "abspath", "fspath",\n'
+     '                     "PurePath", "PureWindowsPath"}',
+     "    path_wrappers = set()"),
 ]
 
 
