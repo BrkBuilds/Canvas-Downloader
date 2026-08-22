@@ -1,0 +1,103 @@
+name: Tests (macOS)
+
+# WHY THIS EXISTS
+#
+# Until 2026-08-22 this repo had exactly ONE workflow - the DMG builder - and no
+# CI test job at all. Every test this project has ever run has run on a
+# developer machine. That is fine while a Mac is to hand and stops being fine
+# the moment it is not, because these tests exist ONLY on macOS:
+#
+#   tests/test_office_concurrency.py        3 tests, the macOS flock path
+#   tests/test_path_key_case_folding.py     probes the real volume
+#   tests/test_longpath_gate_check.py       its off-Windows half
+#
+# That last one had never run ANYWHERE until a macOS session pulled and it
+# failed immediately - the lesson CLAUDE.md records as "a test skipped on YOUR
+# platform runs only where you cannot see it". A guard that passes gets recorded
+# as protection, so a guard that never runs is worse than none.
+#
+# This is deliberately the UNIT suite, not the live audit: the runner is
+# headless, has no Microsoft Office, no Canvas token and no GUI. It covers where
+# a cross-platform regression actually surfaces. Office conversions, WKWebView
+# and the live oracles still need a real Mac.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # A newer push supersedes an in-flight run on the same ref; nobody needs the
+  # result for a commit that has already been replaced.
+  group: tests-macos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unit suite + architecture audit
+    runs-on: macos-14
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        # FULL history, not the default shallow clone. tests/test_version_leads_tags.py
+        # and tests/test_website_advertises_shipped_version.py both read `git tag`
+        # and SKIP when tags are not visible - so a shallow checkout would turn
+        # two release guards into silent no-ops, which is the exact failure this
+        # workflow exists to stop.
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install --no-cache-dir -r requirements.txt
+          # pytest is not in requirements.txt (it is not shipped), and playwright
+          # is imported by the audit harness that tests/test_audit_docs_match_cli.py
+          # reaches. The BROWSERS are not installed - nothing here drives one.
+          pip install --no-cache-dir pytest playwright
+
+      - name: Run the unit suite
+        env:
+          # The website guard resolves the newest NON-PRERELEASE release through
+          # `gh`. Without a token `gh api` fails, the fixture SKIPS, and the guard
+          # silently stops guarding - so the token is what keeps it honest here.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Never let a test touch a real config dir on the runner.
+          CANVAS_DL_CONFIG_DIR: ${{ runner.temp }}/cd-config
+        run: |
+          set -euo pipefail
+          mkdir -p "$CANVAS_DL_CONFIG_DIR"
+          python -m pytest -q -p no:cacheprovider
+
+      - name: Architecture audit
+        run: |
+          set -euo pipefail
+          python scripts/verify_architecture.py
+
+      - name: Report what actually ran
+        # A skipped test is not a passing test. The macOS-only guards are the
+        # whole reason this job runs on macOS rather than the cheaper ubuntu
+        # runner, so print the skip reasons: if the ones named at the top of this
+        # file start skipping here too, this job has quietly stopped earning its
+        # minutes.
+        if: always()
+        env:
+          CANVAS_DL_CONFIG_DIR: ${{ runner.temp }}/cd-config
+        run: |
+          python -m pytest -q -rs -p no:cacheprovider --co -q >/dev/null 2>&1 || true
+          echo "macOS-only guards that MUST run here:"
+          python -m pytest tests/test_office_concurrency.py \
+                           tests/test_path_key_case_folding.py \
+                           tests/test_longpath_gate_check.py \
+                           -q -rs -p no:cacheprovider || true
