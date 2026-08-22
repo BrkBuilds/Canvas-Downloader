@@ -49,7 +49,27 @@ def _tags() -> list[str]:
     return [t for t in (r.stdout or "").split() if t.strip()]
 
 
-def test_version_is_strictly_ahead_of_every_shipped_tag():
+def test_version_is_never_behind_a_shipped_tag():
+    """version.py may EQUAL the newest tag; it may never be below it.
+
+    RELAXED from strictly-ahead on 2026-08-22, and the evidence is in this very
+    file. The property that matters is the one its sibling below asserts through
+    the real ``_is_newer``: the banner must not offer an update to the build the
+    user is running. At ``version.py == newest tag`` that sibling PASSES, because
+    ``_is_newer("2.0.2", "2.0.2")`` is False. Only being BEHIND causes the
+    documented harm - which is what this test's own title always said.
+
+    Strictly-ahead asserted something stronger than the harm, and it is
+    unsatisfiable during the window that matters: tagging v2.0.2 for a build made
+    from ``version.py == 2.0.2`` is the correct and normal state, and the release
+    is not finished until its installers are attached. Demanding a bump at the
+    moment of tagging would mean the next Windows build stamps 2.0.3 into an
+    installer that has to be attached to the v2.0.2 release - the asset/version
+    mismatch that `marketing/FINDINGS.md` already records shipping once.
+
+    So: bump version.py when you START the next version, not when you tag the
+    current one.
+    """
     from version import __version__
 
     tags = _tags()
@@ -59,7 +79,7 @@ def test_version_is_strictly_ahead_of_every_shipped_tag():
 
     local = _version_tuple(__version__)
     newest = max(tags, key=_version_tuple)
-    assert local > _version_tuple(newest), (
+    assert local >= _version_tuple(newest), (
         f"version.py is {__version__!r} but {newest!r} is already tagged. "
         f"Shipping this build would make ui/update_banner.py offer every user "
         f"an update to the release they are running. Bump version.py first.")

@@ -28,6 +28,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -75,11 +76,36 @@ def _newest_tag() -> str | None:
 
 @pytest.fixture(scope="module")
 def shipped() -> str:
-    tag = _newest_tag()
-    if tag is None:
-        pytest.skip("no git tags visible (shallow clone or no git) - "
-                    "cannot judge what has shipped")
-    return tag
+    """The newest version a visitor can actually DOWNLOAD.
+
+    Deliberately NOT ``git tag``. A tag says nothing about whether its release
+    is a prerelease, and on 2026-08-22 that difference turned every test in this
+    file red against a website that was correct: v2.0.2 was tagged and published
+    as a PRERELEASE carrying only the macOS DMG, while the Windows installer was
+    still being built. Taking the raw newest tag would have "fixed" the failure
+    by pointing the site's Windows download button at an asset that does not
+    exist - the precise mistake this file was written to prevent.
+
+    ``scripts/sync_release_page.py:newest_shipped_version`` is the single
+    definition, shared with the tool that WRITES this page, and it matches what
+    ``ui/update_banner.py`` sees (``/releases/latest`` excludes prereleases).
+    Three consumers, one answer.
+
+    Skips when it cannot be determined, which needs ``gh``. That is coherent
+    rather than a hole: the only thing that changes these pages is
+    ``sync_release_page.py``, which requires ``gh`` too - so the guard runs
+    wherever the action it guards can be taken. The half that needs no network
+    is ``test_the_advertised_version_is_internally_consistent_and_real`` below.
+    """
+    sys.path.insert(0, str(REPO))
+    from scripts.sync_release_page import newest_shipped_version
+
+    v = newest_shipped_version()
+    if v is None:
+        pytest.skip("cannot determine the newest NON-PRERELEASE release "
+                    "(gh missing, unauthenticated, or offline) - a bare git tag "
+                    "is not a substitute, see this fixture's docstring")
+    return v
 
 
 def _json_ld(page: Path) -> list[dict]:
@@ -148,3 +174,70 @@ def test_the_site_never_advertises_the_in_development_version(shipped: str):
             assert node.get("softwareVersion") != __version__, (
                 f"{page_name} advertises {__version__}, which is version.py's "
                 f"in-development number. Nobody can download it.")
+
+
+def test_the_advertised_version_is_internally_consistent_and_real():
+    """The half that needs no network, so this file is never vacuous.
+
+    Two properties, both locally decidable:
+
+    * every place the site states a version states the SAME one. The five
+      surfaces above are edited by one script; if they ever disagree, one of
+      them was hand-edited and the page is lying to somebody regardless of
+      which number is right.
+    * that version is a real git tag. This is the original documented bug seen
+      from the only angle that survives without GitHub: on 2026-08-20 the
+      homepage advertised 2.0.2 - version.py's in-development number - when no
+      such tag existed and nobody could download it.
+
+    It deliberately does NOT judge whether that tag is the NEWEST shipped one;
+    that needs prerelease status, which is what the ``shipped`` fixture is for.
+    """
+    html = _markup(DOCS / "releases.html")
+
+    stated: set[str] = set()
+    for element_id in ("win-ver", "mac-ver"):
+        m = re.search(r"<span\b[^>]*\bid=[\"']" + element_id + r"[\"'][^>]*>(.*?)</span>",
+                      html, re.S)
+        assert m, f"#{element_id} is missing from releases.html"
+        stated.add(m.group(1).strip().lstrip("vV"))
+    stated.update(re.findall(r'class="dl-meta"[^>]*>Version\s+([0-9.]+)\s', html))
+    # Scoped to the two CURRENT download buttons by id, never a blanket sweep
+    # of the page: releases.html also carries a "Previous versions" baseline
+    # full of older /releases/download/vX/ URLs, which are supposed to name
+    # older versions. A first draft of this test swept those up and reported a
+    # correct page as inconsistent.
+    for element_id in ("win-exe", "mac-dmg"):
+        m = re.search(r"<a\b[^>]*\bid=[\"']" + element_id + r"[\"'][^>]*href=[\"']([^\"']+)[\"']",
+                      html)
+        assert m, f"#{element_id} has no static href in releases.html"
+        u = re.search(r"/releases/download/v([0-9.]+)/", m.group(1))
+        assert u, f"#{element_id} href is not a release-asset URL: {m.group(1)!r}"
+        stated.add(u.group(1))
+    for page_name in ("index.html", "releases.html"):
+        stated.update(n["softwareVersion"] for n in _json_ld(DOCS / page_name)
+                      if "softwareVersion" in n)
+
+    assert len(stated) == 1, (
+        f"the site states more than one version at once: {sorted(stated)}. "
+        f"These surfaces are all written by scripts/sync_release_page.py - a "
+        f"disagreement means one was hand-edited.")
+
+    advertised = stated.pop()
+    tags = {t.lstrip("vV") for t in _tags()}
+    if not tags:
+        pytest.skip("no git tags visible - cannot check the version is real")
+    assert advertised in tags, (
+        f"the site advertises v{advertised}, which is not a tag in this repo. "
+        f"Nobody can download it. Known tags: {sorted(tags)}")
+
+
+def _tags() -> list[str]:
+    try:
+        r = subprocess.run(["git", "tag"], cwd=REPO, capture_output=True,
+                           text=True, timeout=30)
+    except Exception:                                           # noqa: BLE001
+        return []
+    if r.returncode != 0:
+        return []
+    return [t for t in (r.stdout or "").split() if t.strip()]
