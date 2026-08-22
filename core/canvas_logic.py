@@ -6866,13 +6866,55 @@ class CanvasManager:
                 filepath = self._handle_conflict(filepath)
             seen_paths.add(str(filepath).lower())
 
+        # NEVER overwrite a shortcut this app PRODUCED as a selected output.
+        #
+        # A Panopto lecture IS a Canvas ExternalTool module item, so in the
+        # match layout this function computes exactly the path the Panopto
+        # Shortcut output occupies. `panopto.shortcut.resolve_shortcut_path`
+        # is careful in the other direction - it adopts a link of ours and
+        # steps over anything foreign - but the rule was only ever written
+        # once, on that side, and this function overwrote in place with no
+        # ownership check at all.
+        #
+        # MEASURED 2026-08-22 on course 43660: 36 files ended up tracked by
+        # BOTH sync_manifest (as a Canvas link) and panopto_manifest (as a
+        # Panopto shortcut) - the "two subsystems taking turns clobbering one
+        # path, for ever" state resolve_shortcut_path's docstring says the
+        # design exists to prevent. The chain is: this writes the Canvas link
+        # -> post-processing's URL compiler deletes it (no marker) -> the
+        # Panopto pass finds the name free and writes there. On the NEXT run
+        # this would overwrite the user's selected output, and it survived
+        # only because the compiler deleted it again and Panopto rewrote it -
+        # i.e. correctness depended on an unrelated converter toggle being on.
+        # Cancel the Panopto pass mid-run and the shortcut is simply lost.
+        #
+        # Skipping is the whole fix: the Canvas link is still captured in
+        # Compiled_External_Links.txt when convert_urls is on, and the folder
+        # keeps ONE link file per lecture pointing at the Panopto viewer.
+        # The manifest row is still recorded below - deliberately. Without it
+        # the Canvas item has no row, reads as NEW on every later sync, and is
+        # re-offered for ever; recording it also re-hashes what is actually on
+        # disk, which heals the stale md5 in folders built before this fix.
+        from shared.shortcuts import is_produced_shortcut
+        try:
+            _keep_produced = path_exists(filepath) and is_produced_shortcut(filepath)
+        except Exception:
+            # An unreadable shortcut is not proof of ownership; fall through to
+            # the ordinary write rather than silently declining to create a link.
+            _keep_produced = False
+
         if progress_callback:
             progress_callback(f'Creating link: {title}', progress_type='link', explicit_filepath=str(filepath))
 
         log_debug(f"Creating Link: {title} ({url}) -> {filepath}", debug_file)
 
         try:
-            if platform.system() == 'Darwin':
+            if _keep_produced:
+                log_debug(
+                    f"Link SKIPPED: {filepath.name} is an app-produced shortcut "
+                    f"(a Panopto output); leaving it alone and recording the "
+                    f"manifest row against it", debug_file)
+            elif platform.system() == 'Darwin':
                 # Binary-safe plist generation - plistlib handles all XML
                 # escaping internally, making manual saxutils.escape() unnecessary.
                 content = plistlib.dumps({'URL': url}, fmt=plistlib.FMT_XML)

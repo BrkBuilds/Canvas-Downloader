@@ -525,6 +525,24 @@ def _is_partial_artifact(filename: str) -> bool:
     return low.endswith('.part') or '.part.' in low or low.endswith('.tmp')
 
 
+def _is_replaced_by_produced_shortcut(local_path) -> bool:
+    """True if a tracked Canvas link's path now holds a shortcut WE produced.
+
+    Answers "is our Canvas link still the thing at this path?", which is a
+    different question from "does something exist at this path?". Restricted to
+    shortcut suffixes so it can never be asked of an ordinary file, and total -
+    an unreadable file answers False, i.e. the pre-existing behaviour.
+    """
+    try:
+        from pathlib import Path as _P
+        from shared.shortcuts import SHORTCUT_SUFFIXES, is_produced_shortcut
+        if _P(local_path).suffix.lower() not in SHORTCUT_SUFFIXES:
+            return False
+        return bool(is_produced_shortcut(local_path))
+    except Exception:                                           # noqa: BLE001
+        return False
+
+
 def _is_archive_path(path_str: str) -> bool:
     """Check if a path string represents an archive file, including compound .tar.gz."""
     lower = path_str.lower()
@@ -1781,6 +1799,31 @@ class SyncManager:
                         c_file._target_local_path = calc_path
                         _origin_category = 'new_files'
                         _original_item = c_file
+                elif _is_replaced_by_produced_shortcut(local_path):
+                    # URL Compiler bypass, SECOND FORM: the row's file is not
+                    # gone, it has been REPLACED by an app-produced shortcut.
+                    #
+                    # Only `.url`/`.webloc` rows can reach this, and a
+                    # sync_manifest row with those suffixes is always a Canvas
+                    # ExternalTool link - the Panopto Shortcut output lives in
+                    # panopto_manifest. So a produced shortcut sitting at this
+                    # path means our Canvas link is no longer there, which is
+                    # exactly what the `not path_exists` bypass above already
+                    # calls up to date.
+                    #
+                    # Measured on course 43660: 36 rows in this state, because
+                    # the URL compiler deletes the Canvas link and the Panopto
+                    # pass then writes its own file at the freed name. Without
+                    # this branch the md5 check below classifies all 36 as
+                    # 'modified', so the first Canvas-side edit to any of those
+                    # module items forks a `_NewVersion` sibling for a file the
+                    # user never touched.
+                    #
+                    # NOT gated on convert_urls_enabled: the question asked here
+                    # is about the file that is actually on disk, and the answer
+                    # does not change with a converter toggle.
+                    _origin_category = 'uptodate_files'
+                    _original_item = (c_file, sync_info)
                 elif self._is_canvas_newer(c_file, entry):
                     # Skip the expensive MD5 classification for ignored files;
                     # mod_state is irrelevant until the user explicitly un-ignores them.
