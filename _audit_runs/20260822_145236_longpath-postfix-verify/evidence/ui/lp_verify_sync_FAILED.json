@@ -1,0 +1,130 @@
+{
+  "name": "lp_verify_sync_FAILED",
+  "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260822_145236_longpath-postfix-verify/evidence/screenshots/lp_verify_sync_FAILED.png",
+  "captured": "2026-08-22 14:58:36",
+  "screen": {
+    "url": "http://127.0.0.1:8802/?mode=sync&step=1",
+    "mode": "sync",
+    "step": "1",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [
+      "Canvas Courses to Sync"
+    ],
+    "buttons": [
+      {
+        "key": "cd_wiz_sync_0_select_st_active_idlesep",
+        "text": "1. Select Courses",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_1_analyze_st_idle_idlesep",
+        "text": "2. Analyzing",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_2_review_st_idle_idlesep",
+        "text": "3. Review Changes",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_3_sync_st_idle_idlesep",
+        "text": "4. Download & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "cd_wiz_sync_4_complete_st_idle_idlesep",
+        "text": "5. Complete",
+        "disabled": true,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_hub_main",
+        "text": "Saved Groups & Pairs",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_add_folder_empty",
+        "text": "Add Course",
+        "disabled": false,
+        "gated": false,
+        "kind": "secondary"
+      },
+      {
+        "key": "btn_analyze_sync",
+        "text": "Analyze, Review & Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "primary"
+      },
+      {
+        "key": "btn_quick_sync",
+        "text": "Quick Sync",
+        "disabled": true,
+        "gated": false,
+        "kind": "primary"
+      }
+    ],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "1. Select Courses\n\n2. Analyzing\n\n3. Review Changes\n\n4. Download & Sync\n\n5. Complete\n\nCanvas Courses to Sync\nHelp\nAdd the courses you want below, then choose whether to review the changes first or just fetch everything.\n\nSaved Groups & Pairs\n\nAdd Course\n\nReady to sync? Add a Course Folder and map it to a Canvas course to get started!\n\nAnalyze, Review & Sync\n\nOR\n\nQuick Sync\n\nCompares with Canvas, then you pick what to download\nDownloads every new file and update in one click",
+    "textLen": 477
+  },
+  "wizard": [
+    {
+      "flow": "sync",
+      "index": 0,
+      "id": "select",
+      "state": "active",
+      "label": "1. Select Courses"
+    },
+    {
+      "flow": "sync",
+      "index": 1,
+      "id": "analyze",
+      "state": "idle",
+      "label": "2. Analyzing"
+    },
+    {
+      "flow": "sync",
+      "index": 2,
+      "id": "review",
+      "state": "idle",
+      "label": "3. Review Changes"
+    },
+    {
+      "flow": "sync",
+      "index": 3,
+      "id": "sync",
+      "state": "idle",
+      "label": "4. Download & Sync"
+    },
+    {
+      "flow": "sync",
+      "index": 4,
+      "id": "complete",
+      "state": "idle",
+      "label": "5. Complete"
+    }
+  ],
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": false
+  }
+}
