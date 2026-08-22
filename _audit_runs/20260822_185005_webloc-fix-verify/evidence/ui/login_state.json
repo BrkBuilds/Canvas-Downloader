@@ -1,0 +1,27 @@
+{
+  "name": "login_state",
+  "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260822_185005_webloc-fix-verify/evidence/screenshots/login_state.png",
+  "captured": "2026-08-22 18:50:43",
+  "screen": {
+    "url": "about:blank",
+    "mode": "",
+    "step": "",
+    "quick": "",
+    "dialogOpen": false,
+    "dialogTitle": "",
+    "headings": [],
+    "buttons": [],
+    "checks": [],
+    "inputs": [],
+    "expanders": [],
+    "alerts": [],
+    "exceptions": [],
+    "text": "",
+    "textLen": 0
+  },
+  "console": {
+    "console": [],
+    "errors": [],
+    "missing": true
+  }
+}
