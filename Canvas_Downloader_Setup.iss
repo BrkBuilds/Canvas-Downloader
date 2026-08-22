@@ -10,9 +10,17 @@
 
 #define AppName        "Canvas Downloader"
 ; AppVersion is injected by build_windows.py via /DAppVersion=X.Y.Z.
-; The #ifndef guard preserves manual-iscc compatibility with the hardcoded fallback.
+;
+; It is REQUIRED, and the fallback that used to sit here was a live defect.
+; A `#define AppVersion "2.0.0"` meant any caller that forgot the /D flag
+; silently built an installer declaring itself 2.0.0 - wrong in the filename,
+; wrong in Add/Remove Programs, and wrong for the upgrade logic keyed on AppId.
+; scripts/build_windows.ps1 did exactly that: it called iscc with no /D at all,
+; so on a 2.0.2 tree it produced Canvas_Downloader_Setup_2.0.0.exe and then
+; printed the path of a 2.0.2 file it had not created. Failing here is the
+; only way a forgotten flag can be noticed at all.
 #ifndef AppVersion
-  #define AppVersion   "2.0.0"
+  #error AppVersion is not defined. Build with: python scripts/build_windows.py
 #endif
 #define AppPublisher   "Canvas Downloader"
 #define AppExeName     "Canvas Downloader.exe"

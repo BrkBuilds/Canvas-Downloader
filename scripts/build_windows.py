@@ -1,24 +1,51 @@
+"""build_windows.py - Single-command Windows release build for Canvas Downloader.
+
+    python scripts/build_windows.py [--no-installer]
+
+Steps, each of which now VERIFIES its own output:
+
+  1. read __version__ from version.py (single source of truth)
+  2. regenerate version_info.py (the PE version resource) and read it back
+  3. pyinstaller Canvas_Downloader.spec  -> verify the .exe exists
+  4. iscc /DAppVersion=<ver>             -> verify the installer exists
+  5. publish it under the RELEASE ASSET NAME, ready to upload
+
+WHY EACH GUARD EXISTS - all four are mistakes this project has already made:
+
+**The rename.** Inno emits ``Canvas_Downloader_Setup_<ver>.exe``; the GitHub
+release carries ``Canvas_Downloader_v<ver>_Windows.exe``. That rename was manual,
+and `marketing/FINDINGS.md` records v2.0.1's notes naming a Windows file that was
+not the attached asset. Step 5 produces the correctly-named artifact so nobody
+has to remember, and the final summary names exactly one file to upload.
+
+**Reporting success for a partial build.** The previous version printed
+"Done. Version X built successfully." even when ISCC was missing and no installer
+had been produced, and exited 0. A missing compiler is now an ERROR unless
+``--no-installer`` says you meant it.
+
+**Nothing checked the artifacts.** The macOS workflow verifies the .app exists
+before signing it; this checked only PyInstaller's return code.
+
+**version_info.py drift.** It is GENERATED here but also CHECKED IN, and the spec
+consumes it directly. A build run any other way stamps whatever was last
+committed - which is how a 2.0.1 resource nearly shipped inside 2.0.2. Step 2
+regenerates it and then parses it back, so a write that silently did not take
+cannot pass.
+
+NOT DONE, deliberately, and stated rather than hidden: this does not read the PE
+version resource back out of the built .exe. That is the one guard that would
+close the drift question completely, but it can only be written and tested on
+Windows, and this file was hardened on a Mac. Shipping a guard nobody has run is
+the failure mode `tests/test_macos_floor_check.py` exists to document. The
+source-level check in `tests/test_version_leads_tags.py` covers the same ground
+one layer up.
 """
-build_windows.py - Single-command Windows release build for Canvas Downloader.
+from __future__ import annotations
 
-Usage:
-    python build_windows.py [--no-installer]
-
-Steps:
-  1. Read __version__ from version.py (single source of truth).
-  2. Generate version_info.py (PyInstaller PE version resource).
-  3. Run pyinstaller Canvas_Downloader.spec.
-  4. Run iscc Canvas_Downloader_Setup.iss with /DAppVersion=<version>
-     (skipped if --no-installer is passed or ISCC is not found).
-
-Output:
-  dist/Canvas Downloader/          - unpacked app
-  installer_output/
-    Canvas_Downloader_Setup_<ver>.exe  - Inno Setup installer
-"""
-
+import argparse
 import importlib.util
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -26,25 +53,61 @@ import textwrap
 
 ROOT = pathlib.Path(__file__).parent.parent.resolve()
 
+#: PyInstaller onedir output. The spec's EXE/COLLECT both use this name.
+APP_DIR = ROOT / "dist" / "Canvas Downloader"
+APP_EXE = APP_DIR / "Canvas Downloader.exe"
 
-# ── Step 1: Read version ──────────────────────────────────────────
+INSTALLER_DIR = ROOT / "installer_output"
 
-def _read_version() -> str:
+#: A PyInstaller onedir bootloader is small - a few MB. The floor is deliberately
+#: far below any plausible real value: a false negative here blocks a good build,
+#: while the thing being caught is a zero-byte or absent file.
+_MIN_EXE_BYTES = 100 * 1024
+_MIN_INSTALLER_BYTES = 1024 * 1024
+
+
+def read_version() -> str:
     spec = importlib.util.spec_from_file_location("version", ROOT / "version.py")
-    mod  = importlib.util.module_from_spec(spec)
+    mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod.__version__
 
 
-# ── Step 2: Generate PyInstaller version info file ────────────────
+def release_asset_name(version: str) -> str:
+    """The filename the GitHub release must carry.
 
-def _generate_version_info(version: str) -> pathlib.Path:
-    """Write version_info.py (PyInstaller PE resource format) and return its path."""
+    THE ONE DEFINITION. It differs from Inno's output on purpose - the release
+    naming is a publishing convention, Inno's is a build artifact - and writing
+    it in two places is how v2.0.1's notes came to name a file that was not
+    attached. ``scripts/sync_release_page.py`` never constructs this name; it
+    READS it back off the real release, which is the other half of the same rule.
+    """
+    return f"Canvas_Downloader_v{version}_Windows.exe"
+
+
+def _version_parts(version: str) -> tuple[int, int, int, int]:
+    """(major, minor, patch, build) for the Windows FIXEDFILEINFO tuple.
+
+    Raises on anything non-numeric rather than letting ``int()`` fail deep inside
+    the f-string with no context. A version like ``2.0.2rc1`` is not expressible
+    in a PE resource, so the build must stop rather than stamp something wrong.
+    """
     parts = version.split(".")
-    # Pad to 4 components for the Windows file-version tuple
     while len(parts) < 4:
         parts.append("0")
-    major, minor, patch, build = (int(p) for p in parts[:4])
+    try:
+        nums = [int(p) for p in parts[:4]]
+    except ValueError as exc:
+        raise SystemExit(
+            f"[build] ERROR: version {version!r} is not a numeric X.Y.Z - a "
+            f"Windows PE version resource cannot express it."
+        ) from exc
+    return tuple(nums)  # type: ignore[return-value]
+
+
+def generate_version_info(version: str) -> pathlib.Path:
+    """Write version_info.py (PyInstaller PE resource format) and return its path."""
+    major, minor, patch, build = _version_parts(version)
 
     content = textwrap.dedent(f"""\
         # Auto-generated by build_windows.py - do not edit manually.
@@ -80,72 +143,183 @@ def _generate_version_info(version: str) -> pathlib.Path:
 
     out = ROOT / "version_info.py"
     out.write_text(content, encoding="utf-8")
+    verify_version_info(out, version)
     print(f"[build] Generated {out.name} for version {version}")
     return out
 
 
-# ── Step 3: PyInstaller ───────────────────────────────────────────
+def verify_version_info(path: pathlib.Path, version: str) -> None:
+    """Read the file back and confirm it declares *version*.
 
-def _run_pyinstaller() -> None:
+    The write is the only thing standing between version.py and the PE resource,
+    and it is also the file the spec consumes. Parsing it back costs nothing and
+    turns "the write silently did not take" from a shipped defect into a build
+    failure. Mirrors tests/test_version_leads_tags.py's source-level check.
+    """
+    src = path.read_text(encoding="utf-8")
+    major, minor, patch, _ = _version_parts(version)
+    tuples = re.findall(r"\((\d+),\s*(\d+),\s*(\d+),\s*(\d+)\)", src)
+    if not tuples:
+        raise SystemExit(f"[build] ERROR: {path.name} has no filevers/prodvers tuple.")
+    for t in tuples:
+        if tuple(int(x) for x in t[:3]) != (major, minor, patch):
+            raise SystemExit(
+                f"[build] ERROR: {path.name} declares {t[:3]} but version.py "
+                f"says {version}.")
+    if version not in src:
+        raise SystemExit(
+            f"[build] ERROR: {path.name} does not carry the string {version!r}.")
+
+
+def run_pyinstaller() -> None:
     spec = ROOT / "Canvas_Downloader.spec"
     if not spec.exists():
-        sys.exit(f"[build] ERROR: {spec} not found.")
+        raise SystemExit(f"[build] ERROR: {spec} not found.")
     cmd = [sys.executable, "-m", "PyInstaller", "--clean", str(spec)]
     print(f"[build] Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=str(ROOT))
     if result.returncode != 0:
-        sys.exit(f"[build] ERROR: PyInstaller exited with code {result.returncode}.")
+        raise SystemExit(
+            f"[build] ERROR: PyInstaller exited with code {result.returncode}.")
     print("[build] PyInstaller succeeded.")
 
 
-# ── Step 4: Inno Setup ────────────────────────────────────────────
+def verify_app_built() -> pathlib.Path:
+    """The .exe must exist and be a real file - the macOS workflow's 'Verify
+    .app exists' step, which this build never had."""
+    if not APP_EXE.is_file():
+        raise SystemExit(
+            f"[build] ERROR: PyInstaller reported success but {APP_EXE} does not "
+            f"exist. Nothing was built.")
+    size = APP_EXE.stat().st_size
+    if size < _MIN_EXE_BYTES:
+        raise SystemExit(
+            f"[build] ERROR: {APP_EXE.name} is only {size} bytes - that is not a "
+            f"real executable.")
+    print(f"[build] Verified {APP_EXE.name} ({size / 1e6:.1f} MB)")
+    return APP_EXE
 
-def _run_inno(version: str) -> None:
+
+def find_iscc() -> str | None:
+    return (shutil.which("iscc") or shutil.which("ISCC")
+            or (str(_DEFAULT_ISCC) if _DEFAULT_ISCC.exists() else None))
+
+
+_DEFAULT_ISCC = pathlib.Path(r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe")
+
+
+def run_inno(version: str, iscc: str) -> pathlib.Path:
+    """Compile the installer and verify it landed. Returns its path.
+
+    ``/DAppVersion`` is REQUIRED, not a convenience: the .iss used to carry a
+    fallback ``#define AppVersion "2.0.0"``, so any caller that forgot it built
+    an installer that declared itself 2.0.0 in Add/Remove Programs. That is
+    exactly what scripts/build_windows.ps1 did.
+    """
     iss = ROOT / "Canvas_Downloader_Setup.iss"
     if not iss.exists():
-        print(f"[build] WARNING: {iss.name} not found - skipping installer build.")
-        return
-
-    iscc = shutil.which("iscc") or shutil.which("ISCC")
-    if not iscc:
-        # Try the default Inno Setup 6 install path
-        default = pathlib.Path(r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe")
-        if default.exists():
-            iscc = str(default)
-    if not iscc:
-        print(
-            "[build] WARNING: ISCC (Inno Setup compiler) not found on PATH.\n"
-            "         Install Inno Setup 6 or add it to PATH to build the installer.\n"
-            "         Skipping installer step."
-        )
-        return
+        raise SystemExit(f"[build] ERROR: {iss.name} not found.")
 
     cmd = [iscc, f"/DAppVersion={version}", str(iss)]
     print(f"[build] Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=str(ROOT))
     if result.returncode != 0:
-        sys.exit(f"[build] ERROR: ISCC exited with code {result.returncode}.")
-    print(f"[build] Installer built successfully for version {version}.")
+        raise SystemExit(f"[build] ERROR: ISCC exited with code {result.returncode}.")
+
+    produced = INSTALLER_DIR / f"Canvas_Downloader_Setup_{version}.exe"
+    if not produced.is_file():
+        raise SystemExit(
+            f"[build] ERROR: ISCC reported success but {produced} does not exist. "
+            f"Check OutputDir/OutputBaseFilename in {iss.name}.")
+    size = produced.stat().st_size
+    if size < _MIN_INSTALLER_BYTES:
+        raise SystemExit(
+            f"[build] ERROR: {produced.name} is only {size} bytes - not a real "
+            f"installer.")
+    print(f"[build] Verified {produced.name} ({size / 1e6:.1f} MB)")
+    return produced
 
 
-# ── Main ──────────────────────────────────────────────────────────
+def publish_release_asset(installer: pathlib.Path, version: str) -> pathlib.Path:
+    """Copy the installer to the name the GitHub release must carry.
 
-def main() -> None:
-    no_installer = "--no-installer" in sys.argv
+    A COPY, not a rename: the Setup_<ver>.exe name is referenced by
+    build_windows.ps1's output message and by docs, and breaking those to save
+    90 MB of scratch space on a dev box is a bad trade.
+    """
+    target = installer.parent / release_asset_name(version)
+    shutil.copy2(installer, target)
+    print(f"[build] Release asset ready: {target.name}")
+    return target
 
-    version = _read_version()
-    print(f"[build] Building Canvas Downloader v{version} for Windows")
 
-    _generate_version_info(version)
-    _run_pyinstaller()
+def git_state() -> tuple[str, bool]:
+    """(short commit, dirty?) - reported so the operator knows what they built.
 
-    if no_installer:
-        print("[build] --no-installer flag set; skipping Inno Setup step.")
-    else:
-        _run_inno(version)
+    Not a hard block: a local build from a dirty tree is a normal thing to do
+    while developing, and refusing would stop the build that matters. But a
+    RELEASE artifact built from uncommitted code is untraceable, so the summary
+    says so plainly rather than leaving it to be assumed.
+    """
+    try:
+        sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=str(ROOT),
+                             capture_output=True, text=True, timeout=30)
+        st = subprocess.run(["git", "status", "--porcelain"], cwd=str(ROOT),
+                            capture_output=True, text=True, timeout=30)
+    except Exception:                                           # noqa: BLE001
+        return ("unknown", False)
+    if sha.returncode != 0:
+        return ("unknown", False)
+    return (sha.stdout.strip() or "unknown", bool((st.stdout or "").strip()))
 
-    print(f"\n[build] Done. Version {version} built successfully.")
+
+def main(argv: list | None = None, *,
+         pyinstaller=run_pyinstaller,
+         inno=run_inno,
+         iscc_finder=find_iscc) -> int:
+    """The build. Hooks are injectable so the DECISIONS can be tested without
+    a 90 MB build - the same seam tests/test_macos_floor_check.py needed."""
+    ap = argparse.ArgumentParser(description="Build the Windows release.")
+    ap.add_argument("--no-installer", action="store_true",
+                    help="build the app only; do not compile the Inno installer")
+    args = ap.parse_args(sys.argv[1:] if argv is None else argv)
+
+    version = read_version()
+    commit, dirty = git_state()
+    print(f"[build] Canvas Downloader v{version}  (commit {commit}"
+          f"{', DIRTY WORKING TREE' if dirty else ''})")
+
+    generate_version_info(version)
+    pyinstaller()
+    verify_app_built()
+
+    if args.no_installer:
+        print("[build] --no-installer set; skipping Inno Setup.")
+        print(f"\n[build] Done. App built at {APP_DIR}")
+        if dirty:
+            print("[build] NOTE: built from a DIRTY working tree.")
+        return 0
+
+    iscc = iscc_finder()
+    if not iscc:
+        # Previously a warning followed by "built successfully" and exit 0.
+        print("[build] ERROR: ISCC (the Inno Setup compiler) was not found.\n"
+              "        Install Inno Setup 6, or add it to PATH.\n"
+              "        Pass --no-installer if you only wanted the app folder.",
+              file=sys.stderr)
+        return 1
+
+    installer = inno(version, iscc)
+    asset = publish_release_asset(installer, version)
+
+    print(f"\n[build] Done. Canvas Downloader v{version} built from commit {commit}.")
+    if dirty:
+        print("[build] WARNING: built from a DIRTY working tree - this artifact "
+              "contains uncommitted changes and cannot be reproduced from git.")
+    print(f"[build] UPLOAD THIS FILE to the GitHub release:\n"
+          f"        {asset}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -1,41 +1,31 @@
-# Windows Build Script for Canvas Downloader
-# This script compiles the application using PyInstaller and creates an installer with Inno Setup.
+# Windows build for Canvas Downloader - a thin wrapper, ON PURPOSE.
+#
+# This script used to be a SECOND, divergent implementation of the build, and it
+# was comprehensively wrong on 2026-08-22:
+#
+#   * it ran a bare `pyinstaller Canvas_Downloader.spec`, so version_info.py -
+#     the PE version resource, which is generated AND checked in - was never
+#     regenerated. The build stamped whatever version was last committed.
+#   * it called `iscc Canvas_Downloader_Setup.iss` with NO /DAppVersion, so the
+#     .iss fell back to a hardcoded "2.0.0". On a 2.0.2 tree it produced
+#     Canvas_Downloader_Setup_2.0.0.exe - wrong in the filename, in Add/Remove
+#     Programs, and in the upgrade logic keyed on AppId.
+#   * it then printed "Installer location: ...Canvas_Downloader_Setup_2.0.2.exe",
+#     a file it had not created.
+#
+# None of that was visible from reading either script alone; it was visible from
+# noticing there were two. A build with two implementations is a build where one
+# of them is out of date, so this one now delegates and owns no logic at all.
+# Add anything new to scripts/build_windows.py.
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "--- Starting Windows Build Process ---" -ForegroundColor Cyan
-
-# 1. Clean previous builds
-Write-Host "[1/4] Cleaning previous builds..." -ForegroundColor Yellow
-if (Test-Path "build") { Remove-Item -Path "build" -Recurse -Force }
-if (Test-Path "dist") { Remove-Item -Path "dist" -Recurse -Force }
-Write-Host "Cleanup complete."
-
-# 2. Run PyInstaller
-Write-Host "[2/4] Running PyInstaller..." -ForegroundColor Yellow
-pyinstaller --noconfirm Canvas_Downloader.spec
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "PyInstaller failed with exit code $LASTEXITCODE" -ForegroundColor Red
+$repo = Split-Path -Parent $PSScriptRoot
+Push-Location $repo
+try {
+    python scripts/build_windows.py @args
     exit $LASTEXITCODE
 }
-Write-Host "PyInstaller build successful."
-
-# 3. Run Inno Setup Compiler
-Write-Host "[3/4] Compiling Installer with Inno Setup..." -ForegroundColor Yellow
-$isccPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
-if (-not (Test-Path $isccPath)) {
-    Write-Host "Error: ISCC.exe not found at $isccPath. Please ensure Inno Setup 6 is installed." -ForegroundColor Red
-    exit 1
+finally {
+    Pop-Location
 }
-
-& $isccPath Canvas_Downloader_Setup.iss
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Inno Setup compilation failed with exit code $LASTEXITCODE" -ForegroundColor Red
-    exit $LASTEXITCODE
-}
-Write-Host "Installer compilation successful."
-
-# 4. Success
-$version = Get-Content version.py | Select-String "__version__ = `"(.*)`"" | ForEach-Object { $_.Matches.Groups[1].Value }
-Write-Host "--- Build Complete! ---" -ForegroundColor Green
-Write-Host "Installer location: installer_output\Canvas_Downloader_Setup_$version.exe" -ForegroundColor Green
