@@ -530,3 +530,78 @@ divergent-primitive failure this repo has hit three times does not apply.
 `shutil.disk_usage` sites (destination ROOT, and `_check_disk_space` fails OPEN),
 `converters/verify.py`'s two delete gates (both prefixed), `shared/components`'s
 log-tail readers (config dir), `shared/shortcuts`'s `tmp_long`.
+
+---
+
+## Area 7 - the FULL-STRESS live run on the enforcing machine (2026-08-22)
+
+Everything the product allows, driven through the real app and a real browser
+against the real account, on the one box where `LongPathsEnabled=0`.
+
+**Destination 190 chars -> course folder 260, files to 421.**
+
+### The control comes first
+
+Before starting, an UNPREFIXED `mkdir` of the course folder was attempted and
+**failed** (`FileNotFoundError`). Without that step the run proves nothing: a
+long-path test on a machine that cannot fail passes either way. Same discipline
+as `needs_gate` in the test file.
+
+Config was isolated via `CANVAS_DL_CONFIG_DIR`; afterwards the operator's real
+`canvas_downloader_settings.json` and `canvas_sync_pairs.json` still carried
+their pre-run timestamps.
+
+### Configuration - everything the app allows
+
+| card | state |
+|---|---|
+| Course Files | All Files + With Subfolders |
+| Canvas Content | ON, all 6, **In Separate Folders** |
+| Optimize for AI Tools | ON, all 9 converters |
+| Panopto | Shortcut + Video + Audio. **Transcript/Subtitles disabled by the app** (no model) |
+
+### Download - Success
+
+**372 files, 3.3 GB, 0 `stException`.** On disk 334 files, **333 (100%) past
+260 chars**, deepest **421**.
+
+* every `.pptx`/`.pptm` consumed by PPT->PDF (0 left, 121 PDFs)
+* every `.html` consumed by Pages->MD (0 left, 80 `.md`)
+* `Compiled_External_Links.txt` written, 0 `.zip` remaining
+* **36 mp4 + 36 mp3 + 36 shortcuts** - complete Panopto set
+* **zero `.part` files stranded**
+* only 2 errors, both teacher-locked Canvas files, correctly reported as
+  *"Nothing is missing that could have been fetched."*
+
+**Debug log: 1,356 lines, ZERO** "no such file" / `WinError 2|3|206` / "too
+long" / tracebacks. That is the check that matters, because this defect class
+is silent. The sync run's own log sits at **274 chars inside the course folder**
+and is equally clean.
+
+**`.url` settled at exactly 36** - 77 shortcuts created, the URL compiler
+consumed the 41 Canvas links and SPARED the 36 Panopto ones. The marker logic,
+working at 418 chars.
+
+### Sync review - everything up to date
+
+> *"Sync done - everything up to date. Checked 262 files and 36 recordings in
+> this course - your folder already matches Canvas."*
+
+Analyzer's own tally: `0 new | 0 clean updates | 0 locally-edited updates |
+0 deleted on Canvas | 0 deleted locally`.
+
+**`0 deleted locally` is the load-bearing number.** 41 manifest rows point at
+`.url` files the URL compiler deleted; at depth those could easily have been
+re-offered as missing. The URL Compiler bypass held.
+
+### The two half-fixes, confirmed on REAL data
+
+* `download_errors.txt` written at the real **280-char** path with the engine's
+  own write form -> unprefixed read `FileNotFoundError`, prefixed read fine.
+* ignored-recordings sizing against the real 36-recording manifest ->
+  **old form sized 0 of 108 outputs (all swallowed), new form 108 / 2,617.7 MB**.
+
+### Not covered
+
+Transcript/Subtitles - the app itself disables them with no transcription model
+installed. A real product state, not a trimmed scope.
