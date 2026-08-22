@@ -169,9 +169,9 @@ LONG_PATH_COURSE_FOLDER_MUTANTS = [
     # ...))` - the form that actually carries a prefix onward - was invisible.
     ("the leak guard goes blind to the Path(make_long_path(x)) wrapper form",
      "tests/test_long_path_course_folders.py",
-     '    path_wrappers = {"Path", "str", "join", "normpath", "abspath", "fspath",\n'
-     '                     "PurePath", "PureWindowsPath"}',
-     "    path_wrappers = set()"),
+     'PATH_WRAPPERS = {"Path", "str", "join", "normpath", "abspath", "fspath",\n'
+     '                 "PurePath", "PureWindowsPath"}',
+     "PATH_WRAPPERS = set()"),
 ]
 
 

@@ -321,6 +321,18 @@ def _mkdir_receivers(path: Path):
 #: reported as an offender.
 _MODULE_MKDIRS = {("os", "makedirs"), ("os", "mkdir")}
 
+#: Wrappers that turn a prefixed string back into a PATH, and so can carry
+#: the prefix onward. `x = os.path.getsize(make_long_path(p))` is an int and
+#: cannot leak; `x = Path(make_long_path(p))` very much can - and the first
+#: version of the leak guard, which matched only a BARE make_long_path call,
+#: could not see the wrapped form at all.
+#:
+#: MODULE level so the guard and its control read the SAME set. They each
+#: held a copy first, and the mutation pass caught it: deleting the guard's
+#: copy SURVIVED, because the control was asserting against its own.
+PATH_WRAPPERS = {"Path", "str", "join", "normpath", "abspath", "fspath",
+                 "PurePath", "PureWindowsPath"}
+
 
 def _unprefixed_mkdirs(rel: str, source: str | None = None):
     """The census, as a function so it can be pointed at synthetic source.
@@ -610,9 +622,7 @@ def test_no_prefixed_path_is_stored_returned_or_appended():
     #: could not see the wrapped form at all. Nine such bindings existed; eight
     #: were ints or bare names, one (archive.py's extract_dir) was a real
     #: prefixed path the guard had never examined.
-    path_wrappers = {"Path", "str", "join", "normpath", "abspath", "fspath",
-                     "PurePath", "PureWindowsPath"}
-    offenders = _prefixed_bindings(allowed, path_wrappers)
+    offenders = _prefixed_bindings(allowed, PATH_WRAPPERS)
     assert not offenders, (
         "a prefixed path is bound to a name without a recorded reason - if it "
         "reaches a manifest row or an index, every later comparison against a "
@@ -681,8 +691,7 @@ def test_the_leak_guard_sees_the_wrapper_form():
     because every real wrapper-form binding is exempt, so nothing was left to
     flag. Both directions, since a wrapper that yields an int cannot leak.
     """
-    wrappers = {"Path", "str", "join", "normpath", "abspath", "fspath",
-                "PurePath", "PureWindowsPath"}
+    wrappers = PATH_WRAPPERS
 
     leaks = {"synthetic/leak.py": "root = Path(make_long_path(course))\n"}
     assert _prefixed_bindings({}, wrappers, source_map=leaks), (
