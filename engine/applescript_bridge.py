@@ -1984,9 +1984,15 @@ _QUIT_TARGETS = [
 def _close_marker_docs_script(app: str, collection: str) -> str:
     """AppleScript that closes every open document staged by Canvas Downloader.
 
-    Matches ONLY documents whose ``full name``/``path`` contains the unique
-    ``CanvasDownloaderTmp`` staging marker, so a user's own files can never
-    match. Closes one document per outer pass (re-fetching the live collection
+    Matches ONLY documents whose ``full name``/``path`` contains THIS PROCESS's
+    staging marker (``_INSTANCE_MARKER``), so neither a user's own files nor
+    another Canvas Downloader instance's in-flight conversion can ever match.
+    The broad ``_CANVAS_TMP_MARKER`` would match both this instance's documents
+    and a second instance's - which is the defect the instance token exists to
+    close, and closing a document is destructive, so this side takes the narrow
+    question. Verified live 2026-08-22 with two real instances: a second
+    instance's teardown left the first's open document alone, and the same
+    teardown forced to the first's marker closed it. Closes one document per outer pass (re-fetching the live collection
     each time) because deleting from an AppleScript list while iterating it
     skips elements. Property reads are individually ``try``-wrapped: never-saved
     documents and dictionary differences between Office versions just no-op.
@@ -2043,6 +2049,18 @@ def _force_close_canvas_docs_sync(only_app: str | None = None, *,
     running check inside the script).
     """
     if sys.platform != 'darwin':
+        return
+    # `only_app` is a FULL app name ("Microsoft Word"), because that is what
+    # _QUIT_TARGETS holds and what the one production caller passes straight
+    # through from it. A name that matches nothing skips the whole loop and
+    # this function then does nothing, says nothing, and returns successfully -
+    # which cost a debugging cycle during the 2026-08-22 two-instance
+    # verification, where "Word" read as a working call that closed nothing.
+    # Every other silence in this function was made loud for the same reason.
+    if only_app and only_app not in {a for a, _c in _QUIT_TARGETS}:
+        logger.warning("[OfficeQuit] force-close asked for %r, which is not one "
+                       "of %s - nothing was closed", only_app,
+                       sorted(a for a, _c in _QUIT_TARGETS))
         return
     for app, collection in _QUIT_TARGETS:
         if only_app and app != only_app:
