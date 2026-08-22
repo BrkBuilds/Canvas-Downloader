@@ -7,7 +7,7 @@ import re
 
 import streamlit as st
 from pathlib import Path
-from shared.helpers import path_exists
+from shared.helpers import make_long_path, path_exists
 from shared.helpers import (
     open_folder, open_file, reveal_in_folder, esc, short_path,
     declined_reason_sentence, split_delivery_errors,
@@ -3948,7 +3948,15 @@ def error_log_dialog(log_paths):
         for log_path in log_paths:
             if path_exists(log_path):
                 try:
-                    content = log_path.read_text(encoding='utf-8').strip()
+                    # Prefixed like the existence check above it. These logs sit
+                    # INSIDE a course folder - canvas_logic writes them through
+                    # make_long_path - so an unprefixed read here meant the app
+                    # could write the error log at depth and then not read it
+                    # back, reporting "no such file" about a file it had just
+                    # created. The error dialog is the one screen a user opens
+                    # when something has already gone wrong.
+                    content = Path(make_long_path(log_path)).read_text(
+                        encoding='utf-8').strip()
                     if content:
                         found_any = True
                         # esc() the folder name: it is a course folder, so it

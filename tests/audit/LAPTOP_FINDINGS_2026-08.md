@@ -440,3 +440,93 @@ class this file already documents:
 including the `_NewVersion` route and the iCloud contract. All re-anchored on the
 PROPERTY rather than the spelling. The iCloud test is now stronger than before:
 enumeration moved into a helper, so it follows it there.
+
+---
+
+## Area 6 - the SECOND-ORDER audit: auditing the FIXES (2026-08-22)
+
+Run straight after Area 5, on the standing instruction *"we do NOT want to see
+any crashes in one week"*. The brief named `compute_local_md5` and the mkdir
+sites specifically.
+
+**Result: the product fixes held. The GUARDS did not.** Which is the useful
+finding - at this stage the question is no longer "did I patch the sites" but
+**"can my guard still say NO, and to what?"**
+
+### Two live defects, both the HALF-FIX shape
+
+`path_exists(x)` prefixed, the very next line not. Worse than a plain miss,
+because the existence check PASSES and the follow-up raises `FileNotFoundError`,
+which every handler here reads as *absent*.
+
+| where | effect at depth |
+|---|---|
+| `shared/components.py` `error_log_dialog` | the engine writes `download_errors.txt` prefixed; this read it back without. *"Could not read ...: No such file or directory"* about a file the app had just created - on the one screen a user opens when something already went wrong |
+| `ui/sync_dialogs.py` | sized an ignored Panopto recording; the `except OSError: pass` below swallowed it, so the dialog showed **0 bytes** for recordings plainly on disk |
+
+Measured at 275 / 269 chars: `path_exists` True, unprefixed op `FileNotFoundError`,
+prefixed op fine. Neither is data loss; both are the app lying about its own files.
+
+**The durable artifact is the scanner, not the two fixes.** It found two and will
+find the third.
+
+### The scanner's OWN failure, and it is the transferable lesson
+
+Its window originally counted PHYSICAL lines, so the eight-line comment I wrote
+explaining the `components.py` fix pushed the fixed call outside the window - and
+the guard then **passed against deliberately reverted code**, reporting a live
+defect as absent. It now counts CODE lines. Found by running the control, not by
+reading it. Same trap this repo already records for the transcription sweep.
+
+> A guard whose reach shrinks when someone explains the code is worse than none,
+> because explaining is what a good fix comes with.
+
+### Two blind spots in guards written the day before
+
+Both latent, not live - which is *why* they had to be closed: a guard that passes
+gets recorded as protection.
+
+* **the mkdir census could not see `os.makedirs`** (it matched `<expr>.mkdir(...)`
+  only). Fixing it also removed a false POSITIVE: `os.mkdir` matches
+  `attr == "mkdir"` and its receiver is the bare module `os`, which can never
+  contain `make_long_path`.
+* **the prefix-leak guard could not see `x = Path(make_long_path(y))`**, only the
+  bare form. Nine wrapper-form bindings exist; eight are ints or bare names, one
+  (`archive.py`'s `extract_dir`) was a real prefixed path never examined.
+
+### Three claims re-measured. Two held; one was wrong in my favour
+
+* **`Path.resolve()` keeps the prefix.** An earlier probe said otherwise and *the
+  probe was broken* (heredoc-mangled literal). Matters because `archive.py`'s
+  zip-slip guard compares two `.resolve()` results - both carry the prefix,
+  `commonpath` compares like for like, benign INSIDE / traversal BLOCKED.
+* **ffmpeg accepts a prefixed output path** - real 1412-byte MP3 at 260 chars.
+  `panopto/stream.py` was FLAGGED as broken and then **disproved by reading the
+  whole function**: `out_path` is prefixed at the top and `part_path` derives
+  from it. Grep saw an unprefixed-looking `getsize(part_path)` 90 lines below the
+  binding. Had it been real, every Panopto download in a deep folder would die
+  after 180s blaming the network.
+* **CORRECTION: "the config dir tops out at 180 chars" was wrong.** True worst
+  case with a 104-char username is **224** (`cuda_libs/_tmp12/<nvidia wheel>.whl`);
+  the deepest DIRECTORY - what the 16 unpatched mkdir sites create - is ~163. Both
+  inside their limits (260 / 248), so **the decision not to patch stands and is
+  safer than the number I first wrote**. It holds because both layouts are FLAT:
+  models are streamed to `panopto_models/<id>/<short name>` by hand, NOT via
+  `snapshot_download`, whose cache layout would add 125 chars and reach 272.
+  **Switching that fetch re-opens this.**
+
+### `compute_local_md5`, re-verified at 311 characters
+
+Edit protection rests on it, so all three outcomes were driven, not read:
+EXISTS -> real digest, MISSING -> `""`, LOCKED (exclusive `msvcrt` lock) -> `None`.
+Contract intact at depth. Confirmed there is only ONE file hasher in the app -
+`secondary_content_sig` hashes Canvas STRINGS, not a path - so the
+divergent-primitive failure this repo has hit three times does not apply.
+
+### Swept CLEAN - do not repeat
+
+350 unprefixed path calls in product code, triaged: `sync_manager.history_path`
+(config dir), its `item.is_dir()` (item comes from a prefixed `iterdir`), both
+`shutil.disk_usage` sites (destination ROOT, and `_check_disk_space` fails OPEN),
+`converters/verify.py`'s two delete gates (both prefixed), `shared/components`'s
+log-tail readers (config dir), `shared/shortcuts`'s `tmp_long`.
