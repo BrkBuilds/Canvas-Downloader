@@ -167,11 +167,38 @@ def test_a_handler_that_never_answers_keeps_the_OLD_answer(un):
     """Guessing failure on a slow accept would let the UN banner land AND a
     fallback banner beside it - two notifications for one event."""
     un.setattr(N, "_get_un_center", lambda: _Center("never"), raising=False)
-    monkey_timeout = 0.05
+    # Long enough that a whole scheduler tick is a small fraction of it - see
+    # the note on the bound below. Still trivial next to the suite.
+    monkey_timeout = 0.2
     un.setattr(N, "_UN_DELIVERY_TIMEOUT_S", monkey_timeout, raising=False)
-    t0 = time.time()
+    # A TIMED WAIT MAY RETURN EARLY, so `elapsed >= timeout` asserts something
+    # no OS promises, and this flaked as a lone failure inside a full-suite run
+    # while passing in isolation - the most expensive shape there is, because it
+    # reads as a regression in whatever you just changed.
+    #
+    # Measured on Windows 2026-08-22, and the measurement is the point: a tight
+    # loop of `Event.wait(0.05)` came back short 74 times in 2000, worst case
+    # 1.04 ms, so a 5 ms tolerance looked generous - and it STILL failed 6 runs
+    # in 50, at 0.0393 s, 10.7 ms short. The tight loop had understated it: a
+    # busy process holds the Windows timer resolution high, while a fresh pytest
+    # process runs at the default ~15.6 ms tick, and a timed wait can return up
+    # to a full tick early. Chasing the constant was the wrong move twice.
+    #
+    # So the bound is PROPORTIONAL and the timeout is long enough that a whole
+    # tick is a small fraction of it: 15.6 ms of a 200 ms wait leaves >92%,
+    # against a bound of 50%. What the guard actually exists to catch is the
+    # wait being skipped or the timeout ignored - elapsed ~= 0, which is a mile
+    # below the bound - not the difference between 190 ms and 200 ms.
+    #
+    # monotonic() rather than time.time() is a separate, smaller correctness
+    # point: Event.wait's own deadline is monotonic and the wall clock can be
+    # stepped by NTP mid-run. It is NOT what caused this flake; measuring is
+    # what disproved that first hypothesis.
+    t0 = time.monotonic()
     assert N._show_macos_notification_un("Sync done", "12 files") is True
-    assert time.time() - t0 >= monkey_timeout, "it must actually have waited"
+    waited = time.monotonic() - t0
+    assert waited >= monkey_timeout / 2, (
+        f"it returned without waiting: {waited:.6f}s of {monkey_timeout}s")
 
 
 def test_a_SLOW_answer_is_still_read(un):
