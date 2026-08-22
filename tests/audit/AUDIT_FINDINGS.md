@@ -11,14 +11,14 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260822_145236_longpath-postfix-verify` on 2026-08-22.
 
-**9 open** · 180 total · 29 accepted · 94 fixed · 47 invalid · 1 wontfix
+**3 open** · 180 total · 30 accepted · 98 fixed · 47 invalid · 2 wontfix
 
 ---
 
 ### STATIC ONLY, unconfirmed: four delete-family converters do all their course-folder I/O without make_long_path
 <!-- fp:2af59c761f0c -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: correctness
 **Oracles**: static-analysis
@@ -31,7 +31,9 @@ Last updated by run `20260822_145236_longpath-postfix-verify` on 2026-08-22.
 
 Recorded as a POINTER FOR THE NEXT DYNAMIC RUN, not as a confirmed defect. With the dynamic gate unavailable (see the LongPathsEnabled finding), the same question was asked of the source: an AST scan for filesystem calls whose path expression never passes through make_long_path / office_safe_path. It returns 329 raw hits, which is far too many to all be real - most are config-dir, temp or app-owned paths that are short by construction, and the instrument has no provenance analysis, so that number must NOT be quoted as a defect count. The subset worth a dynamic run is CLAUDE.md's delete family, because those operate on course-folder paths (arbitrary depth under a user-chosen root) and delete the file they converted from: converters/code.py (3 unprefixed FS calls), md.py (3), url.py (4), video.py (3 unlink sites), pdf.py (1) - none of which reference make_long_path at all; excel.py and archive.py do. pdf.py and word.py are partly covered in practice by office_container_stage, which stages to a short src_<hex> path; code, md, url and video have no such staging. PREDICTED behaviour at LongPathsEnabled=0, FROM READING THE CODE AND NOT MEASURED: code.py reads at line 44, writes, verifies exists()+st_size, and only then unlinks the source, so an over-long path raises at the READ and the outer handler returns None with the source intact - the ordering is fail-safe and the delete-family discipline holds. The expected symptom is therefore degradation rather than data loss: files in deeply-nested course folders silently never convert, and the logged reason is '[Errno 2] No such file or directory' about a file that is plainly there, which actively misleads diagnosis. POINT A DYNAMIC RUN AT converters/video.py FIRST: its three Path(...).unlink(missing_ok=True) sites swallow FileNotFoundError, which is exactly what an over-long path raises - the mechanism behind the transcribe.py .part leak ('no removal, no retry, no log'). Severity and even reachability are UNCONFIRMED, because confirming them needs the machine that can fail.
 
-**Notes**: Table and method in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 3. Treat as where to look, not as a findings list.
+**Notes**: FIXED, and this entry was already stale when it was written. The measurement above was taken on the laptop at ~11:00 on 2026-08-22; the five-layer long-path pass (`69b22ec`, 12:21 the same day) landed layer 2, 'converter I/O (14 sites)', which is exactly the remedy the note prescribes. Verified two ways. STATIC: every one of the four now imports and uses the wrappers - converters/code.py 6 references, md.py 4, url.py 7, video.py 4. The specific sites the note named are the fixed ones: video.py's three `Path(...).unlink(missing_ok=True)` calls are now `Path(make_long_path(...)).unlink(...)` (lines 142/154/173), so 'too long' can no longer be swallowed as 'already gone', and url.py's silent glob is now `walk_files_long(course_path)` with a comment saying why rglob cannot be used. LIVE: the full-stress run on the enforcing machine (LongPathsEnabled=0, course folder 260 chars, files to 421, control = an unprefixed mkdir of that folder FAILING first) consumed every .pptx/.pptm into 121 PDFs, every .html into 80 .md, wrote Compiled_External_Links.txt, produced 36 mp3, stranded zero .part files, and left a 1,356-line debug log with ZERO 'no such file' / WinError 2|3|206 / 'too long' lines - which is the check that matters, because this class is silent. Narrative in tests/audit/LAPTOP_FINDINGS_2026-08.md area 7; tests in tests/test_long_path_course_folders.py (23, behavioural ones skip where the gate is masked); scripts/_mutate_long_path_course_folders.py 15/15 caught.
+
+Table and method in tests/audit/LAPTOP_FINDINGS_2026-08.md, area 3. Treat as where to look, not as a findings list.
 > NO LONGER STATIC - MEASURED 2026-08-22 on this laptop once LongPathsEnabled was set to 0, by driving the REAL converter functions against fixtures created through make_long_path (so a failure can only be about the converter's own I/O). Every prediction in the Detail above held, and the severity assessment holds with it: **all four fail SAFE - the user's source file survived in every case** - so this is degradation and misdiagnosis, NOT data loss, and it should not be escalated. convert_code_to_txt at 318 chars returned None, source intact, logged '[Errno 2] No such file or directory' about a file that is plainly there. convert_html_to_md at 349 chars returned None, source intact, logged 'Invalid HTML file path' - it fails at an exists() check before it ever opens anything. compile_urls_to_txt at 360 chars returned (None, []) with the .url file intact and **logged NOTHING AT ALL**, which makes it the worst of the four to diagnose: the glob simply matches nothing, so the course silently compiles no links. And the video.py mechanism is CONFIRMED: Path(...).unlink(missing_ok=True) on a real 323-character file returned normally and deleted nothing, while the identical call at a short path deletes correctly - missing_ok=True swallows the FileNotFoundError an over-long path raises, so 'too long' reads as 'already gone', the exact mechanism behind the transcribe.py .part leak. STILL OPEN because nothing was fixed: the remedy is make_long_path at those call sites, and the product-visible symptom today is that files in deeply-nested course folders silently never convert on a default Windows install.  
 > Not observed in the latest run.
 
@@ -40,7 +42,7 @@ Recorded as a POINTER FOR THE NEXT DYNAMIC RUN, not as a confirmed defect. With 
 ### A COM-spawned EXCEL.EXE outlived 4+ rows (2h08m) while the app correctly killed every instance it tracked
 <!-- fp:6759ff4ce798 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O3
@@ -53,7 +55,8 @@ Recorded as a POINTER FOR THE NEXT DYNAMIC RUN, not as a confirmed defect. With 
 
 REFINES the earlier 'attribution uncertain' note by separating two phenomena I had conflated. The HANGS are plausibly aggravated by this audit's memory pressure (3 lanes on a 13.9 GB machine). The LEAK is not: memory pressure does not explain a process outliving its owner. Measured directly. The app spawns one Excel per conversion attempt and reclaims a hung one by PID - in row m028 alone it logged 'Excel hung >180s on <file>. Killing PID 26740 / 21420 / 27204', three different PIDs, all gone. Yet EXCEL.EXE PID 20872, CreationDate 20260808172055, was still alive at 19:29 - 2h08m, spanning at least m012, m013, m014 and m028. Its command line is 'EXCEL.EXE /automation -Embedding' with ParentProcessId 1396 (DCOM/RPCSS), so it is COM-launched and headless, NOT a user's own Excel window, and CLAUDE.md notes the session orphan reaper cannot see it precisely because it is a child of DCOM rather than of us. This is the class the 2026-08-08 _init_app hardening addresses (capture the PID immediately after DispatchEx, guard the property sets, _kill_app on failure) - one instance reachable from neither direction. User-visible consequence: a ~175 MB headless Excel that never exits, per occurrence, for the life of the session. NOT tied to a specific row by this evidence - 20872 appeared at 17:20:55, inside m014's window, which is a row whose convert_excel toggle was never applied, so the trigger is worth pinning down before fixing. To reproduce cleanly: run the office lane alone and watch for an EXCEL.EXE that survives a COMPLETED row.
 
-**Notes**:   
+**Notes**: ROOT CAUSE FIXED in `faa927d` ('the tracked Office PID was a GUESS, and the watchdog force-kills it'), and the two Excel-orphan entries in this register are the SAME defect seen from two distances. `find_new_office_pid` returned the first process of its name absent from the pre-dispatch snapshot, with nothing checking it was ours. Measured on Windows against `Application.Hwnd` -> `GetWindowThreadProcessId` as ground truth, with two concurrent instances: lane A guessed 2448 when the truth was 9816, lane B guessed 2448 correctly. That single fact explains BOTH loose ends these entries carried. 'The app killed every instance it tracked' is true precisely because it tracked one pid twice - so the other instance's Excel was never tracked by anyone and could be reclaimed from neither direction. And the orphan appearing 'inside a row whose convert_excel was never applied' is because attribution was CROSS-LANE, which is also why the trigger could never be pinned to a row: there is no special row, the trigger is any two concurrent `_init_app` calls. The fix is the discriminator that was already measured and sitting in this register two weeks earlier - a COM-activated Office is `EXCEL.EXE /automation -Embedding` with parent RPCSS, which a user's own double-clicked workbook never carries - plus an ambiguity rule (more than one candidate after a settle re-check -> track nothing rather than guess). Covered by tests/test_office_pid_attribution.py (24, and they pass ON WINDOWS); scripts/_mutate_office_pid_attribution.py 10/10 caught. STATUS DELIBERATELY `fixed` RATHER THAN `invalid`: the observation was real, and marking it fixed is what makes a reappearance report as a REGRESSION - which is the line worth watching. NOT YET RE-MEASURED: no office-lane run has been done on Windows since the fix, so the confirming evidence is 'no EXCEL.EXE survives a completed row'. That is the one check to run on the next Windows office matrix.
+
 > Not observed in the latest run.
 
 ---
@@ -61,7 +64,7 @@ REFINES the earlier 'attribution uncertain' note by separating two phenomena I h
 ### CONFIRMED LEAK: the orphaned EXCEL.EXE survived the entire audit - 5h54m, outliving every lane, the app and the browser
 <!-- fp:b79fd1dd2b22 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: medium
 **Category**: robustness
 **Oracles**: O3
@@ -74,7 +77,8 @@ REFINES the earlier 'attribution uncertain' note by separating two phenomena I h
 
 Decisive follow-up to the earlier 'attribution uncertain' note, taken AFTER full teardown. At 23:15, with zero audit Streamlit apps and zero audit Chrome processes remaining, EXCEL.EXE PID 20872 (CreationDate 20260808172055, command line 'EXCEL.EXE /automation -Embedding', ParentProcessId 1396 = DCOM/RPCSS) was STILL RUNNING - 5 hours 54 minutes old. It outlived all 12 office-lane rows, the app that spawned it, and the browser. That excludes the last benign explanation: it cannot be an instance a live conversion was using, because nothing was live. It is also not the user's own Excel - '/automation -Embedding' means COM-launched and headless. Contrast with the instances the app DOES track: during m028 it logged '[COM Timeout] Excel hung >180s ... Killing PID 26740 / 21420 / 27204', three different pids, every one reclaimed. So the app reclaims what it holds a handle or pid for, and 20872 was reachable from neither - exactly the failure the 2026-08-08 _init_app hardening describes (capture the pid immediately after DispatchEx, guard the property sets, _kill_app on failure). CLAUDE.md already notes the session orphan reaper cannot see such a process because it is a child of DCOM rather than of us. User-visible cost: a ~175 MB headless Excel that never exits. STILL NOT PINNED to a trigger: 20872 appeared at 17:20:55, inside m014's window - a row whose convert_excel toggle was never applied - so the spawning path is worth identifying before fixing. Reproduce by running the office lane alone and watching for an EXCEL.EXE that survives a COMPLETED row.
 
-**Notes**:   
+**Notes**: ROOT CAUSE FIXED in `faa927d` ('the tracked Office PID was a GUESS, and the watchdog force-kills it'), and the two Excel-orphan entries in this register are the SAME defect seen from two distances. `find_new_office_pid` returned the first process of its name absent from the pre-dispatch snapshot, with nothing checking it was ours. Measured on Windows against `Application.Hwnd` -> `GetWindowThreadProcessId` as ground truth, with two concurrent instances: lane A guessed 2448 when the truth was 9816, lane B guessed 2448 correctly. That single fact explains BOTH loose ends these entries carried. 'The app killed every instance it tracked' is true precisely because it tracked one pid twice - so the other instance's Excel was never tracked by anyone and could be reclaimed from neither direction. And the orphan appearing 'inside a row whose convert_excel was never applied' is because attribution was CROSS-LANE, which is also why the trigger could never be pinned to a row: there is no special row, the trigger is any two concurrent `_init_app` calls. The fix is the discriminator that was already measured and sitting in this register two weeks earlier - a COM-activated Office is `EXCEL.EXE /automation -Embedding` with parent RPCSS, which a user's own double-clicked workbook never carries - plus an ambiguity rule (more than one candidate after a settle re-check -> track nothing rather than guess). Covered by tests/test_office_pid_attribution.py (24, and they pass ON WINDOWS); scripts/_mutate_office_pid_attribution.py 10/10 caught. STATUS DELIBERATELY `fixed` RATHER THAN `invalid`: the observation was real, and marking it fixed is what makes a reappearance report as a REGRESSION - which is the line worth watching. NOT YET RE-MEASURED: no office-lane run has been done on Windows since the fix, so the confirming evidence is 'no EXCEL.EXE survives a completed row'. That is the one check to run on the next Windows office matrix.
+
 > Not observed in the latest run.
 
 ---
@@ -104,7 +108,7 @@ The CanvasDownloaderTmp marker means 'some Canvas Downloader', not 'this instanc
 <!-- fp:16e0de9e610a -->
 
 **Status**: open
-**Severity**: medium
+**Severity**: low
 **Category**: robustness
 **Oracles**: O2
 **First seen**: 2026-08-05 (20260805_220433_sync-matrix)
@@ -114,17 +118,30 @@ The CanvasDownloaderTmp marker means 'some Canvas Downloader', not 'this instanc
 
 **Detail**:
 
-Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1': Encountered an error: status code 502
+RE-SCOPED 2026-08-22 from the raw log echo to the mechanism behind it, after reading the code path. The original detail was a single copied log line, which is not something a future session can act on.
 
-**Notes**:   
+WHAT IT IS: `core/canvas_logic.py:_fetch_module_items` fans out one HTTP call per module across up to 8 worker threads during the METADATA SCAN. Its handler catches every exception, logs `Could not fetch items for module '<name>': <e>` at warning level, and returns `None`; the consuming loop then does `if items is None: continue`. **There is no retry.** The session is mounted with a bare `_CanvasTimeoutAdapter(HTTPAdapter)`, which sets a timeout and leaves `max_retries` at its default of 0, so a single transient 502 on `GET /courses/{id}/modules/{mid}/items` drops that module from the scan for the whole run. Note the asymmetry that makes this worth recording: the FILE-DOWNLOAD path in `sync/execution.py` does retry 5xx with exponential backoff, and honours Retry-After. The metadata scan that decides what there is to download does not.
+
+BLAST RADIUS, measured against the code rather than assumed, and it is smaller than 'medium' implied - hence the downgrade to low:
+* Files in the Files tab are unaffected. They come from the bulk `course.get_files()` call, which is a different request; the module walk only ADDS module-only files plus Pages and links.
+* What is lost for that run is the affected module's Pages and links, any file linked ONLY from that module, and its `module_map` entries - so a file that would have been filed under the module lands via the Catch-All instead.
+* In sync mode the previously-downloaded items from that module fall to `deleted_on_canvas`. **That is NOT a data-loss path**: verified at ui/sync_review.py ~2039, the category renders as a read-only expander titled 'Deleted on Canvas (Kept Locally)' with the caption 'They are preserved locally for your safety'. There is no checkbox and no delete action - the app never removes a local file because Canvas dropped it. The cost is a temporarily alarming list, not a deletion.
+* It is self-healing: the 502 is transient, so the next scan sees the module again.
+
+SEEN ONCE, on 2026-08-05, and not reproduced in roughly 200 matrix rows since (the 56-row macOS download matrix, the 43-row live sync matrix, the overnight full run). So this is a rare transient, correctly logged, degrading in a safe direction.
+
+RECOMMENDED FIX (not applied): give `_fetch_module_items` a small bounded retry on 5xx - 2 or 3 attempts with a short backoff - matching what the download path already does. It is roughly eight lines and needs no new decision point. The reason it is not urgent is the blast radius above; the reason it is not closed is that a silently under-scanned module is exactly the kind of gap this codebase's own rules say must be loud.
+
+**Notes**: KEPT OPEN deliberately, and downgraded medium -> low. The finding is real but small, and the actionable part is now written down rather than left as a log line. Re-scoped by reading the code path, not by re-observing it.
+
 > Not observed in the latest run.
 
 ---
 
-### A folder's Panopto formats can only be changed by running a Download, and that run silently narrows them - the sync side shows the contract but cannot edit it
+### RULED OUT OF SCOPE: a folder's Panopto formats are changed by re-downloading, which is how every per-folder setting in this app works
 <!-- fp:2368f8526178 -->
 
-**Status**: open
+**Status**: wontfix
 **Severity**: low
 **Category**: config
 **Oracles**: O4 manifest (sync_metadata.panopto_contract) vs O1 UI
@@ -134,17 +151,16 @@ Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browsere
 
 **Detail**:
 
-A folder's stored panopto_contract is the single source of truth for which recording formats a sync produces, and this run showed the full consequence of that on a real folder. Before: {output_mp3: true, output_txt: true, output_srt: true, output_url: false, output_mp4: false}. After one Custom Download with Video selected: {output_mp4: true} and EVERY OTHER FORMAT false - while the folder still holds 36 mp3s, 5 txt, 5 srt and 36 weblocs, all still tracked in the panopto manifest.
+OUT OF SCOPE BY DESIGN - ruled by the product owner on 2026-08-22. The original detail argued that a folder's Panopto formats are visible but not editable from the sync side, and that a re-download narrows them silently. That text has been REPLACED rather than kept, because it framed the product's intended design as a gap and would send the next session looking for something to build.
 
-That overwrite is the documented design and it is what makes the download run the way a user changes a folder's outputs at all (sync_ui only ever seeds the contract when it is None). The finding is about what a user can do NEXT, in two parts:
+THE RULE: **no** per-folder configuration is editable after the fact, anywhere in this app - not the file filter, not the download mode, not the secondary-content contract, and not the Panopto formats. Re-running a Download over the folder IS the mechanism for changing any of them, and it has been since the first version. A folder therefore has ONE configuration, and every engine downstream - the analyzer, the ignored-recordings dialog, the restore path, post-processing - is written against that guarantee.
 
-1. NOTHING on the sync side can change it. The pair's Edit form covers folder and course only; the ignored-recordings dialog READS the contract to decide which kinds count as configured; sync/analysis.py reads it and, by design, does not write unless it is absent. The Saved Groups hub displays a folder's stored Panopto config, so the app SHOWS the user a setting it gives them no control over - the only route back is to run another Download on that course with the formats they want.
+Making the contract editable is not a UI job. It would add a second way for a folder's shape to change, mid-life, without the download run that reconciles the folder to it - which is a new dimension in every engine that currently gets to assume the contract is fixed. The same ruling is already recorded in CLAUDE.md for the file filter ('one folder, one configuration, no widening'); this entry is the Panopto half of the identical decision, and the two must not diverge.
 
-2. The narrowing is silent. Nothing on the download screen says "this will also stop future syncs from maintaining the 36 mp3s in this folder". The practical effect is not deletion - nothing on disk is touched, and the manifest rows survive - but a locally deleted mp3 will no longer be restored by a sync, because mp3 is no longer a configured kind for that folder.
+What the observation got RIGHT and is worth keeping: the app does display a folder's stored Panopto config in the Saved Groups hub and the sync-side config viewer, and those are READ-ONLY views of a fact, which is correct - the same relationship the file-filter notice already has. Nothing here is a defect.
 
-Recorded as an observation rather than a defect: every individual behaviour here is deliberate and documented in CLAUDE.md, including the specific warning that a Panopto gate placed inside the runner would let a download write an all-off contract over every folder it touched. The gap is that the contract is presented as visible state with no editor, and the one thing that rewrites it does so without saying so.
+**Notes**: Marked `wontfix`, not deleted. The entry is kept so the fingerprint stays adjudicated - deleting the block would let the next audit run re-raise the identical finding as new, which is exactly what the ruling is meant to prevent. The misleading text itself is gone.
 
-**Notes**:   
 > Not observed in the latest run.
 
 ---
@@ -152,7 +168,7 @@ Recorded as an observation rather than a defect: every individual behaviour here
 ### The locked-target _NewVersion fallback is unreachable on macOS: os.replace succeeds onto a read-only file, so a read-only course file is silently updated (and the 6 criticals it produced were the fixture asserting Windows semantics)
 <!-- fp:8e7fc38cea3d -->
 
-**Status**: open
+**Status**: accepted
 **Severity**: low
 **Category**: delivery
 **Oracles**: O3 disk (POSIX rename semantics) vs O1 UI/O2 log (no error reported)
@@ -184,7 +200,9 @@ NOT FIXED, deliberately, and the reasoning is the asymmetry: making this work on
 
 WHAT WAS FIXED is the audit's own expectation, which produced 6 spurious CRITICAL findings on the first macOS sync matrix - expensive noise in a release gate, and the second time this fixture has misfired (a 2026-07-28 run recorded the same shape after it chmod'ed a conversion output instead of a download target). `readonly_target` now sets expect_after="" on POSIX with the measurement written into the comment, keeping expect_category="updated_clean" so the row still asserts what it can on this platform: that a read-only file is still classified as a clean update, and that the run reports neither a silent success nor a hard error. Re-ran the 3 affected rows (ro001/ro013/ro029) with the corrected fixture: all ok, 0 criticals, only the pre-existing informational long-path note.
 
-**Notes**: RE-CONFIRMED on macOS 26.6.1 on 2026-08-20 (run 20260820_143238_macos-26-v2.0.2).
+**Notes**: Moved open -> `accepted` on 2026-08-22. Nothing about the finding changed - the point is that there is no work pending on it, and `open` implied there was. The entry already contains a fully argued decision NOT to fix, with the asymmetry stated: honouring a read-only flag on macOS means a proactive writability probe (os.access W_OK, or a mode check) in the hottest path of the engine, on every file of every sync, whose only benefit is honouring a flag almost nobody sets and whose failure mode - forking a file the user did NOT edit into a _NewVersion sibling that is then re-offered on every later sync - is worse than the current behaviour. The Windows fallback it is compared against is an ERROR-AVOIDANCE mechanism (there the rename genuinely fails and the bytes would be dropped), not a data-protection one; on macOS there is no error to avoid. It is also NOT data loss: the file being replaced is a CLEAN update whose content still matches the manifest md5, and the protection for a file the user really edited is the separate md5-based _NewVersion('edited') path, which is platform-independent and verified working on macOS. Re-confirmed on two macOS versions (15 and 26.6.1) with the rule's own control measured (a replace into a mode-555 DIRECTORY does raise PermissionError), so it is a stable platform property. The thing that WAS a defect - the audit fixture asserting Windows semantics and producing 6 spurious CRITICALs - was fixed at the time.
+
+RE-CONFIRMED on macOS 26.6.1 on 2026-08-20 (run 20260820_143238_macos-26-v2.0.2).
 Identical to macOS 15, so this is a stable property of the platform and not a
 15-only quirk:
 
@@ -255,7 +273,7 @@ PRE-EXISTING: the adoption design shipped 2026-08-07, well before the long-path 
 ### Deleting a multi-GB Whisper model is one unconfirmed click, while the CUDA libraries on the same page use a deliberate schedule-plus-undo flow
 <!-- fp:68f6f6b634d2 -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: low
 **Category**: ux
 **Oracles**: offline
@@ -268,7 +286,10 @@ PRE-EXISTING: the adoption design shipped 2026-08-07, well before the long-path 
 
 ui/panopto_page.py's trash icon calls pmodels.delete_model(mid) immediately - no confirmation, no undo - for a model up to ~3 GB. The CUDA removal directly below it has a carefully-built two-stage flow whose own comment explains why a same-shaped second button reads as a confirm. No data loss (the model is re-downloadable), but bandwidth and time on a metered or slow connection, from an unlabelled icon button. NOT FIXED: a confirm state changes the row's element SHAPE, which is the container-inheritance hazard this codebase documents at length, so it needs its own before/after browser pass rather than a hurried one. Recommended shape: mirror the CUDA schedule + undo idiom.
 
-**Notes**: Left open deliberately - see the Detail for why, and CLAUDE.md 'Known, deliberately NOT changed'.  
+**Notes**: FIXED - and the fix is a TOOLTIP, not the schedule-plus-undo flow the detail recommended, which is the better answer for this control. Verified in the source at ui/panopto_page.py: the delete button now carries `help=f"Removes {m['label']} from your computer completely. You will have to install it from scratch the "
+"next time you want to transcribe with it."`, with a comment above it explaining the choice - the size is deliberately NOT repeated (the row already shows it two columns left, and `size_mb` is bound only on the not-downloading path), so the tooltip carries the CONSEQUENCE instead. That answers the actual complaint - an unlabelled icon button whose cost is invisible - without changing the row's element SHAPE, which is the container-inheritance hazard the detail correctly flagged as the reason not to rush a confirm state. Closed by the product owner on 2026-08-22; do not spend further effort here.
+
+Left open deliberately - see the Detail for why, and CLAUDE.md 'Known, deliberately NOT changed'.  
 > Not observed in the latest run.
 
 ---
