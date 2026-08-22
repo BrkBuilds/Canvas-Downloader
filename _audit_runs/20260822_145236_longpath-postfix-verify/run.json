@@ -23,6 +23,13 @@
       "course": "",
       "config": "{}",
       "result": "ok"
+    },
+    {
+      "name": "seeded_review",
+      "flow": "sync",
+      "course": "",
+      "config": "{}",
+      "result": "ok"
     }
   ]
 }

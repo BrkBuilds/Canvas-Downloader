@@ -231,7 +231,7 @@ the actual complaint.
 **Oracles**: O3,O4
 **First seen**: 2026-08-22 (20260822_145236_longpath-postfix-verify)
 **Last seen**: 2026-08-22 (20260822_145236_longpath-postfix-verify)
-**Occurrences**: 1
+**Occurrences**: 2
 **Scenario**: lp_verify_43660 · 43660
 
 **Detail**:
@@ -2996,8 +2996,8 @@ Nothing records that these were deliberately skipped, so the next sync lists the
 **Oracles**: O4,O3
 **First seen**: 2026-07-28 (20260728_010431_phase2_real)
 **Last seen**: 2026-08-22 (20260822_145236_longpath-postfix-verify)
-**Occurrences**: 6
-**Scenario**:  · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
+**Occurrences**: 8
+**Scenario**: seeded_review · Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)
 
 **Detail**:
 

@@ -1,0 +1,106 @@
+{
+  "name": "seeded_review",
+  "open": {
+    "left_terminal_screen": null,
+    "analyze_present": true,
+    "screen": "sync"
+  },
+  "analyze": {
+    "quick": false,
+    "landed_on": "review",
+    "wait": {
+      "done": true,
+      "active": {
+        "flow": "sync",
+        "idx": 2,
+        "id": "review",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "",
+      "tail": "ample, “Klyngevejledning_1_Program_2022.pdf” looks like “zz omdøbt uden række 1.pdf” in your folder. Hover the ⚠️ next to a file to see which of your files it resembles. You can leave it checked to download a fresh copy - your own files are never renamed, overwritten or deleted - uncheck it if you know you already have it, or use the eye icon to skip it for good.\n\nGo back\n\nSync & Download 15 files",
+      "waited_s": 27.1
+    },
+    "panopto_notice": {
+      "shown": false,
+      "run_started_first": true
+    },
+    "capture": "seeded_review_after_analysis",
+    "ok": true
+  },
+  "review": {
+    "expanded": [
+      "cat_new_43660",
+      "cat_update_43660",
+      "cat_updmod_43660",
+      "cat_deleted_local_43660",
+      "cat_deleted_canvas_43660",
+      "cat_ignored_43660"
+    ],
+    "capture": "seeded_review_review",
+    "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260822_145236_longpath-postfix-verify/evidence/screenshots/seeded_review_review.png",
+    "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260822_145236_longpath-postfix-verify/evidence/ui/seeded_review_review.json",
+    "textLen": 3775,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "confirm": {
+    "ok": true,
+    "skipped": "--no-confirm",
+    "capture": "seeded_review_review_only"
+  },
+  "trace": [
+    {
+      "t": "15:16:40",
+      "action": "open_sync",
+      "left_terminal_screen": null,
+      "analyze_present": true,
+      "screen": "sync"
+    },
+    {
+      "t": "15:17:12",
+      "action": "analyze",
+      "quick": false,
+      "landed_on": "review",
+      "wait": {
+        "done": true,
+        "active": {
+          "flow": "sync",
+          "idx": 2,
+          "id": "review",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "",
+        "tail": "ample, “Klyngevejledning_1_Program_2022.pdf” looks like “zz omdøbt uden række 1.pdf” in your folder. Hover the ⚠️ next to a file to see which of your files it resembles. You can leave it checked to download a fresh copy - your own files are never renamed, overwritten or deleted - uncheck it if you know you already have it, or use the eye icon to skip it for good.\n\nGo back\n\nSync & Download 15 files",
+        "waited_s": 27.1
+      },
+      "panopto_notice": {
+        "shown": false,
+        "run_started_first": true
+      },
+      "capture": "seeded_review_after_analysis",
+      "ok": true
+    },
+    {
+      "t": "15:17:17",
+      "action": "review_snapshot",
+      "expanded": [
+        "cat_new_43660",
+        "cat_update_43660",
+        "cat_updmod_43660",
+        "cat_deleted_local_43660",
+        "cat_deleted_canvas_43660",
+        "cat_ignored_43660"
+      ],
+      "capture": "seeded_review_review",
+      "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260822_145236_longpath-postfix-verify/evidence/screenshots/seeded_review_review.png",
+      "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260822_145236_longpath-postfix-verify/evidence/ui/seeded_review_review.json",
+      "textLen": 3775,
+      "consoleErrors": 0,
+      "exceptions": 0
+    }
+  ]
+}

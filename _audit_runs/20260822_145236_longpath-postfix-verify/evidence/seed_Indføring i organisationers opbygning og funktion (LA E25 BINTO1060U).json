@@ -1,0 +1,862 @@
+{
+  "folder": "/Users/m1/Canvas_Downloader/_audit_runs/20260822_145236_longpath-postfix-verify/downloads/Indføring i organisationers opbygning og funktion (LA E25 BINTO1060U)",
+  "seeded_at": "2026-08-22T15:15:55",
+  "applied": [
+    {
+      "kind": "new_regular",
+      "count": 3
+    },
+    {
+      "kind": "new_secondary",
+      "count": 2
+    },
+    {
+      "kind": "clean_update",
+      "count": 2
+    },
+    {
+      "kind": "edited_update",
+      "count": 2
+    },
+    {
+      "kind": "deleted_locally",
+      "count": 2
+    },
+    {
+      "kind": "deleted_on_canvas",
+      "count": 2
+    },
+    {
+      "kind": "ignored",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_intact",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_dropped",
+      "count": 2
+    },
+    {
+      "kind": "renamed_row_dropped_unrecognisable",
+      "count": 2
+    },
+    {
+      "kind": "renamed_ambiguous",
+      "count": 2
+    },
+    {
+      "kind": "renamed_substitution",
+      "count": 2
+    },
+    {
+      "kind": "moved_deep",
+      "count": 2
+    },
+    {
+      "kind": "moved_and_renamed",
+      "count": 2
+    },
+    {
+      "kind": "duplicate_copy",
+      "count": 2
+    },
+    {
+      "kind": "decoy_same_size_ext",
+      "count": 2
+    },
+    {
+      "kind": "readonly_target",
+      "count": 2
+    },
+    {
+      "kind": "unicode_rename",
+      "count": 2
+    },
+    {
+      "kind": "long_path",
+      "count": 2
+    },
+    {
+      "kind": "foreign_content",
+      "count": 3
+    },
+    {
+      "kind": "partial_artifact",
+      "count": 2
+    }
+  ],
+  "skipped": {},
+  "fixture_count": 44,
+  "expected_categories": {
+    "uptodate": 12,
+    "new": 11,
+    "updated_clean": 4,
+    "deleted_locally": 4,
+    "updated_modified": 2,
+    "deleted_on_canvas": 2,
+    "ignored": 2
+  },
+  "expected_untracked": [
+    "Corporate hierarchy - mine noter 1.jpg",
+    "Exam prep/sorted by topic/zz emne 0 handout.pdf",
+    "Exam prep/sorted by topic/zz emne 1 handout.pdf",
+    "F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf",
+    "Industrialsupply.pdf",
+    "Introduktion til organisationsteori/ITDoesntMatter - copy for exam.pdf",
+    "Klyngevejledning 1_grp 25 - mine noter 0.pdf",
+    "Manual for eksamensprojekt 2021-2022_ - copy for exam.pdf",
+    "Min egen mappe/gamle noter/tanker.txt",
+    "Min egen mappe/mine noter.docx",
+    "My Notes/semester 0/week 3/reading/Øvelse uge 37 - Organisationsdiagram.pdf",
+    "My Notes/semester 1/week 3/reading/Klyngevejledning_1_Program_2023.pdf",
+    "Tema 1 Formelle træk - organisationsformer/Organisationsformer - oversigtstabel - udfyld9.pdf",
+    "Tema 2 Uformelle træk - magt og konflikt/251009_Kom og vær med_Til Stig 9.pdf",
+    "Tema 2 Uformelle træk - magt og konflikt/læsning – uge 42 ✅ resumé.pdf",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/E25_F26_HAIT_Organisationers opbygning.pdf",
+    "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Organisationsprojekt_problemformulering-2_upload.pdf",
+    "decoy 0 unrelated.pdf",
+    "decoy 1 unrelated.pdf",
+    "eksamensplan 2026.pdf",
+    "interrupted download.pdf.part",
+    "læsning – uge 42 ✅ resumé.pdf",
+    "recording.part.mp4",
+    "zz flertydig 0.pdf",
+    "zz flertydig 1.pdf",
+    "zz mine noter 0.pdf",
+    "zz mine noter 1.pdf",
+    "zz omdøbt uden række 0.pdf",
+    "zz omdøbt uden række 1.pdf"
+  ],
+  "expected_missing_rows": [
+    "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf",
+    "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf",
+    "Corporate hierarchy.jpg",
+    "HA(it.)_grupper E2021.pdf",
+    "Klyngevejledning 1/SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+    "Klyngevejledning 1_grp 14.pdf",
+    "Klyngevejledning 1_grp 25.pdf",
+    "Klyngevejledning 2/Skabelon til klyngevejledning 2.docx",
+    "Klyngevejledning_1_Program_2022.pdf",
+    "Klyngevejledning_1_Program_2023.pdf",
+    "Klyngevejledning_1_Program_2024.pdf",
+    "Opdateret Pensumoversigt inkl. Forår 2026/E25_F26_HAIT_Organisationers opbygning.pdf",
+    "Opdateret Pensumoversigt inkl. Forår 2026/Manual for eksamensprojekt 2025-2026.pdf",
+    "Organisationsprojekt - problemformulering/Organisationsprojekt_problemformulering-2_upload.pdf",
+    "Sensemaking slides 2.pdf",
+    "Tema 1 Formelle træk - organisationsformer/Organisationsformer - oversigtstabel - udfyldt.pdf",
+    "Tema 1 Formelle træk - organisationsstruktur/Øvelse uge 37 - Organisationsdiagram.pdf",
+    "Tema 2 Uformelle træk - magt og konflikt/2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pdf",
+    "Tema 2 Uformelle træk - magt og konflikt/251009_Kom og vær med_Til Stig N.pdf",
+    "Øvelsesslides_mål og strategi_XA-1.pdf"
+  ],
+  "expected_md5_drift": [
+    "Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - interview transskribering.docx",
+    "Organisationsprojekt - operationalisering af teori/Observationsskema.docx"
+  ],
+  "expected_size_drift": [
+    "F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf",
+    "Industrialsupply.pdf",
+    "Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - interview transskribering.docx",
+    "Organisationsprojekt - operationalisering af teori/Observationsskema.docx",
+    "Tema 4 Ledelse og strategi - beslutninger i organisationer/Udfaldsrum Beskrivelser.docx",
+    "Øvelser i uge 16/Svarark - Gode råd til projektet.docx"
+  ],
+  "expected_partials": [
+    "interrupted download.pdf.part",
+    "recording.part.mp4"
+  ],
+  "before": {
+    "rows": 262,
+    "files": 296
+  },
+  "after": {
+    "rows": 251,
+    "files": 296
+  },
+  "fixtures": [
+    {
+      "label": "new:Eksempel - Gruppekontrakt.docx",
+      "kind": "new_regular",
+      "path": "Eksempel - Gruppekontrakt.docx",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Eksempel - Gruppekontrakt.docx",
+      "match_name": "Eksempel - Gruppekontrakt.docx",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1560051,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new:Svarark - Gode råd til projektet.docx",
+      "kind": "new_regular",
+      "path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Øvelser i uge 18/Svarark - Gode råd til projektet.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1560056,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new:Eksempel på gruppekontrakt.docx",
+      "kind": "new_regular",
+      "path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Introduktion til organisationsteori/Eksempel på gruppekontrakt.docx",
+      "match_name": "Eksempel på gruppekontrakt.docx",
+      "why": "File and manifest row both removed, and no unclaimed file on disk shares its size+extension, so no adoption tier can reclaim it. It must be offered as New and re-downloaded to its original path.",
+      "canvas_file_id": 1559916,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new-secondary:Page Uge 6 pensum.md",
+      "kind": "new_secondary",
+      "path": "Opsummering - hvad har vi lært/Page Uge 6 pensum.md",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Opsummering - hvad har vi lært/Page Uge 6 pensum.md",
+      "match_name": "Page Uge 6 pensum.md",
+      "why": "Canvas Content entity (module_item) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -248382,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "new-secondary:Page Uge 13 pensum.md",
+      "kind": "new_secondary",
+      "path": "Organisationsprojekt - klargøring af data til analyse/Page Uge 13 pensum.md",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Organisationsprojekt - klargøring af data til analyse/Page Uge 13 pensum.md",
+      "match_name": "Page Uge 13 pensum.md",
+      "why": "Canvas Content entity (module_item) removed from disk and manifest. Secondary entities compare by content signature, so it must reappear as New and regenerate.",
+      "canvas_file_id": -248349,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "clean-update:Svarark - Gode råd til projektet.docx",
+      "kind": "clean_update",
+      "path": "Øvelser i uge 16/Svarark - Gode råd til projektet.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Øvelser i uge 16/Svarark - Gode råd til projektet.docx",
+      "match_name": "Svarark - Gode råd til projektet.docx",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1816004,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "clean-update:Udfaldsrum Beskrivelser.docx",
+      "kind": "clean_update",
+      "path": "Tema 4 Ledelse og strategi - beslutninger i organisationer/Udfaldsrum Beskrivelser.docx",
+      "expect_category": "updated_clean",
+      "expect_after": "restored",
+      "expect_path": "Tema 4 Ledelse og strategi - beslutninger i organisationer/Udfaldsrum Beskrivelser.docx",
+      "match_name": "Udfaldsrum Beskrivelser.docx",
+      "why": "Canvas timestamp back-dated and recorded size perturbed, while original_md5 still matches the file on disk - so the modification classifier returns 'clean' and the file must be overwritten in place, same name, same folder.",
+      "canvas_file_id": 1560193,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:Observationsskema.docx",
+      "kind": "edited_update",
+      "path": "Organisationsprojekt - operationalisering af teori/Observationsskema.docx",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Organisationsprojekt - operationalisering af teori/Observationsskema.docx",
+      "match_name": "Observationsskema.docx",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1560219,
+      "original_path": "",
+      "edited_md5": "3b00b867cd0c3edce7a4e220a713df94",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "edited-update:Kodning øvelse - interview transskribering.docx",
+      "kind": "edited_update",
+      "path": "Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - interview transskribering.docx",
+      "expect_category": "updated_modified",
+      "expect_after": "new_version",
+      "expect_path": "Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - interview transskribering.docx",
+      "match_name": "Kodning øvelse - interview transskribering.docx",
+      "why": "Bytes appended so the file no longer matches original_md5, and Canvas back-dated so an update is due. Must be classified 'edited locally', UNCHECKED by default, and - if synced - written as a _NewVersion sibling with the original untouched.",
+      "canvas_file_id": 1560228,
+      "original_path": "",
+      "edited_md5": "728bb4a3f6861747f09073e65e191352",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+      "kind": "deleted_locally",
+      "path": "Klyngevejledning 1/SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Klyngevejledning 1/SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+      "match_name": "SKABELON_KLYNGEVEJLEDNING_1_2025.docx",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1560226,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-locally:Skabelon til klyngevejledning 2.docx",
+      "kind": "deleted_locally",
+      "path": "Klyngevejledning 2/Skabelon til klyngevejledning 2.docx",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Klyngevejledning 2/Skabelon til klyngevejledning 2.docx",
+      "match_name": "Skabelon til klyngevejledning 2.docx",
+      "why": "File removed but its manifest row kept, which is what a real user deletion looks like. The deletion must be respected: unchecked by default, and always skipped by Quick Sync.",
+      "canvas_file_id": 1560149,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-on-canvas:GhostFile_0_Kodning øvelse - kodning skabelon.pdf",
+      "kind": "deleted_on_canvas",
+      "path": "Organisationsprojekt - klargøring af data til analyse/GhostFile_0_Kodning øvelse - kodning skabelon.pdf",
+      "expect_category": "deleted_on_canvas",
+      "expect_after": "unchanged",
+      "expect_path": "Organisationsprojekt - klargøring af data til analyse/GhostFile_0_Kodning øvelse - kodning skabelon.pdf",
+      "match_name": "GhostFile_0_Kodning øvelse - kodning skabelon.pdf",
+      "why": "A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files.",
+      "canvas_file_id": 900000000,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "deleted-on-canvas:GhostFile_1_Klyngevejledning 1_grp 10.docx",
+      "kind": "deleted_on_canvas",
+      "path": "GhostFile_1_Klyngevejledning 1_grp 10.docx",
+      "expect_category": "deleted_on_canvas",
+      "expect_after": "unchanged",
+      "expect_path": "GhostFile_1_Klyngevejledning 1_grp 10.docx",
+      "match_name": "GhostFile_1_Klyngevejledning 1_grp 10.docx",
+      "why": "A manifest row exists for a Canvas id that cannot be returned, so the analyzer must report it as deleted on Canvas. The local copy must be left exactly where it is - the app never deletes local files.",
+      "canvas_file_id": 900000001,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "ignored:Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx",
+      "kind": "ignored",
+      "path": "Klyngevejledning 1/Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx",
+      "expect_category": "ignored",
+      "expect_after": "unchanged",
+      "expect_path": "Klyngevejledning 1/Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx",
+      "match_name": "Klyngevejledning_1_Program_ 12 marts 2026 KLYNGE 3 OPDATERET.docx",
+      "why": "Marked ignored in the manifest. It must appear only in the Ignored Files category, never in New or Updates, and must be restorable from there.",
+      "canvas_file_id": 1790530,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "ignored:Kodning øvelse - kodning tabel (struktureret).pdf",
+      "kind": "ignored",
+      "path": "Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - kodning tabel (struktureret).pdf",
+      "expect_category": "ignored",
+      "expect_after": "unchanged",
+      "expect_path": "Organisationsprojekt - klargøring af data til analyse/Kodning øvelse - kodning tabel (struktureret).pdf",
+      "match_name": "Kodning øvelse - kodning tabel (struktureret).pdf",
+      "why": "Marked ignored in the manifest. It must appear only in the Ignored Files category, never in New or Updates, and must be restorable from there.",
+      "canvas_file_id": 1559952,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-intact:zz mine noter 0.pdf",
+      "kind": "renamed_row_intact",
+      "path": "zz mine noter 0.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "zz mine noter 0.pdf",
+      "match_name": "HA(it.)_grupper E2021.pdf",
+      "why": "Renamed on disk, bytes untouched, manifest row still present. heal_manifest Tier 2 (original_md5 + exact size, both computed locally) must relocate the row so the file reads UP TO DATE. Offering it as New would put a second copy of the same content in the folder under the Canvas name.",
+      "canvas_file_id": 1560172,
+      "original_path": "HA(it.)_grupper E2021.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-intact:zz mine noter 1.pdf",
+      "kind": "renamed_row_intact",
+      "path": "zz mine noter 1.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "zz mine noter 1.pdf",
+      "match_name": "Sensemaking slides 2.pdf",
+      "why": "Renamed on disk, bytes untouched, manifest row still present. heal_manifest Tier 2 (original_md5 + exact size, both computed locally) must relocate the row so the file reads UP TO DATE. Offering it as New would put a second copy of the same content in the folder under the Canvas name.",
+      "canvas_file_id": 1655086,
+      "original_path": "Sensemaking slides 2.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Klyngevejledning 1_grp 25 - mine noter 0.pdf",
+      "kind": "renamed_row_dropped",
+      "path": "Klyngevejledning 1_grp 25 - mine noter 0.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Klyngevejledning 1_grp 25 - mine noter 0.pdf",
+      "match_name": "Klyngevejledning 1_grp 25.pdf",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1560145,
+      "original_path": "Klyngevejledning 1_grp 25.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-row-dropped:Corporate hierarchy - mine noter 1.jpg",
+      "kind": "renamed_row_dropped",
+      "path": "Corporate hierarchy - mine noter 1.jpg",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Corporate hierarchy - mine noter 1.jpg",
+      "match_name": "Corporate hierarchy.jpg",
+      "why": "Renamed with the original stem intact AND the manifest row dropped, so healing cannot run. Tier (c) must adopt it: the size+extension are unique and the stem still contains the Canvas name, which is the evidence the name floor asks for.",
+      "canvas_file_id": 1559867,
+      "original_path": "Corporate hierarchy.jpg",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-unrecognisable:zz omdøbt uden række 0.pdf",
+      "kind": "renamed_row_dropped_unrecognisable",
+      "path": "zz omdøbt uden række 0.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Klyngevejledning_1_Program_2024.pdf",
+      "match_name": "Klyngevejledning_1_Program_2024.pdf",
+      "why": "Renamed beyond recognition with the row dropped. The tier (c) name floor must REFUSE, so the real file is re-downloaded rather than silently replaced by whatever happened to share its size. The renamed copy stays on disk, untouched.",
+      "canvas_file_id": 1560065,
+      "original_path": "Klyngevejledning_1_Program_2024.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "untracked_expected": "zz omdøbt uden række 0.pdf"
+      }
+    },
+    {
+      "label": "renamed-unrecognisable:zz omdøbt uden række 1.pdf",
+      "kind": "renamed_row_dropped_unrecognisable",
+      "path": "zz omdøbt uden række 1.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Klyngevejledning_1_Program_2022.pdf",
+      "match_name": "Klyngevejledning_1_Program_2022.pdf",
+      "why": "Renamed beyond recognition with the row dropped. The tier (c) name floor must REFUSE, so the real file is re-downloaded rather than silently replaced by whatever happened to share its size. The renamed copy stays on disk, untouched.",
+      "canvas_file_id": 1559957,
+      "original_path": "Klyngevejledning_1_Program_2022.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "untracked_expected": "zz omdøbt uden række 1.pdf"
+      }
+    },
+    {
+      "label": "renamed-ambiguous:zz flertydig 0.pdf",
+      "kind": "renamed_ambiguous",
+      "path": "zz flertydig 0.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf",
+      "match_name": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf",
+      "why": "Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.",
+      "canvas_file_id": 1560011,
+      "original_path": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-ambiguous:zz flertydig 1.pdf",
+      "kind": "renamed_ambiguous",
+      "path": "zz flertydig 1.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf",
+      "match_name": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf",
+      "why": "Renamed, row dropped, and another file shares its size and extension. The uniqueness guard must REFUSE to adopt, so New is correct - binding here would silently mark a missing file present and the user would never get it back.",
+      "canvas_file_id": 1560205,
+      "original_path": "2024_Lektion uge 46_1 Organisationer i et foranderligt perspektiv - Omgivelser - 1 _ Upload-1.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "renamed-substitution:Organisationsformer - oversigtstabel - udfyld9.pdf",
+      "kind": "renamed_substitution",
+      "path": "Tema 1 Formelle træk - organisationsformer/Organisationsformer - oversigtstabel - udfyld9.pdf",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Tema 1 Formelle træk - organisationsformer/Organisationsformer - oversigtstabel - udfyldt.pdf",
+      "match_name": "Organisationsformer - oversigtstabel - udfyldt.pdf",
+      "why": "Last stem character substituted and the file edited, so Tier 1, Tier 2 and Tier 3 must all refuse. The row stays unhealed and surfaces as deleted-locally, which is the safe outcome. A heal here would bind two genuinely different documents.",
+      "canvas_file_id": 1559923,
+      "original_path": "Tema 1 Formelle træk - organisationsformer/Organisationsformer - oversigtstabel - udfyldt.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "untracked_expected": "Tema 1 Formelle træk - organisationsformer/Organisationsformer - oversigtstabel - udfyld9.pdf"
+      }
+    },
+    {
+      "label": "renamed-substitution:251009_Kom og vær med_Til Stig 9.pdf",
+      "kind": "renamed_substitution",
+      "path": "Tema 2 Uformelle træk - magt og konflikt/251009_Kom og vær med_Til Stig 9.pdf",
+      "expect_category": "deleted_locally",
+      "expect_after": "absent",
+      "expect_path": "Tema 2 Uformelle træk - magt og konflikt/251009_Kom og vær med_Til Stig N.pdf",
+      "match_name": "251009_Kom og vær med_Til Stig N.pdf",
+      "why": "Last stem character substituted and the file edited, so Tier 1, Tier 2 and Tier 3 must all refuse. The row stays unhealed and surfaces as deleted-locally, which is the safe outcome. A heal here would bind two genuinely different documents.",
+      "canvas_file_id": 1669054,
+      "original_path": "Tema 2 Uformelle træk - magt og konflikt/251009_Kom og vær med_Til Stig N.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "untracked_expected": "Tema 2 Uformelle træk - magt og konflikt/251009_Kom og vær med_Til Stig 9.pdf"
+      }
+    },
+    {
+      "label": "moved-deep:Øvelse uge 37 - Organisationsdiagram.pdf",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 0/week 3/reading/Øvelse uge 37 - Organisationsdiagram.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 0/week 3/reading/Øvelse uge 37 - Organisationsdiagram.pdf",
+      "match_name": "Øvelse uge 37 - Organisationsdiagram.pdf",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1628057,
+      "original_path": "Tema 1 Formelle træk - organisationsstruktur/Øvelse uge 37 - Organisationsdiagram.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved-deep:Klyngevejledning_1_Program_2023.pdf",
+      "kind": "moved_deep",
+      "path": "My Notes/semester 1/week 3/reading/Klyngevejledning_1_Program_2023.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "My Notes/semester 1/week 3/reading/Klyngevejledning_1_Program_2023.pdf",
+      "match_name": "Klyngevejledning_1_Program_2023.pdf",
+      "why": "Moved four levels down with the same name while the manifest still points at the old path. heal_manifest Tier 1 (exact normalised filename) must follow it. Reporting it as deleted-locally or New would re-download a second copy at the original location.",
+      "canvas_file_id": 1560037,
+      "original_path": "Klyngevejledning_1_Program_2023.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved+renamed:zz emne 0 handout.pdf",
+      "kind": "moved_and_renamed",
+      "path": "Exam prep/sorted by topic/zz emne 0 handout.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Exam prep/sorted by topic/zz emne 0 handout.pdf",
+      "match_name": "Klyngevejledning 1_grp 14.pdf",
+      "why": "Moved into a new folder AND renamed, with the manifest row untouched - what a student reorganising their folder actually does. Only heal Tier 2 (local md5 + size) can follow both changes at once. This is the case the product's value proposition rests on.",
+      "canvas_file_id": 1560064,
+      "original_path": "Klyngevejledning 1_grp 14.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "moved+renamed:zz emne 1 handout.pdf",
+      "kind": "moved_and_renamed",
+      "path": "Exam prep/sorted by topic/zz emne 1 handout.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Exam prep/sorted by topic/zz emne 1 handout.pdf",
+      "match_name": "Manual for eksamensprojekt 2025-2026.pdf",
+      "why": "Moved into a new folder AND renamed, with the manifest row untouched - what a student reorganising their folder actually does. Only heal Tier 2 (local md5 + size) can follow both changes at once. This is the case the product's value proposition rests on.",
+      "canvas_file_id": 1748401,
+      "original_path": "Opdateret Pensumoversigt inkl. Forår 2026/Manual for eksamensprojekt 2025-2026.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "duplicate:ITDoesntMatter - copy for exam.pdf",
+      "kind": "duplicate_copy",
+      "path": "Introduktion til organisationsteori/ITDoesntMatter - copy for exam.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Introduktion til organisationsteori/ITDoesntMatter - copy for exam.pdf",
+      "match_name": "ITDoesntMatter - copy for exam.pdf",
+      "why": "A byte-identical copy the student made. The original stays claimed by its row; the copy must remain unclaimed and must never be counted as Canvas content or offered for anything.",
+      "canvas_file_id": 1560072,
+      "original_path": "Introduktion til organisationsteori/ITDoesntMatter.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "duplicate:Manual for eksamensprojekt 2021-2022_ - copy for exam.pdf",
+      "kind": "duplicate_copy",
+      "path": "Manual for eksamensprojekt 2021-2022_ - copy for exam.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Manual for eksamensprojekt 2021-2022_ - copy for exam.pdf",
+      "match_name": "Manual for eksamensprojekt 2021-2022_ - copy for exam.pdf",
+      "why": "A byte-identical copy the student made. The original stays claimed by its row; the copy must remain unclaimed and must never be counted as Canvas content or offered for anything.",
+      "canvas_file_id": 1559920,
+      "original_path": "Manual for eksamensprojekt 2021-2022_.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "decoy:decoy 0 unrelated.pdf",
+      "kind": "decoy_same_size_ext",
+      "path": "decoy 0 unrelated.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Tema 2 Uformelle træk - sensemaking/Sensemaking slides 2.pdf",
+      "match_name": "Sensemaking slides 2.pdf",
+      "why": "The real file was removed and a same-size, same-extension file of unrelated content put in the folder. Tier (c) WILL bind these (Canvas exposes no md5 to disprove it), so the expectation records what the product actually promises: if the decoy is adopted, the user silently keeps junk in place of their file. Investigate whichever way this lands.",
+      "canvas_file_id": 1668217,
+      "original_path": "Tema 2 Uformelle træk - sensemaking/Sensemaking slides 2.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "decoy_size": 226136
+      }
+    },
+    {
+      "label": "decoy:decoy 1 unrelated.pdf",
+      "kind": "decoy_same_size_ext",
+      "path": "decoy 1 unrelated.pdf",
+      "expect_category": "new",
+      "expect_after": "restored",
+      "expect_path": "Klyngevejledning 2/Klyngevejledning_2_Program_ 21 april 2026.pdf",
+      "match_name": "Klyngevejledning_2_Program_ 21 april 2026.pdf",
+      "why": "The real file was removed and a same-size, same-extension file of unrelated content put in the folder. Tier (c) WILL bind these (Canvas exposes no md5 to disprove it), so the expectation records what the product actually promises: if the decoy is adopted, the user silently keeps junk in place of their file. Investigate whichever way this lands.",
+      "canvas_file_id": 1811688,
+      "original_path": "Klyngevejledning 2/Klyngevejledning_2_Program_ 21 april 2026.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "decoy_size": 245100
+      }
+    },
+    {
+      "label": "readonly:F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf",
+      "kind": "readonly_target",
+      "path": "F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "",
+      "expect_path": "F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf",
+      "match_name": "F23_HAIT_Organisationers opbygning_2022-2023_v2.pdf",
+      "why": "A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error.",
+      "canvas_file_id": 1559921,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true,
+        "posix_no_fork": true
+      }
+    },
+    {
+      "label": "readonly:Industrialsupply.pdf",
+      "kind": "readonly_target",
+      "path": "Industrialsupply.pdf",
+      "expect_category": "updated_clean",
+      "expect_after": "",
+      "expect_path": "Industrialsupply.pdf",
+      "match_name": "Industrialsupply.pdf",
+      "why": "A clean update whose destination is read-only. On POSIX the rename succeeds regardless of the file's mode, so the engine updates it in place; what is checked here is that it is still classified as a clean update and that the run reports neither a silent success nor a hard error.",
+      "canvas_file_id": 1560157,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "restore_mode": true,
+        "posix_no_fork": true
+      }
+    },
+    {
+      "label": "unicode:læsning – uge 42 ✅ resumé.pdf",
+      "kind": "unicode_rename",
+      "path": "læsning – uge 42 ✅ resumé.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "læsning – uge 42 ✅ resumé.pdf",
+      "match_name": "Øvelsesslides_mål og strategi_XA-1.pdf",
+      "why": "Renamed to a name mixing Danish letters, an en dash, an emoji and a COMBINING acute accent (NFD). heal Tier 2 must still hash and match it, and nothing downstream may mangle the name in the UI, the log or the manifest.",
+      "canvas_file_id": 1560085,
+      "original_path": "Øvelsesslides_mål og strategi_XA-1.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "unicode:læsning – uge 42 ✅ resumé.pdf",
+      "kind": "unicode_rename",
+      "path": "Tema 2 Uformelle træk - magt og konflikt/læsning – uge 42 ✅ resumé.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "Tema 2 Uformelle træk - magt og konflikt/læsning – uge 42 ✅ resumé.pdf",
+      "match_name": "2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pdf",
+      "why": "Renamed to a name mixing Danish letters, an en dash, an emoji and a COMBINING acute accent (NFD). heal Tier 2 must still hash and match it, and nothing downstream may mangle the name in the UI, the log or the manifest.",
+      "canvas_file_id": 1560061,
+      "original_path": "Tema 2 Uformelle træk - magt og konflikt/2024_Lektion uge 41_2 Uformelle træk - Magt og konflikt - upload.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "longpath:Organisationsprojekt_problemformulering-2_upload.pdf",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Organisationsprojekt_problemformulering-2_upload.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/Organisationsprojekt_problemformulering-2_upload.pdf",
+      "match_name": "Organisationsprojekt_problemformulering-2_upload.pdf",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1560069,
+      "original_path": "Organisationsprojekt - problemformulering/Organisationsprojekt_problemformulering-2_upload.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 381
+      }
+    },
+    {
+      "label": "longpath:E25_F26_HAIT_Organisationers opbygning.pdf",
+      "kind": "long_path",
+      "path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/E25_F26_HAIT_Organisationers opbygning.pdf",
+      "expect_category": "uptodate",
+      "expect_after": "unchanged",
+      "expect_path": "a very long folder name for testing windows path limits/another equally long folder name to push past two sixty/and a third one so the total comfortably exceeds the cap/E25_F26_HAIT_Organisationers opbygning.pdf",
+      "match_name": "E25_F26_HAIT_Organisationers opbygning.pdf",
+      "why": "Moved to a path past the 260-character Windows limit. Healing, hashing and any rewrite must all go through the long-path prefix; a failure here usually surfaces as WinError 206.",
+      "canvas_file_id": 1747622,
+      "original_path": "Opdateret Pensumoversigt inkl. Forår 2026/E25_F26_HAIT_Organisationers opbygning.pdf",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {
+        "path_len": 371
+      }
+    },
+    {
+      "label": "foreign:mine noter.docx",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/mine noter.docx",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/mine noter.docx",
+      "match_name": "mine noter.docx",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:tanker.txt",
+      "kind": "foreign_content",
+      "path": "Min egen mappe/gamle noter/tanker.txt",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "Min egen mappe/gamle noter/tanker.txt",
+      "match_name": "tanker.txt",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "foreign:eksamensplan 2026.pdf",
+      "kind": "foreign_content",
+      "path": "eksamensplan 2026.pdf",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "eksamensplan 2026.pdf",
+      "match_name": "eksamensplan 2026.pdf",
+      "why": "A file the student put in the folder themselves. It must never be claimed by a manifest row, counted as Canvas content, or shown in any sync category - and must still be there afterwards.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "partial:interrupted download.pdf.part",
+      "kind": "partial_artifact",
+      "path": "interrupted download.pdf.part",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "interrupted download.pdf.part",
+      "match_name": "interrupted download.pdf.part",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    },
+    {
+      "label": "partial:recording.part.mp4",
+      "kind": "partial_artifact",
+      "path": "recording.part.mp4",
+      "expect_category": "",
+      "expect_after": "unchanged",
+      "expect_path": "recording.part.mp4",
+      "match_name": "recording.part.mp4",
+      "why": "Both partial-artifact shapes the engines produce (x.ext.part from the file engine, x.part.ext from the Panopto downloader). Neither may be healed onto a missing entry, auto-discovered, counted as study material, or picked up by post-processing.",
+      "canvas_file_id": null,
+      "original_path": "",
+      "edited_md5": "",
+      "synthetic": true,
+      "extra": {}
+    }
+  ]
+}
