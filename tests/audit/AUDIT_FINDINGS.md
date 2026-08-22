@@ -11,7 +11,7 @@ reported as a **regression** — that is the line worth watching.
 
 Last updated by run `20260822_145236_longpath-postfix-verify` on 2026-08-22.
 
-**1 open** · 180 total · 30 accepted · 100 fixed · 47 invalid · 2 wontfix
+**0 open** · 180 total · 30 accepted · 101 fixed · 47 invalid · 2 wontfix
 
 ---
 
@@ -123,7 +123,7 @@ FIXED 2026-08-22 (`cfc1717`). The marker is now instance-scoped: staging goes to
 ### Unexpected bridged_warning in debug log: Could not fetch items for module 'Uge 44: Forelæsning 8. JavaScript og Browseren, HTML 1':
 <!-- fp:16e0de9e610a -->
 
-**Status**: open
+**Status**: fixed
 **Severity**: low
 **Category**: robustness
 **Oracles**: O2
@@ -148,7 +148,43 @@ SEEN ONCE, on 2026-08-05, and not reproduced in roughly 200 matrix rows since (t
 
 RECOMMENDED FIX (not applied): give `_fetch_module_items` a small bounded retry on 5xx - 2 or 3 attempts with a short backoff - matching what the download path already does. It is roughly eight lines and needs no new decision point. The reason it is not urgent is the blast radius above; the reason it is not closed is that a silently under-scanned module is exactly the kind of gap this codebase's own rules say must be loud.
 
-**Notes**: KEPT OPEN deliberately, and downgraded medium -> low. The finding is real but small, and the actionable part is now written down rather than left as a log line. Re-scoped by reading the code path, not by re-observing it.
+**Notes**: **DOUBLE-VERIFIED 2026-08-22, and the second pass found a regression I had reasoned myself into.** `connect=2` was in the first version, justified as "connect failures are cheap and transient". Measured against a blackholed host at a 3 s connect timeout: no-retry **3.01 s**, connect=2 **10.01 s**. At the adapter's real 15 s that is 15 s -> ~50 s before the user is told Canvas cannot be reached, ON THE LOGIN PATH, for zero benefit to the 502 this exists for. "Cheap and transient" is true of a REFUSED connection and false of a FILTERED one, and the filtered one is the case that hurts. Now `connect=0` - status retries only - and parity with the pre-change latency is measured (3.01 s -> 3.00 s). A mutant pins it.
+
+**LIVE A/B on the real app**, run `20260822_201132_engine-regression-verify`: the same course, same config, same folder state as the pre-change run, driven through a real browser against real Canvas. The engine's scan output is byte-for-byte identical -
+
+| invariant | before | after |
+|---|---|---|
+| Module file tracked | 97 | **97** |
+| Creating Link | 41 | **41** |
+| Link SKIPPED | 36 | **36** |
+| module fetch failures | 0 | **0** |
+
+- **download**: Download Complete, 300 files, **0 exceptions**
+- **sync**: *"Sync done - everything up to date. Checked 261 files and 36 recordings"*, 0 exceptions, 0 module-fetch failures, and the new report correctly stayed SILENT because Canvas was healthy - which is the half a passing run is supposed to prove.
+
+Blast radius checked rather than assumed: the shared `Retry` is immutable across `increment()` (it returns a new object) so sharing it across sessions and threads is safe, and Panopto builds its OWN `requests.Session` so it is untouched by the adapter.
+
+**FIXED 2026-08-22.** Both halves, and the fix is at the one chokepoint rather than at the call site that happened to fail: `_new_canvas_client` is the ONLY place a canvasapi session is built (the main client and both per-worker clients go through it), so a transport-level retry there covers the bulk `get_files()`, `get_modules()`, the module-items fan-out and the per-file fan-out at once.
+
+**Every parameter is a decision against a default, and each was MEASURED against a real local HTTP server rather than read back off the Retry object** (which would only prove I typed what I typed):
+
+| scenario | result |
+|---|---|
+| 502 twice then 200 | **200 after 3 requests, 1.01 s** - the finding |
+| 503 + `Retry-After: 86400` | **200 in 1.01 s, NOT parked** |
+| 404 | 1 request, no retry |
+| 429 | 1 request, no retry |
+| 502 on POST | 1 request, never replayed |
+
+`respect_retry_after_header=False` is the load-bearing one: urllib3 honours the header by default, and this repo already has a finding where a literal `Retry-After` parked a download for a DAY. **429/403 are deliberately OUT of the forcelist** - Canvas signals rate limiting with both, the app handles that explicitly with a CLAMPED `parse_retry_after` on the aiohttp download path, and silently absorbing it here would hide the one signal that path watches for. `read=0` because a read retry only begins after the adapter's 60 s read timeout has already elapsed. `raise_on_status=False` so an exhausted retry still surfaces as canvasapi's own error with its existing message, leaving every downstream handler unchanged.
+
+**The second half - the silence.** A module that survives the retry is still dropped (`if items is None: continue`), and the scan feeds BOTH the analyzer and the download engine. It now reports ONE summary line naming the count and the modules, mirroring the precedent already set by the OUTER `get_modules` handler, which has always emitted a user-visible log line while the per-module one did not. Emitted from the MAIN thread, not from the worker (`progress_callback` drives Streamlit UI and a worker has no ScriptRunContext), and one line rather than per-module because the failure mode being guarded against is a 502 STORM.
+
+`tests/test_canvas_metadata_retry.py` (11) drives a real local HTTP server through the real session - no Canvas, no network, no credentials, so it runs on every platform. `scripts/_mutate_canvas_metadata_retry.py` **9/10 caught, 1 documented EQUIVALENT** (`status=3` caps status retries independently of `total`; measured 4 requests / 3.02 s either way, while raising BOTH genuinely hangs).
+
+**THE MUTATION PASS FOUND A REAL FLAW IN MY OWN TEST, and it is the reusable part.** The `Retry-After` mutant did not make the parking test fail - it made it BLOCK for a day, so the pass had to be killed from outside and **left a mutant on disk**, exactly as CLAUDE.md warns. A test for 'this does not park' that can only hang is the defect wearing the test's clothes. Every request in that file now runs on a thread with a join timeout, which is the rule this repo already states for the ffmpeg watchdog - it applies to every unbounded-wait guard, not just that one.
+
+KEPT OPEN deliberately, and downgraded medium -> low. The finding is real but small, and the actionable part is now written down rather than left as a log line. Re-scoped by reading the code path, not by re-observing it.
 
 > Not observed in the latest run.
 

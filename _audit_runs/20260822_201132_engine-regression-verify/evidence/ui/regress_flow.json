@@ -1,0 +1,410 @@
+{
+  "name": "regress",
+  "course_ids": [
+    43660
+  ],
+  "config": {
+    "file_filter": "all",
+    "mode": "modules",
+    "secondary_isolated": false,
+    "pan_layout": "match",
+    "convert_zip": true,
+    "convert_pptx": true,
+    "convert_word": true,
+    "convert_excel": true,
+    "convert_html": true,
+    "convert_code": true,
+    "convert_urls": true,
+    "convert_video": true,
+    "dl_assignments": true,
+    "dl_syllabus": true,
+    "dl_announcements": true,
+    "dl_discussions": true,
+    "dl_quizzes": true,
+    "dl_submissions": true,
+    "pan_out_url": true,
+    "pan_out_mp4": false,
+    "pan_out_mp3": true,
+    "pan_out_txt": false,
+    "pan_out_srt": false
+  },
+  "select": {
+    "courses": [
+      43660
+    ],
+    "results": [
+      {
+        "course_id": 43660,
+        "ok": true
+      }
+    ]
+  },
+  "open": {
+    "step": "2"
+  },
+  "configure": {
+    "applied": {
+      "file_filter": "all",
+      "mode": "modules",
+      "dl_assignments": true,
+      "dl_syllabus": true,
+      "dl_announcements": true,
+      "dl_discussions": true,
+      "dl_quizzes": true,
+      "dl_submissions": true,
+      "secondary_isolated": false,
+      "convert_zip": true,
+      "convert_pptx": true,
+      "convert_word": true,
+      "convert_excel": true,
+      "convert_html": true,
+      "convert_code": true,
+      "convert_urls": true,
+      "convert_video": true,
+      "pan_out_url": true,
+      "pan_out_mp4": false,
+      "pan_out_mp3": true,
+      "pan_out_txt": false,
+      "pan_out_srt": false,
+      "pan_layout": "match"
+    },
+    "failed": [],
+    "verified": {
+      "convert_zip": true,
+      "convert_pptx": true,
+      "convert_word": true,
+      "convert_excel": true,
+      "convert_html": true,
+      "convert_code": true,
+      "convert_urls": true,
+      "convert_video": true,
+      "dl_assignments": true,
+      "dl_syllabus": true,
+      "dl_announcements": true,
+      "dl_discussions": true,
+      "dl_quizzes": true,
+      "dl_submissions": true,
+      "pan_out_url": true,
+      "pan_out_mp4": false,
+      "pan_out_mp3": true,
+      "pan_out_txt": false,
+      "pan_out_srt": false
+    },
+    "drift": [],
+    "ok": true
+  },
+  "config_shot": {
+    "name": "regress_config",
+    "screenshot": "/Users/m1/Canvas_Downloader/_audit_runs/20260822_201132_engine-regression-verify/evidence/screenshots/regress_config.png",
+    "extract": "/Users/m1/Canvas_Downloader/_audit_runs/20260822_201132_engine-regression-verify/evidence/ui/regress_config.json",
+    "textLen": 2025,
+    "consoleErrors": 0,
+    "exceptions": 0
+  },
+  "run": {
+    "name": "regress",
+    "terminal": {
+      "done": true,
+      "complete": true,
+      "stopped": true,
+      "active": {
+        "flow": "download",
+        "idx": 4,
+        "id": "complete",
+        "state": "active"
+      },
+      "dash": false,
+      "exceptions": 0,
+      "head": "Download Complete!",
+      "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n300\nFILES DOWNLOADED\n688.4\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nCannot Be Downloaded\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n300 FILES\nPDF\n121\nMD\n80\nWEBLOC\n41\nMP3\n36\nOTHER FILES\n22\n\nOpen Folder\n\nGo to front page",
+      "waited_s": 146.2
+    },
+    "panopto_notice": {
+      "shown": true,
+      "accepted": true
+    },
+    "captures": [
+      "regress_phase_scan",
+      "regress_phase_download",
+      "regress_complete"
+    ],
+    "ok": true
+  },
+  "trace": [
+    {
+      "t": "20:12:00",
+      "action": "select_courses",
+      "courses": [
+        43660
+      ],
+      "results": [
+        {
+          "course_id": 43660,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "t": "20:12:01",
+      "action": "open_custom",
+      "step": "2"
+    },
+    {
+      "t": "20:12:04",
+      "action": "expand_card",
+      "card": "toggle_card2",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "20:12:04",
+      "action": "set_toggle",
+      "key": "btn_dl_assignments",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:05",
+      "action": "set_toggle",
+      "key": "btn_dl_syllabus",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:06",
+      "action": "set_toggle",
+      "key": "btn_dl_announcements",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:06",
+      "action": "set_toggle",
+      "key": "btn_dl_discussions",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:07",
+      "action": "set_toggle",
+      "key": "btn_dl_quizzes",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:08",
+      "action": "set_toggle",
+      "key": "btn_dl_submissions",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:09",
+      "action": "expand_card",
+      "card": "toggle_card3",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "20:12:10",
+      "action": "set_toggle",
+      "key": "btn_convert_zip",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:11",
+      "action": "set_toggle",
+      "key": "btn_convert_pptx",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:11",
+      "action": "set_toggle",
+      "key": "btn_convert_word",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:12",
+      "action": "set_toggle",
+      "key": "btn_convert_excel",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:13",
+      "action": "set_toggle",
+      "key": "btn_convert_html",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:14",
+      "action": "set_toggle",
+      "key": "btn_convert_code",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:14",
+      "action": "set_toggle",
+      "key": "btn_convert_urls",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:15",
+      "action": "set_toggle",
+      "key": "btn_convert_video",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:16",
+      "action": "expand_card",
+      "card": "toggle_panopto",
+      "open": true,
+      "ok": true
+    },
+    {
+      "t": "20:12:17",
+      "action": "set_toggle",
+      "key": "btn_pan_out_url",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:17",
+      "action": "set_toggle",
+      "key": "btn_pan_out_mp4",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "20:12:18",
+      "action": "set_toggle",
+      "key": "btn_pan_out_mp3",
+      "want": true,
+      "ok": true,
+      "changed": true
+    },
+    {
+      "t": "20:12:18",
+      "action": "set_toggle",
+      "key": "btn_pan_out_txt",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "20:12:18",
+      "action": "set_toggle",
+      "key": "btn_pan_out_srt",
+      "want": false,
+      "ok": true,
+      "changed": false
+    },
+    {
+      "t": "20:12:18",
+      "action": "configure",
+      "applied": {
+        "file_filter": "all",
+        "mode": "modules",
+        "dl_assignments": true,
+        "dl_syllabus": true,
+        "dl_announcements": true,
+        "dl_discussions": true,
+        "dl_quizzes": true,
+        "dl_submissions": true,
+        "secondary_isolated": false,
+        "convert_zip": true,
+        "convert_pptx": true,
+        "convert_word": true,
+        "convert_excel": true,
+        "convert_html": true,
+        "convert_code": true,
+        "convert_urls": true,
+        "convert_video": true,
+        "pan_out_url": true,
+        "pan_out_mp4": false,
+        "pan_out_mp3": true,
+        "pan_out_txt": false,
+        "pan_out_srt": false,
+        "pan_layout": "match"
+      },
+      "failed": [],
+      "verified": {
+        "convert_zip": true,
+        "convert_pptx": true,
+        "convert_word": true,
+        "convert_excel": true,
+        "convert_html": true,
+        "convert_code": true,
+        "convert_urls": true,
+        "convert_video": true,
+        "dl_assignments": true,
+        "dl_syllabus": true,
+        "dl_announcements": true,
+        "dl_discussions": true,
+        "dl_quizzes": true,
+        "dl_submissions": true,
+        "pan_out_url": true,
+        "pan_out_mp4": false,
+        "pan_out_mp3": true,
+        "pan_out_txt": false,
+        "pan_out_srt": false
+      },
+      "drift": [],
+      "ok": true
+    },
+    {
+      "t": "20:15:05",
+      "action": "confirm_and_run",
+      "name": "regress",
+      "terminal": {
+        "done": true,
+        "complete": true,
+        "stopped": true,
+        "active": {
+          "flow": "download",
+          "idx": 4,
+          "id": "complete",
+          "state": "active"
+        },
+        "dash": false,
+        "exceptions": 0,
+        "head": "Download Complete!",
+        "tail": "1. Select Courses\n\n2. Configure Download\n\n3. Analyzing\n\n4. Downloading\n\n5. Complete\n\nDownload Complete!\nDownload Success\n1\nCOURSE DOWNLOADED\n300\nFILES DOWNLOADED\n688.4\nMB DOWNLOADED\n2\nCANNOT BE DOWNLOADED\nCannot Be Downloaded\nFolders Updated\nIndføring i organisationers opbygning og funktion (LA E25 BINTO1060U)\n300 FILES\nPDF\n121\nMD\n80\nWEBLOC\n41\nMP3\n36\nOTHER FILES\n22\n\nOpen Folder\n\nGo to front page",
+        "waited_s": 146.2
+      },
+      "panopto_notice": {
+        "shown": true,
+        "accepted": true
+      },
+      "captures": [
+        "regress_phase_scan",
+        "regress_phase_download",
+        "regress_complete"
+      ],
+      "ok": true
+    }
+  ]
+}
