@@ -75,6 +75,26 @@ jobs:
         run: |
           set -euo pipefail
           codesign --force --deep --sign - --entitlements entitlements.mac.plist "dist/Canvas Downloader.app"
+
+          # VERIFY THE SEAL. This build signed and never checked, and v2.0.1
+          # shipped a bundle that fails `codesign --verify` outright because
+          # pync vendored a nested .app PyInstaller could not seal. One line
+          # would have failed that build instead of releasing it.
+          #
+          # The distinction this protects is not cosmetic. A valid ad-hoc seal
+          # gives Gatekeeper "rejected" (exit 3) - the "Apple could not verify"
+          # dialog with the Open Anyway path docs/mac-setup.html walks users
+          # through, and the app ships unsigned by design. A BROKEN seal gives
+          # "a sealed resource is missing" (exit 1) - "is damaged and can't be
+          # opened", which has no Open Anyway path at all. Same bundle, one
+          # recoverable and one not.
+          #
+          # --deep --strict, because the failure mode was a nested component:
+          # spctl does not descend into one, so a bundle can assess as exit 3
+          # while codesign --verify fails.
+          echo "Verifying the seal..."
+          codesign --verify --deep --strict --verbose=2 "dist/Canvas Downloader.app"
+          echo "OK - seal verifies"
           
           # Use sindresorhus/create-dmg to build a beautiful DMG with the drag-to-applications visual guide
           cd dist
