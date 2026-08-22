@@ -1087,6 +1087,33 @@ by default even with WSL present.
   probe answered wrongly at a mount point - i.e. it fired without the user
   doing anything.
 
+## A test skipped on YOUR platform runs only where you cannot see it (2026-08-22)
+`tests/test_longpath_gate_check.py:test_off_windows_is_not_applicable_and_exits_clean`
+is `@skipif(os.name == "nt")`. It was written on Windows, so it was skipped in
+every run its author made, and it ran for the first time when the macOS session
+pulled - where it **failed immediately**: `main()` took no `argv`, so
+`parse_args()` read `sys.argv`, which under pytest is the RUNNER's arguments,
+and it died on `-q` with `SystemExit(2)`.
+- **The rule: a platform-guarded test is only covered by the platform it is NOT
+  skipped on.** Writing `skipif(os.name == "nt")` on Windows is writing a test
+  you have structurally guaranteed you will never execute. Same shape as
+  `pdf_looks_real` landing on two of three delete sites, one level up: not a fix
+  that reached too few places, but a GUARD that ran in too few.
+- **The remedy is cheap and it is a habit, not a mechanism**: when you add a
+  test that skips on your own platform, say so in the handoff so the other
+  session runs it. Cross-platform work in this repo is now routinely two
+  sessions on two machines, and the other one is the only place that guard
+  exists.
+- **`main()` must take `argv`** for exactly this reason - a CLI entry point that
+  parses `sys.argv` implicitly cannot be called in-process by anything, and the
+  first caller is always a test. `parse_args(argv)` with `argv=None` defaulting
+  to `sys.argv[1:]` costs nothing and keeps the shell behaviour identical.
+- The wider lesson this session kept re-learning, in three separate places: the
+  laptop's guards were blind (`os.makedirs` invisible to a census, a scanner
+  window measured in physical lines that a comment pushed the target out of),
+  the audit's oracles were blind at depth, and this test never ran. **A guard
+  that passes gets recorded as protection**, so a blind one is worse than none.
+
 ## A bundle's SEAL is only as stable as the least deterministic thing in it (2026-08-21)
 Both specs bundle the app's packages by DIRECTORY, so PyInstaller sweeps in
 whatever `__pycache__` the working tree holds - **75 stale `.pyc` measured** -

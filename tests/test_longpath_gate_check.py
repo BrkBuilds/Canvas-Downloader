@@ -76,7 +76,26 @@ def test_the_self_test_exercises_every_branch():
 
 @pytest.mark.skipif(os.name == "nt", reason="the not-applicable path is off-Windows")
 def test_off_windows_is_not_applicable_and_exits_clean():
-    assert gate.main() == gate.VALID
+    """Pass an explicit argv.
+
+    `main()` with no argument parses ``sys.argv``, which under pytest is the
+    RUNNER's arguments - so this died on ``-q`` with SystemExit(2). It was
+    invisible to the author because this test is skipped on Windows, i.e. it
+    runs only on the platform they could not run it on. It had never executed
+    anywhere until the macOS session ran the suite.
+    """
+    assert gate.main([]) == gate.VALID
+
+
+@pytest.mark.skipif(os.name == "nt", reason="the not-applicable path is off-Windows")
+def test_main_does_not_read_pytests_own_argv():
+    """Pins the cause rather than the symptom, so re-introducing the no-arg
+    form fails here instead of somewhere confusing."""
+    import inspect
+    sig = inspect.signature(gate.main)
+    assert "argv" in sig.parameters, "main() must accept argv or it parses sys.argv"
+    src = inspect.getsource(gate.main)
+    assert "parse_args(argv)" in src, "main() still parses sys.argv"
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows-only registry read")
