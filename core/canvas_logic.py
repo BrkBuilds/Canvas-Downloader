@@ -22,6 +22,7 @@ from core.canvas_debug import log_debug
 import logging
 import requests
 from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from core.sync_manager import (
     SyncManager, make_secondary_id, is_secondary_id, CanvasFileInfo,
@@ -31,6 +32,61 @@ from core.sync_manager import (
 from shared.helpers import make_long_path, path_exists, _err_log_lock
 
 logger = logging.getLogger(__name__)
+
+
+#: Transport-level retry for the Canvas METADATA path (canvasapi/requests).
+#:
+#: A single transient 502 on `GET /courses/{id}/modules/{mid}/items` used to drop
+#: that module from the scan for the whole run - silently, because the consumer
+#: does `if items is None: continue`. The scan feeds BOTH the sync analyzer and
+#: the download engine, so the module's Pages, links and module_map entries just
+#: vanished for that run. Meanwhile the FILE-DOWNLOAD path in sync/execution.py
+#: has retried 5xx with backoff all along: the layer that decides what there is
+#: to download had no retry, while the layer that fetches it did.
+#:
+#: Mounted in `_new_canvas_client`, which is the ONE place a canvasapi session is
+#: built, so every metadata call gets this - the bulk get_files(), get_modules(),
+#: the module-items fan-out and the per-file metadata fan-out alike.
+#:
+#: Each parameter is a decision, not a default:
+#:
+#: * ``status_forcelist`` is transient SERVER errors only. **429/403 are
+#:   deliberately absent**: Canvas signals rate limiting with both, the app
+#:   handles that explicitly on the aiohttp download path with a CLAMPED
+#:   Retry-After (`parse_retry_after`), and retrying a rate limit on a short
+#:   backoff aggravates it. Rate limiting on the metadata path is a separate
+#:   question and is left where it was rather than half-answered here.
+#: * ``respect_retry_after_header=False`` because a 503 may carry one, and this
+#:   repo's rule is that nothing may park the app on a number a server chose -
+#:   a literal `Retry-After: 86400` once parked a download for a day. Our own
+#:   bounded backoff is used instead.
+#: * ``read=0`` AND ``connect=0``: STATUS retries only. Both were measured, and
+#:   the connect one was a real regression I had talked myself into. A retry of
+#:   either kind only begins after a TIMEOUT has already elapsed - 60s read, 15s
+#:   connect - so it multiplies the wall clock on exactly the slow or
+#:   unreachable link those timeouts exist for. Measured against a blackholed
+#:   host at a 3s connect timeout: no-retry 3.01s, ``connect=2`` **10.01s**. At
+#:   the adapter's real 15s that is 15s -> ~50s before the user is told Canvas
+#:   cannot be reached, on the login path, for zero benefit to the 502 this
+#:   exists for. "Connect failures are cheap and transient" is true of a refused
+#:   connection and false of a filtered one, and the filtered one is the case
+#:   that hurts.
+#: * ``raise_on_status=False`` so an exhausted retry returns the 502 and
+#:   canvasapi raises its own error, exactly as before. The retry is invisible
+#:   when it fails, which keeps every existing handler and message meaningful.
+#:
+#: Worst case added latency is ~3.5s per request, bounded.
+_CANVAS_RETRY = Retry(
+    total=3,
+    connect=0,
+    read=0,
+    status=3,
+    status_forcelist=(502, 503, 504),
+    allowed_methods=frozenset({"GET", "HEAD", "OPTIONS"}),
+    backoff_factor=0.5,
+    respect_retry_after_header=False,
+    raise_on_status=False,
+)
 
 
 class _CanvasTimeoutAdapter(HTTPAdapter):
@@ -1136,7 +1192,7 @@ class CanvasManager:
         """
         canvas = Canvas(api_url, api_key)
         try:
-            _adapter = _CanvasTimeoutAdapter()
+            _adapter = _CanvasTimeoutAdapter(max_retries=_CANVAS_RETRY)
             canvas._Canvas__requester._session.mount('https://', _adapter)
             canvas._Canvas__requester._session.mount('http://', _adapter)
         except Exception as _e:
@@ -1553,6 +1609,35 @@ class CanvasManager:
                 _modules_items = list(_ex.map(_fetch_module_items, modules))
         else:
             _modules_items = []
+
+        # A module whose item list could not be fetched is DROPPED from the scan
+        # (`if items is None: continue` below), and this scan feeds both the sync
+        # analyzer and the download engine - so that module's Pages, links and
+        # module_map entries silently do not exist for this run. The transport
+        # retry on `_new_canvas_client` absorbs the transient case; anything that
+        # survives it is worth saying out loud.
+        #
+        # Reported from the MAIN thread, not from `_fetch_module_items`, which
+        # runs on a worker: `progress_callback` drives Streamlit UI and a worker
+        # thread has no ScriptRunContext. The workers already hand back None, so
+        # the information is here for free.
+        #
+        # ONE summary line rather than one per module: the failure mode this
+        # guards against is a 502 STORM, where a per-module line would bury the
+        # run's real errors - the same reasoning as the Panopto hook's
+        # first-failure-only rule.
+        _unfetched = [n for n, its in _modules_items if its is None]
+        if _unfetched:
+            _shown = ", ".join(_unfetched[:3]) + ("…" if len(_unfetched) > 3 else "")
+            logger.warning(
+                "Module items unavailable for %d of %d module(s) after retries: %s. "
+                "Files, Pages and links reachable only through those modules are "
+                "not part of this scan.", len(_unfetched), total_modules, _shown)
+            if progress_callback:
+                progress_callback(
+                    f"Could not read {len(_unfetched)} of {total_modules} modules "
+                    f"({_shown}) - anything linked only from them is not included",
+                    progress_type='log')
 
         for idx, (clean_module_name, items) in enumerate(_modules_items):
             if progress_callback:
