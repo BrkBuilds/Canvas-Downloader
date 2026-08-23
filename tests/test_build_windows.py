@@ -221,3 +221,101 @@ def test_the_powershell_build_delegates_and_owns_no_logic():
             f"build_windows.ps1 invokes {forbidden!r} itself - that is the "
             f"divergence that produced a 2.0.0-labelled installer for a 2.0.2 "
             f"tree. It must only delegate.")
+
+
+# ------------------------------------------------- the output directory (2026-08-23)
+
+def test_pyinstaller_is_told_to_overwrite_the_output_directory():
+    """`--clean` and `--noconfirm` are different knobs, and only one of them
+    touches `dist/`.
+
+    MEASURED 2026-08-23, on the first real run of this script on Windows: with
+    a `dist/` left by an earlier build, PyInstaller reached COLLECT and refused
+    - "The output directory ... is not empty. Please remove all its contents or
+    use the -y option" - and exited 1, about nine minutes in. `--clean` empties
+    the BUILD cache and says nothing about the output tree. A fresh CI checkout
+    has no `dist/`, so this passes there and fails only on the machine where
+    releases are actually built.
+    """
+    import ast
+    import inspect
+    import textwrap
+
+    src = textwrap.dedent(inspect.getsource(bw.run_pyinstaller))
+    tree = ast.parse(src)
+    literals = {n.value for n in ast.walk(tree)
+                if isinstance(n, ast.Constant) and isinstance(n.value, str)}
+    assert "--noconfirm" in literals, (
+        "run_pyinstaller does not pass --noconfirm, so the build fails at "
+        "COLLECT on any machine that has built before")
+    assert "--clean" in literals, "--clean must survive alongside it"
+
+
+# ------------------------------------------------------ finding ISCC (2026-08-23)
+
+def test_iscc_discovery_is_not_pinned_to_one_version_or_one_root():
+    r"""The old form was `which('iscc') or C:\Program Files (x86)\Inno Setup 6`.
+
+    MEASURED 2026-08-23: a working Inno Setup 7.1.0 x64, installed per-user to
+    %LOCALAPPDATA%\Programs\Inno Setup 7, matched none of those - it is a
+    different VERSION in a different ROOT and it puts nothing on PATH - so
+    find_iscc() returned None and the build exited 1 claiming the compiler was
+    not found while it sat there working.
+    """
+    import ast
+    import inspect
+    import textwrap
+
+    src = textwrap.dedent(inspect.getsource(bw._iscc_candidates))
+    assert "Inno Setup*" in src or "Inno Setup" in src
+    tree = ast.parse(src)
+    assert any(isinstance(n, ast.Call) and getattr(n.func, "attr", "") == "glob"
+               for n in ast.walk(tree)), (
+        "candidate discovery must GLOB for versions rather than name one")
+    roots = " ".join(bw._ISCC_ROOTS).lower()
+    assert "program files (x86)" in roots and "program files" in roots
+    assert "programs" in roots, (
+        r"the per-user install root (%LOCALAPPDATA%\Programs) is not searched")
+
+
+def test_iscc_candidates_prefer_the_newest_version(tmp_path, monkeypatch):
+    """A machine with 6 and 7 installed must build with 7."""
+    for name in ("Inno Setup 6", "Inno Setup 7", "Inno Setup 15"):
+        d = tmp_path / name
+        d.mkdir()
+        (d / "ISCC.exe").write_bytes(b"MZ")
+    monkeypatch.setattr(bw, "_ISCC_ROOTS", (str(tmp_path),))
+    found = bw._iscc_candidates()
+    assert [p.parent.name for p in found] == [
+        "Inno Setup 15", "Inno Setup 7", "Inno Setup 6"], (
+        "candidates must be ordered newest-version-first, numerically")
+
+
+def test_iscc_candidates_ignore_a_directory_with_no_compiler(tmp_path, monkeypatch):
+    (tmp_path / "Inno Setup 6").mkdir()          # no ISCC.exe inside
+    monkeypatch.setattr(bw, "_ISCC_ROOTS", (str(tmp_path),))
+    assert bw._iscc_candidates() == []
+
+
+def test_iscc_candidates_survive_an_unreadable_root(tmp_path, monkeypatch):
+    """Discovery runs before anything is built; a bad root must not raise."""
+    monkeypatch.setattr(bw, "_ISCC_ROOTS", (str(tmp_path / "nope"), "", None))
+    assert bw._iscc_candidates() == []
+
+
+def test_path_still_wins_over_a_discovered_install(tmp_path, monkeypatch):
+    """An operator pinning a specific compiler on PATH must keep control."""
+    d = tmp_path / "Inno Setup 7"
+    d.mkdir()
+    (d / "ISCC.exe").write_bytes(b"MZ")
+    monkeypatch.setattr(bw, "_ISCC_ROOTS", (str(tmp_path),))
+    monkeypatch.setattr(bw.shutil, "which",
+                        lambda name: r"C:\pinned\iscc.exe" if name == "iscc" else None)
+    assert bw.find_iscc() == r"C:\pinned\iscc.exe"
+
+
+def test_find_iscc_still_returns_none_when_nothing_is_installed(tmp_path, monkeypatch):
+    """The missing-compiler path is a real ERROR path and must stay reachable."""
+    monkeypatch.setattr(bw, "_ISCC_ROOTS", (str(tmp_path),))
+    monkeypatch.setattr(bw.shutil, "which", lambda name: None)
+    assert bw.find_iscc() is None

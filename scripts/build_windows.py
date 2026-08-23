@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import os
 import pathlib
 import re
 import shutil
@@ -172,10 +173,24 @@ def verify_version_info(path: pathlib.Path, version: str) -> None:
 
 
 def run_pyinstaller() -> None:
+    """Build the app.
+
+    ``--clean`` and ``--noconfirm`` are NOT the same knob, and assuming they
+    were cost a full nine-minute build on 2026-08-23. ``--clean`` empties the
+    BUILD cache; the ``dist/`` OUTPUT directory is untouched by it, and
+    PyInstaller's COLLECT step then refuses to overwrite a non-empty one:
+
+        ERROR: The output directory "...\\dist\\Canvas Downloader" is not
+        empty. Please remove all its contents or use the -y option
+
+    That lands AFTER Analysis, PYZ and EXE, so the failure is expensive and it
+    only happens on a machine that has built before - i.e. never on a fresh CI
+    checkout, and always on the release machine. ``--noconfirm`` is the -y.
+    """
     spec = ROOT / "Canvas_Downloader.spec"
     if not spec.exists():
         raise SystemExit(f"[build] ERROR: {spec} not found.")
-    cmd = [sys.executable, "-m", "PyInstaller", "--clean", str(spec)]
+    cmd = [sys.executable, "-m", "PyInstaller", "--clean", "--noconfirm", str(spec)]
     print(f"[build] Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=str(ROOT))
     if result.returncode != 0:
@@ -200,12 +215,65 @@ def verify_app_built() -> pathlib.Path:
     return APP_EXE
 
 
+#: Where Inno Setup installs itself. The VERSION is a wildcard and the roots
+#: include the per-user one, because the previous single hard-coded path -
+#: ``C:\Program Files (x86)\Inno Setup 6\ISCC.exe`` - missed a perfectly
+#: ordinary install and the build then exited 1 saying the compiler was "not
+#: found" while it sat there working. MEASURED 2026-08-23: Inno Setup 7.1.0
+#: x64, installed per-user, lands in %LOCALAPPDATA%\Programs\Inno Setup 7 and
+#: puts nothing on PATH, so all three of the old checks missed it.
+_ISCC_ROOTS = (
+    r"C:\Program Files (x86)",
+    r"C:\Program Files",
+    os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs"),
+)
+
+
+def _iscc_candidates() -> list[pathlib.Path]:
+    """Every ISCC.exe under a recognised Inno Setup directory, newest first.
+
+    Sorted by the trailing version number so a machine with both 6 and 7
+    installed builds with 7. Non-numeric or unversioned directory names sort
+    last rather than being dropped - an install is still an install.
+    """
+    found: list[tuple[float, pathlib.Path]] = []
+    for root in _ISCC_ROOTS:
+        if not root:
+            continue
+        try:
+            entries = list(pathlib.Path(root).glob("Inno Setup*"))
+        except OSError:
+            continue
+        for d in entries:
+            exe = d / "ISCC.exe"
+            if not exe.is_file():
+                continue
+            m = re.search(r"(\d+(?:\.\d+)?)\s*$", d.name)
+            found.append((float(m.group(1)) if m else -1.0, exe))
+    found.sort(key=lambda pair: pair[0], reverse=True)
+    # de-duplicate while preserving order (two roots can resolve to one file)
+    seen: set[str] = set()
+    out: list[pathlib.Path] = []
+    for _ver, exe in found:
+        key = str(exe).lower()
+        if key not in seen:
+            seen.add(key)
+            out.append(exe)
+    return out
+
+
 def find_iscc() -> str | None:
-    return (shutil.which("iscc") or shutil.which("ISCC")
-            or (str(_DEFAULT_ISCC) if _DEFAULT_ISCC.exists() else None))
+    """Locate the Inno Setup compiler.
 
-
-_DEFAULT_ISCC = pathlib.Path(r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe")
+    PATH wins, so an operator can pin a specific compiler by putting it there;
+    otherwise the newest recognised install is used.
+    """
+    on_path = shutil.which("iscc") or shutil.which("ISCC")
+    if on_path:
+        return on_path
+    for exe in _iscc_candidates():
+        return str(exe)
+    return None
 
 
 def run_inno(version: str, iscc: str) -> pathlib.Path:
