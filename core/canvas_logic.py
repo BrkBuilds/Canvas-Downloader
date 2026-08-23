@@ -89,6 +89,35 @@ _CANVAS_RETRY = Retry(
 )
 
 
+#: Connect timeout, seconds. Not configurable: a connect that has not completed
+#: in 15s is not going to, and `_CANVAS_RETRY` sets `connect=0` precisely
+#: because this number multiplies on the link it exists for.
+_CONNECT_TIMEOUT_SECONDS = 15
+#: Read timeout, seconds. Overridable via CANVAS_TIMEOUT for the slow-server
+#: case (registration day). Mirrors the `sock_read=60` the aiohttp DOWNLOAD
+#: sessions already use, so both halves of the app bound a stalled read alike.
+_DEFAULT_READ_TIMEOUT_SECONDS = 60
+
+
+def _read_timeout_seconds() -> int:
+    """CANVAS_TIMEOUT as a positive int, else the default.
+
+    Parsed defensively because it is read on EVERY request, inside `send`: a
+    malformed value (`CANVAS_TIMEOUT=abc`, or a float like `90.5`) used to raise
+    ValueError out of the adapter and break every Canvas API call in the app,
+    with the env var as the only clue. A bad value now degrades to the default
+    rather than taking the network layer down.
+    """
+    raw = os.environ.get('CANVAS_TIMEOUT')
+    if raw is None:
+        return _DEFAULT_READ_TIMEOUT_SECONDS
+    try:
+        val = int(float(str(raw).strip()))
+    except (TypeError, ValueError):
+        return _DEFAULT_READ_TIMEOUT_SECONDS
+    return val if val > 0 else _DEFAULT_READ_TIMEOUT_SECONDS
+
+
 class _CanvasTimeoutAdapter(HTTPAdapter):
     """Injects a default (connect, read) timeout into every synchronous canvasapi request.
 
@@ -96,11 +125,38 @@ class _CanvasTimeoutAdapter(HTTPAdapter):
     indefinitely on high-latency or unreliable connections (e.g. cross-continent).
     The timeout causes requests.exceptions.Timeout to propagate through canvasapi,
     which then surfaces as a proper error rather than a silent hang.
+
+    THE TRAP, and it is the whole reason this class needs a comment: this used
+    to be `kwargs.setdefault('timeout', ...)`, which is a NO-OP here.
+    `requests.Session.request` builds `send_kwargs = {"timeout": timeout, ...}`
+    and passes it down EXPLICITLY, so by the time an adapter's `send` runs the
+    key is already present - with value None when the caller named no timeout,
+    which is every canvasapi call. `setdefault` sees a key and does nothing, so
+    for as long as that line stood this class injected NOTHING and the hang it
+    exists to prevent was fully reachable.
+
+    MEASURED 2026-08-23 on Windows against a local server that accepts the
+    connection and then sends no byte: the request HUNG PAST 150s with a 60s
+    read timeout configured. The same fixture with the fix below returned in
+    exactly the configured read timeout. A blackholed IP failed in 21.0s - the
+    OS TCP SYN schedule, not our 15s - so connect was bounded only by accident
+    of the platform, and read was not bounded at all.
+
+    So the test is `is None`, never `not in`: requests' explicit None means
+    "the caller named no timeout", which is exactly when we supply ours. An
+    explicit timeout from a caller is still honoured untouched.
+
+    WHY TURNING THIS ON CANNOT BREAK A SLOW-BUT-WORKING REQUEST: the read half
+    is the gap BETWEEN bytes, not the total duration of the response - the same
+    meaning aiohttp's `sock_read` has. A large but progressing paginated reply
+    resets it on every chunk and is unaffected however long it takes overall;
+    only a connection that goes silent for a full minute trips it. That is the
+    difference between "Canvas is slow" and "Canvas stopped answering", and it
+    is the whole reason a read timeout is the right instrument here.
     """
     def send(self, request, **kwargs):
-        # 15s connect / 60s read. Slow Canvas servers on registration day may
-        # exceed this; expose CANVAS_TIMEOUT env var if a user needs more time.
-        kwargs.setdefault('timeout', (15, int(os.environ.get('CANVAS_TIMEOUT', 60))))
+        if kwargs.get('timeout') is None:
+            kwargs['timeout'] = (_CONNECT_TIMEOUT_SECONDS, _read_timeout_seconds())
         return super().send(request, **kwargs)
 
 
