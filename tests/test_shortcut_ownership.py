@@ -42,7 +42,27 @@ from core.canvas_logic import CanvasManager
 from core.sync_manager import (
     CanvasFileInfo, SyncManager, _is_replaced_by_produced_shortcut,
 )
-from shared.shortcuts import SOURCE_PANOPTO, is_produced_shortcut, write_shortcut
+from shared.shortcuts import (
+    SOURCE_PANOPTO, is_produced_shortcut, shortcut_extension, write_shortcut,
+)
+
+#: The suffix `_create_link` will COMPUTE on this host - `.webloc` on macOS,
+#: `.url` everywhere else - resolved through the same `platform.system()` test
+#: the method itself uses.
+#:
+#: Hard-coding `.webloc` here is what made four of these tests fail on Windows
+#: for the whole life of the file: the fixture wrote `Lecture 8.webloc` while
+#: the method under test returned `Lecture 8.url`, so the assertions compared
+#: two different paths. Nothing noticed, because no CI job runs pytest on
+#: Windows - the platform carrying the large majority of installs.
+NATIVE_EXT = shortcut_extension()
+
+#: Both formats, for the checks that are genuinely format-agnostic. The readers
+#: MUST accept either suffix on either host (shared/shortcuts.py states this: a
+#: folder synced on Windows and then opened on macOS holds `.url` files), so
+#: exercising only the native one tests half the contract - and specifically
+#: the half that does NOT cover cross-platform adoption.
+BOTH_EXTS = (".url", ".webloc")
 
 
 def _mgr() -> CanvasManager:
@@ -55,8 +75,17 @@ def _mgr() -> CanvasManager:
 
 
 def _canvas_link(path: Path, url: str = "https://cbscanvas.instructure.com/x") -> Path:
-    """Byte-for-byte what _create_link writes on macOS: a bare single-key plist."""
-    path.write_bytes(plistlib.dumps({"URL": url}, fmt=plistlib.FMT_XML))
+    """Byte-for-byte what `_create_link` writes for a path with this suffix.
+
+    An UNMARKED shortcut, i.e. the thing the URL compiler is meant to consume
+    and the thing the ownership check must NOT protect. The format follows the
+    suffix, exactly as `write_shortcut` does, so this helper is honest on both
+    platforms rather than only on the one it was written on.
+    """
+    if path.suffix.lower() == ".webloc":
+        path.write_bytes(plistlib.dumps({"URL": url}, fmt=plistlib.FMT_XML))
+    else:
+        path.write_text(f"[InternetShortcut]\nURL={url}", encoding="utf-8")
     return path
 
 
@@ -68,19 +97,26 @@ def _panopto_shortcut(path: Path) -> Path:
 
 # --------------------------------------------------------- the predicate
 
-def test_a_canvas_link_is_not_mistaken_for_ours(tmp_path):
+@pytest.mark.parametrize("ext", BOTH_EXTS)
+def test_a_canvas_link_is_not_mistaken_for_ours(tmp_path, ext):
     """The register's stated mechanism, disproved. If this were True, Panopto
-    would be OVERWRITING foreign files - including a user's own .webloc."""
-    assert is_produced_shortcut(_canvas_link(tmp_path / "a.webloc")) is False
+    would be OVERWRITING foreign files - including a user's own shortcut.
+
+    Both suffixes, because the two formats are read by two different branches
+    of `read_shortcut` (plist vs the hand-rolled INI parser) and a marker
+    mis-read in either direction has the same consequence.
+    """
+    assert is_produced_shortcut(_canvas_link(tmp_path / f"a{ext}")) is False
 
 
-def test_a_produced_shortcut_is_recognised(tmp_path):
-    assert is_produced_shortcut(_panopto_shortcut(tmp_path / "b.webloc")) is True
+@pytest.mark.parametrize("ext", BOTH_EXTS)
+def test_a_produced_shortcut_is_recognised(tmp_path, ext):
+    assert is_produced_shortcut(_panopto_shortcut(tmp_path / f"b{ext}")) is True
 
 
 @pytest.mark.parametrize("name,make,expected", [
-    ("ours.webloc", _panopto_shortcut, True),
-    ("theirs.webloc", _canvas_link, False),
+    *[(f"ours{e}", _panopto_shortcut, True) for e in BOTH_EXTS],
+    *[(f"theirs{e}", _canvas_link, False) for e in BOTH_EXTS],
     ("plain.pdf", lambda p: (p.write_bytes(b"%PDF-1.4"), p)[1], False),
 ])
 def test_is_replaced_by_produced_shortcut(tmp_path, name, make, expected):
@@ -100,8 +136,13 @@ def test_the_predicate_is_total(tmp_path):
 
 def test_create_link_does_not_overwrite_a_produced_shortcut(tmp_path):
     """The headline fix: Canvas must step over Panopto's artifact, exactly as
-    Panopto steps over Canvas's link."""
-    target = _panopto_shortcut(tmp_path / "Lecture 8.webloc")
+    Panopto steps over Canvas's link.
+
+    NATIVE_EXT, not a literal: `_create_link` derives its own suffix from
+    `platform.system()`, so a hard-coded one makes the fixture and the method
+    disagree about which file they are talking about on every other platform.
+    """
+    target = _panopto_shortcut(tmp_path / f"Lecture 8{NATIVE_EXT}")
     before = target.read_bytes()
 
     out = _mgr()._create_link("Lecture 8", "https://canvas/modules/items/9",
@@ -115,7 +156,7 @@ def test_create_link_still_overwrites_its_own_previous_canvas_link(tmp_path):
     """The documented behaviour that must SURVIVE the fix: links are fully
     regenerated from Canvas, so a stale one is replaced rather than piling up
     numbered siblings. Only OUR artifacts are protected."""
-    target = _canvas_link(tmp_path / "Lecture 8.webloc", "https://canvas/OLD")
+    target = _canvas_link(tmp_path / f"Lecture 8{NATIVE_EXT}", "https://canvas/OLD")
     _mgr()._create_link("Lecture 8", "https://canvas/NEW", tmp_path, None)
     assert b"NEW" in target.read_bytes()
 
@@ -134,7 +175,7 @@ def test_the_skip_path_still_records_a_manifest_row(tmp_path):
 
     course = tmp_path / "course"
     course.mkdir()
-    target = _panopto_shortcut(course / "Lecture 8.webloc")
+    target = _panopto_shortcut(course / f"Lecture 8{NATIVE_EXT}")
     sm = SyncManager(str(course), 43660)
 
     _mgr()._create_link("Lecture 8", "https://canvas/modules/items/9", course, None,
@@ -146,7 +187,7 @@ def test_the_skip_path_still_records_a_manifest_row(tmp_path):
                       "where canvas_file_id = -77").fetchone()
     con.close()
     assert row is not None, "no row was recorded - the item would be re-offered for ever"
-    assert row["local_path"] == "Lecture 8.webloc"
+    assert row["local_path"] == f"Lecture 8{NATIVE_EXT}"
     assert row["original_md5"] == hashlib.md5(target.read_bytes()).hexdigest(), (
         "the recorded baseline must describe the file that is actually there, "
         "or the row keeps reading as locally modified")
@@ -166,7 +207,7 @@ def test_an_unreadable_shortcut_falls_through_to_an_ordinary_write(tmp_path, mon
         raise OSError("disk hiccup")
 
     monkeypatch.setattr(sc, "is_produced_shortcut", _boom)
-    target = tmp_path / "Lecture 8.webloc"
+    target = tmp_path / f"Lecture 8{NATIVE_EXT}"
     target.write_bytes(b"whatever")
 
     out = _mgr()._create_link("Lecture 8", "https://canvas/NEW", tmp_path, None)
@@ -218,29 +259,36 @@ def _analyze(course: Path, *, local: str):
     return sm.analyze_course([cf], {"files": rows}, download_mode="flat")
 
 
-def test_a_row_whose_file_became_a_produced_shortcut_is_up_to_date(tmp_path):
+@pytest.mark.parametrize("ext", BOTH_EXTS)
+def test_a_row_whose_file_became_a_produced_shortcut_is_up_to_date(tmp_path, ext):
     """The 36. Before this branch they classified as 'modified' on the md5
     check, so the first Canvas-side edit to any of those module items would
-    fork a _NewVersion sibling for a file the user never touched."""
+    fork a _NewVersion sibling for a file the user never touched.
+
+    Both suffixes: a folder first synced on Windows and later opened on macOS
+    (or the reverse) carries the OTHER platform's shortcut, and the analyzer
+    has to reach the same verdict about it either way.
+    """
     course = tmp_path / "c"
     course.mkdir()
-    _panopto_shortcut(course / "Lecture 8.webloc")
+    _panopto_shortcut(course / f"Lecture 8{ext}")
 
-    res = _analyze(course, local="Lecture 8.webloc")
+    res = _analyze(course, local=f"Lecture 8{ext}")
 
     assert len(res.uptodate_files) == 1
     assert not res.updated_modified_files
     assert not res.updated_clean_files
 
 
-def test_a_row_whose_file_is_still_a_canvas_link_is_classified_normally(tmp_path):
+@pytest.mark.parametrize("ext", BOTH_EXTS)
+def test_a_row_whose_file_is_still_a_canvas_link_is_classified_normally(tmp_path, ext):
     """The bypass must not swallow a genuine update. A foreign/ours distinction
     that answers 'up to date' for everything is not a fix."""
     course = tmp_path / "c"
     course.mkdir()
-    _canvas_link(course / "Lecture 8.webloc")
+    _canvas_link(course / f"Lecture 8{ext}")
 
-    res = _analyze(course, local="Lecture 8.webloc")
+    res = _analyze(course, local=f"Lecture 8{ext}")
 
     assert not res.uptodate_files
     assert (res.updated_modified_files or res.updated_clean_files), (

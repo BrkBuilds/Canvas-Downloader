@@ -139,18 +139,68 @@ def test_the_staging_sweep_can_only_remove_EMPTY_directories():
         "conversion, which is worse than the leak it fixes")
 
 
-def test_force_close_with_an_unknown_app_name_warns_instead_of_doing_nothing(caplog):
+def test_force_close_with_an_unknown_app_name_warns_instead_of_doing_nothing(
+        caplog, monkeypatch):
     """`only_app` is a FULL name ("Microsoft Word"); _QUIT_TARGETS holds those and
     the one production caller passes them straight through. A name that matches
     nothing used to skip the loop, close nothing, log nothing and return
     successfully - which read as a working call during the 2026-08-22
     two-instance verification and cost a debugging cycle. Every other silence in
-    that function was already made loud for exactly this reason."""
+    that function was already made loud for exactly this reason.
+
+    THE DARWIN BRANCH IS DRIVEN FROM ANY PLATFORM, deliberately. This test was
+    written on macOS and failed on Windows from the day it was added (2026-08-22,
+    cfc1717), because `_force_close_canvas_docs_sync` opens with
+    `if sys.platform != 'darwin': return` and so never reaches the guard under
+    test. The cheap fix would be a skipif - but this repo's own rule is that a
+    platform-guarded test is only covered by the platform it is NOT skipped on,
+    and macOS is the RARE machine here (it is rented). So instead the guard is
+    answered, exactly as CLAUDE.md describes driving the macOS branches from
+    Windows. That is safe: with an unknown name the function warns and returns
+    at the very next statement, so no osascript, no subprocess, and no Office
+    app is ever touched - which the trailing assertion pins.
+    """
     import logging
+    import subprocess
 
     import engine.applescript_bridge as br
+
+    monkeypatch.setattr(br.sys, "platform", "darwin")
+
+    def _no_subprocess(*a, **k):                      # pragma: no cover - guard
+        raise AssertionError(
+            "the unknown-name guard must return BEFORE any subprocess runs")
+
+    monkeypatch.setattr(subprocess, "run", _no_subprocess)
 
     with caplog.at_level(logging.WARNING, logger="engine.applescript_bridge"):
         br._force_close_canvas_docs_sync("Word")          # not a full app name
     assert "not one of" in caplog.text, (
         f"a name matching no target closed nothing and said nothing: {caplog.text!r}")
+
+
+def test_force_close_is_a_no_op_off_macos(caplog, monkeypatch):
+    """The other side of the platform guard, which nothing covered.
+
+    Off macOS this function has nothing to do - it drives Office through
+    osascript - so it must return silently rather than warn. Without this, the
+    obvious "fix" for the test above (moving the platform guard below the
+    unknown-name check) would look correct while making every non-macOS run
+    log a warning the audit's log oracle would turn into a finding.
+    """
+    import logging
+    import subprocess
+
+    import engine.applescript_bridge as br
+
+    monkeypatch.setattr(br.sys, "platform", "win32")
+
+    def _no_subprocess(*a, **k):                      # pragma: no cover - guard
+        raise AssertionError("off macOS this function must touch nothing")
+
+    monkeypatch.setattr(subprocess, "run", _no_subprocess)
+
+    with caplog.at_level(logging.WARNING, logger="engine.applescript_bridge"):
+        br._force_close_canvas_docs_sync("Microsoft Word")     # a VALID name
+    assert caplog.text == "", (
+        f"off macOS this must be a silent no-op, not a warning: {caplog.text!r}")
