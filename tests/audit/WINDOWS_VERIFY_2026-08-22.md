@@ -1,5 +1,22 @@
 # Windows verification — the 2026-08-22 changes
 
+> **DONE — 2026-08-23. This brief has been executed; do not re-run it as if
+> it were outstanding.** Six findings, all fixed and verified live in the
+> packaged app. Outcome, evidence and the classes they belong to are recorded
+> in `CLAUDE.md` (three new sections dated 2026-08-23) and in
+> `tests/audit/AUDIT_FINDINGS.md` (fp `a1c4e77b3d02`, `b7f2093c6e14`,
+> `c30d5a91f8b6`, `d5e81b6470af`, `e92a4c05d7b3`, `f1638ad2c95e`, all `fixed`).
+>
+> Headline: the Windows suite was **RED** (5 failed / 4367 passed) and there
+> was **no Windows CI at all** — four failures were tests hard-coding
+> `.webloc`, one asserted a warning a correct darwin guard prevents. All
+> test-side; the product was verified correct on Windows separately. The one
+> real product defect was `_CanvasTimeoutAdapter` never applying its timeout
+> (`setdefault` is a no-op in an adapter), latent since 2026-05-21.
+> Now: **4413 passed / 0 failed**, mutations 9/9 · 10/10 · 10/11 · 13/13,
+> architecture audit 0 violations, and `.github/workflows/test-windows.yml`
+> closes the root cause.
+
 Paste everything below the line into a fresh agent session on the **Windows
 PC**, in a clone of `BrkBuilds/Canvas-Downloader` at `main`.
 

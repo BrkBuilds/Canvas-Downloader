@@ -9,9 +9,9 @@ audit refreshes the facts around your decision on every run and never
 overwrites it. Anything you marked `fixed` that appears again is
 reported as a **regression** — that is the line worth watching.
 
-Last updated by run `20260822_145236_longpath-postfix-verify` on 2026-08-22.
+Last updated by run `20260823_windows-verify-and-fix-2026-08-22-changes` on 2026-08-23.
 
-**0 open** · 180 total · 30 accepted · 101 fixed · 47 invalid · 2 wontfix
+**0 open** · 186 total · 30 accepted · 107 fixed · 47 invalid · 2 wontfix
 
 ---
 
@@ -5319,5 +5319,137 @@ Reaching it at all was the blocker: the gate needs macOS 15+ AND Full Disk Acces
 
 **Notes**: > 2026-08-13 reconciliation: A VERIFICATION RECORD, not a work item - marked `accepted` so it stops inflating the open count. The register's own contract is that `fixed` arms regression reporting; a PASS observation has nothing to regress, so it is acknowledged instead. The evidence above stands as written.  
 > Not observed in the latest run.
+
+---
+
+### The four tests guarding _create_link's ownership fix hard-code .webloc, so they FAIL on Windows - and there is no Windows CI to notice
+<!-- fp:a1c4e77b3d02 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: test-coverage
+**Oracles**: windows-verification, full-suite, mutation-harness
+**First seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Last seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Occurrences**: 1
+**Scenario**: python -m pytest tests/test_shortcut_ownership.py on Windows 11, Python 3.13.7, clean tree at c1f218b
+
+**Detail**:
+
+tests/test_shortcut_ownership.py builds its fixtures as `.webloc` (`_panopto_shortcut(tmp_path / "Lecture 8.webloc")`), but `_create_link` picks its extension from `platform.system()` and computes `.url` on Windows. Four tests therefore compare a `.url` the method returned against a `.webloc` the fixture wrote, and FAIL: test_create_link_does_not_overwrite_a_produced_shortcut, test_create_link_still_overwrites_its_own_previous_canvas_link, test_the_skip_path_still_records_a_manifest_row, test_an_unreadable_shortcut_falls_through_to_an_ordinary_write. These are exactly the four that exercise the 2026-08-22 headline fix; the eleven that pass are the format-agnostic predicate tests, which pass because read_shortcut deliberately accepts both suffixes on any host. TWO CONSEQUENCES, and the second is the worse one. (a) The Windows suite is RED at main - 5 failed, 4367 passed, 38 skipped - and .github/workflows/ contains ONLY test-macos.yml and build-macos.yml, so no CI job anywhere runs pytest on Windows. (b) scripts/_mutate_shortcut_ownership.py has a baseline guard and correctly refuses with "BASELINE IS RED - fix that first" (exit 2), so the recorded 9/9 mutation score is UNMEASURABLE on Windows - the guard protecting the day's headline fix has never been scored on ~94% of installs. THE PRODUCT ITSELF IS CORRECT ON WINDOWS, and that was measured rather than assumed: driving the real CanvasManager._create_link against real `.url` files gave 8/8 both shallow and at a 265-character path on a machine with LongPathsEnabled=0 (gate probe VALID) - a marked shortcut is left byte-identical, the method still returns its path, the marker survives, and the CONTROL (an unmarked Canvas link) is still regenerated with the new URL. A separate probe confirmed the skip path still records the manifest row (local_path "Lecture 8.url", original_md5 equal to md5 of the file on disk, so the stale-row healing works) and that _is_replaced_by_produced_shortcut answers True/False correctly for `.url`. So this is a TEST defect, not a product defect - but it is the defect that hides product defects.
+
+**Notes**: The fix is to derive the suffix instead of hard-coding it - shared.shortcuts.shortcut_extension() already exists and uses the same platform.system() test as _create_link - and to make _canvas_link() write INI on Windows and a plist on macOS, since its docstring calls it "byte-for-byte what _create_link writes". Worth doing together with a Windows CI job, because without one this recurs silently. Same class as CLAUDE.md's "A test skipped on YOUR platform runs only where you cannot see it", one degree worse: these are not skipped, they fail.
+
+> FIXED 2026-08-23, and the tests were STRENGTHENED rather than merely repaired. `tests/test_shortcut_ownership.py` now derives the suffix through `shared.shortcuts.shortcut_extension()` (`NATIVE_EXT`) at the four sites that drive `_create_link`, and `_canvas_link()` writes INI or plist according to the path's own suffix so the helper is honest on both platforms rather than only the one it was written on. The format-AGNOSTIC checks - the predicate, `_is_replaced_by_produced_shortcut`, and both analyzer verdicts - are now parametrised over BOTH suffixes, which is strictly more coverage than before: the readers are documented to accept either suffix on either host (a folder synced on Windows and opened on macOS carries `.url`), and only the native one was ever exercised. 19 tests -> 21, all green on Windows. THE SCORE IS NOW MEASURABLE HERE FOR THE FIRST TIME: `scripts/_mutate_shortcut_ownership.py` 9/9 caught on Windows, where it previously refused with BASELINE IS RED. Root cause closed too - see the new `.github/workflows/test-windows.yml`.
+
+---
+
+### _CanvasTimeoutAdapter never applies its timeout - requests always passes timeout=None, so setdefault is a no-op and a stalled Canvas hangs the app indefinitely
+<!-- fp:b7f2093c6e14 -->
+
+**Status**: fixed
+**Severity**: high
+**Category**: correctness
+**Oracles**: windows-verification, measured against a real local socket
+**First seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Last seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Occurrences**: 1
+**Scenario**: Driving the real adapter against (a) a blackholed IP and (b) a local server that accepts and never replies; requests 2.32.3, urllib3 2.5.0
+
+**Detail**:
+
+`_CanvasTimeoutAdapter.send` does `kwargs.setdefault('timeout', (15, int(os.environ.get('CANVAS_TIMEOUT', 60))))`. But requests.Session.request builds `send_kwargs = {"timeout": timeout, ...}` and passes it down explicitly, so by the time the adapter runs `'timeout'` is ALREADY a key - with value None - and setdefault does nothing. Dumped the real kwargs reaching HTTPAdapter.send through the mounted adapter: {'cert': None, 'proxies': OrderedDict(), 'stream': False, 'timeout': None, 'verify': True}. The key is present, so the injection never happens. MEASURED CONSEQUENCE, on a thread with a join timeout so the test could fail rather than hang: against a local server that accepts the connection and then sends nothing, the request HUNG PAST 150s with a 60s read timeout configured, and past 75s on a repeat. POSITIVE CONTROL for the mechanism and its remedy, same fixture: a subclass that sets the timeout when requests passed None (`if kw.get('timeout') is None: kw['timeout'] = (15, 5)`) returned in 5.0s - exactly the configured read timeout. Connect is bounded only by the OS: a blackholed IP with no explicit timeout failed in 21.0s, which is Windows' own TCP SYN retry schedule, not the adapter's 15s. This is PRE-EXISTING - git blame puts the setdefault line at 63d2118, 2026-05-21 - and NOT introduced by the 2026-08-22 retry work. It is recorded here because that work's whole rationale rests on these timeouts: CLAUDE.md's connect=0 reasoning states "a retry of either kind only begins after a TIMEOUT has already elapsed (15s connect, 60s read)" and sizes the cost as "15s -> ~50s on the login path". The 15s is not in effect. The class's own docstring names the exact failure it no longer prevents: "Without this, course.get_modules() / course.get_files() etc. can hang indefinitely on high-latency or unreliable connections". The daily auto-sync runs unattended, which is where an unbounded read matters most.
+
+**Notes**: The retry configuration itself is CORRECT and separately verified on Windows - see the metadata-retry note in the run summary. Fix is one line in _CanvasTimeoutAdapter.send: treat a None timeout as absent. Any test for it must run the call on a thread with a join timeout, per this repo's existing rule for the ffmpeg watchdog, or a regression hangs the suite instead of reporting.
+
+> FIXED 2026-08-23. `_CanvasTimeoutAdapter.send` now tests `kwargs.get('timeout') is None` instead of `setdefault`, and the two values are named constants (`_CONNECT_TIMEOUT_SECONDS` 15, `_DEFAULT_READ_TIMEOUT_SECONDS` 60). CANVAS_TIMEOUT is parsed through `_read_timeout_seconds()`, which degrades a malformed or non-positive value to the default - it is read on EVERY request inside `send`, so `CANVAS_TIMEOUT=abc` previously raised ValueError out of the adapter and broke every Canvas API call in the app. VERIFIED THREE WAYS. (1) The fixture that proved the defect: the accept-and-stall server now returns in exactly the configured read timeout (5.0s) where it hung past 150s. (2) A SAFETY control, because turning a timeout on can regress the opposite way: a server dripping for ~4s under a 2s read timeout still SUCCEEDS, confirming the read half bounds the gap BETWEEN bytes and not the total duration - so a slow-Canvas day cannot start failing. (3) LIVE against real Canvas with a real token: validate_token in 0.23s and 32 courses in 1.00s, with the transport confirmed to receive (15, 60) on the real request. Then end to end in the PACKAGED app - login, 14 courses, and a 12-course sync analysis reporting 'Checked 352 files across 11 courses', 0 exceptions, `failures: {}` in the health record. tests/test_canvas_request_timeout.py (17); scripts/_mutate_canvas_request_timeout.py 10/10 caught, including the original `setdefault` verbatim.
+
+---
+
+### build_windows.py passes --clean but not --noconfirm, so the release build FAILS on any machine that has built before
+<!-- fp:c30d5a91f8b6 -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: build
+**Oracles**: windows-verification, real end-to-end build
+**First seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Last seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Occurrences**: 1
+**Scenario**: python scripts/build_windows.py on a machine with a pre-existing dist/ from an earlier build
+
+**Detail**:
+
+`run_pyinstaller()` runs `python -m PyInstaller --clean <spec>`. `--clean` clears the BUILD cache; it does not clear the `dist/` OUTPUT directory. PyInstaller's COLLECT step then refuses: "ERROR: The output directory ...\dist\Canvas Downloader is not empty. Please remove all its contents or use the -y option", and exits 1. Reproduced on the first real run of this script on Windows, against a dist/ left by a build from 2026-08-05. The failure lands at COLLECT, i.e. AFTER the full Analysis, PYZ and EXE work - about nine minutes in. On a fresh CI checkout there is no dist/, so this passes; it fails specifically on a developer or release machine that has built before, which is where release builds are actually made. The script's NEW guards behaved correctly throughout - it detected the non-zero return code and exited 1 with "[build] ERROR: PyInstaller exited with code 1." rather than reporting success, which is precisely the regression the 2026-08-22 rewrite was written to prevent. Only the missing flag is the defect. After `rm -rf dist` the same command completed end to end: PyInstaller succeeded, "Verified Canvas Downloader.exe (15.0 MB)", ISCC invoked with /DAppVersion=2.0.2, "Verified Canvas_Downloader_Setup_2.0.2.exe (93.4 MB)", release asset Canvas_Downloader_v2.0.2_Windows.exe emitted byte-identical to the Inno output (same md5), and exactly one file named to upload.
+
+**Notes**: Add --noconfirm to the PyInstaller argv. The macOS spec is built with --clean too and has the same shape, so check whether build-macos.yml is insulated only by CI's fresh checkout.
+
+> FIXED 2026-08-23: `run_pyinstaller()` now passes `--noconfirm` alongside `--clean`, with a docstring recording that the two are different knobs and only one touches `dist/`. VERIFIED LIVE by rebuilding with a `dist/` already present - the exact state that failed - and the build ran through PyInstaller, ISCC and the release asset with no COLLECT error. `tests/test_build_windows.py` resolves the argv through the AST and requires both flags.
+
+---
+
+### find_iscc() misses an ordinary Inno Setup install - it knows only PATH and a hard-coded "Inno Setup 6" path under Program Files (x86)
+<!-- fp:d5e81b6470af -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: build
+**Oracles**: windows-verification, real Inno Setup 7.1.0 install
+**First seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Last seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Occurrences**: 1
+**Scenario**: Inno Setup 7.1.0 x64 installed per-user to %LOCALAPPDATA%\Programs\Inno Setup 7
+
+**Detail**:
+
+`find_iscc()` returns `shutil.which("iscc") or shutil.which("ISCC") or _DEFAULT_ISCC if it exists`, where `_DEFAULT_ISCC = C:\Program Files (x86)\Inno Setup 6\ISCC.exe`. Two things make that miss a perfectly ordinary install: the VERSION is pinned in the path ("Inno Setup 6"), and the LOCATION assumes a machine-wide 32-bit install. Inno Setup 7's x64 build offers a per-user install, which lands in %LOCALAPPDATA%\Programs\Inno Setup 7 and does not add itself to PATH. Measured: with a working, current Inno Setup 7.1.0 present, build_windows.find_iscc() returned None, so the build would exit 1 with "ISCC (the Inno Setup compiler) was not found" - correct behaviour for a MISSING compiler, but wrong here, because the compiler is installed and works. Verified it works by putting it on PATH: find_iscc() then resolved it and the full build completed, compiling the .iss under "Compiler engine version: Inno Setup 7.1.0", including its [Code] section. So the .iss is Inno 7 compatible; only the discovery is too narrow. The failure is loud rather than silent (the script exits 1 and says what to do), which is why this is medium and not high.
+
+**Notes**: Suggest globbing "Inno Setup *" under both Program Files roots and %LOCALAPPDATA%\Programs, newest first. Recorded also as evidence that the .iss compiles under Inno Setup 7, so a version bump is not blocked by the script.
+
+> FIXED 2026-08-23: `find_iscc()` now checks PATH first (so an operator can still pin a compiler) and otherwise GLOBS `Inno Setup*` across Program Files, Program Files (x86) and %LOCALAPPDATA%\Programs via `_iscc_candidates()`, newest version first so a machine with 6 and 7 builds with 7. VERIFIED LIVE: with nothing on PATH it resolved the real per-user Inno Setup 7.1.0 install and completed a full build (93.4 MB installer, correct release asset name). Six new tests cover ordering, a directory with no compiler, an unreadable root, PATH precedence, and that the genuinely-missing case still returns None so the ERROR path stays reachable.
+
+---
+
+### The office-lock census asserts "at least one lock in the function", not one per osascript call site, so a mutant that unlocks one of two blocks survives
+<!-- fp:e92a4c05d7b3 -->
+
+**Status**: fixed
+**Severity**: low
+**Category**: test-coverage
+**Oracles**: windows-verification, scripts/_mutate_office_lock_coverage.py
+**First seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Last seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Occurrences**: 1
+**Scenario**: python scripts/_mutate_office_lock_coverage.py on Windows: 11/13 caught
+
+**Detail**:
+
+`_terminate_gallery_stuck` contains TWO `with _office_app_lock(app):` blocks - one around the `osascript ... quit saving no` call and one around the `pgrep`/`pkill` pair. The mutant "the force-terminate quit loses the lock" replaces only the FIRST. tests/test_office_automation_lock_coverage.py's census resolves the function through the AST and asserts `"always" in _lock_kinds(fn)` - i.e. that the function contains a lock - which is still true with the second block intact, so the mutant SURVIVES. This is the "count the sites" discipline this repo already applies elsewhere (pdf_looks_real landing on two of three delete sites) applied one level in: the census counts FUNCTIONS, and the thing that can regress is a CALL SITE. The other Windows survivor, "the exemption stops being conditional and never locks", is fully explained by platform: it is covered by test_the_conditional_helper_REALLY_LOCKS_when_the_caller_does_not, one of three tests skipped off macOS ("the lock degrades to a no-op off macOS"), so it is the expected Windows/macOS survivor difference CLAUDE.md warns not to read as a regression. NO WINDOWS PRODUCT RISK - engine/applescript_bridge is macOS-only and was confirmed not to be eagerly imported on Windows (importing the ten main engine/converter/panopto modules leaves it out of sys.modules, and it imports cleanly when asked for, with an instance-scoped _INSTANCE_MARKER). Recorded for the macOS session, which is the only place this can be scored properly. NOTE ALSO that the brief and CLAUDE.md both cite this harness as 9/9 while it now carries 13 mutants; the recorded figure is stale against the set.
+
+**Notes**: Whether macOS catches this mutant via one of its three skipped tests is NOT determinable from Windows - it should be re-run there before concluding either way. If it survives on macOS too, the census wants strengthening from "the function locks" to "every osascript-issuing statement in the function is inside a lock".
+
+> FIXED 2026-08-23, and the fix helps macOS more than Windows. `tests/test_office_automation_lock_coverage.py` gained `_unlocked_osascript_calls()`, which walks the function tracking whether it is lexically inside a lock and reports every osascript call that is not - the per-SITE form of a census that previously only asked whether the FUNCTION contained a lock anywhere. It carries its own positive control (`test_the_per_site_check_can_actually_fail`) built from the surviving mutant's exact shape, because a checker that cannot say no is not a checker. Separately, the OTHER Windows survivor is now caught too: `test_the_conditional_helper_still_has_both_arms_structurally` asserts through the AST that `_office_app_lock_unless` still branches on `already_held` AND still acquires the real lock with a yield inside it - the behavioural proof of that is necessarily macOS-only (flock), which had left a mutant that unlocks all eight call sites visible ONLY on the rented machine. scripts/_mutate_office_lock_coverage.py: 11/13 -> 13/13 on Windows.
+
+---
+
+### test_office_instance_scoping.py carries no skipif at all, so its unknown-app-name test fails on Windows against a correct platform guard
+<!-- fp:f1638ad2c95e -->
+
+**Status**: fixed
+**Severity**: medium
+**Category**: test-coverage
+**Oracles**: windows-verification, full-suite
+**First seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Last seen**: 2026-08-23 (20260823_windows-verify-2026-08-22-changes)
+**Occurrences**: 1
+**Scenario**: python -m pytest on Windows 11; the fifth of five suite failures at main
+
+**Detail**:
+
+test_force_close_with_an_unknown_app_name_warns_instead_of_doing_nothing drives `_force_close_canvas_docs_sync("Word")` and asserts a WARNING naming the valid targets. On Windows caplog.text is empty and the test FAILS. The product is right: `_force_close_canvas_docs_sync` opens with `if sys.platform != 'darwin': return`, which sits ABOVE the unknown-name guard, so off macOS it correctly returns immediately and logs nothing - the function drives Office through osascript and has nothing to do on Windows. The test simply never accounted for being run off macOS. tests/test_office_instance_scoping.py was added by cfc1717 on 2026-08-22 and contains ZERO uses of skipif, while every function it exercises lives in engine/applescript_bridge, a macOS-only module. Only this one test happens to depend on the darwin path; the rest of the file passes on Windows, which is why the gap is easy to miss. Same root cause as the .webloc entry above and the same reason it survived: no CI job anywhere runs pytest on Windows, so a test added on a Mac has never been executed on the platform carrying ~94% of installs.
+
+**Notes**: Remedy is a module-level or per-test `@pytest.mark.skipif(sys.platform != "darwin", reason=...)`, matching what tests/test_office_automation_lock_coverage.py already does for its three macOS-only tests. CLAUDE.md's rule "a platform-guarded test is only covered by the platform it is NOT skipped on" has a converse worth adding: a test of a platform-guarded FUNCTION needs the guard too, or it fails everywhere else.
+
+> FIXED 2026-08-23 by making the test run EVERYWHERE rather than skipping it. A `skipif` was the cheap answer and the wrong one: this repo's own rule is that a platform-guarded test is only covered by the platform it is NOT skipped on, and macOS is the rare machine here. So the test now answers the guard - `monkeypatch.setattr(br.sys, 'platform', 'darwin')` - which is exactly the technique CLAUDE.md records for driving the macOS branches from Windows. That is safe and the test pins it: with an unknown name the function warns and returns at the very next statement, so `subprocess.run` is patched to raise if anything is executed. A SECOND test covers the other arm, which nothing had: off macOS the function must be a SILENT no-op, not a warning - without it, the obvious 'fix' of moving the platform guard below the unknown-name check would look correct while making every non-macOS run emit a warning the audit's log oracle turns into a finding. 8 tests -> 11, green on Windows.
 
 ---
