@@ -1,0 +1,133 @@
+name: Tests (Windows)
+
+# WHY THIS EXISTS
+#
+# Windows is the large majority of this product's installs, and until
+# 2026-08-23 no CI job anywhere ran pytest on it. The only test workflow was
+# Tests (macOS), added the day before. That is the wrong way round twice over:
+# the platform with the most users had the least automated coverage, and the
+# platform that DID have coverage is the rented one.
+#
+# The cost was not hypothetical. A Windows run of the suite at c1f218b was RED,
+# with FIVE failures nobody could see:
+#
+#   tests/test_shortcut_ownership.py     4 tests hard-coded `.webloc`, while
+#                                        `_create_link` computes `.url` here,
+#                                        so fixture and method compared two
+#                                        different paths. Those four are
+#                                        exactly the ones guarding the
+#                                        2026-08-22 shortcut-ownership fix.
+#   tests/test_office_instance_scoping.py  asserted a warning that a correct
+#                                        `sys.platform != 'darwin'` guard
+#                                        prevents.
+#
+# Worse than the failures themselves: `scripts/_mutate_shortcut_ownership.py`
+# refuses to run on a red baseline, so the 9/9 mutation score protecting that
+# fix was UNMEASURABLE on Windows for as long as the suite stayed red. A guard
+# that passes gets recorded as protection; a guard that cannot run is worse
+# than none.
+#
+# This is the UNIT suite, not the live audit: the runner is headless, has no
+# Microsoft Office, no Canvas token and no GUI. Office COM conversions, the
+# pywebview window and the live oracles still need a real machine.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  # A newer push supersedes an in-flight run on the same ref.
+  group: tests-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Unit suite + architecture audit
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    defaults:
+      run:
+        # bash, not PowerShell: this repo's other workflow is written in bash
+        # and `set -euo pipefail` is what makes a mid-script failure fatal.
+        # Windows runners ship git-bash, so the two jobs stay readable side by
+        # side instead of diverging into two dialects.
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        # FULL history, not the default shallow clone. tests/test_version_leads_tags.py
+        # and tests/test_website_advertises_shipped_version.py both read `git tag`
+        # and SKIP when tags are not visible - so a shallow checkout would turn
+        # two release guards into silent no-ops.
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          pip install --no-cache-dir -r requirements.txt
+          # pytest is not in requirements.txt (it is not shipped), and playwright
+          # is imported by the audit harness that tests/test_audit_docs_match_cli.py
+          # reaches. The BROWSERS are not installed - nothing here drives one.
+          pip install --no-cache-dir pytest playwright
+
+      - name: Report the long-path gate
+        # NOT a failure condition - it is context for reading the skip list.
+        # tests/test_long_path_course_folders.py SKIPS its behavioural half when
+        # LongPathsEnabled=1, because a long-path test on a machine that cannot
+        # fail on long paths passes whether or not the bug is present. Printing
+        # the gate's verdict is what stops a masked pass being read as coverage.
+        continue-on-error: true
+        run: |
+          python scripts/check_longpath_gate.py || true
+
+      - name: Run the unit suite
+        env:
+          # The website guard resolves the newest NON-PRERELEASE release through
+          # `gh`. Without a token `gh api` fails, the fixture SKIPS, and the guard
+          # silently stops guarding.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Never let a test touch a real config dir on the runner.
+          CANVAS_DL_CONFIG_DIR: ${{ runner.temp }}/cd-config
+        run: |
+          set -euo pipefail
+          mkdir -p "$CANVAS_DL_CONFIG_DIR"
+          # -rs prints the reason for every skip. A skipped test is not a passing
+          # test, and the skip SET is platform-dependent by design - the whole
+          # point of running here is that it differs from the macOS one.
+          python -m pytest -q -rs -p no:cacheprovider
+
+      - name: Architecture audit
+        run: |
+          set -euo pipefail
+          python scripts/verify_architecture.py
+
+      - name: Report what actually ran
+        # The Windows-relevant guards, named so that if they start SKIPPING here
+        # this job has quietly stopped earning its minutes. These are the files
+        # whose Windows behaviour differs from macOS - the shortcut format, the
+        # `\\?\` long-path prefix, the PE version resource and the installer
+        # naming that the release depends on.
+        if: always()
+        env:
+          CANVAS_DL_CONFIG_DIR: ${{ runner.temp }}/cd-config
+        run: |
+          echo "Windows-relevant guards that MUST run here:"
+          python -m pytest tests/test_shortcut_ownership.py \
+                           tests/test_office_instance_scoping.py \
+                           tests/test_long_path_course_folders.py \
+                           tests/test_build_windows.py \
+                           tests/test_canvas_request_timeout.py \
+                           -q -rs -p no:cacheprovider || true
