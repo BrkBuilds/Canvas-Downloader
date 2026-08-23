@@ -3,26 +3,45 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Windows Setup Guide - Canvas Downloader</title>
-  <link rel="canonical" href="https://canvasdownloader.app/win-setup.html" />
-  <meta property="og:url" content="https://canvasdownloader.app/win-setup.html" />
-  <meta name="description" content="How to install Canvas Downloader on Windows - Microsoft Store or direct installer, including the one-time SmartScreen approval." />
+  <title>Blog: Canvas Guides and How-Tos</title>
+  <link rel="canonical" href="https://canvasdownloader.app/blog.html" />
+  <meta property="og:url" content="https://canvasdownloader.app/blog.html" />
+  <meta name="description" content="Guides to getting your course material out of Canvas: every download method, lecture recordings, feedback, and what to do with the files afterwards." />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Windows Setup Guide - Canvas Downloader" />
-  <meta property="og:description" content="How to install Canvas Downloader on Windows - Microsoft Store or direct installer, including the one-time SmartScreen approval." />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="Canvas Downloader" />
+  <meta property="og:title" content="Blog: Canvas Guides and How-Tos" />
+  <meta property="og:description" content="Guides to getting your course material out of Canvas: every download method, lecture recordings, feedback, and what to do with the files afterwards." />
   <meta property="og:image" content="https://canvasdownloader.app/assets/og-card.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Canvas Downloader - download every file from all your Canvas courses at once" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Windows Setup Guide - Canvas Downloader" />
-  <meta name="twitter:description" content="How to install Canvas Downloader on Windows - Microsoft Store or direct installer, including the one-time SmartScreen approval." />
+  <meta name="twitter:title" content="Blog: Canvas Guides and How-Tos" />
+  <meta name="twitter:description" content="Guides to getting your course material out of Canvas: every download method, lecture recordings, feedback, and what to do with the files afterwards." />
   <meta name="twitter:image" content="https://canvasdownloader.app/assets/og-card.png" />
   <meta name="twitter:image:alt" content="Canvas Downloader - download every file from all your Canvas courses at once" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@graph": [
+      {
+        "@type": "Person",
+        "@id": "https://canvasdownloader.app/#author",
+        "name": "BrkBuilds",
+        "url": "https://github.com/BrkBuilds",
+        "sameAs": [
+          "https://github.com/BrkBuilds",
+          "https://ko-fi.com/brkbuilds"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://canvasdownloader.app/#website",
+        "url": "https://canvasdownloader.app/",
+        "name": "Canvas Downloader",
+        "inLanguage": "en"
+      },
       {
         "@type": "BreadcrumbList",
         "itemListElement": [
@@ -35,10 +54,59 @@
           {
             "@type": "ListItem",
             "position": 2,
-            "name": "Windows Setup",
-            "item": "https://canvasdownloader.app/win-setup.html"
+            "name": "Blog",
+            "item": "https://canvasdownloader.app/blog.html"
           }
         ]
+      },
+      {
+        "@type": "CollectionPage",
+        "@id": "https://canvasdownloader.app/blog.html#page",
+        "url": "https://canvasdownloader.app/blog.html",
+        "name": "Blog: Canvas Guides and How-Tos",
+        "description": "Guides to getting your course material out of Canvas: every download method, lecture recordings, feedback, and what to do with the files afterwards.",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@id": "https://canvasdownloader.app/#website"
+        },
+        "about": "Downloading and keeping Canvas course material",
+        "mainEntity": {
+          "@type": "ItemList",
+          "itemListOrder": "https://schema.org/ItemListOrderDescending",
+          "numberOfItems": 5,
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "url": "https://canvasdownloader.app/save-canvas-assignment-feedback.html",
+              "name": "How to Save Your Canvas Assignment Feedback"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "url": "https://canvasdownloader.app/canvas-files-into-notebooklm.html",
+              "name": "How to Get Your Canvas Files Into NotebookLM"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "url": "https://canvasdownloader.app/how-to-download-all-canvas-files.html",
+              "name": "How to Download All Files From Canvas (5 Methods Compared)"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "url": "https://canvasdownloader.app/canvas-access-after-graduation.html",
+              "name": "Canvas Access After Graduation: What to Save Before It Ends"
+            },
+            {
+              "@type": "ListItem",
+              "position": 5,
+              "url": "https://canvasdownloader.app/download-panopto-lecture-recordings.html",
+              "name": "How to Download Panopto Lecture Recordings"
+            }
+          ]
+        }
       }
     ]
   }
@@ -271,6 +339,43 @@
     footer a { color: var(--txt2); text-decoration: none; margin: 0 12px; }
     footer a:hover { color: var(--txt); }
     footer .meta { margin-top: 10px; }
+  
+    /* ---- BLOG INDEX ---- */
+    .container.wide { max-width: 800px; width: 100%; }
+    .hero h1 { line-height: 1.12; }
+    .post-list { text-align: left; padding-bottom: 20px; }
+    .post {
+      display: block; text-decoration: none;
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad-l); padding: 22px 24px; margin-bottom: 16px;
+      transition: border-color .15s ease, background .15s ease, transform .15s ease;
+    }
+    .post:hover {
+      border-color: var(--cyan); background: var(--surf2);
+      transform: translateY(-2px);
+    }
+    .post-meta {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--txt3); margin: 0 0 8px;
+    }
+    .post h2 {
+      font-size: clamp(19px, 2.6vw, 23px); font-weight: 800;
+      letter-spacing: -0.02em; color: var(--txt); margin: 0 0 8px;
+      line-height: 1.25;
+    }
+    .post:hover h2 { color: var(--cyan); }
+    .post p { font-size: 15px; color: var(--txt2); line-height: 1.7; margin: 0; }
+    .post-more {
+      display: inline-block; margin-top: 12px;
+      font-size: 14px; font-weight: 700; color: var(--cyan);
+    }
+    /* The whole card is the link, so the arrow must not look separately
+       clickable - it is decoration on a target that is already 800px wide. */
+    .post-more::after { content: " \2192"; }
+    .blog-intro {
+      text-align: left; font-size: 15px; color: var(--txt2);
+      line-height: 1.75; margin: 0 0 26px;
+    }
   </style>
 </head>
 <body>
@@ -282,7 +387,7 @@
         Canvas Downloader
       </a>
       <div class="nav-right">
-        <a href="mac-setup.html" class="nav-link active" data-setup-link><span class="setup-full">How to set up</span><span
+        <a href="mac-setup.html" class="nav-link" data-setup-link><span class="setup-full">How to set up</span><span
             class="setup-short">Setup</span></a>
         <a href="guide.html" class="nav-link">How It Works</a>
         <a href="index.html#get" class="btn-nav">
@@ -307,69 +412,50 @@
   </nav>
 
   <div class="hero">
-    <div class="container">
-      <h1>Windows Setup Guide</h1>
-      <p class="sub">Installing Canvas Downloader on Windows takes under a minute. Pick either install method below - both give you the exact same app.</p>
+    <div class="container wide">
+      <h1>Blog</h1>
+      <p class="sub">Practical guides to getting your course material out of
+      Canvas, and what to do with it once you have it.</p>
     </div>
   </div>
 
-  <div class="os-switch">
-    <a href="mac-setup.html">On a Mac? Open the macOS setup guide &#8594;</a>
-  </div>
+  <div class="container wide">
+    <p class="blog-intro">Written for students, checked against Canvas's own
+    documentation, and honest about the cases where a built-in Canvas feature or
+    somebody else's tool is the better answer.</p>
 
-  <div class="container" style="padding-bottom: 40px;">
-
-    <div class="setup-card">
-      <h3><span class="num">A</span> Microsoft Store <span class="pill green">Easiest - no warnings</span></h3>
-      <p>The Store build installs like any other app: no SmartScreen warning, automatic updates, and clean uninstall via Settings &rarr; Apps.</p>
-      <a href="https://apps.microsoft.com/detail/9n1dwwvrq5wc?referrer=appbadge&mode=full" target="_blank"
-        rel="noopener noreferrer" class="store-badge">
-        <img decoding="async" loading="lazy" src="https://get.microsoft.com/images/en-us%20light.svg" alt="Get it from Microsoft" />
+    <div class="post-list">
+      <a class="post" href="save-canvas-assignment-feedback.html">
+        <p class="post-meta">23 August 2026 &middot; 6 min read</p>
+        <h2>How to save your Canvas assignment feedback</h2>
+        <p>Canvas exports your submissions in one click but not the feedback on them. How to save annotations, comments and rubrics before access ends.</p>
+        <span class="post-more">Read the guide</span>
+      </a>
+      <a class="post" href="canvas-files-into-notebooklm.html">
+        <p class="post-meta">23 August 2026 &middot; 6 min read</p>
+        <h2>How to get your Canvas files into NotebookLM</h2>
+        <p>What NotebookLM accepts, why it cannot reach Canvas, how to choose sources that matter, and what to do with lecture recordings.</p>
+        <span class="post-more">Read the guide</span>
+      </a>
+      <a class="post" href="how-to-download-all-canvas-files.html">
+        <p class="post-meta">20 August 2026 &middot; 8 min read</p>
+        <h2>How to download all your files from Canvas</h2>
+        <p>Every way to get your Canvas course files onto your computer, compared: Download as Zip, submissions, browser extensions, scripts and a desktop app.</p>
+        <span class="post-more">Read the guide</span>
+      </a>
+      <a class="post" href="canvas-access-after-graduation.html">
+        <p class="post-meta">20 August 2026 &middot; 5 min read</p>
+        <h2>Canvas access after graduation</h2>
+        <p>How long you keep Canvas after graduating, the three ways access disappears, and a checklist for saving your courses, feedback and recordings first.</p>
+        <span class="post-more">Read the guide</span>
+      </a>
+      <a class="post" href="download-panopto-lecture-recordings.html">
+        <p class="post-meta">20 August 2026 &middot; 5 min read</p>
+        <h2>How to download Panopto lecture recordings</h2>
+        <p>Why Panopto downloads are off by default, how to get them enabled, what your university allows, and how to keep a lecture as video, audio or a searchable transcript.</p>
+        <span class="post-more">Read the guide</span>
       </a>
     </div>
-
-    <div class="setup-card">
-      <h3><span class="num">B</span> Direct installer (.exe)</h3>
-      <ol>
-        <li>Download the installer from the <a href="releases.html">Downloads &amp; Releases</a> page.</li>
-        <li>Run it. When <strong>Windows SmartScreen</strong> appears, click <strong>"More info"</strong> &rarr; <strong>"Run anyway"</strong>.</li>
-        <li>Follow the installer - it adds a Start Menu shortcut and uninstalls cleanly via Settings &rarr; Apps.</li>
-      </ol>
-      <p style="margin-top: 12px;">The warning appears only because the app is a free, unsigned solo project - the full source code is public on
-        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">GitHub</a>. You only see it once.</p>
-    </div>
-
-    <!-- The three things a cautious person wants to know before running an
-         unsigned 140 MB installer, none of which the page answered. -->
-    <div class="card">
-      <h3><span class="num">?</span> Before you install</h3>
-      <ul style="margin: 0; padding-left: 20px; line-height: 1.75;">
-        <li><strong>Size.</strong> The installer is about <strong>140 MB</strong> and uses roughly
-          <strong>330 MB</strong> once installed. Most of that is the bundled Python runtime and the media tools -
-          nothing has to be installed separately.</li>
-        <li><strong>Antivirus.</strong> Some antivirus tools flag <em>any</em> unsigned installer that bundles a Python
-          runtime, so a scanner may warn even though nothing is wrong. If yours does, the file is on
-          <a href="https://github.com/BrkBuilds/Canvas-Downloader/releases/latest" target="_blank"
-            rel="noopener">GitHub Releases</a> and can be checked with VirusTotal before you run it. The Microsoft Store
-          build avoids this entirely.</li>
-        <li><strong>Updates.</strong> The Store version updates itself. With the direct installer, the app tells you
-          when a new version is out and you download and run the new installer over the top - your settings, saved
-          pairs and downloaded files are kept.</li>
-      </ul>
-    </div>
-
-    <div class="done-strip">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-      </svg>
-      <p><strong>That's the whole setup.</strong> Unlike macOS, Windows needs no extra permissions. On first launch,
-        connect with your <a href="index.html#login">Canvas URL and Access Token</a> - the
-        <a href="guide.html#getting-started">How It Works guide</a> shows you exactly where to find both. The only
-        optional extra: Microsoft Office (PowerPoint/Word/Excel), used solely for the Office&#8594;PDF conversions.</p>
-    </div>
-
   </div>
 
   <footer>

@@ -24,8 +24,12 @@ in every page**, and nothing tells you when one is missed.
 | `docs/releases.html` | Downloads. **Static-first**, see section 3. |
 | `docs/win-setup.html` | **The shell source of truth.** Smallest page; the guide generator lifts its CSS, nav and footer. |
 | `docs/mac-setup.html` | macOS setup. Contains the wizard (`mac-wizard.js`). |
+| `docs/blog.html` | **Generated** index of every article, newest first. Do not hand-edit. |
 | `docs/how-to-download-all-canvas-files.html` | **Generated.** Do not hand-edit. |
 | `docs/canvas-access-after-graduation.html` | **Generated.** Do not hand-edit. |
+| `docs/download-panopto-lecture-recordings.html` | **Generated.** Do not hand-edit. |
+| `docs/save-canvas-assignment-feedback.html` | **Generated.** Do not hand-edit. |
+| `docs/canvas-files-into-notebooklm.html` | **Generated.** Do not hand-edit. |
 | `docs/404.html` | Must use **root-relative** paths, see section 5. |
 | `docs/thanks-win.html`, `thanks-mac.html` | `noindex` download confirmations, correctly excluded from the sitemap. |
 | `docs/llms.txt` | Factual brief for AI assistants. |
@@ -33,26 +37,41 @@ in every page**, and nothing tells you when one is missed.
 
 ## 2. Adding or editing a guide page
 
-The two search-facing pages are **generated**, so they cannot drift from the
-rest of the site:
+The search-facing pages **and their index** are generated, so they cannot drift
+from the rest of the site:
 
 ```
 scripts/guide_pages_content.py   <- the prose, and the page definitions
-scripts/build_guide_pages.py     <- the shell, the article CSS, the schema
+scripts/build_guide_pages.py     <- the shell, the article CSS, the schema,
+                                    and build_index() -> docs/blog.html
 python scripts/build_guide_pages.py
 ```
 
-Edit the prose in the content file and re-run. To add a third page, append a
-dict to `PAGES` with `slug`, `title`, `description`, `h1`, `lede`, `crumb`,
-`body`, `faq`, `extra_nodes`, `published`, `modified`.
+Edit the prose in the content file and re-run. To add a page, append a dict to
+`PAGES` with `slug`, `title`, `description`, `h1`, `lede`, `crumb`, `body`,
+`faq`, `extra_nodes`, `published`, `modified`.
+
+**`docs/blog.html` is derived from `PAGES`**, newest `published` first, so the
+index, the card titles, the dates and the reading times all follow from that one
+dict. Reading time is computed from the body, so it cannot go stale the way a
+typed one does.
 
 Then, by hand:
 
 1. Add it to `docs/sitemap.xml`.
-2. Add it to the footer of the other pages (the generator picks the footer up
-   from `win-setup.html`, so update **that one first**, then re-run).
+2. Add it to `docs/llms.txt`, which is what an assistant reads. A guide missing
+   from that list is invisible to the surface the register says already
+   summarises this product from somewhere else.
 3. `python -m pytest tests/test_website_internal_links.py` will fail until the
    sitemap knows about it. That is the point.
+
+**You do NOT touch the footer any more, and that is the whole reason the blog
+index exists.** Article links used to sit loose in the footer of fourteen
+hand-maintained pages, so every new article was fourteen edits with nothing to
+tell you when one was missed. There is now a single **Blog** entry pointing at
+the index. If you ever need to change the footer itself, the old rule still
+applies: edit `win-setup.html` **first** (the generator lifts the shell from it)
+and then every other hand-written page.
 
 **Constraints the generator already enforces, do not undo them:**
 

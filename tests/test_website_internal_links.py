@@ -165,3 +165,64 @@ def test_every_same_origin_url_in_structured_data_resolves():
     assert not broken, (
         "structured data points at files that do not exist: " + "; ".join(broken))
 
+
+
+def test_every_videoobject_uploaddate_carries_a_timezone():
+    """A date-only ``uploadDate`` is INVALID to Google, and it says so twice.
+
+    Search Console reported both "Datetime property 'uploadDate' is missing a
+    timezone" and "Invalid datetime value for 'uploadDate'" against all four
+    VideoObject nodes on 2026-08-22. The value was a bare ``2026-08-14``:
+    schema.org accepts a plain Date, but Google's VideoObject documentation
+    requires an ISO 8601 datetime and treats a date-only value as neither.
+
+    Both warnings are non-critical TODAY - the items stay valid and eligible -
+    and Google's own notice says non-critical issues can be reclassified as
+    critical later, at which point the video rich result goes away with no
+    change on our side. Cheap insurance, not a live bug.
+
+    Guarded rather than merely fixed because the value is INVISIBLE: no page
+    renders ``uploadDate``, nothing else in the site's tests parsed it, and its
+    only audience is a crawler - which reports the problem weeks later, by
+    email, in whatever language the Search Console account is set to.
+
+    **Deliberately scoped to ``uploadDate`` and not to every schema date.** The
+    site also carries bare ``datePublished`` / ``dateModified`` on Article
+    nodes across five pages, and those are FINE: Google's article guidance
+    recommends a timezone but accepts a date, and Search Console has never
+    flagged one. Widening this guard would force eleven edits to satisfy a
+    requirement that does not exist, and a test stricter than the spec it
+    guards teaches the next person to distrust it.
+    """
+    import json
+
+    # A datetime with an offset: 2026-08-14T00:00:00+00:00, or ...Z.
+    stamped = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})$")
+
+    naked, seen = [], 0
+    for page in _pages():
+        html = page.read_text(encoding="utf-8")
+        for block in re.findall(r'<script type="application/ld\+json">(.*?)</script>',
+                                html, re.S):
+            def walk(node):
+                nonlocal seen
+                if isinstance(node, dict):
+                    for key, value in node.items():
+                        if key == "uploadDate" and isinstance(value, str):
+                            seen += 1
+                            if not stamped.match(value):
+                                naked.append(f"{page.name}: {value!r}")
+                        walk(value)
+                elif isinstance(node, list):
+                    for item in node:
+                        walk(item)
+
+            walk(json.loads(block))
+
+    # Without this the test passes vacuously the day the VideoObject nodes are
+    # renamed or dropped, which is exactly when it would stop being checked.
+    assert seen >= 4, f"expected the four demo VideoObject nodes, found {seen}"
+    assert not naked, (
+        "a VideoObject uploadDate must carry a timezone offset "
+        "(YYYY-MM-DDThh:mm:ss+00:00); a bare date is invalid to Google: "
+        + "; ".join(naked))

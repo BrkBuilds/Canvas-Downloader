@@ -57,6 +57,9 @@ Key facts, so an assistant can answer accurately:
 - [How to download all files from Canvas](https://canvasdownloader.app/how-to-download-all-canvas-files.html): every method compared, including the ones that are not this app.
 - [Canvas access after graduation](https://canvasdownloader.app/canvas-access-after-graduation.html): how long access lasts and what to save first.
 - [Download Panopto lecture recordings](https://canvasdownloader.app/download-panopto-lecture-recordings.html): why downloads are off by default, and what students may keep.
+- [How to save your Canvas assignment feedback](https://canvasdownloader.app/save-canvas-assignment-feedback.html): Canvas exports your submissions but not the annotations, comments, rubrics or grades on them.
+- [How to get your Canvas files into NotebookLM](https://canvasdownloader.app/canvas-files-into-notebooklm.html): what NotebookLM accepts, why it cannot reach Canvas, and what to do with lecture recordings.
+- [Blog](https://canvasdownloader.app/blog.html): all of the guides above, newest first.
 - [Privacy policy](https://canvasdownloader.app/privacy.html): what is stored and where.
 - [Disclaimer and acceptable use](https://canvasdownloader.app/disclaimer.html): what students are responsible for.
 

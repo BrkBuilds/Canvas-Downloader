@@ -174,11 +174,23 @@ rule nothing uses, so the same corpse cannot form again.
 
 ---
 
-## OPEN: 75% of the homepage and 97% of the guide are invisible without JavaScript
+## FIXED: 75% of the homepage and 97% of the guide were invisible without JavaScript
 
-**Status: open. Found 2026-08-21 while checking the new strip renders for
-crawlers. Not fixed here: the fix touches three pages and needs its own
-before-and-after browser pass.**
+**Status: fixed 2026-08-21, verified on the deployed site.** This entry still
+read `open` on 2026-08-23, two days after the fix shipped. The register was
+wrong, not the site, and a stale `open` is the expensive direction: it invites a
+second session to re-investigate something already done.
+
+The fix is the inversion described below, and it is live on all three pages
+(`html:not(.js) .reveal { opacity: 1; transform: none; }` in `index.html`,
+`guide.html` and `engine.html`), guarded by
+`tests/test_website_noscript_content.py`, and measured at **0 hidden words** on
+`index` and `guide`, against 3,125 and 7,025 before. The JS path was controlled
+against the deployed pre-fix site: identical reveal count, identical hidden
+count, identical per-element delay ladder, identical computed transition.
+
+The finding as originally written follows, because the mechanism is worth
+keeping.
 
 Nearly every block on the homepage carries `class="reveal"`, which is
 `opacity: 0` until an IntersectionObserver adds `.vis`. There is **no
@@ -537,6 +549,52 @@ concatenation pattern as well as scanning for the old owner.
 - **`AppComments` in the installer said "Canvas LMS"**, which is administrator
   vocabulary. See the vocabulary rule in [STRATEGY.md](STRATEGY.md).
 
+## BUILT: a blog index, and the footer stopped being a list of articles
+
+**Status: built 2026-08-23.** `docs/blog.html`, generated from `PAGES`.
+
+Three article links sat loose in the footer of fourteen hand-maintained pages.
+That is a list of articles pretending to be navigation, and its cost is
+structural rather than cosmetic: **every new article was fourteen edits**, each
+page inlines its own footer, and nothing tells you when one is missed. It also
+caps the content strategy at however many links look reasonable in a footer,
+which is about three.
+
+There is now one **Blog** entry pointing at an index that is DERIVED from the
+same `PAGES` list the articles are built from - titles, dates, descriptions and
+a reading time computed from the body. Adding a dict is the whole job.
+
+Schema is `CollectionPage` + `ItemList` rather than `Blog` + `BlogPosting`,
+deliberately: each article already declares an `Article` node at `<url>#article`,
+and a second typed node for the same URL declared from a different page is how
+two competing descriptions of one document end up in the index. An `ItemList`
+only points. Article breadcrumbs gained a Blog rung at the same time, because a
+breadcrumb that skips a real level describes a structure the visitor cannot
+navigate.
+
+Verified in a browser before shipping: all five cards resolve 200, zero
+horizontal overflow at 360 / 390 / 768 / 1180 / 1600, no page errors, and the
+whole index and both new articles render fully with **JavaScript disabled**.
+
+## BUILT: two more search-facing pages
+
+**Status: built 2026-08-23**, taking the set to five.
+
+- **`save-canvas-assignment-feedback.html`.** The load-bearing fact was found
+  during grounding and reframed the page: Canvas **does** have a one-click
+  student export of submissions (Account > Settings > Download Submissions), and
+  it contains none of the feedback - no annotations, no comments, no rubrics, no
+  grades - and it expires after 30 days. So the page is not "how to download
+  your work", it is "Canvas gives you your half and not theirs". The product
+  mention is honest about the limit: the app saves grade, rubric, comment thread
+  and comment attachments, and does **not** capture DocViewer annotations,
+  because those are drawn in the viewer rather than stored on the file.
+- **`canvas-files-into-notebooklm.html`.** See the NotebookLM entry below.
+
+Both were grounded against sources before a word was written, and the facts that
+shaped them are recorded in the `guide_pages_content.py` docstring beside the
+prose, per this project's usual rule.
+
 ## FIXED: two search-facing pages now exist
 
 **Status: fixed (built).** See [SITE_RUNBOOK.md](SITE_RUNBOOK.md) for how to
@@ -558,31 +616,124 @@ Also created: `docs/llms.txt` (a factual brief for AI assistants) and
 
 ---
 
-## OPEN: is the site indexed at all?
+## ANSWERED: the site IS indexed, and already carries an AI Overview
 
-**Status: open. This is the most important unanswered question in this folder.**
+**Status: answered 2026-08-23**, from Search Console and a signed-in browser.
+This was the most important unanswered question in this folder, and the answer
+is the good one.
 
-Three web searches, one containing the literal string `canvasdownloader.app`,
-returned **zero** results from the domain. The Microsoft Store listing appeared
-in two of them, and a search assistant summarising the product **quoted the
-Store copy**.
+Three pieces of evidence, and it takes all three:
 
-That evidence is consistent with two very different situations, and they need
-opposite responses:
+- **`site:canvasdownloader.app` in a signed-in browser** returns the homepage
+  plus `guide`, `releases`, `engine`, `disclaimer`, `privacy` and `win-setup`,
+  each with a real title and a real snippet. The homepage snippet is dated
+  "2 days ago", so the crawler is not merely aware of the site, it is coming
+  back.
+- **Google renders an AI Overview for the brand query, and it is built from OUR
+  copy** - "a free, open-source tool that lets you batch-download course files,
+  readings, and lecture media" - with `privacy.html` surfaced as a source card
+  beside the Store listing. The observation this folder was founded on, that an
+  assistant summarised the product from the Store copy rather than from the
+  site, **no longer holds**.
+- **Search Console**: `sitemap.xml` submitted 19 Aug, last read 22 Aug, status
+  Success, **11 pages discovered**. HTTPS 8 valid, 0 non-HTTPS. Breadcrumbs 4
+  valid, 0 invalid. Videos 4 valid, 0 invalid.
 
-- **not indexed** (a technical or trust problem: fix crawling, request indexing);
-- **indexed and ranking nowhere** (an authority problem: the answer is off-site
-  work, which is `PLAYBOOK.md`).
+**So the constraint was never crawling.** Of the two branches below it is the
+second: indexed, and ranking for a brand term nobody searches. That makes
+`PLAYBOOK.md` - off-site work, links, directories, communities - the entire
+remaining lever, and it retires the technical branch completely. Do not spend
+another hour on crawlability.
 
-Scripted `site:` queries against Bing and DuckDuckGo were attempted and are
-**not reliable evidence**: both block scripted access, and a control query
-(`site:instructure.com`) returned zero results through the same parser, proving
-the parser, not the index. Do not repeat that approach.
+### The Pages report, once it finished processing
 
-**Google Search Console answers it definitively, under Pages.** The verification
-meta tag is already on the homepage.
+Read 2026-08-23, before the blog changes were deployed: **8 indexed, 5 not
+indexed across 3 reasons.** Every row was then opened, so the URLs below are
+observed and not inferred.
 
-## OPEN / operator-only: five things that cannot be done from the repo
+**The four non-issues, confirmed by URL:**
+
+| Reason | URLs | Verdict |
+|---|---|---|
+| Page with redirect | `http://www`, `https://www`, `http://` apex | Correct. All three 301 to the canonical apex, measured independently. The property is a DOMAIN property, so it includes every variant, and three is exactly how many exist |
+| Alternate page with proper canonical | `/index.html` | Correct. GitHub Pages serves it 200 and its canonical points at `/`, so Google indexed `/` and filed the duplicate |
+
+Every canonical on the site was audited alongside: **17 pages, all
+self-referencing, none claimed twice**, and the only three without one
+(`404.html`, both `thanks-*`) are all `noindex`.
+
+### THE ACTUAL FINDING: not one search-facing page is indexed
+
+The eight indexed URLs are `/`, `guide`, `engine`, `releases`, `win-setup`,
+`mac-setup`, `privacy` and `disclaimer` - **every one of them a product page,
+and every one of them old.** Of the three pages written specifically to rank:
+
+- `download-panopto-lecture-recordings.html` - **crawled 21 Aug, not indexed**
+- `how-to-download-all-canvas-files.html` - **absent from the report entirely**
+- `canvas-access-after-graduation.html` - **absent from the report entirely**
+
+Absent is not the same as rejected: it means Google has not crawled them at all.
+So the honest summary is that the site's SEO content has **zero index presence**,
+which is worth stating plainly because the headline "8 indexed" reads like
+success and the eight are the pages that were never the point.
+
+**Do not over-read it yet, for two measured reasons.** The pages were published
+20 Aug and this report's data ends 21 Aug, so they are one to three days old.
+And all three not-indexed categories are stamped *"first detected 22.08.2026"*,
+i.e. the property itself is days old and this is its first crawl report - there
+is no history here and no trend to read.
+
+**The plausible mechanism, and it is the one thing that was ours to fix.**
+Before 2026-08-23 the ONLY internal links to those three pages were in the
+FOOTER. Sitewide boilerplate links are the weakest internal signal there is,
+and they were competing with a dozen other footer links on every page. There
+was no hub, no contextual link, and nothing telling Google those three pages
+were a category rather than three loose files.
+
+That is exactly what the blog index changes: `/blog.html` is a real hub with
+one card per article, descriptive anchor text, and body links between the
+articles themselves. **This is the strongest on-site lever available for this
+precise symptom** - which is a happy accident of timing, since the blog was
+built for maintainability rather than for this.
+
+**It is a discovery and crawl fix, NOT an authority fix, and the distinction
+decides what to do next.** If `download-panopto-lecture-recordings.html` is
+still crawled-not-indexed a few weeks after the blog is live and has been
+submitted, then internal linking has done all it can and the answer is off-site:
+`PLAYBOOK.md`, not more pages and not more markup.
+
+**Core Web Vitals shows "no data" rather than a score, and that is not a
+regression.** CWV in Search Console is FIELD data from real Chrome users, and
+the site does not have the traffic for a significant sample. The lab numbers in
+this folder (mobile LCP 2764 ms, CLS 0.0013) remain the only measurements that
+exist and remain valid. Its emptiness is a traffic fact, not a performance fact.
+
+**Expect the numbers to look WORSE right after the blog deploy, and do not read
+that as a regression.** Three new URLs will be discovered before they are
+crawled, so a "Discovered - currently not indexed" bucket will appear and the
+not-indexed count will rise for a week or two. That is the normal shape of
+publishing.
+
+**The old lesson stands and is worth keeping.** Scripted `site:` queries against
+Bing and DuckDuckGo are NOT reliable evidence: both block scripted access, and a
+control query (`site:instructure.com`) returned zero through the same parser,
+proving the parser and not the index. What settled this was a signed-in human
+browser plus Search Console, which is what should settle it next time.
+
+## MOSTLY DONE / operator-only: what is left of the five
+
+**Status updated 2026-08-23.** Items 1, 4 and 5 are **done**; item 2 turned out
+to be a different and worse defect and now has its own entry below; item 3 is
+the only one still untouched. The original list is kept whole rather than
+trimmed, so nobody re-derives it.
+
+| # | Item | State |
+|---|---|---|
+| 1 | v2.0.1 release-note dead links | **done** 2026-08-21, across v2.0.1, v2.0.0 and v1.0.0, each replacement verified 200 before publishing |
+| 2 | GitHub social preview | **not "unset" - BROKEN.** See the entry below |
+| 3 | Bing Webmaster Tools | **open**, and now the only untouched one |
+| 4 | Search Console | **done** - property verified, sitemap submitted and read, and it answered the indexing question above |
+| 5 | GitHub Discussions | **done**, enabled 2026-08-21 |
 
 Full detail and exact replacement text in `PLAYBOOK.md` section 1b.
 
@@ -606,6 +757,107 @@ Full detail and exact replacement text in `PLAYBOOK.md` section 1b.
    guide pages, and answer the open question above.
 5. **GitHub Discussions is off.** Enabling it creates indexable Q&A on a
    high-authority domain that links back to the site.
+
+## OPEN / yours: the GitHub social preview is SET and points at a DELETED image
+
+**Status: diagnosed 2026-08-23. The repair is two clicks and it is yours -
+there is no REST API for this field.**
+
+This supersedes two earlier and both-wrong readings of the same thing. The
+register first said the preview was **not set**; `CLAUDE.md` corrected that to
+**set, but it is the 1024x1024 app icon on a surface that renders 2:1**. Neither
+was right, and the correction was as wrong as the original.
+
+**Measured**, which is the only reason the truth came out. The repo page carries:
+
+```
+og:image = https://repository-images.githubusercontent.com/1136287256/7ae23d37-...
+```
+
+That is the **custom-upload** host; an auto-generated card would be
+`opengraph.githubassets.com`. So GitHub does hold a custom-preview record. And
+that exact URL answers:
+
+```
+HTTP/1.1 404 The requested content does not exist.
+x-ms-error-code: WebContentNotFound
+```
+
+**The record exists and the image behind it does not.** One fact, every symptom:
+the Settings box renders as an empty rectangle because it is displaying a 404,
+an upload appears "not to show up", and every shared link resolves its card
+image to nothing. The likely cause is the move from `birkls` to the `BrkBuilds`
+organisation, which can orphan the blob while leaving the reference behind, and
+that is also why re-uploading over it does not help.
+
+**The repair, and the order matters:** Settings > General > Social preview >
+**Edit > Remove image FIRST**, so the dangling record is cleared, and only then
+upload `docs/assets/github-social-preview.png`. Uploading without removing is
+what has already been tried.
+
+**How to verify it, since the Settings box cannot be trusted to show it.** One
+command, and it is the check to repeat after any future repo move or rename:
+
+```bash
+curl -s https://github.com/BrkBuilds/Canvas-Downloader \
+  | grep -oE '<meta property="og:image"[^>]*>'      # read the URL
+curl -sI "<that url>" | head -1                     # must be 200, not 404
+```
+
+`200` with `Content-Type: image/png` is the pass. Pasting the repo link into a
+Slack or Discord message box is the visual confirmation.
+
+The correct asset is in the repo and verified at exactly **1280x640**
+(`docs/assets/github-social-preview.png`, 384,637 bytes). `docs/icon.png` is
+1024x1024 and is **not** the file to upload here.
+
+## FIXED: four VideoObject nodes carried an invalid `uploadDate`
+
+**Status: fixed 2026-08-23**, `docs/index.html`, guarded by
+`tests/test_website_internal_links.py`
+(`test_every_videoobject_uploaddate_carries_a_timezone`).
+
+Search Console reported two issues against all four VideoObject nodes on
+22 Aug: *"Datetime property 'uploadDate' is missing a timezone"* and *"Invalid
+datetime value for 'uploadDate'"*. The value was a bare `2026-08-14`.
+schema.org accepts a plain Date; **Google's VideoObject documentation requires
+an ISO 8601 datetime**, and a date-only value satisfies neither warning. It is
+now `2026-08-14T00:00:00+00:00`.
+
+**Both warnings are non-critical today** - the items stay valid and eligible -
+and Google's own notice says non-critical issues *can be reclassified as
+critical later*, at which point the video rich result disappears with no change
+on our side. So this is cheap insurance, not a live bug, and it is worth
+recording as such rather than inflating it.
+
+**It is guarded because it is invisible.** No page renders `uploadDate`, no
+existing test parsed it, and its only audience is a crawler - which reports the
+problem weeks later, by email, in whatever language the Search Console account
+happens to be set to. The guard has a positive control (it fails on the old
+value, verified) and a floor assertion (`seen >= 4`) so it cannot pass vacuously
+the day those nodes are renamed or dropped.
+
+**Deliberately NOT widened.** The first version checked every schema datetime
+and found bare `datePublished` / `dateModified` on Article nodes across five
+pages. Those are fine: Google's article guidance recommends a timezone but
+accepts a date, and Search Console has never flagged one. Widening would mean
+eleven edits to satisfy a requirement that does not exist, and a test stricter
+than its own spec teaches the next person to distrust it.
+
+## ACCEPTED: one video is "not on a watch page", so it will not be indexed
+
+**Status: accepted 2026-08-23. Not a defect, and not worth fixing.**
+
+Search Console's Video indexing report: **1 video not indexed, 0 indexed**,
+reason *"Video is not on a watch page"*. Google indexes a video when it is the
+main content of its own page; these are short UI demos embedded in a marketing
+page, so the classification is correct.
+
+Fixing it means a dedicated page per video whose primary content is that video.
+That is four thin pages, and `STRATEGY.md` already settles the general case:
+**two strong pages beat eight thin ones, and thin pages actively hurt.** The
+VideoObject markup still earns its place - it is what can produce a video
+thumbnail beside an ordinary result - so nothing is removed.
 
 ## DEFERRED: in-app "rate on the Microsoft Store" prompt
 
@@ -652,10 +904,27 @@ performs, saves the same stream the player would send, breaks no encryption, and
 including the last part, and repeats the disclaimer's three cautions. Any future
 edit that makes this read as a workaround misrepresents the product.
 
-## DEFERRED: `canvas-to-notebooklm.html`
+## BUILT: the NotebookLM page, on a corrected premise
 
-**Status: deferred, and the reason changed on investigation. Read this before
-building it.**
+**Status: built 2026-08-23 as `canvas-files-into-notebooklm.html`.** The
+deferral below was right to happen and its reasoning is what made the page
+worth writing: re-grounded on 2026-08-23, Word and PowerPoint support are both
+confirmed, so the original hook was retired rather than repeated.
+
+What the page is framed on instead, all of it durable: **NotebookLM cannot
+reach Canvas at all**, so everything has to be a local file first; the source
+cap makes curation the real skill and pushes one notebook per course; and
+**local video is not an accepted source type while audio is**, which is the one
+place a conversion step is genuinely still required. Current figures are stated
+as current, not as permanent: 50 sources per notebook on the free plan, 500,000
+words or 200 MB per source.
+
+The original deferral note follows, because its lesson - do not build a page on
+a fact that a vendor ships changes to monthly - is the reusable part.
+
+## DEFERRED (superseded by the above): `canvas-to-notebooklm.html`
+
+**Status: superseded. Read this before writing anything else about NotebookLM.**
 
 The page was going to be built on the premise that Office files must be
 converted to PDF because NotebookLM cannot read them. **That premise is at least

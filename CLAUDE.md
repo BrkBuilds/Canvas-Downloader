@@ -1222,8 +1222,21 @@ was never written is invisible to it.
 - The reusable half: when a document names a test, **check the file exists**
   before quoting its score. Three of this session's findings were documents
   describing something that was not there - this one, the register header
-  ("19 open", actually 7), and "the GitHub social preview is not set" (it is set,
-  and it is the 1024x1024 app icon on a surface that renders 2:1).
+  ("19 open", actually 7), and "the GitHub social preview is not set".
+- **CORRECTED 2026-08-23, and the correction is the better lesson.** That last
+  one was re-stated here as *"it is set, and it is the 1024x1024 app icon on a
+  surface that renders 2:1"* - **also wrong, and wrong in a way that reads as
+  authoritative because it names a size**. Measured properly: the repo's
+  `og:image` is on `repository-images.githubusercontent.com`, i.e. the
+  CUSTOM-upload host, and that URL answers **HTTP 404 `WebContentNotFound`**.
+  The record exists and the blob does not, most likely orphaned by the
+  `birkls` -> `BrkBuilds` move. One fact explaining three symptoms: an empty box
+  in GitHub's own Settings UI, an upload that "does not show up", and a shared
+  link with no card image. **Two documented claims about one field, both from
+  reading rather than fetching, both wrong** - so the rule is not merely "check
+  the file exists" but **resolve the URL**: `curl -sI <og:image>` and require
+  `200`. Full diagnosis and the repair order (remove the image FIRST, then
+  upload) in `marketing/FINDINGS.md`.
 
 
 ## A DIRECTORY fails at 248 characters, not 260 - and the app died there first (2026-08-22)

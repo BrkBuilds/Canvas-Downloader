@@ -39,6 +39,7 @@ Run:  python scripts/build_guide_pages.py
 """
 from __future__ import annotations
 
+import datetime
 import html
 import json
 import re
@@ -184,6 +185,48 @@ ARTICLE_CSS = """
 """
 
 
+# The index needs a card list and nothing else. Kept separate from ARTICLE_CSS
+# so an article page does not carry rules for a layout it never uses.
+INDEX_CSS = """
+    /* ---- BLOG INDEX ---- */
+    .container.wide { max-width: 800px; width: 100%; }
+    .hero h1 { line-height: 1.12; }
+    .post-list { text-align: left; padding-bottom: 20px; }
+    .post {
+      display: block; text-decoration: none;
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad-l); padding: 22px 24px; margin-bottom: 16px;
+      transition: border-color .15s ease, background .15s ease, transform .15s ease;
+    }
+    .post:hover {
+      border-color: var(--cyan); background: var(--surf2);
+      transform: translateY(-2px);
+    }
+    .post-meta {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--txt3); margin: 0 0 8px;
+    }
+    .post h2 {
+      font-size: clamp(19px, 2.6vw, 23px); font-weight: 800;
+      letter-spacing: -0.02em; color: var(--txt); margin: 0 0 8px;
+      line-height: 1.25;
+    }
+    .post:hover h2 { color: var(--cyan); }
+    .post p { font-size: 15px; color: var(--txt2); line-height: 1.7; margin: 0; }
+    .post-more {
+      display: inline-block; margin-top: 12px;
+      font-size: 14px; font-weight: 700; color: var(--cyan);
+    }
+    /* The whole card is the link, so the arrow must not look separately
+       clickable - it is decoration on a target that is already 800px wide. */
+    .post-more::after { content: " \\2192"; }
+    .blog-intro {
+      text-align: left; font-size: 15px; color: var(--txt2);
+      line-height: 1.75; margin: 0 0 26px;
+    }
+"""
+
+
 def faq_markup(items: list[tuple[str, str]]) -> str:
     out = []
     for q, a in items:
@@ -232,9 +275,13 @@ def build(slug: str, *, title: str, description: str, h1: str, lede: str,
          "sameAs": ["https://github.com/BrkBuilds", "https://ko-fi.com/brkbuilds"]},
         {"@type": "WebSite", "@id": SITE + "#website", "url": SITE,
          "name": "Canvas Downloader", "inLanguage": "en"},
+        # Home > Blog > article. The Blog rung was added when the index page
+        # was, because a breadcrumb that skips a real level is a breadcrumb
+        # that describes a site structure the visitor cannot navigate.
         {"@type": "BreadcrumbList", "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": "Canvas Downloader", "item": SITE},
-            {"@type": "ListItem", "position": 2, "name": crumb, "item": url}]},
+            {"@type": "ListItem", "position": 2, "name": "Blog", "item": SITE + "blog.html"},
+            {"@type": "ListItem", "position": 3, "name": crumb, "item": url}]},
         {"@type": "Article", "@id": url + "#article", "headline": h1,
          "description": description, "inLanguage": "en",
          "datePublished": published, "dateModified": modified,
@@ -313,6 +360,139 @@ def build(slug: str, *, title: str, description: str, h1: str, lede: str,
     return out
 
 
+def _reading_minutes(body: str) -> int:
+    """Derived from the prose, so it cannot go stale the way a typed one does."""
+    words = len(re.sub(r"<[^>]+>", " ", body).split())
+    return max(1, round(words / 200))
+
+
+def build_index(pages: list[dict]) -> Path:
+    """docs/blog.html - the index every article link in the footer now points at.
+
+    GENERATED, for the same reason the articles are. Three loose article links
+    in the footer of fourteen hand-maintained pages does not scale: every new
+    article means fourteen edits, and nothing tells you when one is missed. One
+    "Blog" entry pointing here means adding a dict to PAGES is the whole job.
+
+    Schema is CollectionPage + ItemList rather than Blog + BlogPosting. The
+    articles already declare an Article node at <url>#article, and declaring a
+    second typed node for the same URL from a different page is how you end up
+    with two descriptions of one document competing. An ItemList only points.
+    """
+    css, nav, foot, tail = _shell()
+    url = SITE + "blog.html"
+    title = "Blog: Canvas Guides and How-Tos"
+    description = ("Guides to getting your course material out of Canvas: every "
+                   "download method, lecture recordings, feedback, and what to "
+                   "do with the files afterwards.")
+
+    newest_first = sorted(pages, key=lambda p: p["published"], reverse=True)
+
+    graph = [
+        {"@type": "Person", "@id": SITE + "#author", "name": "BrkBuilds",
+         "url": "https://github.com/BrkBuilds",
+         "sameAs": ["https://github.com/BrkBuilds", "https://ko-fi.com/brkbuilds"]},
+        {"@type": "WebSite", "@id": SITE + "#website", "url": SITE,
+         "name": "Canvas Downloader", "inLanguage": "en"},
+        {"@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "Canvas Downloader", "item": SITE},
+            {"@type": "ListItem", "position": 2, "name": "Blog", "item": url}]},
+        {"@type": "CollectionPage", "@id": url + "#page", "url": url,
+         "name": title, "description": description, "inLanguage": "en",
+         "isPartOf": {"@id": SITE + "#website"},
+         "about": "Downloading and keeping Canvas course material",
+         "mainEntity": {
+             "@type": "ItemList",
+             "itemListOrder": "https://schema.org/ItemListOrderDescending",
+             "numberOfItems": len(newest_first),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i, "url": SITE + p["slug"],
+                  "name": p["title"]}
+                 for i, p in enumerate(newest_first, 1)]}},
+    ]
+    ld = json.dumps({"@context": "https://schema.org", "@graph": graph},
+                    indent=2, ensure_ascii=False)
+    ld = "\n".join("  " + ln for ln in ld.splitlines())
+
+    e = html.escape
+    cards = []
+    for p in newest_first:
+        when = datetime.date.fromisoformat(p["published"]).strftime("%d %B %Y").lstrip("0")
+        cards.append(
+            f'      <a class="post" href="{p["slug"]}">\n'
+            f'        <p class="post-meta">{when} &middot; '
+            f'{_reading_minutes(p["body"])} min read</p>\n'
+            f'        <h2>{e(p["h1"])}</h2>\n'
+            f'        <p>{e(p["description"])}</p>\n'
+            f'        <span class="post-more">Read the guide</span>\n'
+            f'      </a>')
+    cards = "\n".join(cards)
+
+    page = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{e(title)}</title>
+  <link rel="canonical" href="{url}" />
+  <meta property="og:url" content="{url}" />
+  <meta name="description" content="{e(description)}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="Canvas Downloader" />
+  <meta property="og:title" content="{e(title)}" />
+  <meta property="og:description" content="{e(description)}" />
+  <meta property="og:image" content="{OG}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="{e(OG_ALT)}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{e(title)}" />
+  <meta name="twitter:description" content="{e(description)}" />
+  <meta name="twitter:image" content="{OG}" />
+  <meta name="twitter:image:alt" content="{e(OG_ALT)}" />
+  <script type="application/ld+json">
+{ld}
+  </script>
+  <meta name="theme-color" content="#0b0c14" />
+  <link rel="icon" type="image/x-icon" href="icon.ico" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+{css[:-len("</style>")]}{INDEX_CSS}  </style>
+</head>
+<body>
+{nav}
+
+  <div class="hero">
+    <div class="container wide">
+      <h1>Blog</h1>
+      <p class="sub">Practical guides to getting your course material out of
+      Canvas, and what to do with it once you have it.</p>
+    </div>
+  </div>
+
+  <div class="container wide">
+    <p class="blog-intro">Written for students, checked against Canvas's own
+    documentation, and honest about the cases where a built-in Canvas feature or
+    somebody else's tool is the better answer.</p>
+
+    <div class="post-list">
+{cards}
+    </div>
+  </div>
+
+{foot}
+
+{tail}</body>
+</html>
+"""
+    out = DOCS / "blog.html"
+    out.write_text(page, encoding="utf-8", newline="\r\n")
+    return out
+
+
 # --------------------------------------------------------------- content ----
 # Kept in this file rather than in HTML so the two pages cannot drift in
 # structure, and so a copy change is a diff of prose instead of a diff of markup.
@@ -327,6 +507,10 @@ def main() -> None:
                                               "", out.read_text(encoding="utf-8"), flags=re.S))
         print(f"  {out.name:44s} {len(text.split()):5d} words  "
               f"{out.stat().st_size/1024:6.1f} KB")
+
+    idx = build_index(PAGES)
+    print(f"  {idx.name:44s} {len(PAGES):5d} posts  "
+          f"{idx.stat().st_size/1024:6.1f} KB")
 
 
 if __name__ == "__main__":

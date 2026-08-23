@@ -76,6 +76,19 @@ rather than against them.
 None of these can be done from the repo, all are quick, and the first one is
 actively costing you traffic today.
 
+> **STATUS 2026-08-23. Three of the five are done; do not redo them.**
+>
+> | # | Item | State |
+> |---|---|---|
+> | 1 | Release-note dead links | **done** 2026-08-21, on v2.0.1, v2.0.0 and v1.0.0 |
+> | 2 | Social preview | **still open, and it is a different defect than described below** - the preview IS set and points at a deleted image (404), which is why an upload appears not to take. Remove the image FIRST, then upload. Full diagnosis in FINDINGS.md |
+> | 3 | Bing Webmaster Tools | **open** - the only one nobody has touched |
+> | 4 | Search Console | **done**, and it answered the indexing question: the site is indexed |
+> | 5 | GitHub Discussions | **done**, enabled 2026-08-21 |
+>
+> The text below is the original brief, kept because its exact replacement URLs
+> and reasoning are still the record of what was done.
+
 ### 1. Fix the v2.0.1 release notes (10 minutes, highest value)
 
 The release page is where people who click "Releases" land, and Google indexes

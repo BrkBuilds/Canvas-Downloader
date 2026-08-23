@@ -11,18 +11,57 @@ independent of the release; 4–8 are the release itself and are strictly ordere
 
 ---
 
+## STATUS 2026-08-23 — read this before working the list
+
+| # | Item | State |
+|---|---|---|
+| 1 | Social preview | **open, and the diagnosis has changed** — see the rewritten item below |
+| 2 | Search Console | **done.** The site IS indexed: `site:` returns 7 pages with real snippets, the sitemap is read, 11 pages discovered, and Google renders an AI Overview built from our own copy |
+| 3 | Bing Webmaster Tools | **open** |
+| 4 | Windows verification gate | **PASSED 2026-08-23.** Six findings, five test-side; one real product defect (the timeout adapter never applying its timeout). Suite 4413 passed / 0 failed, architecture audit clean |
+| 5 | Build both installers | **both exist.** macOS DMG is on the v2.0.2 prerelease; Windows is at `installer_output/Canvas_Downloader_v2.0.2_Windows.exe` |
+| 6 | Tag and publish v2.0.2 | **half done.** v2.0.2 is tagged and published **as a PRERELEASE**, macOS asset only. Attach the Windows exe and promote it to Latest |
+| 7 | Update the website | **correctly untouched.** It advertises 2.0.1, which is right — `newest_shipped_version()` skips prereleases. It becomes wrong the moment 2.0.2 is promoted, so run the sync in the same sitting |
+| 8 | Microsoft Store MSIX | **not started**, and it gates the launch date because certification takes days |
+
+`gh` is now installed (2.98.0) but **not authenticated**, and step 7 needs it:
+run `gh auth login` once.
+
+---
+
 ## Today — independent of the release
 
-### 1 · Set the GitHub social preview (2 minutes, highest ratio)
+### 1 · Repair the GitHub social preview (2 minutes, highest ratio)
 
-**Settings → General → Social preview → Upload an image →**
-`docs/assets/github-social-preview.png`
+**Settings → General → Social preview → Edit → REMOVE IMAGE first →**
+then upload `docs/assets/github-social-preview.png`.
 
-The repo currently *has* a custom preview and it is **`docs/icon.png`,
-byte-identical, 1024×1024**. Social cards render at 2:1, so every shared repo
-link — Reddit, Product Hunt, X, LinkedIn, Slack, Discord — is a square icon
-letterboxed into a wide frame with no product name and no proposition on it. The
-correct 1280×640 asset is already in the repo and verified at that exact size.
+**The order is the fix.** Measured 2026-08-23: the repo's `og:image` points at
+`repository-images.githubusercontent.com/…`, which is the CUSTOM-upload host
+(an auto-generated card would be `opengraph.githubassets.com`), and that URL
+answers **HTTP 404, `WebContentNotFound`**. GitHub holds a custom-preview record
+whose image does not exist.
+
+That single fact explains every symptom at once: the empty box in Settings, an
+upload that "does not show up", and a shared link whose card image resolves to
+nothing. Uploading over the dangling record is what has already been tried.
+Remove it first.
+
+This **corrects** the earlier note here, which said the preview was
+`docs/icon.png` at 1024×1024. It is not — there is no image at all. The likely
+cause is the `birkls` → `BrkBuilds` move orphaning the blob while leaving the
+reference behind.
+
+**Verify afterwards, because the Settings box cannot be trusted to show it:**
+
+```bash
+curl -s https://github.com/BrkBuilds/Canvas-Downloader \
+  | grep -oE '<meta property="og:image"[^>]*>'
+curl -sI "<that url>" | head -1        # must be 200, not 404
+```
+
+`200` with `Content-Type: image/png` is the pass; pasting the repo link into a
+Slack or Discord message box is the visual check.
 
 There is **no REST API** for this field, which is why it is yours and not mine.
 

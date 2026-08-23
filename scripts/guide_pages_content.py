@@ -789,6 +789,479 @@ P3_FAQ = [
      "with earlier than the rest of a course."),
 ]
 
+# ============================================================ PAGE 4 =========
+# Grounded 2026-08-23. The load-bearing fact is that Canvas DOES have a
+# student-side bulk export of submissions (Account > Settings > Download
+# Submissions > Create Export), and that it contains none of the feedback:
+# Instructure KB 661234 states it covers current and concluded courses, holds
+# only the files submitted plus text entries saved as HTML, and explicitly
+# excludes instructor-modified (annotated) submissions, grades, comments,
+# discussions and quizzes, and that exports expire after 30 days. The
+# annotation half is Instructure KB 661231 and 661230: annotations are shown by
+# DocViewer behind a "View Feedback" button, downloading from DocViewer flattens
+# them into a PDF, and a file that offers "Preview" instead is not DocViewer
+# compatible and carries no annotations at all.
+
+P4_BODY = """      <div class="toc">
+        <p>On this page</p>
+        <ol>
+          <li><a href="#export">The export Canvas does give you</a></li>
+          <li><a href="#missing">What it leaves out, which is the important half</a></li>
+          <li><a href="#where">Where each kind of feedback actually lives</a></li>
+          <li><a href="#annotations">Saving inline annotations</a></li>
+          <li><a href="#comments">Saving comments, rubrics and grades</a></li>
+          <li><a href="#order">The order to do this in</a></li>
+          <li><a href="#when">When to do it</a></li>
+          <li><a href="#faq">Common questions</a></li>
+        </ol>
+      </div>
+
+      <p class="lede">Canvas will hand you every file you ever submitted, in one
+      click, for every course you have taken. It will not hand you a single word
+      your instructor wrote back. That asymmetry catches almost everybody, and it
+      matters because the feedback is the half you cannot reconstruct.</p>
+
+      <p>Your own essays are already on your laptop somewhere. The three
+      paragraphs explaining why the argument in section two did not hold, the
+      marked-up PDF, the rubric with the examiner's note against each criterion -
+      those exist in exactly one place, and that place stops being yours on a
+      date nobody tells you.</p>
+
+      <h2 id="export">The export Canvas does give you</h2>
+
+      <p>This one is genuinely good and very few students know it exists. It is
+      not per course - it covers everything you have ever submitted.</p>
+
+      <ol class="steps">
+        <li>Click <strong>Account</strong> in the global navigation on the far
+        left.</li>
+        <li>Click <strong>Settings</strong>.</li>
+        <li>In the sidebar on the right, click <strong>Download Submissions</strong>.</li>
+        <li>Click <strong>Create Export</strong> and wait. Large accounts take a
+        while.</li>
+        <li>Download the ZIP when it appears.</li>
+      </ol>
+
+      <p>What arrives is every file you uploaded to an assignment, across
+      <strong>current and concluded courses</strong>, plus anything you typed
+      into the rich text editor saved as an HTML file. Group assignments are
+      included even where a team mate did the submitting.</p>
+
+      <div class="note warn">
+        <p><strong>The export expires after 30 days.</strong> It is generated on
+        request and then deleted, so this is not a link you can bookmark and
+        come back to after graduation. Generate it and save the ZIP somewhere
+        permanent the same day.</p>
+      </div>
+
+      <h2 id="missing">What it leaves out, which is the important half</h2>
+
+      <p>The export contains your work and nothing about how it was received.
+      Specifically, none of this is in it:</p>
+
+      <ul>
+        <li><strong>Inline annotations.</strong> The comments drawn directly on
+        your PDF or essay. Canvas is explicit that instructor-modified
+        submissions are excluded, so what you get back is the pristine file you
+        uploaded, not the marked-up one.</li>
+        <li><strong>Assignment comments.</strong> The conversation thread beside
+        the submission, including audio and video comments.</li>
+        <li><strong>Rubrics.</strong> The graded grid, and any per-criterion
+        remarks in it.</li>
+        <li><strong>Grades and scores.</strong> Not in the ZIP at all.</li>
+        <li><strong>Discussions and quizzes.</strong> Neither your posts nor your
+        quiz attempts, so a course graded largely on participation exports as
+        very little.</li>
+      </ul>
+
+      <p>So the export is a good first move and a bad last one. Run it, then go
+      and collect the feedback separately.</p>
+
+      <h2 id="where">Where each kind of feedback actually lives</h2>
+
+      <p>Canvas scatters feedback across three different places on one screen,
+      which is why it is easy to save one kind and never notice the others. Open
+      any graded assignment and you are looking at all three at once.</p>
+
+      <div class="tbl-wrap" tabindex="0" role="region" aria-label="Where Canvas keeps each kind of feedback">
+        <table class="cmp">
+          <thead>
+            <tr><th>Feedback</th><th>Where it is</th><th>In the export?</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Marks on the document</td><td>DocViewer, behind <strong>View Feedback</strong></td><td class="no">No</td></tr>
+            <tr><td>Written comments</td><td>Comment sidebar on the submission</td><td class="no">No</td></tr>
+            <tr><td>Audio and video comments</td><td>Same sidebar, played in Canvas</td><td class="no">No</td></tr>
+            <tr><td>Rubric with criterion notes</td><td>Submission details page</td><td class="no">No</td></tr>
+            <tr><td>Grade and score</td><td>Grades page</td><td class="no">No</td></tr>
+            <tr><td>The file you submitted</td><td>Your own upload</td><td class="yes">Yes</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="annotations">Saving inline annotations</h2>
+
+      <p>Annotations are the ones people most want and most often lose, because
+      they are not part of your file. Canvas renders them in a viewer on top of
+      it, so downloading the file from your own submission gives you a clean copy
+      with nothing on it.</p>
+
+      <ol class="steps">
+        <li>Open <strong>Grades</strong>, then click the assignment name.</li>
+        <li>On the submission details page, look for
+        <strong>View Feedback</strong>.</li>
+        <li>The document opens in DocViewer with the annotations on it.</li>
+        <li>Click <strong>Download</strong>. You get a PDF with the annotations
+        flattened into the page, which is exactly what you want.</li>
+      </ol>
+
+      <div class="note">
+        <p><strong>If the button says "Preview" rather than "View Feedback",
+        stop looking.</strong> That means the file type is not DocViewer
+        compatible, and a file DocViewer cannot open is a file nobody annotated.
+        There is nothing to save; check the comment sidebar instead, which is
+        where the feedback for those submissions ends up.</p>
+      </div>
+
+      <p>Do this per assignment. It is tedious and there is no bulk version, so
+      be selective: the assignments worth ten minutes of your time are the ones
+      whose feedback you would actually reread.</p>
+
+      <h2 id="comments">Saving comments, rubrics and grades</h2>
+
+      <p>These have no download button anywhere, which surprises people who
+      assume feedback must be exportable somehow. Your options are ordinary ones.</p>
+
+      <p><strong>Print the submission details page to PDF.</strong> The browser's
+      print dialogue offers "Save as PDF" as a destination on every platform, and
+      the submission details page carries the rubric, the score and the comment
+      thread together. One page, one PDF, and it captures all three at once.
+      Expand every comment first; a collapsed thread prints collapsed.</p>
+
+      <p><strong>Audio and video comments need a different approach.</strong>
+      They play inside Canvas and there is no save option. If a recorded comment
+      matters, play it and write down what it says. That sounds primitive and it
+      is the only reliable answer.</p>
+
+      <p><strong>Grades.</strong> There is no student-side CSV export of your own
+      grades. Print the Grades page to PDF per course, which also captures the
+      per-assignment scores and any comment icons.</p>
+
+      <h2 id="order">The order to do this in</h2>
+
+      <p>If you have twenty courses and an afternoon, do it in this order. It is
+      sorted by how permanently the thing disappears, not by how much of it there
+      is.</p>
+
+      <ol class="steps">
+        <li><strong>Run the submissions export first</strong>, because it is one
+        click and it runs while you do everything else.</li>
+        <li><strong>Annotated documents</strong>, for assignments that mattered.
+        Irrecoverable and per-assignment.</li>
+        <li><strong>Submission detail pages</strong> for those same assignments,
+        printed to PDF. Catches rubric, score and comments in one go.</li>
+        <li><strong>Recorded comments</strong>, transcribed by hand where they
+        were substantive.</li>
+        <li><strong>Grades pages</strong>, one PDF per course.</li>
+        <li><strong>The course material itself</strong> - slides, readings,
+        recordings - which is a separate job. See
+        <a href="how-to-download-all-canvas-files.html">how to download all your
+        files from Canvas</a>.</li>
+      </ol>
+
+      <h2 id="when">When to do it</h2>
+
+      <p>Before the course concludes, not after. A concluded course usually goes
+      read-only, and read-only is survivable: you can still open it and still
+      print. What is not survivable is the enrolment ending, at which point the
+      course leaves your dashboard entirely and neither the submission page nor
+      the export can reach it.</p>
+
+      <p>The dates differ by institution and nobody emails you about them.
+      <a href="canvas-access-after-graduation.html">Canvas access after
+      graduation</a> covers the three separate ways access ends and roughly when
+      each one bites.</p>
+
+      <div class="cta-box">
+        <h3>Saving the feedback with everything else</h3>
+        <p>Canvas Downloader can save assignment feedback as it downloads a
+        course: the grade and score, the rubric with its per-criterion comments,
+        the full comment thread, and any file a teacher attached to a comment -
+        one readable page per assignment, alongside the course material.</p>
+        <p>It does <strong>not</strong> capture inline annotations. Those are
+        drawn inside DocViewer rather than stored on the file, so the per-
+        assignment Download button above is still the way to keep those.</p>
+        <div class="cta-row">
+          <a href="releases.html" class="btn-nav">Download</a>
+          <a href="guide.html" class="btn-nav-ghost"><span>See how it works</span></a>
+        </div>
+      </div>
+"""
+
+P4_FAQ = [
+    ("Can I download all my Canvas feedback at once?",
+     'No. Canvas has a one-click export of your submissions - Account, then '
+     'Settings, then Download Submissions - but it deliberately excludes '
+     'annotated submissions, comments, rubrics and grades. There is no built-in '
+     'bulk export of feedback, so it has to be collected per assignment.'),
+    ("Does the Canvas submissions export include my grades?",
+     'No. The ZIP holds the files you uploaded and any text-entry answers saved '
+     'as HTML, for current and concluded courses. It contains no grades, no '
+     'instructor comments and no annotated versions of your work.'),
+    ("Why does my assignment show Preview instead of View Feedback?",
+     'Because that file type is not compatible with Canvas DocViewer, which is '
+     'the tool that displays annotations. If you only see Preview, there are no '
+     'inline annotations to save on that submission, so check the comment '
+     'sidebar instead.'),
+    ("How do I download a PDF with my instructor's annotations on it?",
+     'Open the assignment from Grades, click View Feedback to open the document '
+     'in DocViewer, then click Download. The PDF you get has the annotations '
+     'flattened into the page. Downloading the file from your own submission '
+     'instead gives you the clean copy you uploaded, with nothing on it.'),
+    ("Will my feedback disappear when the course ends?",
+     'Eventually. A concluded course normally becomes read-only, so you can '
+     'still open and print it. Once your enrolment ends the course leaves your '
+     'account altogether, and at that point neither the submission page nor the '
+     'export can reach it.'),
+    ("Can I save audio or video comments from my instructor?",
+     'Not directly - recorded comments play inside Canvas and have no download '
+     'option. If a recorded comment is substantive, the practical answer is to '
+     'play it and write down what it says while you still can.'),
+    ("How long does the submissions export stay available?",
+     'Thirty days. Canvas generates the ZIP on request and deletes it after '
+     'that, so save the file somewhere permanent the same day rather than '
+     'treating the export page as storage.'),
+    ("Does downloading my feedback notify my instructor?",
+     'No. Opening or downloading your own submission and its feedback is not '
+     'reported to anyone. Canvas records page views in its own access logs '
+     'exactly as it does when you browse a course normally.'),
+]
+
+# ============================================================ PAGE 5 =========
+# Grounded 2026-08-23, and the premise CHANGED on investigation - see
+# marketing/FINDINGS.md, where this page was deferred because it was going to be
+# built on "NotebookLM cannot read Office files", which stopped being true in
+# November 2025. Google's own announcement added .docx, Google Sheets, Drive
+# URLs and images; .pptx is supported as well. So the page is framed on what
+# does NOT change: NotebookLM cannot reach Canvas, the source cap makes
+# curation the real skill, and video is the one genuine conversion problem
+# because local video is not an accepted source type while audio is.
+# Free tier at the time of writing: 50 sources per notebook, 100 notebooks,
+# 50 chats a day, 3 Audio Overviews a day; per source 500,000 words or 200 MB,
+# whichever comes first. Numbers move, so the page states them as current
+# rather than as permanent.
+
+P5_BODY = """      <div class="toc">
+        <p>On this page</p>
+        <ol>
+          <li><a href="#gap">The part nobody explains</a></li>
+          <li><a href="#accepts">What NotebookLM accepts</a></li>
+          <li><a href="#cap">Why the source limit changes what you upload</a></li>
+          <li><a href="#getting">Getting the files out of Canvas first</a></li>
+          <li><a href="#lectures">Lecture recordings, the one real conversion problem</a></li>
+          <li><a href="#recipe">A recipe for one course</a></li>
+          <li><a href="#weak">Where it is genuinely weak</a></li>
+          <li><a href="#faq">Common questions</a></li>
+        </ol>
+      </div>
+
+      <p class="lede">NotebookLM is very good at the thing students want from it:
+      answering questions from your own course material, with citations back to
+      the source. There is one obstacle in front of that, and every guide skips
+      it. NotebookLM cannot see your Canvas courses. It has no integration, no
+      login, no way in. Everything has to be a file on your computer first.</p>
+
+      <p>Which means the hard part of "use AI on my course material" is not the
+      AI at all. It is the twenty minutes of clicking that gets four months of
+      slides, readings and lecture recordings out of Canvas and into a folder.</p>
+
+      <h2 id="gap">The part nobody explains</h2>
+
+      <p>Canvas keeps your material behind a login, spread across a Files tab,
+      module attachments, Pages and a separate lecture capture system. NotebookLM
+      takes uploads. Nothing bridges those two automatically, so the workflow is
+      always: get the files down, tidy them, then upload.</p>
+
+      <p>That has one useful consequence. Once the files are on your machine they
+      are yours permanently, and you can put them into whichever tool you like -
+      NotebookLM today, something else next year, and your own reading in the
+      meantime. The download is the durable part; the AI tool is not.</p>
+
+      <h2 id="accepts">What NotebookLM accepts</h2>
+
+      <p>The format situation is much better than it was. Word and PowerPoint
+      were both added during 2025, which removed the conversion step that used to
+      make this awkward. As things stand it takes:</p>
+
+      <ul>
+        <li><strong>Documents</strong> - PDF, <code>.docx</code>,
+        <code>.pptx</code>, <code>.txt</code>, <code>.md</code>, CSV.</li>
+        <li><strong>Google files</strong> - Docs, Slides and Sheets, plus Drive
+        links.</li>
+        <li><strong>Audio</strong> - MP3, M4A and WAV, transcribed on upload.</li>
+        <li><strong>Images</strong>, pasted text, web page URLs, and public
+        YouTube links.</li>
+      </ul>
+
+      <p>Per source you get up to 500,000 words or 200 MB, whichever you hit
+      first, which no normal lecture deck or reading comes close to.</p>
+
+      <div class="note warn">
+        <p><strong>Local video files are not on that list.</strong> You can point
+        it at a public YouTube URL, but a lecture recording saved as MP4 cannot
+        be uploaded. That is the one place a conversion step is still genuinely
+        required, and it is covered below.</p>
+      </div>
+
+      <h2 id="cap">Why the source limit changes what you upload</h2>
+
+      <p>A free notebook holds <strong>50 sources</strong>. Paid plans raise it.
+      Fifty sounds generous until you try to put a whole degree in one notebook
+      and discover that a single semester of one course is already thirty files.</p>
+
+      <p>So the cap pushes you toward the right habit anyway:
+      <strong>one notebook per course</strong>. Grounding quality points the same
+      direction. Ask a question of a notebook holding one course and the answer
+      comes from that course's own material and cites it. Ask the same question
+      of a notebook holding four unrelated courses and you get confident answers
+      assembled from the wrong module.</p>
+
+      <p>Curation is the actual skill here, and it is worth being ruthless. A
+      semester folder straight off Canvas contains a lot that is not study
+      material: administrative announcements, the same reading list posted three
+      times, the assignment brief you already submitted against.</p>
+
+      <h2 id="getting">Getting the files out of Canvas first</h2>
+
+      <p>How much work this is depends entirely on where your course keeps its
+      material. If everything is in the Files tab, Canvas will zip it for you and
+      you are five minutes from done. If it is attached to modules or embedded in
+      Pages, the Files tab does not contain it and the zip will quietly not
+      include it.</p>
+
+      <p><a href="how-to-download-all-canvas-files.html">How to download all your
+      files from Canvas</a> covers every route in detail, including the built-in
+      ones that need no software. Start there, and only reach for a tool if the
+      built-in export leaves too much behind.</p>
+
+      <h2 id="lectures">Lecture recordings, the one real conversion problem</h2>
+
+      <p>A recorded lecture is the single most useful thing you can give
+      NotebookLM, because it is where most of the actual explanation lives and it
+      is the material you are least likely to reread. It is also the one thing
+      you cannot upload as it comes.</p>
+
+      <p>Two routes work, and one is clearly better:</p>
+
+      <ul>
+        <li><strong>Audio.</strong> Extract the audio track as MP3 and upload
+        that. NotebookLM transcribes it on the way in - a half-hour recording
+        takes a couple of minutes. Simple, and it costs you one source.</li>
+        <li><strong>A transcript.</strong> Better. A text transcript is tiny,
+        searchable in your own folder, quotable in your notes, readable without
+        any AI tool at all, and it is what NotebookLM was going to produce
+        internally anyway.</li>
+      </ul>
+
+      <p>Either way, remember that lecture recordings are the material
+      universities restrict most often, and the permission question is a real one
+      rather than a formality. See
+      <a href="download-panopto-lecture-recordings.html">how to download Panopto
+      lecture recordings</a>, which leads with exactly that.</p>
+
+      <h2 id="recipe">A recipe for one course</h2>
+
+      <ol class="steps">
+        <li>Download the course to a folder on your computer.</li>
+        <li>Delete the administrative noise - announcements about room changes,
+        duplicated reading lists, the assignment briefs you have already
+        submitted against.</li>
+        <li>Turn any lecture recordings into transcripts or MP3s.</li>
+        <li>Create a notebook named after the course. One course, one
+        notebook.</li>
+        <li>Upload the slides and readings first, then the transcripts. You will
+        usually land somewhere between fifteen and forty sources, which fits.</li>
+        <li>Ask it for a study guide, or a timeline of the topics, or the three
+        questions most likely to come up. Then check the citations, which is the
+        whole point of a grounded tool.</li>
+      </ol>
+
+      <div class="note good">
+        <p><strong>Keep the folder, not just the notebook.</strong> The notebook
+        is a view over your sources and it depends on somebody else's product
+        staying free and staying available. The folder on your disk is the thing
+        that is actually yours, and it will still open in ten years.</p>
+      </div>
+
+      <h2 id="weak">Where it is genuinely weak</h2>
+
+      <p>It answers from what you gave it, so a gap in your folder is a gap in
+      its answers, stated just as confidently as everything else. If half the
+      course was delivered verbally and you uploaded only the slides, it will
+      cheerfully summarise the slides and never mention the rest.</p>
+
+      <p>It is also not a shortcut past your institution's rules. Policies on
+      using AI tools with course material vary a great deal, they are usually
+      stricter for assessed work than for revision, and a few explicitly cover
+      uploading lecture material to third-party services. Check yours before
+      building a workflow on it.</p>
+
+      <div class="cta-box">
+        <h3>Get the folder first</h3>
+        <p>Canvas Downloader pulls a whole course down in one run and can convert
+        as it goes: Office files to PDF, Canvas Pages to Markdown, and lecture
+        recordings to audio or a searchable transcript - which is close to a
+        list of what NotebookLM accepts.</p>
+        <p>You do not need it. If your course keeps everything in the Files tab,
+        Canvas will zip it and that is genuinely simpler.</p>
+        <div class="cta-row">
+          <a href="releases.html" class="btn-nav">Download</a>
+          <a href="guide.html" class="btn-nav-ghost"><span>See how it works</span></a>
+        </div>
+      </div>
+"""
+
+P5_FAQ = [
+    ("Can NotebookLM connect to Canvas directly?",
+     'No. There is no Canvas integration and no way for NotebookLM to log in to '
+     'your account. Course material has to be downloaded to your computer first '
+     'and then uploaded as sources, which is why getting the files out of Canvas '
+     'is the real work.'),
+    ("Can I upload a lecture video to NotebookLM?",
+     'Not a local video file. It accepts audio - MP3, M4A and WAV - and public '
+     'YouTube links, so a recorded lecture needs to become audio or a transcript '
+     'first. A transcript is usually the better choice: it is smaller, '
+     'searchable in your own folder and readable without any AI tool.'),
+    ("Does NotebookLM read PowerPoint and Word files?",
+     'Yes. Both were added during 2025, so .pptx and .docx upload directly '
+     'alongside PDF, plain text, Markdown, CSV and Google Docs, Slides and '
+     'Sheets. The conversion step older guides describe is no longer needed for '
+     'ordinary documents.'),
+    ("How many files can I put in one notebook?",
+     'Fifty sources per notebook on the free plan, with paid plans raising the '
+     'limit. Each source can run to 500,000 words or 200 MB, whichever comes '
+     'first, which no normal lecture deck approaches.'),
+    ("Should I make one notebook per course or one per semester?",
+     'Per course. The source limit pushes you that way and so does answer '
+     'quality: a notebook holding one course cites that course, while a notebook '
+     'holding four produces confident answers assembled from the wrong module.'),
+    ("Is it safe to upload my course material to NotebookLM?",
+     'That is a question about Google\'s terms and your institution\'s policy '
+     'rather than a technical one. Policies vary, are usually stricter for '
+     'assessed work than for revision, and some explicitly cover uploading '
+     'lecture material to third-party services. Check yours first.'),
+    ("Will NotebookLM make things up about my course?",
+     'It answers from the sources you give it and cites them, which makes it '
+     'much easier to check than a general chatbot. The real failure mode is a '
+     'gap in your folder: material you did not upload simply will not appear in '
+     'the answers, and nothing flags that it is missing.'),
+    ("What should I not bother uploading?",
+     'Administrative announcements, duplicated reading lists, assignment briefs '
+     'you have already submitted against, and anything you would not reread. '
+     'With a source limit, every slot spent on noise is a slot not spent on a '
+     'lecture transcript.'),
+]
+
 # ============================================================================
 
 PAGES = [
@@ -830,5 +1303,31 @@ PAGES = [
         crumb="Download Panopto lecture recordings",
         body=P3_BODY, faq=P3_FAQ, extra_nodes=[],
         published="2026-08-20", modified="2026-08-20",
+    ),
+    dict(
+        slug="save-canvas-assignment-feedback.html",
+        title="How to Save Your Canvas Assignment Feedback",
+        description=("Canvas exports your submissions in one click but not the "
+                     "feedback on them. How to save annotations, comments and "
+                     "rubrics before access ends."),
+        h1="How to save your Canvas assignment feedback",
+        lede=("Canvas hands back every file you submitted. It hands back nothing "
+              "your instructor wrote, and that is the half you cannot rebuild."),
+        crumb="Save your Canvas assignment feedback",
+        body=P4_BODY, faq=P4_FAQ, extra_nodes=[],
+        published="2026-08-23", modified="2026-08-23",
+    ),
+    dict(
+        slug="canvas-files-into-notebooklm.html",
+        title="How to Get Your Canvas Files Into NotebookLM",
+        description=("What NotebookLM accepts, why it cannot reach Canvas, how to "
+                     "choose sources that matter, and what to do with lecture "
+                     "recordings."),
+        h1="How to get your Canvas files into NotebookLM",
+        lede=("NotebookLM cannot see your Canvas courses. Everything has to be a "
+              "file on your computer first, and that is the part guides skip."),
+        crumb="Canvas files into NotebookLM",
+        body=P5_BODY, faq=P5_FAQ, extra_nodes=[],
+        published="2026-08-23", modified="2026-08-23",
     ),
 ]

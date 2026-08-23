@@ -26,16 +26,21 @@ as the change it describes.
 
 ## Where things stand, in ten lines
 
-Measured 2026-08-20, with the last three lines added 2026-08-21. Re-measure
-before trusting; these rot.
+Measured 2026-08-20, with the last three lines added 2026-08-21 and the search
+lines rewritten 2026-08-23. Re-measure before trusting; these rot.
 
-- The **Microsoft Store listing is the only surface that ranks**. The website
-  appeared in **zero** of three web searches, including one containing the
-  literal domain. When a search assistant summarised the product it quoted the
-  Store copy, not the site.
-- **Whether the site is indexed at all is UNKNOWN.** It cannot be determined
-  from outside. Google Search Console answers it; the tag is already installed.
-  This is the single most important unanswered question in this folder.
+- **The site IS indexed, and it ranks for the brand query.** Answered
+  2026-08-23 from Search Console plus a signed-in browser: `site:` returns
+  seven pages with real snippets, the sitemap is submitted and read (11 pages),
+  and **Google renders an AI Overview built from our own copy**, citing
+  `privacy.html`. This replaces the 2026-08-20 reading below it.
+- **The Store is no longer the only surface that ranks**, but it is still the
+  only one with traction. The older observation - zero results in three web
+  searches, an assistant quoting the Store copy - was taken before the site was
+  crawled and no longer holds.
+- **The remaining constraint is authority, not crawling.** Indexed and ranking
+  for a term nobody searches is an off-site problem, so `PLAYBOOK.md` is now
+  the whole lever. Do not spend more time on crawlability.
 - On-page technical quality is now **good**: canonical, OG, sitemap, robots,
   structured data on 11 of 14 pages, one `h1` each, no broken links.
 - **Three search-facing guide pages** exist (download methods, access after
@@ -60,9 +65,14 @@ before trusting; these rot.
   44 from GitHub) and 100 countries, in the hero strip and in `llms.txt`. The
   Store has **0 ratings and 0 reviews**, so nothing on the site claims an
   opinion, and nothing mentions the absence either.
-- **75% of the homepage and 97% of the guide are `opacity: 0` without
-  JavaScript**, `h1` included, with no `noscript` fallback. Open, with a one-line
-  inversion as the fix. This is a candidate cause of the indexing question above.
+- The homepage and guide were **75% and 97% `opacity: 0` without JavaScript**,
+  `h1` included. **Fixed 2026-08-21** and verified live at 0 hidden words. It
+  was a candidate cause of the indexing question above; that question has since
+  been answered the other way, so it was insurance rather than the cause.
+- **The GitHub social preview is set and points at a 404.** Measured
+  2026-08-23: the record is on the custom-upload host, the blob behind it does
+  not exist, which is why the Settings box looks empty and re-uploading does
+  not help. Remove the image first, then upload. See FINDINGS.md.
 
 ---
 
