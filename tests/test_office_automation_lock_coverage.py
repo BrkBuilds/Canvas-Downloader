@@ -114,6 +114,136 @@ def test_office_driving_sites_take_the_lock(name):
     )
 
 
+def _unlocked_osascript_calls(fn):
+    """osascript calls in *fn* that are NOT lexically inside a lock.
+
+    `_lock_kinds` answers "does this function contain a lock ANYWHERE", which
+    is a question about the function. The thing that regresses is a CALL SITE,
+    and the two differ the moment a function holds more than one lock block.
+
+    MEASURED 2026-08-23: `_terminate_gallery_stuck` has TWO
+    `with _office_app_lock(app):` blocks - one around `... to quit saving no`,
+    one around the `pgrep`/`pkill` pair - so the mutant that unlocks the FIRST
+    left the second in place, `_lock_kinds` still answered {"always"}, and the
+    mutant SURVIVED. Same "count the sites, not the functions" discipline this
+    repo applies to the delete-family gates, one level in.
+
+    Nested `def`s are not descended into: they are separate entries in EXPECTED
+    and are checked in their own right (this is what makes the orchestrator
+    `quit_idle_office_apps` vacuous here rather than doubly-counted).
+    """
+    unlocked = []
+
+    def walk(node, locked):
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue                      # classified separately
+            child_locked = locked
+            if isinstance(child, (ast.With, ast.AsyncWith)):
+                for item in child.items:
+                    seg = ast.get_source_segment(SRC, item.context_expr) or ""
+                    if "_office_app_lock" in seg:
+                        child_locked = True
+            if isinstance(child, ast.Call):
+                nm = getattr(child.func, "attr", None) or getattr(child.func, "id", None)
+                if nm in ("run", "Popen", "check_output", "call"):
+                    seg = ast.get_source_segment(SRC, child) or ""
+                    if "osascript" in seg and not locked:
+                        unlocked.append(child)
+            walk(child, child_locked)
+
+    walk(fn, False)
+    return unlocked
+
+
+@pytest.mark.parametrize(
+    "name", sorted(n for n, k in EXPECTED.items() if k in ("always", "conditional")))
+def test_EVERY_osascript_call_site_is_inside_the_lock_not_merely_the_function(name):
+    """The per-SITE form of the census above.
+
+    A function that locks one of its two Office calls is exactly as dangerous
+    as one that locks neither - the unlocked call still drives an application a
+    second instance may be mid-conversion with, which is what crashes it into
+    Microsoft Error Reporting.
+    """
+    fn = _issuers()[name]
+    unlocked = _unlocked_osascript_calls(fn)
+    assert not unlocked, (
+        f"{name} issues {len(unlocked)} osascript call(s) OUTSIDE any "
+        f"`_office_app_lock`, at line(s) "
+        f"{sorted(n.lineno for n in unlocked)} - the function containing a "
+        f"lock elsewhere does not protect them."
+    )
+
+
+def test_the_per_site_check_can_actually_fail():
+    """A guard that cannot say no is not a guard.
+
+    `_unlocked_osascript_calls` is the whole strength of the test above, and it
+    is easy to write one that returns [] for everything (walk the wrong node,
+    mis-name the call, treat every `with` as a lock). So hand it a function
+    shaped exactly like the surviving mutant: two osascript calls, one locked
+    and one not, and require it to find precisely the unlocked one.
+    """
+    src = (
+        "def f(app):\n"
+        "    with _office_app_lock(app):\n"
+        "        subprocess.run(['osascript', '-e', 'tell application X'])\n"
+        "    if True:\n"
+        "        subprocess.run(['osascript', '-e', 'tell application Y'])\n"
+    )
+    global SRC
+    saved = SRC
+    try:
+        SRC = src
+        fn = ast.parse(src).body[0]
+        found = _unlocked_osascript_calls(fn)
+        assert len(found) == 1, f"expected exactly the unlocked call, got {found}"
+        assert "tell application Y" in (ast.get_source_segment(src, found[0]) or "")
+    finally:
+        SRC = saved
+
+
+def test_the_conditional_helper_still_has_both_arms_structurally():
+    """The STRUCTURAL half of the exemption, so it is covered off macOS too.
+
+    `test_the_conditional_helper_REALLY_LOCKS_when_the_caller_does_not` is the
+    behavioural proof and it is necessarily macOS-only: `_office_app_lock` is
+    built on flock, which degrades to a no-op elsewhere, so there is no lock to
+    observe on Windows. That left a real gap - a mutant reducing this function's
+    whole body to a bare `yield` (i.e. it NEVER locks, and every one of the
+    eight call sites silently stops being protected) SURVIVED a Windows
+    mutation pass, because the only test that could see it was skipped.
+
+    macOS is the rare machine here - it is rented - so leaning entirely on it
+    is the wrong way round. This asserts the shape on every platform: an
+    `already_held` early-out, and a real `_office_app_lock` acquisition on the
+    other arm. It cannot prove the lock BLOCKS; it can prove it is still there.
+    """
+    fn = next(f for f in _functions() if f.name == "_office_app_lock_unless")
+
+    guards = [n for n in ast.walk(fn) if isinstance(n, ast.If)
+              and "already_held" in (ast.get_source_segment(SRC, n.test) or "")]
+    assert guards, (
+        "_office_app_lock_unless no longer branches on already_held - the "
+        "nested sweep would re-acquire its caller's lock and stall for the "
+        "full 120s timeout")
+
+    locks = [n for n in ast.walk(fn) if isinstance(n, (ast.With, ast.AsyncWith))
+             and any("_office_app_lock" in (ast.get_source_segment(SRC, i.context_expr) or "")
+                     for i in n.items)]
+    assert locks, (
+        "_office_app_lock_unless never acquires `_office_app_lock` on ANY path "
+        "- the exemption has stopped being conditional and all eight call "
+        "sites are now unlocked")
+
+    yields_in_lock = [n for lock in locks for n in ast.walk(lock)
+                      if isinstance(n, (ast.Yield, ast.YieldFrom))]
+    assert yields_in_lock, (
+        "the lock is acquired but the body does not yield inside it, so the "
+        "caller's work happens outside the lock it thinks it holds")
+
+
 def test_conversion_still_holds_the_lock_at_its_wrapper():
     """The original 2026-08-11 fix, pinned so widening never loosens it."""
     fn = next(f for f in _functions() if f.name == "run_applescript")
