@@ -720,6 +720,105 @@ control query (`site:instructure.com`) returned zero through the same parser,
 proving the parser and not the index. What settled this was a signed-in human
 browser plus Search Console, which is what should settle it next time.
 
+## SETTLED: GPL-3 does NOT block the Microsoft Store, and what publishing now requires
+
+**Status: researched 2026-08-24 against the CURRENT agreements, quoted from the
+live documents rather than recalled.** The app relicensed from MIT to
+**GPL-3.0-or-later** on 2026-08-24.
+
+**The ban you are half-remembering is real, and it is retired.** The 2011 Windows
+Phone Marketplace agreement defined an *"Excluded License"* as any licence
+requiring source disclosure, derivative-work licensing or free redistribution,
+and named **GPLv3, AGPLv3 and LGPLv3 explicitly**. That is what caused the
+public VLC dispute. It is why every web search on this question returns alarming
+2011-2012 results.
+
+**DO NOT RE-DERIVE THIS FROM A WEB SEARCH.** The top results are all from the
+banned era and they read as current. Fetch the agreement itself, through
+Microsoft's own fwlink, and search the text.
+
+### The evidence, from the documents
+
+**App Developer Agreement v8.11, FY26** (reached via
+`learn.microsoft.com/en-us/legal/windows/agreements/app-developer-agreement` ->
+`go.microsoft.com/fwlink/?linkid=528905` -> a PDF authored 6 March 2026). All 52
+pages extracted and searched:
+
+| Term | Occurrences |
+|---|---|
+| `Excluded License` | **0** |
+| `GPL` / `Affero` / `LGPL` | **0** |
+| `FOSS` | 9 |
+
+The clause is gone, and FOSS is now defined and permitted. Section 1(n):
+
+> "FOSS" or "Free and Open Source Software" means any software licensed under an
+> Open Source Initiative Approved License.
+
+GPL-3.0 is OSI-approved, so the app simply **is** FOSS by the agreement's own
+definition. Section 5(a) contemplates such apps directly - *"The App ...
+including any App or In-App Product that contains FOSS, must comply with this
+Agreement, the Certification Requirements..."* - and section 4(b) carves FOSS out
+of the rights grant, which is the structural fix for the old conflict:
+
+> ... but, **except for any material subject to any FOSS licenses**, you grant to
+> Microsoft ... the worldwide right to: host, install, run ... and sign the App.
+
+The agreement's own changelog dates this to **v8.7, July 2021**: *"Added 4(c),
+clarifying and consolidating terms applicable to FOSS Licenses."*
+
+**Microsoft Store Policies v7.19** (published 10 Sep 2025, effective 14 Oct 2025)
+were checked too, because 5(a) points at them: **zero licensing restrictions**.
+The only mention of open source is 10.2.1, requiring web browsers to use Chromium
+or Gecko, which is irrelevant here.
+
+### WHAT PUBLISHING NOW REQUIRES - read this before the next Store submission
+
+Section 4(c) moves the whole compliance burden onto us:
+
+> If any portion of your App's code is licensed from a third party or licensed
+> under any FOSS License, **you are solely responsible for: (i) compliance with
+> those license terms and conditions including any source code availability
+> requirements**...
+
+GPLv3 section 6 requires the Corresponding Source whenever object code is
+conveyed, and the MSIX in the Store **is** object code. Three things satisfy it:
+
+1. **Put the source URL in the Microsoft Store listing description.** One line
+   pointing at `https://github.com/BrkBuilds/Canvas-Downloader`. This is the one
+   action that is not in the repo and is easy to forget, because Partner Center
+   never asks for it.
+2. **Submit an MSIX built from a TAGGED commit**, so "which source produced this
+   binary" has an answer. `scripts/build_windows.py` already prints the commit it
+   built from.
+3. **Keep `THIRD_PARTY_NOTICES.md` current**, since it is what discharges the
+   notice obligation for the bundled FFmpeg. Both specs bundle it into the app.
+
+**Signing is NOT a tivoization problem**, in case it is ever raised. Section 4(b)
+has Microsoft sign the package and strip prior signatures, but GPLv3's
+anti-tivoization language governs *devices* that refuse to run modified builds. A
+Windows PC is general purpose and users can install unsigned software - which
+this project proves itself, by shipping an unsigned `.exe` alongside the Store
+build.
+
+### Two facts that made the relicensing safe, both verified rather than assumed
+
+- **Nobody else's consent was needed.** Relicensing requires every copyright
+  holder to agree. GitHub reports **one contributor** (`birkls`, 578 commits) and
+  the six git author identities are all the same person across four email
+  addresses. A single merged outside PR would have complicated this considerably.
+  **Check this first if relicensing is ever proposed again.**
+- **The move fixed a live compliance defect rather than creating one.** The
+  bundled FFmpeg is a GPL build. Shipping it inside an MIT-licensed app was a
+  real violation; GPL-3 resolves it. See `CLAUDE.md` for the engineering half.
+
+### Also settled here
+
+Every directory listing and the release copy now say **GPL-3.0**, not MIT: the
+Softpedia licence radio is **GPLv3** (not "Open Source", which is vaguer and also
+offered), AlternativeTo's licence field is GPL-3.0, and the long description in
+this folder's copy library was updated in the same pass.
+
 ## DONE: the five operator-only items are all closed
 
 **Status updated 2026-08-24: ALL FIVE ARE CLOSED.** Item 3 was the last one and

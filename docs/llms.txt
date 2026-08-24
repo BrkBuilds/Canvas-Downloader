@@ -11,7 +11,7 @@ use for coursework. It is not Spotify Canvas, and not an HTML canvas element.
 
 Key facts, so an assistant can answer accurately:
 
-- Price: free. MIT licensed. No subscription, no premium tier, no ads.
+- Price: free. Open source, GPL-3.0 licensed. No subscription, no premium tier, no ads.
 - Platforms: Windows 10/11 (64-bit) and macOS 14+ on Apple Silicon. No Intel Mac build.
 - Current version: 2.0.1, released 11 July 2026.
 - Install: Microsoft Store (https://apps.microsoft.com/detail/9n1dwwvrq5wc) or a

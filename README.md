@@ -15,7 +15,7 @@ account, no telemetry.
 [![GitHub downloads](https://img.shields.io/github/downloads/BrkBuilds/Canvas-Downloader/total?style=flat-square&color=16a34a&label=GitHub%20downloads)](https://github.com/BrkBuilds/Canvas-Downloader/releases)
 [![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-install-0078D4?style=flat-square&logo=microsoftstore&logoColor=white)](https://apps.microsoft.com/detail/9n1dwwvrq5wc)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey?style=flat-square)](#download)
-[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPLv3-green?style=flat-square)](LICENSE)
 
 **[Download](#download)** · **[Website](https://canvasdownloader.app/)** · **[How it works](https://canvasdownloader.app/guide.html)** · **[Mac setup guide](https://canvasdownloader.app/mac-setup.html)** · **[FAQ](#faq)**
 
@@ -713,7 +713,22 @@ promptly.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Copyright (C) 2026 BrkBuilds
+
+Canvas Downloader is free software: you can redistribute it and/or modify it under the terms of
+the **GNU General Public License** as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+[GNU General Public License](LICENSE) for the full terms.
+
+In plain terms: use it, study it, share it and build on it freely. If you distribute a modified
+version, the source has to come with it under this same license, so the next student can read and
+fix it too.
+
+Bundled third-party components and their licenses are listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ---
 

@@ -295,7 +295,7 @@ footer code{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--i
 
   <!-- ============================================ DO NEXT -->
   <section id="now">
-    <div class="sec-head"><h2>Do next</h2><span class="count">4 open</span></div>
+    <div class="sec-head"><h2>Do next</h2><span class="count">5 open</span></div>
     <p class="sec-sub">In value order. The two forum threads are worth more than everything below them combined, because each is a real person asking your exact question on a domain Google already trusts.</p>
 
     <div class="card">
@@ -357,6 +357,22 @@ Full disclosure, I wrote a free open-source app that does the above through the 
           <a class="btn" href="#copy">Jump to copy library</a>
         </div>
         <p class="why">Adding software is behind a login, so sign in first and use the account menu. There is no reliable deep link, so do not go hunting for one.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-top">
+        <label class="tick"><input type="checkbox" data-task="t5"></label>
+        <h3>Add the source URL to the Microsoft Store listing</h3>
+        <span class="pill open">GPL-3 duty</span>
+      </div>
+      <p class="why">The app is now GPL-3.0, and the Store agreement makes you solely responsible for source availability. The MSIX is object code, so GPLv3 section 6 requires the source to be reachable. Partner Center never asks for this, which is exactly why it gets missed.</p>
+      <div class="body">
+        <div class="copy">
+          <div class="copy-head"><span class="copy-label">Paste into the Store description</span><button class="copy-btn">Copy</button></div>
+          <pre class="copy-body">Canvas Downloader is free software licensed under the GNU General Public License v3 or later. The complete source code is available at https://github.com/BrkBuilds/Canvas-Downloader</pre>
+        </div>
+        <p class="why">Also make sure the MSIX you submit is built from a <b>tagged</b> commit, so "which source produced this binary" has an answer. The build script prints the commit it used.</p>
       </div>
     </div>
 
@@ -495,7 +511,7 @@ Canvas Downloader signs in with an access token you create yourself and uses the
 - Save Panopto lecture recordings as MP4, MP3, a transcript or subtitles, with transcription running on your own machine
 - Convert Word, Excel and PowerPoint to PDF, and unpack archives, so a course folder is ready for AI study tools
 
-Windows 10/11 and macOS 14+ on Apple Silicon. MIT licensed. No account, no server, no telemetry, nothing uploaded. It reads only what your own Canvas account can already open.</pre>
+Windows 10/11 and macOS 14+ on Apple Silicon. GPL-3.0 licensed. No account, no server, no telemetry, nothing uploaded. It reads only what your own Canvas account can already open.</pre>
         </div>
         <div class="copy">
           <div class="copy-head"><span class="copy-label">Tags</span><button class="copy-btn">Copy</button></div>

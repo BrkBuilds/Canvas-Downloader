@@ -27,6 +27,7 @@ datas = [
     ('ui', 'ui'),
     ('styles', 'styles'),
     ('LICENSE', '.'),
+    ('THIRD_PARTY_NOTICES.md', '.'),   # GPL v3 compliance: the bundled FFmpeg is GPL-licensed
 ]
 
 ffmpeg_exe_path = imageio_ffmpeg.get_ffmpeg_exe()
@@ -204,6 +205,7 @@ app = BUNDLE(
         'CFBundleShortVersionString': _APP_VERSION,   # Fix 8: read from version.py at build time
         'CFBundleVersion': _APP_VERSION,
         'CFBundleName': 'Canvas Downloader',
+        'NSHumanReadableCopyright': 'Copyright (C) 2026 BrkBuilds. Licensed under GPL-3.0-or-later.',
         'NSRequiresAquaSystemAppearance': False,
         # Minimum macOS version.
         #

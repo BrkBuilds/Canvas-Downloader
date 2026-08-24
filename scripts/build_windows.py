@@ -132,7 +132,7 @@ def generate_version_info(version: str) -> pathlib.Path:
                  StringStruct('FileDescription', 'Canvas Downloader'),
                  StringStruct('FileVersion', '{version}'),
                  StringStruct('InternalName', 'Canvas Downloader'),
-                 StringStruct('LegalCopyright', ''),
+                 StringStruct('LegalCopyright', 'Copyright (C) 2026 BrkBuilds - GPL-3.0-or-later'),
                  StringStruct('OriginalFilename', 'Canvas Downloader.exe'),
                  StringStruct('ProductName', 'Canvas Downloader'),
                  StringStruct('ProductVersion', '{version}')])

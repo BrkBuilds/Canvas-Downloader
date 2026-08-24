@@ -29,6 +29,7 @@ datas = [
     ('styles', 'styles'),
     ('.streamlit', '.streamlit'),
     ('LICENSE', '.'),
+    ('THIRD_PARTY_NOTICES.md', '.'),   # GPL v3 compliance: the bundled FFmpeg is GPL-licensed
 ]
 
 # Automatically locate the ffmpeg binary provided by imageio_ffmpeg

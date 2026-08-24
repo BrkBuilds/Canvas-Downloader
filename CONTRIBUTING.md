@@ -88,6 +88,16 @@ both of us than a rejected pull request.
 
 Please do not open a public issue for a security problem. See [SECURITY.md](SECURITY.md).
 
+## Licensing of contributions
+
+Canvas Downloader is licensed under the **GNU General Public License v3 or later** (see
+[LICENSE](LICENSE)). By opening a pull request you agree that your contribution is offered under
+that same license. There is no separate contributor licence agreement to sign.
+
+You keep the copyright to what you write. In practice this means the project stays open source
+permanently: nobody, including the maintainer, can take a contribution closed source later without
+asking every contributor first.
+
 ## Code of conduct
 
 Be decent to people. The full text is in [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).

@@ -372,7 +372,7 @@ official Canvas API, so it can do what the built-in tools cannot:
 - Convert Word, Excel and PowerPoint to PDF, and unpack archives, so a course
   folder is ready for AI study tools
 
-Windows 10/11 and macOS 14+ on Apple Silicon. MIT licensed. No account, no
+Windows 10/11 and macOS 14+ on Apple Silicon. Open source, GPL-3.0 licensed. No account, no
 server, no telemetry, nothing uploaded. It reads only what your own Canvas
 account can already open.
 ```

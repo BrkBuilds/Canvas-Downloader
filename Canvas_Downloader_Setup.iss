@@ -44,6 +44,8 @@ AppPublisherURL={#AppURL}
 AppSupportURL={#AppSupportURL}
 AppUpdatesURL={#AppUpdatesURL}
 AppComments=Batch-download your Canvas course materials to your computer.
+AppCopyright=Copyright (C) 2026 BrkBuilds - GPL-3.0-or-later
+VersionInfoCopyright=Copyright (C) 2026 BrkBuilds - GPL-3.0-or-later
 
 ; Install location
 DefaultDirName={autopf}\{#AppName}

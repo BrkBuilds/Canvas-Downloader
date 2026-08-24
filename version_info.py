@@ -19,7 +19,7 @@ VSVersionInfo(
          StringStruct('FileDescription', 'Canvas Downloader'),
          StringStruct('FileVersion', '2.0.2'),
          StringStruct('InternalName', 'Canvas Downloader'),
-         StringStruct('LegalCopyright', ''),
+         StringStruct('LegalCopyright', 'Copyright (C) 2026 BrkBuilds - GPL-3.0-or-later'),
          StringStruct('OriginalFilename', 'Canvas Downloader.exe'),
          StringStruct('ProductName', 'Canvas Downloader'),
          StringStruct('ProductVersion', '2.0.2')])
