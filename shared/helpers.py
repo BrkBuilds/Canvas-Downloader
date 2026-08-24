@@ -356,6 +356,52 @@ def robust_filename_normalize(name: str) -> str:
 SYNC_PAIRS_FILENAME = "canvas_sync_pairs.json"
 
 
+# APPMODEL_ERROR_NO_PACKAGE - the documented return of every package-identity
+# API for a process that has none. Any OTHER return means identity exists
+# (a zero-length buffer legitimately answers ERROR_INSUFFICIENT_BUFFER).
+_APPMODEL_ERROR_NO_PACKAGE = 15700
+
+_msix_packaged: bool | None = None
+
+
+def is_msix_package() -> bool:
+    """True when this process runs from an MSIX package (the Microsoft Store).
+
+    Asks Windows itself, via ``kernel32.GetCurrentPackageFullName``. That is the
+    ONLY authoritative answer: package identity is a property the loader gives
+    the process, not something inferable from where the file sits.
+
+    Do NOT go back to a path heuristic. ``core.health_log`` carries the older
+    one - ``os.environ.get("MSIX_PACKAGE_ID") or "WindowsApps" in
+    sys.executable`` - and half of it is dead: nothing in this repo ever sets
+    that variable (build_msix.py included), so it rested entirely on the path
+    substring. That is *usually* right and quietly wrong at the edges - a
+    sideloaded dev package lands in WindowsApps too, and a repackaged or
+    relocated build does not - which is fine for a telemetry field and not
+    fine for a gate on a user-facing surface.
+
+    Memoised: identity cannot change inside a process, and callers ask on a
+    render path. Never raises - off Windows the DLL has no such export, and
+    "not packaged" is the safe answer everywhere (it is what suppresses the
+    Store rating card on macOS and on the Inno .exe build).
+    """
+    global _msix_packaged
+    if _msix_packaged is not None:
+        return _msix_packaged
+    packaged = False
+    try:
+        if sys.platform == "win32":
+            import ctypes
+            length = ctypes.c_uint32(0)
+            rc = ctypes.windll.kernel32.GetCurrentPackageFullName(
+                ctypes.byref(length), None)
+            packaged = (rc != _APPMODEL_ERROR_NO_PACKAGE)
+    except Exception:
+        packaged = False
+    _msix_packaged = packaged
+    return packaged
+
+
 def get_config_dir() -> str:
     """Get the directory where config files are stored.
 

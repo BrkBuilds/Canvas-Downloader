@@ -3924,6 +3924,166 @@ def render_transcription_setup_notice(wants_transcription: bool, *, key: str,
     return True
 
 
+# ── The Microsoft Store rating ask ──────────────────────────────────────────
+# The decision (who, when, how often) lives in core.store_review and is pure;
+# this is only the surface. Read that module's docstring before changing any
+# threshold - every one of them is a decision against nagging a daily user.
+
+#: Both live states emit exactly this many children, so the one that renders
+#: fewer cannot inherit the other's tail. See :func:`pad_slot_children`.
+_STORE_REVIEW_SLOT_CHILDREN = 2
+
+#: The thank-you tick. SUCCESS green, because the state it marks is "done".
+_SR_CHECK = ("<svg viewBox='0 0 24 24' fill='none' stroke='#4ade80' "
+             "stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' "
+             "width='16' height='16' aria-hidden='true'>"
+             "<polyline points='20 6 9 17 4 12'/></svg>")
+
+
+def _store_review_rate() -> None:
+    """Terminal: record the press, then hand the user to the Store."""
+    from core import store_review
+    store_review.note_rated()
+    st.session_state['_sr_opened'] = store_review.open_store_review_page()
+    st.session_state['_sr_state'] = 'thanks'
+
+
+def _store_review_not_now() -> None:
+    """The snooze is already on disk (charged when the card was shown), so this
+    only has to take the card off the screen."""
+    st.session_state['_sr_state'] = 'hidden'
+
+
+def render_store_review_card(clean_run: bool, *, key_prefix: str) -> bool:
+    """The "rate this on the Microsoft Store" ask. Returns True if it rendered.
+
+    Called at the END of both completion screens - after the folder cards, above
+    "Go to front page". That position is the whole design: the run has just
+    visibly delivered, and the user's task is over, so there is nothing left on
+    the screen to obstruct. It sits OUTSIDE the completion card on purpose - a
+    rating ask is not a fact about the run, and putting it in the notice family
+    would both misfile it and disturb that card's documented ordering.
+
+    *clean_run* must be the app's own definition of clean - zero RETRIABLE
+    errors - not ``len(errors) == 0``. A teacher-locked file and an LTI stream
+    are not failures, and the completion card already refuses to count them as
+    such; asking for five stars under an amber "Completed with Errors" header is
+    the one thing this feature must never do.
+
+    THE SLOT ONLY EXISTS FOR MSIX. ``is_msix_package()`` is constant for the
+    process, so on macOS and on the Inno .exe build nothing is ever emitted here
+    and the element indices below are exactly what they were before this
+    existed. Within MSIX the two live states (the card, and the thank-you) are
+    padded to the same child count, because they render at one index and
+    ``addBlock`` hands a block the CHILDREN of whatever sat there.
+
+    The ask is charged on SHOW, not on a click - see ``store_review.note_ask``.
+    A session flag makes that sticky, so the write cannot pull the card out from
+    under the user on the very next rerun of the same screen.
+    """
+    from shared.helpers import is_msix_package
+    if not is_msix_package():
+        return False
+
+    from core import store_review
+
+    state = st.session_state.get('_sr_state')
+    if state == 'hidden':
+        return False
+
+    if state != 'thanks':
+        if not clean_run:
+            return False
+        # Idempotent within a day, and it stops writing once the threshold is
+        # met - so this costs at most three disk writes in an install's life.
+        store_review.note_clean_run()
+        if state != 'card':
+            if not store_review.should_ask():
+                return False
+            store_review.note_ask()
+            # Cached now because the card re-reads nothing on later reruns, and
+            # because the count only means anything AFTER this ask is charged.
+            st.session_state['_sr_left'] = store_review.asks_remaining()
+            st.session_state['_sr_state'] = 'card'
+        state = 'card'
+
+    # Styling lives in styles/global.css (injected once per page by app.py),
+    # never in an st.html(<style>) here: every style host on a page reconciles
+    # BY INDEX, and this surface has branches that flip on a CLICK, mid-session,
+    # which is exactly the arming condition for a stylesheet landing on its
+    # neighbour's host.
+    # HALF WIDTH, via st.columns rather than a CSS max-width. Columns are the
+    # repo's idiom for this and they stay correct when Streamlit stacks them on a
+    # narrow viewport, where a hard percentage would leave the card marooned at
+    # half of an already-narrow page. The card is an aside on a screen whose main
+    # business is above it, and a full-bleed panel reads as the opposite.
+    _half, _ = st.columns([1, 1])
+    with _half, st.container(key=f"{key_prefix}_store_review_card"):
+        if state == 'thanks':
+            _opened = st.session_state.get('_sr_opened', True)
+            _msg = ("Thank you. The Microsoft Store should be opening now."
+                    if _opened else
+                    "Thank you. The Store app would not open - you can rate it "
+                    "any time from the Store listing.")
+            # ONE concatenated line: a blank line inside an HTML string handed to
+            # st.markdown ends the HTML block, and Markdown then reads the
+            # following indented line as a CODE BLOCK.
+            st.markdown(
+                "<div class='sr-thanks'>" + _SR_CHECK
+                + f"<span>{esc(_msg)}</span></div>",
+                unsafe_allow_html=True,
+            )
+            pad_slot_children(1, _STORE_REVIEW_SLOT_CHILDREN)
+            return True
+
+        # A question and a call to action, and nothing else. The first version
+        # had a gold badge and a five-star row; both were cut as tacky (product
+        # owner, 2026-08-23) - and the stars were dishonest decoration anyway,
+        # since the deep link cannot carry a rating.
+        st.markdown(
+            "<div class='sr-title'>Enjoying Canvas Downloader?</div>"
+            "<div class='sr-body'>Rate it on the Microsoft Store. It takes a "
+            "few seconds, and it is how other students find a free tool built "
+            "by one student.</div>",
+            unsafe_allow_html=True,
+        )
+
+        # THREE outcomes are impossible here and that is deliberate. "Already
+        # rated" is unknowable (no API answers it), so pressing Rate is what
+        # ends the ask for good; the lifetime cap is what protects the user who
+        # simply ignores it. A "never ask again" button would therefore be a
+        # third control that only duplicates a promise the cap already keeps.
+        _left = int(st.session_state.get('_sr_left', 0))
+        # "At least a week", never a date. The snooze is a FLOOR: the card also
+        # needs a clean run on a later day before it can come back at all, so
+        # naming a day would promise a schedule this cannot keep.
+        _tip = ("This was the last time - it will not be shown again."
+                if _left <= 0 else
+                f"Hides this for at least a week. It will be shown at most "
+                f"{_left} more time{'' if _left == 1 else 's'}, ever.")
+        # 3:1, and NO trailing spacer column - the pair spans the card's
+        # full inner width, so the row is bounded by the card's own padding
+        # rather than by a gap nothing explains.
+        c_rate, c_later = st.columns([3, 1])
+        with c_rate:
+            # on_click, never `if st.button(): ...; st.rerun()`. This sits on a
+            # long completion screen, where the second render of the explicit
+            # form is what drops the browser's scroll anchor.
+            #
+            # NOT type="primary". These are styled as the half-height tinted
+            # outline the Panopto card uses, in blue - a solid primary here
+            # competes with "Go to front page", which is the action the user
+            # actually came to this screen to press.
+            st.button("Rate on the Store", key=f"{key_prefix}_sr_rate",
+                      use_container_width=True,
+                      on_click=_store_review_rate)
+        with c_later:
+            st.button("Not now", key=f"{key_prefix}_sr_later",
+                      use_container_width=True, help=_tip,
+                      on_click=_store_review_not_now)
+    return True
+
+
 @st.dialog("📄 Error Log", width="large")
 def error_log_dialog(log_paths):
     """Display the contents of download_errors.txt files in a modal dialog.

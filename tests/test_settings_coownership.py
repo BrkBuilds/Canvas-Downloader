@@ -5,6 +5,7 @@ Four modules read-modify-write this one file, each changing only its own keys:
 * ``ui.auth``          - the Settings dialog and the login path
 * ``panopto.settings`` - the ``"panopto"`` engine block AND ``panopto_globally_enabled``
 * ``shared.legal``     - ``panopto_notice_ack_version``, an accepted legal notice
+* ``core.store_review`` - the ``"store_review"`` block (Microsoft Store rating ask)
 
 Every one of them read the whole file, degraded an unreadable read to ``{}``, and
 wrote anyway. ``ui.auth`` was hardened for this on 2026-08-08 via
@@ -66,12 +67,19 @@ def _writers():
     """
     import panopto.settings as ps
     import shared.legal as legal
+    import core.store_review as sr
     return [
         ("panopto.settings.set_globally_enabled", lambda: ps.set_globally_enabled(False)),
         ("panopto.settings.save_settings", lambda: ps.save_settings({"model": "small"})),
         ("panopto.settings.set_tx_setup_notice_dismissed",
          lambda: ps.set_tx_setup_notice_dismissed(True)),
         ("shared.legal.record_panopto_acknowledgement", legal.record_panopto_acknowledgement),
+        # All three of core.store_review's writers, not one representative: they
+        # funnel through _save_state, so listing only one would leave the other
+        # two free to grow their own read and this census would not notice.
+        ("core.store_review.note_clean_run", sr.note_clean_run),
+        ("core.store_review.note_ask", sr.note_ask),
+        ("core.store_review.note_rated", sr.note_rated),
     ]
 
 
@@ -249,6 +257,11 @@ def _calls_in(fn_node):
     ("panopto/settings.py", ["save_settings", "set_globally_enabled",
                              "set_tx_setup_notice_dismissed"]),
     ("shared/legal.py", ["record_panopto_acknowledgement"]),
+    # core.store_review funnels its three public writers through ONE
+    # read-modify-write, so _save_state is the function this census is about.
+    # That every writer really does go through it is asserted separately, by
+    # tests/test_store_review.py - splitting the two keeps both meaningful.
+    ("core/store_review.py", ["_save_state"]),
 ])
 def test_every_writer_reads_through_the_for_update_reader(module_path, writers):
     """A writer must never take its dict from the degrading reader.

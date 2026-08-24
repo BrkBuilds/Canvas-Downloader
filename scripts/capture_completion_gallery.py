@@ -72,6 +72,9 @@ ELEMENTS: list[tuple[str, str, str]] = [
     ("files-expander",  "Files added expander",             "Folders"),
     ("file-rows",       "Per-file rows (Open/Reveal)",      "Folders"),
     ("cancelled-card",  "Cancelled card",                   "Cancelled"),
+    ("store-ask",       "Store rating ask",                 "Store rating"),
+    ("store-cta",       "Rating CTA button",                "Store rating"),
+    ("store-thanks",    "Store rating: thank-you",          "Store rating"),
     ("front-btn",       "Go to front page button",          "Page chrome"),
 ]
 
@@ -137,6 +140,9 @@ DETECT_JS = """() => {
     add('files-expander', !!q('[data-testid="stExpander"]'));
     add('file-rows', !!q('[class*="st-key-fileactlist_"]'));
 
+    add('store-ask', !!q('.sr-title'));
+    add('store-cta', !!q('[class*="_sr_rate"] button'));
+    add('store-thanks', !!q('.sr-thanks'));
     add('cancelled-card', T.includes('was cancelled.'));
     return out;
 }"""

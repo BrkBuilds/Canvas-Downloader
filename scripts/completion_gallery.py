@@ -52,7 +52,7 @@ from shared.components import (  # noqa: E402
     render_panopto_disabled_notice, render_cancelled_card,
     render_completion_card, render_error_section, render_folder_cards,
     render_pp_warning, inject_material_icons_font,
-    render_folder_scope_notice,
+    render_folder_scope_notice, render_store_review_card,
 )
 from shared.helpers import (  # noqa: E402
     LOCKED_FILE_ERROR_TYPE, LOCKED_FILE_REASON, LTI_STREAM_ERROR_TYPE,
@@ -296,12 +296,41 @@ def _reset_state(**overrides):
 # the two screen shells - a faithful copy of the real composition order
 # ---------------------------------------------------------------------------
 
+def _seed_store_review(mode):
+    """Put the rating card into one of its live states WITHOUT writing to disk.
+
+    ``render_store_review_card`` short-circuits on ``_sr_state``, so seeding it
+    skips both the eligibility read and the ask-charging write. The MSIX memo is
+    set directly because the gallery is not a packaged process and the card is
+    (correctly) invisible outside one.
+
+    Run the gallery under ``CANVAS_DL_CONFIG_DIR`` anyway: the card still calls
+    ``note_clean_run()``, which is a real read-modify-write of the settings file.
+    """
+    if not mode:
+        return
+    import shared.helpers as _h
+    _h._msix_packaged = True
+    if mode == "thanks":
+        st.session_state["_sr_state"] = "thanks"
+        st.session_state["_sr_opened"] = True
+    elif mode == "thanks-failed":
+        st.session_state["_sr_state"] = "thanks"
+        st.session_state["_sr_opened"] = False
+    else:
+        st.session_state["_sr_state"] = "card"
+        # "last" is the third and final ask, where the Not now tooltip stops
+        # promising another one. It is the only copy difference in the card.
+        st.session_state["_sr_left"] = 0 if mode == "last" else 2
+
+
 def download_screen(*, synced, courses, total_bytes, errors=(),
                     size_skipped=(), size_limit=0, archives=(), archive_limit=0,
                     retry_attempted=False, retry_resolved=0, retry_total=0,
                     retry_failed=False, pp_failures=0, force_kill=False,
                     panopto=None, folder_courses=3, error_log=False,
-                    panopto_off_courses=(), scope_courses=()):
+                    panopto_off_courses=(), scope_courses=(),
+                    store_review=None):
     """app.py, `download_status == 'done'` (lines ~2276-2499)."""
     st.session_state["error_log_enabled"] = error_log
     st.session_state["size_skipped_files"] = list(size_skipped)
@@ -379,6 +408,8 @@ def download_screen(*, synced, courses, total_bytes, errors=(),
                 margin="0",  # the card's flex gap (16px) is the ONE rhythm; a margin here adds to it
             )
 
+    _seed_store_review(store_review)
+    render_store_review_card(clean_run=True, key_prefix='dl')
     render_folder_cards(details, folders, key_prefix='dl')
     _front_page()
 
@@ -406,7 +437,8 @@ def sync_screen(*, synced, courses, total_bytes, errors=(),
                 retry_failed=False, pp_failures=0, force_kill=False,
                 panopto=None, quick=False, uptodate_stats=None, qs_skipped=None,
                 ignored=False, newversion=None, structural=0, folder_courses=2,
-                interactive_files=True, error_log=False, scope_courses=()):
+                interactive_files=True, error_log=False, scope_courses=(),
+                store_review=None):
     """sync/completion.py, `show_sync_complete` (lines ~128-383)."""
     st.session_state["error_log_enabled"] = error_log
     st.session_state["size_skipped_files"] = list(size_skipped)
@@ -508,6 +540,8 @@ def sync_screen(*, synced, courses, total_bytes, errors=(),
                 render_info_notice(note["message"], detail=note["detail"],
                                    margin="0")
 
+    _seed_store_review(store_review)
+    render_store_review_card(clean_run=True, key_prefix='sync_complete')
     render_folder_cards(
         details, folders, key_prefix='sync_complete', show_files_expander=True,
         file_records=records if interactive_files else None,
@@ -581,6 +615,50 @@ SCENARIOS: dict[str, tuple[str, str, callable]] = {
             size_skipped=SIZE_SKIPPED, size_limit=50,
             archives=ARCHIVES, archive_limit=1000,
             scope_courses=("Makro\u00f8konomi (XB)", "Digitalisering af Forretningsprocesser")),
+    ),
+    "d-store-review": (
+        "Download · Success + the Store rating ask",
+        "MSIX ONLY - it never renders on macOS or on the Inno .exe build, where "
+        "there is nothing to rate. Last on the screen, above 'Go to front page': "
+        "the task is over here, so there is nothing left to obstruct. It sits "
+        "OUTSIDE the completion card because a rating ask is not a fact about "
+        "the run, and it is NEUTRAL rather than amber because on these screens "
+        "amber means a warning and nothing here is wrong.",
+        lambda: download_screen(synced=143, courses=3, total_bytes=int(1.24 * GB),
+                                store_review="card"),
+    ),
+    "d-store-review-last": (
+        "Download · Store ask, the LAST one",
+        "The third and final ask. The only difference is the 'Not now' tooltip, "
+        "which stops promising another one and says so - hover it. Everything "
+        "about the cap being honest depends on this line being true.",
+        lambda: download_screen(synced=143, courses=3, total_bytes=int(1.24 * GB),
+                                store_review="last"),
+    ),
+    "d-store-review-thanks": (
+        "Download · Store ask, after pressing Rate",
+        "The terminal state. Pressing Rate is what ends the ask for good - "
+        "'already rated' is unknowable, so the PRESS is recorded, not a review. "
+        "Padded to the card's child count so neither state can inherit the "
+        "other's tail at this index.",
+        lambda: download_screen(synced=143, courses=3, total_bytes=int(1.24 * GB),
+                                store_review="thanks"),
+    ),
+    "d-store-review-thanks-failed": (
+        "Download · Store ask, the Store would not open",
+        "os.startfile can fail (a stripped Store app, a broken URI handler). "
+        "The button still ends the ask - the user did their part - but it says "
+        "what happened instead of looking like it worked.",
+        lambda: download_screen(synced=143, courses=3, total_bytes=int(1.24 * GB),
+                                store_review="thanks-failed"),
+    ),
+    "s-store-review": (
+        "Sync · Complete + the Store rating ask",
+        "The same card on the sync screen, at the same position and off the same "
+        "gate. Both screens or neither - a fix that lands on one of two looks "
+        "complete and ships half a feature.",
+        lambda: sync_screen(synced=12, courses=2, total_bytes=int(48 * MB),
+                            store_review="card"),
     ),
     "s-scope-study": (
         "Sync \u00b7 Complete + Slides & PDFs only",

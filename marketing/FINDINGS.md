@@ -720,18 +720,18 @@ control query (`site:instructure.com`) returned zero through the same parser,
 proving the parser and not the index. What settled this was a signed-in human
 browser plus Search Console, which is what should settle it next time.
 
-## MOSTLY DONE / operator-only: what is left of the five
+## DONE: the five operator-only items are all closed
 
-**Status updated 2026-08-23.** Items 1, 4 and 5 are **done**; item 2 turned out
-to be a different and worse defect and now has its own entry below; item 3 is
-the only one still untouched. The original list is kept whole rather than
-trimmed, so nobody re-derives it.
+**Status updated 2026-08-24: ALL FIVE ARE CLOSED.** Item 3 was the last one and
+went in on 2026-08-24; item 2 is closed in the only sense available, meaning the
+404 is gone - see its own entry below. The original list is kept whole rather
+than trimmed, so nobody re-derives it.
 
 | # | Item | State |
 |---|---|---|
 | 1 | v2.0.1 release-note dead links | **done** 2026-08-21, across v2.0.1, v2.0.0 and v1.0.0, each replacement verified 200 before publishing |
-| 2 | GitHub social preview | **not "unset" - BROKEN.** See the entry below |
-| 3 | Bing Webmaster Tools | **open**, and now the only untouched one |
+| 2 | GitHub social preview | **closed 2026-08-24** in the only way available: the 404 is gone and the auto-generated card serves. The custom image is GitHub's to repair. See the entry below |
+| 3 | Bing Webmaster Tools | **done** 2026-08-24 - verified, sitemap submitted, all 14 URLs submitted, and IndexNow wired properly (its own entry below) |
 | 4 | Search Console | **done** - property verified, sitemap submitted and read, and it answered the indexing question above |
 | 5 | GitHub Discussions | **done**, enabled 2026-08-21 |
 
@@ -758,58 +758,131 @@ Full detail and exact replacement text in `PLAYBOOK.md` section 1b.
 5. **GitHub Discussions is off.** Enabling it creates indexable Q&A on a
    high-authority domain that links back to the site.
 
-## OPEN / yours: the GitHub social preview is SET and points at a DELETED image
+## RESOLVED as far as it can be: the GitHub social preview, and what really broke
 
-**Status: diagnosed 2026-08-23. The repair is two clicks and it is yours -
-there is no REST API for this field.**
+**Status: the 404 is gone, 2026-08-24. The custom image still cannot be uploaded
+and that is GitHub's to fix.** This supersedes two earlier readings, both wrong,
+and - more importantly - a prescribed repair that does not work.
 
-This supersedes two earlier and both-wrong readings of the same thing. The
-register first said the preview was **not set**; `CLAUDE.md` corrected that to
-**set, but it is the 1024x1024 app icon on a surface that renders 2:1**. Neither
-was right, and the correction was as wrong as the original.
+**The repair this entry used to prescribe, "remove the dangling record first,
+then upload", was tried and it FAILS.** Stated first because that instruction is
+what the previous version sent the next session off to do.
 
-**Measured**, which is the only reason the truth came out. The repo page carries:
+### What was measured
 
-```
-og:image = https://repository-images.githubusercontent.com/1136287256/7ae23d37-...
-```
+Three uploads, three different images, three fresh records, three 404s:
 
-That is the **custom-upload** host; an auto-generated card would be
-`opengraph.githubassets.com`. So GitHub does hold a custom-preview record. And
-that exact URL answers:
+| # | Record | Image | Result |
+|---|---|---|---|
+| 1 | `7ae23d37...` | the old app icon | 404 |
+| 2 | `53902da7...` | `docs/assets/github-social-preview.png` | 404 |
+| 3 | `d8dc872f-d4ac-4739-9e17-bac095e596b5` | a third, different image | 404 |
 
-```
-HTTP/1.1 404 The requested content does not exist.
-x-ms-error-code: WebContentNotFound
-```
+Every 404 carried `x-ms-error-code: WebContentNotFound` with `X-Cache: MISS` and
+`Age: 0` - a live fetch to origin, not a cached artifact.
 
-**The record exists and the image behind it does not.** One fact, every symptom:
-the Settings box renders as an empty rectangle because it is displaying a 404,
-an upload appears "not to show up", and every shared link resolves its card
-image to nothing. The likely cause is the move from `birkls` to the `BrkBuilds`
-organisation, which can orphan the blob while leaving the reference behind, and
-that is also why re-uploading over it does not help.
+**Every hypothesis pointing at us was tested and killed:**
 
-**The repair, and the order matters:** Settings > General > Social preview >
-**Edit > Remove image FIRST**, so the dangling record is cleared, and only then
-upload `docs/assets/github-social-preview.png`. Uploading without removing is
-what has already been tried.
+- **Not the image.** The PNG is 1280x640, 8-bit truecolour, non-interlaced,
+  384,637 bytes, well inside GitHub's 1 MB limit. Two other images failed
+  identically.
+- **Not a stale repo id.** The URL path uses `1136287256` and the API reports
+  `id: 1136287256` for `BrkBuilds/Canvas-Downloader`. They match.
+- **Not permissions.** GitHub Support raised this, since only Maintain or Admin
+  may edit social cards. It is a red herring: an unauthorised user cannot upload
+  at all, and these uploads were accepted three times.
+- **Not a setting anyone switched off.** There is no social-preview toggle
+  anywhere - repo, organisation or account. The proof is better than the absence
+  of a checkbox: **a disabled feature would not mint a new record on every
+  upload.** GitHub is writing the database row and failing to store the blob
+  behind it.
 
-**How to verify it, since the Settings box cannot be trusted to show it.** One
-command, and it is the check to repeat after any future repo move or rename:
+**The write path is broken and the remove path is not**, and that asymmetry is
+the one diagnostic worth keeping. After `Remove image`, `og:image` correctly fell
+back to `opengraph.githubassets.com/...` and returns **200**. It was only visible
+because the fallback was checked rather than assumed, and it is the strongest
+thing to put in front of support.
+
+### Current state, and why it is acceptable
+
+`og:image` is now GitHub's auto-generated card, serving 200: repo name,
+description, owner avatar, stars, language. Generic, but it *renders*, which a
+404 does not. A shared repo link produces a real preview again.
+
+**Right-size this before spending another evening on it.** It affects exactly one
+surface: the card when the repo link is pasted into Slack, Discord, X or
+iMessage. It does not touch the website, the sitemap, Google indexing, the Store
+listing, or the homepage's own OG image, which is separate and fine.
+
+### If the custom image is wanted back
+
+There is no REST API for this field and no self-service route, so it is GitHub's
+to repair. Support's first-line reply restated the documentation and then
+conceded there is no documented fix for this state. Escalate with:
+
+> Uploads are accepted but the image is never stored. Three uploads of three
+> different images each minted a new `og:image` record (`7ae23d37...`,
+> `53902da7...`, `d8dc872f-d4ac-4739-9e17-bac095e596b5`) and all three return
+> `404 WebContentNotFound` from origin. After `Remove image`, `og:image`
+> correctly falls back to `opengraph.githubassets.com` and returns 200, so the
+> remove path works and the write path does not. Repo id 1136287256, transferred
+> from the personal account `birkls`. Please inspect the repository-images
+> storage state for this repository.
+
+### The check, worth repeating after any future move or rename
+
+Read the tag, then resolve the URL. **Reading it is not enough** - this folder
+has twice recorded a confident claim about this field made from reading rather
+than fetching, and both were wrong.
 
 ```bash
-curl -s https://github.com/BrkBuilds/Canvas-Downloader \
-  | grep -oE '<meta property="og:image"[^>]*>'      # read the URL
-curl -sI "<that url>" | head -1                     # must be 200, not 404
+curl -s https://github.com/BrkBuilds/Canvas-Downloader | grep -oE '<meta property="og:image"[^>]*>'
+curl -sI "<that url>" | head -1
 ```
 
-`200` with `Content-Type: image/png` is the pass. Pasting the repo link into a
-Slack or Discord message box is the visual confirmation.
+`opengraph.githubassets.com` + 200 is the current expected pass.
+`repository-images.githubusercontent.com` + 200 means the custom image is finally
+working. Anything + 404 is the broken state returning.
 
-The correct asset is in the repo and verified at exactly **1280x640**
-(`docs/assets/github-social-preview.png`, 384,637 bytes). `docs/icon.png` is
-1024x1024 and is **not** the file to upload here.
+## BUILT: IndexNow, and the Cloudflare setting that does nothing here
+
+**Status: built 2026-08-24.** Bing Webmaster Tools is verified, the sitemap is
+submitted, all 14 URLs were submitted through the portal, and IndexNow is wired.
+
+**The trap, and it is the reason this entry exists.** Cloudflare's **Crawler
+Hints** feature submits to IndexNow on your behalf, it is one toggle, and turning
+it on here **does nothing at all**. Measured:
+
+- Nameservers *are* Cloudflare (`albert`/`vida.ns.cloudflare.com`), so DNS is
+  managed there and the toggle is present and settable.
+- But `canvasdownloader.app` resolves to **185.199.108-111.153**, which are
+  GitHub Pages' own IPs. A proxied record would return Cloudflare IPs.
+- Response headers confirm it: `Server: GitHub.com`, `Via: 1.1 varnish`,
+  `X-Served-By: cache-cph...`, and **no `cf-ray`**.
+
+That is DNS-only mode, the grey cloud. Cloudflare never sees a request to the
+site, so it cannot notice content changing, so Crawler Hints has nothing to fire
+on. It looks enabled in the dashboard and is inert.
+
+**Do not turn the orange cloud on to fix that.** Proxying GitHub Pages adds a
+layer and a certificate path to get right, for a site whose TTFB is already
+186 ms. The manual key route is simpler and it works.
+
+**What was done instead.** The key file is hosted at the site root -
+`docs/2b07a6c59aed473f8be3319d97848444.txt`, 32 bytes, exactly the key, no BOM
+and no trailing newline (`docs/` is the Pages root and `.nojekyll` is present, so
+an arbitrary `.txt` serves). All 14 sitemap URLs were then POSTed to
+`api.indexnow.org`, which answered **202 Accepted**.
+
+**202 is the success answer and it is not in Bing's own table.** In the IndexNow
+spec it means *URLs received, key validation pending* - the engine takes the list
+and then fetches the key file to confirm host ownership. A **403** is the failure
+to look for, meaning the key check did not pass. Do not read 202 as an error.
+
+**One POST covers every participating engine** - Bing, DuckDuckGo, Yandex, Seznam
+and Naver all consume `api.indexnow.org`. There is nothing to repeat per engine.
+
+To confirm receipt: Bing Webmaster Tools, IndexNow section, under URL Submission.
 
 ## FIXED: four VideoObject nodes carried an invalid `uploadDate`
 

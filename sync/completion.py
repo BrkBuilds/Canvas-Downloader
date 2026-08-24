@@ -26,7 +26,7 @@ from shared.components import (
     render_pp_warning, render_error_section,
     render_archives_skipped_notice, render_panopto_disabled_notice,
     render_folder_scope_notice,
-    fresh_container,
+    fresh_container, render_store_review_card,
 )
 from core.state_registry import cleanup_sync_state
 from engine.notifications import play_completion_beep
@@ -420,6 +420,21 @@ def show_sync_complete():
             render_info_notice(_newver["message"], detail=_newver["detail"],
                                margin="0")
 
+    # The Microsoft Store rating ask (MSIX builds only). Directly under the
+    # completion card and OUTSIDE its container, for the same reason and in the
+    # same position as the download screen's - see the note there.
+    #
+    # `_sync_retriable`, not `len(sync_errors)`: the engine writes a distinct
+    # sentence for a teacher-locked file and for an LTI stream and neither can
+    # ever succeed, which is why the completion card above already refuses to
+    # count them as failures. `synced_count > 0` keeps the ask off an
+    # "everything up to date" screen - a correct outcome, but not a delivery,
+    # and a rating ask should land on the run that just gave the user something.
+    render_store_review_card(
+        clean_run=(_sync_retriable == 0 and synced_count > 0),
+        key_prefix='sync_complete',
+    )
+
     # Folders updated - card style with filetype summary
     file_dropdown_details = {}
     folder_paths_map = {}
@@ -457,6 +472,7 @@ def show_sync_complete():
         key_prefix='sync_complete', show_files_expander=True,
         file_records=file_records_map,
     )
+
 
     st.markdown("<div style='margin-top: 25px;'></div>", unsafe_allow_html=True)
     col_front, _ = st.columns([0.35, 0.65])

@@ -26,7 +26,7 @@ from shared.components import (
     render_archives_skipped_notice, render_panopto_disabled_notice,
     render_folder_scope_notice,
     error_log_dialog, render_panopto_summary,
-    fresh_container,
+    fresh_container, render_store_review_card,
 )
 from styles import inject_css
 from shared.components import inject_material_icons_font
@@ -2908,12 +2908,30 @@ with st.container():
                         margin="0",  # the card's flex gap (16px) is the ONE rhythm; a margin here adds to it
                     )
 
-            # 4. Per-course folder cards with filetype summary (folders already
+            # 4. The Microsoft Store rating ask (MSIX builds only, and only
+            #    after a run that actually delivered something with nothing
+            #    retriable and no app error behind it). Directly under the
+            #    completion card and OUTSIDE its container: the run's own result
+            #    is what the user came for, so the ask sits in its wake - but a
+            #    rating request is not a fact about the run, so it must not join
+            #    that card's documented stats -> expanders -> notices ordering.
+            #    `_retriable`/`_app_errors` rather than `len(download_errors)` -
+            #    a teacher-locked file and an LTI stream are not failures, which
+            #    is why the completion card itself does not count them either.
+            #    See core.store_review.
+            render_store_review_card(
+                clean_run=(_retriable == 0 and _app_errors == 0
+                           and success_count > 0),
+                key_prefix='dl',
+            )
+
+            # 5. Per-course folder cards with filetype summary (folders already
             #    resolved above - see the note on the shared manager)
             folder_paths = {name: str(path) for name, path in _course_folders.items()}
 
             render_folder_cards(file_details, folder_paths, key_prefix='dl')
-        
+
+
         elif st.session_state.get('download_status') == 'cancelled':
             # Both the Office tidy-up and the card itself are shared with the sync
             # cancelled screen (shared/components.py). They used to be duplicated

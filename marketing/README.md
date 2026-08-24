@@ -26,8 +26,8 @@ as the change it describes.
 
 ## Where things stand, in ten lines
 
-Measured 2026-08-20, with the last three lines added 2026-08-21 and the search
-lines rewritten 2026-08-23. Re-measure before trusting; these rot.
+Measured 2026-08-20, with the search lines rewritten 2026-08-23 and the
+operator-only lines rewritten 2026-08-24. Re-measure before trusting; these rot.
 
 - **The site IS indexed, and it ranks for the brand query.** Answered
   2026-08-23 from Search Console plus a signed-in browser: `site:` returns
@@ -55,8 +55,9 @@ lines rewritten 2026-08-23. Re-measure before trusting; these rot.
 - The `.edu` help desks own the money query, and **they cannot be outranked**,
   only complemented. Two pages now exist to do that.
 - Analytics: **none, by decision**. Search Console and Bing Webmaster only.
-- Five things need the operator personally and cannot be done from the repo.
-  They are listed in `PLAYBOOK.md` section 1b.
+- The five things that needed the operator personally are **all done** as of
+  2026-08-24. `PLAYBOOK.md` section 1b is now history, not a to-do list. The
+  only lever left is off-site: sections 3 to 5 of that file.
 - Market is **English-speaking but NOT predominantly US**: by Store installs,
   Philippines 82, US 79, Australia 70, South Africa 62, India 55, Nigeria 27,
   UK 24. This corrects an earlier reading taken from the app's institution
@@ -69,10 +70,13 @@ lines rewritten 2026-08-23. Re-measure before trusting; these rot.
   `h1` included. **Fixed 2026-08-21** and verified live at 0 hidden words. It
   was a candidate cause of the indexing question above; that question has since
   been answered the other way, so it was insurance rather than the cause.
-- **The GitHub social preview is set and points at a 404.** Measured
-  2026-08-23: the record is on the custom-upload host, the blob behind it does
-  not exist, which is why the Settings box looks empty and re-uploading does
-  not help. Remove the image first, then upload. See FINDINGS.md.
+- **The GitHub social preview 404 is fixed; the custom image is GitHub's to
+  repair.** Three uploads of three images each minted a new record and all
+  three 404'd, so "remove then upload" does NOT work. Removing the image was
+  the fix: the auto-generated card now serves 200. See FINDINGS.md.
+- **All five operator-only items are closed** as of 2026-08-24, Bing Webmaster
+  and IndexNow being the last. Note Cloudflare Crawler Hints is inert here -
+  the site is DNS-only, so the IndexNow key is hosted and posted manually.
 
 ---
 

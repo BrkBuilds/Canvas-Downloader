@@ -3065,3 +3065,187 @@ div[class*="st-key-stg_fda_manage_btn"] button:hover {
     color: #e2e8f0 !important;              /* TEXT_SLATE_200 */
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE MICROSOFT STORE RATING ASK  (shared/components.render_store_review_card)
+   ═══════════════════════════════════════════════════════════════════════════
+   Rendered only inside an MSIX build, at the very bottom of both completion
+   screens. Lives HERE and not in an st.html(<style>) beside the component for
+   the reason the transcription notice above records: every style host on a page
+   reconciles BY INDEX, and this card has branches that flip on a CLICK
+   (Rate -> thank-you, Not now -> gone), which is precisely the arming condition
+   for a conditionally-emitted stylesheet landing on its neighbour's host.
+   global.css goes through inject_css() -> st.markdown -> the MAIN container,
+   which no fragment rerun can reach, and it costs no extra element.
+
+   Amber throughout, deliberately: the rating ask is the only amber surface on a
+   completion screen that is not a warning, and it is separated from the amber
+   notice family by sitting OUTSIDE the completion card entirely. */
+
+div[class*="_store_review_card"] {
+    /* BLUE, and never amber. This went amber -> neutral -> blue, and the
+       reason is a correctness one rather than taste: on a completion screen
+       amber MEANS a warning, and this card is the one surface there where
+       nothing is wrong. Blue is already the app's "an action you may take"
+       colour (every primary button on these screens is BLUE_DEEP), so it reads
+       as an invitation and cannot be mistaken for something that went wrong.
+
+       A FLAT fill, not a gradient. The first version used a diagonal three-stop
+       wash on the theory that flat would read as an alert bar; on screen the
+       gradient just read as tacky, and the thing that actually stops this
+       looking like an alert is the light hairline border plus its position as a
+       half-width aside. One low alpha, so it composes over both completion
+       screens' backgrounds - and it stays under the button's 0.10, which is
+       what keeps the control reading as raised out of the card. */
+    background: rgba(59, 130, 246, 0.07) !important;
+    /* ACCENT_LINK, the palette's lightest blue, so the edge reads as a hairline
+       rather than as the card's own colour thickened. NO outer box-shadow: an
+       ambient glow around a card on a completion screen reads as a state
+       (something is active / something needs attention), which is the one thing
+       this surface must not imply. The only shadow left is on the button, and
+       only on hover, where it is an affordance rather than a resting style. */
+    border: 1px solid rgba(56, 189, 248, 0.38) !important;
+    border-radius: 12px !important;
+    padding: 18px 20px 16px 20px !important;
+    /* The container's own flex gap would sit BETWEEN the copy and the button
+       row on top of the margin set below - two rhythms fighting. One wins. */
+    gap: 0 !important;
+    margin: 4px 0 0 0 !important;
+}
+
+/* Streamlit puts margin-bottom: -16px on every stMarkdownContainer, and it is
+   the CONTAINER that sizes the box - so without this the card's declared
+   bottom padding lands ~16px short. Same trap as the completion cards. */
+div[class*="_store_review_card"] [data-testid="stMarkdownContainer"] {
+    margin-bottom: 0 !important;
+}
+
+div[class*="_store_review_card"] [data-testid="stElementContainer"] {
+    margin-bottom: 0 !important;
+}
+
+/* --- Copy: a question, then the call to action -------------------------- */
+/* The gold badge and the five-star row were cut (product owner, 2026-08-23):
+   tacky, and the stars were dishonest decoration besides - the ms-windows-store
+   deep link cannot carry a rating, so clicking a third star and a fifth star
+   would have done exactly the same thing. */
+.sr-title {
+    color: #ffffff;
+    font-size: 1.12rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.sr-body {
+    /* Back on the SLATE ramp now the card is blue. It was moved to the gray
+       ramp while the card was amber, because theme.py's note says gray exists
+       "where slate would read too cool" - on a warm tint it read like a link.
+       On a cool card the same ramp is the one that harmonises. */
+    color: #cbd5e1;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-top: 7px;
+}
+
+/* --- The button row ----------------------------------------------------- */
+div[class*="_store_review_card"] [data-testid="stHorizontalBlock"] {
+    margin-top: 14px !important;
+}
+
+/* --- The two buttons ---------------------------------------------------- */
+/* The PANOPTO CARD BUTTON's recipe, in blue: 32px tall (half the app's standard
+   3em button), a translucent tint plus a matching border rather than a solid
+   fill, 0.85rem, 8px radius. Copied deliberately from
+   ui/download_settings.py's `pan_open_dialog_btn` so the two read as the same
+   KIND of control - a quiet offer inside a card, not a page action.
+
+   A solid primary here would compete with "Go to front page", which is the
+   button the user actually came to this screen to press. */
+div[class*="_sr_rate"] button,
+div[class*="_sr_later"] button {
+    height: 32px !important;
+    min-height: 32px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 0 14px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+                color 0.15s ease !important;
+}
+
+/* Brighter than the Panopto button it is modelled on, and deliberately so:
+   that one is a settings control the user went looking for, this one has to
+   read as the offer on a screen where it is the only thing being offered. Still
+   a tint rather than a solid, so it stays below "Go to front page" in weight. */
+div[class*="_sr_rate"] button {
+    background: rgba(59, 130, 246, 0.20) !important;
+    border: 1px solid rgba(59, 130, 246, 0.55) !important;
+    color: #ffffff !important;
+}
+
+div[class*="_sr_rate"] button:hover {
+    background-color: rgba(59, 130, 246, 0.30) !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+/* The leading star. A plain-text button label renders with NO <p> in 1.51 (the
+   text sits directly in stMarkdownContainer), so `button p` matches nothing -
+   the icon and the flex row both go on the CONTAINER, which is correct whether
+   or not Streamlit decides to wrap the label. That is the one place this differs
+   from the Panopto button, whose own label is not plain text. No line-height
+   here: shrinking the line box below the glyph height is what makes a label read
+   as mis-centred. */
+div[class*="_sr_rate"] button [data-testid="stMarkdownContainer"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+}
+
+div[class*="_sr_rate"] button [data-testid="stMarkdownContainer"]::before {
+    content: "";
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* "Not now" stays quieter still. It is the answer most people will give and it
+   must not compete with the offer beside it, but it must still be obviously a
+   button - a text link here reads as a dismissal the user has to hunt for.
+
+   The explicit sizing above is also what keeps it level with its neighbour:
+   `help=` wraps a button in stTooltipIcon > stTooltipHoverTarget, so it is no
+   longer a direct child of .stButton and the app's default sizing stops
+   applying - measured 40px against 48px before this block existed. The generic
+   rule earlier in this file does NOT cover it either: that selector is a
+   DIRECT-child chain and the live DOM puts stTooltipIcon in between, which is
+   why the per-key rules using a DESCENDANT combinator are not the dead weight
+   the comment above them calls them. */
+div[class*="_sr_later"] button {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    color: #94a3b8 !important;
+}
+
+div[class*="_sr_later"] button:hover {
+    border-color: rgba(255, 255, 255, 0.26) !important;
+    color: #e2e8f0 !important;
+}
+
+/* --- The thank-you state ------------------------------------------------ */
+/* Same slot, same child count (padded), so neither state can inherit the
+   other's tail when it lands on this index. */
+.sr-thanks {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #e2e8f0;
+    font-size: 0.88rem;
+}
