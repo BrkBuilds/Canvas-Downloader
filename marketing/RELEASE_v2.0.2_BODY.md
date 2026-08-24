@@ -1,6 +1,6 @@
-Canvas Downloader 2.0.2 makes the app faster everywhere, adds a searchable directory of 4,750+ verified Canvas schools to the login screen, and fixes several bugs that could cost you work.
+Canvas Downloader batch-downloads your Canvas course materials to your own computer and keeps them in sync. It runs entirely on your machine, needs nothing but your own Canvas account, and is free.
 
-If you are upgrading, the fixes under **Your files** are the ones worth reading.
+2.0.2 makes the app faster everywhere, adds a searchable directory of 4,750+ verified Canvas schools to the login screen, and fixes several bugs that could cost you work. If you are upgrading, the fixes under **Fixed: your files** are the ones worth reading.
 
 ## New
 
@@ -45,6 +45,10 @@ If you are upgrading, the fixes under **Your files** are the ones worth reading.
 - **It no longer asks for Accessibility permission.** It never needed it, and it is the worst prompt macOS has: there is no Allow button, and the wording says "control this computer".
 - Course folders on external drives, on case-sensitive volumes, and with Danish or other accented filenames are all handled correctly.
 
+## Licence
+
+This release relicenses Canvas Downloader from MIT to **GPL-3.0-or-later**. If you are just using the app, nothing changes: it is still free, still open source, and still does everything it did before. If you have forked or reused the code, the new terms apply from this version onward.
+
 ## Download
 
 | Platform | File | Requirements |
@@ -52,7 +56,7 @@ If you are upgrading, the fixes under **Your files** are the ones worth reading.
 | Windows | `Canvas_Downloader_v2.0.2_Windows.exe`, or the [Microsoft Store](https://apps.microsoft.com/detail/9n1dwwvrq5wc) | Windows 10 or 11, 64-bit |
 | macOS | `Canvas_Downloader_v2.0.2_macOS.dmg` | Apple Silicon, macOS 14 or newer |
 
-The direct downloads are unsigned, so Windows shows a SmartScreen warning and macOS shows a Gatekeeper warning. Keeping the app free means not paying Apple's $99 a year for a certificate. The Microsoft Store build is signed and shows no warning.
+The direct downloads are unsigned, so Windows shows a SmartScreen warning and macOS shows a Gatekeeper warning. Code-signing certificates cost money every year on both platforms, and keeping the app free means not buying them. The Microsoft Store build is signed and shows no warning.
 
 Setup guides walk through those dialogs for your exact version: [Windows](https://canvasdownloader.app/win-setup.html) and [macOS](https://canvasdownloader.app/mac-setup.html).
 

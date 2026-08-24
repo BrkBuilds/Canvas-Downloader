@@ -68,13 +68,34 @@ def fetch_releases() -> list[dict]:
     operator's token and is not subject to the 60/hour anonymous rate limit -
     the same limit that makes the page's own client-side fetch fall back to the
     static markup this script maintains.
+
+    ``encoding="utf-8"`` is LOAD-BEARING, and its absence made this whole script
+    unrunnable on Windows. ``text=True`` alone decodes with the LOCALE encoding,
+    which is cp1252 there - and a release body containing any character whose
+    UTF-8 encoding includes byte 0x90 (an emoji, a dash) is undecodable in
+    cp1252. The failure is worse than a crash: the decode happens on
+    ``subprocess``'s own reader THREAD, whose exception is swallowed, so
+    ``run()`` returns ``returncode == 0`` with ``stdout is None`` and the
+    returncode guard above sails past it. Measured 2026-08-24: every one of the
+    six guards in ``tests/test_website_advertises_shipped_version.py`` errored
+    at setup with ``json.loads(None)`` -> ``TypeError``, and the Windows CI job
+    had been red since. Same rule this project already states for ``open()``
+    ("always specify encoding='utf-8' - Windows defaults to CP1252"); it had
+    simply never been applied to ``subprocess``.
+
+    The ``stdout is None`` guard stays anyway. It cannot fire now, and that is
+    the point: a silent None is exactly the shape that produced a TypeError two
+    frames away from its cause, and a decode set elsewhere must not be able to
+    reintroduce it without saying so.
     """
     out = subprocess.run(
         ["gh", "api", f"repos/{SLUG}/releases", "--paginate"],
-        capture_output=True, text=True, cwd=REPO,
+        capture_output=True, text=True, encoding="utf-8", cwd=REPO,
     )
     if out.returncode != 0:
-        raise SystemExit(f"gh api failed: {out.stderr.strip()[:300]}")
+        raise SystemExit(f"gh api failed: {(out.stderr or '').strip()[:300]}")
+    if out.stdout is None:
+        raise SystemExit("gh api returned no output (its stdout could not be read)")
     rels = json.loads(out.stdout)
     return [r for r in rels if not r.get("draft")]
 
