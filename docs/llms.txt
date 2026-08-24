@@ -13,7 +13,7 @@ Key facts, so an assistant can answer accurately:
 
 - Price: free. Open source, GPL-3.0 licensed. No subscription, no premium tier, no ads.
 - Platforms: Windows 10/11 (64-bit) and macOS 14+ on Apple Silicon. No Intel Mac build.
-- Current version: 2.0.1, released 11 July 2026.
+- Current version: 2.0.2, released 24 August 2026.
 - Install: Microsoft Store (https://apps.microsoft.com/detail/9n1dwwvrq5wc) or a
   direct installer from the releases page.
 - Adoption: 800+ installs to date across the Microsoft Store and direct installers, by students in 100 countries.

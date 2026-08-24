@@ -51,6 +51,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 PAGE = REPO / "docs" / "releases.html"
+HOME = REPO / "docs" / "index.html"
+LLMS = REPO / "docs" / "llms.txt"
 SITEMAP = REPO / "docs" / "sitemap.xml"
 SLUG = "BrkBuilds/Canvas-Downloader"
 PAGE_URL = "https://canvasdownloader.app/releases.html"
@@ -306,6 +308,58 @@ def rewrite_sitemap(xml: str, today: str) -> str:
 
 # ── entry point ──────────────────────────────────────────────────────────────
 
+def rewrite_home(html: str, win_rel: dict) -> str:
+    """The HOMEPAGE's JSON-LD states the version too, and it was hand-maintained.
+
+    ``tests/test_website_advertises_shipped_version.py`` asserts that every
+    version-bearing surface agrees, and its failure message says they "are all
+    written by scripts/sync_release_page.py - a disagreement means one was
+    hand-edited". That was NOT true: this script wrote ``releases.html`` and
+    nothing else, so publishing v2.0.2 left ``index.html`` advertising 2.0.1 and
+    turned the guard red against a script that had just run successfully.
+    Measured 2026-08-24, on the launch itself.
+
+    Which is the same defect the module docstring already describes one level
+    up - a fact stated in two places drifts - so the fix is to write both rather
+    than to remember the second one.
+
+    Only ``softwareVersion`` and ``datePublished`` are touched here. The
+    homepage's ``downloadUrl`` is deliberately the releases PAGE rather than an
+    asset, and it carries no ``fileSize``, so the other two rewrites
+    ``rewrite_page`` performs have nothing to bind to here.
+    """
+    v = ver_of(win_rel)
+    html = _sub_once(html, r'("softwareVersion": ")[\d.]+(")', rf'\g<1>{v}\g<2>',
+                     "homepage JSON-LD softwareVersion")
+    html = _sub_once(html, r'("datePublished": ")[\d-]+(")',
+                     rf'\g<1>{date_of(win_rel).isoformat()}\g<2>',
+                     "homepage JSON-LD datePublished")
+    return html
+
+
+def rewrite_llms(text: str, win_rel: dict) -> str:
+    """``llms.txt`` states the current version too, in prose.
+
+    It is the file an assistant reads, and ``marketing/FINDINGS.md`` records the
+    site being quoted BY an assistant while the pages themselves were invisible
+    in search - so a stale version here is wrong in front of exactly the audience
+    that file exists for. No test covered it: the website guard reads the release
+    page's pills, meta lines and hrefs plus both pages' JSON-LD, and llms.txt is
+    none of those.
+
+    Prose, so it is matched on its own label rather than on a bare version
+    number - ``2.0.1`` also appears in this file's history and adoption lines,
+    and a blind replace would rewrite those too.
+    """
+    return _sub_once(
+        text,
+        r'(- Current version: )[\d.]+(, released )[^\n]*',
+        lambda m, v=ver_of(win_rel), d=date_of(win_rel): (
+            m.group(1) + v + m.group(2)
+            + f"{d.day} {d.strftime('%B %Y')}."),
+        "llms.txt current version")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--check", action="store_true",
@@ -326,12 +380,20 @@ def main() -> int:
     new = rewrite_older(new, older_rows(
         rels, {win[0]["tag_name"], mac[0]["tag_name"]}))
 
+    home = HOME.read_text(encoding="utf-8")
+    new_home = rewrite_home(home, win[0])
+
+    llms = LLMS.read_text(encoding="utf-8")
+    new_llms = rewrite_llms(llms, win[0])
+
     xml = SITEMAP.read_text(encoding="utf-8")
     new_xml = xml
     if new != html:      # only touch lastmod when the page actually changed
         new_xml = rewrite_sitemap(xml, _dt.date.today().isoformat())
 
     changed = [n for n, a, b in (("docs/releases.html", html, new),
+                                 ("docs/index.html", home, new_home),
+                                 ("docs/llms.txt", llms, new_llms),
                                  ("docs/sitemap.xml", xml, new_xml)) if a != b]
     if not changed:
         print("\nalready in sync - nothing to write")
@@ -343,6 +405,8 @@ def main() -> int:
         return 1
 
     PAGE.write_text(new, encoding="utf-8")
+    HOME.write_text(new_home, encoding="utf-8")
+    LLMS.write_text(new_llms, encoding="utf-8")
     SITEMAP.write_text(new_xml, encoding="utf-8")
     print("\nrewrote: " + ", ".join(changed))
     print("now run: python -m pytest tests/test_website_advertises_shipped_version.py "
