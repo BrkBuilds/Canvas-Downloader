@@ -20,8 +20,8 @@
 #   SSH on / sleep + auto-lock off      so you can leave VNC immediately
 #   Xcode Command Line Tools            git, compilers - everything needs it
 #   Homebrew                            everything below is a brew cask
-#   Visual Studio Code + extensions     the IDE, driven from Windows over SSH
-#   NoMachine                           a fast remote desktop, if you want one
+#   Visual Studio Code + extensions     the IDE, run ON the Mac in NoMachine
+#   NoMachine 9 (from a DMG you stage)  the desktop you work in all day
 #   Microsoft Office                    ~2 GB; the converter phase needs it
 #   git, tmux, python@3.11, uv          the audit's own toolchain
 #
@@ -40,6 +40,7 @@ step() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 [ "$(uname -s)" = "Darwin" ] || { echo "macOS only."; exit 1; }
 USER_NAME=$(id -un)
 ARCH=$(uname -m)
+IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "<mac-ip>")
 T0=$(date +%s)
 
 printf '\n\033[1mCanvas Downloader - macOS audit machine setup\033[0m\n'
@@ -162,16 +163,76 @@ cat <<'EOF'
       VNC, but the good compression lives in Apple's own client extensions, so
       third-party clients fall back to near-raw framebuffers. Changing VNC
       CLIENT barely helps; changing PROTOCOL does.
-        NoMachine     free, NX + H.264 - what you work in, port 4000
+        NoMachine 9   NX + H.264 - what you work in, port 4000
+        NoMachine 10  DO NOT - the free edition is retired, it wants a licence
         VNC           only to grant NoMachine its permissions, then drop it
         Parsec        DO NOT - macOS is client-only, it cannot host
 EOF
+# `brew install --cask nomachine` IS DEAD AND WILL STAY DEAD. NoMachine retired
+# the free edition at v10 - their own words, "a fully commercial product for
+# anyone", $24.50/yr - and withdrew every v9 binary from their download server,
+# which now 301s and then 302s each old path to their homepage. Measured
+# 2026-08-26: the cask fetched that 154-byte redirect page and failed on a
+# CHECKSUM MISMATCH, which reads like a stale cask rather than like a product
+# that no longer exists. That misreading cost an hour of chasing URLs which had
+# all been withdrawn together. Do NOT "fix" this by retrying brew or by looking
+# up the current URL: the current URL serves v10, which installs and THEN asks
+# for a licence - worse than not installing, because it fails later, on the
+# desktop, looking like our problem.
+#
+# So v9 comes from a mirror, and the SIGNATURE is what makes that safe rather
+# than a matter of trust: a mirror can host a file, it cannot re-sign one. The
+# gate below REFUSES anything whose Developer ID chain does not name NoMachine.
+NX_DMG="${NX_DMG:-$HOME/nx.dmg}"
 if [ -d "/Applications/NoMachine.app" ]; then
   ok "already installed"
+elif [ -f "$NX_DMG" ]; then
+  info "installing from $NX_DMG"
+  NX_MNT=$(hdiutil attach -nobrowse "$NX_DMG" 2>/dev/null | grep -o '/Volumes/.*' | tail -1)
+  NX_PKG=$(ls -d "$NX_MNT"/*.pkg 2>/dev/null | head -1)
+  if [ -z "$NX_PKG" ]; then
+    warn "no .pkg inside that disk image - is it really a NoMachine DMG?"
+    [ -n "$NX_MNT" ] && hdiutil detach "$NX_MNT" >/dev/null 2>&1
+  elif ! pkgutil --check-signature "$NX_PKG" 2>&1 \
+       | grep -qi 'Developer ID Installer: NoMachine'; then
+    warn "REFUSING to install - $NX_PKG is not signed by NoMachine:"
+    pkgutil --check-signature "$NX_PKG" 2>&1 | sed 's/^/         /'
+    hdiutil detach "$NX_MNT" >/dev/null 2>&1
+  else
+    ok "signature verified - NoMachine Developer ID, notarized by Apple"
+    if sudo installer -pkg "$NX_PKG" -target / >/tmp/nx_install.log 2>&1; then
+      ok "installed"
+    else
+      warn "installer failed - its own output follows. Do not guess at this:"
+      sed 's/^/         /' /tmp/nx_install.log
+    fi
+    hdiutil detach "$NX_MNT" >/dev/null 2>&1
+  fi
 else
-  brew install --cask nomachine >/dev/null 2>&1 \
-    && ok "installed - grant it Screen Recording + Accessibility when asked" \
-    || warn "cask failed - skip it, VS Code Remote-SSH covers most of the need"
+  warn "not installed, and no DMG is staged at $NX_DMG"
+  cat <<EOF
+         Get NoMachine 9.7.3 for Mac - 102 MB DMG, the last free line:
+             https://nomachine.en.uptodown.com/mac/download
+         Older 9.x builds: https://nomachine.en.uptodown.com/mac/versions
+
+         Copy it over from your own PC, then run this script again:
+             scp <your-downloads>/nomachine-9-7-3.dmg ${USER_NAME}@${IP}:~/nx.dmg
+             bash ~/fc.sh
+
+         It verifies the Developer ID before installing and refuses anything
+         NoMachine did not sign, which is what makes a mirror safe to use here.
+EOF
+fi
+if [ -d "/Applications/NoMachine.app" ]; then
+  # No sudo: nxserver runs as root so a plain lsof cannot see it, and a
+  # password prompt here would land in the middle of an unattended run.
+  if (exec 3<>/dev/tcp/127.0.0.1/4000) 2>/dev/null; then
+    ok "nxserver is listening on 4000"
+  else
+    warn "nxserver is NOT listening on 4000 - sudo /etc/NX/nxserver --restart"
+  fi
+  info "turn its auto-update OFF once you are on the desktop, or it upgrades"
+  info "itself to v10 mid-audit and starts asking for a licence"
 fi
 
 # ─────────────────────────────────────────────── 7. Microsoft Office
@@ -207,7 +268,6 @@ cat <<'EOF'
 EOF
 
 # ────────────────────────────────────────────────────────── 8. what next
-IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "<mac-ip>")
 ELAPSED=$(( ($(date +%s) - T0) / 60 ))
 
 step "Done in ~${ELAPSED} min"

@@ -11,8 +11,9 @@ The agent's brief is `MAC_AUDIT_PROMPT.md`; what to test is `MAC_RUNBOOK.md`.
 ## How this works, in one paragraph
 
 You **SSH in from your own PC** and run one setup script. It installs
-everything (Xcode tools, Homebrew, VS Code + extensions, NoMachine, Microsoft
-Office, Python, tmux) in 30-45 minutes, mostly unattended. Then you VNC in
+everything (Xcode tools, Homebrew, VS Code + extensions, Microsoft Office,
+Python, tmux) in 30-45 minutes, mostly unattended, and installs NoMachine
+from a DMG you staged first (see 0.2 - it can no longer fetch it itself). Then you VNC in
 **once**, to answer the consent prompts and grant NoMachine its two
 permissions. From then on you work on the Mac's own desktop through
 **NoMachine**: **VS Code running on the Mac**, with Claude Code in its
@@ -56,6 +57,15 @@ git push
 - A **VNC client**. TigerVNC is known to work against macOS's ARD auth. You
   need it once, in Part 3, and only to grant NoMachine its permissions.
 - The **NoMachine client**. This is what you actually work in all day.
+- **The NoMachine 9 `.dmg`, downloaded before you rent.** NoMachine retired
+  the free edition at v10 ("a fully commercial product for anyone",
+  $24.50/yr) and withdrew every v9 binary, so `brew install --cask nomachine`
+  is permanently dead and every old vendor URL now redirects to their
+  homepage. Get 9.7.3 (102 MB) from
+  <https://nomachine.en.uptodown.com/mac/download>; older 9.x builds are at
+  <https://nomachine.en.uptodown.com/mac/versions>.
+  **Do not install v10** - it installs fine and then asks for a licence, on
+  the desktop, looking like our problem.
 - Your `mac_audit_secrets.env` (you have this).
 - Microsoft 365 credentials to hand.
 
@@ -110,7 +120,7 @@ It asks for your password once at the start and then runs unattended. In order:
 | Xcode Command Line Tools | installed **headlessly** via `softwareupdate` where possible |
 | Homebrew | everything below depends on it |
 | **VS Code** + Claude Code, Python, Remote-SSH extensions | your IDE, run **on the Mac** |
-| **NoMachine** | the remote desktop you work in all day, port 4000 |
+| **NoMachine 9** | the remote desktop you work in all day, port 4000 - **only if you staged `~/nx.dmg` first**, see 2.2 |
 | **Microsoft Office** (~2 GB) | downloaded and installed for you |
 | git, tmux, python@3.11, uv | the audit toolchain |
 
@@ -127,6 +137,32 @@ sudo lsof -nP -iTCP:4000 -sTCP:LISTEN
 ```
 
 Three paths and a listening `nxserver` means you are through.
+
+### 2.2 If NoMachine is missing
+
+Expected if you did not stage the DMG. Copy it over and run the script
+again - every step detects what is already there, so it costs seconds:
+
+```powershell
+scp "$env:USERPROFILE\Downloads\nomachine-9-7-3.dmg" m1@<mac-ip>:~/nx.dmg
+```
+
+```bash
+bash ~/fc.sh
+```
+
+It mounts the image, **verifies the installer's Developer ID before
+touching `sudo installer`, and refuses anything whose chain does not name
+NoMachine**. That check is what makes a mirror safe to use: a mirror can
+host a file, it cannot re-sign one. A genuine 9.7.3 reads:
+
+```
+Developer ID Installer: NoMachine S.a.r.l. (493C5JZAGR)
+Notarization: trusted by the Apple notary service
+```
+
+Once you are on the desktop, **turn NoMachine's auto-update off**, or it
+will pull itself up to v10 mid-audit and start asking for a licence.
 
 ---
 

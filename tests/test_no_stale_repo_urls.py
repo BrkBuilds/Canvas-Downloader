@@ -33,6 +33,28 @@ The rule is about LINKS, not about the word. Prose that discusses the old
 account - the transfer runbook, a docstring citing the old host as history - is
 correct and stays. Only a URL is a defect, because only a URL is something a
 user or a crawler can follow.
+
+THE SURFACE THIS TEST CANNOT REACH, AND IT WAS STILL BROKEN
+The docstring above measured that 404 on 2026-08-20, and this guard swept the
+whole tree for it. On 2026-08-24 the **Microsoft Store listing** was found still
+serving that exact dead URL as its Privacy Policy link, and the old Pages root as
+its App website link - four days after the 404 was written down here.
+
+Nothing failed, and nothing should have. The guard covers every surface it can
+see, and Partner Center is not a file in this repository. A published URL can
+live in a form on somebody else's server, and a repo-wide grep is structurally
+blind to it.
+
+So a rename needs an OUT-OF-REPO checklist. It lives in
+``marketing/STORE_LISTING.md`` section 3.8:
+
+  * Microsoft Store - Privacy policy URL, Website, Support contact info
+  * any directory listing (AlternativeTo, Softpedia, ...)
+  * the GitHub repo's own About/homepage field
+
+Resolve each with ``curl -sI -L`` and require 200. Do not read them: this failure
+was invisible from reading, and the one link that DID redirect - the github.com
+issues URL - is exactly what would have made a spot check report all clear.
 """
 from __future__ import annotations
 
@@ -66,6 +88,9 @@ EXCLUDED = {
     "marketing/PLAYBOOK.md",                 # records the finding, including the dead url
     "marketing/FINDINGS.md",                 # the register; quotes the dead urls as evidence
     "marketing/SITE_RUNBOOK.md",             # documents the redirect asymmetry
+    "marketing/STORE_LISTING.md",            # quotes the dead Store fields as evidence
+    "marketing/store-listing.html",          # generated FROM that file; same evidence
+    "marketing/store-listing.artifact.html", # generated FROM that file; same evidence
 }
 
 # Directories that are build output, vendored dependencies or scratch.

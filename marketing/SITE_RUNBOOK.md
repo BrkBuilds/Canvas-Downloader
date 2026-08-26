@@ -35,6 +35,10 @@ in every page**, and nothing tells you when one is missed.
 | `docs/llms.txt` | Factual brief for AI assistants. |
 | `docs/.well-known/security.txt` | RFC 9116. **Verify it serves after the first deploy**; GitHub Pages and dot-directories are worth confirming rather than assuming. Its `Expires` field is required and is set to 2027-08-20. |
 
+**The homepage's six demo videos have their own runbook: [PILLAR_VIDEOS.md](PILLAR_VIDEOS.md).** Read it before touching any `.mp4` or poster
+under `docs/assets/`. Encoding settings, the deferred-poster rule that keeps them off
+the LCP path, and the poster-frame privacy rule all live there rather than here.
+
 ## 2. Adding or editing a guide page
 
 The search-facing pages **and their index** are generated, so they cannot drift

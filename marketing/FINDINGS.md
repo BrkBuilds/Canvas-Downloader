@@ -11,6 +11,256 @@ lives in [STRATEGY.md](STRATEGY.md) as well.
 
 ---
 
+## SUBMITTED, NOT YET LIVE: the Store listing's Privacy Policy and Website links were BOTH 404
+
+**Status: found 2026-08-24, submitted the same day, awaiting certification.**
+The fix is a Partner Center field edit, so it cannot be committed - the values
+live in [STORE_LISTING.md](STORE_LISTING.md) section 3.8.
+
+**Both sides measured before submitting, so there is an exact before-shot.** The
+live values were read out of the Store catalog API rather than off the dashboard:
+
+| Field | Live listing, still serving | Submitted |
+|---|---|---|
+| Privacy policy | `birkls.github.io/...privacy.html` -> **404** | `canvasdownloader.app/privacy.html` -> **200** |
+| Website | `birkls.github.io/...` -> **404** | `canvasdownloader.app/` -> **200** |
+| Support | `github.com/birkls/...issues` -> 200 | `github.com/BrkBuilds/...issues` -> **200** |
+
+Re-run the catalog command in section 7.7 after it publishes. The table above is
+the control, so a fix that silently did not take is visible in one command.
+
+
+| Field on the live listing | Resolves to | Result |
+|---|---|---|
+| Privacy policy | `birkls.github.io/Canvas_LMS_batch_file_downloader/privacy.html` | **404** |
+| App website | `birkls.github.io/Canvas_LMS_batch_file_downloader/` | **404** |
+| Support | `github.com/birkls/Canvas_LMS_batch_file_downloader/issues` | 200 |
+
+**The mechanism, which is the part worth keeping.** GitHub redirects a renamed
+*repository* for ever - that is why the support link still works. It does **not**
+redirect `<olduser>.github.io` after a **username** change, because the old user
+page host stops existing. So the `birkls` -> `BrkBuilds` move killed the two
+links that are pure Pages URLs and spared the one routed through `github.com`.
+Checking one link would have concluded everything was fine.
+
+**The sharpest part is that this was ALREADY KNOWN, four days earlier, and the
+guard still could not reach it.** `tests/test_no_stale_repo_urls.py` exists
+precisely for this, its docstring says *"`github.io` project sites do not redirect
+after a move to a custom domain ... was measured returning a hard 404"*, and it
+names **this exact URL**, measured 2026-08-20. It swept the whole tree and passed.
+Partner Center is not a file in this repository, so a repo-wide grep is
+structurally blind to it.
+
+So this is not "nobody knew". It is the register's own recurring shape - *which
+surface did the fix for this class NOT reach?* - with the answer being a surface
+that lives on somebody else's server. The guard's docstring now carries the
+out-of-repo checklist (Store URL fields, directory listings, the repo's own About
+field), and [STORE_LISTING.md](STORE_LISTING.md) section 3.8 holds the values.
+
+**Second half of the rule, and it is what a spot check gets wrong:** resolve every
+published URL with `curl -sI -L` and require 200. Do not read them. The one link
+that *did* keep working here is the `github.com` issues URL, because GitHub
+redirects renamed repositories - so checking that one alone reports all clear
+while two links are dead.
+
+Cost: 800+ installers, ten weeks, and the one link that exists to prove the app
+is trustworthy. Also policy-relevant - Store Policy 10.5.1 requires a working
+privacy policy.
+
+## SETTLED: the GPL source offer goes in Additional license terms, NOT the description
+
+**Corrects the entry below** (*"WHAT PUBLISHING NOW REQUIRES"*, item 1), which
+said to put the source URL in the Store **description**. Both of Microsoft's own
+listing documents were read on 2026-08-24 and they point the other way:
+
+> Do not include HTML, code snippets, or URLs in the description field. Instead,
+> provide support, privacy policy, and website links in their designated
+> submission fields.
+
+> [Additional license terms] If you enter a single URL into this field, it will
+> be displayed to customers as a link that they can click to read your additional
+> license terms.
+
+So the field built for licence terms explicitly takes a URL, and the description
+explicitly does not. **Both are now used**: the clickable offer in the licence
+field (which was **empty**), plus a scheme-less `github.com/...` mention in the
+description so the source is findable in prose. That is a stronger discharge of
+GPLv3 section 6(d) than the description line alone *and* it removes a
+certification-rejection risk. `marketing/ops-desk.html` was corrected in the same
+pass, because two documents giving contradictory instructions is how the wrong
+one gets followed.
+
+## FIXED IN COPY: the listing promised "never deletes anything of yours" while eight of the app's own conversions delete their source
+
+Found by checking the description against the source code rather than against the
+draft it came from, which is the only way this class surfaces at all.
+
+The sentence read: *"...and it never deletes anything of yours - your files are
+safe."* [converters/pdf.py](../converters/pdf.py) carries the comment **"DELETES
+the user's original - so require a real PDF"**, and seven of the eight AI
+conversions consume their input: PowerPoint, Word, Excel, code, URLs, video and
+archives. Only HTML keeps its source.
+
+**Scoped to sync the sentence is true**, which is why it survived a read: the
+sync engine deletes only `.part` intermediates and a superseded pristine copy
+after a clean rename. But it sits three paragraphs below a section selling the
+conversions, and a reader does not scope it.
+
+**This is not a cosmetic over-claim.** It is a written safety promise, in the
+field a person reads before installing, contradicted by an opt-in feature the
+same text recommends. The app itself is honest - the conversions card says the
+source is replaced - so the listing was the only dishonest surface in the chain.
+
+The narrowing that is both true and keeps the force: **"never deletes work of
+your own"**. What gets consumed is the Canvas-supplied original, replaced by its
+converted twin; anything the student edited or annotated is exactly what
+`_NewVersion` protects.
+
+**The reusable part.** I had already reviewed this sentence and flagged the
+clause *beside it* ("never touches documents you have open" -> "never closes an
+Office document you have open") while missing this one. Both are in one sentence.
+Reviewing copy against a previous draft finds phrasing problems. Only reviewing
+it against the code finds false claims.
+
+## MEASURED: hero art is a minority asset, the trailer is a games asset - and the instrument lied twice first
+
+The owner proposed shipping the v2.0.2 listing with no 16:9 super hero art and no
+trailer, on the observation that many leading apps have neither. Measured against
+the live Store catalog API, 2026-08-24:
+
+| | have it |
+|---|---|
+| Trailer | **1 of 21 apps** (Todoist) |
+| Hero art | **8 of 21 apps** |
+
+Without either: Power Planner, Notion, WhatsApp, Adobe Acrobat, Zoom, Todoist,
+Grammarly, Canva, Microsoft To Do, Trello. With hero art: Spotify, Duolingo,
+Slack, Anki, Dropbox, Evernote.
+
+**The decisive row is Power Planner** - the direct category competitor, 4.8
+stars, 2,760 ratings, sixteen screenshots, and neither asset.
+
+Caveat kept on purpose: the survey took the top search hit per name and three
+rows landed on a different product than intended. Excluding all three it is 6 of
+17 and 1 of 17. Same picture, so the conclusion is robust to the flaw.
+
+**THE PART WORTH KEEPING IS THAT THE INSTRUMENT RETURNED A CONFIDENT ZERO TWICE
+BEFORE IT WORKED.** Pass one asked for `ImagePurpose` and `Videos`; both fields
+are named something else in this API, so every app came back `?` and `0`, which
+reads exactly like "nobody has media". Pass two used the documented-sounding type
+names `SuperHeroArt` and `Hero`; the real value is lowercase **`hero`**, so it
+returned **0 of 15** - a clean, plausible, entirely false result that happened to
+agree with the hypothesis being tested.
+
+What caught it was a **positive control**: six first-party games, picked because
+they are the products most certain to carry hero art. All six returned `hero` and
+one to four trailers. Only after that was the app number worth anything.
+
+This is the register's recurring shape, stated for a marketing measurement rather
+than a test oracle: **a blind instrument does not under-report, it invents** - and
+it invents most convincingly when its answer is the one you were hoping for. Any
+survey that comes back zero needs a control that could still have come back
+non-zero.
+
+**Decided.** The trailer is a permanent no unless one falls out of other work.
+The hero is worth an hour at some point, in a media-only submission that touches
+no package, needs no version bump and no copy review, with the live listing up
+throughout certification.
+
+
+## MEASURED: the app ranks for its own name in Store search and nothing else
+
+Measured 2026-08-24 against the live Store search API. Full table in
+[STORE_LISTING.md](STORE_LISTING.md) section 2.
+
+`canvas downloader` **#1**. `canvas course` **#8**. Everything else - `panopto`,
+`lecture downloader`, `notebooklm`, `download course files`, `bulk download`,
+`canvas lms` - **not in the top 20**.
+
+Three things came out of it that are worth more than the ranking itself:
+
+- **Title match dominates and description text is only weakly indexed.**
+  `Credential Manager canvas` ranks #9 on a phrase that exists nowhere but our
+  description, while `AI-ready conversion` and `syllabus announcements`, also
+  description-only, return nothing. Writing keywords into the description body is
+  therefore close to worthless; the Keywords field is the lever.
+- **`panopto`, `lecture downloader` and `notebooklm` are uncontested** - every
+  app currently ranking for them does something else entirely.
+- **Generic download-manager terms were deliberately left OUT.** Ranking blends
+  relevance with download-through rate, so impressions that do not convert teach
+  the algorithm the app is irrelevant for that term. Somebody typing
+  `bulk download` wants a download manager. Being absent from a term you would
+  lose is not a gap.
+
+**Re-run this in about two weeks** and record the deltas. It is one command and
+it is the only way to know whether the keywords did anything.
+
+## SETTLED: the Store Product Name was NOT extended with keywords
+
+Considered on the evidence above, and declined. Title match is the strongest
+ranking field and competitors plainly exploit it (*"Video Downloader 4K - Bulk
+GetVid"*). But Microsoft recommends the listing name match the package name, the
+package `DisplayName` is `Canvas Downloader`, and the app window, Start menu and
+website would all keep the short name while the Store showed a long one. That is
+brand damage for a ranking bet. Revisit only with real Store search-term data -
+the same condition [STRATEGY.md](STRATEGY.md) puts on the brand-name question.
+
+## CLOSED: the MSIX rating gate is verified, with both controls
+
+`CLAUDE.md` recorded `shared/helpers.is_msix_package()` as **not verified in a
+packaged build**, which mattered because the in-app rating card is MSIX-only and
+the Store listing has **0 ratings after 800+ installs**. Verified 2026-08-24 on
+Windows, running the exact ctypes call from the real function:
+
+```
+unpackaged system python     rc = 15700 (APPMODEL_ERROR_NO_PACKAGE) -> False
+Store-packaged Python 3.11   rc = 122   (ERROR_INSUFFICIENT_BUFFER) -> True
+```
+
+**The negative control is the half that matters.** A gate answering True for
+everything would put the card on the `.exe` build; one answering False for
+everything would silently never show it. Both are excluded. Using an unrelated
+Store-packaged app as the positive control costs nothing and needs no sideload.
+
+Still unverified: the *card rendering* inside a real MSIX container. Not a
+blocker - the failure mode is one card not appearing.
+
+## CORRECTED: the Short description IS a Partner Center field - it was collapsed
+
+Recorded here in my own voice because the wrong claim was mine, it reached three
+files, and the mechanism is the reusable part.
+
+Section 3.2 of `STORE_LISTING.md` said the Short description "does not appear in
+Partner Center's MSIX flow", on the operator's report that it was not on the
+page. It is on the page. It is the second-to-last control under **Supplemental
+fields**, and Partner Center renders that whole section **collapsed by default**.
+A screenshot of the live submission with the section expanded shows the field
+filled and its counter reading 823 of 1,000 remaining.
+
+**Microsoft's documentation was right and the reading of the page was wrong** -
+the docs even named the section. Two documents ended up describing one field from
+looking rather than from measuring, which is the same shape as the `og:image`
+entry further down this file: a claim about a published surface, taken by eye,
+that reads as authoritative because it is specific.
+
+**The rule: a collapsed section is invisible to a look.** Before reporting a
+field absent from any console, expand every collapsible group on the page. The
+cost of the check is one click; the cost of the claim was a paragraph of
+reasoning about why the field exists in the API but not in this flow, all of it
+built on a control nobody had scrolled to.
+
+Corrected in `marketing/STORE_LISTING.md` section 3.2, `store_page_template.html`
+(field label, note, runbook step), and the parametrize comment in
+`tests/test_store_page_generated.py`. The copy itself did not change and is still
+guarded at 270 characters - only the claim about where it goes.
+
+**A second point, which is the one that affects conversion.** The live submission
+holds the *description's opening line* in this field. It is a second slot in the
+two best positions on the page, so a duplicate spends one of them saying nothing
+new. Section 3.2 carries a 223-character alternative that adds lecture
+recordings, transcripts, NotebookLM, free/open-source and privacy.
+
+
 ## FIXED: the site had no social proof, while the Store had the only traction
 
 **Status: fixed 2026-08-21.** `docs/index.html` and `docs/llms.txt`.

@@ -12,15 +12,17 @@ as the change it describes.
 
 ---
 
-## The five files
+## The seven files
 
 | File | What it holds | Read it when |
 |---|---|---|
 | **[FINDINGS.md](FINDINGS.md)** | The register. Every defect and opportunity found, with its evidence, its status, and why anything deferred was deferred. | You are about to "discover" something. Check here first; it is probably already known and possibly already decided. |
 | **[STRATEGY.md](STRATEGY.md)** | Positioning, who the user is, the vocabulary rule, and the decisions that are **settled**. | Before writing any copy, choosing a keyword, or proposing a rename. |
 | **[SITE_RUNBOOK.md](SITE_RUNBOOK.md)** | How to change the website without breaking it: the page shell, the generator, the release procedure, which tests guard what, how to measure. | Before editing anything under `docs/`. |
+| **[PILLAR_VIDEOS.md](PILLAR_VIDEOS.md)** | The six looping demo clips on the homepage: the encoding recipe, why posters are deferred, the poster-frame and PII rules, and how to add, replace or remove one. | Before touching any video or poster under `docs/assets/`. |
 | **[PLAYBOOK.md](PLAYBOOK.md)** | The off-site execution plan: threads to answer, directories, communities, ready-to-paste copy, calendar. | When you have an hour to spend on promotion. |
 | **[CHANGELOG.md](CHANGELOG.md)** | What was built and changed, per session, with the measured before-and-after. | To find out what already exists without re-deriving it from the code. |
+| **[STORE_LISTING.md](STORE_LISTING.md)** | The Microsoft Store listing: every field's copy, the measured search rankings the keywords are chosen from, the screenshot order, the hero-art and trailer briefs, and the click-by-click submission runbook. | Before touching Partner Center, and before writing any Store copy. Open `store-listing.html` beside it - same content, with copy buttons and live character counts. |
 
 ---
 
@@ -77,6 +79,12 @@ operator-only lines rewritten 2026-08-24. Re-measure before trusting; these rot.
 - **All five operator-only items are closed** as of 2026-08-24, Bing Webmaster
   and IndexNow being the last. Note Cloudflare Crawler Hints is inert here -
   the site is DNS-only, so the IndexNow key is hosted and posted manually.
+- **The Store listing is on v2.0.0 and its Privacy Policy link is a 404.** Both
+  are fixed by the v2.0.2 submission, which is prepared in
+  [STORE_LISTING.md](STORE_LISTING.md) and not yet submitted. Measured
+  2026-08-24: the app ranks **#1 for `canvas downloader`** and is outside the
+  top 20 for every other term tried, including the uncontested `panopto` and
+  `notebooklm`.
 
 ---
 

@@ -366,13 +366,13 @@ Full disclosure, I wrote a free open-source app that does the above through the 
         <h3>Add the source URL to the Microsoft Store listing</h3>
         <span class="pill open">GPL-3 duty</span>
       </div>
-      <p class="why">The app is now GPL-3.0, and the Store agreement makes you solely responsible for source availability. The MSIX is object code, so GPLv3 section 6 requires the source to be reachable. Partner Center never asks for this, which is exactly why it gets missed.</p>
+      <p class="why">The app is now GPL-3.0, and the Store agreement makes you solely responsible for source availability. The MSIX is object code, so GPLv3 section 6 requires the source to be reachable. Partner Center never asks for this, which is exactly why it gets missed. <b>Corrected 2026-08-24:</b> it goes in <b>Additional license terms</b>, not the description. Microsoft's listing guidance says plainly "do not include ... URLs in the description field", while the licence field explicitly renders a single URL as a clickable link. Full field list in marketing/STORE_LISTING.md section 3.7.</p>
       <div class="body">
         <div class="copy">
-          <div class="copy-head"><span class="copy-label">Paste into the Store description</span><button class="copy-btn">Copy</button></div>
-          <pre class="copy-body">Canvas Downloader is free software licensed under the GNU General Public License v3 or later. The complete source code is available at https://github.com/BrkBuilds/Canvas-Downloader</pre>
+          <div class="copy-head"><span class="copy-label">Paste into Additional license terms (on its own)</span><button class="copy-btn">Copy</button></div>
+          <pre class="copy-body">https://github.com/BrkBuilds/Canvas-Downloader</pre>
         </div>
-        <p class="why">Also make sure the MSIX you submit is built from a <b>tagged</b> commit, so "which source produced this binary" has an answer. The build script prints the commit it used.</p>
+        <p class="why">The description also carries a scheme-less <code>github.com/BrkBuilds/Canvas-Downloader</code> mention so the source is findable without tripping the URL guidance. Also make sure the MSIX you submit is built from a <b>tagged</b> commit, so "which source produced this binary" has an answer. <b>Verified for v2.0.2:</b> the built package is byte-equivalent to the v2.0.2 tag - the only .py difference from HEAD is scripts/sync_release_page.py, which is not bundled.</p>
       </div>
     </div>
 

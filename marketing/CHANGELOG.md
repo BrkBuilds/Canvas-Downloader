@@ -6,6 +6,201 @@ the evidence for everything below.
 
 ---
 
+## 2026-08-25 - the pillar demo videos, re-shot and re-cut
+
+Four of the six homepage pillars got new recordings of the current UI. Two of
+them were not videos before: **Daily Auto-Sync** was a static PNG, and
+**Lecture Recordings** was a grid of four format icons that only restated the
+checklist inside its own expander. Both now show the thing they describe
+actually happening.
+
+The full procedure, the encoding recipe and the reasoning behind each decision
+are in **[PILLAR_VIDEOS.md](PILLAR_VIDEOS.md)**, which is new. This entry is
+the what-changed; that file is the how-to.
+
+### What is on the page now
+
+| Pillar | Was | Now |
+|---|---|---|
+| 1. Download | video with a black margin baked in | re-cropped, edge to edge |
+| 2. Quick Sync | old UI | `quick-sync-new-canvas-files.mp4` |
+| 3. Daily Auto-Sync | **static PNG** | `daily-auto-sync-canvas-files.mp4` |
+| 4. AI Optimization | old UI | `convert-canvas-files-for-ai.mp4` |
+| 5. Sync Review | unchanged | unchanged |
+| 6. Lecture Recordings | **four static icons** | `download-transcribe-panopto-lectures.mp4` |
+
+All six autoplay and loop silently, as before. Every one now carries an
+`aria-label`; the Today PNG's `alt` text was carried across rather than lost.
+
+### The page got faster, not slower, and that took a second pass
+
+The first pass regressed mobile LCP from **3476 to 3984 ms**. A `poster`
+**cannot be lazy-loaded** - there is no `loading="lazy"` for one - so two more
+videos meant two more images fetched eagerly in front of the hero image, which
+is the LCP element. That is the same class of problem the 2026-08-20 deferred
+video fix was built to solve, so it was not shipped.
+
+Both the source and the poster now live in `data-` attributes and are attached
+together by the existing IntersectionObserver. Attaching the poster with the
+source loses nothing: its job is to cover the video download, not the scroll
+approach, and at about 36 KB against a 1 to 2 MB clip it still wins by a wide
+margin.
+
+| | Before | After |
+|---|---|---|
+| Mobile LCP (390px, 4x CPU, 1.6 Mbps) | about 3480 ms | **2836 ms** |
+| CLS | 0.0013 | 0.0013 |
+| Posters and videos fetched on load | 4 | **0** |
+
+CLS held only because every pillar video gained real `width`/`height`
+attributes, including the two that were not otherwise touched. The poster used
+to be what gave the element its intrinsic aspect ratio.
+
+### Pillar 1 was a frame inside a frame
+
+Reported by the operator, and it was real: the file was 1800x1440 with the
+window at x 20-1779, y 24-1410, so about 20 to 25px of black was baked in. The
+recording already carries its own Win11 rounded corners and shadow, so our
+`border-radius` and `border` drew a second frame around the first one with
+black in between. `cropdetect` does not find this: it only looks for pure
+black, and the padding here is the window's own shadow.
+
+Cropped to 1760x1388 and re-encoded at CRF 24 (SSIM 0.9990 against a
+losslessly cropped copy). CRF 19 was tried first and rejected - it quadrupled
+the file to 1031 KB faithfully preserving the original's own compression
+artifacts, with no visible gain over 755 KB. The other five clips were
+measured the same way and are all edge to edge.
+
+### SEO
+
+- Query-shaped filenames (`download-transcribe-panopto-lectures.mp4`), which
+  are a ranking signal for video and image search.
+- **Six `VideoObject` nodes** now, in page order, each with `width`, `height`
+  and `duration` read out of `ffprobe`. Two added, three rewritten.
+- Posters moved to **WebP at 1280 wide**, up from JPEG at 960. Measured on the
+  same frame: **36 KB against 47 KB**, so larger for search and smaller on the
+  wire. `thumbnailUrl` is unaffected by the poster being deferred, so the full
+  search value is kept at zero render cost.
+- Poster frames chosen and eyeballed per the rule already in `FINDINGS.md`. No
+  file dialogs, no personal paths. Course names and codes are the existing,
+  operator-owned status quo.
+
+### Deliberately not done
+
+- **AV1**, though it measured about 36% smaller at matched quality. It needs a
+  codec fallback chain in the defer bridge, and a pillar video that fails to
+  decode is worse than a larger one that always plays. The numbers are in
+  `PILLAR_VIDEOS.md` section 6 if it is ever revisited.
+- **A no-JS still.** Those visitors now see an empty slot where they saw a
+  poster. It was already a dead video for them, since the source has been
+  JS-gated since 2026-08-20. The obvious fix (`html:not(.js)` plus a
+  `<noscript><img>`) collides with the old-WebKit path, which deliberately
+  loads every clip eagerly: it would hide videos that are working.
+
+### Files
+
+`docs/index.html` (six video elements, the defer bridge, the `@graph`),
+`docs/sitemap.xml` (`<lastmod>`), `docs/assets/` (+5 `.mp4`, +5 `.webp`
+posters, -3 `.mp4`, -2 `.jpg` posters, -1 `.png`), and `marketing/`
+(`PILLAR_VIDEOS.md` new, indexed from `README.md` and `SITE_RUNBOOK.md`).
+
+Verified in a real browser: all six load, autoplay and loop (proved by seeking
+to `duration - 0.4` and watching `currentTime` wrap), correct posters attached,
+no leftover `data-*`, box heights identical before and after load, zero page
+errors, zero 4xx, no horizontal overflow at 390px. 80 website tests pass.
+
+---
+
+## 2026-08-24 - the v2.0.2 Microsoft Store submission
+
+**Submitted to Partner Center.** Certification pending; the live listing serves
+v2.0.0 until it clears.
+
+### Why the submission existed
+
+Two of the three URL fields on the live listing were **404**, and had been since
+the `birkls` -> `BrkBuilds` account rename. Both sides measured before submitting,
+with the live values read out of the Store catalog API rather than off the
+dashboard, so there is an exact before-shot to check against after publish:
+
+| Field | Live listing, still serving | Submitted |
+|---|---|---|
+| Privacy policy | old Pages host, `/privacy.html` -> **404** | `canvasdownloader.app/privacy.html` -> **200** |
+| Website | old Pages host, root -> **404** | `canvasdownloader.app/` -> **200** |
+| Support | old owner's repo, `/issues` -> 200, because GitHub redirects a renamed *repository* for ever | the current repo, `/issues` -> **200** |
+
+The exact dead strings are quoted in [FINDINGS.md](FINDINGS.md), which is
+excluded from `tests/test_no_stale_repo_urls.py` precisely so it can hold them as
+evidence. This file is **not** excluded and should stay that way: a changelog is
+append-only and will outlive any one entry, so it names the hosts rather than
+quoting them. That guard is also what caught a stray Store catalog dump left in
+the repo root while this entry was being written.
+
+### Submitted
+
+- **Package v2.0.2.0** at rank 1, v2.0.0.0 left in place to be superseded
+  automatically. Both submission-option checkboxes left unchecked: gradual
+  rollout has no upside at this size, and the mandatory-update flag is UWP-only.
+- **Eight new screenshots** replacing all nine v2.0.0 ones, each captioned.
+- **Description, What's new, Product features and Keywords** rewritten.
+- **Short description** filled. It IS a Partner Center field, under
+  **Supplemental fields**, a section Partner Center collapses by default - which
+  is why an earlier pass reported it missing.
+- **Additional license terms** = the GitHub URL on its own, which is where the
+  GPLv3 section 6 offer belongs and where Partner Center renders it clickable.
+  **Copyright and trademark info** names the licence and carries the Instructure
+  disclaimer.
+- **Categories** Education > Study aids, with Productivity as a second category.
+- **Privacy declaration** "Yes, my product uses personal information". That is
+  the honest answer even for an app that uploads nothing: it *accesses* the
+  user's Canvas token and course data. The privacy page carries a section headed
+  "Information the app accesses", so a reviewer following the link finds the
+  declaration explained rather than contradicted.
+
+### Deferred deliberately
+
+**16:9 super hero art and the trailer**, on a measurement rather than a guess -
+see FINDINGS. A media-only follow-up submission touches no package, needs no
+version bump and no copy review, and the live listing stays up through
+certification.
+
+One consequence acted on: with no hero and no trailer, **screenshot 1 is the
+entire visual first impression**, which is what raises the stakes on the "On your
+pc" capitalisation in that exact frame.
+
+### Copy fact-checked against the source, not against the draft
+
+Every checkable claim in the description was resolved in code. Correct as
+written: five built-in presets, eight conversion toggles, 4,757 institutions
+("4,750+"), the five Panopto outputs (`url`/`mp4`/`mp3`/`txt`/`srt`), the seven
+secondary-content categories, and the five Sync Review categories, which map
+one-to-one onto the labels the screen actually renders.
+
+One false claim found and corrected, one omission flagged - both in FINDINGS.
+
+### Verified by me vs reported by the owner
+
+Worth separating, because only one half needs re-checking after publish.
+
+**Verified:** the three URL fields on both sides (curl), the live listing's
+current values (catalog API), the Properties page state, the hero/trailer
+adoption survey, and the source checks above.
+
+**Reported, not seen:** the final round of copy edits - the delete claim, Word
+added to the conversions list, the `canvas` capitalisation, Panopto moved to
+screenshot slot 4, the short-description swap, the keyword swap, the feature
+split, and caption 1. The Store listing page was reviewed before those edits and
+not after.
+
+### After it goes live
+
+Re-run the catalog command in [STORE_LISTING.md](STORE_LISTING.md) section 7.7.
+The table above is the control, so a field that silently did not take shows up in
+one command instead of in ten weeks.
+
+---
+
+
 ## 2026-08-21 - social proof from the Store, and what the data changed
 
 ### Built
