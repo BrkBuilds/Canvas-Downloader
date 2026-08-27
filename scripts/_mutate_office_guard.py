@@ -1,6 +1,6 @@
 """Mutation pass for the Office document guard. Throwaway - not shipped.
 
-Hazards this respects, all recorded in AUDIT_PLAYBOOK.md after they cost real
+Hazards this respects, all recorded in tests/audit/AUDIT_PLAYBOOK.md after they cost real
 code or real time:
 
 * **refuses a dirty tree.** The pass rewrites its targets, so any uncommitted

@@ -139,7 +139,7 @@ python -m tests.audit flow download smoke --courses 43667
   two oracles that disagree, it is not a finding yet.
 - **Reproduce before you fix.** Then fix, then add a test, then **mutate** the
   real code to prove the test catches it, then re-verify in the running app.
-  `AUDIT_PLAYBOOK.md` has the workflow and the mutation-harness hazards.
+  `tests/audit/AUDIT_PLAYBOOK.md` has the workflow and the mutation-harness hazards.
   - Keep mutation runs targeted (`pytest <file> -x -k <subset>`); running a
     whole suite per mutant costs ~75 s each where a targeted run costs ~1 s.
 - **Fix as you go**, but keep each fix small and separately verified. This is

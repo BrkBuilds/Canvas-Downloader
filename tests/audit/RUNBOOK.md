@@ -64,7 +64,7 @@ whose path exists on disk with a matching md5" is a defect with a repro.
    per-run state lives, a short app name where the full one is the key, a
    guessed function name. Each produced a convincing "finding" that was the
    harness. **Read the signature, the docstring, and ONE real call site first**;
-   all of them say so explicitly. `AUDIT_PLAYBOOK.md` has the table.
+   all of them say so explicitly. `tests/audit/AUDIT_PLAYBOOK.md` has the table.
 
 3c. **Give a new check a POSITIVE CONTROL before trusting it.** If it cannot
    confirm something you already know is true, it is not ready to tell you

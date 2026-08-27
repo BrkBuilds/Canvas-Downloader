@@ -37,7 +37,7 @@ platform and the one with no recent evidence.
    defects. **Read the "Do NOT report" sections before filing anything.**
 3. `tests/audit/AUDIT_FINDINGS.md` — the register. 7 open. Two of them are
    yours (below).
-4. `AUDIT_PLAYBOOK.md` — the offline technique ranking, and the twelve sweeps
+4. `tests/audit/AUDIT_PLAYBOOK.md` — the offline technique ranking, and the twelve sweeps
    that came back clean and must not be repeated.
 
 ## The one rule
