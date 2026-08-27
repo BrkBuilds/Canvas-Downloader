@@ -12,7 +12,7 @@ as the change it describes.
 
 ---
 
-## The seven files
+## The eight files
 
 | File | What it holds | Read it when |
 |---|---|---|
@@ -20,7 +20,8 @@ as the change it describes.
 | **[STRATEGY.md](STRATEGY.md)** | Positioning, who the user is, the vocabulary rule, and the decisions that are **settled**. | Before writing any copy, choosing a keyword, or proposing a rename. |
 | **[SITE_RUNBOOK.md](SITE_RUNBOOK.md)** | How to change the website without breaking it: the page shell, the generator, the release procedure, which tests guard what, how to measure. | Before editing anything under `docs/`. |
 | **[PILLAR_VIDEOS.md](PILLAR_VIDEOS.md)** | The six looping demo clips on the homepage: the encoding recipe, why posters are deferred, the poster-frame and PII rules, and how to add, replace or remove one. | Before touching any video or poster under `docs/assets/`. |
-| **[PLAYBOOK.md](PLAYBOOK.md)** | The off-site execution plan: threads to answer, directories, communities, ready-to-paste copy, calendar. | When you have an hour to spend on promotion. |
+| **[BLOG_PLAN.md](BLOG_PLAN.md)** | The blog: what the five existing articles do and do not achieve, the measured demand map, and the phased plan for fixing and extending them. | Before writing, retitling or adding any article under `docs/`. |
+| **[PLAYBOOK.md](PLAYBOOK.md)** | The off-site execution plan: threads to answer, directories, communities, ready-to-paste copy, calendar. | When you have an hour to spend on promotion. Open `playbook.html` beside it - same content, rendered, with a status board and copy buttons. |
 | **[CHANGELOG.md](CHANGELOG.md)** | What was built and changed, per session, with the measured before-and-after. | To find out what already exists without re-deriving it from the code. |
 | **[STORE_LISTING.md](STORE_LISTING.md)** | The Microsoft Store listing: every field's copy, the measured search rankings the keywords are chosen from, the screenshot order, the hero-art and trailer briefs, and the click-by-click submission runbook. | Before touching Partner Center, and before writing any Store copy. Open `store-listing.html` beside it - same content, with copy buttons and live character counts. |
 
@@ -50,8 +51,12 @@ operator-only lines rewritten 2026-08-24. Re-measure before trusting; these rot.
   could not be verified**, not because nobody got to it. See FINDINGS.md.
 - Core Web Vitals are now **good on desktop and mobile**. They were not: mobile
   LCP was 5300 ms (Google's POOR band) until 2026-08-20.
-- Off-site presence is **effectively zero**: 1 star, 0 forks, no directory
-  listings, no backlinks worth the name. This is the real constraint.
+- Off-site presence is **effectively zero**: 1 star, 0 forks, no backlinks
+  worth the name. This is the real constraint. First move against it:
+  **AlternativeTo, Product Hunt and Softpedia submitted 2026-08-27** - sent, not
+  yet confirmed live, and a submission is not a listing until its URL returns
+  200. MajorGeeks (email-only, outdated) and Slant (dead) are ruled out. See
+  PLAYBOOK.md section 4.
 - The brand name is **contested** by a Spotify tool that owns the .com, three
   Chrome extensions and five GitHub repos of the same name.
 - The `.edu` help desks own the money query, and **they cannot be outranked**,

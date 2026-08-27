@@ -72,7 +72,7 @@
         "description": "Every way to get your Canvas course files onto your computer, compared: Download as Zip, submissions, browser extensions, scripts and a desktop app.",
         "inLanguage": "en",
         "datePublished": "2026-08-20",
-        "dateModified": "2026-08-20",
+        "dateModified": "2026-08-27",
         "author": {
           "@id": "https://canvasdownloader.app/#author"
         },
@@ -419,6 +419,23 @@
     .art strong { color: var(--txt); font-weight: 700; }
     .art a { color: var(--cyan); text-decoration: none; }
     .art a:hover { text-decoration: underline; }
+
+    /* ...and that rule reaches INTO the CTA box, where the two buttons are also
+       anchors. They lost the colours the shell gives them everywhere else on the
+       site, silently, on the one element the box exists for. Measured in the
+       browser 2026-08-27, on all five articles: Download rendered cyan-on-blue
+       at a 2.31:1 contrast ratio, against the byte-identical nav button's
+       white-on-blue 4.95:1 - below the 4.5:1 AA floor and below the 3:1 large
+       floor. The hover underline was landing on them too.
+       Restate the shell's own values (win-setup.html, .btn-nav / .btn-nav-ghost)
+       rather than inventing new ones; .art .btn-nav is 0,2,0 and wins over
+       .art a at 0,1,1. Same family as the homepage's `a { color: inherit }`
+       swallowing new body links - a broad link rule that a button is an anchor
+       inside of. */
+    .art .btn-nav { color: #fff; }
+    .art .btn-nav-ghost { color: var(--txt); }
+    .art .btn-nav-ghost:hover { color: #fff; }
+    .art .cta-row a:hover { text-decoration: none; }
     .art code {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 12.5px; background: var(--surf2); color: var(--txt);
@@ -490,6 +507,60 @@
     .cta-box p { margin: 0 0 16px; font-size: 14px; }
     .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
+    /* The byline. Google's helpful-content guidance asks whether it is
+       "self-evident to your visitors who authored your content", and wants a
+       byline that leads to further information - hence the #about-the-author
+       link rather than a bare name. */
+    .byline {
+      margin: 14px 0 0; font-size: 13px; color: var(--txt3);
+      display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
+      justify-content: center;  /* the hero above it is centred */
+    }
+    .byline a { color: var(--txt2); text-decoration: none; border-bottom: 1px dotted var(--border2); }
+    .byline a:hover { color: var(--cyan); }
+    .byline .sep { color: var(--border2); }
+    /* Below ~480px the byline wraps to three lines and every separator
+       lands dangling at the end of a line. Stack it instead. */
+    @media (max-width: 480px) {
+      .byline { flex-direction: column; gap: 3px; }
+      .byline .sep { display: none; }
+    }
+
+    /* The block an AI Overview lifts and a skimmer reads. It answers the title
+       question completely, so it must never be a teaser for the article. */
+    .short-answer {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 var(--rad) var(--rad) 0;
+      padding: 16px 20px; margin: 0 0 26px;
+    }
+    .short-answer p.sa-label {
+      margin: 0 0 6px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan);
+    }
+    .short-answer p { margin: 0 0 10px; font-size: 15px; color: var(--txt2); }
+    .short-answer p:last-child { margin-bottom: 0; }
+
+    /* Inline citation to a primary source. Cited sources are the single
+       largest measured lever for a page that does not already rank; see
+       marketing/BLOG_PLAN.md section 3. */
+    a.src {
+      color: var(--txt2); text-decoration: none;
+      border-bottom: 1px solid var(--border2);
+    }
+    a.src:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+    .author-box {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 20px 22px; margin: 34px 0 0;
+    }
+    .author-box p.ab-label {
+      margin: 0 0 8px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3);
+    }
+    .author-box p { margin: 0 0 10px; font-size: 14px; }
+    .author-box p:last-child { margin-bottom: 0; }
+
     .toc {
       background: var(--surf); border: 1px solid var(--border);
       border-radius: var(--rad); padding: 16px 20px; margin: 0 0 30px;
@@ -537,11 +608,29 @@
     <div class="container wide">
       <h1>How to download all your files from Canvas</h1>
       <p class="sub">Canvas has no button that downloads everything. Here is every route that works, what each one really collects, and which to pick.</p>
+      <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-20">20 August 2026</time></span><span class="sep">&middot;</span><span>Updated <time datetime="2026-08-27">27 August 2026</time></span></p>
     </div>
   </div>
 
   <div class="container wide">
     <div class="art">
+      <div class="short-answer">
+        <p class="sa-label">Short answer</p>
+        <p>Canvas has no single button for this. It can zip <strong>one
+        course's Files tab at a time</strong> - open the course, click Files,
+        press Ctrl or Cmd + A, then Download as Zip - and it can export
+        <strong>every file you have submitted</strong>, from Account then
+        Settings then Download Submissions.</p>
+        <p>Neither one includes Pages, assignment briefs, announcements,
+        discussions, quizzes or the feedback you were given, and neither covers
+        more than one course at a time.
+        <a href="what-canvas-download-as-zip-misses.html">Measured across 33 real
+        courses</a>, that non-file content came to <strong>173 items</strong>,
+        against a file-level gap of <strong>3</strong>. Getting everything from every course
+        needs a browser extension, a script, or a desktop app that reads the
+        Canvas API with an access token. All five routes are compared below.</p>
+      </div>
+
       <div class="toc">
         <p>On this page</p>
         <ol>
@@ -581,10 +670,9 @@
       <p>Neither one touches Pages, Assignment descriptions, announcements,
       discussions, quizzes or the syllabus. Nothing built into Canvas exports
       those in bulk, which is the part most people are surprised by. When a
-      student asked precisely this on the Instructure Community forum in October
-      2024, the accepted answer ended with <em>"As for Pages and Assignments,
-      I'm not sure of a quick way off the top of my head."</em> That is still
-      the state of it.</p>
+      student asked precisely this on the <a class="src" href="https://community.instructure.com/en/discussion/618390/how-to-download-all-course-files-and-media-on-canvas" target="_blank" rel="noopener">Instructure Community forum</a> in October 2024, the accepted answer ended with <em>"As for Pages and
+      Assignments, I'm not sure of a quick way off the top of my head."</em>
+      That is still the state of it.</p>
 
       <div class="note">
         <p><strong>"Can't I just export the course?"</strong> No, and this trips
@@ -611,20 +699,28 @@
       </ol>
 
       <p>You get the files and the folder structure exactly as the teacher
-      arranged them. For a tidy course that is genuinely all you need.</p>
+      arranged them. For a tidy course that is genuinely all you need. This is
+      the route university help desks document, and they agree on the steps -
+      <a class="src" href="https://answers.uillinois.edu/illinois/page.php?id=127046" target="_blank" rel="noopener">Illinois</a>, <a class="src" href="https://canvashelp.stanford.edu/hc/en-us/articles/115001602467-Bulk-download-Canvas-files" target="_blank" rel="noopener">Stanford</a> and <a class="src" href="https://ecampushelpdesk.nctc.edu/hc/en-us/articles/205334770-Downloading-multiple-files-from-Canvas-to-your-PC" target="_blank" rel="noopener">NCTC</a> all describe the same select-all and zip.</p>
 
       <h3>Where it stops</h3>
 
       <ul>
         <li><strong>One course at a time.</strong> Six courses means repeating
         this six times, then organising six zips yourself.</li>
+        <li><strong>The Files tab can be switched off entirely.</strong> This is
+        the big one, and it is bigger than the one everybody warns about. A
+        teacher can disable Files in course navigation, and plenty do. Then this
+        method does not exist for that course at all.
+        <a href="what-canvas-download-as-zip-misses.html">Measured across 33
+        real courses</a>, that was the case in 3 of the 11 that held any
+        material, and those three held 246 files between them.</li>
         <li><strong>Files uploaded straight into a Module or a Page may not be
-        in the Files tab at all.</strong> This is the big one. A lecturer who
-        attaches a slide deck directly to a module item has put a file in your
-        course that the Files tab never lists, so the zip silently misses it.</li>
-        <li><strong>The Files tab can be switched off.</strong> Teachers can
-        hide it from course navigation, and plenty do. Then this method does not
-        exist for that course.</li>
+        in the Files tab.</strong> A lecturer who attaches a slide deck directly
+        to a module item has put a file in your course that the Files tab never
+        lists, so the zip misses it. Real, and smaller than its reputation: in
+        the same measurement it came to 3 files out of 358, in one course of
+        eight.</li>
         <li><strong>Nothing else comes with it.</strong> No Pages, no assignment
         instructions, no announcements, no quiz content, no feedback you were
         given.</li>
@@ -652,7 +748,9 @@
         <li>Click <strong>Download Submissions</strong> in the sidebar, then
         <strong>Create Export</strong>.</li>
         <li>Wait for Canvas to build it, then download the zip. It covers current
-        <em>and</em> concluded courses.</li>
+        <em>and</em> concluded courses, and it
+        <a class="src" href="https://community.instructure.com/en/kb/articles/661234" target="_blank" rel="noopener">expires after 30 days</a>, so save it somewhere
+        permanent the same day.</li>
       </ol>
 
       <p>Or browse them directly under <strong>Account</strong> then
@@ -711,10 +809,11 @@
       rel="noopener">public on GitHub</a>, so you can check every claim below
       rather than take our word for it.</p>
 
-      <p>It signs in with an access token you create yourself in Canvas, then
-      uses the same official API the Canvas mobile apps use. Because it works at
-      the account level rather than the page level, it can do the two things the
-      other methods cannot:</p>
+      <p>It signs in with
+      <a href="canvas-access-token-explained.html">an access token you create
+      yourself</a> in Canvas, then uses the same official API the Canvas mobile
+      apps use. Because it works at the account level rather than the page
+      level, it can do the two things the other methods cannot:</p>
 
       <ul>
         <li><strong>Every course in one run.</strong> Tick the courses you want
@@ -737,7 +836,10 @@
         small number of institutions have turned off students' ability to create
         one. If your Canvas account settings have no "New Access Token" button,
         no API-based tool can work for you, and Methods 1 to 3 are your options.
-        Check before you install anything.</p>
+        Check before you install anything, and see
+        <a href="canvas-access-token-explained.html">what a Canvas access token
+        is and what it cannot do</a> if you are weighing up whether to make
+        one.</p>
       </div>
 
       <h2 id="compare">All five, side by side</h2>
@@ -806,7 +908,9 @@
       Zip. Do not install anything.</p>
 
       <p><strong>One messy module where the files are scattered through
-      Pages.</strong> A browser extension will be quicker than anything else.</p>
+      Pages.</strong> A browser extension will be quicker than anything else, and
+      <a href="canvas-download-tools-compared.html">the tool comparison</a> names
+      the ones worth trying.</p>
 
       <p><strong>You are about to lose access and want everything.</strong> This
       is the case the built-in tools handle worst, because "everything" includes
@@ -821,18 +925,40 @@
       <p><strong>You are comfortable in a terminal.</strong> Use a script. You
       will get exactly what you want and you will understand every part of it.</p>
 
+      <p><strong>You want the grades and comments you were given.</strong> None
+      of the five collects those, and Canvas's submissions export deliberately
+      leaves them out. See
+      <a href="save-canvas-assignment-feedback.html">how to save your Canvas
+      assignment feedback</a>.</p>
+
+      <p><strong>You want the Pages, quizzes, discussions and announcements.</strong>
+      None of them is a file, so nothing on this page reaches them. There is one
+      built-in route with a deadline on it -
+      <a href="save-canvas-pages-quizzes-discussions.html">how to save Canvas
+      quizzes, Pages and discussions</a>.</p>
+
       <p><strong>You want the lecture recordings.</strong> None of the five above
-      touch them, because Panopto is a separate system. See
+      touch them, because the video is never a Canvas file - it belongs to Studio,
+      Panopto or Kaltura. Start with
+      <a href="download-lecture-videos-from-canvas.html">how to download lecture
+      videos from Canvas</a> to work out which you have, then
       <a href="download-panopto-lecture-recordings.html">how to download Panopto
-      lecture recordings</a>, and read the permission section first.</p>
+      lecture recordings</a> if it is Panopto. Read the permission section
+      first.</p>
 
       <div class="cta-box">
-        <h3>Get every file from every course</h3>
+        <h3>Every course, in one run</h3>
+        <p>Tick the courses you want and Canvas Downloader fetches all of them:
+        the Files tab, the files hidden in modules and Pages that the zip misses,
+        and the categories Canvas has no export for at all - assignments,
+        announcements, discussions, quizzes, the syllabus, and the feedback on
+        your own work. Run it again next month and it fetches only what
+        changed.</p>
         <p>Free and open source, for Windows and macOS. Runs on your own
         computer: no account, no server, nothing uploaded.</p>
         <div class="cta-row">
           <a href="releases.html" class="btn-nav">Download</a>
-          <a href="guide.html" class="btn-nav-ghost"><span>See how it works</span></a>
+          <a href="index.html#features" class="btn-nav-ghost"><span>See it in action</span></a>
         </div>
       </div>
 
@@ -870,6 +996,22 @@
         <summary>Will these methods work after my course ends?</summary>
         <div><p>Only while you can still open the course. Once a course is concluded or your enrolment ends, the Files tab and the API both stop returning it. That is why the right time to do this is before the semester ends, not after.</p></div>
       </details>
+
+      <div class="author-box" id="about-the-author">
+        <p class="ab-label">Who wrote this</p>
+        <p><strong>BrkBuilds</strong> builds Canvas Downloader, the free
+        open-source app this site is about. These guides are written from the
+        engine side: what Canvas does and does not export is described from
+        having implemented against the Canvas API, not from reading about it.
+        The app's behaviour is documented in
+        <a href="engine.html">Under the Hood</a> and the whole codebase is
+        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">public
+        on GitHub</a>, so every claim on this page can be checked against the
+        code that makes it.</p>
+        <p>It is a one-person project with no company behind it. Where a page is
+        uncertain it says so, and where a built-in Canvas feature or somebody
+        else's tool is the better answer, it says that too.</p>
+      </div>
     </div>
   </div>
 

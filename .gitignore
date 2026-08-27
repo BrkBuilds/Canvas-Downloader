@@ -118,15 +118,11 @@ _audit_runs/**/samples/
 _audit_runs/_snapshots/
 _audit_runs/_screens/
 # UI review renders (scripts/capture_completion_gallery.py). Regenerated on
-# demand and ~18 MB of PNGs - deliberately NOT under docs/, which is the
-# published website.
+# demand and ~18 MB of PNGs.
 ui-review/
 
-# Virtualenvs. NOT ignored until 2026-08-10, and it mattered: the macOS audit
-# machine builds .venv INSIDE the repo, so `git add -A` (which the audit agent
-# is instructed to run) saw ~10,000 files and would have committed the whole
-# interpreter, native wheels and all. Ignored here rather than in a local
-# exclude so every machine that clones this is protected.
+# Virtualenvs. NOT ignored until 2026-08-10, changed for macOS audit.
+# Ignored here rather than in a local exclude so every machine that clones this is protected.
 .venv/
 venv/
 env/
@@ -137,3 +133,6 @@ ENV/
 
 # The macOS Office Automation permission record (runtime state, machine-specific)
 macos_permission_setup.json
+
+#temporary
+marketing/search-data*

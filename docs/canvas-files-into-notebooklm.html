@@ -72,7 +72,7 @@
         "description": "What NotebookLM accepts, why it cannot reach Canvas, how to choose sources that matter, and what to do with lecture recordings.",
         "inLanguage": "en",
         "datePublished": "2026-08-23",
-        "dateModified": "2026-08-23",
+        "dateModified": "2026-08-27",
         "author": {
           "@id": "https://canvasdownloader.app/#author"
         },
@@ -419,6 +419,23 @@
     .art strong { color: var(--txt); font-weight: 700; }
     .art a { color: var(--cyan); text-decoration: none; }
     .art a:hover { text-decoration: underline; }
+
+    /* ...and that rule reaches INTO the CTA box, where the two buttons are also
+       anchors. They lost the colours the shell gives them everywhere else on the
+       site, silently, on the one element the box exists for. Measured in the
+       browser 2026-08-27, on all five articles: Download rendered cyan-on-blue
+       at a 2.31:1 contrast ratio, against the byte-identical nav button's
+       white-on-blue 4.95:1 - below the 4.5:1 AA floor and below the 3:1 large
+       floor. The hover underline was landing on them too.
+       Restate the shell's own values (win-setup.html, .btn-nav / .btn-nav-ghost)
+       rather than inventing new ones; .art .btn-nav is 0,2,0 and wins over
+       .art a at 0,1,1. Same family as the homepage's `a { color: inherit }`
+       swallowing new body links - a broad link rule that a button is an anchor
+       inside of. */
+    .art .btn-nav { color: #fff; }
+    .art .btn-nav-ghost { color: var(--txt); }
+    .art .btn-nav-ghost:hover { color: #fff; }
+    .art .cta-row a:hover { text-decoration: none; }
     .art code {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 12.5px; background: var(--surf2); color: var(--txt);
@@ -490,6 +507,60 @@
     .cta-box p { margin: 0 0 16px; font-size: 14px; }
     .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
+    /* The byline. Google's helpful-content guidance asks whether it is
+       "self-evident to your visitors who authored your content", and wants a
+       byline that leads to further information - hence the #about-the-author
+       link rather than a bare name. */
+    .byline {
+      margin: 14px 0 0; font-size: 13px; color: var(--txt3);
+      display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
+      justify-content: center;  /* the hero above it is centred */
+    }
+    .byline a { color: var(--txt2); text-decoration: none; border-bottom: 1px dotted var(--border2); }
+    .byline a:hover { color: var(--cyan); }
+    .byline .sep { color: var(--border2); }
+    /* Below ~480px the byline wraps to three lines and every separator
+       lands dangling at the end of a line. Stack it instead. */
+    @media (max-width: 480px) {
+      .byline { flex-direction: column; gap: 3px; }
+      .byline .sep { display: none; }
+    }
+
+    /* The block an AI Overview lifts and a skimmer reads. It answers the title
+       question completely, so it must never be a teaser for the article. */
+    .short-answer {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 var(--rad) var(--rad) 0;
+      padding: 16px 20px; margin: 0 0 26px;
+    }
+    .short-answer p.sa-label {
+      margin: 0 0 6px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan);
+    }
+    .short-answer p { margin: 0 0 10px; font-size: 15px; color: var(--txt2); }
+    .short-answer p:last-child { margin-bottom: 0; }
+
+    /* Inline citation to a primary source. Cited sources are the single
+       largest measured lever for a page that does not already rank; see
+       marketing/BLOG_PLAN.md section 3. */
+    a.src {
+      color: var(--txt2); text-decoration: none;
+      border-bottom: 1px solid var(--border2);
+    }
+    a.src:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+    .author-box {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 20px 22px; margin: 34px 0 0;
+    }
+    .author-box p.ab-label {
+      margin: 0 0 8px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3);
+    }
+    .author-box p { margin: 0 0 10px; font-size: 14px; }
+    .author-box p:last-child { margin-bottom: 0; }
+
     .toc {
       background: var(--surf); border: 1px solid var(--border);
       border-radius: var(--rad); padding: 16px 20px; margin: 0 0 30px;
@@ -537,11 +608,26 @@
     <div class="container wide">
       <h1>How to get your Canvas files into NotebookLM</h1>
       <p class="sub">NotebookLM cannot see your Canvas courses. Everything has to be a file on your computer first, and that is the part guides skip.</p>
+      <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-23">23 August 2026</time></span><span class="sep">&middot;</span><span>Updated <time datetime="2026-08-27">27 August 2026</time></span></p>
     </div>
   </div>
 
   <div class="container wide">
     <div class="art">
+      <div class="short-answer">
+        <p class="sa-label">Short answer</p>
+        <p>NotebookLM cannot reach Canvas. There is no integration and no
+        login, so every source has to be a <strong>file on your computer
+        first</strong>.</p>
+        <p>It accepts PDF, <code>.docx</code>, <code>.pptx</code>,
+        <code>.txt</code>, <code>.md</code>, CSV, images, audio, web URLs and
+        public YouTube links, up to <strong>50 sources</strong> per notebook on
+        the free tier. It does <strong>not</strong> accept a local video file,
+        which is why lecture recordings have to become audio or a transcript
+        before you can upload them. One notebook per course beats one notebook
+        per degree, for grounding reasons covered below.</p>
+      </div>
+
       <div class="toc">
         <p>On this page</p>
         <ol>
@@ -554,6 +640,15 @@
           <li><a href="#weak">Where it is genuinely weak</a></li>
           <li><a href="#faq">Common questions</a></li>
         </ol>
+      </div>
+
+      <div class="note">
+        <p><strong>NotebookLM is now called Gemini Notebook.</strong> Google
+        <a class="src" href="https://blog.google/innovation-and-ai/products/gemini-notebook/notebooklm-gemini-notebook/" target="_blank" rel="noopener">renamed it on 16 July 2026</a> and describes it
+        as a rename rather than a replacement: same product, same notebooks,
+        new name and logo rolling out over several weeks. Everything on this
+        page applies to both names, and this page says "NotebookLM" throughout
+        because that is still what most people call it.</p>
       </div>
 
       <p class="lede">NotebookLM is very good at the thing students want from it:
@@ -581,8 +676,9 @@
       <h2 id="accepts">What NotebookLM accepts</h2>
 
       <p>The format situation is much better than it was. Word and PowerPoint
-      were both added during 2025, which removed the conversion step that used to
-      make this awkward. As things stand it takes:</p>
+      were both <a class="src" href="https://blog.google/innovation-and-ai/models-and-research/google-labs/notebooklm-deep-research-file-types/" target="_blank" rel="noopener">added during 2025</a>, which removed the
+      conversion step that used to make this awkward. As things stand it
+      takes:</p>
 
       <ul>
         <li><strong>Documents</strong> - PDF, <code>.docx</code>,
@@ -594,8 +690,11 @@
         YouTube links.</li>
       </ul>
 
-      <p>Per source you get up to 500,000 words or 200 MB, whichever you hit
-      first, which no normal lecture deck or reading comes close to.</p>
+      <p>Per source you get up to <strong>500,000 words or 200 MB</strong>,
+      whichever you hit first, which no normal lecture deck or reading comes
+      close to. The accepted types and the limits are listed in
+      <a class="src" href="https://support.google.com/notebooklm/answer/16215270" target="_blank" rel="noopener">Google's own source documentation</a>, and they do
+      move, so check it rather than trusting this paragraph in a year.</p>
 
       <div class="note warn">
         <p><strong>Local video files are not on that list.</strong> You can point
@@ -651,8 +750,19 @@
         <li><strong>A transcript.</strong> Better. A text transcript is tiny,
         searchable in your own folder, quotable in your notes, readable without
         any AI tool at all, and it is what NotebookLM was going to produce
-        internally anyway.</li>
+        internally anyway. See
+        <a href="panopto-lecture-transcript.html">how to get a transcript of a
+        Panopto lecture</a> - there is often one waiting that you do not have to
+        make.</li>
       </ul>
+
+      <p>Getting the recording in the first place is its own problem, because
+      Canvas embeds video from
+      <a href="download-lecture-videos-from-canvas.html">five different systems</a>
+      and each has different rules. Useful detail for this page: in both Canvas
+      Studio and Panopto the <strong>transcript is a separate permission from the
+      video</strong>, and it is often left open when the video is not - which
+      hands you the better source anyway.</p>
 
       <p>Either way, remember that lecture recordings are the material
       universities restrict most often, and the permission question is a real one
@@ -663,11 +773,17 @@
       <h2 id="recipe">A recipe for one course</h2>
 
       <ol class="steps">
-        <li>Download the course to a folder on your computer.</li>
+        <li>Download the course to a folder on your computer. If the Files tab
+        holds everything, Canvas's own zip is the quickest route; if it does not,
+        or if you are doing this for several courses, the
+        <strong>100% AI &amp; NotebookLM Ready</strong> preset below does steps
+        1 to 3 in a single run.</li>
         <li>Delete the administrative noise - announcements about room changes,
         duplicated reading lists, the assignment briefs you have already
         submitted against.</li>
-        <li>Turn any lecture recordings into transcripts or MP3s.</li>
+        <li>Turn any lecture recordings into transcripts or MP3s. This is the
+        step with no manual equivalent - NotebookLM will not take the video, so
+        something has to convert it before you upload.</li>
         <li>Create a notebook named after the course. One course, one
         notebook.</li>
         <li>Upload the slides and readings first, then the transcripts. You will
@@ -681,7 +797,10 @@
         <p><strong>Keep the folder, not just the notebook.</strong> The notebook
         is a view over your sources and it depends on somebody else's product
         staying free and staying available. The folder on your disk is the thing
-        that is actually yours, and it will still open in ten years.</p>
+        that is actually yours, and it will still open in ten years - which
+        matters most if you are close to
+        <a href="canvas-access-after-graduation.html">losing Canvas access
+        altogether</a>.</p>
       </div>
 
       <h2 id="weak">Where it is genuinely weak</h2>
@@ -698,16 +817,19 @@
       building a workflow on it.</p>
 
       <div class="cta-box">
-        <h3>Get the folder first</h3>
-        <p>Canvas Downloader pulls a whole course down in one run and can convert
-        as it goes: Office files to PDF, Canvas Pages to Markdown, and lecture
-        recordings to audio or a searchable transcript - which is close to a
-        list of what NotebookLM accepts.</p>
-        <p>You do not need it. If your course keeps everything in the Files tab,
-        Canvas will zip it and that is genuinely simpler.</p>
+        <h3>A course folder NotebookLM already accepts</h3>
+        <p>Canvas Downloader ships a preset called <strong>100% AI &amp;
+        NotebookLM Ready</strong>, built for exactly this. Tick as many courses
+        as you like and each course arrives as one flat folder, drag-and-drop
+        ready: PowerPoints, Word documents and spreadsheets converted to PDF,
+        Canvas Pages and link lists as text, and the Panopto lecture recordings
+        saved separately as audio, or as a searchable transcript - which is the
+        one source on this page NotebookLM will not take as video.</p>
+        <p>Free and open source, Windows and macOS. Runs on your own computer,
+        and the transcription does too.</p>
         <div class="cta-row">
           <a href="releases.html" class="btn-nav">Download</a>
-          <a href="guide.html" class="btn-nav-ghost"><span>See how it works</span></a>
+          <a href="index.html#features" class="btn-nav-ghost"><span>See it in action</span></a>
         </div>
       </div>
 
@@ -745,6 +867,22 @@
         <summary>What should I not bother uploading?</summary>
         <div><p>Administrative announcements, duplicated reading lists, assignment briefs you have already submitted against, and anything you would not reread. With a source limit, every slot spent on noise is a slot not spent on a lecture transcript.</p></div>
       </details>
+
+      <div class="author-box" id="about-the-author">
+        <p class="ab-label">Who wrote this</p>
+        <p><strong>BrkBuilds</strong> builds Canvas Downloader, the free
+        open-source app this site is about. These guides are written from the
+        engine side: what Canvas does and does not export is described from
+        having implemented against the Canvas API, not from reading about it.
+        The app's behaviour is documented in
+        <a href="engine.html">Under the Hood</a> and the whole codebase is
+        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">public
+        on GitHub</a>, so every claim on this page can be checked against the
+        code that makes it.</p>
+        <p>It is a one-person project with no company behind it. Where a page is
+        uncertain it says so, and where a built-in Canvas feature or somebody
+        else's tool is the better answer, it says that too.</p>
+      </div>
     </div>
   </div>
 

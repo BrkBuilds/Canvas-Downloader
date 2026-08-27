@@ -72,7 +72,7 @@
         "description": "How long you keep Canvas after graduating, the three ways access disappears, and a checklist for saving your courses, feedback and recordings first.",
         "inLanguage": "en",
         "datePublished": "2026-08-20",
-        "dateModified": "2026-08-20",
+        "dateModified": "2026-08-27",
         "author": {
           "@id": "https://canvasdownloader.app/#author"
         },
@@ -411,6 +411,23 @@
     .art strong { color: var(--txt); font-weight: 700; }
     .art a { color: var(--cyan); text-decoration: none; }
     .art a:hover { text-decoration: underline; }
+
+    /* ...and that rule reaches INTO the CTA box, where the two buttons are also
+       anchors. They lost the colours the shell gives them everywhere else on the
+       site, silently, on the one element the box exists for. Measured in the
+       browser 2026-08-27, on all five articles: Download rendered cyan-on-blue
+       at a 2.31:1 contrast ratio, against the byte-identical nav button's
+       white-on-blue 4.95:1 - below the 4.5:1 AA floor and below the 3:1 large
+       floor. The hover underline was landing on them too.
+       Restate the shell's own values (win-setup.html, .btn-nav / .btn-nav-ghost)
+       rather than inventing new ones; .art .btn-nav is 0,2,0 and wins over
+       .art a at 0,1,1. Same family as the homepage's `a { color: inherit }`
+       swallowing new body links - a broad link rule that a button is an anchor
+       inside of. */
+    .art .btn-nav { color: #fff; }
+    .art .btn-nav-ghost { color: var(--txt); }
+    .art .btn-nav-ghost:hover { color: #fff; }
+    .art .cta-row a:hover { text-decoration: none; }
     .art code {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 12.5px; background: var(--surf2); color: var(--txt);
@@ -482,6 +499,60 @@
     .cta-box p { margin: 0 0 16px; font-size: 14px; }
     .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
+    /* The byline. Google's helpful-content guidance asks whether it is
+       "self-evident to your visitors who authored your content", and wants a
+       byline that leads to further information - hence the #about-the-author
+       link rather than a bare name. */
+    .byline {
+      margin: 14px 0 0; font-size: 13px; color: var(--txt3);
+      display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
+      justify-content: center;  /* the hero above it is centred */
+    }
+    .byline a { color: var(--txt2); text-decoration: none; border-bottom: 1px dotted var(--border2); }
+    .byline a:hover { color: var(--cyan); }
+    .byline .sep { color: var(--border2); }
+    /* Below ~480px the byline wraps to three lines and every separator
+       lands dangling at the end of a line. Stack it instead. */
+    @media (max-width: 480px) {
+      .byline { flex-direction: column; gap: 3px; }
+      .byline .sep { display: none; }
+    }
+
+    /* The block an AI Overview lifts and a skimmer reads. It answers the title
+       question completely, so it must never be a teaser for the article. */
+    .short-answer {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 var(--rad) var(--rad) 0;
+      padding: 16px 20px; margin: 0 0 26px;
+    }
+    .short-answer p.sa-label {
+      margin: 0 0 6px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan);
+    }
+    .short-answer p { margin: 0 0 10px; font-size: 15px; color: var(--txt2); }
+    .short-answer p:last-child { margin-bottom: 0; }
+
+    /* Inline citation to a primary source. Cited sources are the single
+       largest measured lever for a page that does not already rank; see
+       marketing/BLOG_PLAN.md section 3. */
+    a.src {
+      color: var(--txt2); text-decoration: none;
+      border-bottom: 1px solid var(--border2);
+    }
+    a.src:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+    .author-box {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 20px 22px; margin: 34px 0 0;
+    }
+    .author-box p.ab-label {
+      margin: 0 0 8px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3);
+    }
+    .author-box p { margin: 0 0 10px; font-size: 14px; }
+    .author-box p:last-child { margin-bottom: 0; }
+
     .toc {
       background: var(--surf); border: 1px solid var(--border);
       border-radius: var(--rad); padding: 16px 20px; margin: 0 0 30px;
@@ -529,11 +600,25 @@
     <div class="container wide">
       <h1>Canvas access after graduation</h1>
       <p class="sub">How long you keep it, the three different ways it disappears, and what to save first while you still can.</p>
+      <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-20">20 August 2026</time></span><span class="sep">&middot;</span><span>Updated <time datetime="2026-08-27">27 August 2026</time></span></p>
     </div>
   </div>
 
   <div class="container wide">
     <div class="art">
+      <div class="short-answer">
+        <p class="sa-label">Short answer</p>
+        <p>It depends entirely on your university, and the published range is
+        wide: <strong>120 days</strong> at Stanford, <strong>365 days</strong>
+        after the semester at Washington University, <strong>five years</strong>
+        of course-site retention at Penn.</p>
+        <p>Access also ends in three separate ways - the course is concluded,
+        your enrolment ends, or your account is deactivated - and the first can
+        happen while you are still a student. Assume you have less time than you
+        think, and save your courses before your final term ends rather than
+        after it.</p>
+      </div>
+
       <div class="toc">
         <p>On this page</p>
         <ol>
@@ -555,9 +640,23 @@
 
       <p>So the useful question is not how long you have. It is what you will
       wish you had kept, and how quickly you can get it. That takes about twenty
-      minutes for a full degree, and it only works while you are still enrolled.</p>
+      minutes for a full degree, and it only works while you are still enrolled.
+      There is a step-by-step version in
+      <a href="back-up-canvas-course-before-losing-access.html">how to back up a
+      Canvas course before you lose access</a>, including what to save
+      first.</p>
 
       <h2 id="howlong">How long you actually keep access</h2>
+
+      <p>There is no single answer, and the spread between institutions is much
+      wider than most people expect. Four published policies, to show the range:
+      <a class="src" href="https://canvashelp.stanford.edu/hc/en-us/articles/1500000114382-Student-access-to-course-content-after-the-quarter-ends" target="_blank" rel="noopener">Stanford</a> gives graduating students
+      <strong>120 days</strong>; <a class="src" href="https://mycanvas.wustl.edu/faq-how-long-will-i-be-able-to-access-my-course-after-the-semester-ends-or-i-graduate-leave-washu/" target="_blank" rel="noopener">Washington University in St. Louis</a> keeps courses available for <strong>365 days</strong> after the semester
+      ends; <a class="src" href="https://infocanvas.upenn.edu/students/canvas-after-graduation/" target="_blank" rel="noopener">Penn</a> retains course sites for
+      <strong>five years</strong> from the term they ran in; and
+      <a class="src" href="https://teamdynamix.umich.edu/TDClient/30/Portal/KB/Article/119/Student-Alumni-Access-to-Canvas-after-Graduation-or-the-End-of-Term" target="_blank" rel="noopener">Michigan</a> moves students to read-only access shortly
+      after the term. So a number you read anywhere, including here, tells you
+      about somebody else's university.</p>
 
       <p>Find your own answer rather than trusting a number from the internet.
       In order of reliability:</p>
@@ -636,13 +735,18 @@
 
       <ol class="steps">
         <li><strong>Your submissions and their feedback.</strong> Start here. It
-        is the only category no one else can give you.</li>
+        is the only category no one else can give you, and Canvas exports the
+        submissions but not the feedback -
+        <a href="save-canvas-assignment-feedback.html">how to save your Canvas
+        assignment feedback</a> is the separate job.</li>
         <li><strong>Lecture recordings</strong>, if your course has them and your
         institution allows you to keep them.</li>
         <li><strong>Course files</strong> - slides, readings, worksheets.</li>
         <li><strong>Assignment briefs and rubrics.</strong></li>
         <li><strong>Announcements and discussions</strong>, which often carry
-        corrections that never made it into the slides.</li>
+        corrections that never made it into the slides -
+        <a href="save-canvas-pages-quizzes-discussions.html">none of which is a
+        file</a>, so nothing file-based will collect them.</li>
         <li><strong>The syllabus</strong> for each course, which is what you will
         need if you ever apply for credit transfer or exemptions.</li>
       </ol>
@@ -664,13 +768,18 @@
       <p>The short version: for one or two courses, use Canvas's own
       <strong>Download as Zip</strong> and be done. For a whole degree, use
       something that reads your account through the Canvas API, because that is
-      the only way to get the categories Canvas has no export for.</p>
+      <a href="save-canvas-pages-quizzes-discussions.html">the only way to get
+      the categories Canvas has no export for</a>.</p>
 
       <div class="cta-box">
         <h3>Save every course before access ends</h3>
-        <p>Canvas Downloader collects every file, plus assignments, announcements,
-        discussions, quizzes and your own feedback, from every course you pick.
-        Free and open source, Windows and macOS.</p>
+        <p>Tick every course you are still enrolled in and Canvas Downloader
+        saves them all in one run: every file, including the ones attached to
+        modules that the built-in zip leaves behind, plus assignments,
+        announcements, discussions, quizzes, the syllabus, and the grades and
+        feedback you were given. Those last ones are exactly what you cannot get
+        back once the enrolment ends.</p>
+        <p>Free and open source, Windows and macOS. Runs on your own computer.</p>
         <div class="cta-row">
           <a href="releases.html" class="btn-nav">Download</a>
           <a href="how-to-download-all-canvas-files.html" class="btn-nav-ghost"><span>Compare all methods</span></a>
@@ -679,9 +788,13 @@
 
       <h2 id="recordings">Lecture recordings are the hard part</h2>
 
-      <p>Recordings usually live in Panopto rather than in Canvas, which means
-      they are governed separately, they often expire on their own schedule, and
-      no Canvas export has ever included them.</p>
+      <p>Recordings usually live outside Canvas - in Panopto, Canvas Studio or
+      Kaltura - which means they are governed separately, they often expire on
+      their own schedule, and no Canvas export has ever included them.
+      <a href="download-lecture-videos-from-canvas.html">How to download lecture
+      videos from Canvas</a> covers all five systems and how to tell them apart;
+      <a href="download-panopto-lecture-recordings.html">how to download Panopto
+      lecture recordings</a> goes deeper on the most common one.</p>
 
       <p>They are also the material universities are strictest about. Many
       institutions permit personal study copies and forbid sharing; some forbid
@@ -692,7 +805,10 @@
 
       <p>If you are allowed to keep them, a transcript is worth as much as the
       video and takes a fraction of the space. It is also searchable, which the
-      video is not.</p>
+      video is not - and it is usually the easiest thing in the course to get
+      hold of, because
+      <a href="panopto-lecture-transcript.html">Panopto has probably already made
+      one</a>.</p>
 
 
       <h2 id="faq">Common questions</h2>
@@ -724,6 +840,22 @@
         <summary>Is there a way to save everything from all my courses at once?</summary>
         <div><p>Nothing built into Canvas does it. Canvas zips one course's Files tab at a time and does not export assignments, announcements or feedback. A tool that uses the Canvas API can cover every course and those extra categories in one run - see our <a href="how-to-download-all-canvas-files.html">comparison of every method</a>.</p></div>
       </details>
+
+      <div class="author-box" id="about-the-author">
+        <p class="ab-label">Who wrote this</p>
+        <p><strong>BrkBuilds</strong> builds Canvas Downloader, the free
+        open-source app this site is about. These guides are written from the
+        engine side: what Canvas does and does not export is described from
+        having implemented against the Canvas API, not from reading about it.
+        The app's behaviour is documented in
+        <a href="engine.html">Under the Hood</a> and the whole codebase is
+        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">public
+        on GitHub</a>, so every claim on this page can be checked against the
+        code that makes it.</p>
+        <p>It is a one-person project with no company behind it. Where a page is
+        uncertain it says so, and where a built-in Canvas feature or somebody
+        else's tool is the better answer, it says that too.</p>
+      </div>
     </div>
   </div>
 

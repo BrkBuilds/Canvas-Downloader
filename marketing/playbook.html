@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Off-Site Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#F5F7FA; --surface:#FFFFFF; --surface-2:#EDF1F6; --sunk:#E4EAF2;
+  --ink:#0F1720; --ink-2:#334154; --ink-3:#61718A; --line:#D3DCE8; --line-2:#BECAD9;
+  --accent:#0369A1; --accent-2:#0284C7; --accent-soft:#E0F1FB;
+  --btn-fg:#FFFFFF;
+  --go:#15803D; --go-soft:#DCFCE7; --warn:#A15C07; --warn-soft:#FDF0D5;
+  --stop:#B4232A; --stop-soft:#FBE3E4;
+  --shadow:0 1px 2px rgba(15,23,32,.06), 0 8px 24px -12px rgba(15,23,32,.18);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#0B0F16; --surface:#131A24; --surface-2:#182130; --sunk:#0E141C;
+  --ink:#E9EEF5; --ink-2:#B3C0D2; --ink-3:#7C8CA3; --line:#25303F; --line-2:#33404F;
+  --accent:#59C1F0; --accent-2:#38BDF8; --accent-soft:#102A3A;
+  --btn-fg:#08121A;
+  --go:#5CD68B; --go-soft:#0F2A1B; --warn:#F0B44E; --warn-soft:#2E2311;
+  --stop:#F58189; --stop-soft:#31161A;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+}}
+:root[data-theme="dark"]{
+  --paper:#0B0F16; --surface:#131A24; --surface-2:#182130; --sunk:#0E141C;
+  --ink:#E9EEF5; --ink-2:#B3C0D2; --ink-3:#7C8CA3; --line:#25303F; --line-2:#33404F;
+  --accent:#59C1F0; --accent-2:#38BDF8; --accent-soft:#102A3A;
+  --btn-fg:#08121A;
+  --go:#5CD68B; --go-soft:#0F2A1B; --warn:#F0B44E; --warn-soft:#2E2311;
+  --stop:#F58189; --stop-soft:#31161A;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{max-width:960px;margin:0 auto;padding:40px 22px 90px}
+h1,h2,h3,.disp{font-family:Archivo,"Arial Narrow",system-ui,sans-serif;text-wrap:balance}
+a{color:var(--accent);text-underline-offset:2px}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+code{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  font-size:.88em;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:5px;padding:1px 5px;color:var(--ink)}
+
+.mast{border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:26px}
+.brow{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between}
+.eyebrow{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:500}
+h1{font-size:clamp(30px,5.4vw,46px);line-height:1.02;font-weight:800;
+  letter-spacing:-.025em;margin:8px 0 0}
+.dek{color:var(--ink-2);max-width:66ch;margin:12px 0 0;font-size:16.5px}
+
+.alert{background:var(--accent-soft);border:1px solid var(--accent);border-left-width:5px;
+  border-radius:10px;padding:20px 22px;margin:26px 0 34px}
+.alert.warn{background:var(--warn-soft);border-color:var(--warn)}
+.alert.stop{background:var(--stop-soft);border-color:var(--stop)}
+.alert h2{margin:0 0 8px;font-size:20px;font-weight:700;letter-spacing:-.01em;color:var(--ink);
+  border:0;padding:0;text-transform:none;font-family:Archivo,sans-serif}
+.alert p{margin:0 0 10px;color:var(--ink-2)}
+.alert p:last-child{margin-bottom:0}
+.alert b{color:var(--ink)}
+
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:7px;
+  padding:7px 11px;font-family:"JetBrains Mono",monospace;font-size:12px;
+  font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.stat b{color:var(--ink);font-weight:700}
+
+h2.sec{font-size:13px;font-family:"JetBrains Mono",monospace;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:700;
+  border-top:1px solid var(--line);padding-top:14px;margin:46px 0 20px}
+h3.sub{font-size:19px;font-weight:700;letter-spacing:-.015em;margin:30px 0 8px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:13px;
+  margin:0 0 20px;overflow:hidden;box-shadow:var(--shadow)}
+.chead{display:flex;gap:15px;padding:18px 20px 15px;align-items:flex-start}
+.rank{font-family:Archivo,sans-serif;font-size:25px;font-weight:800;color:var(--accent);
+  line-height:1;min-width:34px;font-variant-numeric:tabular-nums;padding-top:2px}
+.ctitle{flex:1;min-width:0}
+.ctitle h3{margin:0 0 4px;font-size:18.5px;font-weight:700;letter-spacing:-.015em;line-height:1.3}
+.ctitle h3 a{color:var(--ink);text-decoration:none;border-bottom:2px solid var(--accent-soft)}
+.ctitle h3 a:hover{border-bottom-color:var(--accent)}
+.meta{display:flex;flex-wrap:wrap;gap:5px 13px;font-family:"JetBrains Mono",monospace;
+  font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;margin-top:7px}
+.meta .src{color:var(--accent);font-weight:700}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:4px 10px;
+  font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;flex:0 0 auto;
+  background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent)}
+.chip.go{background:var(--go-soft);color:var(--go);border-color:var(--go)}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.chip.stop{background:var(--stop-soft);color:var(--stop);border-color:var(--stop)}
+.why{padding:0 20px 16px;margin:0;color:var(--ink-2);font-size:14.7px}
+.why b{color:var(--ink);font-weight:600}
+.why .q{color:var(--ink);font-style:italic}
+.why p{margin:0 0 11px}
+.why p:last-child{margin-bottom:0}
+
+.copywrap{border-top:1px solid var(--line);background:var(--sunk);padding:15px 20px 18px}
+.rlabel{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:9px}
+.rlabel span{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.copy{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;cursor:pointer;
+  background:var(--accent);color:var(--btn-fg);border:1px solid var(--accent);
+  border-radius:7px;padding:7px 14px;transition:opacity .15s,background .15s;flex:0 0 auto}
+.copy:hover{opacity:.86}
+.copy:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.copy.done{background:var(--go);border-color:var(--go)}
+.copytext{background:var(--surface);border:1px solid var(--line-2);border-radius:9px;
+  padding:16px 18px;white-space:pre-wrap;font-size:15px;line-height:1.66;color:var(--ink);
+  font-family:Inter,system-ui,sans-serif}
+.copytext.mono{font-family:"JetBrains Mono",monospace;font-size:13px;line-height:1.6}
+.copytext::selection{background:var(--accent-soft)}
+
+table.t{width:100%;border-collapse:collapse;font-size:14.5px}
+table.t th{text-align:left;font-family:"JetBrains Mono",monospace;font-size:10.5px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:700;
+  padding:0 12px 9px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+table.t td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);
+  vertical-align:top;color:var(--ink-2)}
+table.t td:first-child{color:var(--ink);font-weight:500}
+table.t td.m{font-family:"JetBrains Mono",monospace;font-size:13px;
+  font-variant-numeric:tabular-nums}
+table.t tr.dim td{opacity:.55}
+.tblwrap{overflow-x:auto;margin:0 0 24px}
+
+.board{display:grid;gap:10px;margin:0 0 30px}
+@media(min-width:700px){.board{grid-template-columns:1fr 1fr}}
+.bitem{display:flex;gap:12px;align-items:flex-start;background:var(--surface);
+  border:1px solid var(--line);border-radius:10px;padding:13px 15px;box-shadow:var(--shadow)}
+.bitem .bt{flex:1;min-width:0}
+.bitem h4{margin:0 0 3px;font-size:14.5px;font-weight:700;letter-spacing:-.01em;
+  font-family:Inter,sans-serif;color:var(--ink)}
+.bitem p{margin:0;font-size:13px;color:var(--ink-3);line-height:1.5}
+.bitem.done{border-left:4px solid var(--go)}
+.bitem.pending{border-left:4px solid var(--warn)}
+.bitem.todo{border-left:4px solid var(--accent)}
+
+.rules{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:8px 24px 20px;box-shadow:var(--shadow);margin:0 0 24px}
+.rules li{margin:11px 0;color:var(--ink-2)}
+.rules li b{color:var(--ink);font-weight:600}
+
+.cal{display:grid;gap:12px;margin:0 0 24px}
+@media(min-width:760px){.cal{grid-template-columns:repeat(3,1fr)}}
+.season{background:var(--surface);border:1px solid var(--line);border-radius:11px;
+  padding:16px 17px;box-shadow:var(--shadow)}
+.season .n{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;
+  letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+.season.now{border-color:var(--go);border-width:2px}
+.season.now .n{color:var(--go)}
+.season h3{margin:7px 0 6px;font-size:16.5px;font-weight:700;letter-spacing:-.01em}
+.season p{margin:0;font-size:14px;color:var(--ink-2);line-height:1.55}
+
+footer{margin-top:42px;padding-top:16px;border-top:1px solid var(--line);
+  font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--ink-3);line-height:1.8}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <div class="brow">
+    <div class="eyebrow">Internal &middot; not published</div>
+    <div class="eyebrow">v2.0.2 &middot; statuses verified 27 Aug 2026</div>
+  </div>
+  <h1>Off-Site Playbook</h1>
+  <p class="dek">Where the product actually stands, and what moves it. Every figure here was
+  measured or fetched on the date given, never estimated. This is the HTML rendering of
+  <code>marketing/PLAYBOOK.md</code>; the Markdown file remains the source of record and both
+  change together.</p>
+</header>
+
+<div class="alert">
+  <h2>The one finding that governs everything below</h2>
+  <p>The Microsoft Store is <b>~94% of all installs</b>. Measured 27 Aug: 900+ Store installs
+  against <b>59 GitHub release-asset downloads across every release this project has ever
+  published</b>. An AI search assistant asked to summarise "Canvas Downloader" quotes the
+  <b>Store copy</b>, not the site.</p>
+  <p>So the website is a discovery and trust surface, and an AI-assistant surface. <b>It is not
+  the funnel.</b> When an hour is going spare, it is worth more on the Store listing or on an
+  inbound link than on the site.</p>
+  <div class="stats">
+    <span class="stat">Store installs <b>900+</b></span>
+    <span class="stat">GitHub downloads, lifetime <b>59</b></span>
+    <span class="stat">Store ratings <b>0</b></span>
+    <span class="stat">Referring domains <b>0</b></span>
+    <span class="stat">GitHub stars <b>2</b></span>
+    <span class="stat">Countries <b>100</b></span>
+  </div>
+</div>
+
+<h2 class="sec">Status board</h2>
+
+<div class="board">
+  <div class="bitem done"><span class="chip go">Done</span><div class="bt">
+    <h4>Release-note dead links</h4><p>Fixed 21 Aug on v2.0.1, v2.0.0 and v1.0.0.</p></div></div>
+  <div class="bitem done"><span class="chip go">Done</span><div class="bt">
+    <h4>GitHub social preview</h4><p>GitHub repaired the storage state after escalation. Verified
+    27 Aug: custom host, 200, PNG 1280x640.</p></div></div>
+  <div class="bitem done"><span class="chip go">Done</span><div class="bt">
+    <h4>Bing Webmaster Tools</h4><p>Set up. Site Scan and Performance both read.</p></div></div>
+  <div class="bitem done"><span class="chip go">Done</span><div class="bt">
+    <h4>Search Console</h4><p>Verified, sitemap submitted, Pages report read.</p></div></div>
+  <div class="bitem done"><span class="chip go">Done</span><div class="bt">
+    <h4>GitHub Discussions</h4><p>Enabled 21 Aug.</p></div></div>
+  <div class="bitem done"><span class="chip go">Done</span><div class="bt">
+    <h4>Store Privacy and Website links</h4><p>Both now resolve to
+    <code>canvasdownloader.app</code>, 200. Clears Store Policy 10.5.1.</p></div></div>
+  <div class="bitem done"><span class="chip go">Done</span><div class="bt">
+    <h4>In-app rate prompt</h4><p>Shipped in v2.0.2, verified present in the Store package
+    25 Aug. Cannot fire before ~1 Sept by design.</p></div></div>
+  <div class="bitem done"><span class="chip go">Done</span><div class="bt">
+    <h4>IndexNow</h4><p>The key was live for days with nothing ever submitting. Script and
+    workflow now wired; first submission accepted 14 URLs.</p></div></div>
+  <div class="bitem pending"><span class="chip warn">Pending</span><div class="bt">
+    <h4>AlternativeTo, Product Hunt, Softpedia</h4><p>Submitted 27 Aug. All three moderated.
+    A submission is not a listing; only a fetch settles it.</p></div></div>
+  <div class="bitem todo"><span class="chip">Open</span><div class="bt">
+    <h4>Three keyword slots produce nothing</h4><p><code>panopto</code>, <code>notebooklm</code>
+    and <code>lecture transcripts</code> do not rank on any form. See section 6.</p></div></div>
+  <div class="bitem todo"><span class="chip">Open</span><div class="bt">
+    <h4>Community threads</h4><p>Two live Instructure Community threads, still unanswered, both
+    ranking. Highest-value free action available.</p></div></div>
+  <div class="bitem todo"><span class="chip">Open</span><div class="bt">
+    <h4>Bing Keyword Research</h4><p>Never run with real phrases. The only free source of
+    absolute search volume this project has.</p></div></div>
+</div>
+
+<h2 class="sec">1 &middot; Where you actually stand</h2>
+
+<div class="tblwrap">
+<table class="t">
+<thead><tr><th>Fact</th><th>Value</th><th>How it was checked</th></tr></thead>
+<tbody>
+<tr><td>Homepage TTFB</td><td class="m">186 ms</td><td>Chromium navigation timing, live site</td></tr>
+<tr><td>LCP, desktop unthrottled</td><td class="m">1068 ms (good)</td><td>PerformanceObserver</td></tr>
+<tr><td>LCP, mobile 4x CPU / 1.6 Mbps</td><td class="m">5300 &rarr; <b>2764 ms</b></td><td>390px mobile profile, before and after the video fix</td></tr>
+<tr><td>Cumulative Layout Shift</td><td class="m">0.0057 / 0.0013</td><td>Desktop / mobile. Good is under 0.1</td></tr>
+<tr><td>Page weight</td><td class="m">5.36 MB</td><td>4.70 MB of it autoplaying demo video, loaded ahead of the hero image</td></tr>
+<tr><td>Analytics on the site</td><td class="m">none</td><td>grep for 11 vendors across all pages</td></tr>
+<tr><td>GitHub</td><td class="m">2 stars, 0 forks</td><td>GitHub API, 27 Aug</td></tr>
+<tr><td>Repo age</td><td class="m">created 2026-01-17</td><td>GitHub API</td></tr>
+<tr><td>Referring domains</td><td class="m">0</td><td>Bing Webmaster</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 class="sub">The finding that matters</h3>
+<p>Three searches were run on 20 Aug: <code>"canvas downloader" app download all canvas courses</code>,
+<code>canvasdownloader.app Canvas Downloader free desktop app Windows macOS</code>, and a
+<code>site:</code> query. <b>The domain appeared in none of them.</b> The Microsoft Store listing
+appeared in two.</p>
+<p>That is not a page-quality problem. The pages are technically sound. It is an authority
+problem: a domain a few months old with effectively no inbound links, competing for a phrase that
+other products already own.</p>
+
+<div class="alert warn">
+  <h2>Crawl budget is now the binding constraint, and internal links cannot buy more of it</h2>
+  <p>Proven twice on 27 Aug. <code>how-to-download-all-canvas-files.html</code> has been live
+  since 20 Aug, carries <b>9 internal links from 7 pages</b>, sits in the sitemap at priority 0.9,
+  and Google has <b>never fetched it</b>. Meanwhile
+  <code>save-canvas-assignment-feedback.html</code> has <b>one</b> body link and was indexed about
+  three hours after publication.</p>
+  <p><b>The adjacency proof:</b> both links sit in the same paragraph on the homepage. Google
+  names the homepage as the referring page for the one it crawled, so Googlebot parsed that exact
+  paragraph, followed the second anchor and did not fetch the first. Discovery is not the problem.
+  Scheduling is.</p>
+  <p>So <b>"add more internal links" is dead as a diagnosis</b>, and adding more articles does not
+  help either: publishing divides the same small budget rather than enlarging it. On-site work is
+  done. The remaining levers are Request Indexing, IndexNow and <b>external authority</b>.</p>
+</div>
+
+<h3 class="sub">What you are competing with for the name</h3>
+<div class="tblwrap">
+<table class="t">
+<thead><tr><th>Competitor for the name</th><th>What it is</th></tr></thead>
+<tbody>
+<tr><td><a href="https://www.canvasdownloader.com/">canvasdownloader<b>.com</b></a></td><td>A <b>Spotify</b> Canvas downloader. Different product, much higher search volume, owns the .com.</td></tr>
+<tr><td><a href="https://chromewebstore.google.com/detail/canvas-downloader-bulk-sa/odmemmdfgbjocanojmocjdbanbhimkeh">Canvas Downloader - Bulk Save Course Files</a></td><td>Chrome extension carrying your exact name.</td></tr>
+<tr><td><a href="https://chromewebstore.google.com/detail/canvas-course-downloader/mmnmcnffbkcnhcjiidmdnaclpfeekiol">Canvas Course Downloader</a></td><td>Plus a "(Simple)" variant.</td></tr>
+<tr><td>Five GitHub repos</td><td>jamubc, aik2mlj, beast-nev, RoryQo, BenSweaterVest. All outranking yours.</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 class="sub">Who owns the money query</h3>
+<p>For "how to download all files from Canvas at once", the results are university help desks:
+<a href="https://canvashelp.stanford.edu/hc/en-us/articles/115001602467-Bulk-download-Canvas-files">Stanford</a>,
+<a href="https://answers.uillinois.edu/illinois/page.php?id=127046">Illinois</a>,
+<a href="https://hdkb.clemson.edu/phpkb/article.php?id=939">Clemson</a>,
+<a href="https://teaching.pitt.edu/resources/how-to-export-course-materials-from-canvas/">Pitt</a>,
+<a href="https://ecampushelpdesk.nctc.edu/hc/en-us/articles/205334770-Downloading-multiple-files-from-Canvas-to-your-PC">NCTC</a>,
+<a href="https://lms.unt.edu/resources/canvas-eos-tasks.html">UNT</a>.</p>
+<p>You will not outrank a <code>.edu</code> on a young domain. <b>You do not have to.</b> Every one
+of those pages stops at the same wall, and that wall is the product pitch.
+<code>docs/how-to-download-all-canvas-files.html</code> is written to stand beside them rather
+than against them.</p>
+
+<h2 class="sec">2 &middot; The one rule</h2>
+
+<div class="alert">
+  <h2>Be the most useful answer in the room, then say what you built</h2>
+  <p>Every channel below fails if you invert that order, and forums punish it permanently.</p>
+</div>
+
+<ol class="rules">
+  <li><b>Disclose that you made it, every time.</b> "I built this" costs you nothing and is the
+  difference between a contribution and a removed post.</li>
+  <li><b>Answer the question first</b>, completely, including the parts the app does not solve. If
+  the honest answer is "use Canvas's own Download as Zip", say that.</li>
+  <li><b>Never post the same text twice.</b> Copy-paste across threads is the single clearest spam
+  signal a moderator has.</li>
+  <li><b>State limits in the same breath as claims.</b> Some institutions disable access tokens,
+  Office conversions need the Office desktop app, and Intel Macs are unsupported.</li>
+</ol>
+
+<h2 class="sec">3 &middot; Priority 1 &middot; community threads</h2>
+<p>Real, open threads that rank for your query. Verified 20 Aug, still unanswered as of 27 Aug.</p>
+
+<article class="card">
+  <div class="chead">
+    <div class="rank">01</div>
+    <div class="ctitle">
+      <h3><a href="https://community.instructure.com/en/discussion/619809/student-question-how-do-i-backup-download-a-course-as-a-student-who-does-not-own-the-course">STUDENT QUESTION: How do I backup/download a course as a student who does not own the course?</a></h3>
+      <div class="meta"><span class="src">Instructure Community</span><span>Oct 2024</span><span>open</span></div>
+    </div>
+    <span class="chip go">Best one</span>
+  </div>
+  <div class="why">
+    <p>The asker is exactly your user. Her words: <span class="q">"I would like to download all
+    course content that was available to me as a student so that I can keep it after I graduate.
+    I'll likely lose access to my two-factor authentification... I've paid thousands of dollars to
+    access this material."</span></p>
+    <p>The single accepted answer is <span class="q">"You really should speak with your instructor
+    first and ask for permission to do this."</span> That is fair advice and it answers nothing
+    about the how. The thread has been sitting there since October 2024.</p>
+  </div>
+  <div class="copywrap">
+    <div class="rlabel"><span>Draft reply &middot; edit it, do not paste verbatim</span>
+      <button class="copy" type="button">Copy</button></div>
+    <div class="copytext">Susan is right that the permission question comes first, and it is worth checking your syllabus, because some courses have an explicit policy.
+
+On the how: students cannot export a course. The .imscc course export is an instructor permission, so you will not see the option. What you can do yourself:
+
+1. Per course, open Files in the course nav, click in the list, press Ctrl/Cmd+A and choose Download as Zip. Two caveats: a file attached directly to a module item does not have to appear in the Files tab, so the zip can silently miss material, and teachers can hide the Files tab entirely.
+
+2. Your own submitted work, via Account > Settings > Download Submissions > Create Export. It covers concluded courses too. It does not include instructor-annotated versions, which is worth knowing if the annotated copy is the one you care about.
+
+3. Pages, assignment briefs, announcements and discussions have no bulk export at all. Saving each as a PDF from your browser is the manual route.
+
+On your 2FA point specifically: losing the second factor is not usually what ends access. Enrolments are removed on their own schedule and the course can disappear while your login still works, so the safe assumption is that you have less time than you think.
+
+Full disclosure, I wrote a free open-source app that does the above through the Canvas API, including the categories Canvas has no export for. It needs an access token, which some institutions have disabled, so check that you can create one under Account > Settings before you count on it. Happy to point you at it if it is useful, and the manual routes above work regardless.</div>
+  </div>
+</article>
+
+<article class="card">
+  <div class="chead">
+    <div class="rank">02</div>
+    <div class="ctitle">
+      <h3><a href="https://community.instructure.com/en/discussion/618390/how-to-download-all-course-files-and-media-on-canvas">How to download all course files and media on Canvas</a></h3>
+      <div class="meta"><span class="src">Instructure Community</span><span>Oct 2024</span><span>ranks in Google</span></div>
+    </div>
+    <span class="chip go">Go</span>
+  </div>
+  <div class="why">
+    <p>This one surfaces in Google for the main query. Two accepted answers, both partial. One
+    ends: <span class="q">"As for Pages and Assignments, I'm not sure of a quick way off the top of
+    my head."</span></p>
+    <p>The asker also says their school <b>removed access tokens</b>, so lead with the methods that
+    do not need one. Answering the Pages and Assignments half is a genuine contribution to a thread
+    that never got one. <b>Write it fresh</b>; do not reuse the reply above.</p>
+  </div>
+</article>
+
+<article class="card">
+  <div class="chead">
+    <div class="rank">03</div>
+    <div class="ctitle">
+      <h3><a href="https://community.instructure.com/en/discussion/633259/how-to-i-download-all-the-files-from-my-canvas-course-to-my-computer">How to I download ALL the files from my Canvas course to my computer?</a></h3>
+      <div class="meta"><span class="src">Instructure Community</span><span>Feb 2025</span></div>
+    </div>
+    <span class="chip stop">Do not answer</span>
+  </div>
+  <div class="why">
+    <p>The asker is tagged <b>Instructor</b>, and the accepted answer is the course export they
+    already have access to. Your product is not the answer here and posting it would read as spam.
+    Listed only so it is not mistaken for a target.</p>
+  </div>
+</article>
+
+<h2 class="sec">4 &middot; Priority 2 &middot; directory listings</h2>
+
+<div class="tblwrap">
+<table class="t">
+<thead><tr><th>Where</th><th>Status</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>AlternativeTo</td><td><span class="chip warn">Submitted 27 Aug</span></td>
+<td>Highest value here: people search it for "alternative to X". Listed as an alternative to the Chrome extensions above. Moderated.</td></tr>
+<tr><td>Product Hunt</td><td><span class="chip warn">Submitted 27 Aug</span></td>
+<td>A product gets one post, and this was it. The old "Tuesday to Thursday, 00:01 PT" timing advice is spent.</td></tr>
+<tr><td>Softpedia</td><td><span class="chip warn">Submitted 27 Aug</span></td>
+<td>Already lists competing Canvas extensions, so the category exists. <b>Verify what its download button actually serves</b> once live: Softpedia re-hosts a mirror, and a mirrored 2.0.2 goes stale with nothing here to say so.</td></tr>
+<tr><td>GitHub topics</td><td><span class="chip go">Done</span></td>
+<td>20 topics, all good.</td></tr>
+<tr class="dim"><td>MajorGeeks</td><td><span class="chip stop">Ruled out</span></td>
+<td>Submission is by email, the site is outdated, expected yield does not justify the effort. Do not re-add on the strength of "still indexed well".</td></tr>
+<tr class="dim"><td>Slant</td><td><span class="chip stop">Dead</span></td>
+<td>Confirmed 27 Aug. The 526 SSL error was not transient.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert warn">
+  <h2>A submission is NOT a listing, and only a fetch settles it</h2>
+  <p>All three are moderated, so what exists today is a form that was sent, not a page anyone can
+  reach. This project has already been wrong twice by trusting a record over a fetch: the GitHub
+  <code>og:image</code> whose record existed while the blob 404'd, and the Store's Privacy link
+  that 404'd for ten weeks while a repo-wide link guard passed.</p>
+  <p>When each listing appears, write its URL into this table, confirm it returns <b>200</b>, and
+  check two things the submission form does not guarantee: that the licence reads <b>GPL-3.0</b>,
+  and that the download points at the current release rather than a frozen mirror.</p>
+</div>
+
+<p>Also worth doing, no link needed: submit to the <code>awesome-*</code> lists covering education
+or student tools by opening a PR on the relevant repo.</p>
+
+<h2 class="sec">5 &middot; Priority 3 &middot; communities</h2>
+
+<div class="tblwrap">
+<table class="t">
+<thead><tr><th>Group</th><th>Where</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td>Directly on topic</td><td class="m">r/canvaslms</td><td>The obvious first stop, though it skews toward instructors and admins.</td></tr>
+<tr><td>Students</td><td class="m">r/college, r/university, r/GradSchool, r/studytips</td><td>Highest intent during the semester-start and end-of-term windows.</td></tr>
+<tr><td>Software</td><td class="m">r/opensource, r/software, r/windowsapps, r/macapps</td><td>Lead with open source and the no-server claim.</td></tr>
+<tr><td>Best fit</td><td class="m">r/DataHoarder</td><td><b>The standout.</b> That audience cares about local copies and no cloud, which is exactly sync mode and edit protection.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert stop">
+  <h2>Read each subreddit's self-promotion rule before posting</h2>
+  <p>Several ban it outright, several allow it with a flair, and several allow it only from
+  accounts with existing history. <b>Posting into a ban costs you the account.</b> The account
+  warm-up plan and twelve thread-specific replies are in
+  <a href="reddit-outreach.html">reddit-outreach.html</a>.</p>
+</div>
+
+<p><b>The highest-yield channel is not Reddit, it is your own university.</b> One post in a course
+group chat, a study group or a student Facebook group reaches people who have the exact problem
+today, and it needs no SEO at all.</p>
+
+<h2 class="sec">6 &middot; Priority 4 &middot; the Microsoft Store</h2>
+
+<p>This is the only surface that currently ranks and the one AI assistants quote, which makes it
+worth more attention than the website right now.</p>
+
+<h3 class="sub">Where the app ranks, measured 27 Aug</h3>
+<div class="tblwrap">
+<table class="t">
+<thead><tr><th>Query</th><th>24 Aug</th><th>27 Aug</th><th>Reading</th></tr></thead>
+<tbody>
+<tr><td class="m">canvas downloader</td><td class="m">#1</td><td class="m"><b>#1</b></td><td>Title match</td></tr>
+<tr><td class="m">canvas course</td><td class="m">#8</td><td class="m"><b>#1</b></td><td>Keyword moved it</td></tr>
+<tr><td class="m">canvas sync</td><td class="m">not measured</td><td class="m"><b>#1</b></td><td>Keyword</td></tr>
+<tr><td class="m">download course files</td><td class="m">absent</td><td class="m"><b>#7</b></td><td>Keyword moved it</td></tr>
+<tr><td class="m">download canvas files</td><td class="m">not measured</td><td class="m"><b>#9</b></td><td>Keyword</td></tr>
+<tr><td class="m">bulk course download</td><td class="m">absent</td><td class="m"><b>#10</b></td><td>Keyword</td></tr>
+<tr><td class="m">panopto downloader</td><td class="m">not measured</td><td class="m"><b>#13</b></td><td>Carried by "downloader" in the title</td></tr>
+<tr><td class="m">panopto lecture recordings</td><td class="m">not measured</td><td class="m">not in top 20</td><td><b>Keyword, no result</b></td></tr>
+<tr><td class="m">notebooklm study files</td><td class="m">not measured</td><td class="m">not in top 20</td><td><b>Keyword, no result</b></td></tr>
+<tr><td class="m">lecture transcripts subtitles</td><td class="m">not measured</td><td class="m">not in top 20</td><td><b>Keyword, no result</b></td></tr>
+<tr><td class="m">panopto / notebooklm / lecture downloader</td><td class="m">absent</td><td class="m">not in top 20</td><td>Uncontested and unreachable</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert warn">
+  <h2>The Keywords field amplifies the title. It does not reach past it</h2>
+  <p><b>The first six rows are the control.</b> <code>canvas course</code> moving #8 to #1 and
+  <code>download course files</code> going from absent to #7 proves the keyword submission has
+  been indexed. So the failures below are not "too early to tell"; they are the same index
+  answering no.</p>
+  <p><b>The pattern is exact.</b> Every query that ranks contains <code>canvas</code>,
+  <code>course</code> or <code>downloader</code>. Every query that does not rank contains none of
+  them, including three keyword phrases sitting in the field verbatim.</p>
+  <p>So <code>panopto</code>, <code>notebooklm</code> and <code>lecture downloader</code> are
+  genuinely uncontested <b>and genuinely not reachable</b> through the Keywords field. The one
+  field that would reach them is the Product Name, which was deliberately and correctly declined
+  as brand damage for a ranking bet. <b>Redirect those three slots, do not retry them.</b></p>
+</div>
+
+<div class="card">
+  <div class="chead"><div class="rank">&rarr;</div><div class="ctitle">
+    <h3>Suggested keyword replacements</h3>
+    <div class="meta"><span>each anchored to a word that demonstrably matches</span><span>within the 7-term / 40-char / 21-word budget</span></div>
+  </div></div>
+  <div class="copywrap">
+    <div class="rlabel"><span>Partner Center &middot; Keywords</span>
+      <button class="copy" type="button">Copy</button></div>
+    <div class="copytext mono">canvas course downloader
+download canvas files
+canvas lecture recordings
+canvas course transcripts
+canvas sync
+bulk course download
+canvas study files</div>
+  </div>
+</div>
+
+<h3 class="sub">The exclusion that matters more than the inclusions</h3>
+<p>Ranking blends relevance with <b>download-through rate</b>. If people search a term, see the app
+and do not install, the algorithm learns the app is not relevant for that term. So generic
+download-manager phrases are <b>deliberately left out</b> even though the app is absent from them:
+somebody typing <code>bulk download</code> wants a download manager, would not install this, and
+the failed impressions would actively cost rank. <code>bulk course download</code> is kept because
+the word <i>course</i> makes the intent ours.</p>
+
+<h3 class="sub">Ratings</h3>
+<p><code>RatingCount</code> is <b>0</b> after 900+ installs, and it cannot be anything else yet.
+The in-app rate card shipped in v2.0.2 and is verified present in the shipped Store package, but
+its gate requires <b>3 distinct days with a clean run plus a 7-day floor</b>. The earliest any user
+can be shown it is around <b>1 September</b>. A zero read before then is the gate working, not the
+feature failing. <b>Do not loosen the gate</b>: the constraints exist so the ask never lands on a
+failed or cancelled run, and the lifetime cap of three is the protection.</p>
+
+<p>Do a macOS equivalent only if it is cheap. The Mac App Store would require sandboxing this app
+cannot satisfy, so the practical macOS channel is the website and Homebrew casks, not an app
+store.</p>
+
+<h2 class="sec">7 &middot; Ready-to-paste copy</h2>
+<p>Vocabulary rule: students say <b>Canvas</b>, never "LMS". The only place "Canvas LMS" appears is
+machine-readable schema. Directory listings get one clarifying phrase because their audience is
+broader.</p>
+
+<div class="card">
+  <div class="chead"><div class="rank">A</div><div class="ctitle">
+    <h3>One-liner</h3><div class="meta"><span>60 characters</span></div></div></div>
+  <div class="copywrap">
+    <div class="rlabel"><span>Short tagline</span><button class="copy" type="button">Copy</button></div>
+    <div class="copytext mono">Download every file from all your Canvas courses at once</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="chead"><div class="rank">B</div><div class="ctitle">
+    <h3>Short description</h3><div class="meta"><span>about 150 characters</span></div></div></div>
+  <div class="copywrap">
+    <div class="rlabel"><span>Short</span><button class="copy" type="button">Copy</button></div>
+    <div class="copytext">Free desktop app that downloads every file from all your Canvas courses at once, then keeps the folders synced. Windows and macOS. Nothing leaves your computer.</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="chead"><div class="rank">C</div><div class="ctitle">
+    <h3>Medium description</h3><div class="meta"><span>about 500 characters</span></div></div></div>
+  <div class="copywrap">
+    <div class="rlabel"><span>Medium</span><button class="copy" type="button">Copy</button></div>
+    <div class="copytext">Canvas Downloader gets every file out of your university's Canvas courses and onto your computer in one run: module files, assignments, syllabus, announcements, discussions, quizzes and the feedback on your own work. It then keeps those folders up to date, fetching only what changed, and can save Panopto lecture recordings as video, audio or a transcript. It converts Office files to PDF so a course folder can be dropped straight into an AI study tool. Free, open source, and it runs entirely on your own machine: no account, no server, no telemetry.</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="chead"><div class="rank">D</div><div class="ctitle">
+    <h3>Long description</h3><div class="meta"><span>for directory listings</span></div></div></div>
+  <div class="copywrap">
+    <div class="rlabel"><span>Long</span><button class="copy" type="button">Copy</button></div>
+    <div class="copytext">Canvas Downloader is a free, open-source desktop app for students who use Canvas, the learning platform most universities run their courses on.
+
+Canvas has no way to download everything. It can zip one course's Files tab at a time, and that tab often does not contain files a lecturer attached directly to a module. Nothing in Canvas exports Pages, assignment briefs, announcements, discussions or quizzes at all.
+
+Canvas Downloader signs in with an access token you create yourself and uses the official Canvas API, so it can do what the built-in tools cannot:
+
+- Download every file from every course you pick, in one run
+- Collect the categories Canvas has no export for, saved as readable documents
+- Sync: run it again and it fetches only what is new or changed, never overwriting a file you annotated and never restoring one you deleted
+- Sync your chosen courses automatically once a day
+- Save Panopto lecture recordings as MP4, MP3, a transcript or subtitles, with transcription running on your own machine
+- Convert Word, Excel and PowerPoint to PDF, and unpack archives, so a course folder is ready for AI study tools
+
+Windows 10/11 and macOS 14+ on Apple Silicon. Open source, GPL-3.0 licensed. No account, no server, no telemetry, nothing uploaded. It reads only what your own Canvas account can already open.</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="chead"><div class="rank">E</div><div class="ctitle">
+    <h3>Tags</h3></div></div>
+  <div class="copywrap">
+    <div class="rlabel"><span>Directory tags</span><button class="copy" type="button">Copy</button></div>
+    <div class="copytext mono">canvas, canvas-lms, student-tools, education, downloader, batch-download, offline, sync, panopto, transcription, notebooklm, edtech, open-source, windows, macos</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="chead"><div class="rank">F</div><div class="ctitle">
+    <h3>Product Hunt first comment</h3>
+    <div class="meta"><span>post it yourself, immediately</span></div></div></div>
+  <div class="copywrap">
+    <div class="rlabel"><span>PH launch comment</span><button class="copy" type="button">Copy</button></div>
+    <div class="copytext">Hi all, I built this because Canvas has no way to download everything. It zips one course's Files tab at a time, and that tab frequently does not include the slides a lecturer attached straight to a module. Pages, assignment briefs and announcements have no bulk export at all.
+
+I was about to lose access to four years of coursework and doing it by hand was going to take a weekend. So: pick your courses, it downloads all of them, including the parts Canvas will not export. Run it again next week and it fetches only what changed, and it will never overwrite a PDF you annotated.
+
+It runs entirely on your own machine. No account, no server, nothing uploaded, and every line of it is on GitHub. It signs in with a Canvas access token you create yourself, so it only ever reaches what your own account can already open.
+
+Happy to answer anything, including what it does not do.</div>
+  </div>
+</div>
+
+<h2 class="sec">8 &middot; What to measure</h2>
+<p>You chose Search Console and Bing Webmaster only, so the funnel below the click is invisible by
+design. Accept that and measure what you can.</p>
+<ol class="rules">
+  <li><b>Google Search Console.</b> Impressions on the article pages are the proxy for whether the
+  content strategy works. As of 24 Aug: impressions went 1, 4, 11, 18, <b>65</b> across five days,
+  with the first 2 clicks on 24 Aug. <code>canvas downloader</code> sits at position <b>6.05</b>,
+  which is page one.</li>
+  <li><b>Bing Webmaster.</b> Feeds Bing, DuckDuckGo and Copilot, and it matters more than its
+  market share suggests because several AI assistants are Bing-backed. <b>Bing Keyword Research has
+  still not been run with real phrases</b>, and it is the only free source of absolute search volume
+  this project has.</li>
+  <li><b>GitHub release download counts.</b> A real conversion number, free, already on the README
+  badge. 59 lifetime, which is what puts the Store at ~94%.</li>
+  <li><b>The Store search probe.</b> One command, and the only way to know whether a keyword change
+  did anything. Re-run two weeks after any edit.</li>
+</ol>
+
+<h2 class="sec">9 &middot; Calendar</h2>
+<div class="cal">
+  <div class="season now">
+    <div class="n">Right now &middot; late Aug to Sept</div>
+    <h3>New semester</h3>
+    <p>New students setting things up. The window for the "how to download all your files" page and
+    for Reddit. <b>This is the current window.</b></p>
+  </div>
+  <div class="season">
+    <div class="n">Late Nov to Dec, late Apr to Jun</div>
+    <h3>End of term and graduation</h3>
+    <p>When "download Canvas before I lose access" peaks. Highest intent and emotionally loaded.
+    Publish and promote <b>before</b> it, not during.</p>
+  </div>
+  <div class="season">
+    <div class="n">Exam periods</div>
+    <h3>AI study tools</h3>
+    <p>The NotebookLM and transcript angle is strongest here.</p>
+  </div>
+</div>
+
+<h2 class="sec">10 &middot; Things not to do</h2>
+<ol class="rules">
+  <li><b>Do not buy links or submit to link farms.</b> A young domain with a sudden spike of
+  low-quality links is the classic pattern that gets sites suppressed.</li>
+  <li><b>Do not spin up thin pages.</b> A page needs a distinct question and measured demand behind
+  it. There is no cap on how many pages there should be, but publishing divides crawl budget rather
+  than enlarging it.</li>
+  <li><b>Do not add analytics without updating <code>docs/privacy.html</code></b> in the same
+  commit, or the site is making a false claim.</li>
+  <li><b>Do not chase the brand term yet.</b> The name is contested by a Spotify tool and three
+  extensions. Long-tail phrases are winnable now and the brand term follows traffic, not the other
+  way around.</li>
+  <li><b>Do not translate the site.</b> English first is settled on the institution-count
+  measurement.</li>
+  <li><b>Do not add more internal links to fix indexing.</b> Measured anti-correlated. See the
+  crawl-budget note in section 1.</li>
+</ol>
+
+<h2 class="sec">11 &middot; Still on the table</h2>
+<div class="tblwrap">
+<table class="t">
+<thead><tr><th>Item</th><th>State</th></tr></thead>
+<tbody>
+<tr><td>In-app "rate on the Microsoft Store"</td><td><span class="chip go">Shipped v2.0.2</span></td></tr>
+<tr><td><code>download-panopto-lecture-recordings.html</code></td><td><span class="chip go">Built</span></td></tr>
+<tr><td>NotebookLM page</td><td><span class="chip go">Built</span></td></tr>
+<tr><td>Lazy-load the demo videos</td><td><span class="chip go">Done 20 Aug</span> <code>preload="none"</code> is ignored while <code>autoplay</code> is present; withholding the <code>src</code> is what works. 5300 ms to 2764 ms.</td></tr>
+<tr><td><code>VideoObject</code> schema</td><td><span class="chip go">Done</span> poster frames generated</td></tr>
+<tr><td>Five articles written but not deployed</td><td><span class="chip stop">Blocked</span> see the deploy hazard below</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="alert stop">
+  <h2>Deploy hazard for whoever pushes next</h2>
+  <p><code>docs/sitemap.xml</code> in the working tree lists <b>5 URLs that currently 404</b>:
+  <code>download-lecture-videos-from-canvas</code>, <code>panopto-lecture-transcript</code>,
+  <code>save-canvas-pages-quizzes-discussions</code>, <code>canvas-access-token-explained</code>
+  and <code>canvas-download-tools-compared</code>. The deployed sitemap has 14 and is clean.</p>
+  <p>Pushing the sitemap without the article files submits five 404s to both engines.
+  <code>scripts/ping_indexnow.py</code> refuses to announce them, and that guard earned its keep on
+  its very first run, <b>but the sitemap itself carries no such guard.</b> Ship the files and the
+  sitemap together.</p>
+</div>
+
+<footer>
+  Internal document. Not in <span class="mono">docs/</span>, so it is not published.<br>
+  Source of record: <span class="mono">marketing/PLAYBOOK.md</span>. Change both together.<br>
+  See also <a href="reddit-outreach.html">reddit-outreach.html</a>,
+  <span class="mono">FINDINGS.md</span>, <span class="mono">STRATEGY.md</span>,
+  <span class="mono">SEO_FINDINGS_2026-08-27.md</span>, <span class="mono">SITE_RUNBOOK.md</span>.
+</footer>
+
+</div>
+<script>
+document.querySelectorAll('.copy').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var box = btn.closest('.copywrap').querySelector('.copytext');
+    var text = box.innerText;
+    var done = function () {
+      btn.textContent = 'Copied';
+      btn.classList.add('done');
+      setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1800);
+    };
+    var fallback = function () {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      if (ok) { done(); return; }
+      var r = document.createRange();
+      r.selectNodeContents(box);
+      var s = window.getSelection();
+      s.removeAllRanges();
+      s.addRange(r);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+  });
+});
+</script>
+</body>
+</html>

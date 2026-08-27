@@ -1237,6 +1237,16 @@ was never written is invisible to it.
   the file exists" but **resolve the URL**: `curl -sI <og:image>` and require
   `200`. Full diagnosis and the repair order (remove the image FIRST, then
   upload) in `marketing/FINDINGS.md`.
+- **RESOLVED 2026-08-27, by GitHub, after the operator escalated with exactly
+  the evidence above.** The write path was repaired server-side and the upload
+  now takes: `og:image` is on `repository-images.githubusercontent.com` and
+  answers **200**, PNG **1280x640**, 384,637 bytes. **The lesson is unchanged
+  and is in fact what confirmed the fix** - the same two-step check (read the
+  tag, then resolve the URL) is the only thing that can tell "the image is
+  set" from "a record exists and the blob does not", and those two states are
+  identical from GitHub's own Settings UI. Expected pass is now the custom host
+  plus 200; `opengraph.githubassets.com` plus 200 means the custom image was
+  removed again, and anything plus 404 is the broken state returning.
 
 
 ## A DIRECTORY fails at 248 characters, not 260 - and the app died there first (2026-08-22)

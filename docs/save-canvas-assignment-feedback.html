@@ -72,7 +72,7 @@
         "description": "Canvas exports your submissions in one click but not the feedback on them. How to save annotations, comments and rubrics before access ends.",
         "inLanguage": "en",
         "datePublished": "2026-08-23",
-        "dateModified": "2026-08-23",
+        "dateModified": "2026-08-27",
         "author": {
           "@id": "https://canvasdownloader.app/#author"
         },
@@ -419,6 +419,23 @@
     .art strong { color: var(--txt); font-weight: 700; }
     .art a { color: var(--cyan); text-decoration: none; }
     .art a:hover { text-decoration: underline; }
+
+    /* ...and that rule reaches INTO the CTA box, where the two buttons are also
+       anchors. They lost the colours the shell gives them everywhere else on the
+       site, silently, on the one element the box exists for. Measured in the
+       browser 2026-08-27, on all five articles: Download rendered cyan-on-blue
+       at a 2.31:1 contrast ratio, against the byte-identical nav button's
+       white-on-blue 4.95:1 - below the 4.5:1 AA floor and below the 3:1 large
+       floor. The hover underline was landing on them too.
+       Restate the shell's own values (win-setup.html, .btn-nav / .btn-nav-ghost)
+       rather than inventing new ones; .art .btn-nav is 0,2,0 and wins over
+       .art a at 0,1,1. Same family as the homepage's `a { color: inherit }`
+       swallowing new body links - a broad link rule that a button is an anchor
+       inside of. */
+    .art .btn-nav { color: #fff; }
+    .art .btn-nav-ghost { color: var(--txt); }
+    .art .btn-nav-ghost:hover { color: #fff; }
+    .art .cta-row a:hover { text-decoration: none; }
     .art code {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 12.5px; background: var(--surf2); color: var(--txt);
@@ -490,6 +507,60 @@
     .cta-box p { margin: 0 0 16px; font-size: 14px; }
     .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 
+    /* The byline. Google's helpful-content guidance asks whether it is
+       "self-evident to your visitors who authored your content", and wants a
+       byline that leads to further information - hence the #about-the-author
+       link rather than a bare name. */
+    .byline {
+      margin: 14px 0 0; font-size: 13px; color: var(--txt3);
+      display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
+      justify-content: center;  /* the hero above it is centred */
+    }
+    .byline a { color: var(--txt2); text-decoration: none; border-bottom: 1px dotted var(--border2); }
+    .byline a:hover { color: var(--cyan); }
+    .byline .sep { color: var(--border2); }
+    /* Below ~480px the byline wraps to three lines and every separator
+       lands dangling at the end of a line. Stack it instead. */
+    @media (max-width: 480px) {
+      .byline { flex-direction: column; gap: 3px; }
+      .byline .sep { display: none; }
+    }
+
+    /* The block an AI Overview lifts and a skimmer reads. It answers the title
+       question completely, so it must never be a teaser for the article. */
+    .short-answer {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 var(--rad) var(--rad) 0;
+      padding: 16px 20px; margin: 0 0 26px;
+    }
+    .short-answer p.sa-label {
+      margin: 0 0 6px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan);
+    }
+    .short-answer p { margin: 0 0 10px; font-size: 15px; color: var(--txt2); }
+    .short-answer p:last-child { margin-bottom: 0; }
+
+    /* Inline citation to a primary source. Cited sources are the single
+       largest measured lever for a page that does not already rank; see
+       marketing/BLOG_PLAN.md section 3. */
+    a.src {
+      color: var(--txt2); text-decoration: none;
+      border-bottom: 1px solid var(--border2);
+    }
+    a.src:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+    .author-box {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 20px 22px; margin: 34px 0 0;
+    }
+    .author-box p.ab-label {
+      margin: 0 0 8px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3);
+    }
+    .author-box p { margin: 0 0 10px; font-size: 14px; }
+    .author-box p:last-child { margin-bottom: 0; }
+
     .toc {
       background: var(--surf); border: 1px solid var(--border);
       border-radius: var(--rad); padding: 16px 20px; margin: 0 0 30px;
@@ -537,11 +608,25 @@
     <div class="container wide">
       <h1>How to save your Canvas assignment feedback</h1>
       <p class="sub">Canvas hands back every file you submitted. It hands back nothing your instructor wrote, and that is the half you cannot rebuild.</p>
+      <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-23">23 August 2026</time></span><span class="sep">&middot;</span><span>Updated <time datetime="2026-08-27">27 August 2026</time></span></p>
     </div>
   </div>
 
   <div class="container wide">
     <div class="art">
+      <div class="short-answer">
+        <p class="sa-label">Short answer</p>
+        <p>Canvas has a one-click export of your submissions - Account,
+        Settings, Download Submissions, Create Export - and it deliberately
+        contains <strong>none of the feedback</strong>: no grades, no comments,
+        no rubrics, and not the annotated version of your file. It also expires
+        after 30 days.</p>
+        <p>So the feedback has to be saved by hand. Annotations come from the
+        Download button inside <strong>View Feedback</strong>, one assignment at
+        a time; grades, rubrics and comment threads have to be saved from each
+        submission's own page. Do it while you can still open the course.</p>
+      </div>
+
       <div class="toc">
         <p>On this page</p>
         <ol>
@@ -588,9 +673,8 @@
       included even where a team mate did the submitting.</p>
 
       <div class="note warn">
-        <p><strong>The export expires after 30 days.</strong> It is generated on
-        request and then deleted, so this is not a link you can bookmark and
-        come back to after graduation. Generate it and save the ZIP somewhere
+        <p><strong>The export <a class="src" href="https://community.instructure.com/en/kb/articles/661234" target="_blank" rel="noopener">expires after 30 days</a>.</strong> It is generated on request and then deleted, so this is not a
+        link you can bookmark and come back to after graduation. Generate it and save the ZIP somewhere
         permanent the same day.</p>
       </div>
 
@@ -642,8 +726,7 @@
       <h2 id="annotations">Saving inline annotations</h2>
 
       <p>Annotations are the ones people most want and most often lose, because
-      they are not part of your file. Canvas renders them in a viewer on top of
-      it, so downloading the file from your own submission gives you a clean copy
+      they are not part of your file. Canvas <a class="src" href="https://community.instructure.com/en/kb/articles/661231" target="_blank" rel="noopener">renders them in a viewer on top of it</a>, so downloading the file from your own submission gives you a clean copy
       with nothing on it.</p>
 
       <ol class="steps">
@@ -658,7 +741,7 @@
       <div class="note">
         <p><strong>If the button says "Preview" rather than "View Feedback",
         stop looking.</strong> That means the file type is not DocViewer
-        compatible, and a file DocViewer cannot open is a file nobody annotated.
+        compatible, and <a class="src" href="https://community.instructure.com/en/kb/articles/661230" target="_blank" rel="noopener">a file DocViewer cannot open</a> is a file nobody annotated.
         There is nothing to save; check the comment sidebar instead, which is
         where the feedback for those submissions ends up.</p>
       </div>
@@ -706,7 +789,10 @@
         <li><strong>The course material itself</strong> - slides, readings,
         recordings - which is a separate job. See
         <a href="how-to-download-all-canvas-files.html">how to download all your
-        files from Canvas</a>.</li>
+        files from Canvas</a>, and
+        <a href="save-canvas-pages-quizzes-discussions.html">how to save the
+        quizzes, Pages and discussions</a>, which are not files and need their
+        own answer.</li>
       </ol>
 
       <h2 id="when">When to do it</h2>
@@ -724,16 +810,17 @@
 
       <div class="cta-box">
         <h3>Saving the feedback with everything else</h3>
-        <p>Canvas Downloader can save assignment feedback as it downloads a
-        course: the grade and score, the rubric with its per-criterion comments,
-        the full comment thread, and any file a teacher attached to a comment -
-        one readable page per assignment, alongside the course material.</p>
-        <p>It does <strong>not</strong> capture inline annotations. Those are
-        drawn inside DocViewer rather than stored on the file, so the per-
-        assignment Download button above is still the way to keep those.</p>
+        <p>Canvas Downloader saves your feedback as it downloads a course: the
+        grade and score, the rubric with its per-criterion comments, the full
+        comment thread, and any file a teacher attached to a comment - one
+        readable page per assignment, sitting next to the material it belongs to.
+        Inline DocViewer annotations are the one exception, for the reason
+        above, so keep using the per-assignment Download button for those.</p>
+        <p>Do it for every course you are still enrolled in, in one run. Free and
+        open source, Windows and macOS.</p>
         <div class="cta-row">
           <a href="releases.html" class="btn-nav">Download</a>
-          <a href="guide.html" class="btn-nav-ghost"><span>See how it works</span></a>
+          <a href="index.html#features" class="btn-nav-ghost"><span>See it in action</span></a>
         </div>
       </div>
 
@@ -771,6 +858,22 @@
         <summary>Does downloading my feedback notify my instructor?</summary>
         <div><p>No. Opening or downloading your own submission and its feedback is not reported to anyone. Canvas records page views in its own access logs exactly as it does when you browse a course normally.</p></div>
       </details>
+
+      <div class="author-box" id="about-the-author">
+        <p class="ab-label">Who wrote this</p>
+        <p><strong>BrkBuilds</strong> builds Canvas Downloader, the free
+        open-source app this site is about. These guides are written from the
+        engine side: what Canvas does and does not export is described from
+        having implemented against the Canvas API, not from reading about it.
+        The app's behaviour is documented in
+        <a href="engine.html">Under the Hood</a> and the whole codebase is
+        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">public
+        on GitHub</a>, so every claim on this page can be checked against the
+        code that makes it.</p>
+        <p>It is a one-person project with no company behind it. Where a page is
+        uncertain it says so, and where a built-in Canvas feature or somebody
+        else's tool is the better answer, it says that too.</p>
+      </div>
     </div>
   </div>
 

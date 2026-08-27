@@ -309,7 +309,7 @@
   <div class="hero">
     <div class="container">
       <h1>Windows Setup Guide</h1>
-      <p class="sub">Installing Canvas Downloader on Windows takes under a minute. Pick either install method below - both give you the exact same app.</p>
+      <p class="sub">Installing Canvas Downloader on Windows takes under a minute. Pick either install method below - both give you the exact same app - then log in and you are going.</p>
     </div>
   </div>
 
@@ -337,6 +337,29 @@
       </ol>
       <p style="margin-top: 12px;">The warning appears only because the app is a free, unsigned solo project - the full source code is public on
         <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">GitHub</a>. You only see it once.</p>
+    </div>
+
+    <!-- Log in. Deliberately SHORT: the full walkthrough lives in guide.html
+         and this page's job is to get someone from installer to first
+         download. mac-setup.html's Step 4 is the same three points. -->
+    <div class="setup-card">
+      <h3><span class="num">C</span> Log in to Canvas</h3>
+      <p>The app opens on a login screen asking for two things: your school's Canvas address, and a personal access
+        token you create yourself. Two minutes, once.</p>
+      <ol>
+        <li>For the address, use <strong>Find your institution</strong> beside the field and start typing your
+          school's name - the address fills itself in. Not listed? Paste it yourself; every Canvas works, listed or
+          not.</li>
+        <li>For the token, click <strong>Get a token</strong> beside the token field. It opens your own Canvas token
+          page, where <strong>Approved Integrations</strong> &rarr; <strong>+ New Access Token</strong> generates one
+          in about 30 seconds.</li>
+        <li>Copy it straight away - Canvas shows it only once - and paste it in. The app then remembers it in Windows
+          Credential Manager, so you are not typing it again. Canvas now puts a time limit on tokens, so it will ask
+          you for a fresh one when yours runs out. Wondering what a token actually gives away?
+          <a href="canvas-access-token-explained.html" style="color: var(--cyan); text-decoration: none;">Here is what it can and cannot do</a>.</li>
+      </ol>
+      <p style="margin-top: 12px;">Want it in pictures? The <a href="guide.html#api-token">step-by-step
+        walkthrough</a> in the guide has the whole thing, clip included.</p>
     </div>
   </div>
 

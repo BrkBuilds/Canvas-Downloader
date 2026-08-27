@@ -257,12 +257,23 @@ Ready-to-paste copy is in section 7. Notes on each:
 
 | Where | Link | Notes |
 |---|---|---|
-| AlternativeTo | [alternativeto.net](https://alternativeto.net/) | Highest value here: people search it for "alternative to X". The add-software route is behind a login, so sign in and use the account menu. **I could not verify a deep link, so I am not giving you one that might 404.** List it as an alternative to the Chrome extensions above. |
-| Product Hunt | [producthunt.com/posts/new](https://www.producthunt.com/posts/new) (redirects to login, i.e. correct) | One shot only, so do it when a release is ready. Tuesday to Thursday, 00:01 PT. |
-| MajorGeeks | [submit software](https://www.majorgeeks.com/content/page/submit_software.html) | Verified 200. Old-school Windows directory, still indexed well. |
-| Softpedia | [softpedia.com](https://www.softpedia.com/) | Already lists competing Canvas extensions, so the category exists. Submission needs an account; the URL I guessed 404'd, so find it from their footer. |
+| AlternativeTo | [alternativeto.net](https://alternativeto.net/) | **Submitted 2026-08-27.** Highest value here: people search it for "alternative to X". Listed as an alternative to the Chrome extensions above. Moderated, so see the note under this table before counting it. |
+| Product Hunt | [producthunt.com/posts/new](https://www.producthunt.com/posts/new) | **Submitted 2026-08-27.** A product gets one post, and this was it, so the old "Tuesday to Thursday, 00:01 PT" timing advice is spent and no longer actionable. |
+| ~~MajorGeeks~~ | [submit software](https://www.majorgeeks.com/content/page/submit_software.html) | **Ruled out 2026-08-27.** Submission is by email, the site is outdated, and the expected yield does not justify the effort. Do not re-add it on the strength of "still indexed well", which is what put it on this list. |
+| Softpedia | [softpedia.com](https://www.softpedia.com/) | **Submitted 2026-08-27.** Already lists competing Canvas extensions, so the category exists. Softpedia is understood to re-host a mirror of the installer rather than linking the release; **verify what its download button actually serves** once the page is live, because a mirrored 2.0.2 goes stale and nothing here will say so. |
 | GitHub topics | [canvas-lms](https://github.com/topics/canvas-lms), [canvas](https://github.com/topics/canvas) | Already done, your 20 topics are good. |
-| Slant | [slant.co](https://www.slant.co/) | Returned an SSL error (526) when checked, so **verify it is alive before spending time on it.** |
+| ~~Slant~~ | [slant.co](https://www.slant.co/) | **Dead, confirmed 2026-08-27.** The 526 SSL error seen on 2026-08-20 was not transient. Do not spend time on it. |
+
+**A submission is NOT a listing, and only a fetch settles it.** All three
+submitted directories are moderated, so what exists today is a form that was
+sent, not a page anyone can reach. This repo has already been wrong twice by
+trusting a record over a fetch (the GitHub `og:image` whose record exists while
+the blob 404s, and the Store's Privacy link that 404'd for ten weeks while a
+link guard passed - both in [FINDINGS.md](FINDINGS.md)). So when each listing
+appears, write its URL into this table and confirm it returns **200**, and while
+you are there check two things the submission form does not guarantee: that the
+licence reads **GPL-3.0** (see FINDINGS.md on the relicense) and that the
+download points at the current release rather than a frozen mirror.
 
 Also worth doing, no link needed: submit to the `awesome-*` lists that cover
 education or student tools by opening a PR on the relevant repo.
@@ -447,8 +458,9 @@ The demand for this product is seasonal and the peaks are predictable:
 
 - **Do not buy links or submit to link farms.** A young domain with a sudden
   spike of low-quality links is the classic pattern that gets sites suppressed.
-- **Do not spin up more thin pages.** Two strong pages beat eight thin ones, and
-  thin pages actively hurt.
+- **Do not spin up thin pages.** A page needs a distinct question and measured
+  demand behind it; see [BLOG_PLAN.md](BLOG_PLAN.md). There is no cap on how
+  many pages there should be.
 - **Do not add analytics without updating `docs/privacy.html`.** You decided
   against analytics; if that changes, the privacy page has to change in the same
   commit or the site is making a false claim.

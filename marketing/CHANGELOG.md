@@ -6,6 +6,67 @@ the evidence for everything below.
 
 ---
 
+## 2026-08-26 - the login walkthrough left the homepage
+
+The homepage carried the whole thing - **How to log in**, ~370 lines: the Canvas
+URL card with the two address formats, the token card with its four steps and the
+YouTube clip, the token-safety block, and a Setup Guide CTA. It sat directly under
+the download buttons, so the first thing a visitor met after deciding to download
+was a tutorial for a screen they cannot reach yet. The reasoning and the rule are
+now a settled decision in [STRATEGY.md](STRATEGY.md).
+
+### Where each piece went
+
+| Piece | Now |
+|---|---|
+| Canvas URL + token walkthrough | `guide.html#api-token` - already there, already current (it named the institution picker and the *Get a token* button). Nothing had to be rewritten. |
+| The 30-second clip | `guide.html`, same click-to-load `.guide-embed` pattern as `mac-setup.html`. Nothing is requested from YouTube until the play button is pressed - verified: 0 youtube/google requests on load. |
+| *Your token is safe* + the does/doesn't lists | `index.html#security`, as a fifth full-width card in *Fair questions, straight answers*. |
+| The Setup Guide CTA | Dropped. The nav's **How to set up** and the footer already carry it, and the post-download pages route there on their own. |
+
+### The Windows gap this exposed
+
+`mac-setup.html` has had a **Log in to Canvas** step since it was written;
+`win-setup.html` had nothing. Removing the homepage section would have left a
+Windows reader's whole path - homepage, `thanks-win.html`, `win-setup.html` -
+saying not one word about the token. It now has a card **C**, three points, the
+same length as the Mac one.
+
+### Measured
+
+| | Before | After |
+|---|---|---|
+| Homepage height, desktop 1280px | 11,399 px | **8,806 px** (-23%) |
+| Homepage height, mobile 390px | 16,510 px | **12,585 px** (-3,925 px, -24%) |
+
+On a phone that is close to four screens of scrolling removed from between the
+download buttons and everything after them.
+
+### Guards
+
+`tests/test_website_login_claims.py` moved with the content, and all four changed
+or new guards were run against a deliberately broken tree first - 4 of 4 caught:
+
+- `test_the_homepage_does_not_teach_the_login` is new. It matches the Canvas
+  **controls** a walkthrough has to name (*New Access Token*, *Generate Token*,
+  *Get a token*, *Find your institution*), because the homepage legitimately says
+  "token" many times and the breach card legitimately names *Approved
+  Integrations* as the place to revoke one.
+- `test_no_page_links_to_an_index_anchor_that_does_not_exist` became
+  `..._a_local_anchor_...`. The narrow version only ever looked at `index.html`,
+  so it could not see the `guide.html#api-token` link the setup pages now depend
+  on - it would have passed on a dead link.
+- The token-shown-once and named-button guards follow the content:
+  `guide.html`, `win-setup.html`, `mac-setup.html`.
+
+Also: the orphaned video-facade script was removed from `index.html`, the green
+reassurance block got a `margin-top` (every card in that grid renders a **0px**
+gap between summary and body - the other four read fine only because a text body
+starts with its line box's own leading, which a bordered box does not get), and
+`sitemap.xml` `lastmod` was bumped for the four edited pages.
+
+---
+
 ## 2026-08-25 - the pillar demo videos, re-shot and re-cut
 
 Four of the six homepage pillars got new recordings of the current UI. Two of

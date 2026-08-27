@@ -696,7 +696,7 @@
           <p>Most conversions <strong>replace</strong> the original rather than sitting beside it. Turn on
             PowerPoint&nbsp;&rarr;&nbsp;PDF and you get the PDF - the <code>.pptx</code> is gone. That is intentional
             (you asked for a PDF, not both), but it is worth knowing before you run it on a folder you care about.
-            The exception is Canvas pages, which keep their source.</p>
+            Every conversion on the card works this way - what you end up with is the converted file.</p>
         </div>
       </section>
 
@@ -742,7 +742,7 @@
         </div>
 
         <p class="body">
-          If your course uses Panopto, the app can find the recordings and pull them down in up to four forms. You
+          If your course uses Panopto, the app can find the recordings and pull them down in up to five forms. You
           choose any combination:
         </p>
 
@@ -750,6 +750,7 @@
           <table>
             <thead><tr><th>Output</th><th>What it is</th><th>Notes</th></tr></thead>
             <tbody>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_url.png" alt="" />Shortcut</td><td>A small link file that reopens the lecture on Panopto</td><td>Costs nothing to fetch; a pointer, not a copy</td></tr>
               <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_mp4.png" alt="" />Video</td><td>The full lecture as MP4</td><td>By far the largest option</td></tr>
               <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_mp3.png" alt="" />Audio</td><td>Audio only, as MP3</td><td>A fraction of the size; enough to re-listen</td></tr>
               <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/pan_txt.png" alt="" />Transcript</td><td>Plain-text transcript</td><td><span class="pill need">Needs a model</span></td></tr>
@@ -757,6 +758,12 @@
             </tbody>
           </table>
         </div>
+
+        <p class="body">
+          The shortcut is the cheap one. It costs nothing to fetch, and it keeps the things a downloaded copy loses -
+          the slide navigation, the screen capture and Panopto's own search. It is a pointer rather than a copy, so it
+          stops working when your access to the course does: a companion to an offline file, not a substitute for one.
+        </p>
 
         <div class="callout safe">
           <div class="callout-t">Transcription happens on your computer</div>
@@ -795,9 +802,9 @@
               <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_pptx.png" alt="" />PowerPoint &rarr; PDF</td><td><code>.ppt</code> <code>.pptx</code> <code>.pptm</code> <code>.pot</code> <code>.potx</code></td><td>A PDF of the deck</td><td><span class="pill gone">Replaced</span></td></tr>
               <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_word.png" alt="" />Legacy Word &rarr; PDF</td><td><code>.doc</code> <code>.rtf</code> <code>.odt</code></td><td>A PDF</td><td><span class="pill gone">Replaced</span></td></tr>
               <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_excel.png" alt="" />Excel &rarr; PDF &amp; data</td><td><code>.xlsx</code> <code>.xls</code> <code>.xlsm</code></td><td>A PDF, plus a <code>_Data.txt</code> with every cell value (<code>.xls</code> gets the PDF only)</td><td><span class="pill gone">Replaced</span></td></tr>
-              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_html.png" alt="" />Canvas Pages &rarr; Plain Text</td><td><code>.html</code></td><td>A Markdown version beside it</td><td><span class="pill keep">Kept</span></td></tr>
-              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_code.png" alt="" />Code &amp; Data &rarr; .txt</td><td>50+ code and data formats - <code>.py</code> <code>.js</code> <code>.sql</code> <code>.json</code> <code>.csv</code> <code>.yaml</code> and more</td><td>A readable <code>.txt</code> with a header</td><td><span class="pill gone">Replaced</span></td></tr>
-              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_urls.png" alt="" />Gather Web Links</td><td><code>.url</code> <code>.webloc</code></td><td>One <code>Compiled_External_Links.txt</code> for the course</td><td><span class="pill gone">Replaced</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_html.png" alt="" />Canvas Pages &rarr; Plain Text</td><td><code>.html</code></td><td>A Markdown version of the page</td><td><span class="pill gone">Replaced</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_code.png" alt="" />Code &amp; Data &rarr; .txt</td><td>50 code and data formats - <code>.py</code> <code>.js</code> <code>.sql</code> <code>.json</code> <code>.csv</code> <code>.yaml</code> and more</td><td>A readable <code>.txt</code> with a header</td><td><span class="pill gone">Replaced</span></td></tr>
+              <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_urls.png" alt="" />Gather Web Links</td><td><code>.url</code> <code>.webloc</code></td><td>One <code>Compiled_External_Links.txt</code> for the course. Panopto shortcuts are left alone.</td><td><span class="pill gone">Replaced</span></td></tr>
               <tr><td class="nm"><img decoding="async" loading="lazy" class="ti" src="assets/icon_conv_video.png" alt="" />Video &rarr; Audio</td><td><code>.mp4</code> <code>.mov</code> <code>.mkv</code> <code>.avi</code> <code>.m4v</code></td><td>An MP3 of the audio</td><td><span class="pill gone">Replaced</span></td></tr>
             </tbody>
           </table>
@@ -877,7 +884,7 @@
       <section class="guide-section" id="limits">
         <div class="sh">
           <div class="icon-h2"><svg viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg><h2>Filters &amp; limits</h2></div>
-          <p>Two ways to download less, and one important consequence.</p>
+          <p>Two ways to download less, and what happens to everything you leave out.</p>
         </div>
 
         <h3 class="sub-h"><img decoding="async" loading="lazy" class="shi-img" src="assets/icon_study_files.png" alt="" />Slides &amp; PDFs only</h3>
@@ -887,6 +894,12 @@
           and code are skipped - and so are <b>Word documents</b>. If your reading list is a <code>.docx</code>,
           this filter will not bring it down; use <b>All files</b> instead.
         </p>
+        <p class="body">
+          The choice is written into the folder, so every later sync keeps to it: a filtered folder stays a filtered
+          folder, and files outside it are never offered. The review and completion screens say so, with a count of
+          what the filter is holding back, so a folder never quietly pretends to be a complete copy. To change it,
+          download the course again into a fresh folder with <b>All files</b> selected.
+        </p>
 
         <h3 class="sub-h"><svg class="shi" viewBox="0 0 24 24"><path d="M22 3H2l8 9.5V19l4 2v-8.5L22 3z"/></svg>Maximum file size</h3>
         <p class="body">
@@ -895,11 +908,13 @@
         </p>
 
         <div class="callout">
-          <div class="callout-t">A skipped file stays genuinely absent</div>
-          <p>A file skipped by either filter leaves <em>no trace</em> in your folder's record - it isn't quietly marked
-            as "already have it". That matters: if it were, then raising the cap later, or switching back to all files,
-            would never bring it in. Because it's genuinely absent, it shows up as a new file the moment you widen the
-            settings.</p>
+          <div class="callout-t">An oversized file is set aside, not forgotten</div>
+          <p>A file the cap skips is recorded in your folder as <b>ignored</b>, so later syncs stop listing it as new
+            every time - which is the point, since otherwise the same enormous video would be offered on every run
+            forever.</p>
+          <p>It stays visible in <b>Ignored Files</b> on the pair's card. To bring one in later, raise the cap,
+            restore the file there, and sync - the restore is what puts it back in play, so raising the cap on its
+            own won't fetch it.</p>
         </div>
       </section>
 
@@ -981,7 +996,7 @@
         <p class="body">
           Before a sync touches anything, it compares three things: what's on Canvas now, what your folder's record
           says it saved, and what's actually on disk right now. Any disagreement becomes one of six categories - and
-          three of them are <strong>unchecked by default</strong>, because they represent decisions you made.
+          two of them are <strong>unchecked by default</strong>, because they represent decisions you made.
         </p>
 
         <div class="tbl-wrap">
@@ -1029,7 +1044,7 @@
         </div>
 
         <div class="callout why">
-          <div class="callout-t">Why three are unchecked</div>
+          <div class="callout-t">Why two are unchecked</div>
           <p>Each of the unchecked categories represents something you did on purpose. You edited that file. You
             deleted that one. The app's job is to bring you new material, not to undo your decisions - so those
             actions need an explicit tick before anything happens.</p>
@@ -1372,12 +1387,13 @@
 
     function emitContent(list, depth) {
       list.forEach(function (c) {
-        rows.push(row(depth, c.n, { card: 'canvas', badge: ['canvas', 'canvas content'] }));
-        nFiles++; mb += c.mb;
         if (S.html && /\.html$/i.test(c.n)) {
-          rows.push(row(depth, baseName(c.n) + '.md', { card: 'conv', badge: ['conv', 'converted'], note: 'source kept' }));
-          nFiles++;
+          rows.push(row(depth, baseName(c.n) + '.md', { card: 'conv', badge: ['conv', 'converted'], note: 'was ' + c.n }));
+          nConv++;
+        } else {
+          rows.push(row(depth, c.n, { card: 'canvas', badge: ['canvas', 'canvas content'] }));
         }
+        nFiles++; mb += c.mb;
       });
     }
 
@@ -1417,17 +1433,17 @@
     var typesOff = ['assignments','announcements','quizzes','discussions','syllabus','submissions']
       .filter(function (t) { return !S[t]; }).length;
 
-    if (capped)   notes.push('<b>' + capped + ' file skipped by the size limit.</b> It leaves no record behind, so raising the limit later brings it straight in.');
+    if (capped)   notes.push('<b>' + capped + ' file skipped by the size limit.</b> It is set aside as <b>ignored</b>, so later syncs stop offering it - restore it there once you raise the limit.');
     if (filtered) notes.push('<b>' + filtered + ' files hidden by &ldquo;Slides &amp; PDFs&rdquo;.</b> Datasets, code, archives and video all sit outside that filter.');
     if (S.zip)    notes.push('The archive was unpacked - and <b>nothing inside it was converted</b>, even where a conversion would otherwise apply.');
     if (S.code && !S.zip) notes.push('Code conversion renames <code>analysis.py</code> to <code>analysis_py.txt</code> - the dot becomes an underscore.');
     if (S.word)   notes.push('Only the legacy <code>.doc</code> converted. <b><code>.docx</code> is never converted</b> - it already opens everywhere.');
     if (S.excel)  notes.push('Excel produced two outputs: a PDF to read, and a <code>_Data.txt</code> holding every cell value.');
-    if (S.html && mdExtra) notes.push('Canvas Pages conversion is the one that <b>keeps its source</b> - you get the <code>.md</code> <em>and</em> the original <code>.html</code>.');
+    if (S.html && mdExtra) notes.push('Each Canvas page became a <code>.md</code> - the <code>.html</code> it was built from is <b>replaced</b>, exactly like the other conversions.');
     if (S.layout === 'flat' && S.zip) notes.push('Even in &ldquo;All in One Folder&rdquo;, an unpacked archive keeps its own folder - its internal structure is the point.');
     if (typesOff === 6) notes.push('Every Canvas content type is off, so no assignments, announcements or quizzes are saved at all.');
     else if (typesOff) notes.push('<b>' + typesOff + ' Canvas content type' + (typesOff > 1 ? 's are' : ' is') + ' switched off</b> - those are simply never fetched.');
-    if (nConv)    notes.push('<b>' + nConv + ' original' + (nConv > 1 ? 's were' : ' was') + ' replaced.</b> Conversions swap the file out rather than sitting beside it - except Canvas Pages, which keeps its source.');
+    if (nConv)    notes.push('<b>' + nConv + ' original' + (nConv > 1 ? 's were' : ' was') + ' replaced.</b> Conversions swap the file out rather than sitting beside it - what you keep is the converted version.');
     if (!notes.length) notes.push('This is close to the <b>default download</b> - files kept exactly as your teacher uploaded them, nothing converted, nothing skipped. Turn something on to see what changes.');
 
     document.getElementById('sim-notes').innerHTML = notes.map(function (t) {

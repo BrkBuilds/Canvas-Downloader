@@ -82,6 +82,10 @@ and then every other hand-written page.
 - The nav's `active` class is stripped. A guide page is none of the nav's four
   destinations, and lifting the shell verbatim once told every visitor to a
   guide page that they were on the setup page.
+- **The nav holds exactly those four destinations and never gains a fifth.**
+  How to set up, How It Works, Download, GitHub. Settled by the product owner
+  2026-08-26; see [STRATEGY.md](STRATEGY.md). A new page earns its traffic
+  through contextual links in body copy, not through the nav.
 - `Person` and `WebSite` nodes are **defined**, not just referenced. Google
   resolves `@id` per page, so a bare reference to a node on another page gives
   you an author with no name.

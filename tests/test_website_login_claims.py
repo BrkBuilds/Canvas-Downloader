@@ -104,12 +104,34 @@ def test_no_page_calls_the_help_tooltip_a_guide():
 def test_the_token_walkthrough_names_the_button_and_its_fallback():
     """The app opens the right Canvas page in one click, so the site must not
     teach the hunt as the only route - and must still say where that page is,
-    because the button is the part that can fail."""
-    for name in ("index.html", "guide.html"):
-        body = _page(name)
-        assert "Get a token" in body, f"{name} never mentions the one-click button"
-        assert re.search(r"Account\s*(?:&#8594;|&rarr;|→|-&gt;)\s*Settings", body), (
-            f"{name} does not say where the token page is without the button"
+    because the button is the part that can fail.
+
+    `guide.html`, not the homepage. The homepage used to carry the whole
+    walkthrough, which taught someone how to log in before they had downloaded
+    anything; it now carries none of it, and the two setup pages carry the
+    short version (see the -shown-once test below, which covers all three)."""
+    body = _page("guide.html")
+    assert "Get a token" in body, "guide.html never mentions the one-click button"
+    assert re.search(r"Account\s*(?:&#8594;|&rarr;|→|-&gt;)\s*Settings", body), (
+        "guide.html does not say where the token page is without the button"
+    )
+
+
+def test_the_homepage_does_not_teach_the_login():
+    """Decided 2026-08-26: the login walkthrough is setup instruction, and
+    putting it on the homepage explains a screen the visitor cannot reach yet -
+    friction in front of the download, which is the one thing that page is for.
+
+    Matched on the Canvas CONTROLS the walkthrough has to name. A softer match
+    is useless here: the homepage legitimately says "token" many times (the
+    security cards, the FAQ, the structured data), and the breach card
+    legitimately names "Approved Integrations" as the place to revoke one."""
+    body = _page("index.html")
+    for teaching in ("New Access Token", "Generate Token", "Get a token",
+                     "Find your institution"):
+        assert teaching not in body, (
+            f"index.html is teaching the login again ({teaching!r}) - that "
+            f"belongs in guide.html, win-setup.html and mac-setup.html"
         )
 
 
@@ -122,7 +144,7 @@ def test_the_canvas_path_is_account_then_settings_everywhere():
         )
 
 
-@pytest.mark.parametrize("name", ["index.html", "guide.html", "mac-setup.html"])
+@pytest.mark.parametrize("name", ["guide.html", "mac-setup.html", "win-setup.html"])
 def test_the_pages_that_teach_login_agree_the_token_is_shown_once(name):
     """Every page that walks someone through generating a token has to carry
     this, because it is the only step with a cost: miss it and the token is
@@ -141,26 +163,33 @@ def test_the_pages_that_teach_login_agree_the_token_is_shown_once(name):
 # ── Anchors other pages depend on ────────────────────────────────────────────
 
 def test_the_login_walkthrough_has_an_anchor_and_the_links_reach_it():
-    """win-setup and mac-setup send people to the login walkthrough. Before the
-    anchor existed those links landed on the FAQ, which answers a different
-    question - and a wrong in-page link fails silently, because the page still
-    loads."""
-    # On the SECTION tag, not merely present in the file: an anchor is only an
-    # anchor if it is on an element the browser can scroll to.
-    assert re.search(r"<section[^>]*\bid=\"login\"", _page("index.html")), (
-        "the login section lost its anchor"
+    """The setup pages send people to the login walkthrough for the long
+    version. Before an anchor existed those links landed on the FAQ, which
+    answers a different question - and a wrong in-page link fails silently,
+    because the page still loads.
+
+    The walkthrough moved from `index.html#login` to `guide.html#api-token` on
+    2026-08-26. Both halves are asserted: the anchor exists on an element the
+    browser can scroll to, AND something still points at it. Either alone
+    passes on a broken site - an orphaned anchor nobody links to is as dead as
+    a link to an anchor that is not there."""
+    assert re.search(r'id="api-token"', _page("guide.html")), (
+        "the token walkthrough lost its anchor"
     )
-    linkers = [n for n in _PAGES if "index.html#login" in _page(n)]
-    assert linkers, "nothing links to the login walkthrough any more"
+    linkers = [n for n in _PAGES if "guide.html#api-token" in _page(n)]
+    assert linkers, "nothing links to the token walkthrough any more"
 
 
-def test_no_page_links_to_an_index_anchor_that_does_not_exist():
-    """A dead in-page link scrolls nowhere and says nothing about it."""
-    index = _page("index.html")
-    ids = set(re.findall(r'id="([^"]+)"', index))
+def test_no_page_links_to_a_local_anchor_that_does_not_exist():
+    """A dead in-page link scrolls nowhere and says nothing about it.
+
+    Widened from index.html-only when the walkthrough moved: the link the
+    setup pages depend on now points into `guide.html`, which the narrow
+    version could not see at all."""
+    ids = {name: set(re.findall(r'id="([^"]+)"', _page(name))) for name in _PAGES}
     missing = []
     for name in _PAGES:
-        for anchor in re.findall(r'href="index\.html#([^"]+)"', _page(name)):
-            if anchor not in ids:
-                missing.append(f"{name} -> #{anchor}")
-    assert not missing, f"dead links into index.html: {missing}"
+        for target, anchor in re.findall(r'href="([a-z0-9_.-]+\.html)#([^"]+)"', _page(name)):
+            if target in ids and anchor not in ids[target]:
+                missing.append(f"{name} -> {target}#{anchor}")
+    assert not missing, f"dead links into a local page: {missing}"

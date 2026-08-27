@@ -127,6 +127,25 @@ def _files() -> list[Path]:
     return out
 
 
+#: A findings document that records a dead URL AS the defect it reports is not
+#: a file linking to it. `marketing/SEO_FINDINGS_2026-08-27.md` has a
+#: before/after table whose whole content is "this URL 404s, this one is 200",
+#: and flagging it makes the guard fire on the write-up of the very fix the
+#: guard exists to enforce.
+#:
+#: The exemption is a PROPERTY rather than a filename: the line must carry an
+#: explicit dead HTTP status beside the URL. A filename allowlist would go
+#: stale the moment the document is renamed, and prose words like "old" or
+#: "redirect" are far too common to key on - a first draft used them and would
+#: have exempted any real link in a sentence containing the word "old". A
+#: three-digit status code next to a URL is something only a report writes.
+_DEAD_MARKER = re.compile(r"\b(?:404|410|301|308)\b")
+
+
+def _documents_the_url_as_dead(line: str) -> bool:
+    return bool(_DEAD_MARKER.search(line))
+
+
 def test_no_shipped_file_links_to_the_old_owner_or_pages_host():
     offenders: list[str] = []
     for path in _files():
@@ -135,7 +154,7 @@ def test_no_shipped_file_links_to_the_old_owner_or_pages_host():
         except (UnicodeDecodeError, OSError):
             continue
         for lineno, line in enumerate(text.splitlines(), 1):
-            if _STALE_LINK.search(line):
+            if _STALE_LINK.search(line) and not _documents_the_url_as_dead(line):
                 rel = path.relative_to(REPO).as_posix()
                 offenders.append(f"{rel}:{lineno}: {line.strip()[:110]}")
     assert not offenders, (

@@ -103,6 +103,23 @@ ARTICLE_CSS = """
     .art strong { color: var(--txt); font-weight: 700; }
     .art a { color: var(--cyan); text-decoration: none; }
     .art a:hover { text-decoration: underline; }
+
+    /* ...and that rule reaches INTO the CTA box, where the two buttons are also
+       anchors. They lost the colours the shell gives them everywhere else on the
+       site, silently, on the one element the box exists for. Measured in the
+       browser 2026-08-27, on all five articles: Download rendered cyan-on-blue
+       at a 2.31:1 contrast ratio, against the byte-identical nav button's
+       white-on-blue 4.95:1 - below the 4.5:1 AA floor and below the 3:1 large
+       floor. The hover underline was landing on them too.
+       Restate the shell's own values (win-setup.html, .btn-nav / .btn-nav-ghost)
+       rather than inventing new ones; .art .btn-nav is 0,2,0 and wins over
+       .art a at 0,1,1. Same family as the homepage's `a { color: inherit }`
+       swallowing new body links - a broad link rule that a button is an anchor
+       inside of. */
+    .art .btn-nav { color: #fff; }
+    .art .btn-nav-ghost { color: var(--txt); }
+    .art .btn-nav-ghost:hover { color: #fff; }
+    .art .cta-row a:hover { text-decoration: none; }
     .art code {
       font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 12.5px; background: var(--surf2); color: var(--txt);
@@ -173,6 +190,60 @@ ARTICLE_CSS = """
     .cta-box h3 { margin: 0 0 8px; font-size: 18px; }
     .cta-box p { margin: 0 0 16px; font-size: 14px; }
     .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+    /* The byline. Google's helpful-content guidance asks whether it is
+       "self-evident to your visitors who authored your content", and wants a
+       byline that leads to further information - hence the #about-the-author
+       link rather than a bare name. */
+    .byline {
+      margin: 14px 0 0; font-size: 13px; color: var(--txt3);
+      display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
+      justify-content: center;  /* the hero above it is centred */
+    }
+    .byline a { color: var(--txt2); text-decoration: none; border-bottom: 1px dotted var(--border2); }
+    .byline a:hover { color: var(--cyan); }
+    .byline .sep { color: var(--border2); }
+    /* Below ~480px the byline wraps to three lines and every separator
+       lands dangling at the end of a line. Stack it instead. */
+    @media (max-width: 480px) {
+      .byline { flex-direction: column; gap: 3px; }
+      .byline .sep { display: none; }
+    }
+
+    /* The block an AI Overview lifts and a skimmer reads. It answers the title
+       question completely, so it must never be a teaser for the article. */
+    .short-answer {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 var(--rad) var(--rad) 0;
+      padding: 16px 20px; margin: 0 0 26px;
+    }
+    .short-answer p.sa-label {
+      margin: 0 0 6px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan);
+    }
+    .short-answer p { margin: 0 0 10px; font-size: 15px; color: var(--txt2); }
+    .short-answer p:last-child { margin-bottom: 0; }
+
+    /* Inline citation to a primary source. Cited sources are the single
+       largest measured lever for a page that does not already rank; see
+       marketing/BLOG_PLAN.md section 3. */
+    a.src {
+      color: var(--txt2); text-decoration: none;
+      border-bottom: 1px solid var(--border2);
+    }
+    a.src:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+    .author-box {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 20px 22px; margin: 34px 0 0;
+    }
+    .author-box p.ab-label {
+      margin: 0 0 8px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3);
+    }
+    .author-box p { margin: 0 0 10px; font-size: 14px; }
+    .author-box p:last-child { margin-bottom: 0; }
 
     .toc {
       background: var(--surf); border: 1px solid var(--border);
@@ -258,9 +329,53 @@ def faq_schema(items: list[tuple[str, str]], page_url: str) -> dict:
     }
 
 
+AUTHOR_BOX = """      <div class="author-box" id="about-the-author">
+        <p class="ab-label">Who wrote this</p>
+        <p><strong>BrkBuilds</strong> builds Canvas Downloader, the free
+        open-source app this site is about. These guides are written from the
+        engine side: what Canvas does and does not export is described from
+        having implemented against the Canvas API, not from reading about it.
+        The app's behaviour is documented in
+        <a href="engine.html">Under the Hood</a> and the whole codebase is
+        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">public
+        on GitHub</a>, so every claim on this page can be checked against the
+        code that makes it.</p>
+        <p>It is a one-person project with no company behind it. Where a page is
+        uncertain it says so, and where a built-in Canvas feature or somebody
+        else's tool is the better answer, it says that too.</p>
+      </div>
+"""
+
+
+def _pretty(iso: str) -> str:
+    """20 August 2026. Matches the format the blog index already prints."""
+    return datetime.date.fromisoformat(iso).strftime("%d %B %Y").lstrip("0")
+
+
+def byline(published: str, modified: str) -> str:
+    """A visible byline and date.
+
+    Both were missing entirely: the dates existed in PAGES and were rendered on
+    the index but never on the article itself, so a reader had no way to tell
+    whether a page was current or who stood behind it.
+
+    Updated is shown only when it differs from published. Printing "Updated"
+    with the publication date is the kind of small untruth that costs a reader
+    their trust in every other number on the page.
+    """
+    bits = ['<span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span>',
+            '<span class="sep">&middot;</span>',
+            f'<span>Published <time datetime="{published}">{_pretty(published)}</time></span>']
+    if modified != published:
+        bits += ['<span class="sep">&middot;</span>',
+                 f'<span>Updated <time datetime="{modified}">{_pretty(modified)}</time></span>']
+    return '<p class="byline">' + "".join(bits) + "</p>"
+
+
 def build(slug: str, *, title: str, description: str, h1: str, lede: str,
           crumb: str, body: str, faq: list[tuple[str, str]],
-          extra_nodes: list[dict], published: str, modified: str) -> Path:
+          extra_nodes: list[dict], published: str, modified: str,
+          answer: str = "") -> Path:
     css, nav, foot, tail = _shell()
     url = SITE + slug
     graph = [
@@ -295,6 +410,12 @@ def build(slug: str, *, title: str, description: str, h1: str, lede: str,
     ld = json.dumps({"@context": "https://schema.org", "@graph": graph},
                     indent=2, ensure_ascii=False)
     ld = "\n".join("  " + ln for ln in ld.splitlines())
+
+    short_answer = ""
+    if answer:
+        short_answer = ('      <div class="short-answer">\n'
+                        '        <p class="sa-label">Short answer</p>\n'
+                        + answer + "      </div>\n")
 
     e = html.escape
     page = f"""<!DOCTYPE html>
@@ -338,16 +459,19 @@ def build(slug: str, *, title: str, description: str, h1: str, lede: str,
     <div class="container wide">
       <h1>{h1}</h1>
       <p class="sub">{lede}</p>
+      {byline(published, modified)}
     </div>
   </div>
 
   <div class="container wide">
     <div class="art">
+{short_answer}
 {body}
 
       <h2 id="faq">Common questions</h2>
 {faq_markup(faq)}
-    </div>
+
+{AUTHOR_BOX}    </div>
   </div>
 
 {foot}

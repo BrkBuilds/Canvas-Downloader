@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to Get a Transcript of a Panopto Lecture</title>
+  <link rel="canonical" href="https://canvasdownloader.app/panopto-lecture-transcript.html" />
+  <meta property="og:url" content="https://canvasdownloader.app/panopto-lecture-transcript.html" />
+  <meta name="description" content="Panopto has probably already made one, and captions are often allowed when downloads are not. How to get it, and how to transcribe one yourself." />
+  <meta property="og:type" content="article" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="Canvas Downloader" />
+  <meta property="og:title" content="How to Get a Transcript of a Panopto Lecture" />
+  <meta property="og:description" content="Panopto has probably already made one, and captions are often allowed when downloads are not. How to get it, and how to transcribe one yourself." />
+  <meta property="og:image" content="https://canvasdownloader.app/assets/og-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Canvas Downloader - download every file from all your Canvas courses at once" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="How to Get a Transcript of a Panopto Lecture" />
+  <meta name="twitter:description" content="Panopto has probably already made one, and captions are often allowed when downloads are not. How to get it, and how to transcribe one yourself." />
+  <meta name="twitter:image" content="https://canvasdownloader.app/assets/og-card.png" />
+  <meta name="twitter:image:alt" content="Canvas Downloader - download every file from all your Canvas courses at once" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": "https://canvasdownloader.app/#author",
+        "name": "BrkBuilds",
+        "url": "https://github.com/BrkBuilds",
+        "sameAs": [
+          "https://github.com/BrkBuilds",
+          "https://ko-fi.com/brkbuilds"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://canvasdownloader.app/#website",
+        "url": "https://canvasdownloader.app/",
+        "name": "Canvas Downloader",
+        "inLanguage": "en"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Canvas Downloader",
+            "item": "https://canvasdownloader.app/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Blog",
+            "item": "https://canvasdownloader.app/blog.html"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "How to get a transcript of a Panopto lecture",
+            "item": "https://canvasdownloader.app/panopto-lecture-transcript.html"
+          }
+        ]
+      },
+      {
+        "@type": "Article",
+        "@id": "https://canvasdownloader.app/panopto-lecture-transcript.html#article",
+        "headline": "How to get a transcript of a Panopto lecture",
+        "description": "Panopto has probably already made one, and captions are often allowed when downloads are not. How to get it, and how to transcribe one yourself.",
+        "inLanguage": "en",
+        "datePublished": "2026-08-27",
+        "dateModified": "2026-08-27",
+        "author": {
+          "@id": "https://canvasdownloader.app/#author"
+        },
+        "publisher": {
+          "@id": "https://canvasdownloader.app/#author"
+        },
+        "mainEntityOfPage": "https://canvasdownloader.app/panopto-lecture-transcript.html",
+        "image": "https://canvasdownloader.app/assets/og-card.png"
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://canvasdownloader.app/panopto-lecture-transcript.html#faq",
+        "inLanguage": "en",
+        "isPartOf": {
+          "@id": "https://canvasdownloader.app/#website"
+        },
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Does Panopto give you a transcript automatically?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Usually, now. Panopto machine-transcribes recordings to produce closed captions, and institutions are documenting a change to having that on by default for new content. Brown University's IT knowledge base dates it to on or before 11 May 2026, driven by Section 504 and WCAG 2.1 Level AA accessibility requirements. Tenants are configured independently, so check yours. Older recordings are not covered either way."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I download the transcript from a Panopto lecture?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Open the recording in the Panopto player, open the Captions or Transcript panel, and look for a download option there or in the player's menu. Panopto documents this as downloading captions from the viewer. What you get is a subtitle file, which is plain text with timestamps and opens in any text editor."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I get the transcript if downloading the video is blocked?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Often, yes. Captions are usually a separate permission from the recording, and a lecturer who has switched downloads off has frequently left captions alone, because turning accessibility features off is harder to justify. It is worth checking before concluding a lecture is locked."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How long does it take to transcribe a lecture on my own laptop?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It depends entirely on the model, and the range is about tenfold. Measured on a 10-core laptop CPU with no GPU: roughly 2 minutes per hour of lecture on the smallest model, about 10 minutes on a mid-sized one, and about 24 minutes on a large one. That is one machine on one clip rather than a benchmark, but the ordering holds."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Should I use Large v3 Turbo for transcription?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "On a GPU, yes. On a CPU, no, and the reason is structural. Turbo is fast because its decoder has four layers instead of thirty-two. Its encoder is unchanged from the full model, and on a CPU the encoder is what dominates the time, so almost none of the speed-up arrives. On a laptop it lands in the group that is too slow to be practical."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is machine transcription accurate enough to revise from?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "For following the argument, yes. Panopto states its automatic captions are typically 90 to 95% accurate depending on audio quality, and the open models are in a similar band. The errors are not spread evenly, though: proper nouns and technical terms are where both fail, which is exactly what you were going to search for. Treat a transcript as a searchable index into the recording rather than as a document of record."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does transcribing a lecture upload it anywhere?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It does not have to. Open speech-recognition models run on your own computer, so the audio never leaves it, and after the model is downloaded once the process needs no network at all. Paid online services do upload, which for lecture recordings is worth thinking about, since they usually contain other students."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the difference between a .txt transcript and a .srt subtitle file?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Only timestamps. A .srt carries a time for every line, so the text stays anchored to the recording and you can search the transcript, find the timestamp and jump to that minute. A .txt is tidier to read. Keep both if you can - the timestamps are what make a transcript a navigation tool rather than just a wall of words."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <meta name="theme-color" content="#0b0c14" />
+  <link rel="icon" type="image/x-icon" href="icon.ico" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
+  <link rel="stylesheet" href="fonts.css" />
+<style>
+    :root {
+      --bg: #0b0c14;
+      --surf: #10111e;
+      --surf2: #15172a;
+      --border: rgba(255, 255, 255, 0.1);
+      --border2: rgba(255, 255, 255, 0.16);
+      --txt: #e2e8f0;
+      --txt2: #94a3b8;
+      --txt3: #64748b;
+      --cyan: #38bdf8;
+      --green: #34d399;
+      --blue: #3b71b8;
+      --rad: 10px;
+      --rad-l: 16px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column; min-height: 100vh;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    /* ---- NAV ---- */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 12, 20, 0.9);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 58px;
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--txt);
+      text-decoration: none;
+    }
+
+    .nav-logo img {
+      width: 28px;
+      height: 28px;
+      border-radius: 7px;
+      display: block;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--txt2);
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+      text-decoration: none;
+    }
+
+    .nav-link:hover {
+      color: var(--txt);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-link.active {
+      color: var(--cyan);
+    }
+
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 18px;
+      border-radius: var(--rad);
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: filter 0.15s;
+      text-decoration: none;
+    }
+
+    .btn-nav:hover {
+      filter: brightness(1.15);
+    }
+
+    .btn-nav-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: var(--rad);
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border2);
+      color: var(--txt);
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .btn-nav-ghost:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .nav-link, .nav-logo, .btn-nav, .btn-nav-ghost { white-space: nowrap; }
+
+    @media(max-width:860px) {
+      .btn-nav-ghost span, .btn-nav span { display: none; }
+      .btn-nav-ghost, .btn-nav { padding: 8px 10px; }
+    }
+
+    .setup-short { display: none; }
+
+    @media(max-width:600px) {
+      .setup-full { display: none; }
+      .setup-short { display: inline; }
+    }
+
+    @media(max-width:540px) {
+      .nav-right .nav-link { display: none; }
+    }
+
+    /* ---- HERO ---- */
+    .hero { padding: 56px 0 20px; text-align: center; }
+    h1 { font-size: clamp(28px, 5vw, 42px); font-weight: 900; letter-spacing: -0.04em; margin: 0 0 14px; }
+    p.sub { font-size: 16px; color: var(--txt2); max-width: 560px; margin: 0 auto 18px; }
+
+    .os-switch { text-align: center; margin: 0 0 34px; }
+    .os-switch a {
+      display: inline-block;
+      color: var(--txt3);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: transform 0.2s, color 0.2s;
+    }
+    .os-switch a:hover { color: var(--txt); transform: scale(1.04); }
+
+    /* ---- CARDS ---- */
+    .setup-card {
+      background: var(--surf);
+      border: 1px solid var(--border);
+      border-radius: var(--rad-l);
+      padding: 26px;
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    .setup-card h3 {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 17px; font-weight: 800; margin: 0 0 12px;
+    }
+    .setup-card h3 .num {
+      background: rgba(56,189,248,0.1); color: var(--cyan);
+      border: 1px solid rgba(56,189,248,0.3);
+      width: 28px; height: 28px; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 50%; font-size: 14px; font-weight: 800;
+    }
+    .setup-card p, .setup-card li { font-size: 14px; color: var(--txt2); line-height: 1.7; }
+    .setup-card ul, .setup-card ol { margin: 8px 0 0; padding-left: 20px; }
+    .setup-card li { margin-bottom: 8px; }
+    .setup-card strong { color: var(--txt); }
+    .setup-card a { color: var(--cyan); text-decoration: none; }
+    .setup-card a:hover { text-decoration: underline; }
+
+    .pill {
+      font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 100px;
+      white-space: nowrap; vertical-align: middle;
+    }
+    .pill.green { background: rgba(52,211,153,0.12); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+
+    .store-badge { display: inline-flex; transition: transform 0.15s; margin: 10px 0 4px; }
+    .store-badge img { display: block; height: 54px; }
+    .store-badge:hover { transform: scale(1.03); }
+
+    .done-strip {
+      display: flex; align-items: flex-start; gap: 14px;
+      background: rgba(52,211,153,0.07);
+      border: 1px solid rgba(52,211,153,0.25);
+      border-radius: var(--rad-l);
+      padding: 20px 22px; margin-bottom: 18px;
+      text-align: left;
+    }
+    .done-strip svg { flex-shrink: 0; margin-top: 2px; }
+    .done-strip p { margin: 0; font-size: 14px; color: var(--txt2); line-height: 1.7; }
+    .done-strip strong { color: var(--green); }
+    .done-strip a { color: var(--cyan); text-decoration: none; }
+
+    footer { margin-top: auto; padding: 36px 0 40px; text-align: center; color: var(--txt3); font-size: 13px; }
+    footer a { color: var(--txt2); text-decoration: none; margin: 0 12px; }
+    footer a:hover { color: var(--txt); }
+    footer .meta { margin-top: 10px; }
+  
+    /* ---- ARTICLE (guide pages) ---- */
+    /* width: 100% is load-bearing, not tidying, and it is the ONLY thing that
+       fixes this - min-width: 0 was tried first and measured no different.
+
+       The shell makes <body> a COLUMN FLEX container, so .container is a flex
+       item and its width is the CROSS size. With width:auto that size is
+       resolved from content, and the comparison table declares min-width:640px,
+       so on a 390px phone the container came out 688px wide and the WHOLE PAGE
+       scrolled sideways (measured: 172 elements past the viewport edge).
+       A definite width stops the content-based sizing, the container lands at
+       342px, and .tbl-wrap's own overflow-x then does its job: the table scrolls
+       inside its box and the page does not. Verified at 390 / 768 / 1180. */
+    .container.wide { max-width: 800px; width: 100%; }
+    .art { text-align: left; padding-bottom: 20px; }
+    /* The shell h1 inherits body line-height 1.6, which is right for a
+       one-line setup title and far too airy for a two-line article title. */
+    .hero h1 { line-height: 1.12; }
+    .art h2 {
+      font-size: clamp(21px, 3vw, 27px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin: 46px 0 14px;
+      scroll-margin-top: 80px;
+    }
+    .art h3 { font-size: 17px; font-weight: 700; margin: 28px 0 8px; }
+    .art p { font-size: 15px; color: var(--txt2); margin: 0 0 14px; line-height: 1.75; }
+    .art li { font-size: 15px; color: var(--txt2); line-height: 1.75; margin-bottom: 7px; }
+    .art ul, .art ol { margin: 0 0 16px; padding-left: 22px; }
+    .art strong { color: var(--txt); font-weight: 700; }
+    .art a { color: var(--cyan); text-decoration: none; }
+    .art a:hover { text-decoration: underline; }
+
+    /* ...and that rule reaches INTO the CTA box, where the two buttons are also
+       anchors. They lost the colours the shell gives them everywhere else on the
+       site, silently, on the one element the box exists for. Measured in the
+       browser 2026-08-27, on all five articles: Download rendered cyan-on-blue
+       at a 2.31:1 contrast ratio, against the byte-identical nav button's
+       white-on-blue 4.95:1 - below the 4.5:1 AA floor and below the 3:1 large
+       floor. The hover underline was landing on them too.
+       Restate the shell's own values (win-setup.html, .btn-nav / .btn-nav-ghost)
+       rather than inventing new ones; .art .btn-nav is 0,2,0 and wins over
+       .art a at 0,1,1. Same family as the homepage's `a { color: inherit }`
+       swallowing new body links - a broad link rule that a button is an anchor
+       inside of. */
+    .art .btn-nav { color: #fff; }
+    .art .btn-nav-ghost { color: var(--txt); }
+    .art .btn-nav-ghost:hover { color: #fff; }
+    .art .cta-row a:hover { text-decoration: none; }
+    .art code {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 12.5px; background: var(--surf2); color: var(--txt);
+      border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px;
+    }
+    .lede { font-size: 17px !important; color: var(--txt) !important; }
+
+    /* Steps a reader follows with Canvas open in another tab. */
+    .steps { counter-reset: st; list-style: none; padding-left: 0; }
+    .steps > li {
+      counter-increment: st; position: relative;
+      padding-left: 38px; margin-bottom: 12px;
+    }
+    .steps > li::before {
+      content: counter(st);
+      position: absolute; left: 0; top: 1px;
+      width: 25px; height: 25px; border-radius: 50%;
+      background: rgba(56,189,248,0.1); color: var(--cyan);
+      border: 1px solid rgba(56,189,248,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12.5px; font-weight: 800;
+    }
+
+    .note {
+      border-left: 3px solid var(--cyan);
+      background: rgba(56,189,248,0.06);
+      border-radius: 0 var(--rad) var(--rad) 0;
+      padding: 15px 18px; margin: 0 0 20px;
+    }
+    .note p { margin: 0; font-size: 14px; }
+    .note.warn { border-left-color: #f59e0b; background: rgba(245,158,11,0.06); }
+    .note.good { border-left-color: var(--green); background: rgba(52,211,153,0.06); }
+
+    /* A wide table must scroll inside its own box, never the page. */
+    .tbl-wrap { overflow-x: auto; max-width: 100%; margin: 0 0 22px; -webkit-overflow-scrolling: touch; }
+    table.cmp { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13.5px; }
+    table.cmp th, table.cmp td {
+      border: 1px solid var(--border); padding: 10px 12px;
+      text-align: left; vertical-align: top; color: var(--txt2);
+    }
+    table.cmp th { background: var(--surf2); color: var(--txt); font-weight: 700; }
+    table.cmp td:first-child { color: var(--txt); font-weight: 600; }
+    .yes { color: var(--green); font-weight: 700; }
+    .no  { color: #f87171; font-weight: 700; }
+    .part { color: #fbbf24; font-weight: 700; }
+
+    details.faq {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 0; margin-bottom: 10px;
+    }
+    details.faq > summary {
+      cursor: pointer; padding: 15px 18px; font-size: 15px;
+      font-weight: 600; color: var(--txt); list-style: none;
+    }
+    details.faq > summary::-webkit-details-marker { display: none; }
+    details.faq > summary::after {
+      content: '+'; float: right; color: var(--txt3); font-weight: 700;
+    }
+    details.faq[open] > summary::after { content: '\2212'; }
+    details.faq > div { padding: 0 18px 16px; }
+    details.faq p { font-size: 14px; margin: 0 0 10px; }
+
+    .cta-box {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-radius: var(--rad-l); padding: 24px; margin: 34px 0 10px;
+      text-align: center;
+    }
+    .cta-box h3 { margin: 0 0 8px; font-size: 18px; }
+    .cta-box p { margin: 0 0 16px; font-size: 14px; }
+    .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+    /* The byline. Google's helpful-content guidance asks whether it is
+       "self-evident to your visitors who authored your content", and wants a
+       byline that leads to further information - hence the #about-the-author
+       link rather than a bare name. */
+    .byline {
+      margin: 14px 0 0; font-size: 13px; color: var(--txt3);
+      display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center;
+      justify-content: center;  /* the hero above it is centred */
+    }
+    .byline a { color: var(--txt2); text-decoration: none; border-bottom: 1px dotted var(--border2); }
+    .byline a:hover { color: var(--cyan); }
+    .byline .sep { color: var(--border2); }
+    /* Below ~480px the byline wraps to three lines and every separator
+       lands dangling at the end of a line. Stack it instead. */
+    @media (max-width: 480px) {
+      .byline { flex-direction: column; gap: 3px; }
+      .byline .sep { display: none; }
+    }
+
+    /* The block an AI Overview lifts and a skimmer reads. It answers the title
+       question completely, so it must never be a teaser for the article. */
+    .short-answer {
+      background: var(--surf); border: 1px solid var(--border2);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 var(--rad) var(--rad) 0;
+      padding: 16px 20px; margin: 0 0 26px;
+    }
+    .short-answer p.sa-label {
+      margin: 0 0 6px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan);
+    }
+    .short-answer p { margin: 0 0 10px; font-size: 15px; color: var(--txt2); }
+    .short-answer p:last-child { margin-bottom: 0; }
+
+    /* Inline citation to a primary source. Cited sources are the single
+       largest measured lever for a page that does not already rank; see
+       marketing/BLOG_PLAN.md section 3. */
+    a.src {
+      color: var(--txt2); text-decoration: none;
+      border-bottom: 1px solid var(--border2);
+    }
+    a.src:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+    .author-box {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 20px 22px; margin: 34px 0 0;
+    }
+    .author-box p.ab-label {
+      margin: 0 0 8px; font-size: 12px; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3);
+    }
+    .author-box p { margin: 0 0 10px; font-size: 14px; }
+    .author-box p:last-child { margin-bottom: 0; }
+
+    .toc {
+      background: var(--surf); border: 1px solid var(--border);
+      border-radius: var(--rad); padding: 16px 20px; margin: 0 0 30px;
+    }
+    .toc p { margin: 0 0 8px; font-size: 12px; font-weight: 800;
+             letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3); }
+    .toc ol { margin: 0; padding-left: 20px; }
+    .toc li { margin-bottom: 4px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="icon.png" alt="Canvas Downloader" />
+        Canvas Downloader
+      </a>
+      <div class="nav-right">
+        <a href="mac-setup.html" class="nav-link" data-setup-link><span class="setup-full">How to set up</span><span
+            class="setup-short">Setup</span></a>
+        <a href="guide.html" class="nav-link">How It Works</a>
+        <a href="index.html#get" class="btn-nav">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          <span>Download</span>
+        </a>
+        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener"
+          class="btn-nav-ghost">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+          </svg>
+          <span>100% Open Source</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="container wide">
+      <h1>How to get a transcript of a Panopto lecture</h1>
+      <p class="sub">The most useful form of a lecture is the one nobody asks for. Where to find the transcript Panopto already made, and how to make your own when it has not.</p>
+      <p class="byline"><span>By <a href="#about-the-author">BrkBuilds</a>, who builds the app</span><span class="sep">&middot;</span><span>Published <time datetime="2026-08-27">27 August 2026</time></span></p>
+    </div>
+  </div>
+
+  <div class="container wide">
+    <div class="art">
+      <div class="short-answer">
+        <p class="sa-label">Short answer</p>
+        <p>Check Panopto first, because it has probably already made one.
+        It machine-transcribes recordings to produce closed captions, and
+        institutions are documenting a change to having that <strong>on by
+        default</strong> for new content. Open the recording, open the Captions
+        or Transcript panel, and look for a download option - what you get is a
+        subtitle file, which is plain text with timestamps.</p>
+        <p>Captions are usually a <strong>separate permission</strong> from the
+        video, so they are often available when downloading is not. If there is
+        no transcript - an older recording, the wrong language, or downloads
+        switched off - you can make one yourself on your own computer with an
+        offline speech-recognition model, with no upload and no account. Expect
+        roughly 2 to 24 minutes per hour of lecture depending on the model; the
+        measured table is below.</p>
+      </div>
+
+      <div class="toc">
+        <p>On this page</p>
+        <ol>
+          <li><a href="#free">Panopto has probably already made one</a></li>
+          <li><a href="#get">Getting it out of the player</a></li>
+          <li><a href="#gaps">When Panopto's transcript is not there, or not enough</a></li>
+          <li><a href="#own">Making your own, on your own computer</a></li>
+          <li><a href="#speed">How long it actually takes, measured</a></li>
+          <li><a href="#model">Which model, and the advice that is wrong on a laptop</a></li>
+          <li><a href="#accurate">How accurate any of this is</a></li>
+          <li><a href="#use">What a transcript is actually good for</a></li>
+          <li><a href="#allowed">The permission question</a></li>
+          <li><a href="#faq">Common questions</a></li>
+        </ol>
+      </div>
+
+      <p class="lede">A transcript is the most useful form of a lecture and the
+      least demanded. It is searchable, it is a few hundred kilobytes against a
+      few hundred megabytes, it opens on anything, and it is the only form an AI
+      study tool will read. It is also, right now, easier to get than it has ever
+      been - and for most people it already exists.</p>
+
+      <p>So this page starts with the free one that needs no software, and only
+      then covers making your own.</p>
+
+      <h2 id="free">Panopto has probably already made one</h2>
+
+      <p>Panopto machine-transcribes recordings to produce closed captions, and
+      captions are a transcript with timestamps on. What changed recently is that
+      it is no longer something a lecturer has to remember to switch on.</p>
+
+      <p>Brown University's IT knowledge base records the rollout and the reason:
+      <a class="src" href="https://ithelp.brown.edu/kb/articles/managing-automatic-captions-in-panopto" target="_blank" rel="noopener">"On or before May 11, 2026 automatic captions will be turned on for all new content uploaded to Panopto"</a>,
+      to meet the US Section 504 ruling and WCAG 2.1 Level AA. That is one
+      institution documenting one rollout, and tenants are configured
+      independently, so read it as "check yours" rather than as a guarantee. The
+      direction only goes one way, though, and it is driven by accessibility law
+      rather than by anybody's product roadmap. <strong>Captions are far more likely to
+      be present on a 2026 recording than on a 2023 one.</strong></p>
+
+      <p>Two consequences worth having:</p>
+
+      <ul>
+        <li><strong>Captions are usually not the same permission as the video.</strong>
+        A lecturer who has switched downloading off has very often left captions
+        alone, because turning accessibility features off is a decision nobody
+        wants to defend. Check the transcript before concluding a lecture is
+        locked.</li>
+        <li><strong>They arrive on a delay.</strong> Panopto's own FAQ says
+        captions <a class="src" href="https://www.panopto.com/blog/frequently-asked-questions-faqs-about-video-captioning-answered/" target="_blank" rel="noopener">"can be created in about one-quarter of the total video length"</a>,
+        so a two-hour lecture is roughly half an hour behind the recording. If a
+        lecture went up an hour ago and has no captions, wait rather than
+        conclude.</li>
+      </ul>
+
+      <h2 id="get">Getting it out of the player</h2>
+
+      <p>Inside the Panopto viewer the transcript is a panel beside the video,
+      and it is worth opening even if you never download it: clicking a line
+      jumps the recording to that moment, which is the fastest way to find the
+      four minutes of a lecture you actually needed.</p>
+
+      <ol class="steps">
+        <li>Open the recording in the Panopto player, inside Canvas or on your
+        institution's Panopto site.</li>
+        <li>Open the <strong>Captions</strong> or <strong>Transcript</strong>
+        panel. If there is no such panel, the recording has no captions yet -
+        see the next section.</li>
+        <li>Look for a download option on that panel or in the player's menu.
+        Panopto documents this as
+        <a class="src" href="https://support.panopto.com/s/article/How-to-Download-Captions-from-the-Viewer" target="_blank" rel="noopener">downloading captions from the viewer</a>,
+        and what you get is a subtitle file.</li>
+        <li>If you only want the words, open the file in any text editor and
+        delete the numbers. A subtitle file is plain text with timestamps; there
+        is nothing proprietary in it.</li>
+      </ol>
+
+      <div class="note">
+        <p><strong>A subtitle file is more useful than a plain one, so keep it.</strong>
+        <code>.srt</code> and <code>.vtt</code> carry a timestamp per line, which
+        means the text stays anchored to the recording. Search the transcript,
+        find the timestamp, jump to that minute. A plain transcript loses that
+        for the sake of tidiness you will not care about in April.</p>
+      </div>
+
+      <h2 id="gaps">When Panopto's transcript is not there, or not enough</h2>
+
+      <p>Four situations where the free route runs out, all ordinary:</p>
+
+      <ul>
+        <li><strong>Older recordings.</strong> The default change applies to new
+        content. A 2024 course may have nothing, and nothing will appear on its
+        own.</li>
+        <li><strong>Caption downloads switched off</strong> while viewing is
+        allowed. You can read it and not keep it.</li>
+        <li><strong>The wrong language, or a mixed one.</strong> ASR picks a
+        language and commits. A lecture delivered in Danish with English slides
+        and English technical vocabulary is exactly the case machine captioning
+        handles worst, and it is completely normal in Europe.</li>
+        <li><strong>You are about to lose access.</strong> A transcript you can
+        only read inside Panopto disappears with your account, which is precisely
+        when you want it - see
+        <a href="canvas-access-after-graduation.html">what happens to your Canvas
+        access after graduation</a>.</li>
+      </ul>
+
+      <h2 id="own">Making your own, on your own computer</h2>
+
+      <p>The alternative is to transcribe the audio yourself. This used to mean
+      an upload to a paid service; it does not any more. Open speech-recognition
+      models run on an ordinary laptop, and the whole job is local: the audio
+      never leaves your machine, there is no account, no quota and no per-minute
+      charge.</p>
+
+      <p>The shape of it is always the same, whatever tool you use:</p>
+
+      <ol class="steps">
+        <li>Get the audio. You do not need the video - a lecture's audio track is
+        a fraction of the size and carries everything a transcript can use.</li>
+        <li>Download a speech-recognition model once. They run from about
+        <strong>75 MB</strong> to <strong>3 GB</strong> depending on how accurate
+        you want to be.</li>
+        <li>Run it. After the first download, nothing needs a network
+        connection.</li>
+        <li>Keep both outputs if the tool offers them: a plain
+        <code>.txt</code> to read and search, and a timestamped
+        <code>.srt</code> to navigate with.</li>
+      </ol>
+
+      <p>The catch is not accuracy. It is time, and almost nothing published
+      about this is specific about how much.</p>
+
+      <h2 id="speed">How long it actually takes, measured</h2>
+
+      <p>Here is a real measurement rather than an estimate. Six models on the
+      same clip, on one machine, timed as <strong>multiples of realtime</strong> -
+      so 6x means an hour of lecture takes ten minutes.</p>
+
+      <div class="tbl-wrap" tabindex="0" role="region"
+        aria-label="Transcription speed by model on a 10-core CPU">
+        <table class="cmp">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Download size</th>
+              <th>Speed on this CPU</th>
+              <th>One hour of lecture takes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Tiny</td><td>75 MB</td><td>25.5x realtime</td><td>about 2 minutes</td></tr>
+            <tr><td>Base</td><td>145 MB</td><td>17.5x realtime</td><td>about 3 minutes</td></tr>
+            <tr><td>Small</td><td>484 MB</td><td>6.2x realtime</td><td>about 10 minutes</td></tr>
+            <tr><td>Large v3 Turbo</td><td>1.6 GB</td><td>3.3x realtime</td><td>about 18 minutes</td></tr>
+            <tr><td>Medium</td><td>1.5 GB</td><td>2.5x realtime</td><td>about 24 minutes</td></tr>
+            <tr><td>Large v3</td><td>3.1 GB</td><td>not timed - wants a GPU</td><td>-</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <p><strong>The method, and how small the sample is.</strong> One machine -
+        an Apple M4 with 10 CPU cores, running on the CPU - over 180 seconds of
+        real Danish lecture audio, at int8 quantisation, beam size 5, with
+        voice-activity filtering on. That is a single clip on a single laptop, not a benchmark suite. It
+        is published because the relative ordering is stable and useful and
+        nobody else states it at all, not because four significant figures would
+        mean anything. Your machine will differ; the <em>shape</em> of the table
+        will not.</p>
+      </div>
+
+      <p>Two things fall out of it that matter more than the exact numbers.
+      First, on a CPU the range across models is <strong>ten-fold</strong>, so
+      the choice is not a detail. Second, a semester is not one lecture: at
+      2.5x realtime, thirty two-hour lectures is about a full day of your laptop
+      running flat out, and at 25x it is under three hours.</p>
+
+      <h2 id="model">Which model, and the advice that is wrong on a laptop</h2>
+
+      <p>The standard advice is to use Large v3 Turbo, because it is nearly as
+      accurate as Large v3 and several times faster. On a GPU that is correct.
+      <strong>On a CPU it is wrong, and the reason is structural rather than a
+      matter of degree.</strong></p>
+
+      <p>Turbo's speed comes from its <strong>decoder</strong>, which has four
+      layers where Large v3 has thirty-two. Its <strong>encoder</strong> is Large
+      v3's, unchanged. On a GPU the decoder dominates the time, so cutting it to
+      an eighth is transformative. On a CPU the encoder dominates - and the
+      encoder did not change, so almost none of that speed-up arrives. In the
+      table above Turbo lands between Small and Medium, in the group that is too
+      slow to be practical.</p>
+
+      <p>What that costs in real terms, from a real course: <strong>36
+      recordings that take 40 to 60 minutes on Tiny would have taken about six
+      and a half hours</strong> on the model a naive "pick the best one" rule
+      selects.</p>
+
+      <p>So the honest rule is short:</p>
+
+      <ul>
+        <li><strong>No GPU?</strong> Nothing above Small. Small is the floor
+        rather than Tiny because the tier below it loses real accuracy on
+        non-English lecture audio, which is what most of these recordings
+        are.</li>
+        <li><strong>A GPU with 4 GB or more free?</strong> Turbo, and this is
+        where its reputation comes from.</li>
+        <li><strong>A GPU with 6 GB or more?</strong> Large v3, if you want the
+        last sliver of accuracy on a hard language.</li>
+      </ul>
+
+      <h2 id="accurate">How accurate any of this is</h2>
+
+      <p>Both routes are machine transcription and both are wrong sometimes, so
+      it is worth knowing where.</p>
+
+      <p>Panopto states that
+      <a class="src" href="https://www.panopto.com/blog/frequently-asked-questions-faqs-about-video-captioning-answered/" target="_blank" rel="noopener">"ASR captions are typically 90-95% accurate depending on the audio quality in the recording"</a>,
+      and institutions restate that with a warning attached: Brown's guidance
+      says machine captions
+      <a class="src" href="https://ithelp.brown.edu/kb/articles/managing-automatic-captions-in-panopto" target="_blank" rel="noopener">"may contain errors"</a>
+      and that creators are expected to review and edit them. Which is worth
+      reading twice: <strong>90 to 95% correct means roughly one word in fifteen
+      is wrong</strong>, and they are not distributed evenly.</p>
+
+      <p>The open models sit in a similar band. They were trained at a scale
+      that makes them fairly tolerant of accents and background noise: the
+      current large model was built on
+      <a class="src" href="https://huggingface.co/openai/whisper-large-v3" target="_blank" rel="noopener">1 million hours of weakly labelled audio and 4 million hours of pseudo-labelled audio</a>,
+      Its own model card claims a "10% to 20% reduction of errors" over the
+      version before it, across a wide range of languages.</p>
+
+      <p>Where both fail is the same place, and it is the worst possible place
+      for a student: <strong>proper nouns and technical vocabulary</strong>. A
+      lecturer's name, a theory named after somebody, a chemical, a case
+      citation, a Danish word inside an English sentence. The general words come
+      out fine and the exact term you were going to search for does not.</p>
+
+      <p>The practical answer is not a better model. Treat the transcript as a
+      <strong>searchable index into the recording</strong> rather than as a
+      document of record. That is what the timestamps are for, and it is why
+      keeping the recording, or at least a shortcut to it, beside the transcript
+      is worth the disk.</p>
+
+      <h2 id="use">What a transcript is actually good for</h2>
+
+      <ul>
+        <li><strong>Finding the four minutes that mattered.</strong> Search the
+        text, read the timestamp, jump there. This alone is worth the exercise
+        and it is not possible with video.</li>
+        <li><strong>Revision that is not rewatching.</strong> Reading a
+        ninety-minute lecture takes about fifteen minutes.</li>
+        <li><strong>AI study tools.</strong> A local video file is the one thing
+        they will not take - see
+        <a href="canvas-files-into-notebooklm.html">getting your Canvas files
+        into NotebookLM</a>, where the transcript is the whole point of this
+        exercise.</li>
+        <li><strong>Quoting accurately.</strong> With the caveat above: check the
+        exact words against the audio before a quotation goes into anything
+        assessed.</li>
+        <li><strong>Keeping the lecture at all.</strong> Text is the format most
+        likely to still open in ten years, on any machine, with no player and no
+        login.</li>
+      </ul>
+
+      <h2 id="allowed">The permission question</h2>
+
+      <p>Getting a transcript out of Panopto is subject to the same rules as
+      getting the video, and those rules genuinely differ between institutions.
+      <a href="download-panopto-lecture-recordings.html">How to download Panopto
+      lecture recordings</a> covers it properly; the short version is that a
+      personal study copy is widely allowed, redistribution is prohibited
+      essentially everywhere, and asking is a two-click favour rather than an
+      imposition.</p>
+
+      <p>Transcribing audio you are entitled to have does not change that
+      calculation in either direction. If you may keep the recording, you may
+      keep a transcript of it. If you may not, a transcript is not a loophole.
+      And if your lectures turn out not to be in Panopto at all, start with
+      <a href="download-lecture-videos-from-canvas.html">how to download lecture
+      videos from Canvas</a>, which covers all five systems.</p>
+
+      <div class="cta-box">
+        <h3>A whole semester of lectures, as text you can search</h3>
+        <p>Tick as many courses as you like. Canvas Downloader finds the
+        <strong>Panopto lecture recordings</strong> in each one and saves them as
+        a searchable transcript and a timestamped subtitle file, alongside the
+        video or audio if you want it, and alongside the slides and readings from
+        the same courses.</p>
+        <p>The transcription runs <strong>on your own computer</strong> with the
+        models in the table above - nothing is uploaded, there is no account and
+        no per-minute charge, and after the first model download it works with no
+        network at all. Free and open source, Windows and macOS.</p>
+        <div class="cta-row">
+          <a href="releases.html" class="btn-nav">Download</a>
+          <a href="index.html#features" class="btn-nav-ghost"><span>See it in action</span></a>
+        </div>
+      </div>
+
+
+      <h2 id="faq">Common questions</h2>
+      <details class="faq">
+        <summary>Does Panopto give you a transcript automatically?</summary>
+        <div><p>Usually, now. Panopto machine-transcribes recordings to produce closed captions, and institutions are documenting a change to having that on by default for new content. Brown University's IT knowledge base dates it to on or before 11 May 2026, driven by Section 504 and WCAG 2.1 Level AA accessibility requirements. Tenants are configured independently, so check yours. Older recordings are not covered either way.</p></div>
+      </details>
+      <details class="faq">
+        <summary>How do I download the transcript from a Panopto lecture?</summary>
+        <div><p>Open the recording in the Panopto player, open the Captions or Transcript panel, and look for a download option there or in the player's menu. Panopto documents this as downloading captions from the viewer. What you get is a subtitle file, which is plain text with timestamps and opens in any text editor.</p></div>
+      </details>
+      <details class="faq">
+        <summary>Can I get the transcript if downloading the video is blocked?</summary>
+        <div><p>Often, yes. Captions are usually a separate permission from the recording, and a lecturer who has switched downloads off has frequently left captions alone, because turning accessibility features off is harder to justify. It is worth checking before concluding a lecture is locked.</p></div>
+      </details>
+      <details class="faq">
+        <summary>How long does it take to transcribe a lecture on my own laptop?</summary>
+        <div><p>It depends entirely on the model, and the range is about tenfold. Measured on a 10-core laptop CPU with no GPU: roughly 2 minutes per hour of lecture on the smallest model, about 10 minutes on a mid-sized one, and about 24 minutes on a large one. That is one machine on one clip rather than a benchmark, but the ordering holds.</p></div>
+      </details>
+      <details class="faq">
+        <summary>Should I use Large v3 Turbo for transcription?</summary>
+        <div><p>On a GPU, yes. On a CPU, no, and the reason is structural. Turbo is fast because its decoder has four layers instead of thirty-two. Its encoder is unchanged from the full model, and on a CPU the encoder is what dominates the time, so almost none of the speed-up arrives. On a laptop it lands in the group that is too slow to be practical.</p></div>
+      </details>
+      <details class="faq">
+        <summary>Is machine transcription accurate enough to revise from?</summary>
+        <div><p>For following the argument, yes. Panopto states its automatic captions are typically 90 to 95% accurate depending on audio quality, and the open models are in a similar band. The errors are not spread evenly, though: proper nouns and technical terms are where both fail, which is exactly what you were going to search for. Treat a transcript as a searchable index into the recording rather than as a document of record.</p></div>
+      </details>
+      <details class="faq">
+        <summary>Does transcribing a lecture upload it anywhere?</summary>
+        <div><p>It does not have to. Open speech-recognition models run on your own computer, so the audio never leaves it, and after the model is downloaded once the process needs no network at all. Paid online services do upload, which for lecture recordings is worth thinking about, since they usually contain other students.</p></div>
+      </details>
+      <details class="faq">
+        <summary>What is the difference between a .txt transcript and a .srt subtitle file?</summary>
+        <div><p>Only timestamps. A .srt carries a time for every line, so the text stays anchored to the recording and you can search the transcript, find the timestamp and jump to that minute. A .txt is tidier to read. Keep both if you can - the timestamps are what make a transcript a navigation tool rather than just a wall of words.</p></div>
+      </details>
+
+      <div class="author-box" id="about-the-author">
+        <p class="ab-label">Who wrote this</p>
+        <p><strong>BrkBuilds</strong> builds Canvas Downloader, the free
+        open-source app this site is about. These guides are written from the
+        engine side: what Canvas does and does not export is described from
+        having implemented against the Canvas API, not from reading about it.
+        The app's behaviour is documented in
+        <a href="engine.html">Under the Hood</a> and the whole codebase is
+        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">public
+        on GitHub</a>, so every claim on this page can be checked against the
+        code that makes it.</p>
+        <p>It is a one-person project with no company behind it. Where a page is
+        uncertain it says so, and where a built-in Canvas feature or somebody
+        else's tool is the better answer, it says that too.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <a href="index.html">Homepage</a>
+      <a href="guide.html">How It Works</a>
+      <a href="engine.html">Under the Hood</a>
+      <a href="releases.html">Downloads &amp; Releases</a>
+      <a href="blog.html">Blog</a>
+      <a href="privacy.html">Privacy Policy</a>
+        <a href="disclaimer.html">Disclaimer</a>
+      <a href="mac-setup.html">macOS Setup</a>
+      <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://ko-fi.com/brkbuilds" target="_blank" rel="noopener"><span
+          style="color:#f97316;">&hearts;</span> Support the project</a>
+      <div class="meta">Not affiliated with Instructure or Canvas LMS</div>
+    </div>
+  </footer>
+
+  <script>
+    // OS-aware setup links: Windows users get the Windows guide.
+    (function () {
+      // navigator.platform is deprecated and reports "MacIntel" on iPadOS.
+      var _uad = navigator.userAgentData;
+      var _plat = (_uad && _uad.platform) || navigator.platform || '';
+      if (!/Mac/i.test(_plat) && !/Mac OS X/i.test(navigator.userAgent || '')) {
+        document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
+      }
+    })();
+  </script>
+</body>
+</html>

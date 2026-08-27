@@ -1,0 +1,58 @@
+# Announce changed site pages to IndexNow (Bing, Yandex, Seznam, Naver).
+#
+# WHY: hosting the key file is only half of IndexNow. Bing's IndexNow page stays
+# on its setup screen until it receives a first successful SUBMISSION, and until
+# 2026-08-27 nothing in this repo ever submitted - the key had been live and
+# correct for days while the feature sat inert. This is the half that was
+# missing.
+#
+# WHY IT MATTERS MORE THAN ITS SIZE: Bing feeds Copilot and ChatGPT search,
+# which is the surface docs/llms.txt was written for. At the time this landed,
+# Bing had crawled the site exactly once (23 Aug) and reported 0 referring
+# domains, while Google was declining to crawl a seven-day-old page that carried
+# nine internal links. Getting new pages announced within hours instead of weeks
+# is the one lever here that does not depend on domain authority.
+#
+# ONLY CHANGED PAGES ARE SUBMITTED. The spec asks for changed URLs, and
+# re-announcing an unchanged set on every push is what receiving engines treat
+# as noise. `--changed-since` maps the push diff onto public URLs.
+
+name: IndexNow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**.html'
+      - 'docs/sitemap.xml'
+  workflow_dispatch:
+    inputs:
+      submit_all:
+        description: 'Submit every URL in the sitemap instead of only changed pages'
+        type: boolean
+        default: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The diff needs history. github.event.before is not reachable in a
+          # shallow clone, and the script's fallback to HEAD~1 would then be
+          # doing the real work on every run rather than only on force-pushes.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Submit to IndexNow
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.submit_all }}" = "true" ]; then
+            python scripts/ping_indexnow.py --all --wait-seconds 300
+          else
+            python scripts/ping_indexnow.py \
+              --changed-since "${{ github.event.before }}" \
+              --wait-seconds 300
+          fi

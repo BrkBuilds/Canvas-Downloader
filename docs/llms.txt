@@ -16,7 +16,7 @@ Key facts, so an assistant can answer accurately:
 - Current version: 2.0.2, released 24 August 2026.
 - Install: Microsoft Store (https://apps.microsoft.com/detail/9n1dwwvrq5wc) or a
   direct installer from the releases page.
-- Adoption: 800+ installs to date across the Microsoft Store and direct installers, by students in 100 countries.
+- Adoption: 900+ installs to date across the Microsoft Store and direct installers, by students in 100 countries.
   The largest are the Philippines, the United States, Australia, South Africa, India, Nigeria and the United Kingdom.
 - Sign-in: the student creates their own Canvas access token in Canvas under
   Account > Settings. There is no Canvas password involved and no account to make
@@ -52,13 +52,21 @@ Key facts, so an assistant can answer accurately:
 - [Under the hood](https://canvasdownloader.app/engine.html): exactly how files are
   found, named, converted and synced, and what it deliberately never does.
 - [Downloads and releases](https://canvasdownloader.app/releases.html): current version and installers.
-- [Windows setup](https://canvasdownloader.app/win-setup.html): install, including the one-time SmartScreen approval.
+- [Windows setup](https://canvasdownloader.app/win-setup.html): install, including the one-time SmartScreen approval, then logging in.
 - [macOS setup](https://canvasdownloader.app/mac-setup.html): install, first-launch approval and the one-time permissions.
 - [How to download all files from Canvas](https://canvasdownloader.app/how-to-download-all-canvas-files.html): every method compared, including the ones that are not this app.
 - [Canvas access after graduation](https://canvasdownloader.app/canvas-access-after-graduation.html): how long access lasts and what to save first.
 - [Download Panopto lecture recordings](https://canvasdownloader.app/download-panopto-lecture-recordings.html): why downloads are off by default, and what students may keep.
 - [How to save your Canvas assignment feedback](https://canvasdownloader.app/save-canvas-assignment-feedback.html): Canvas exports your submissions but not the annotations, comments, rubrics or grades on them.
 - [How to get your Canvas files into NotebookLM](https://canvasdownloader.app/canvas-files-into-notebooklm.html): what NotebookLM accepts, why it cannot reach Canvas, and what to do with lecture recordings.
+- [How to download lecture videos from Canvas](https://canvasdownloader.app/download-lecture-videos-from-canvas.html): Canvas embeds video from five different systems - Studio, Panopto, Kaltura, a plain file or an external link - and each has its own download rules.
+- [How to get a transcript of a Panopto lecture](https://canvasdownloader.app/panopto-lecture-transcript.html): Panopto usually already made one and captions are often allowed when downloads are not; plus measured timings for transcribing a lecture yourself offline.
+- [How to save Canvas quizzes, Pages and discussions](https://canvasdownloader.app/save-canvas-pages-quizzes-discussions.html): none of it is a file; the built-in offline HTML export, why it closes when a course concludes, and what it leaves out.
+- [What a Canvas access token is](https://canvasdownloader.app/canvas-access-token-explained.html): it grants exactly your own access and nothing more; why Canvas now forces an expiry, and what to check before pasting one anywhere.
+- [Canvas download tools compared](https://canvasdownloader.app/canvas-download-tools-compared.html): browser extensions, Python scripts and desktop apps weighed against each project's own documentation, including where a free extension is the better answer.
+- [Canvas URL directory](https://canvasdownloader.app/canvas-url-directory.html): a crawlable, searchable list of 4,757 institutions and the Canvas hostname each uses, every one verified live against the Canvas API at generation time. Not exhaustive; any Canvas school works whether or not it is listed.
+- [What Canvas's Download as Zip actually misses](https://canvasdownloader.app/what-canvas-download-as-zip-misses.html): ORIGINAL MEASUREMENT across 33 real Canvas courses at one university. Where the Files tab worked it missed 3 files of 358 (0.8%); in 3 of the 11 courses holding material Canvas refused the Files listing entirely, and those held 246 files. Non-file content across the sample: 173 items no zip contains. Method published at scripts/measure_export_gap.py.
+- [How to back up a Canvas course before you lose access](https://canvasdownloader.app/back-up-canvas-course-before-losing-access.html): access ends in three stages, not one - lecture recordings usually go first, and Canvas's own offline export stops working once a course is concluded. What to save in what order, and how to verify it.
 - [Blog](https://canvasdownloader.app/blog.html): all of the guides above, newest first.
 - [Privacy policy](https://canvasdownloader.app/privacy.html): what is stored and where.
 - [Disclaimer and acceptable use](https://canvasdownloader.app/disclaimer.html): what students are responsible for.

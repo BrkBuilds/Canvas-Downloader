@@ -3415,8 +3415,9 @@
            Lifetime totals, measured 20 August 2026. Rules for changing them,
            and the evidence behind them, are in marketing/FINDINGS.md:
 
-             - 800+ = 767 successful Microsoft Store installs + 44 GitHub
-               release-asset downloads. 
+             - 900+ = 900+ successful Microsoft Store installs (reported by the
+               product owner 27 August 2026) plus GitHub release-asset
+               downloads, rounded down. 
              - 100 countries in the Store's geographical spread. 
                Both figures are LIFETIME CUMULATIVE, so they can
                only go up - which is why rounding down is enough on its own and
@@ -3427,7 +3428,7 @@
         <li class="proof-tag">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-          <span><b>800+</b> installs</span>
+          <span><b>900+</b> installs</span>
         </li>
         <li class="proof-tag">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -3539,7 +3540,11 @@
               configuration, and let the app pull <b>all your course files</b> from Canvas, into course folders
               organized exactly like your Canvas courses. <br><br>But that's not all: The app also downloads <b>Canvas
                 Content</b> - all your assignments, announcements, quizzes, etc. and any <b> file attachments</b>, so
-              your PC has a 1:1 copy of each course.</p>
+              your PC has a 1:1 copy of each course. <br><br>New to this? Read
+              <a href="how-to-download-all-canvas-files.html" style="color: var(--cyan); text-decoration: none;">every way to download your Canvas files, compared</a> -
+              including the built-in routes that need no software at all - and
+              <a href="save-canvas-pages-quizzes-discussions.html" style="color: var(--cyan); text-decoration: none;">how to save the half of a course
+              that is not a file</a>.</p>
             <label for="p1-open" class="pillar-expander-label desktop-only">See exactly what you can download, and how
               <span class="pex-arrow"></span></label>
           </div>
@@ -3822,7 +3827,9 @@
               core. <br><br> When enabled, the app <b>automatically converts</b> all your course materials to
               <b>AI-Ready file formats</b>, whenever you Sync or Download. No more timely manual conversions on sketchy
               websites. <br><br><b>Purpose-built for NotebookLM (100% compatibility): </b>Enable AI Optimizations →
-              Download → Drag & Drop into NotebookLM and start studying.</p>
+              Download → Drag & Drop into NotebookLM and start studying. <br><br>The full workflow, including what
+              NotebookLM accepts and why one notebook per course beats one per degree, is in
+              <a href="canvas-files-into-notebooklm.html" style="color: var(--cyan); text-decoration: none;">how to get your Canvas files into NotebookLM</a>.</p>
             <label for="p4-open" class="pillar-expander-label desktop-only">See the conversions available <span
                 class="pex-arrow"></span></label>
           </div>
@@ -4033,7 +4040,13 @@
               to an AI. Canvas Downloader saves them straight to your course folder as <b>video</b> or <b>audio</b> to
               watch anytime, and turns them into <b>transcripts</b> and <b>subtitles</b> that are instantly
               AI-ready.<br><br>Video and audio need zero setup. Transcripts run <b>100% on your own computer</b> -
-              private, offline, and free.</p>
+              private, offline, and free, and
+              <a href="panopto-lecture-transcript.html" style="color: var(--cyan); text-decoration: none;">this is what a lecture transcript is
+              actually for</a>. <br><br>Not sure which system your lectures are in? Canvas embeds video from five
+              of them: <a href="download-lecture-videos-from-canvas.html" style="color: var(--cyan); text-decoration: none;">how to download lecture videos from
+              Canvas</a>. Downloads are off by default in Panopto, and the permission question comes first:
+              see <a href="download-panopto-lecture-recordings.html" style="color: var(--cyan); text-decoration: none;">how to download Panopto lecture
+              recordings</a>.</p>
             <label for="p5-open" class="pillar-expander-label desktop-only">See the download options <span
                 class="pex-arrow"></span></label>
           </div>
@@ -4358,378 +4371,6 @@
     </div>
   </section>
 
-  <!-- id="login": other pages send people here for "where do I find my Canvas
-       URL and token" (win-setup, mac-setup). Without an anchor those links
-       landed on the FAQ, which answers a different question. -->
-  <section class="security-section" id="login" style="padding-bottom: 90px;">
-    <div class="container">
-      <!-- Login Content -->
-      <div style="max-width: 860px; margin: 0 auto; width: 100%;">
-        <div class="sh reveal">
-          <div class="section-kicker">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"></path>
-            </svg>
-            Authentication
-          </div>
-          <h2>How to log in</h2>
-          <p>Canvas Downloader talks directly to your university's own Canvas server - there is no account to create
-            and nothing to sign up for. It needs two things from Canvas, and the app helps you get both: your school's
-            address, and an access token you generate yourself. About two minutes, once.</p>
-        </div>
-
-        <!-- URL Guide -->
-        <div class="reveal"
-          style="width: 100%; max-width: 860px; margin: 0 auto 24px; background: var(--surf); border: 1px solid var(--border); border-radius: var(--rad-l); padding: 24px; text-align: left;">
-          <h4
-            style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; font-size: 18px; color: var(--txt);">
-            <span
-              style="background: var(--cyan-bg); color: var(--cyan); width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px;">1</span>
-            Your Canvas URL
-          </h4>
-          <p style="color: var(--txt2); font-size: 15px; margin-bottom: 20px;">Most people never have to look this up.
-            The app opens on a searchable list of <strong>4,757 verified schools</strong> - start typing your
-            university and pick it, and the address fills itself in.</p>
-
-          <!-- The picker is the app's answer to this whole section, and the
-               site had never mentioned it: visitors were being taught the
-               manual address hunt that the picker exists to remove. -->
-          <div
-            style="background: var(--cyan-bg); border: 1px solid var(--cyan-b); border-radius: var(--rad); padding: 16px 18px; margin-bottom: 24px; display: flex; gap: 14px; align-items: flex-start;">
-            <svg style="color: var(--cyan); flex-shrink: 0; margin-top: 2px;" width="18" height="18"
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-              stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <div style="font-size: 14px; color: var(--txt2); line-height: 1.6;">
-              <strong style="color: var(--txt); display: block; margin-bottom: 3px;">Find your school by name</strong>
-              It opens on the institutions in your own country, and accents are optional - typing
-              <em>kobenhavn</em> finds Københavns Universitet. Your school not listed? It still works: paste the
-              address below instead.
-            </div>
-          </div>
-
-          <p style="color: var(--txt2); font-size: 15px; margin-bottom: 24px;">If your school isn't in the list, you
-            need its direct Canvas URL.</p>
-
-          <div
-            style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-            <div
-              style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px;">
-              <span style="color: #64748b;">https://</span><span
-                style="color: var(--cyan); font-weight: 500;">schoolname.instructure.com</span><span
-                style="color: #64748b;">/courses/1234</span>
-            </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-            <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: var(--rad);">
-              <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 14px;">How to find it</strong>
-              <ol style="margin: 0; padding-left: 18px; color: var(--txt2); font-size: 14px; display: flex; flex-direction: column; gap: 8px;">
-                <li>Log in to Canvas in your browser.</li>
-                <li>Examine the address bar <strong>after</strong> logging in (most schools use one of two formats):
-                  <ul style="margin: 4px 0 0 0; padding-left: 14px; list-style-type: disc; display: flex; flex-direction: column; gap: 4px;">
-                    <li><strong>Format 1:</strong> <code style="background:var(--cyan-bg);padding:2px 4px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;">canvas.[university].edu</code> (e.g., canvas.schoolname.edu)</li>
-                    <li><strong>Format 2:</strong> <code style="background:var(--cyan-bg);padding:2px 4px;border-radius:4px;border:1px solid var(--cyan-b);color:var(--cyan);font-weight:600;font-family:inherit;">[university].instructure.com</code> (e.g., schoolname.instructure.com)</li>
-                  </ul>
-                </li>
-              </ol>
-            </div>
-            <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: var(--rad);">
-              <strong style="color: var(--orange); display: block; margin-bottom: 12px; font-size: 14px;">Important</strong>
-              <p style="margin: 0; color: var(--txt2); font-size: 14px; line-height: 1.6;">While your university's URL
-                (like canvas.schoolname.edu)
-                might be accepted, pasting the <strong>real base Canvas URL</strong> (ending in .instructure.com) is always the best and most reliable option to prevent login issues.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Token Guide -->
-        <div class="reveal"
-          style="width: 100%; max-width: 860px; margin: 0 auto 24px; background: var(--surf); border: 1px solid var(--border); border-radius: var(--rad-l); padding: 24px; text-align: left;">
-          <h4
-            style="margin-bottom: 12px; display: flex; align-items: center; gap: 10px; font-size: 18px; color: var(--txt);">
-            <span
-              style="background: var(--cyan-bg); color: var(--cyan); width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px;">2</span>
-            Your Canvas Access Token
-          </h4>
-          <p style="color: var(--txt2); font-size: 15px; margin-bottom: 22px;">A key you generate yourself in Canvas,
-            which lets the app read your courses. It takes about a minute, and only once - the app remembers it
-            afterwards in your operating system's password vault.</p>
-
-          <!-- What the user is looking at when they start. The app puts a
-               "Get a token" button next to the token field that opens the
-               right Canvas page in one click, and the site had never mentioned
-               it - visitors were being sent to hunt through Canvas for a page
-               the app can open for them. Drawn rather than described, so it is
-               recognisable at a glance. -->
-          <div
-            style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--rad); padding: 14px 16px 16px; margin-bottom: 22px;">
-            <div style="font-size: 12.5px; color: var(--txt3); margin-bottom: 10px;">In the app</div>
-            <div
-              style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--txt2); margin-bottom: 7px;">
-              Your Canvas Access Token
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-              </svg>
-            </div>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-              <!-- EMPTY on purpose: this is the screen at the moment you press
-                   the button, and a filled field would imply you already have
-                   the thing you are here to go and get. -->
-              <div
-                style="flex: 1 1 220px; min-width: 0; background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 6px; height: 38px; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--txt3)" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </div>
-              <span
-                style="flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; background: #1f77b4; color: #fff; font-size: 13.5px; font-weight: 600; height: 38px; padding: 0 16px; border-radius: 6px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.3);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                  <polyline points="15 3 21 3 21 9"></polyline>
-                  <line x1="10" y1="14" x2="21" y2="3"></line>
-                </svg>
-                Get a token
-              </span>
-            </div>
-          </div>
-
-          <ol
-            style="list-style: none; margin: 0 0 22px; padding: 0; display: flex; flex-direction: column; gap: 16px;">
-            <li style="display: flex; gap: 14px; align-items: flex-start;">
-              <span
-                style="flex-shrink: 0; background: var(--cyan-bg); color: var(--cyan); width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 600; margin-top: 1px;">1</span>
-              <div style="font-size: 14.5px; color: var(--txt2); line-height: 1.6;">
-                Click <strong style="color: var(--txt);">Get a token</strong> next to the token field. It opens your
-                own Canvas token page in your browser.
-                <div style="color: var(--txt3); font-size: 13.5px; margin-top: 4px;">Nothing happens? Open Canvas
-                  yourself and go to <strong style="color: var(--txt2);">Account &#8594; Settings</strong> - that is
-                  the same page.</div>
-              </div>
-            </li>
-            <li style="display: flex; gap: 14px; align-items: flex-start;">
-              <span
-                style="flex-shrink: 0; background: var(--cyan-bg); color: var(--cyan); width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 600; margin-top: 1px;">2</span>
-              <div style="font-size: 14.5px; color: var(--txt2); line-height: 1.6;">
-                Scroll down to <strong style="color: var(--txt);">Approved Integrations</strong> and click
-                <strong style="color: var(--txt);">+ New Access Token</strong>.
-              </div>
-            </li>
-            <li style="display: flex; gap: 14px; align-items: flex-start;">
-              <span
-                style="flex-shrink: 0; background: var(--cyan-bg); color: var(--cyan); width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 600; margin-top: 1px;">3</span>
-              <div style="font-size: 14.5px; color: var(--txt2); line-height: 1.6;">
-                Give it any purpose - <em>Canvas Downloader</em> does fine - and leave
-                <strong style="color: var(--txt);">Expires</strong> blank, so you are not asked to do this again.
-                Then click <strong style="color: var(--txt);">Generate Token</strong>.
-              </div>
-            </li>
-            <li style="display: flex; gap: 14px; align-items: flex-start;">
-              <span
-                style="flex-shrink: 0; background: var(--cyan-bg); color: var(--cyan); width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: 600; margin-top: 1px;">4</span>
-              <div style="font-size: 14.5px; color: var(--txt2); line-height: 1.6;">
-                Copy the token <strong style="color: var(--txt);">straight away</strong>, paste it into the app and
-                press <strong style="color: var(--txt);">Log In</strong>.
-              </div>
-            </li>
-          </ol>
-
-          <div
-            style="background: var(--org-bg); border: 1px solid var(--org-b); border-radius: var(--rad); padding: 14px 16px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start;">
-            <svg style="color: var(--orange); flex-shrink: 0; margin-top: 2px;" width="16" height="16"
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-              stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <div style="font-size: 14px; color: var(--txt2); line-height: 1.6;">
-              <strong style="color: var(--orange);">Canvas shows the token once.</strong> Leave that page without
-              copying it and the token is gone for good - generate a new one, no harm done.
-            </div>
-          </div>
-
-          <!-- Honest caption: the recording predates the current login screen
-               (it still says "Canvas API Token" and has the two help expanders
-               that are gone). The CANVAS half - which is all the video is
-               really for - has not changed, so the clip is still useful; the
-               claim that it matches the app step for step is what would not
-               be true. -->
-          <div style="font-size: 13.5px; color: var(--txt3); margin-bottom: 12px;">Prefer to watch? The clip walks
-            through it end to end. The app's login screen has been redesigned since it was recorded - the Canvas side
-            is identical.</div>
-
-          <!-- Click-to-load. The iframe used to be in the markup, so simply
-               reading this page contacted YouTube and handed Google the
-               visitor's IP - on the page whose whole argument is that nothing
-               leaves your machine. The poster is served from this site; nothing
-               is requested from YouTube until the play button is pressed. -->
-          <!-- Capped, and left-aligned with the steps. The written walkthrough
-               above is the primary path now, so a full-width 16:9 poster of a
-               login screen that no longer looks like that was the loudest
-               thing in the card and the only out-of-date thing in it. -->
-          <div id="video-container"
-            style="width: 100%; max-width: 520px; aspect-ratio: 16/9; position: relative;">
-            <button type="button" id="video-facade" aria-label="Play: how to get your Canvas Access Token"
-              style="all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: var(--rad); border: 1px solid var(--border); box-shadow: 0 8px 30px rgba(0,0,0,0.4); position: relative; overflow: hidden; cursor: pointer; background: #000;">
-              <img src="assets/token-video-poster.jpg" alt="" loading="lazy" decoding="async"
-                style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;" />
-              <span
-                style="position: absolute; inset: 0; background: rgba(0,0,0,0.32); transition: background-color 0.2s;"></span>
-              <span class="play-btn-circle"
-                style="position: relative; z-index: 2; width: 68px; height: 68px; background: rgba(229,9,20,0.95); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: transform 0.2s;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="#ffffff" style="margin-left: 3px;">
-                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-              </span>
-              <span
-                style="position: absolute; bottom: 12px; right: 12px; z-index: 2; background: rgba(11,12,20,0.82); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 9px; font-size: 11px; color: #e2e8f0; font-weight: 500;">
-                Play video
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <div class="reveal"
-          style="display: flex; flex-direction: column; gap: 16px; max-width: 860px; width: 100%; margin: 0 auto; background: var(--surf); border: 1px solid var(--border); border-radius: var(--rad-l); padding: 24px; text-align: left;">
-          <div
-            style="background: var(--grn-bg); border: 1px solid var(--grn-b); border-radius: var(--rad); padding: 24px; display: flex; align-items: flex-start; gap: 20px; color: var(--txt2);">
-            <div style="flex-shrink: 0; margin-top: 2px;">
-              <svg style="color: var(--green); filter: drop-shadow(0 0 12px rgba(104,212,163,0.3));" width="32"
-                height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-            </div>
-            <div>
-              <strong style="color: var(--green); font-size: 16px; margin-bottom: 6px; display: block;">Your token is
-                safe.</strong>
-              <span style="font-size: 14px; line-height: 1.6; display: block;">It's stored securely in your operating
-                system and used exclusively to call your university's Canvas API. The app has no backend, no analytics,
-                no telemetry, it runs 100% locally on your computer.</span>
-            </div>
-          </div>
-
-          <div
-            style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: var(--rad); padding: 24px;">
-            <div class="token-bottom-grid" style="gap: 32px;">
-
-              <div>
-                <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 14px;">The
-                  application:</strong>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                  <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14"
-                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                      stroke-linejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Downloads your enrolled
-                      course files and content</span>
-                  </div>
-                  <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14"
-                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                      stroke-linejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Locates your assignments,
-                      syllabus, and grades</span>
-                  </div>
-                  <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14"
-                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                      stroke-linejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Organizes everything into
-                      neat, offline folders</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 14px;">The application
-                  doesn't:</strong>
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                  <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14"
-                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                      stroke-linejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Submit, upload, or modify
-                      anything</span>
-                  </div>
-                  <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14"
-                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                      stroke-linejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Access other students' data
-                      or submissions</span>
-                  </div>
-                  <div style="display: flex; gap: 10px; align-items: flex-start;">
-                    <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14"
-                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                      stroke-linejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                    <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Access instructor or admin
-                      features</span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        <!-- Setup Guide Link -->
-        <div style="margin-top: 40px; text-align: center; padding: 20px 0;">
-          <h4 style="margin-bottom: 12px; font-size: 16px; color: var(--txt);">Already installed the app?</h4>
-          <p
-            style="color: var(--txt2); font-size: 15px; margin-bottom: 20px; max-width: 540px; margin-left: auto; margin-right: auto;">
-            Make sure Canvas Downloader has the right permissions to save files, especially on macOS. Check out our
-            step-by-step setup guide for detailed instructions.
-          </p>
-          <a href="mac-setup.html" data-setup-link
-            style="display: inline-flex; align-items: center; justify-content: center; padding: 10px 24px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--txt); font-weight: 500; font-size: 14px; border-radius: var(--rad); text-decoration: none; transition: background 0.2s ease;"
-            onmouseover="this.style.background='rgba(255,255,255,0.08)'"
-            onmouseout="this.style.background='rgba(255,255,255,0.05)'">
-            Read the Setup Guide
-            <svg style="margin-left: 8px; color: var(--txt3);" width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-          </a>
-        </div>
-
-      </div>
-    </div> <!-- end max-width 860px -->
-
-    </div>
-  </section>
-
   <hr class="div" />
 
   <!-- macOS Known Limitations.
@@ -4974,6 +4615,130 @@
           </a>
         </details>
 
+        <!-- Card 5: What the token can reach.
+             Moved here from the old homepage login walkthrough, which taught
+             people how to log in before they had downloaded anything. The
+             walkthrough itself now lives in guide.html; this is the half of it
+             that answered a SECURITY question rather than a setup one, so it
+             belongs with the other four.
+
+             Full width: the two-column does/doesn't grid needs the room, and
+             it closes the section rather than leaving a lone half card in the
+             last row. It reuses `.token-bottom-grid`, which is what styled the
+             same two lists before the move. -->
+        <details class="sec-qa-card" style="grid-column: 1 / -1;">
+          <summary>
+            <!-- A key, not a shield: the section kicker and card 3 already
+                 use the shield, and this card is about what the token
+                 unlocks rather than about being protected. -->
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="7.5" cy="15.5" r="5.5" />
+              <path d="M21 2l-9.6 9.6" />
+              <path d="M15.5 7.5l3 3L22 7l-3-3" />
+            </svg>
+            What can the app do with my Canvas token?
+          </summary>
+
+          <!-- margin-TOP as well as bottom. Every card in this grid renders a 0px
+               gap between summary and body (measured, all five); the other four
+               read fine because a text body starts with its line box's own
+               leading, which a bordered box does not get - so this one alone sits
+               flush against the question on any width where the title wraps. -->
+          <div
+            style="background: var(--grn-bg); border: 1px solid var(--grn-b); border-radius: var(--rad); padding: 14px 16px; display: flex; gap: 13px; align-items: flex-start; margin: 12px 0 18px;">
+            <svg style="color: var(--green); flex-shrink: 0; margin-top: 1px;" width="19" height="19"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <div style="font-size: 14px; color: var(--txt2); line-height: 1.7;">
+              <strong style="color: var(--green);">Read-only, and only your own account.</strong> The token is a
+              student key: it reaches the courses you are enrolled in and nothing else. It is stored in your operating
+              system's password vault and only ever sent to your university's own Canvas.
+            </div>
+          </div>
+
+          <div class="token-bottom-grid" style="gap: 28px;">
+
+            <div>
+              <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 13.5px;">The
+                application:</strong>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Downloads your enrolled
+                    course files and content</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Locates your assignments,
+                    syllabus, and grades</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <svg style="color: var(--green); flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Organizes everything into
+                    neat, offline folders</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <strong style="color: var(--txt); display: block; margin-bottom: 12px; font-size: 13.5px;">The
+                application doesn't:</strong>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Submit, upload, or modify
+                    anything</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Access other students' data
+                    or submissions</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                  <svg style="color: #ef4444; flex-shrink: 0; margin-top: 3px;" width="14" height="14"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                  <span style="font-size: 13.5px; color: var(--txt2); line-height: 1.5;">Access instructor or admin
+                    features</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <p class="qa-note">You create the token yourself in Canvas and can revoke it there at any moment, which cuts
+            the app off instantly. <a href="guide.html#api-token"
+              style="color: var(--cyan); text-decoration: none;">How to get one &#8594;</a></p>
+        </details>
+
       </div>
     </div>
   </section>
@@ -5106,7 +4871,15 @@
           files, compared</a>, or, if you are finishing your degree,
         <a href="canvas-access-after-graduation.html"
           style="color: var(--cyan); text-decoration: none;">what happens to your Canvas access
-          after graduation</a>.
+          after graduation</a> and
+        <a href="save-canvas-assignment-feedback.html"
+          style="color: var(--cyan); text-decoration: none;">how to save the feedback you were
+          given</a>. Weighing this app against a browser extension or a script?
+        <a href="canvas-download-tools-compared.html"
+          style="color: var(--cyan); text-decoration: none;">We compare them, including where they
+          beat us</a>. Every guide is on the
+        <a href="blog.html"
+          style="color: var(--cyan); text-decoration: none;">blog</a>.
       </p>
     </div>
   </section>
@@ -5213,39 +4986,6 @@
         card.classList.add('active');
       });
     });
-
-    // Load the YouTube player only when the user asks for it.
-    //
-    // Opened from a file:// path the embed fails anyway (YouTube error 153),
-    // which is what the old "local preview mode" branch worked around - so that
-    // case simply opens the video on YouTube instead. Everywhere else the
-    // iframe is created on click, which is what keeps "nothing is requested
-    // from YouTube until you press play" true.
-    (function () {
-      const facade = document.getElementById('video-facade');
-      const container = document.getElementById('video-container');
-      if (!facade || !container) return;
-
-      facade.addEventListener('click', function () {
-        if (window.location.protocol === 'file:') {
-          window.open('https://www.youtube.com/watch?v=VadvcIvrrhU', '_blank', 'noopener');
-          return;
-        }
-        const iframe = document.createElement('iframe');
-        iframe.width = '100%';
-        iframe.height = '100%';
-        iframe.src = 'https://www.youtube-nocookie.com/embed/VadvcIvrrhU'
-          + '?autoplay=1&vq=hd1080&modestbranding=1&rel=0';
-        iframe.title = 'Getting your Canvas Access Token';
-        iframe.frameBorder = '0';
-        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-        iframe.allowFullscreen = true;
-        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
-        iframe.style.cssText = 'border-radius: var(--rad); border: 1px solid var(--border);'
-          + ' box-shadow: 0 8px 30px rgba(0,0,0,0.4); display: block; background: #000;';
-        container.replaceChildren(iframe);
-      });
-    })();
   </script>
 
   <!-- Typewriter Effect Script -->

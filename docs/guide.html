@@ -143,10 +143,10 @@
           },
           {
             "@type": "Question",
-            "name": "If I enable PowerPoint to PDF, does the original get deleted?",
+            "name": "If I enable a conversion, does the original get deleted?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes - the original is replaced by the PDF. Same for Legacy Word to PDF, Excel to PDF, and Video to Audio."
+              "text": "Yes. Every conversion on the AI Optimization card replaces what it converted - PowerPoint, Legacy Word and Excel to PDF, Canvas Pages to Markdown, Code & Data to .txt, Video to Audio, the web links gathered into one file, and an unpacked archive by the folder of its contents. What you keep is the converted version, which is what you asked for - so turn a conversion on knowing the original goes with it."
             }
           },
           {
@@ -693,6 +693,49 @@
     .info-card ol.guide-steps { padding-left: 22px; margin: 0; display: flex; flex-direction: column; gap: 9px; }
     .info-card ol.guide-steps li { font-size: 13px; color: var(--txt2); line-height: 1.7; padding-left: 4px; }
     .info-card ol.guide-steps li::marker { color: var(--cyan); font-weight: 700; }
+
+    /* A closing remark under a card's list - separated from it, but plainly
+       part of the same card rather than a callout of its own. */
+    .info-card .card-note {
+      margin: 12px 0 0;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      color: var(--txt2);
+    }
+    .info-card .card-note strong { color: var(--txt); }
+
+    /* Click-to-load YouTube embed. Lifted verbatim from mac-setup.html so
+       the two pages cannot drift on the one property that matters: the
+       player is created on click, never written into the markup. */
+    .guide-embed {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      aspect-ratio: 16 / 9;
+      margin: 0 auto 14px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
+      background: #000;
+    }
+
+    .guide-embed iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .media-cap {
+      font-size: 12px;
+      color: var(--txt3);
+      text-align: center;
+      margin: 0 auto 18px;
+      max-width: 600px;
+      line-height: 1.55;
+    }
   </style>
 </head>
 <body>
@@ -831,6 +874,8 @@
         <p class="body-text reveal">
           Canvas Downloader uses your <strong>Canvas Access Token</strong> to access your courses - the same way Canvas' own mobile app connects.
           The token only grants access to <strong>your own student account</strong>: your enrolled courses, your files, and your grades. There is no way to access other students' data.
+          Instructure puts the same thing in one line, and it is worth reading before you create one:
+          <a href="canvas-access-token-explained.html" style="color: var(--cyan); text-decoration: none;">what a Canvas access token is, and what it cannot do</a>.
         </p>
 
         <div class="info-card reveal">
@@ -839,7 +884,8 @@
             <strong>1.</strong> Click <strong>Get a token</strong> beside the token field. It opens your own Canvas
             token page in your browser - no hunting for it.<br/>
             <strong>2.</strong> Scroll down to <strong>Approved Integrations</strong> and click <strong>"+ New Access Token"</strong>.<br/>
-            <strong>3.</strong> Give it a name (e.g. "Canvas Downloader"), leave the expiry blank, and click <strong>Generate Token</strong>.<br/>
+            <strong>3.</strong> Give it a purpose (e.g. "Canvas Downloader"). Canvas now requires an expiry date and
+            caps how far ahead you can set it, so take the longest it offers you, then click <strong>Generate Token</strong>.<br/>
             <strong>4.</strong> Copy the token <strong>straight away</strong> - Canvas shows it only once - and paste it into the app.
           </p>
           <p>
@@ -848,6 +894,16 @@
             step 2 is the same.
           </p>
         </div>
+
+        <!-- The 30-second clip, moved off the homepage with the rest of the
+             login walkthrough. Click-to-load: the poster is served from this
+             site and nothing is requested from YouTube until the play button
+             is pressed, which is what keeps the privacy policy's statement
+             about this page true. Same `.guide-embed[data-yt]` pattern as
+             mac-setup.html. -->
+        <div class="guide-embed reveal" data-yt="VadvcIvrrhU"></div>
+        <p class="media-cap">The app's login screen has been redesigned since this was recorded - the Canvas half,
+          which is all the clip is really for, is unchanged.</p>
 
         <div class="callout info reveal">
           <strong>You only do this once.</strong> After the first login the token is kept in your operating system's
@@ -892,14 +948,14 @@
             <img decoding="async" loading="lazy" src="assets/icon_quick_dl_complete.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>Complete Canvas Download</strong>
-              <span>All course files and every Canvas web page - assignments, syllabus, announcements, discussions, quizzes, and submissions - organized by module, plus full Panopto lecture videos.</span>
+              <span>All course files and every Canvas web page - assignments, syllabus, announcements, discussions, quizzes, and submissions - organized by module, plus full Panopto lecture videos. Archives are unpacked so you can reach what is inside them; nothing else is converted.</span>
             </div>
           </div>
           <div class="preset-row">
             <img decoding="async" loading="lazy" src="assets/icon_quick_dl_ai_optimized.png" alt="" class="preset-icon" />
             <div class="preset-row-body">
               <strong>Daily study pack (Optimized)</strong>
-              <span>Same as Complete, plus PowerPoint and legacy Word files are automatically converted to PDF, Canvas Content is filed into its own subfolders (Assignments/, Quizzes/ &hellip;), and Panopto lecture video &amp; audio are both saved. Designed for uploading your whole course to an AI tool.</span>
+              <span>Same as Complete - archives unpacked included - plus PowerPoint and legacy Word files are automatically converted to PDF, Canvas Content is filed into its own subfolders (Assignments/, Quizzes/ &hellip;), and Panopto lecture video &amp; audio are both saved. Designed for uploading your whole course to an AI tool.</span>
             </div>
           </div>
           <div class="preset-row">
@@ -989,6 +1045,15 @@
           </div>
         </div>
 
+        <div class="callout info reveal">
+          <strong>A filtered folder stays filtered.</strong> Both choices here are written into the folder and every
+          later sync keeps to them, so a <strong>Slides &amp; PDFs</strong> folder is never quietly topped up with the
+          Word documents and datasets it was set up to leave out. The review and completion screens say as much, with a
+          count of what the filter is holding back, so you always know the folder is a deliberate selection rather than
+          a complete copy. To change your mind, download the course again into a fresh folder with
+          <strong>All Files</strong> - see <a href="#sync-config">Syncing &amp; Download Configuration</a>.
+        </div>
+
         <!-- Card 2 -->
         <h3 class="sub-title reveal" id="card2">Card 2 - Canvas Content</h3>
         <p class="body-text reveal">
@@ -1006,6 +1071,11 @@
             <li><img decoding="async" loading="lazy" src="assets/icon_quizzes.png" alt="" class="li-icon" /><span><strong>Quizzes</strong> - Quiz questions and answer choices (visibility depends on your professor's settings).</span></li>
             <li><img decoding="async" loading="lazy" src="assets/icon_submissions.png" alt="" class="li-icon" /><span><strong>Submissions (Results)</strong> - Feedback and grades you received on your own submitted work. Your professor is not notified.</span></li>
           </ul>
+          <p class="card-note"><strong>Two more come down on their own.</strong> Canvas <strong>Pages</strong> and the
+            <strong>external links</strong> your teacher put in a module are part of the module itself, so they are
+            saved whatever you tick here - pages as web pages, links as small shortcut files. In separate-folder mode
+            they get a <em>Pages/</em> and a <em>Links/</em> folder of their own. They are also what the
+            <em>Canvas Pages &#8594; Plain Text</em> and <em>Gather Web Links</em> conversions in Card 3 work on.</p>
         </div>
 
         <div class="compare-grid reveal">
@@ -1024,18 +1094,19 @@
         <p class="body-text reveal">
           Optional. After downloading finishes, the app can automatically convert your files into formats that work best with AI study tools like <strong>NotebookLM</strong>, <strong>ChatGPT</strong>, or <strong>Claude</strong>.
           Each conversion only touches the file types it handles - all others are left unchanged.
+          For the workflow end to end, see <a href="canvas-files-into-notebooklm.html" style="color:var(--cyan)">how to get your Canvas files into NotebookLM</a>.
         </p>
 
         <div class="info-card reveal">
           <h4>Available conversions</h4>
           <ul class="icon-list">
-            <li><img decoding="async" loading="lazy" src="assets/icon_conv_zip.png" alt="" class="li-icon" /><span><strong>Unpack Archives</strong> - Extracts .zip, .tar and .tar.gz files so the contents are immediately accessible. Most AI tools cannot read archives directly. Nothing <em>inside</em> an archive is converted - it comes out exactly as your teacher packed it, so a code project stays a working project.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_zip.png" alt="" class="li-icon" /><span><strong>Unpack Archives</strong> - Extracts .zip, .tar and .tar.gz files so the contents are immediately accessible. Most AI tools cannot read archives directly. Nothing <em>inside</em> an archive is converted - it comes out exactly as your teacher packed it, so a code project stays a working project. The archive itself is replaced by the folder of its contents.</span></li>
             <li><img decoding="async" loading="lazy" src="assets/icon_conv_pptx.png" alt="" class="li-icon" /><span><strong>PowerPoint &#8594; PDF</strong> - Converts slide decks to PDF. Original is replaced. Requires the Microsoft PowerPoint desktop app.</span></li>
-            <li><img decoding="async" loading="lazy" src="assets/icon_conv_word.png" alt="" class="li-icon" /><span><strong>Legacy Word &#8594; PDF</strong> - Converts old .doc / .rtf / .odt formats to PDF. Modern .docx files are not affected.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_word.png" alt="" class="li-icon" /><span><strong>Legacy Word &#8594; PDF</strong> - Converts old .doc / .rtf / .odt formats to PDF. The original is replaced. Modern .docx files are not affected, and Word must be installed.</span></li>
             <li><img decoding="async" loading="lazy" src="assets/icon_conv_excel.png" alt="" class="li-icon" /><span><strong>Excel &#8594; PDF &amp; Data</strong> - Creates a visual PDF plus a plain text data file holding every cell value (<em>Budget.xlsx</em> becomes <em>Budget.pdf</em> + <em>Budget_Data.txt</em>). The original spreadsheet is replaced. Legacy .xls files get the PDF only.</span></li>
-            <li><img decoding="async" loading="lazy" src="assets/icon_conv_html.png" alt="" class="li-icon" /><span><strong>Canvas Pages &#8594; Plain Text</strong> - Strips web formatting from Canvas pages, making them easy for AI tools.</span></li>
-            <li><img decoding="async" loading="lazy" src="assets/icon_conv_code.png" alt="" class="li-icon" /><span><strong>Code &amp; Data &#8594; .txt</strong> - Turns 50+ code and data formats into plain text for AI tools that refuse anything else. The dot becomes an underscore - <em>analysis.py</em> becomes <em>analysis_py.txt</em> - so the original type stays visible in the name and can never collide with a .txt that was already there. The original is replaced.</span></li>
-            <li><img decoding="async" loading="lazy" src="assets/icon_conv_urls.png" alt="" class="li-icon" /><span><strong>Gather Web Links</strong> - Collects every .url / .webloc shortcut into one <em>Compiled_External_Links.txt</em> per course, and removes the shortcuts. Keeps NotebookLM from choking on files it cannot read.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_html.png" alt="" class="li-icon" /><span><strong>Canvas Pages &#8594; Plain Text</strong> - Strips web formatting from the Canvas pages the app saved (assignments, announcements, quizzes and the rest), leaving a clean Markdown .md file that AI tools read easily. The .html it was built from is replaced.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_code.png" alt="" class="li-icon" /><span><strong>Code &amp; Data &#8594; .txt</strong> - Turns 50 code and data formats into plain text for AI tools that refuse anything else. The dot becomes an underscore - <em>analysis.py</em> becomes <em>analysis_py.txt</em> - so the original type stays visible in the name and can never collide with a .txt that was already there. The original is replaced.</span></li>
+            <li><img decoding="async" loading="lazy" src="assets/icon_conv_urls.png" alt="" class="li-icon" /><span><strong>Gather Web Links</strong> - Collects every .url / .webloc shortcut into one <em>Compiled_External_Links.txt</em> per course, and removes the shortcuts. Panopto shortcuts are left alone. Keeps NotebookLM from choking on files it cannot read.</span></li>
             <li><img decoding="async" loading="lazy" src="assets/icon_conv_video.png" alt="" class="li-icon" /><span><strong>Video &#8594; Audio</strong> - Extracts audio as MP3, typically 10-20x smaller. Original video is replaced.</span></li>
           </ul>
         </div>
@@ -1048,6 +1119,7 @@
         <h3 class="sub-title reveal" id="panopto"><img src="assets/pan_icon.png" alt="" class="sub-icon" />Card 4 - Panopto Lecture Recordings</h3>
         <p class="body-text reveal">
           Optional. Some courses record their lectures and attach them in Canvas as <strong>Panopto</strong> links. They're useful - but watching back hours of video is slow, and the recordings aren't in a format you can hand to an AI study tool. Canvas Downloader solves both: it automatically finds those Panopto links and saves each recording right inside your course folder, as <strong>video or audio</strong> you can watch or listen to whenever you want, plus <strong>locally-generated transcripts and subtitles</strong> that make every lecture AI-ready.
+          Downloads are off by default on Panopto's side, so read <a href="download-panopto-lecture-recordings.html" style="color:var(--cyan)">how to download Panopto lecture recordings</a> for the permission question before you rely on this.
         </p>
 
         <div class="info-card reveal">
@@ -1057,12 +1129,11 @@
             <li><img decoding="async" loading="lazy" src="assets/pan_mp3.png" alt="" class="li-icon" /><span><strong>Audio (MP3)</strong> - just the audio track, far smaller than video - great for re-listening or feeding to AI tools. No setup needed.</span></li>
             <li><img decoding="async" loading="lazy" src="assets/pan_txt.png" alt="" class="li-icon" /><span><strong>Transcript (.txt)</strong> - a written transcript of the spoken lecture, perfect for AI tools. Needs a transcription model (see below).</span></li>
             <li><img decoding="async" loading="lazy" src="assets/pan_srt.png" alt="" class="li-icon" /><span><strong>Subtitles (.srt)</strong> - timestamped captions you can load alongside the video. Needs a transcription model (see below).</span></li>
-            <li><span><strong>Shortcut</strong> - a small link file that reopens the lecture on Panopto, saved next to
+            <li><img decoding="async" loading="lazy" src="assets/pan_url.png" alt="" class="li-icon" /><span><strong>Shortcut</strong> - a small link file that reopens the lecture on Panopto, saved next to
                 the rest of the course. It costs no disk space, no bandwidth and no waiting, and it keeps the things a
                 local copy loses: the slide navigation, the screen capture and Panopto's own search. It is a pointer,
                 though, so it stops working if you lose access to the course - treat it as a companion to an offline
-                copy rather than a replacement. <strong>Off by default</strong>, unlike audio, transcript and
-                subtitles.</span></li>
+                copy rather than a replacement.</span></li>
           </ul>
         </div>
 
@@ -1135,11 +1206,15 @@
           <h4>Which model should I pick?</h4>
           <ul class="icon-list">
             <li><span><strong>Tiny / Base</strong> - fastest, lowest accuracy. Good for a quick test or very slow machines.</span></li>
-            <li><span><strong>Small</strong> - the balanced, recommended choice on CPU. Great accuracy for its speed.</span></li>
-            <li><span><strong>Medium</strong> - more accurate, noticeably slower on CPU.</span></li>
+            <li><span><strong>Small</strong> - the balanced, recommended choice on CPU. Good for its speed, though noticeably weaker on languages other than English.</span></li>
+            <li><span><strong>Medium</strong> - more accurate, and slow enough on a CPU that it is really a GPU model.</span></li>
             <li><span><strong>Large v3</strong> - the most accurate (best for languages like Danish), but really wants a GPU.</span></li>
-            <li><span><strong>Large v3 Turbo</strong> - near-Large accuracy, much faster. The recommended pick when you have a GPU.</span></li>
+            <li><span><strong>Large v3 Turbo</strong> - near-Large accuracy at a fraction of the time <em>on a GPU</em>. The recommended pick when you have one.</span></li>
           </ul>
+          <p class="card-note"><strong>On a CPU, stay at Small or below.</strong> Turbo's speed comes from the half of the
+            model a graphics card accelerates; without one it runs slower than Small, so the bigger models are only
+            worth it if the app tells you a GPU was detected. The dialog recommends the right model for the machine it
+            is running on, and that recommendation is the one to trust.</p>
         </div>
 
         <div class="info-card reveal">
@@ -1191,9 +1266,9 @@
           <strong>One folder = one course.</strong> Do not mix files from multiple Canvas courses into the same Course Folder. For best results, link folders originally downloaded via Canvas Downloader.
         </div>
 
-        <div class="info-card reveal">
+        <div class="info-card reveal" id="sync-config">
           <h4>Syncing &amp; Download Configuration</h4>
-          <p><strong>Courses inherit their original download configuration.</strong> If you initially downloaded a course with AI Optimization enabled, the sync engine will automatically apply those same conversions to any new files you sync.</p><p style="margin-top:8px;">The same goes for <strong>Panopto lecture recordings</strong>: the folder remembers which formats it was set up with (video / audio / transcript / subtitles), and every new lecture is fetched in exactly that configuration - so you never have to reconfigure a sync.</p><p style="margin-top:8px;">Want to change any of it? Re-download the course into a new folder with your preferred configuration. A sync will never restructure a folder underneath you.</p>
+          <p><strong>Courses inherit their original download configuration.</strong> If you initially downloaded a course with AI Optimization enabled, the sync engine will automatically apply those same conversions to any new files you sync.</p><p style="margin-top:8px;">The same goes for <strong>Panopto lecture recordings</strong>: the folder remembers which formats it was set up with (shortcut / video / audio / transcript / subtitles), and every new lecture is fetched in exactly that configuration - so you never have to reconfigure a sync.</p><p style="margin-top:8px;">Your <strong>file type</strong> choice is remembered the same way. A folder downloaded as <strong>Slides &amp; PDFs</strong> keeps to slides and PDFs on every sync; files outside it are never offered, and the review and completion screens show a count of what is being held back.</p><p style="margin-top:8px;">Want to change any of it? Re-download the course into a new folder with your preferred configuration. A sync will never restructure a folder underneath you.</p>
         </div>
 
         <div class="info-card reveal">
@@ -1311,7 +1386,7 @@
           </div>
           <div class="compare-card">
             <h4><img decoding="async" loading="lazy" src="assets/icon_sync_group.png" alt="" class="card-icon" />Save a Group</h4>
-            <p>A Group is a named collection of multiple pairs - e.g. all your semester courses. Add all pairs to the sync list, then click <strong>Save Group</strong>. You need at least 2 pairs to save a group.</p>
+            <p>A Group is a named collection of multiple pairs - e.g. all your semester courses. Add all pairs to the sync list, then click <strong>Save Group</strong>. You need at least 2 pairs to save a group, and the button stays greyed out if that exact set is already saved or one of the folders has gone missing.</p>
           </div>
         </div>
 
@@ -1469,6 +1544,10 @@
             <li><span><strong>Move deselected to Ignored</strong> - Sits at the top of every category. Click it to sweep every unchecked file in that list into your permanent Ignored bucket.</span></li>
             <li><img decoding="async" loading="lazy" src="assets/icon_restore.png" alt="" class="li-icon" /><span><strong>The Restore icon</strong> - Inside the Ignored Files category, click the restore arrow next to a file, or use "Restore All" to bring them back into active sync.</span></li>
           </ul>
+          <p class="card-note"><strong>Lecture recordings get their own list.</strong> If the folder was set up for
+            Panopto, each course shows a <strong>Panopto Recordings</strong> section sorted into the same categories as
+            the files above, with the same tick boxes, the same eye icon to ignore one for good, and the same
+            unchecked-by-default treatment for anything you deleted locally.</p>
         </div>
 
         <div class="info-card reveal">
@@ -1736,8 +1815,8 @@
             <p>Click the edit icon on the pair and re-select the folder at its new location. The hidden database lives inside the folder, so all sync history is preserved automatically.</p>
           </details>
           <details class="faq-item reveal">
-            <summary>If I enable PowerPoint to PDF, does the original get deleted?</summary>
-            <p>Yes - the original is replaced by the PDF. Same for Legacy Word to PDF, Excel to PDF, and Video to Audio.</p>
+            <summary>If I enable a conversion, does the original get deleted?</summary>
+            <p>Yes. Every conversion on the AI Optimization card replaces what it converted - PowerPoint, Legacy Word and Excel to PDF, Canvas Pages to Markdown, Code &amp; Data to .txt, Video to Audio, the web links gathered into one file, and an unpacked archive by the folder of its contents. What you keep is the converted version, which is what you asked for - so turn a conversion on knowing the original goes with it.</p>
           </details>
           <details class="faq-item reveal">
             <summary>What does Submissions (Results) save, and will my professor know?</summary>
@@ -1824,6 +1903,45 @@
       document.querySelectorAll('a[data-setup-link]').forEach(function (a) { a.href = 'win-setup.html'; });
     }
   })();
+
+  // Guide-embed YouTube players, loaded ON CLICK.
+  //
+  // A plain iframe in the markup would contact YouTube - and therefore
+  // Google - simply because someone opened the guide. The poster is served
+  // from this site; the player is created only when the play button is
+  // pressed. Same implementation as mac-setup.html.
+  document.querySelectorAll('.guide-embed[data-yt]').forEach(function (box) {
+    var id = box.getAttribute('data-yt');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Play: how to get your Canvas Access Token');
+    btn.style.cssText = 'all:unset;box-sizing:border-box;position:absolute;inset:0;display:flex;' +
+      'align-items:center;justify-content:center;cursor:pointer;background:#0c1424;overflow:hidden;';
+    btn.innerHTML =
+      '<img src="assets/token-video-poster.jpg" alt="" loading="lazy" decoding="async"' +
+      ' style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />' +
+      '<span style="position:absolute;inset:0;background:rgba(0,0,0,0.32);"></span>' +
+      '<span style="position:relative;z-index:2;width:60px;height:60px;background:rgba(229,9,20,0.95);' +
+      'border-radius:50%;display:flex;align-items:center;justify-content:center;' +
+      'box-shadow:0 4px 15px rgba(0,0,0,0.5);">' +
+      '<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" style="margin-left:3px;">' +
+      '<polygon points="5 3 19 12 5 21 5 3"></polygon></svg></span>';
+
+    btn.addEventListener('click', function () {
+      // From a file:// path the embed fails with YouTube error 153, so send
+      // the reader to the video itself rather than to a broken player.
+      if (location.protocol === 'file:') {
+        window.open('https://www.youtube.com/watch?v=' + id, '_blank', 'noopener');
+        return;
+      }
+      box.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + id +
+        '?autoplay=1&modestbranding=1&rel=0" title="Getting your Canvas Access Token"' +
+        ' allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"' +
+        ' allowfullscreen referrerpolicy="strict-origin-when-cross-origin"' +
+        ' style="position:absolute;inset:0;width:100%;height:100%;border:0;"></iframe>';
+    });
+    box.appendChild(btn);
+  });
 </script>
 </body>
 </html>
