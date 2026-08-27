@@ -6,7 +6,7 @@ app no longer has. Re-run it after any change to that module.
 
     python scripts/filetype_icon_gallery.py
 
-Writes two files next to each other in ``video/`` (untracked):
+Writes two files next to each other in ``marketing/video/`` (gitignored):
 
 * ``filetype-icons.artifact.html`` - body content only, for the Artifact tool,
   which supplies its own doctype/head/body wrapper.
@@ -31,7 +31,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from shared.filetype_icons import _FAMILIES, FILETYPE_SVG_DEFAULT, _mix  # noqa: E402
 
-OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "video")
+OUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                       "marketing", "video")
 
 # What each family is FOR, in the user's words rather than the code's.
 BLURBS = {
