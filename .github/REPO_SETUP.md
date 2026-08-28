@@ -63,8 +63,10 @@ survive a machine change lives in the repository. Pull before starting.
 7. Optional: pin the repository on the org profile, and give `BrkBuilds` a profile
    README via a `.github` repository.
 
-**Marketing, SEO and launch memory now lives in [`marketing/`](../marketing/README.md)** -
-findings register, settled decisions, the site runbook and the off-site playbook.
+**Marketing, SEO and launch memory lives in `marketing/`** - findings register, settled
+decisions, the site runbook and the off-site playbook. That folder is gitignored as of
+2026-08-28 and is LOCAL-ONLY, so this is deliberately not a link: it is not in a clone,
+it does not travel between machines, and nothing tracked may depend on a file inside it.
 
 ## On a new machine
 

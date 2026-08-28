@@ -60,9 +60,9 @@
       --surf2: #15172a;
       --border: rgba(255, 255, 255, 0.1);
       --border2: rgba(255, 255, 255, 0.16);
-      --txt: #e2e8f0;
-      --txt2: #cbd5e1;
-      --txt3: #94a3b8;
+      --txt: #e9ebee;
+      --txt2: #bfc3c9;
+      --txt3: #9599a1;
       --cyan: #38bdf8;
       --cyan-bg: rgba(56, 189, 248, 0.08);
       --cyan-b: rgba(56, 189, 248, 0.3);
@@ -76,6 +76,7 @@
       --blu-bg: rgba(59, 113, 184, 0.12);
       --red: #ef4444;
       --rad: 10px;
+      --rad-s:   5px;
       --rad-l: 16px;
     }
 
@@ -122,7 +123,10 @@
        the .reveal above on specificity (0,2,1 vs 0,1,0) without !important. */
     html:not(.js) .reveal { opacity: 1; transform: none; }
 
-    /* section label */
+    /* Section label. One neutral colour, matching .label on guide.html and
+       engine.html. Eight of these run down the page; in cyan they read as
+       eight links, and the numbered ones ("1. Download" ... "6. Lecture
+       Recordings") are structure, not something to click. */
     .section-kicker {
       display: inline-flex;
       align-items: center;
@@ -131,7 +135,7 @@
       font-weight: 800;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--cyan);
+      color: var(--txt3);
       margin-bottom: 16px;
     }
 
@@ -228,7 +232,7 @@
 
     .pillar-text li::before {
       content: "•";
-      color: var(--cyan);
+      color: var(--txt3);
       position: absolute;
       left: 0;
       top: 0;
@@ -285,6 +289,11 @@
       font-weight: 700;
       font-size: 15px;
       color: var(--txt);
+      /* The wordmark is nowrap, so without this it refuses to shrink and the
+         buttons land on top of it instead. Clipping the last characters is the
+         graceful failure; an overlapped title is not. */
+      min-width: 0;
+      overflow: hidden;
     }
 
     .nav-logo img {
@@ -314,8 +323,11 @@
       background: rgba(255, 255, 255, 0.05);
     }
 
+    /* White, not cyan. Cyan is this site's LINK colour; spending it on a
+       state as well makes every nav read as three links and one brighter
+       link. --txt against the bar's --txt2 is the whole signal needed. */
     .nav-link.active {
-      color: var(--cyan);
+      color: var(--txt);
     }
 
     .nav-v {
@@ -324,7 +336,7 @@
       background: var(--surf2);
       border: 1px solid var(--border);
       padding: 3px 10px;
-      border-radius: 100px;
+      border-radius: var(--rad-s);
     }
 
     .btn-nav {
@@ -420,21 +432,29 @@
 
     @media(max-width:860px) {
 
-      /* The GitHub button may collapse to its icon - it is a secondary link.
-         The Download button must not: it is the page's primary action, and an
-         unlabelled 32px glyph is the weakest CTA on offer. Only the word is
-         kept; the padding still tightens. */
-      .btn-nav-ghost span {
+      /* BOTH nav buttons collapse to their icon here, which is what every other
+         page on the site already does. The previous rule kept the word
+         "Download" on the argument that an unlabelled glyph is a weak CTA. It
+         did not fit: measured on a 360px Android viewport, the labelled button
+         made .nav-right 157px wide, so it started at x=208 - exactly where the
+         "Canvas Downloader" wordmark ends, with no gap - and ran to x=365, five
+         pixels past the viewport, giving the page horizontal scroll. The
+         wordmark cannot shrink (white-space: nowrap), so the collision lands on
+         the title. The CTA loses nothing: this href is a desktop .exe/.dmg that
+         a phone visitor cannot act on, and the hero's own Download button is
+         two screens' scroll away. */
+      /* Scoped to `nav`. In the nav each button also carries an SVG, so
+         dropping the words leaves a glyph; outside it there is nothing left
+         behind. Measured unscoped on the article shell, 390px viewport: an
+         empty 22x37px box where "See it in action" should be. */
+      nav .btn-nav-ghost span,
+      nav .btn-nav span {
         display: none;
       }
 
-      .btn-nav-ghost {
+      nav .btn-nav-ghost,
+      nav .btn-nav {
         padding: 8px 10px;
-      }
-
-      .btn-nav {
-        padding: 8px 12px;
-        font-size: 12.5px;
       }
     }
 
@@ -581,11 +601,12 @@
       margin-bottom: 20px;
     }
 
+    /* Flat accent, never a gradient fill - see engine.html for why. The
+       live hero sets `color: var(--cyan)` inline on the typewriter span, so
+       this rule matched nothing; it is kept in step rather than left as a
+       gradient waiting for the next author to reuse it. */
     .hero-text h1 span {
-      background: linear-gradient(135deg, #38bdf8, #818cf8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: var(--cyan);
     }
 
     .hero-text p {
@@ -1110,7 +1131,7 @@
       font-size: 11px;
       font-weight: 700;
       padding: 2px 9px;
-      border-radius: 100px;
+      border-radius: var(--rad-s);
       margin-left: auto;
     }
 
@@ -1412,7 +1433,7 @@
       font-size: 10px;
       font-weight: 700;
       padding: 2px 8px;
-      border-radius: 100px;
+      border-radius: var(--rad-s);
       white-space: nowrap;
       align-self: flex-start;
       margin-left: 10px;
@@ -1598,7 +1619,7 @@
       font-size: 11px;
       font-weight: 600;
       padding: 2px 9px;
-      border-radius: 100px;
+      border-radius: var(--rad-s);
       white-space: nowrap;
       flex-shrink: 0;
     }
@@ -1676,7 +1697,7 @@
       font-size: 11px;
       font-weight: 700;
       padding: 2px 8px;
-      border-radius: 100px;
+      border-radius: var(--rad-s);
       flex-shrink: 0;
     }
 
@@ -1916,21 +1937,18 @@
       gap: 9px;
     }
 
+    /* A number, not a chip - same rule as .steps in the article shell.
+       (No markup uses this today; kept in step so it is correct if it
+       comes back rather than reintroducing the circle.) */
     .sec-n {
-      width: 20px;
-      height: 20px;
       min-width: 20px;
-      border-radius: 50%;
-      background: rgba(249, 115, 22, 0.15);
-      border: 1px solid rgba(249, 115, 22, 0.3);
-      color: var(--orange);
-      font-size: 10px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--txt3);
       margin-top: 1px;
     }
+    .sec-n::after { content: "."; }
 
     .sec-step p {
       font-size: 12px;
@@ -2025,21 +2043,16 @@
       align-items: flex-start;
     }
 
+    /* A number, not a chip - see .sec-n above. */
     .tok-n {
-      width: 22px;
-      height: 22px;
       min-width: 22px;
-      border-radius: 50%;
-      background: var(--cyan-bg);
-      border: 1px solid var(--cyan-b);
-      color: var(--cyan);
-      font-size: 11px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--txt3);
       margin-top: 1px;
     }
+    .tok-n::after { content: "."; }
 
     .token-step p {
       font-size: 13px;
@@ -2218,19 +2231,16 @@
       padding: 90px 0;
     }
 
+    /* Same kicker as .section-kicker above, under an older name. */
     .sec-label {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--txt3);
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 4px 12px;
-      border-radius: 100px;
       margin-bottom: 16px;
     }
 
@@ -2548,7 +2558,7 @@
       color: var(--cyan);
       background: var(--cyan-bg);
       border: 1px solid var(--cyan-b);
-      border-radius: 20px;
+      border-radius: var(--rad-s);
       padding: 2px 9px;
       flex-shrink: 0;
     }
@@ -2629,6 +2639,12 @@
       content: '+';
       margin-left: auto;
       /* Pushes the toggle sign to the right */
+      /* The gutter lives in the glyph's own padding, not in a gap: margin-left
+         auto right-aligns the box, so padding-left is empty space that only
+         appears once the title is long enough to reach it. A title that needs
+         the room wraps instead of stopping a character short of the '+'. */
+      padding-left: 14px;
+      flex-shrink: 0;
       font-size: 18px;
       color: var(--txt3);
       font-weight: 400;
@@ -2835,7 +2851,7 @@
       font-weight: 500;
       user-select: none;
       transition: color 0.15s;
-      border-bottom: 1px dashed rgba(148, 163, 184, 0.5);
+      border-bottom: 1px dashed rgba(149, 153, 161, 0.5);
       padding-bottom: 2px;
       margin-bottom: 8px;
     }
@@ -2910,7 +2926,7 @@
       font-weight: 500;
       user-select: none;
       transition: color 0.15s;
-      border-bottom: 1px dashed rgba(148, 163, 184, 0.5);
+      border-bottom: 1px dashed rgba(149, 153, 161, 0.5);
       padding-bottom: 2px;
       margin-top: 16px;
       width: fit-content;
@@ -2978,7 +2994,7 @@
     .expand-note {
       margin-top: 20px;
       padding: 13px 16px;
-      border-radius: var(--rad-m);
+      border-radius: var(--rad);
       border: 1px solid rgba(184, 157, 254, 0.3);
       background: rgba(184, 157, 254, 0.07);
       font-size: 12.5px;
@@ -2998,6 +3014,87 @@
 
     .expand-note a:hover {
       text-decoration: underline;
+    }
+
+    /* Deep-dive article links. These used to be a closing paragraph inside three
+       pillar TEXTS (Download, AI Optimization, Lecture Recordings) - six links
+       and four sentences of prose in the most-read block of the funnel, where
+       the pillar's whole job is to sell one feature in one screen. The
+       crawl-budget finding in marketing/ measured link COUNT as anti-correlated
+       with getting crawled (9 links = never crawled, 1 link = indexed), so the
+       prose cost conversion and bought nothing. Same links, same page, now at
+       the foot of each pillar's own expander: zero vertical space until a
+       reader opens it, and still in the served HTML for a crawler. */
+    .pillar-reading {
+      margin-top: 22px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .pillar-reading .expand-section-label {
+      margin-bottom: 10px;
+    }
+
+    /* Hanging indent: the arrow sits in the 20px gutter and wrapped lines clear
+       it. The ::before needs its own `text-indent: 0` - text-indent inherits,
+       and an inline-block is its own block container, so the -20px would
+       otherwise pull the arrow out of its own box. */
+    .pr-item {
+      padding-left: 20px;
+      text-indent: -20px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .pr-item+.pr-item {
+      margin-top: 11px;
+    }
+
+    .pr-item::before {
+      content: "→";
+      display: inline-block;
+      width: 20px;
+      text-indent: 0;
+      color: var(--txt3);
+    }
+
+    .pr-item a {
+      color: var(--cyan);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .pr-item a:hover {
+      text-decoration: underline;
+    }
+
+    .pr-note {
+      display: block;
+      text-indent: 0;
+      color: var(--txt3);
+      font-size: 12.5px;
+      line-height: 1.55;
+      margin-top: 2px;
+    }
+    /* Keyboard focus ring.
+
+       The `outline: none` on these summaries is there for a reason - a
+       <summary> takes :focus on a MOUSE click, so without it every click on
+       an accordion left a ring behind. But it also removed the ring for the
+       keyboard, and a <summary> is the only way to open one with a keyboard.
+       Measured by tabbing the real page: 11 of 70 stops on guide.html and 30
+       of 69 on index.html had no focus indicator of any kind, almost all of
+       them summaries. Every OTHER page on the site was already clean, which
+       is the census - `outline: none` appears in exactly these two files.
+
+       :focus-visible does not match a mouse click on a summary, so the click
+       behaviour the outline:none was protecting is unchanged. */
+    summary:focus-visible,
+    button:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+      border-radius: 4px;
     }
   </style>
   <script type="application/ld+json">
@@ -3211,14 +3308,6 @@
             "acceptedAnswer": {
               "@type": "Answer",
               "text": "Yes. Canvas Downloader uses the standard Canvas REST API, which every Canvas institution runs. If you can log into Canvas at your university, it works. The app ships a searchable list of 4,757 verified institutions, and if yours is not listed you can paste your Canvas address instead."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Do I need Python or anything else installed?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "No. Python is bundled inside the executable. The only optional extra is the Microsoft Office desktop app (PowerPoint, Word, Excel), needed solely for the Office to PDF conversions. Everything else works with no extra software."
             }
           },
           {
@@ -3468,7 +3557,7 @@
   <!-- Section 2: Pain Point -->
   <section class="pain-point reveal">
     <div class="container">
-      <div class="section-kicker" style="justify-content: center; width: 100%; margin-bottom: 24px; color: var(--red);">
+      <div class="section-kicker" style="justify-content: center; width: 100%; margin-bottom: 24px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
           stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
           <circle cx="12" cy="12" r="10"></circle>
@@ -3540,11 +3629,7 @@
               configuration, and let the app pull <b>all your course files</b> from Canvas, into course folders
               organized exactly like your Canvas courses. <br><br>But that's not all: The app also downloads <b>Canvas
                 Content</b> - all your assignments, announcements, quizzes, etc. and any <b> file attachments</b>, so
-              your PC has a 1:1 copy of each course. <br><br>New to this? Read
-              <a href="how-to-download-all-canvas-files.html" style="color: var(--cyan); text-decoration: none;">every way to download your Canvas files, compared</a> -
-              including the built-in routes that need no software at all - and
-              <a href="save-canvas-pages-quizzes-discussions.html" style="color: var(--cyan); text-decoration: none;">how to save the half of a course
-              that is not a file</a>.</p>
+              your PC has a 1:1 copy of each course.</p>
             <label for="p1-open" class="pillar-expander-label desktop-only">See exactly what you can download, and how
               <span class="pex-arrow"></span></label>
           </div>
@@ -3679,6 +3764,17 @@
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+          <div class="pillar-reading">
+            <div class="expand-section-label">Related reading</div>
+            <div class="pr-item">
+              <a href="how-to-download-all-canvas-files.html">Every way to download your Canvas files, compared</a>
+              <span class="pr-note">New to this? Five methods side by side, including the built-in Canvas routes that need no software at all.</span>
+            </div>
+            <div class="pr-item">
+              <a href="save-canvas-pages-quizzes-discussions.html">How to save the half of a course that is not a file</a>
+              <span class="pr-note">Pages, quizzes, discussions and announcements are not files, so no file download reaches them.</span>
             </div>
           </div>
         </div>
@@ -3827,9 +3923,7 @@
               core. <br><br> When enabled, the app <b>automatically converts</b> all your course materials to
               <b>AI-Ready file formats</b>, whenever you Sync or Download. No more timely manual conversions on sketchy
               websites. <br><br><b>Purpose-built for NotebookLM (100% compatibility): </b>Enable AI Optimizations →
-              Download → Drag & Drop into NotebookLM and start studying. <br><br>The full workflow, including what
-              NotebookLM accepts and why one notebook per course beats one per degree, is in
-              <a href="canvas-files-into-notebooklm.html" style="color: var(--cyan); text-decoration: none;">how to get your Canvas files into NotebookLM</a>.</p>
+              Download → Drag & Drop into NotebookLM and start studying.</p>
             <label for="p4-open" class="pillar-expander-label desktop-only">See the conversions available <span
                 class="pex-arrow"></span></label>
           </div>
@@ -3921,6 +4015,13 @@
               <div class="pp-btn-text">
                 <div class="pp-title">Video to Audio</div>
               </div>
+            </div>
+          </div>
+          <div class="pillar-reading">
+            <div class="expand-section-label">Related reading</div>
+            <div class="pr-item">
+              <a href="canvas-files-into-notebooklm.html">How to get your Canvas files into NotebookLM</a>
+              <span class="pr-note">The full workflow: what NotebookLM accepts, and why one notebook per course beats one per degree.</span>
             </div>
           </div>
         </div>
@@ -4040,13 +4141,7 @@
               to an AI. Canvas Downloader saves them straight to your course folder as <b>video</b> or <b>audio</b> to
               watch anytime, and turns them into <b>transcripts</b> and <b>subtitles</b> that are instantly
               AI-ready.<br><br>Video and audio need zero setup. Transcripts run <b>100% on your own computer</b> -
-              private, offline, and free, and
-              <a href="panopto-lecture-transcript.html" style="color: var(--cyan); text-decoration: none;">this is what a lecture transcript is
-              actually for</a>. <br><br>Not sure which system your lectures are in? Canvas embeds video from five
-              of them: <a href="download-lecture-videos-from-canvas.html" style="color: var(--cyan); text-decoration: none;">how to download lecture videos from
-              Canvas</a>. Downloads are off by default in Panopto, and the permission question comes first:
-              see <a href="download-panopto-lecture-recordings.html" style="color: var(--cyan); text-decoration: none;">how to download Panopto lecture
-              recordings</a>.</p>
+              private, offline, and free.</p>
             <label for="p5-open" class="pillar-expander-label desktop-only">See the download options <span
                 class="pex-arrow"></span></label>
           </div>
@@ -4116,6 +4211,21 @@
             the run goes ahead exactly as normal. You can also switch lecture recordings off for good in
             <b>Settings</b>. Whatever you save is for your own study - never re-share a recording. The full story is on
             the <a href="disclaimer.html">Disclaimer &amp; Acceptable Use</a> page.
+          </div>
+          <div class="pillar-reading">
+            <div class="expand-section-label">Related reading</div>
+            <div class="pr-item">
+              <a href="download-panopto-lecture-recordings.html">How to download Panopto lecture recordings</a>
+              <span class="pr-note">Downloads are off by default in Panopto, so the permission question comes first.</span>
+            </div>
+            <div class="pr-item">
+              <a href="download-lecture-videos-from-canvas.html">How to download lecture videos from Canvas</a>
+              <span class="pr-note">Not sure which system your lectures are in? Canvas embeds video from five of them.</span>
+            </div>
+            <div class="pr-item">
+              <a href="panopto-lecture-transcript.html">What a lecture transcript is actually for</a>
+              <span class="pr-note">Panopto has often made one already, and captions are frequently allowed where downloads are not.</span>
+            </div>
           </div>
         </div>
       </div>
@@ -4384,7 +4494,7 @@
   <section id="macos-notes" style="padding:80px 0 70px;">
     <div class="container">
       <div class="sh reveal" style="text-align:center; max-width:540px; margin:0 auto 40px;">
-        <div class="label org" style="justify-content:center;">macOS</div>
+        <div class="section-kicker" style="justify-content:center;">macOS</div>
         <h2>On a Mac? Read this first</h2>
         <p style="font-size:15px;">Canvas Downloader works on macOS, but there are a few things worth knowing before you
           dive in - especially if you're on a university-managed Mac.</p>
@@ -4412,7 +4522,7 @@
           </summary>
           <p>Because Canvas Downloader is a free solo project, it isn't signed with Apple's paid certificate. macOS will
             block it with an "unidentified developer" or "damaged" message the first time you open it. This is normal
-            for free apps.<br><br>The <a href="thanks-mac.html"
+            for free apps.<br><br>The <a href="mac-setup.html"
               style="color:var(--cyan); text-decoration:underline; text-underline-offset:2px;">install guide</a> walks
             you through it in under a minute: approve it in <strong>System Settings &rarr; Privacy &amp; Security &rarr; Open
               Anyway</strong>, or run one Terminal command if it says "damaged". After that, it opens normally forever.
@@ -4811,13 +4921,6 @@
             institutions</strong> across every country that uses Canvas, so most people just type their school's name
             and pick it. Not in the list? Paste your Canvas address instead - nothing about the app depends on being
             listed.</p>
-        </details>
-        <details class="faq-item reveal">
-          <summary>Do I need Python or anything else installed?</summary>
-          <p>No. Python is bundled inside the executable. The only optional extra is the Microsoft Office desktop
-            app (PowerPoint / Word / Excel), needed solely for the Office&#8594;PDF conversions. Everything else -
-            downloading, syncing, video-to-audio, archives, Canvas pages, code and link files - works with no
-            extra software.</p>
         </details>
         <details class="faq-item reveal">
           <summary>What happens when my professor updates a file?</summary>

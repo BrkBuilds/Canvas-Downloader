@@ -99,9 +99,9 @@
       --surf2:   #15172a;
       --border:  rgba(255,255,255,0.1);
       --border2: rgba(255,255,255,0.16);
-      --txt:     #e2e8f0;
-      --txt2:    #a8b6c9;   /* raised from #94a3b8 - body copy was too dim */
-      --txt3:    #8494a8;   /* raised from #475569 - captions were unreadable */
+      --txt:     #e9ebee;
+      --txt2:    #bfc3c9;   /* neutral ramp; see .claude/rules/website.md */
+      --txt3:    #9599a1;   /* neutral ramp; see .claude/rules/website.md */
       --cyan:    #38bdf8;
       --cyan-bg: rgba(56,189,248,0.08);
       --cyan-b:  rgba(56,189,248,0.3);
@@ -129,7 +129,8 @@
       --c3:    #f97316;  --c3-bg: rgba(249,115,22,0.10);  --c3-b: rgba(249,115,22,0.34);
       --c4:    #b89dfe;  --c4-bg: rgba(184,157,254,0.10); --c4-b: rgba(184,157,254,0.34);
 
-      --rad: 10px; --rad-l: 16px;
+      --rad: 10px;
+      --rad-s:   5px; --rad-l: 16px;
       --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
     }
 
@@ -154,15 +155,16 @@
       .reveal { opacity: 1; transform: none; transition: none; }
     }
 
+    /* One neutral treatment, matching guide.html. The colour used to change
+       per section without encoding anything a reader could act on. Variant
+       classes stay valid and resolve to the same plain text, so the markup
+       does not have to be re-tagged. No box at all, matching .section-kicker
+       on index.html - see the note on guide.html's .label. */
     .label {
       display: inline-flex; align-items: center; gap: 6px;
-      font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--cyan); background: var(--cyan-bg); border: 1px solid var(--cyan-b);
-      padding: 4px 12px; border-radius: 100px; margin-bottom: 16px;
+      font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--txt3); margin-bottom: 16px;
     }
-    .label.grn { color: var(--green); background: var(--grn-bg); border-color: var(--grn-b); }
-    .label.org { color: var(--orange); background: var(--org-bg); border-color: var(--org-b); }
-    .label.purp { color: var(--purple); background: var(--purp-bg); border-color: var(--purp-b); }
 
     /* ---- NAV ---- */
     nav { position: sticky; top: 0; z-index: 100; background: rgba(11,12,20,0.9);
@@ -174,7 +176,7 @@
     .nav-link { font-size: 13px; font-weight: 500; color: var(--txt2); padding: 7px 11px;
                 border-radius: 7px; transition: all 0.15s; white-space: nowrap; }
     .nav-link:hover { color: var(--txt); background: rgba(255,255,255,0.05); }
-    .nav-link.active { color: var(--cyan); background: var(--cyan-bg); }
+    .nav-link.active { color: var(--txt); background: rgba(255,255,255,0.05); }
     .btn-nav { display: inline-flex; align-items: center; gap: 7px; background: var(--blue); color: #fff;
                font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 8px; transition: all 0.15s; white-space: nowrap; }
     .btn-nav:hover { filter: brightness(1.12); }
@@ -182,7 +184,11 @@
                      color: var(--txt2); font-size: 13px; font-weight: 500; padding: 7px 12px; border-radius: 8px;
                      transition: all 0.15s; white-space: nowrap; }
     .btn-nav-ghost:hover { color: var(--txt); border-color: var(--txt3); }
-    @media(max-width:900px) { .btn-nav-ghost span { display: none; } }
+    /* Scoped to `nav`, like the 860px form on the other 21 pages. Only the
+       nav uses .btn-nav-ghost here and it carries an SVG, so this is not a
+       live defect on engine.html - but unscoped it is the same latent one:
+       a text-only reuse elsewhere would collapse to an empty box. */
+    @media(max-width:900px) { nav .btn-nav-ghost span { display: none; } }
     @media(max-width:700px) { .nav-link { padding: 6px 8px; font-size: 12px; } }
     .setup-short { display: none; }
     @media(max-width:600px) { .setup-full { display: none; } .setup-short { display: inline; } }
@@ -195,8 +201,12 @@
       pointer-events: none; }
     .guide-hero h1 { font-size: clamp(28px, 4vw, 44px); font-weight: 900; letter-spacing: -0.03em;
       line-height: 1.1; margin-bottom: 14px; position: relative; }
-    .guide-hero h1 span { background: linear-gradient(135deg, #a855f7, #38bdf8);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    /* Flat accent. A gradient-filled headline is the one thing on this site
+       that could not have come from the product's own design language - the
+       app draws no gradient text anywhere - and it is the single most
+       recognisable tell of a generated landing page. Matches guide.html,
+       which was already flat. */
+    .guide-hero h1 span { color: var(--cyan); }
     .guide-hero p { font-size: 16px; color: var(--txt2); max-width: 640px; line-height: 1.7; position: relative; }
     hr.div { border: none; border-top: 1px solid var(--border); margin: 0; }
 
@@ -214,7 +224,7 @@
     .toc a { font-size: 13px; color: var(--txt3); padding: 6px 12px; border-radius: 6px;
       border-left: 2px solid transparent; transition: all 0.15s; display: block; line-height: 1.4; }
     .toc a:hover { color: var(--txt); background: rgba(255,255,255,0.03); }
-    .toc a.active { color: var(--cyan); border-left-color: var(--cyan); background: var(--cyan-bg); }
+    .toc a.active { color: var(--txt); border-left-color: var(--cyan); background: rgba(255,255,255,0.05); }
     .toc a.sub { padding-left: 24px; font-size: 12px; }
     .toc-sep { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
       color: var(--txt3); margin: 14px 0 6px; padding-left: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
@@ -275,13 +285,15 @@
       border-radius: var(--rad); background: var(--surf); }
     table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
     thead th { text-align: left; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      color: #9fb0c6; padding: 11px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+      color: var(--txt3); padding: 11px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
     tbody td { padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--txt2);
       vertical-align: top; line-height: 1.55; }
     tbody tr:last-child td { border-bottom: none; }
     tbody tr:hover { background: rgba(255,255,255,0.02); }
     td.nm { color: var(--txt); font-weight: 600; white-space: nowrap; }
-    .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 100px;
+    /* The colour here is a LEGEND (kept / gone / n-a / needed) and stays.
+       Only the shape changes: --rad-s, like every other small box. */
+    .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--rad-s);
       border: 1px solid; white-space: nowrap; }
     .pill.keep { color: var(--green); background: var(--grn-bg); border-color: var(--grn-b); }
     .pill.gone { color: var(--orange); background: var(--org-bg); border-color: var(--org-b); }
@@ -291,10 +303,20 @@
     /* ---- STEPS ---- */
     .steps { display: flex; flex-direction: column; margin: 20px 0 24px; max-width: 760px; }
     .step { display: grid; grid-template-columns: 34px 1fr; gap: 14px; padding-bottom: 20px; position: relative; }
-    .step:not(:last-child)::before { content: ''; position: absolute; left: 16px; top: 32px; bottom: 0; width: 1px; background: var(--border); }
-    .step-n { width: 33px; height: 33px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 800; color: var(--cyan); background: var(--cyan-bg);
-      border: 1px solid var(--cyan-b); position: relative; z-index: 1; }
+    /* The connecting rail stays - it is structure, it says these four things
+       happen in order. What goes is the filled chip around the digit. The
+       rail now starts below the number's line box rather than below a 33px
+       box, and the number is centred in its own 34px grid column so the
+       rail still runs through its middle. */
+    /* 13px, not 16px (half of the 34px column). The marker reads "1." and
+       the period sits past the digits, so centring the STRING puts the
+       digits left of the column's middle: measured glyph mid-point 495
+       against a rail at 498. The rail has to line up with the numbers a
+       reader sees, not with the box they sit in. */
+    .step:not(:last-child)::before { content: ''; position: absolute; left: 13px; top: 24px; bottom: 0; width: 1px; background: var(--border); }
+    .step-n { font-family: var(--mono); font-size: 13px; font-weight: 600; line-height: 1.6;
+      color: var(--txt3); text-align: center; position: relative; z-index: 1; }
+    .step-n::after { content: "."; }
     .step-b h4 { font-size: 14.5px; font-weight: 700; margin-bottom: 4px; }
     .step-b p { font-size: 13.5px; color: var(--txt2); line-height: 1.65; margin: 0; }
 
@@ -317,8 +339,8 @@
     .ctl-grp.wide { grid-column: 1 / -1; }
     .sim-result { padding: 16px 18px 18px; }
     .ctl-lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-      color: #9fb0c6; margin-bottom: 9px; display: flex; align-items: center; gap: 8px; }
-    .cbadge { font-size: 9.5px; font-weight: 800; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 100px;
+      color: var(--txt3); margin-bottom: 9px; display: flex; align-items: center; gap: 8px; }
+    .cbadge { font-size: 9.5px; font-weight: 800; letter-spacing: 0.04em; padding: 2px 7px; border-radius: var(--rad-s);
       border: 1px solid; text-transform: none; }
     .cbadge.c1 { color: var(--c1); border-color: var(--c1-b); background: var(--c1-bg); }
     .cbadge.c2 { color: var(--c2); border-color: var(--c2-b); background: var(--c2-bg); }
@@ -347,10 +369,10 @@
     .frow.dir .fn    { color: var(--c1); font-weight: 700; }
     .frow.conv .fn   { color: var(--c3); }
     .frow.canvas .fn { color: var(--c2); }
-    .frow.ghost .fn  { color: #8494a8; }
-    .fnote { font-size: 11.5px; color: #93a3b8; font-style: italic; margin-left: 4px; align-self: center; word-break: break-word; }
+    .frow.ghost .fn  { color: var(--txt3); }
+    .fnote { font-size: 11.5px; color: var(--txt3); font-style: italic; margin-left: 4px; align-self: center; word-break: break-word; }
     .fbadge { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-      padding: 1px 7px; border-radius: 100px; border: 1px solid; align-self: center; white-space: nowrap; }
+      padding: 1px 7px; border-radius: var(--rad-s); border: 1px solid; align-self: center; white-space: nowrap; }
     .fbadge.canvas { color: var(--c2); border-color: var(--c2-b); background: var(--c2-bg); }
     .fbadge.conv   { color: var(--c3); border-color: var(--c3-b); background: var(--c3-bg); }
 
@@ -935,17 +957,17 @@
                   as a <strong>Locked File</strong> and the rest of the course continues normally.</td>
               </tr>
               <tr>
-                <td class="nm"><svg class="ti" viewBox="0 0 24 24" stroke="#94a3b8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M12 3v12M7 10l5 5 5-5"/></svg>Your own submitted files</td>
+                <td class="nm"><svg class="ti" viewBox="0 0 24 24" stroke="#9599a1"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M12 3v12M7 10l5 5 5-5"/></svg>Your own submitted files</td>
                 <td>Deliberately not downloaded. You already have them on the machine you submitted from. Teacher
                   feedback and attachments to it <em>are</em> saved.</td>
               </tr>
               <tr>
-                <td class="nm"><svg class="ti" viewBox="0 0 24 24" stroke="#94a3b8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>Content behind another login</td>
+                <td class="nm"><svg class="ti" viewBox="0 0 24 24" stroke="#9599a1"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>Content behind another login</td>
                 <td>Publisher platforms and external tools have their own accounts. Where a link exists it's saved as a
                   shortcut, so you can still find it.</td>
               </tr>
               <tr>
-                <td class="nm"><svg class="ti" viewBox="0 0 24 24" stroke="#94a3b8"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M1 1l22 22"/></svg>Deleted or unpublished</td>
+                <td class="nm"><svg class="ti" viewBox="0 0 24 24" stroke="#9599a1"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M1 1l22 22"/></svg>Deleted or unpublished</td>
                 <td>If it isn't visible to you in Canvas, it isn't visible to the app either - it uses your account and
                   sees exactly what you see.</td>
               </tr>
@@ -1248,8 +1270,8 @@
     audio:  ['#ec4899','<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'],
     link:   ['#38bdf8','<path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>'],
     html:   ['#68d4a3','<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>'],
-    txt:    ['#a8b6c9','<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/>'],
-    db:     ['#8494a8','<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>']
+    txt:    ['#bfc3c9','<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/>'],
+    db:     ['#9599a1','<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>']
   };
   function kindOf(name, isDir) {
     if (isDir) return 'dir';

@@ -185,9 +185,9 @@
       --surf2:   #15172a;
       --border:  rgba(255,255,255,0.1);
       --border2: rgba(255,255,255,0.16);
-      --txt:     #e2e8f0;
-      --txt2:    #94a3b8;
-      --txt3:    #475569;
+      --txt:     #e9ebee;
+      --txt2:    #bfc3c9;
+      --txt3:    #9599a1;
       --cyan:    #38bdf8;
       --cyan-bg: rgba(56,189,248,0.08);
       --cyan-b:  rgba(56,189,248,0.3);
@@ -209,6 +209,7 @@
       --amb-bg:  rgba(245,158,11,0.08);
       --amb-b:   rgba(245,158,11,0.3);
       --rad:     10px;
+      --rad-s:   5px;
       --rad-l:   16px;
     }
 
@@ -235,16 +236,28 @@
        the .reveal above on specificity (0,2,1 vs 0,1,0) without !important. */
     html:not(.js) .reveal { opacity: 1; transform: none; }
 
-    /* section label */
+    /* Section label.
+
+       ONE neutral treatment, not four colours. The colour used to change per
+       section (cyan / blue / green / orange) while saying nothing a reader
+       could act on - a kicker is a position marker, and four hues turn a
+       structural cue into decoration. It also carried a real defect: the
+       .blu variant put #3b71b8 on #0b0c14, which is 3.94:1 and below the
+       4.5:1 floor, so "Keep Your Courses Up to Date" was the least readable
+       text on the page.
+       The variant classes stay in the markup on purpose and now resolve to
+       the same plain text, so no page has to be re-tagged to get the fix.
+
+       And no box at all, matching .section-kicker on index.html: a filled
+       rounded rectangle above a heading reads as a status chip on the section
+       rather than a label for it, and the only thing it was carrying was the
+       colour that has just been removed. 13px rather than 11px because
+       without a box around it an 11px kicker reads as a stray caption. */
     .label {
       display: inline-flex; align-items: center; gap: 6px;
-      font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--cyan); background: var(--cyan-bg); border: 1px solid var(--cyan-b);
-      padding: 4px 12px; border-radius: 100px; margin-bottom: 16px;
+      font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--txt3); margin-bottom: 16px;
     }
-    .label.grn { color: var(--green); background: var(--grn-bg); border-color: var(--grn-b); }
-    .label.org { color: var(--orange); background: var(--org-bg); border-color: var(--org-b); }
-    .label.blu { color: var(--blue); background: var(--blu-bg); border-color: rgba(59,113,184,0.3); }
 
     /* ---- NAV ---- */
     nav {
@@ -299,8 +312,11 @@
       background: rgba(255, 255, 255, 0.05);
     }
 
+    /* White, not cyan. Cyan is this site's LINK colour; spending it on a
+       state as well makes every nav read as three links and one brighter
+       link. --txt against the bar's --txt2 is the whole signal needed. */
     .nav-link.active {
-      color: var(--cyan);
+      color: var(--txt);
     }
 
     .btn-nav {
@@ -352,13 +368,17 @@
     }
 
     @media(max-width:860px) {
-      .btn-nav-ghost span,
-      .btn-nav span {
+      /* Scoped to `nav`. In the nav each button also carries an SVG, so
+         dropping the words leaves a glyph; outside it there is nothing left
+         behind. Measured unscoped on the article shell, 390px viewport: an
+         empty 22x37px box where "See it in action" should be. */
+      nav .btn-nav-ghost span,
+      nav .btn-nav span {
         display: none;
       }
 
-      .btn-nav-ghost,
-      .btn-nav {
+      nav .btn-nav-ghost,
+      nav .btn-nav {
         padding: 8px 10px;
       }
     }
@@ -400,13 +420,19 @@
       font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
       color: var(--txt3); margin-bottom: 10px; padding-left: 12px;
     }
+    /* The idle link is --txt2, not --txt3: this is a 30-entry list a reader
+       navigates by, not a caption. On the old ramp it was #475569 = 2.57:1,
+       the worst contrast anywhere on the site. */
     .toc a {
-      font-size: 13px; color: var(--txt3); padding: 6px 12px; border-radius: 6px;
+      font-size: 13px; color: var(--txt2); padding: 6px 12px; border-radius: 6px;
       border-left: 2px solid transparent; transition: all 0.15s;
       display: block; line-height: 1.4;
     }
-    .toc a:hover { color: var(--txt2); background: rgba(255,255,255,0.03); }
-    .toc a.active { color: var(--cyan); border-left-color: var(--cyan); background: var(--cyan-bg); }
+    .toc a:hover { color: var(--txt); background: rgba(255,255,255,0.03); }
+    /* White text + a neutral fill; the cyan RAIL is what marks the position.
+       One accent per element - cyan text inside a cyan-tinted box inside a
+       cyan-railed row states the same accent three times. */
+    .toc a.active { color: var(--txt); border-left-color: var(--cyan); background: rgba(255,255,255,0.05); }
     .toc a.sub { padding-left: 24px; font-size: 12px; }
 
     /* ---- GUIDE HERO ---- */
@@ -529,13 +555,15 @@
       background: var(--surf); border: 1px solid var(--border);
       border-radius: var(--rad); padding: 16px; position: relative;
     }
+    /* A number, not a chip. Same rule as .steps in the article shell and
+       .perm-num on mac-setup: mono figures set the marker apart by font,
+       so nothing has to be drawn around it. */
     .step-num {
-      width: 28px; height: 28px; border-radius: 8px;
-      background: rgba(56,189,248,0.12); border: 1px solid var(--cyan-b);
-      color: var(--cyan); font-size: 13px; font-weight: 800;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 10px;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 13px; font-weight: 600; color: var(--txt3);
+      line-height: 1; margin-bottom: 10px;
     }
+    .step-num::after { content: "."; }
     .step-card h5 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
     .step-card p { font-size: 12px; color: var(--txt2); line-height: 1.55; }
 
@@ -566,7 +594,7 @@
     .cat-edited   { background: rgba(90,60,20,0.35); border: 1px solid rgba(245,158,11,0.6); }
     .cat-locdel   { background: rgba(60,30,90,0.35); border: 1px solid rgba(168,85,247,0.6); }
     .cat-candel   { background: rgba(90,30,35,0.35); border: 1px solid rgba(239,68,68,0.6); }
-    .cat-ignored  { background: rgba(0,0,0,0.35);    border: 1px solid rgba(100,116,139,0.6); }
+    .cat-ignored  { background: rgba(0,0,0,0.35);    border: 1px solid rgba(149,153,161,0.6); }
     .cat-uptodate { background: rgba(40,45,50,0.35);  border: 1px solid rgba(150,150,150,0.45); }
 
     /* ---- COMPARISON CARDS ---- */
@@ -635,6 +663,10 @@
     .faq-item summary::after {
       content: '+';
       margin-left: auto;
+      /* Empty space inside the glyph's own box, so it only shows up when a long
+         title reaches it. See the same rule in index.html. */
+      padding-left: 14px;
+      flex-shrink: 0;
       font-size: 18px;
       color: var(--txt3);
       font-weight: 400;
@@ -692,7 +724,10 @@
     .info-card ul.icon-list li .li-icon { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; margin-top: 2px; }
     .info-card ol.guide-steps { padding-left: 22px; margin: 0; display: flex; flex-direction: column; gap: 9px; }
     .info-card ol.guide-steps li { font-size: 13px; color: var(--txt2); line-height: 1.7; padding-left: 4px; }
-    .info-card ol.guide-steps li::marker { color: var(--cyan); font-weight: 700; }
+    .info-card ol.guide-steps li::marker {
+      color: var(--txt3); font-weight: 600;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
 
     /* A closing remark under a card's list - separated from it, but plainly
        part of the same card rather than a callout of its own. */
@@ -735,6 +770,26 @@
       margin: 0 auto 18px;
       max-width: 600px;
       line-height: 1.55;
+    }
+    /* Keyboard focus ring.
+
+       The `outline: none` on these summaries is there for a reason - a
+       <summary> takes :focus on a MOUSE click, so without it every click on
+       an accordion left a ring behind. But it also removed the ring for the
+       keyboard, and a <summary> is the only way to open one with a keyboard.
+       Measured by tabbing the real page: 11 of 70 stops on guide.html and 30
+       of 69 on index.html had no focus indicator of any kind, almost all of
+       them summaries. Every OTHER page on the site was already clean, which
+       is the census - `outline: none` appears in exactly these two files.
+
+       :focus-visible does not match a mouse click on a summary, so the click
+       behaviour the outline:none was protecting is unchanged. */
+    summary:focus-visible,
+    button:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+      border-radius: 4px;
     }
   </style>
 </head>
@@ -1617,7 +1672,7 @@
         <div class="sh reveal">
           <div class="label">Application-Wide</div>
           <div class="icon-h2">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#e9ebee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
             <h2>Settings</h2>
           </div>
           <p>Fine-tune how the app behaves - download speed, file size limits, where things are saved, notifications, lecture recordings, and more.</p>
@@ -1915,7 +1970,15 @@
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.setAttribute('aria-label', 'Play: how to get your Canvas Access Token');
-    btn.style.cssText = 'all:unset;box-sizing:border-box;position:absolute;inset:0;display:flex;' +
+    // NOT `all:unset`. It strips the UA chrome, which is the point, but it
+    // also resets `outline` - and because this is an INLINE style it beats
+    // the stylesheet's `button:focus-visible` rule, so the play button was
+    // the one keyboard stop on this page with no focus indicator at all
+    // (measured by tabbing: 69 of 70 stops had a ring, this was the 70th).
+    // The explicit reset does the same job and leaves `outline` alone.
+    btn.style.cssText = 'appearance:none;background:none;border:0;padding:0;margin:0;' +
+      'font:inherit;color:inherit;text-align:inherit;' +
+      'box-sizing:border-box;position:absolute;inset:0;display:flex;' +
       'align-items:center;justify-content:center;cursor:pointer;background:#0c1424;overflow:hidden;';
     btn.innerHTML =
       '<img src="assets/token-video-poster.jpg" alt="" loading="lazy" decoding="async"' +

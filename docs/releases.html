@@ -68,9 +68,9 @@
       --surf2: #15172a;
       --border: rgba(255, 255, 255, 0.1);
       --border2: rgba(255, 255, 255, 0.16);
-      --txt: #e2e8f0;
-      --txt2: #cbd5e1;
-      --txt3: #94a3b8;
+      --txt: #e9ebee;
+      --txt2: #bfc3c9;
+      --txt3: #9599a1;
       --cyan: #38bdf8;
       --green: #68d4a3;
       --grn-bg: rgba(104, 212, 163, 0.08);
@@ -78,6 +78,7 @@
       --orange: #f97316;
       --blue: #3b71b8;
       --rad: 10px;
+      --rad-s:   5px;
       --rad-l: 16px;
     }
 
@@ -206,9 +207,19 @@
 
     .nav-link, .nav-logo, .btn-nav, .btn-nav-ghost { white-space: nowrap; }
 
+    /* Scoped to `nav`, and that scope is load-bearing.
+
+       Collapsing these buttons to their icon below 860px is correct IN THE
+       NAV, where each carries an SVG - see .claude/rules/website.md for the
+       360px measurement that put it there. But the article CTA box reuses
+       .btn-nav-ghost for a TEXT-ONLY link, so hiding its <span> left an
+       empty box: measured on a 390px viewport, 22x37 px with no label and
+       no glyph, on all 12 article pages ("See it in action", "Compare all
+       methods", "Acceptable use"). The nav buttons still collapse exactly
+       as before; only the ones outside the nav keep their words. */
     @media(max-width:860px) {
-      .btn-nav-ghost span, .btn-nav span { display: none; }
-      .btn-nav-ghost, .btn-nav { padding: 8px 10px; }
+      nav .btn-nav-ghost span, nav .btn-nav span { display: none; }
+      nav .btn-nav-ghost, nav .btn-nav { padding: 8px 10px; }
     }
 
     .setup-short { display: none; }
@@ -302,7 +313,7 @@
       font-size: 11px;
       font-weight: 700;
       padding: 2px 8px;
-      border-radius: 100px;
+      border-radius: var(--rad-s);
       background: var(--grn-bg);
       color: var(--green);
       border: 1px solid var(--grn-b);

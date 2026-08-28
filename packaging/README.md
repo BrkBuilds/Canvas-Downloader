@@ -1,7 +1,8 @@
 # Packaging: getting the app into package managers
 
 Written 2026-08-28. The reasoning for *why* these channels matter is in
-[`marketing/DISTRIBUTION.md`](../marketing/DISTRIBUTION.md) section 2. This file
+`marketing/DISTRIBUTION.md` section 2, which is LOCAL-ONLY: `marketing/` is gitignored
+as of 2026-08-28, so that is deliberately not a link and is not in a clone. This file
 is the mechanics: what is here, how to submit it, and what will go wrong.
 
 Everything here was generated against the **published v2.0.2 release assets**
@@ -16,13 +17,20 @@ and the hashes were computed from the downloaded files, not from a local build.
 | winget-pkgs PR | **OPEN**, CLA signed, 8 checks green, 0 failures - <https://github.com/microsoft/winget-pkgs/pull/425661> |
 | `WINGET_TOKEN` secret | **SET** 2026-08-28 13:22 UTC |
 | `birkls/winget-pkgs` fork | **EXISTS** - the workflow pushes its branch here every release. Do not delete it |
-| `.github/workflows/winget.yml` | **WRITTEN, NOT YET PUSHED** - see below |
+| `.github/workflows/winget.yml` | **COMMITTED AND PUSHED** 2026-08-28 in `b6c81f0d`; `main` is level with `origin/main` |
 | Homebrew | **DROPPED** - built, published, deleted the same day. See section 2 |
 
-**The one thing still open.** The workflow file exists only in the working tree.
-A secret with no workflow does nothing, so **the automation is not live until
-that file is committed and pushed.** Until then a new release updates nothing
-and the winget listing silently keeps describing 2.0.2.
+**The automation is live.** The workflow was committed and pushed the same day,
+so the secret now has something to run. It is still unproven: nothing has cut a
+release since, so the first real test is the next tag, and the failure mode to
+watch for is a listing that silently keeps describing 2.0.2.
+
+**PR state re-read from the API 2026-08-28 evening:** `open`, `merged: false`,
+labels `Azure-Pipeline-Passed`, `Validation-Completed`, `New-Package`. The only
+comment after the CLA is the bot's *"check-in policies require a moderator to
+approve PRs from the community"*. **There is nothing to do and nothing to bump**
+- a comment on a queued winget PR is noise to a volunteer moderator, not a
+nudge.
 
 **What the PR is waiting on** is a maintainer's approving review, not anything on
 this side. `08. Installation Validation` runs the installer in a sandbox VM,

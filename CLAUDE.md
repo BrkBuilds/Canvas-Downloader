@@ -45,7 +45,7 @@ styles/           static CSS injected once per page via inject_css()
 scripts/          build + maintenance tooling (never bundled)
 tests/            ~4,500 tests, incl. tests/audit/ (live-audit harness + runbooks)
 docs/             THE PUBLISHED WEBSITE (canvasdownloader.app) - never put notes here
-marketing/        launch, SEO and positioning register
+marketing/        launch, SEO and positioning register - LOCAL-ONLY, gitignored
 ```
 
 **Runtime data files** (all gitignored - they hold real user data):
@@ -109,6 +109,14 @@ code and watched it fail. Most gaps found here were in the tests, not the produc
 
 **Prose style**: no em dashes anywhere. Quote app copy character-exact rather than reflowing it.
 
+**A document written for the product owner to READ is HTML, not Markdown.** Stated by
+him 2026-08-28: raw Markdown is unreadable to him, so a `.md` deliverable is a document
+nobody opens. This covers plans, scripts, briefs, reports and worklists - anything whose
+audience is a person. It does not cover the registers Claude greps (`CLAUDE.md`,
+`.claude/rules/`, `tests/audit/`), which stay Markdown. `marketing/` already had the
+convention and it is now the rule: write the HTML, and do not also ship a `.md` twin of
+the same content, because the copy nobody reads is the copy that goes stale.
+
 ## Where the detail lives
 
 `.claude/rules/*.md` carry the hard-won specifics and load automatically when Claude opens a
@@ -139,7 +147,10 @@ Other registers, read on demand rather than loaded:
 - `tests/audit/README.md`, `RUNBOOK.md`, `MAC_RUNBOOK.md` - the live audit (real app, real
   browser, real Canvas, five oracles) and its findings register.
 - `marketing/README.md` - index for launch, SEO and positioning; `FINDINGS.md` is the register
-  and `STRATEGY.md` holds settled decisions.
+  and `STRATEGY.md` holds settled decisions. The whole folder is gitignored as of 2026-08-28,
+  so it is NOT in a fresh clone and nothing tracked may depend on a file inside it: a test
+  that read `marketing/STORE_LISTING.md` turned both CI workflows red with 15 failures the
+  first push after the untracking, and was deleted rather than gated.
 
 Anything durable belongs in the repo, in the same commit as the fix. Auto-memory is
 machine-local and does not travel between machines; this repo does.

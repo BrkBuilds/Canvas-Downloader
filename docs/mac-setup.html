@@ -59,14 +59,15 @@
       --border: rgba(255, 255, 255, 0.09);
       --border2: rgba(255, 255, 255, 0.16);
       --border-sub: rgba(255, 255, 255, 0.05);
-      --txt: #e2e8f0;
-      --txt2: #b8cad8;
-      --txt3: #8899a8;
+      --txt: #e9ebee;
+      --txt2: #bfc3c9;
+      --txt3: #9599a1;
       --cyan: #38bdf8;
       --green: #34d399;
       --amber: #fbbf24;
       --blue: #3b71b8;
       --rad: 10px;
+      --rad-s:   5px;
     }
 
     *,
@@ -147,8 +148,11 @@
       background: rgba(255, 255, 255, 0.05);
     }
 
+    /* White, not cyan. Cyan is this site's LINK colour; spending it on a
+       state as well makes every nav read as three links and one brighter
+       link. --txt against the bar's --txt2 is the whole signal needed. */
     .nav-link.active {
-      color: var(--cyan);
+      color: var(--txt);
     }
 
     .btn-nav {
@@ -194,9 +198,19 @@
 
     .nav-link, .nav-logo, .btn-nav, .btn-nav-ghost { white-space: nowrap; }
 
+    /* Scoped to `nav`, and that scope is load-bearing.
+
+       Collapsing these buttons to their icon below 860px is correct IN THE
+       NAV, where each carries an SVG - see .claude/rules/website.md for the
+       360px measurement that put it there. But the article CTA box reuses
+       .btn-nav-ghost for a TEXT-ONLY link, so hiding its <span> left an
+       empty box: measured on a 390px viewport, 22x37 px with no label and
+       no glyph, on all 12 article pages ("See it in action", "Compare all
+       methods", "Acceptable use"). The nav buttons still collapse exactly
+       as before; only the ones outside the nav keep their words. */
     @media(max-width:860px) {
-      .btn-nav-ghost span, .btn-nav span { display: none; }
-      .btn-nav-ghost, .btn-nav { padding: 8px 10px; }
+      nav .btn-nav-ghost span, nav .btn-nav span { display: none; }
+      nav .btn-nav-ghost, nav .btn-nav { padding: 8px 10px; }
     }
 
     .setup-short { display: none; }
@@ -296,7 +310,7 @@
       font-weight: 700;
       letter-spacing: 0.15em;
       text-transform: uppercase;
-      color: var(--cyan);
+      color: var(--txt3);
       margin-bottom: 6px;
     }
 
@@ -341,8 +355,7 @@
 
     ol.steps li {
       counter-increment: step;
-      position: relative;
-      padding-left: 38px;
+      padding-left: 30px;
       font-size: 14.5px;
       color: var(--txt2);
       margin-bottom: 15px;
@@ -353,22 +366,25 @@
       margin-bottom: 0;
     }
 
+    /* Identical marker to .steps in the article shell: an inline-block in
+       the same line box, pulled into the gutter, so the baseline is the
+       browser's problem and not a per-page constant. Three step lists on
+       this site used three different markers (this box, a cyan circle, and
+       a grey circle in the wizard); they are one rule now. */
     ol.steps li::before {
-      content: counter(step);
-      position: absolute;
-      left: 0;
-      top: 1px;
-      width: 24px;
-      height: 24px;
-      background: var(--surf2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--cyan);
+      content: counter(step) ".";
+      display: inline-block;
+      box-sizing: border-box;
+      width: 30px;
+      margin-left: -30px;
+      padding-right: 9px;
+      text-align: right;
+      font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+      font-size: 0.85em;
+      font-weight: 600;
+      line-height: inherit;
+      font-variant-numeric: tabular-nums;
+      color: var(--txt);
     }
 
     ol.steps li strong {
@@ -616,7 +632,7 @@
     .code-block code {
       font-family: 'SF Mono', ui-monospace, Menlo, monospace;
       font-size: 12.5px;
-      color: #e2e8f0;
+      color: var(--txt);
       white-space: nowrap;
       user-select: all;
     }
@@ -626,10 +642,16 @@
       margin: 0;
     }
 
+    /* 18px was the gutter beside a 34px circle. The marker is now a
+       22px number, so the same 18px reads as a gap the eye has to jump. */
     .perm-item {
       display: flex;
-      gap: 18px;
-      align-items: flex-start;
+      gap: 10px;
+      /* baseline, not flex-start: the marker's line box is 21.75px against
+         the title's 29.7px, so aligning their TOPS left the number sitting
+         6px above the title it labels (measured). Baseline alignment makes
+         the two line up on the same line, whatever either font-size is. */
+      align-items: baseline;
       padding: 24px 0;
       border-bottom: 1px solid var(--border-sub);
     }
@@ -643,21 +665,19 @@
       padding-bottom: 0;
     }
 
+    /* The number IS the marker. A filled circle around it is the only
+       circle this UI draws, and it competes with the permission title it
+       is labelling. */
     .perm-num {
-      width: 34px;
-      height: 34px;
       flex-shrink: 0;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--border);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14.5px;
-      font-weight: 700;
-      color: var(--txt2);
-      margin-top: 1px;
+      min-width: 22px;
+      text-align: right;
+      font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--txt3);
     }
+    .perm-num::after { content: "."; }
 
     .perm-body {
       flex: 1;
@@ -683,9 +703,26 @@
       color: var(--cyan);
       background: rgba(56, 189, 248, 0.1);
       border: 1px solid rgba(56, 189, 248, 0.2);
-      border-radius: 4px;
+      border-radius: var(--rad-s);
       padding: 2px 7px;
     }
+
+
+    /* Base link colour.
+
+       Without this a bare <a> falls back to the UA's #0000EE on a near-black
+       page: measured 1.99:1 on the "step-by-step walkthrough" link in the
+       token card, against the 4.5:1 floor. Every OTHER link on this page had
+       been given `style="color: var(--cyan)"` one at a time, which is why the
+       one that was missed looked broken rather than merely off-palette.
+       Stated once here so a new link cannot be missed again.
+
+       This is a (0,0,1) rule, so every anchor that carries a class of its own
+       - .nav-link, .btn-nav, .btn-nav-ghost, .store-badge, .dl-fallback -
+       still wins. Verified by diffing the computed colour of all 18 anchors
+       on this page before and after: exactly one changed. */
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
 
     /* ── INLINE CODE ── */
     code.ic {
@@ -771,10 +808,10 @@
         gap: 10px;
       }
 
+      /* No box left to shrink; only the type scales down. */
       .perm-num {
-        width: 26px;
-        height: 26px;
-        font-size: 11px;
+        min-width: 18px;
+        font-size: 13px;
       }
     }
   </style>
@@ -822,9 +859,9 @@
 
       <div style="text-align: center; margin-top: 4px;">
         <a href="win-setup.html"
-          style="display: inline-block; color: #64748b; font-size: 14px; font-weight: 500; text-decoration: none; transition: transform 0.2s, color 0.2s;"
+          style="display: inline-block; color: var(--txt3); font-size: 14px; font-weight: 500; text-decoration: none; transition: transform 0.2s, color 0.2s;"
           onmouseover="this.style.color='var(--txt)'; this.style.transform='scale(1.04)';"
-          onmouseout="this.style.color='#64748b'; this.style.transform='scale(1)';">
+          onmouseout="this.style.color='var(--txt3)'; this.style.transform='scale(1)';">
           On Windows? Open the Windows setup guide &#8594;
         </a>
       </div>
@@ -1244,7 +1281,15 @@
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.setAttribute('aria-label', 'Play video');
-      btn.style.cssText = 'all:unset;box-sizing:border-box;position:absolute;inset:0;display:flex;' +
+      // NOT `all:unset`. It strips the UA chrome, which is the point, but it
+      // also resets `outline` - and because this is an INLINE style it beats
+      // the stylesheet's `button:focus-visible` rule, so the play button was
+      // the one keyboard stop on this page with no focus indicator at all
+      // (measured by tabbing: 69 of 70 stops had a ring, this was the 70th).
+      // The explicit reset does the same job and leaves `outline` alone.
+      btn.style.cssText = 'appearance:none;background:none;border:0;padding:0;margin:0;' +
+        'font:inherit;color:inherit;text-align:inherit;' +
+        'box-sizing:border-box;position:absolute;inset:0;display:flex;' +
         'align-items:center;justify-content:center;cursor:pointer;background:#0c1424;overflow:hidden;';
       btn.innerHTML =
         '<img src="assets/token-video-poster.jpg" alt="" loading="lazy" decoding="async"' +

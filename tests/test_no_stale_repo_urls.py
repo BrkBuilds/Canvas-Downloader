@@ -85,20 +85,22 @@ EXCLUDED = {
     ".github/REPO_SETUP.md",                 # the transfer runbook; the old names are its subject
     "tests/test_no_stale_repo_urls.py",      # this file
     "CLAUDE.md",                             # project memory, records history verbatim
-    "marketing/PLAYBOOK.md",                 # records the finding, including the dead url
-    "marketing/FINDINGS.md",                 # the register; quotes the dead urls as evidence
-    "marketing/SITE_RUNBOOK.md",             # documents the redirect asymmetry
-    "marketing/STORE_LISTING.md",            # quotes the dead Store fields as evidence
-    "marketing/store-listing.html",          # generated FROM that file; same evidence
-    "marketing/store-listing.artifact.html", # generated FROM that file; same evidence
 }
 
 # Directories that are build output, vendored dependencies or scratch.
+#
+# `marketing/` is here because it is GITIGNORED as of 2026-08-28 and therefore
+# local-only. A named-file allowlist cannot work against a folder git does not
+# carry: six marketing paths used to sit in EXCLUDED above, and the moment one of
+# them was renamed locally (PLAYBOOK.md -> PLAYBOOK-DONE.md) this test went red on
+# the owner's machine over quoted evidence in a document that is not in the repo,
+# while CI - where the folder does not exist at all - kept passing. A test can only
+# guard what git carries.
 SKIP_DIRS = {
     ".git", "__pycache__", "dist", "build", "msix", "msix_output",
     "installer_output", "_audit_runs", "panopto_models", "cuda_libs",
     "diagnostics", ".playwright-mcp", ".pytest_cache", "node_modules",
-    ".claude", "memory-bank",
+    ".claude", "memory-bank", "marketing",
 }
 
 SCAN_SUFFIXES = {".py", ".md", ".html", ".css", ".json", ".iss", ".spec",

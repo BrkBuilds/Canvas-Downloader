@@ -10,9 +10,11 @@
   --mw-surf2:   #191b30;
   --mw-border:  rgba(255, 255, 255, 0.11);
   --mw-sub:     rgba(255, 255, 255, 0.06);
-  --mw-txt:     #e8edf3;
-  --mw-txt2:    #b8cad8;
-  --mw-txt3:    #8899a8;
+  /* Kept in step with the site ramp in every page's :root - this is a
+     SECOND copy of the same scale, so a change to one must land on both. */
+  --mw-txt:     #e9ebee;
+  --mw-txt2:    #bfc3c9;
+  --mw-txt3:    #9599a1;
   --mw-cyan:    #38bdf8;
   --mw-green:   #34d399;
   --mw-amber:   #fbbf24;
@@ -60,7 +62,7 @@
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--mw-cyan);
+  color: var(--mw-txt3);
   margin-bottom: 9px;
 }
 .mw-title {
@@ -155,22 +157,25 @@
 }
 .mw-steps li {
   counter-increment: mws;
-  position: relative;
-  padding-left: 38px;
+  padding-left: 30px;
   font-size: 14px; color: var(--mw-txt2);
   margin-bottom: 15px; line-height: 1.6;
 }
 .mw-steps li:last-child { margin-bottom: 0; }
+/* Same marker as ol.steps on mac-setup.html, which hosts this wizard, and
+   as .steps in the article shell: an inline-block in the sentence's own
+   line box rather than a circle beside it. box-sizing is restated because
+   the host page's reset is `*`, which does not match pseudo-elements. */
 .mw-steps li::before {
-  content: counter(mws);
-  position: absolute;
-  left: 0; top: 0;
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: var(--mw-surf2);
-  border: 1px solid var(--mw-border);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; color: var(--mw-cyan);
+  content: counter(mws) ".";
+  display: inline-block;
+  box-sizing: border-box;
+  width: 30px; margin-left: -30px; padding-right: 9px;
+  text-align: right;
+  font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.85em; font-weight: 600; line-height: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--mw-txt);
 }
 .mw-steps strong { color: var(--mw-txt); font-weight: 600; }
 
@@ -344,7 +349,7 @@
   text-transform: uppercase; color: var(--mw-cyan);
   background: rgba(56, 189, 248, 0.1);
   border: 1px solid rgba(56, 189, 248, 0.22);
-  border-radius: 4px; padding: 1px 6px;
+  border-radius: 5px; padding: 1px 6px;
 }
 
 /* ── Done screen ────────────────────────────────────────── */
