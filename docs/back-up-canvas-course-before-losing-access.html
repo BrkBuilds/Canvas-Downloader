@@ -594,13 +594,15 @@
       border-radius: 0 var(--rad) var(--rad) 0;
       padding: 16px 20px; margin: 0 0 26px;
     }
-    /* Neutral, because the block's left rail is ALREADY cyan: colouring the
-       label too puts the accent on the page twice for one element. */
+    /* --txt, not cyan and not --txt3.  Cyan would state the accent twice
+       beside the block's own cyan rail; --txt3 read as secondary, and this
+       label plus the answer under it are the first thing a skimmer reads.
+       Structural furniture carries the full text weight, meta does not. */
     .short-answer p.sa-label {
       margin: 0 0 6px; font-size: 12px; font-weight: 800;
-      letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3);
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt);
     }
-    .short-answer p { margin: 0 0 10px; font-size: 15px; color: var(--txt2); }
+    .short-answer p { margin: 0 0 10px; font-size: 15px; color: var(--txt); }
     .short-answer p:last-child { margin-bottom: 0; }
 
     /* Inline citation to a primary source. Cited sources are the single
@@ -627,10 +629,13 @@
       background: var(--surf); border: 1px solid var(--border);
       border-radius: var(--rad); padding: 16px 20px; margin: 0 0 30px;
     }
+    /* Same reasoning as .sa-label: the label and the numbers are how a reader
+       navigates, so they hold --txt.  The numbers must state it - .art li
+       paints every list item --txt2 and ::marker inherits from its own li. */
     .toc p { margin: 0 0 8px; font-size: 12px; font-weight: 800;
-             letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3); }
+             letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt); }
     .toc ol { margin: 0; padding-left: 20px; }
-    .toc li { margin-bottom: 4px; font-size: 14px; }
+    .toc li { margin-bottom: 4px; font-size: 14px; color: var(--txt); }
   </style>
 </head>
 <body>

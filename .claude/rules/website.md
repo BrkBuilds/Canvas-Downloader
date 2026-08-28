@@ -250,3 +250,80 @@ documents the ePub route under Account. Both are real student-side bulk exports.
 - **The check is one grep**, and it is now rule 7 in `edu-outreach.html`: before sending, grep
   `docs/` for the claim you are about to make. The articles are the research; the email is a
   summary of it, and a summary that contradicts its source is the error, not the source.
+
+## The AI tell in outreach prose is that NO SENTENCE IS SHORT (2026-08-29)
+Seven emails to university help desks were written from one skeleton and read, in the product
+owner's words, as obviously machine-written. Scored with `scripts/check_ai_writing_tells.py`, the
+same scanner that fixed the blog articles, the signature is countable and it is not vocabulary:
+**six of the seven contained zero sentences of eight words or fewer**, against 18 to 33% in the
+rewrites, with contractions at 6.8 to 14.4 per 1k against 35 to 51.
+- **A person writing to a help desk drops in "Thanks." or "That one looks like a quick fix."**
+  The template never did. Uniform sentence weight across a whole email is the thing a reader feels
+  and cannot name, and both halves of it are countable before sending.
+- **Do not overcorrect.** The first Boston College rewrite came back at sd 6.2 with no long
+  sentence at all, which is the same tell in different clothes. `BLOG_PLAN.md` section 10 sets the
+  benchmark at a standard deviation near 9 to 10; the three accepted rewrites landed 8.8 to 9.3.
+- **The structural half matters more than the numbers.** Seven emails shared an opening move, a
+  "two things it does not cover" middle and several verbatim phrases. Vary what each email is FOR:
+  one reports a defect on their page, one agrees with them first, one carries a single gap and
+  stops. A message shaped like the last one is a template however well it scores.
+- **The scanner takes docs slugs, not free text.** The wrapper that scores plain email bodies is
+  twenty lines and reuses `sentences()`, `BANNED_WORDS` and `NEG_PARALLEL` from the module rather
+  than restating them. Never restate the rules: a second copy of the lexicon is the same defect
+  this repo has recorded three times elsewhere.
+- **Two content rules for institutional mail**, from the same session: the full URL goes in
+  brackets immediately after the article title, with its KB or Article ID, because these are
+  ticket systems holding thousands of articles and a title alone forces a second email. And never
+  write `GPL-3.0` to a learning-technology coordinator; say that the code is public and that it
+  runs on the student's own computer.
+- **The inbox preview is the first line, and the template wasted it.** A mail client shows the
+  subject then the opening words of the body. The seven sent emails opened with a standalone
+  "Hello," and a compliment, so the preview read as flattery while the finding sat in paragraph
+  two, and several restated their own subject in the first sentence. Three rules: no standalone
+  greeting (there is no name to put in it), the first sentence carries the finding, and it must
+  ADD to the subject rather than repeat it.
+
+## Structural furniture holds `--txt`; only META stays `--txt3` (2026-08-29)
+"SHORT ANSWER" and "ON THIS PAGE", their body copy and the TOC's numbers were `--txt3` /
+`--txt2` on all twelve article pages, and the product owner read them as secondary: these are
+the two devices that tell a skimmer what the page answers and where to go in it. All four are
+`--txt` now. The line is what the element DOES, not where it sits: a card label that guides
+the read is structural, a credit line is meta.
+- **The numbers needed the colour stated on `.toc li`, and nowhere else.** `.toc li` set only
+  `margin-bottom` and `font-size`, so `.art li { color: var(--txt2) }` painted every TOC row,
+  and `::marker` takes its colour from its OWN originating `li`. Setting it on `.toc` or
+  `.toc ol` does not reach the marker; setting it on `.toc p` colours the label alone. The
+  links inside stay cyan, because a TOC entry is a link and cyan is this site's link colour.
+- **Do not reach for `--txt3` itself.** It is the shared meta token: the byline, the footer,
+  every section kicker, the FAQ `+`, and `.author-box p.ab-label` all read it. Verified in a
+  browser after the change that byline, ab-label and footer are still `rgb(149, 153, 161)` and
+  `.art` list items still `rgb(191, 195, 201)`, while all four targets are `rgb(233, 235, 238)`.
+  A token edit here would have whitened the whole site's meta layer in one move.
+- **"Who wrote this" stays `--txt3` on purpose.** The author box sits under the FAQ and states
+  provenance; nobody navigates by it. Same for the sticky sidebar "On this page" on
+  `guide.html` and `engine.html`, where `--txt` is what marks the ACTIVE row: whitening that
+  title would spend the state colour on furniture.
+- **The tradeoff is real and was accepted**: `.art strong` is already `--txt`, so bold inside
+  the short answer now differs by WEIGHT only. That is the same treatment `.lede` gets, which
+  is the block this one is a sibling of.
+- The four rules are byte-identical in all twelve pages, so one exact-string replacement
+  reaches every page. Assert the count is 12 before writing, per the entry above about a
+  single-string replacement that reached 21 of 24.
+
+## `docs/sitemap.xml` has no generator, so its `lastmod` lies after every push (2026-08-29)
+Commit `ef2eb1ae` changed **19** pages under `docs/` and did not touch the sitemap, so all 22
+`lastmod` values still read `2026-08-27` while the deployed pages were a day newer. `lastmod` is
+how a search engine decides whether a URL is worth re-fetching, and crawl budget is this site's
+measured binding constraint, so a stale date throws away the one legitimate way to ask for a
+re-crawl.
+- **Only Google was misled.** `scripts/ping_indexnow.py` derives its changed set from `git diff`,
+  not from the sitemap, so Bing got the correct list on the same push. Two engines were being told
+  different things and only one of them the truth.
+- **Fix:** `python scripts/sync_sitemap_lastmod.py --write`, committed in the SAME commit as the
+  page change. `tests/test_sitemap_lastmod.py` fails when any entry is older than its file's last
+  commit, and also when a `<loc>` has no file behind it, which is a 404 announced to two engines.
+- **The test skips rather than fails when git history is absent.** CI clones with
+  `fetch-depth: 1` by default, where `git log` for a path is legitimately empty; a guard that
+  cannot see history must say so instead of reporting all 22 pages as stale.
+- Mutation-checked three ways: a reverted date, a deleted `<lastmod>` tag, and a `<loc>` pointed
+  at a file that does not exist. All three fail as they should.
