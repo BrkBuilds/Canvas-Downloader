@@ -1,0 +1,67 @@
+name: Publish to winget
+
+# WHY THIS EXISTS
+#
+# The app was present in winget only through the `msstore` source, which is
+# automatic for anything in the Microsoft Store and worth nothing: nobody
+# searches `--source msstore`, it carries no version number, and it produces no
+# web page. The community repo (microsoft/winget-pkgs) is the default source and
+# the one that matters. Manifests were written by hand on 2026-08-28 and live in
+# `packaging/winget/`.
+#
+# WHY IT IS AUTOMATED RATHER THAN DONE BY HAND
+#
+# A winget manifest names an exact version and an exact SHA256, so EVERY release
+# needs a new pull request or the listing silently describes an old build. This
+# repo has already paid for that failure mode once: `marketing/FINDINGS.md`
+# records the Microsoft Store listing sitting on v2.0.0 with a 404 privacy link
+# for ten weeks, because updating it was a manual step nobody remembered.
+#
+# A listing that goes stale is worse than no listing, because `winget upgrade`
+# then reports the package as current when it is not.
+#
+# WHY `release: published` AND NOT A BUILD JOB
+#
+# The Windows installer is built on the operator's own machine
+# (`scripts/build_windows.py`), not in CI - the only build workflow here is the
+# macOS DMG. So the trigger has to be the moment the asset becomes publicly
+# fetchable, which is when the GitHub Release is published, regardless of where
+# the binary was produced. The action reads the asset off the release, computes
+# the hash itself, and opens the PR.
+#
+# `workflow_dispatch` is kept so a failed or rejected PR can be re-run against
+# an existing release without cutting a new one.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish (e.g. v2.0.2)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: Submit manifest to winget-pkgs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish to winget-pkgs
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: BrkBuilds.CanvasDownloader
+
+          # Only the Windows installer. The release also carries a macOS .dmg,
+          # and handing that to winget produces an invalid manifest rather than
+          # an error, so the filter is load-bearing.
+          installers-regex: '_Windows\.exe$'
+
+          release-tag: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+
+          # NOT the default GITHUB_TOKEN. This action pushes a branch to a FORK
+          # of microsoft/winget-pkgs on the account, which the repo-scoped
+          # default token cannot reach. Needs a classic PAT with `public_repo`,
+          # stored as the WINGET_TOKEN secret, and a fork of winget-pkgs must
+          # already exist on that account.
+          token: ${{ secrets.WINGET_TOKEN }}
