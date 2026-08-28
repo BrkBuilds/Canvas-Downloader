@@ -77,7 +77,7 @@ No Python installation required. Everything is bundled.
 | Platform | Get it | Requirements |
 |---|---|---|
 | **Windows 10/11** | **[Microsoft Store](https://apps.microsoft.com/detail/9n1dwwvrq5wc)** (recommended - auto-updates, no security warning)<br>or the `.exe` installer from **[Releases](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)** | Nothing, batteries included |
-| **macOS 11+** | `Canvas_Downloader_macOS.dmg` from **[Releases](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)** | **Apple Silicon only** (M1 or later). Intel Macs are not supported |
+| **macOS 14+** | `Canvas_Downloader_macOS.dmg` from **[Releases](https://github.com/BrkBuilds/Canvas-Downloader/releases/latest)** | **Apple Silicon only** (M1 or later). Intel Macs are not supported |
 
 ### Windows
 
@@ -94,7 +94,7 @@ No Python installation required. Everything is bundled.
 
 1. Open the `.dmg` and drag **Canvas Downloader** to your Applications folder.
 2. First launch:
-   - **macOS 13 and 14:** right-click the app, choose **Open**, then **Open** again.
+   - **macOS 14:** right-click the app, choose **Open**, then **Open** again.
    - **macOS 15 (Sequoia) and newer:** double-click it, let it get blocked, then go to
      **System Settings → Privacy & Security**, scroll down and click **Open Anyway**. Sequoia removed
      the old right-click bypass, so this is the only route.
