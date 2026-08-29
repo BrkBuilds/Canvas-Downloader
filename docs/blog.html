@@ -73,77 +73,83 @@
         "mainEntity": {
           "@type": "ItemList",
           "itemListOrder": "https://schema.org/ItemListOrderDescending",
-          "numberOfItems": 12,
+          "numberOfItems": 13,
           "itemListElement": [
             {
               "@type": "ListItem",
               "position": 1,
-              "url": "https://canvasdownloader.app/download-lecture-videos-from-canvas.html",
-              "name": "How to Download Lecture Videos From Canvas (All 5 Systems)"
+              "url": "https://canvasdownloader.app/canvas-end-of-semester-checklist.html",
+              "name": "The End-of-Semester Canvas Checklist (Printable)"
             },
             {
               "@type": "ListItem",
               "position": 2,
+              "url": "https://canvasdownloader.app/download-lecture-videos-from-canvas.html",
+              "name": "How to Download Lecture Videos From Canvas (All 6 Systems)"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
               "url": "https://canvasdownloader.app/panopto-lecture-transcript.html",
               "name": "How to Get a Transcript of a Panopto Lecture"
             },
             {
               "@type": "ListItem",
-              "position": 3,
+              "position": 4,
               "url": "https://canvasdownloader.app/save-canvas-pages-quizzes-discussions.html",
               "name": "How to Save Canvas Quizzes, Pages and Discussions"
             },
             {
               "@type": "ListItem",
-              "position": 4,
+              "position": 5,
               "url": "https://canvasdownloader.app/canvas-access-token-explained.html",
               "name": "What a Canvas Access Token Is (And What It Cannot Do)"
             },
             {
               "@type": "ListItem",
-              "position": 5,
+              "position": 6,
               "url": "https://canvasdownloader.app/canvas-download-tools-compared.html",
               "name": "Canvas Download Tools Compared: Extension, Script or App"
             },
             {
               "@type": "ListItem",
-              "position": 6,
+              "position": 7,
               "url": "https://canvasdownloader.app/back-up-canvas-course-before-losing-access.html",
               "name": "How to Back Up a Canvas Course Before You Lose Access"
             },
             {
               "@type": "ListItem",
-              "position": 7,
+              "position": 8,
               "url": "https://canvasdownloader.app/what-canvas-download-as-zip-misses.html",
               "name": "What Canvas's Download as Zip Actually Misses (Measured)"
             },
             {
               "@type": "ListItem",
-              "position": 8,
+              "position": 9,
               "url": "https://canvasdownloader.app/save-canvas-assignment-feedback.html",
               "name": "How to Save Your Canvas Assignment Feedback"
             },
             {
               "@type": "ListItem",
-              "position": 9,
+              "position": 10,
               "url": "https://canvasdownloader.app/canvas-files-into-notebooklm.html",
               "name": "How to Get Your Canvas Files Into NotebookLM"
             },
             {
               "@type": "ListItem",
-              "position": 10,
+              "position": 11,
               "url": "https://canvasdownloader.app/how-to-download-all-canvas-files.html",
               "name": "How to Download All Files From Canvas (5 Methods Compared)"
             },
             {
               "@type": "ListItem",
-              "position": 11,
+              "position": 12,
               "url": "https://canvasdownloader.app/canvas-access-after-graduation.html",
               "name": "Canvas Access After Graduation: What to Save Before It Ends"
             },
             {
               "@type": "ListItem",
-              "position": 12,
+              "position": 13,
               "url": "https://canvasdownloader.app/download-panopto-lecture-recordings.html",
               "name": "How to Download Panopto Lecture Recordings"
             }
@@ -407,49 +413,77 @@
     footer .meta { margin-top: 10px; }
   
     /* ---- BLOG INDEX ---- */
-    .container.wide { max-width: 800px; width: 100%; }
+    /* Wider than the 800px reading measure the ARTICLES use, because this page
+       is a grid of cards rather than a column of prose: at 800px two columns
+       give ~380px each, which is too narrow for a three-line title. */
+    .container.wide { max-width: 1080px; width: 100%; }
     .hero h1 { line-height: 1.12; }
-    .post-list { text-align: left; padding-bottom: 20px; }
-    /* `color: var(--txt)`, not the UA's #0000EE. The 12 post cards are each
-       one big <a>, and every piece of text inside them happens to set its
-       own colour - so nothing renders blue today. That is luck, not a rule:
-       one unstyled <span> added to a card would inherit 2.08:1 browser blue.
-       Same class of defect as the "step-by-step walkthrough" link on
-       mac-setup.html and "school search" on canvas-url-directory.html, both
-       of which WERE visible. Census: `document.querySelectorAll('a')` with a
-       computed colour of rgb(0,0,238), on every page. */
+    .post-list { display: grid; gap: 12px; text-align: left; padding-bottom: 20px; }
+    /* One column on a phone, two from 860px. 860 rather than 768 because the
+       nav already collapses there, so the page has one breakpoint, not two. */
+    @media (min-width: 860px) { .post-list { grid-template-columns: 1fr 1fr; } }
+    /* `color: var(--txt)`, not the UA's #0000EE. The post cards are each one
+       big <a>, and every piece of text inside them happens to set its own
+       colour - so nothing renders blue today. That is luck, not a rule: one
+       unstyled <span> added to a card would inherit 2.08:1 browser blue. Same
+       class of defect as the "step-by-step walkthrough" link on mac-setup.html
+       and "school search" on canvas-url-directory.html, both of which WERE
+       visible. Census: `document.querySelectorAll('a')` with a computed colour
+       of rgb(0,0,238), on every page. */
+    /* A column, not a block, so `Read the guide` can be pushed to the bottom
+       with `margin-top: auto`. In a two-column grid the cards are already the
+       same HEIGHT; without this their footers still sit at different offsets,
+       which is the thing that actually reads as ragged. */
     .post {
-      display: block; text-decoration: none; color: var(--txt);
+      display: flex; flex-direction: column;
+      text-decoration: none; color: var(--txt);
       background: var(--surf); border: 1px solid var(--border);
-      border-radius: var(--rad-l); padding: 22px 24px; margin-bottom: 16px;
+      border-radius: var(--rad-l); padding: 17px 19px;
       transition: border-color .15s ease, background .15s ease, transform .15s ease;
     }
     .post:hover {
       border-color: var(--cyan); background: var(--surf2);
       transform: translateY(-2px);
     }
-    .post-meta {
-      font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
-      text-transform: uppercase; color: var(--txt3); margin: 0 0 8px;
+    /* MEASURED 2026-08-29: this block declared 12px and var(--txt3) and rendered
+       at 15px and var(--txt2), because `.post p` is (0,1,1) and `.post-meta` is
+       (0,1,0), so the later, more specific rule won BOTH declarations. At the
+       same size as the body text but bold, uppercase and tracked, the date line
+       read LARGER than the sentence describing the article - which is what the
+       product owner saw. The fix is to make the two rules disjoint rather than
+       to out-specify: `:not(.post-meta)` below cannot be re-broken by someone
+       reordering the file, and out-specifying can. */
+    p.post-meta {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--txt3); margin: 0 0 7px;
     }
     .post h2 {
-      font-size: clamp(19px, 2.6vw, 23px); font-weight: 800;
-      letter-spacing: -0.02em; color: var(--txt); margin: 0 0 8px;
-      line-height: 1.25;
+      font-size: clamp(16px, 1.7vw, 18px); font-weight: 800;
+      letter-spacing: -0.02em; color: var(--txt); margin: 0 0 7px;
+      line-height: 1.3;
     }
     .post:hover h2 { color: var(--cyan); }
-    .post p { font-size: 15px; color: var(--txt2); line-height: 1.7; margin: 0; }
+    .post p:not(.post-meta) {
+      font-size: 13.5px; color: var(--txt2); line-height: 1.65; margin: 0;
+    }
     .post-more {
-      display: inline-block; margin-top: 12px;
-      font-size: 14px; font-weight: 700; color: var(--cyan);
+      display: inline-block; margin-top: auto; padding-top: 11px;
+      font-size: 12.5px; font-weight: 700; color: var(--cyan);
     }
     /* The whole card is the link, so the arrow must not look separately
-       clickable - it is decoration on a target that is already 800px wide. */
+       clickable - it is decoration on a target that is already the card. */
     .post-more::after { content: " \2192"; }
-    .blog-intro {
-      text-align: left; font-size: 15px; color: var(--txt2);
-      line-height: 1.75; margin: 0 0 26px;
+    /* Centred, like the h1 and the sub above it. The one left-aligned block on
+       this page used to be a paragraph saying the articles were honest and
+       checked, which is what every page claims and so tells a reader nothing;
+       it was removed rather than re-centred. This line is here because these
+       two pages are the only ones with NO path from a page Google has indexed. */
+    .blog-tools {
+      text-align: center; font-size: 13px; color: var(--txt3);
+      line-height: 1.7; margin: 24px 0 0;
     }
+    .blog-tools a { color: var(--cyan); text-decoration: none; }
+    .blog-tools a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -494,15 +528,17 @@
   </div>
 
   <div class="container wide">
-    <p class="blog-intro">Written for students, checked against Canvas's own
-    documentation, and honest about the cases where a built-in Canvas feature or
-    somebody else's tool is the better answer.</p>
-
     <div class="post-list">
+      <a class="post" href="canvas-end-of-semester-checklist.html">
+        <p class="post-meta">29 August 2026 &middot; 10 min read</p>
+        <h2>The end-of-semester Canvas checklist</h2>
+        <p>A printable checklist for saving your Canvas courses before access ends: the five settings to check today, what to download in which order, and how to verify it worked.</p>
+        <span class="post-more">Read the guide</span>
+      </a>
       <a class="post" href="download-lecture-videos-from-canvas.html">
-        <p class="post-meta">27 August 2026 &middot; 9 min read</p>
+        <p class="post-meta">27 August 2026 &middot; 11 min read</p>
         <h2>How to download lecture videos from Canvas</h2>
-        <p>Canvas embeds video from five different systems, each with its own rules. How to tell which you have, and what works for Studio, Panopto, Kaltura.</p>
+        <p>Canvas embeds video from six different systems, each with its own rules. How to tell which you have, and what works for Studio, Panopto, Kaltura and Echo360.</p>
         <span class="post-more">Read the guide</span>
       </a>
       <a class="post" href="panopto-lecture-transcript.html">
@@ -572,6 +608,10 @@
         <span class="post-more">Read the guide</span>
       </a>
     </div>
+
+    <p class="blog-tools">Two reference tools rather than guides:
+    <a href="canvas-url-directory.html">the Canvas URL directory</a>, and
+    <a href="canvas-data.html">the same 4,757 institutions as CSV and JSON</a>.</p>
   </div>
 
   <footer>

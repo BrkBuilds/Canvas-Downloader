@@ -327,3 +327,298 @@ re-crawl.
   cannot see history must say so instead of reporting all 22 pages as stale.
 - Mutation-checked three ways: a reverted date, a deleted `<lastmod>` tag, and a `<loc>` pointed
   at a file that does not exist. All three fail as they should.
+
+## Bing Keyword Research sees BRAND queries only, at any phrase length (2026-08-29)
+The 2026-08-28 run read its own floor as a phrase-LENGTH limit: `panopto` (28.5K) and `canvas
+download` (7.3K) answered while every phrase of three words or more did not. Twenty short probes
+on 2026-08-29 falsify that. **The split is whether the phrase carries a product NAME.**
+Answered: `notebooklm` 3.2M, `kaltura` 12.3K, `echo360` 3.5K, `moodle download` 3.1K, `canvas
+studio` 2.2K, `panopto download` 638, `canvas videos` 317. Silent, at two words as readily as at
+five: `canvas files`, `canvas backup`, `canvas export`, `canvas quizzes`, `canvas token`, `canvas
+transcript`, `panopto transcript`, `course download`, `course backup`, `lecture download`,
+`lecture recordings`, `study files`. Across both runs that is **34 generic phrases with no data**,
+so the instrument measures brand and navigational demand and cannot see task demand here at all.
+**Do not run generic probes again**; the answer is known and it is not "no demand".
+- **FIVE intent traps, and they are the run's most useful output.** An impression count is not
+  demand for what you sell, and the `Top 10 url ranking` panel says so in one look. `panopto
+  download` (638) is **10 of 10 "Install Panopto for Windows"** - the recorder, not a lecture.
+  `moodle download` (3.1K) is the Moodle app. `canvas transcript` is an **academic** transcript
+  (Parchment, "transcript of my enrollments"). `course download` is Udemy and r/Piracy. `canvas
+  videos` (317) returns a related list that is **100% Canva**. Read the SERP panel before
+  believing the number: five of eight numbers this run produced belong to someone else's intent.
+- **The UK Panopto gap is confirmed on a second phrase.** `panopto download` is 153/638 =
+  **24% UK** against 21% on bare `panopto`, and the `panopto transcript` SERP carries
+  `digi-ed.uk` and `imperial.ac.uk`. The UK is 2.9% of installs.
+- **`notebooklm` is 3.2M and its biggest market is INDIA**, 401.2K against the US's 140.1K and the
+  UK's 22.4K. India is a top-five install market. Its 3M trend is **falling** (about 310K to
+  230K), so it is large and cooling, not large and growing.
+- **The platform gap is a measured NON-opportunity and must stay recorded as one.** `kaltura`
+  12.3K + `echo360` 3.5K + `canvas studio` 2.2K = **18K against panopto's 28.5K**, so the lecture
+  platforms this app does not reach are two thirds the size of the one it does. That reads as a
+  roadmap item and is not one: **the product owner's university runs none of them** (stated
+  2026-08-29), so nothing there can be built, tested or verified first-hand, which is this site's
+  whole evidence standard. `download-lecture-videos-from-canvas.html` already documents Kaltura
+  and Studio from Instructure KB 664517 / 660507 and Michigan MiVideo KB 10274 and says the app
+  handles Panopto only. That is the finished answer. The one real gap is that **`echo360` appears
+  nowhere in `docs/` or in the generator**, and it belongs as a row in that article's five-system
+  table, sourced the same way, and nothing more.
+- **The SERP panel found five competitors the register does not list**: `Ryfter/canvas-backup`
+  (positions **1 and 5** on `canvas backup`), `classbackup.com`, `canvasexport.com`,
+  `techconsigliere/CanvExporter`, and a `Panopto Captions and Video Downloader` Chrome extension
+  ranking on `panopto transcript` where we do not. `STRATEGY.md` section 5 was rebuilt from the
+  tools' own docs on 2026-08-27 and is **stale again three days later**; rebuild it from the
+  repositories, never from search snippets.
+
+## Every article on this site ends by selling the app, so no page is citable by the people who publish links (2026-08-29)
+Census of `.cta-box` across `docs/`: **12 of 12 generated articles carry one**; the only
+search-facing pages without are `canvas-url-directory.html` and `blog.html`. Every article is
+therefore addressed to a student mid-task, and students do not publish links. The audiences that
+do - help desk and learning-technology staff, accessibility officers, tool builders, subreddit
+wiki editors - have no page here, and a page that closes with a Download button has to be edited
+before a university KB can cite it.
+- **This is a different defect from "nothing linkable has been built".** Two linkable assets
+  shipped 2026-08-27 (`what-canvas-download-as-zip-misses.html` and the URL directory) and one of
+  the two still ends in a CTA. The asset thesis was right; the reader it was aimed at was not.
+- **The outreach inherits it.** `edu-outreach.html`'s emails cite
+  `save-canvas-pages-quizzes-discussions.html` and
+  `back-up-canvas-course-before-losing-access.html`, both of which carry a CTA box, so a cold mail
+  from a stranger links to a page selling software. That is a better explanation for the reply
+  rate than the sentence rhythm the entry above this one fixed.
+- **Do not fix it by removing CTAs from the twelve.** They are the conversion element and
+  `BLOG_PLAN.md` phase 0b settled that argument with the reasoning. The fix is one page that never
+  had one.
+
+## `docs/` publishes no machine-readable data, so the one dataset this project owns cannot be cited (2026-08-29)
+There is no CSV and no JSON anywhere under `docs/` (checked 2026-08-29; the only non-HTML files
+are the IndexNow key, `CNAME`, `robots.txt`, `sitemap.xml`, `llms.txt`, two CSS files and one JS).
+`shared/institutions.py` holds **4,757 Canvas hostnames, each proven live against
+`/api/v1/users/self` at generation time**, and it reaches the web only as a 957 KB HTML table.
+- **A builder who consumes a CSV cites it; a builder who scrapes a table copies it.** A dataset at
+  a stable URL, with a licence and a stated method, is the shape that attracts a citation, and
+  publishing one costs no article and no new prose.
+- **Size the win honestly.** GitHub renders README links `nofollow` (measured 2026-08-28), so a
+  repository citing the data passes no ranking signal. What it passes is discovery and credibility
+  with builders, plus a chance of a dofollow wherever a dataset gets written up.
+- **State the coverage rather than hiding it**: 1,558 of 4,757 rows carry a country, across 40
+  countries, US 1,330. The directory page already makes the "not exhaustive" point and the data
+  files must repeat it.
+
+## THREE generators were behind their own output, so any build reverted shipped fixes (2026-08-29)
+Every hand-applied CSS fix from 2026-08-28 and 2026-08-29 was written into the
+GENERATED file under `docs/` and never back-ported to the script that writes it.
+Running the build script therefore silently reverted them. Found by running the
+builds, not by reading anything.
+
+| Generator | What a rebuild destroyed |
+|---|---|
+| `build_institution_directory.py` | the base `a { color: var(--cyan) }` rule (**4,760 anchors** fall back to the UA's `#0000EE` at 2.08:1 without it), `#dirq:focus-visible`, and five `var(--muted)` declarations of a variable this site never defines |
+| `build_guide_pages.py` `ARTICLE_CSS` | the step marker as an inline-block CHARACTER (reverted to the round cyan circle the pill entry retired), `margin-left: 12px` on the FAQ `summary::after`, `.short-answer` label and body at `--txt`, `.toc p` and `.toc li` at `--txt` - **four documented fixes, on all twelve article pages at once** |
+| `build_guide_pages.py` `build_index` | `.post { color: var(--txt) }` on `blog.html`, whose cards are each one big `<a>` |
+
+- **The tests caught two of the three and they caught them because they enumerate
+  by GLOB.** `test_website_reading_hygiene.py` globs `docs/*.html`, so it had no
+  opinion about which page was being edited. A guard written against a named page
+  would have passed. The `ARTICLE_CSS` reversion was caught by *reading the diff*
+  of a page nobody had touched, which is the cheaper habit: **after running any
+  build script, `git diff` a file you did not intend to change.**
+- **The fix is always into the generator, never back into `docs/`.** Restoring the
+  HTML would leave the landmine armed for the next person who runs a build for an
+  unrelated reason. All three are ported.
+- **The rule this gives:** before editing anything under `docs/`, check whether a
+  script writes it - `grep -l "<filename>" scripts/*.py`. `docs/` holds 13
+  generated article pages, `blog.html`, `canvas-url-directory.html` and
+  `canvas-data.html`; only `index.html`, `guide.html`, `engine.html`, the setup
+  and legal pages are hand-maintained.
+- One genuine improvement fell out of it: the deployed pages carried a
+  **duplicated** `/* Steps a reader follows... */` comment, because the hand-edit
+  inserted the long version without deleting the short one. The generator emits
+  one. That is the single-line diff on ten of the article pages.
+
+## The checklist page is a different SHAPE, and that is the whole experiment (2026-08-29)
+`canvas-end-of-semester-checklist.html`, the thirteenth article and the first that
+is not a long-form how-to. Twelve articles, ~20,700 words of prose, all the same
+object: TOC, prose, FAQ, CTA. A reader who bounces off one bounces off all of them.
+- **Its distinct claim is the five switches**, not the download list. Article 6
+  already owns "what to save and in what order". What nothing on the site or
+  anywhere else says is that **five institution settings decide what a student is
+  ALLOWED to save, none is announced, and none can be checked after access ends**:
+  student token creation, `Export Course Content` on the Modules page, `Files` in
+  course navigation, the Panopto download permission, and captions. Written as a
+  duplicate of article 6 it would have been a near-duplicate in Google's eyes too,
+  which matters when the measured constraint is indexing rather than crawling.
+- **`page_css` is a new `build()` parameter**, defaulting to empty, appended after
+  `ARTICLE_CSS` inside the same `<style>`. The other twelve pages carry not one
+  extra byte. A page-specific device belongs there, not bolted onto the shared
+  sheet.
+- **The print stylesheet is the feature, not decoration.** A checklist that cannot
+  be printed is an article about a checklist. Print drops nav, footer, CTA,
+  byline, author box, TOC and the whole FAQ, repaints black-on-white, and
+  **writes every source URL out after its link** with `a.src::after { content: " (" attr(href) ")" }`,
+  because a reader on paper cannot hover. Verified by enumerating every selector
+  in the `@media print` block against the live DOM: **17 selectors, 0 dead**. That
+  is the check worth copying - a print rule aimed at a class the page never
+  renders is invisible until somebody prints.
+- **The checkboxes are native**, styled only with `accent-color`, so they keep
+  their own focus ring and keyboard behaviour. Every one of the 18 has a `<label for>`
+  and clicking the text toggles the box (verified by driving a real click). There
+  is no JavaScript and no persistence: it is worked through in one sitting or
+  printed, and adding storage would be the first script on a page that needs none.
+- **Measured on the writing targets**: sd **9.6** against the 9-10 benchmark,
+  **0.0** dashes per 1k, 4% long sentences, 0 negation constructions. short% is
+  16%, slightly under the 18% floor, and was left alone deliberately - the target
+  is VARIANCE, and padding prose to move a number is the behaviour the scanner
+  exists to catch.
+
+## A question-shaped HEADING is not a rhetorical question (2026-08-29)
+`check_ai_writing_tells.py` flagged two "rhetorical questions" on the checklist
+page. Both were its own `<h3>` section headings - *"2. Is there an Export Course
+Content button?"*, *"3. Is Files in the course navigation?"* - which are questions
+by design and are how the page matches the phrasing a reader types.
+`RHETORICAL_Q` is defined as a MID-PARAGRAPH self-question, and stripping tags runs
+a heading straight into the next paragraph's opening capital, which is that pattern
+exactly. **Third time a checker on this site needed fixing before its number meant
+anything**, and the same family as the FAQ headings and the table cell already
+recorded in `BLOG_PLAN.md` section 10.
+- `visible_text()` now strips `<h1>`-`<h6>`, exactly as it already stripped the
+  TOC, tables and the FAQ: remove what the metric never claimed to be reading.
+- **It cannot hide a real hit**, because a genuine mid-paragraph self-question
+  lives inside a `<p>`, which is untouched. Controlled both ways: a comma-splice
+  question and a run-on question are still caught; a question-shaped heading is
+  not; and **2 of the 13 pages still score 1**, so the guard can still say yes.
+  A metric that goes to zero everywhere has been broken, not fixed.
+- **The first control was wrong and that is the lesson.** "The files were there.
+  So why did nobody notice?" is NOT matched - the regex needs `[a-z,]` before the
+  capital, so a question after a full stop never matched and never did. Check what
+  your control actually exercises before reading its result as a pass.
+
+## The constraint is INDEXING, not crawling, and that retires the no-new-pages rule (2026-08-29)
+Read from Search Console by the product owner: the six pages published 2026-08-27
+are **crawled and not indexed**, and indexing was requested for each. The
+2026-08-27 reading in `marketing/SEO_FINDINGS_2026-08-27.md` concluded from five
+earlier pages that *publishing divides the crawl budget*, and that conclusion has
+been the standing reason not to write anything new.
+
+**It is falsified in its crawl half.** Six more pages went into the same budget
+and Google fetched them. Discovery works, scheduling works, and adding a page does
+not starve the others.
+
+- **"Crawled - currently not indexed" is a SELECTION verdict, not a budget one.**
+  Google fetched the page and declined to store it. The levers are therefore
+  distinctness and authority, not internal links, not sitemap priority, and not
+  restraint about publishing. Requesting indexing is worth doing once per URL and
+  is not a fix.
+- **The practical consequence for writing:** a new page that restates an already
+  indexed page competes with it for the same slot and loses. That is why
+  `canvas-end-of-semester-checklist.html` is built around the five institution
+  switches rather than around what to save, which
+  `back-up-canvas-course-before-losing-access.html` already covers. Ask what a new
+  page says that no indexed page says, and if the answer is "the same thing more
+  conveniently", it is a section, not a URL.
+- **Do not re-derive the crawl-budget rule from the old entry.** It was correct
+  about what it measured at n=5 on an eight-day-old property and it is superseded.
+- **Bing AI Performance was opened and it is empty**: 0 total citations, 0 cited
+  pages, 0 grounding queries, over 3M. The site is not yet indexed on Bing long
+  enough to be grounded on, so this is *no data yet*, with the reason known. It is
+  the right instrument for `docs/llms.txt` and it stays on the list to re-read, not
+  as an open question about whether the GEO work landed.
+
+## Getting "crawled - currently not indexed" pages indexed: what is actually true (2026-08-29)
+Researched against Google's own documentation and the July 2026 Search Off the
+Record episode, then two site-side hypotheses were tested locally. **Both came
+back negative, which is what makes the conclusion usable.**
+
+**Google's own words, and they close two doors:**
+- `ask-google-to-recrawl`: *"There's a quota for submitting individual URLs and
+  requesting a recrawl multiple times for the same URL won't get it crawled any
+  faster."* So re-requesting indexing does nothing. Request once, then stop.
+- Same page: *"Crawling can take anywhere from a few days to a few weeks."*
+- The **Indexing API is not an option**: *"The Indexing API can only be used to
+  crawl pages with either `JobPosting` or `BroadcastEvent` embedded in a
+  `VideoObject`."* Every blog and tool recommending it for ordinary pages is
+  recommending a policy violation.
+
+**Mueller and Splitt, "How to read the Indexing Report", 16 July 2026. It is a
+SITE-level judgement, not a page-level one:** *"if our systems are seriously
+worried about the quality of the website that they will reduce the number of
+pages at the index"*, and *"if we have strong concerns about the overall quality,
+then it doesn't make much sense for our systems to spend a lot of time on the
+website"*. The advice is *"you almost need to take a step back and think about the
+quality overall"*. The failing bar, in his words: *"There's nothing unique or
+valuable that is available here for me... Anyone could have written this. This
+tells me nothing."* He also states a healthy site does **not** need a 100% index
+rate. Google reps at Search Central Toronto, April 2026, put the passing bar as
+**personal experience and knowledge no one else possesses**.
+
+**MEASURED HERE, and both hypotheses are dead:**
+- **Self-cannibalisation: ruled out.** Pairwise 5-word-shingle overlap across all
+  thirteen articles peaks at **2.2% Jaccard / 4.5% containment**
+  (`back-up-canvas-course` against the checklist). Duplicate detection operates an
+  order of magnitude above that. No article is competing with another one here.
+- **Thin content: ruled out.** 1,142 to 2,605 words of extracted prose per page.
+- **Every waiting page except two is linked from a page Google has already chosen
+  to KEEP** (`blog.html`, `canvas-access-after-graduation`,
+  `save-canvas-assignment-feedback`). The exceptions are `canvas-data.html` and
+  `canvas-url-directory.html`, which are deliberately not in `blog.html` because
+  they are tools rather than articles. That is the one concrete, cheap thing left
+  on the site side, and it is a DIFFERENT mechanism from "add more internal
+  links", which this site's own crawl data already killed.
+
+**So the answer is the one the register already had, arrived at from the other
+end: it is site-level authority, and nothing on the page moves it.** Note also
+that the six pages were **two days old** when this was read, against Google's own
+"a few days to a few weeks". Calling that a defect now would repeat this folder's
+worst historical error, which was a confident verdict from the wrong measurement.
+
+**What follows for what gets written.** Google's stated bar is content nobody else
+could have produced. Two pages here clear it unambiguously and both are first-hand
+measurement: the 33-course census and the Whisper CPU timings. **The prediction to
+judge this on: those index before the explainers do.** If after four to six weeks
+nothing has indexed, the thing to reconsider is not the writing but whether
+thirteen articles is more than a three-week-old domain's authority supports -
+Mueller is explicit that every indexed page counts toward the site's quality
+judgement. Do not act on that before the wait.
+
+**Do not:** re-request indexing (stated useless), touch the Indexing API (policy),
+buy an indexing service (the entire search result set for that query is link
+spam), add internal links (anti-correlated here), or publish more explainers to
+"build topical authority" (that adds pages to a site that may already have more
+than it can carry).
+
+## `.post p` silently overrode `.post-meta`, so the blog index's date line was never its own size (2026-08-29)
+The product owner read `blog.html` and said the "9 MIN READ" line looked bigger
+than the sentence introducing the article. It did, and it was not a taste
+judgement: **`.post-meta` declared `font-size: 12px; color: var(--txt3)` and
+computed to `15px` and `var(--txt2)`**, because `.post p` is **(0,1,1)** and
+`.post-meta` is **(0,1,0)**, and the more specific rule sat later in the file. The
+date line had never once rendered at its intended size or colour.
+- **At the same px as the body text but bold, uppercase and letter-spaced, a line
+  reads LARGER.** That is why it was visible to the eye and invisible in the
+  source: both numbers say 12px there.
+- **The fix is DISJOINT selectors, not a more specific one.** `.post p:not(.post-meta)`
+  cannot be re-broken by someone reordering the stylesheet; `.post p.post-meta`
+  would win today and lose again the next time a rule is added below it.
+- **Read the computed value, never the declaration.** The whole diagnosis was one
+  `getComputedStyle` call against the declared value, and it is the same technique
+  that found the 2.31:1 CTA button and the `var(--muted)` that was never defined.
+  Enumerating which rules MATCH an element (`el.matches(r.selectorText)` over
+  `document.styleSheets`) is what names the culprit rather than just the symptom.
+- Scale after, measured: meta **11px/600/--txt3**, dek 13.5px, title 18px (was
+  23px). The hierarchy is now monotonic, which it was not.
+
+## blog.html is two columns, and the footers had to be pushed (2026-08-29)
+`.post-list` is a grid, one column below 860px and two above, with
+`.container.wide` widened to **1080px on this page only** - at the articles' 800px
+reading measure two columns give ~380px each, which is too narrow for a
+three-line title. Page height went **3,271px to 1,918px** at 1680px wide.
+- **A grid already makes cards the same HEIGHT; it does not align their
+  CONTENTS.** With cards of unequal dek length the "Read the guide" line sat at a
+  different offset in each, which is the thing that actually reads as ragged. The
+  card is a flex column and `.post-more` takes `margin-top: auto`. Measured after:
+  **0px footer spread on all six rows.**
+- **The left-aligned intro paragraph was deleted, not re-centred.** It said the
+  articles were written for students, checked against documentation and honest -
+  which every page claims, so it told a reader nothing, and it was the only
+  left-aligned block on a centred page. Removing furniture beats aligning it.
+- **`.blog-tools` closes a real gap**, not just a layout one: `canvas-url-directory.html`
+  and `canvas-data.html` were the only two pages with NO path from any page Google
+  has chosen to index. One centred line at the foot of the index gives them one.

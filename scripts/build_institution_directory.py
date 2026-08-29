@@ -67,12 +67,25 @@ PAGE_CSS = """
   <style>
     .dir-tools { display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
       margin: 0 0 18px; }
-    .dir-count { font-size: 14px; color: var(--muted); }
+    .dir-count { font-size: 14px; color: var(--txt3); }
+    /* Base link colour. Without it a bare <a> falls back to the UA's #0000EE:
+       measured 2.08:1 on the "school search" link in the intro, against the
+       4.5:1 floor, and three such links on this page. The 4,757 directory
+       links are `table.dir td.dir-host a` at (0,2,3) and the nav buttons
+       carry their own classes, so all of them beat this (0,0,1) rule -
+       verified by diffing every one of the 4,775 anchors' computed colour
+       before and after. */
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
     #dirq { flex: 1 1 260px; min-width: 220px; padding: 10px 14px;
       border-radius: 10px; border: 1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.04); color: var(--txt); font: inherit;
       font-size: 15px; }
+    /* A border-colour change alone is a weak focus cue - it is the same
+       signal hover gives. :focus-visible adds a real ring for keyboard
+       users without putting one on every mouse click into the field. */
     #dirq:focus { outline: none; border-color: var(--cyan); }
+    #dirq:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
     .dir-tbl-wrap { overflow-x: auto; border-radius: 12px;
       border: 1px solid rgba(255,255,255,.09); }
     table.dir { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -80,15 +93,15 @@ PAGE_CSS = """
       border-bottom: 1px solid rgba(255,255,255,.06); vertical-align: top; }
     table.dir th { position: sticky; top: 0; background: #12131c;
       font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
-      color: var(--muted); z-index: 1; }
+      color: var(--txt3); z-index: 1; }
     table.dir tbody tr:hover { background: rgba(255,255,255,.03); }
     table.dir td.dir-host a { color: var(--cyan); text-decoration: none;
       word-break: break-all; }
     table.dir td.dir-host a:hover { text-decoration: underline; }
-    .dir-cc { font-size: 11px; color: var(--muted); border:
+    .dir-cc { font-size: 11px; color: var(--txt3); border:
       1px solid rgba(255,255,255,.14); border-radius: 5px; padding: 1px 6px; }
-    .dir-none { display: none; padding: 22px 14px; color: var(--muted); }
-    .dir-note { font-size: 14px; color: var(--muted); margin: 16px 0 0; }
+    .dir-none { display: none; padding: 22px 14px; color: var(--txt3); }
+    .dir-note { font-size: 14px; color: var(--txt3); margin: 16px 0 0; }
   </style>
 """
 
@@ -252,6 +265,11 @@ def build() -> pathlib.Path:
       <p class="dir-note">Country is shown where it could be established from
       the address or the institution's own name. A blank one means unknown
       rather than anything about the institution.</p>
+
+      <p>If you want this list as a file rather than a page, the same rows are
+      published as <a href="canvas-data.html">CSV and
+      JSON under CC BY 4.0</a>, with the verification method and the field
+      notes beside them.</p>
 
       <h2 id="what-next">What to do with your Canvas URL</h2>
 

@@ -127,20 +127,35 @@ ARTICLE_CSS = """
     }
     .lede { font-size: 17px !important; color: var(--txt) !important; }
 
-    /* Steps a reader follows with Canvas open in another tab. */
+    /* Steps a reader follows with Canvas open in another tab.
+
+       The marker is an inline-block in the SAME line box as the sentence,
+       pulled into the gutter with a negative margin - NOT an absolutely
+       positioned box. That is what makes the baseline correct for free:
+       `line-height` here is the unitless 1.75 the list inherits, so an
+       absolutely positioned marker at a smaller font-size resolves a
+       SHORTER line box (13.2 x 1.75 = 23.1px against the row's 26.25px)
+       and sits ~1.6px high. In the line box the browser aligns the two
+       baselines itself, at every font-size the four shells use (15px in
+       .art, 14px in .setup-card), with no per-page numbers to keep in sync.
+
+       box-sizing is restated because the shell's reset is `*`, which does
+       not match pseudo-elements - without it the padding is added to the
+       30px and the text no longer lands on the list's own indent. */
     .steps { counter-reset: st; list-style: none; padding-left: 0; }
     .steps > li {
-      counter-increment: st; position: relative;
-      padding-left: 38px; margin-bottom: 12px;
+      counter-increment: st;
+      padding-left: 30px; margin-bottom: 12px;
     }
     .steps > li::before {
-      content: counter(st);
-      position: absolute; left: 0; top: 1px;
-      width: 25px; height: 25px; border-radius: 50%;
-      background: rgba(56,189,248,0.1); color: var(--cyan);
-      border: 1px solid rgba(56,189,248,0.3);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12.5px; font-weight: 800;
+      content: counter(st) ".";
+      display: inline-block; box-sizing: border-box;
+      width: 30px; margin-left: -30px; padding-right: 9px;
+      text-align: right;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 0.88em; font-weight: 600; line-height: inherit;
+      font-variant-numeric: tabular-nums;
+      color: var(--txt);
     }
 
     .note {
@@ -177,6 +192,10 @@ ARTICLE_CSS = """
     details.faq > summary::-webkit-details-marker { display: none; }
     details.faq > summary::after {
       content: '+'; float: right; color: var(--txt3); font-weight: 700;
+      /* Text flows around this float, so without a left margin a long
+         question runs right up against the '+'. Same defect, same class,
+         as the flex toggles on index.html and guide.html. */
+      margin-left: 12px;
     }
     details.faq[open] > summary::after { content: '\\2212'; }
     details.faq > div { padding: 0 18px 16px; }
@@ -218,11 +237,15 @@ ARTICLE_CSS = """
       border-radius: 0 var(--rad) var(--rad) 0;
       padding: 16px 20px; margin: 0 0 26px;
     }
+    /* --txt, not cyan and not --txt3.  Cyan would state the accent twice
+       beside the block's own cyan rail; --txt3 read as secondary, and this
+       label plus the answer under it are the first thing a skimmer reads.
+       Structural furniture carries the full text weight, meta does not. */
     .short-answer p.sa-label {
       margin: 0 0 6px; font-size: 12px; font-weight: 800;
-      letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan);
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt);
     }
-    .short-answer p { margin: 0 0 10px; font-size: 15px; color: var(--txt2); }
+    .short-answer p { margin: 0 0 10px; font-size: 15px; color: var(--txt); }
     .short-answer p:last-child { margin-bottom: 0; }
 
     /* Inline citation to a primary source. Cited sources are the single
@@ -249,10 +272,13 @@ ARTICLE_CSS = """
       background: var(--surf); border: 1px solid var(--border);
       border-radius: var(--rad); padding: 16px 20px; margin: 0 0 30px;
     }
+    /* Same reasoning as .sa-label: the label and the numbers are how a reader
+       navigates, so they hold --txt.  The numbers must state it - .art li
+       paints every list item --txt2 and ::marker inherits from its own li. */
     .toc p { margin: 0 0 8px; font-size: 12px; font-weight: 800;
-             letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt3); }
+             letter-spacing: 0.08em; text-transform: uppercase; color: var(--txt); }
     .toc ol { margin: 0; padding-left: 20px; }
-    .toc li { margin-bottom: 4px; font-size: 14px; }
+    .toc li { margin-bottom: 4px; font-size: 14px; color: var(--txt); }
 """
 
 
@@ -260,41 +286,77 @@ ARTICLE_CSS = """
 # so an article page does not carry rules for a layout it never uses.
 INDEX_CSS = """
     /* ---- BLOG INDEX ---- */
-    .container.wide { max-width: 800px; width: 100%; }
+    /* Wider than the 800px reading measure the ARTICLES use, because this page
+       is a grid of cards rather than a column of prose: at 800px two columns
+       give ~380px each, which is too narrow for a three-line title. */
+    .container.wide { max-width: 1080px; width: 100%; }
     .hero h1 { line-height: 1.12; }
-    .post-list { text-align: left; padding-bottom: 20px; }
+    .post-list { display: grid; gap: 12px; text-align: left; padding-bottom: 20px; }
+    /* One column on a phone, two from 860px. 860 rather than 768 because the
+       nav already collapses there, so the page has one breakpoint, not two. */
+    @media (min-width: 860px) { .post-list { grid-template-columns: 1fr 1fr; } }
+    /* `color: var(--txt)`, not the UA's #0000EE. The post cards are each one
+       big <a>, and every piece of text inside them happens to set its own
+       colour - so nothing renders blue today. That is luck, not a rule: one
+       unstyled <span> added to a card would inherit 2.08:1 browser blue. Same
+       class of defect as the "step-by-step walkthrough" link on mac-setup.html
+       and "school search" on canvas-url-directory.html, both of which WERE
+       visible. Census: `document.querySelectorAll('a')` with a computed colour
+       of rgb(0,0,238), on every page. */
+    /* A column, not a block, so `Read the guide` can be pushed to the bottom
+       with `margin-top: auto`. In a two-column grid the cards are already the
+       same HEIGHT; without this their footers still sit at different offsets,
+       which is the thing that actually reads as ragged. */
     .post {
-      display: block; text-decoration: none;
+      display: flex; flex-direction: column;
+      text-decoration: none; color: var(--txt);
       background: var(--surf); border: 1px solid var(--border);
-      border-radius: var(--rad-l); padding: 22px 24px; margin-bottom: 16px;
+      border-radius: var(--rad-l); padding: 17px 19px;
       transition: border-color .15s ease, background .15s ease, transform .15s ease;
     }
     .post:hover {
       border-color: var(--cyan); background: var(--surf2);
       transform: translateY(-2px);
     }
-    .post-meta {
-      font-size: 12px; font-weight: 700; letter-spacing: 0.06em;
-      text-transform: uppercase; color: var(--txt3); margin: 0 0 8px;
+    /* MEASURED 2026-08-29: this block declared 12px and var(--txt3) and rendered
+       at 15px and var(--txt2), because `.post p` is (0,1,1) and `.post-meta` is
+       (0,1,0), so the later, more specific rule won BOTH declarations. At the
+       same size as the body text but bold, uppercase and tracked, the date line
+       read LARGER than the sentence describing the article - which is what the
+       product owner saw. The fix is to make the two rules disjoint rather than
+       to out-specify: `:not(.post-meta)` below cannot be re-broken by someone
+       reordering the file, and out-specifying can. */
+    p.post-meta {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--txt3); margin: 0 0 7px;
     }
     .post h2 {
-      font-size: clamp(19px, 2.6vw, 23px); font-weight: 800;
-      letter-spacing: -0.02em; color: var(--txt); margin: 0 0 8px;
-      line-height: 1.25;
+      font-size: clamp(16px, 1.7vw, 18px); font-weight: 800;
+      letter-spacing: -0.02em; color: var(--txt); margin: 0 0 7px;
+      line-height: 1.3;
     }
     .post:hover h2 { color: var(--cyan); }
-    .post p { font-size: 15px; color: var(--txt2); line-height: 1.7; margin: 0; }
+    .post p:not(.post-meta) {
+      font-size: 13.5px; color: var(--txt2); line-height: 1.65; margin: 0;
+    }
     .post-more {
-      display: inline-block; margin-top: 12px;
-      font-size: 14px; font-weight: 700; color: var(--cyan);
+      display: inline-block; margin-top: auto; padding-top: 11px;
+      font-size: 12.5px; font-weight: 700; color: var(--cyan);
     }
     /* The whole card is the link, so the arrow must not look separately
-       clickable - it is decoration on a target that is already 800px wide. */
+       clickable - it is decoration on a target that is already the card. */
     .post-more::after { content: " \\2192"; }
-    .blog-intro {
-      text-align: left; font-size: 15px; color: var(--txt2);
-      line-height: 1.75; margin: 0 0 26px;
+    /* Centred, like the h1 and the sub above it. The one left-aligned block on
+       this page used to be a paragraph saying the articles were honest and
+       checked, which is what every page claims and so tells a reader nothing;
+       it was removed rather than re-centred. This line is here because these
+       two pages are the only ones with NO path from a page Google has indexed. */
+    .blog-tools {
+      text-align: center; font-size: 13px; color: var(--txt3);
+      line-height: 1.7; margin: 24px 0 0;
     }
+    .blog-tools a { color: var(--cyan); text-decoration: none; }
+    .blog-tools a:hover { text-decoration: underline; }
 """
 
 
@@ -375,7 +437,15 @@ def byline(published: str, modified: str) -> str:
 def build(slug: str, *, title: str, description: str, h1: str, lede: str,
           crumb: str, body: str, faq: list[tuple[str, str]],
           extra_nodes: list[dict], published: str, modified: str,
-          answer: str = "") -> Path:
+          answer: str = "", page_css: str = "") -> Path:
+    """``page_css`` is for a page that needs a device the other twelve do not.
+
+    It is appended AFTER ``ARTICLE_CSS`` inside the same ``<style>``, so a page
+    rule can override an article rule without an ``!important``. It defaults to
+    empty, so the twelve pages that do not use it carry not one extra byte -
+    which is the reason this is a parameter rather than another block bolted on
+    to the shared stylesheet.
+    """
     css, nav, foot, tail = _shell()
     url = SITE + slug
     graph = [
@@ -450,7 +520,7 @@ def build(slug: str, *, title: str, description: str, h1: str, lede: str,
   <!-- Self-hosted fonts: no request leaves the visitor's browser. See fonts.css. -->
   <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin />
   <link rel="stylesheet" href="fonts.css" />
-{css[:-len("</style>")]}{ARTICLE_CSS}  </style>
+{css[:-len("</style>")]}{ARTICLE_CSS}{page_css}  </style>
 </head>
 <body>
 {nav}
@@ -598,13 +668,13 @@ def build_index(pages: list[dict]) -> Path:
   </div>
 
   <div class="container wide">
-    <p class="blog-intro">Written for students, checked against Canvas's own
-    documentation, and honest about the cases where a built-in Canvas feature or
-    somebody else's tool is the better answer.</p>
-
     <div class="post-list">
 {cards}
     </div>
+
+    <p class="blog-tools">Two reference tools rather than guides:
+    <a href="canvas-url-directory.html">the Canvas URL directory</a>, and
+    <a href="canvas-data.html">the same 4,757 institutions as CSV and JSON</a>.</p>
   </div>
 
 {foot}

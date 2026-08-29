@@ -97,6 +97,18 @@ def visible_text(html: str) -> str:
     # guard that cannot say no.
     t = re.sub(r'(?s)<section[^>]*id="faq".*', ' ', t)
     t = re.sub(r'(?s)<h2[^>]*id="faq".*', ' ', t)
+    # A HEADING IS NOT A SENTENCE IN A PARAGRAPH, and RHETORICAL_Q is defined as
+    # a MID-PARAGRAPH self-question. Stripping tags runs a question-shaped
+    # heading straight into the following paragraph's opening capital, which is
+    # the pattern exactly - so `<h3>Is Files in the course navigation?</h3>`
+    # followed by any sentence scored as a rhetorical question. Same defect as
+    # the FAQ and the table cell above it, and the same fix: remove the thing
+    # the metric never claimed to be reading.
+    #
+    # This cannot hide a real hit. A genuine mid-paragraph self-question lives
+    # inside a <p>, which is untouched here. Positive control in the commit:
+    # a paragraph containing one is still caught after this line.
+    t = re.sub(r'(?s)<h[1-6][^>]*>.*?</h[1-6]>', ' ', t)
     t = re.sub(r'<[^>]+>', ' ', t)
     t = t.replace('&nbsp;', ' ').replace('&amp;', '&')
     t = re.sub(r'&[a-z]+;', ' ', t)

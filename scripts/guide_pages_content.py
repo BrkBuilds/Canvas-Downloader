@@ -1474,6 +1474,7 @@ P6_BODY = """      <div class="toc">
           <li><a href="#studio">Canvas Studio</a></li>
           <li><a href="#panopto">Panopto</a></li>
           <li><a href="#kaltura">Kaltura, My Media and the branded ones</a></li>
+          <li><a href="#echo360">Echo360, which defaults the other way</a></li>
           <li><a href="#files">A plain video file, and the one people miss</a></li>
           <li><a href="#transcript">When the video is off, the transcript often is not</a></li>
           <li><a href="#allowed">What you are actually allowed to do</a></li>
@@ -1484,16 +1485,16 @@ P6_BODY = """      <div class="toc">
 
       <p class="lede">There is no such thing as a Canvas lecture video. Canvas
       almost never stores the recording; it embeds a player belonging to one of
-      five other systems. Which system decides everything about what you can do
+      six other systems. Which system decides everything about what you can do
       next: one click, one email to your lecturer, or nothing at all.</p>
 
       <p>That is why the answers you find contradict each other. They are all
-      correct, each for a different one of the five, and none of them says which.
+      correct, each for a different one of the six, and none of them says which.
       Work out which one you have first and the rest of this page is short.</p>
 
       <h2 id="where">First work out where the video actually lives</h2>
 
-      <p>Five systems put a video in front of a Canvas student. They behave
+      <p>Six systems put a video in front of a Canvas student. They behave
       nothing alike:</p>
 
       <ul>
@@ -1508,12 +1509,15 @@ P6_BODY = """      <div class="toc">
         download button depends on which player the channel uses.</li>
         <li><strong>A plain video file</strong> that somebody uploaded to the
         Files tab. This is an ordinary file and downloads like any other.</li>
+        <li><strong>Echo360</strong>, documented as <em>EchoVideo</em>. Another
+        lecture-capture system Canvas links out to, and the only one here where
+        downloading is <strong>on</strong> by default.</li>
         <li><strong>An external link</strong> - YouTube, Vimeo, a Zoom cloud
         recording, or a link to a departmental server. Governed by that service,
         not by Canvas.</li>
       </ul>
 
-      <p>Only two of those five are ever affected by anything you do inside
+      <p>Only two of those six are ever affected by anything you do inside
       Canvas, which is the part that surprises people. Deleting your Canvas
       account does not delete a Panopto recording, and exporting your Canvas
       course does not export one either.</p>
@@ -1534,7 +1538,8 @@ P6_BODY = """      <div class="toc">
         inline in a Canvas page among ordinary text, it is Studio or a file.</li>
         <li><strong>Check the course navigation menu on the left.</strong> A
         <em>My Media</em> or <em>Media Gallery</em> entry means Kaltura. A
-        <em>Panopto</em> entry means Panopto. A <em>Studio</em> entry means
+        <em>Panopto</em> entry means Panopto. An <em>Echo360</em> or
+        <em>EchoVideo</em> entry means Echo360. A <em>Studio</em> entry means
         Studio.</li>
         <li><strong>Open the Files tab and search for the name.</strong> If the
         recording appears there as an <code>.mp4</code>, it is a plain file and
@@ -1611,6 +1616,44 @@ P6_BODY = """      <div class="toc">
       <p>A number of institutions replaced Kaltura with Canvas Studio through
       2024 and 2025. If yours did, old links may have been relinked to Studio
       automatically, so read the Studio section rather than this one.</p>
+
+      <h2 id="echo360">Echo360, which defaults the other way</h2>
+
+      <p>Echo360, documented as <em>EchoVideo</em>, is the same shape as Panopto.
+      It sits outside Canvas, Canvas links into it, and the recordings live in
+      its library rather than in your course files. Everything on this page about
+      telling Panopto apart from Studio applies to it too.</p>
+
+      <p><strong>One thing about it is different, and it is the useful thing.</strong>
+      Downloading is on by default. Echo360's own guide to the course setting
+      says to <a href="https://support.echo360.com/hc/en-us/articles/11077312875789-EchoVideo-Allow-or-Disable-Downloading-Media-from-Classes" rel="nofollow noopener" target="_blank">toggle
+      the <em>Class Content downloads</em> switch off to disable the ability to
+      download content, and that <em>it is enabled by default</em></a>. So on
+      Echo360 the question is not whether your lecturer switched downloading on.
+      It is whether anybody switched it off.</p>
+
+      <p>Two more things are worth knowing before you go looking:</p>
+
+      <ul>
+        <li><strong>It is one switch for the whole course.</strong> The same page
+        says the setting <em>"applies to all content across the course for
+        students and teaching assistants"</em>, and an administrator can take the
+        choice away from the instructor. So if one recording will not download,
+        none of them will, and asking about that one recording is the wrong
+        question.</li>
+        <li><strong>Interactive media is gated behind the polling questions.</strong>
+        Echo360's guide to downloading from the class list states that
+        <a href="https://support.echo360.com/hc/en-us/articles/11077552130701-EchoVideo-Downloading-Media-From-the-Class-List" rel="nofollow noopener" target="_blank">students
+        <em>"are restricted from downloading ANY aspect of interactive media
+        until they have viewed and responded to ALL of the polling questions.
+        This includes transcripts"</em></a>. That is a wall with a door in it.
+        Answer the polls and the download appears.</li>
+      </ul>
+
+      <p><strong>This app does not download Echo360</strong>, the same as Studio
+      and Kaltura. It is on this page because its default runs the opposite way
+      to everything else here, so a student who assumes the Panopto rules apply
+      goes looking for a permission that was never off.</p>
 
       <h2 id="files">A plain video file, and the one people miss</h2>
 
@@ -3965,6 +4008,431 @@ P12_FAQ = [
 
 # ============================================================================
 
+P13_CSS = """
+    /* ---- the checklist instrument (canvas-end-of-semester-checklist) ----
+       This page's whole reason to exist is that it is a LIST you work through,
+       not an essay about working through one, so the list gets real controls
+       and a print stylesheet rather than being a styled <ul>. */
+    .ckl { margin: 0 0 30px; }
+    .ckl-phase {
+      border: 1px solid var(--border); border-radius: var(--rad);
+      background: var(--surf2); padding: 18px 20px 10px; margin: 0 0 14px;
+    }
+    .ckl-phase h3 { margin: 0 0 2px; font-size: 17px; }
+    .ckl-when {
+      font-size: 11.5px; font-weight: 800; letter-spacing: 0.09em;
+      text-transform: uppercase; color: var(--txt3); margin: 0 0 14px;
+    }
+    .ckl-phase ul { list-style: none; margin: 0; padding: 0; }
+    .ckl-phase li {
+      display: flex; gap: 11px; align-items: flex-start;
+      padding: 10px 0; margin: 0; font-size: 15px; line-height: 1.65;
+      border-top: 1px solid var(--border);
+    }
+    .ckl-phase li:first-child { border-top: 0; }
+    /* accent-color paints the checked box with one declaration and leaves the
+       control native, so it keeps its own focus ring and its keyboard
+       behaviour. Restyling a checkbox from scratch loses both. */
+    .ckl-phase input[type="checkbox"] {
+      flex: 0 0 auto; width: 17px; height: 17px; margin: 4px 0 0;
+      accent-color: var(--cyan); cursor: pointer;
+    }
+    .ckl-phase label { flex: 1 1 auto; cursor: pointer; color: var(--txt2); }
+    .ckl-phase label strong { color: var(--txt); }
+    .ckl-t {
+      flex: 0 0 auto; padding-top: 3px;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 11.5px; color: var(--txt3); font-variant-numeric: tabular-nums;
+    }
+    @media (max-width: 520px) {
+      .ckl-phase li { flex-wrap: wrap; }
+      .ckl-t { padding-top: 0; margin-left: 28px; }
+    }
+
+    /* ---- print ----
+       A checklist that cannot be printed is an article about a checklist. The
+       page is dark-on-dark on screen and that is a full ink cartridge on paper,
+       so print gets its own colours rather than the screen ones. Everything
+       that is navigation, conversion or provenance is dropped: what survives is
+       the list, its headings, and enough of the page to know what it is. */
+    @media print {
+      nav, footer, .cta-box, .byline, .author-box, .toc,
+      details.faq, .art h2#faq, .hero .sub { display: none !important; }
+      html, body { background: #fff !important; color: #000 !important; }
+      .hero { padding: 0 !important; margin: 0 0 12pt !important; }
+      .hero h1 { font-size: 20pt !important; color: #000 !important; }
+      .container, .container.wide { max-width: none !important; padding: 0 !important; }
+      .art p, .art li, .ckl-phase label { color: #000 !important; font-size: 10.5pt !important; }
+      .art h2 { font-size: 13pt !important; margin: 14pt 0 6pt !important;
+                page-break-after: avoid; }
+      .art h3, .ckl-phase h3 { font-size: 11.5pt !important; color: #000 !important;
+                page-break-after: avoid; }
+      .short-answer { border: 1pt solid #999 !important; background: none !important;
+                      padding: 8pt !important; }
+      .short-answer p, .short-answer p.sa-label { color: #000 !important; }
+      .ckl-phase { border: 1pt solid #999 !important; background: none !important;
+                   page-break-inside: avoid; margin: 0 0 10pt !important; }
+      .ckl-phase li { border-top: 1pt solid #ddd !important; padding: 6pt 0 !important; }
+      .ckl-t { color: #555 !important; }
+      .note { border: 1pt solid #999 !important; background: none !important; }
+      .note p { color: #000 !important; }
+      /* A URL a reader cannot see is a citation they cannot check, and on paper
+         they cannot hover. Print the href after every source link. */
+      .art a.src::after { content: " (" attr(href) ")"; font-size: 8pt; color: #555; }
+      .art a { color: #000 !important; text-decoration: underline; }
+    }
+"""
+
+P13_BODY = """      <div class="toc">
+        <p>On this page</p>
+        <ol>
+          <li><a href="#list">The checklist</a></li>
+          <li><a href="#order">Why recordings first and files last</a></li>
+          <li><a href="#switches">The five switches, one at a time</a></li>
+          <li><a href="#verify">How to check it actually worked</a></li>
+          <li><a href="#when">When to do this, if you want one date</a></li>
+          <li><a href="#faq">Common questions</a></li>
+        </ol>
+      </div>
+
+      <p class="lede">Most advice about saving your Canvas work tells you what to
+      download. The harder problem is that five settings at your institution
+      decide what you are <em>allowed</em> to download, none of them is
+      announced, and you can only check them while you are still enrolled.</p>
+
+      <p>So this page is a list rather than an essay. Work through part one
+      today, in about five minutes. Parts two and three are for the last fortnight
+      of term. It prints, if you would rather have it on paper.</p>
+
+      <h2 id="list">The checklist</h2>
+
+      <div class="ckl">
+        <div class="ckl-phase">
+          <h3>Part 1: check the five switches</h3>
+          <p class="ckl-when">Today &middot; about 5 minutes &middot; while the courses are open</p>
+          <ul>
+            <li><input type="checkbox" id="c1"><label for="c1"><strong>Account, then
+              Settings.</strong> Is there a <strong>+ New Access Token</strong>
+              button?</label><span class="ckl-t">30 s</span></li>
+            <li><input type="checkbox" id="c2"><label for="c2"><strong>Any course,
+              then Modules.</strong> Is there an <strong>Export Course Content</strong>
+              button, usually top right?</label><span class="ckl-t">30 s</span></li>
+            <li><input type="checkbox" id="c3"><label for="c3"><strong>Course
+              navigation, in three different courses.</strong> Is <strong>Files</strong>
+              in the left-hand menu?</label><span class="ckl-t">1 min</span></li>
+            <li><input type="checkbox" id="c4"><label for="c4"><strong>Open one
+              lecture recording.</strong> Is there a download control on the
+              player?</label><span class="ckl-t">1 min</span></li>
+            <li><input type="checkbox" id="c5"><label for="c5"><strong>Same
+              recording.</strong> Is there a captions or transcript tab, even if
+              the download is off?</label><span class="ckl-t">1 min</span></li>
+            <li><input type="checkbox" id="c6"><label for="c6"><strong>Write down
+              which course ends first.</strong> They do not all end on the same
+              day, and the first one is your real deadline.</label><span class="ckl-t">1 min</span></li>
+          </ul>
+        </div>
+
+        <div class="ckl-phase">
+          <h3>Part 2: download, in this order</h3>
+          <p class="ckl-when">Last two weeks of term &middot; hardest thing first</p>
+          <ul>
+            <li><input type="checkbox" id="d1"><label for="d1"><strong>Lecture
+              recordings, and their transcripts.</strong> Biggest files, slowest
+              download, shortest clock. Start the night before you need
+              them.</label><span class="ckl-t">hours</span></li>
+            <li><input type="checkbox" id="d2"><label for="d2"><strong>Quiz
+              questions and your own answers.</strong> These can be viewable
+              exactly once, ever. If a quiz result is on screen, treat that as
+              your only chance.</label><span class="ckl-t">10 min</span></li>
+            <li><input type="checkbox" id="d3"><label for="d3"><strong>Assignment
+              feedback.</strong> The grade, the rubric with its per-criterion
+              comments, the comment thread, and the annotated copy of what you
+              handed in.</label><span class="ckl-t">15 min</span></li>
+            <li><input type="checkbox" id="d4"><label for="d4"><strong>Pages,
+              announcements and discussions.</strong> None of these is a file, so
+              no zip contains any of them.</label><span class="ckl-t">15 min</span></li>
+            <li><input type="checkbox" id="d5"><label for="d5"><strong>Export
+              Course Content, per course</strong>, if part 1 found the button. It
+              stops working the moment a course concludes.</label><span class="ckl-t">5 min each</span></li>
+            <li><input type="checkbox" id="d6"><label for="d6"><strong>The Files
+              tab</strong>, per course. Select all, Download as
+              Zip.</label><span class="ckl-t">5 min each</span></li>
+            <li><input type="checkbox" id="d7"><label for="d7"><strong>Your own
+              submissions.</strong> Account, Settings, Download Submissions. It
+              covers concluded courses too.</label><span class="ckl-t">5 min</span></li>
+          </ul>
+        </div>
+
+        <div class="ckl-phase">
+          <h3>Part 3: prove it worked</h3>
+          <p class="ckl-when">Same evening &middot; 10 minutes &middot; while a gap is still fixable</p>
+          <ul>
+            <li><input type="checkbox" id="v1"><label for="v1"><strong>Open three
+              files at random.</strong> One big, one small, one old. A zip that
+              downloaded is not a zip that opens.</label><span class="ckl-t">2 min</span></li>
+            <li><input type="checkbox" id="v2"><label for="v2"><strong>Play a
+              recording from the last minute</strong>, not the first. A truncated
+              video looks completely healthy until you reach the
+              end.</label><span class="ckl-t">2 min</span></li>
+            <li><input type="checkbox" id="v3"><label for="v3"><strong>Click into
+              a discussion</strong> in the offline export and look for the
+              replies. They are usually left online only.</label><span class="ckl-t">2 min</span></li>
+            <li><input type="checkbox" id="v4"><label for="v4"><strong>Sort the
+              folder by size and look at the bottom.</strong> Zero-byte files are
+              failed downloads that reported success.</label><span class="ckl-t">2 min</span></li>
+            <li><input type="checkbox" id="v5"><label for="v5"><strong>Check where
+              the folder lives.</strong> A backup on the laptop you are about to
+              drop is not a backup.</label><span class="ckl-t">2 min</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="note warn">
+        <p><strong>The one deadline that surprises people:</strong> Canvas's own
+        offline export is the only built-in route to Pages, quizzes and
+        discussions, and Instructure's documentation states that
+        <a class="src" href="https://community.instructure.com/en/kb/articles/661316-how-do-i-view-course-content-offline-as-an-html-file-as-a-student" target="_blank" rel="noopener">"offline
+        content cannot be downloaded once a course is concluded"</a>. The backup
+        tool expires before the thing it backs up.</p>
+      </div>
+
+      <h2 id="order">Why recordings first and files last</h2>
+
+      <p>The order above is deliberately the reverse of the obvious one. Files
+      are the obvious button, so most people start there and run out of term
+      before they reach the recordings. That is backwards for three reasons.</p>
+
+      <p><strong>Access does not end once. It ends in stages</strong>, and the
+      stages belong to different systems that do not consult each other. Lecture
+      recordings usually go first, because Panopto is a separate product with its
+      own retention rules and its own idea of when your course is over. The
+      course concluding is a second, later event. Your enrolment ending is a
+      third, later still. The full account of that staircase, with the published
+      retention policies behind it, is in
+      <a href="back-up-canvas-course-before-losing-access.html">how to back up a
+      Canvas course before you lose access</a>.</p>
+
+      <p><strong>Recordings are also the slowest thing to fetch and the only
+      thing nobody else has a copy of.</strong> A lecture is an hour of video.
+      Your notes exist elsewhere, the reading list is on a syllabus you can
+      re-request, and a lecturer will usually re-send a slide deck. Nobody
+      re-records a lecture for you.</p>
+
+      <p><strong>And files are the best-protected category anyway.</strong> They
+      are the one thing Canvas has a bulk button for, they are usually mirrored
+      in your own downloads folder already, and they are what a friend on the
+      same course can send you. Everything above them on the list has none of
+      those fallbacks.</p>
+
+      <h2 id="switches">The five switches, one at a time</h2>
+
+      <p>Each of these is a setting somebody else chose, usually before you
+      enrolled. None is announced anywhere. All five take seconds to check and
+      cannot be checked once you are locked out.</p>
+
+      <h3>1. Can you create an access token?</h3>
+
+      <p>Account, then Settings, then scroll to <strong>Approved Integrations</strong>
+      and look for <strong>+ New Access Token</strong>. Instructure documents the
+      button
+      <a class="src" href="https://community.instructure.com/en/kb/articles/662901-how-do-i-manage-api-access-tokens-in-my-user-account" target="_blank" rel="noopener">in
+      every user's own account settings</a>, and administrators have been able to
+      switch it off for students since September 2025.</p>
+
+      <p><strong>If it is missing</strong>, no tool that talks to the Canvas API
+      can work for you, including this one. That is not a small thing to discover
+      in your last week. Browser extensions need no token because they ride the
+      session you are already signed in to, so they still work. More on what the
+      token is and what it cannot reach is in
+      <a href="canvas-access-token-explained.html">what a Canvas access token
+      is</a>.</p>
+
+      <h3>2. Is there an Export Course Content button?</h3>
+
+      <p>Open a course, click <strong>Modules</strong>, and look top right. This
+      is Canvas's offline content feature, it produces the whole course as
+      browsable HTML, and Instructure documents it
+      <a class="src" href="https://community.instructure.com/en/kb/articles/661316-how-do-i-view-course-content-offline-as-an-html-file-as-a-student" target="_blank" rel="noopener">for
+      students specifically</a>. Almost nobody knows it exists, for two good
+      reasons: it is an administrator setting that is simply absent at many
+      institutions, and it lives on the Modules page, which is not where anyone
+      looks for a download.</p>
+
+      <p><strong>Check it per course, not once.</strong> It is enabled per course
+      on top of the institution-level setting, so having it in one course tells
+      you nothing about another. And it is the switch with a deadline attached:
+      once the course concludes, the button stops working.</p>
+
+      <h3>3. Is Files in the course navigation?</h3>
+
+      <p>Look at the left-hand menu inside a course. Instructors
+      <a class="src" href="https://community.instructure.com/en/kb/articles/660741-how-do-i-manage-course-navigation-links" target="_blank" rel="noopener">choose
+      which links appear there</a>, and hiding Files is common, usually so that
+      students go through the modules in order rather than browsing ahead.</p>
+
+      <p><strong>This one is measured.</strong> Across
+      <a href="what-canvas-download-as-zip-misses.html">33 real courses censused
+      for this site</a>, 11 held any material, and in <strong>3 of those 11</strong>
+      the Files listing was refused outright. Those three courses held
+      <strong>246 files</strong> between them, every one of them still reachable
+      through the modules one at a time. So the failure people warn about, a zip
+      that misses a few module-attached files, turned out to be the rare one. The
+      common failure is that there is no zip button at all.</p>
+
+      <h3>4. Can the lecture recordings be downloaded?</h3>
+
+      <p>Open one and look for a download control. In both Canvas Studio and
+      Panopto downloading is <strong>off by default</strong> and somebody has to
+      switch it on, in Panopto's case per folder or per recording. Stanford's
+      guidance to its own staff on
+      <a class="src" href="https://canvashelp.stanford.edu/hc/en-us/articles/360047508074-Enable-download-of-Panopto-Course-Videos-recordings-for-students" target="_blank" rel="noopener">enabling
+      download of Panopto recordings for students</a> is a fair example of what
+      the lecturer sees.</p>
+
+      <p><strong>If it is off, ask.</strong> It is one checkbox for the person
+      who owns the folder, and asking in week ten of term is a very different
+      conversation from asking in the week after grades. Which system you are
+      actually looking at changes the answer completely, and there are six of
+      them:
+      <a href="download-lecture-videos-from-canvas.html">how to download lecture
+      videos from Canvas</a> tells them apart.</p>
+
+      <h3>5. Are the captions there, even when the video is not?</h3>
+
+      <p>This is the one worth knowing and almost nobody does. <strong>The
+      transcript is a separate permission from the video</strong>, and lecturers
+      who restrict the recording routinely leave captions open, because switching
+      accessibility features off is not a decision anyone wants to defend. Brown
+      University's IT knowledge base
+      <a class="src" href="https://ithelp.brown.edu/kb/articles/managing-automatic-captions-in-panopto" target="_blank" rel="noopener">dates
+      automatic captions becoming the default for new content to "on or before
+      May 11, 2026"</a>, driven by accessibility law rather than a product
+      roadmap. Tenants are configured independently, so check yours, but the
+      direction is one way.</p>
+
+      <p>For revision a transcript is often the better artefact anyway: it is
+      searchable, it is a thousandth of the size, and it is what an AI study tool
+      can actually read. <a href="panopto-lecture-transcript.html">How to get a
+      transcript of a Panopto lecture</a> covers the free routes first.</p>
+
+      <h2 id="verify">How to check it actually worked</h2>
+
+      <p>Part 3 exists because every one of those checks has caught a real
+      failure, and all of them are silent. A download that fails halfway usually
+      reports success, and the folder looks right.</p>
+
+      <p><strong>The recording check is the one to do properly.</strong> Skip to
+      the last minute rather than the first. A truncated video has a plausible
+      file size, a working thumbnail and a seek bar of the right length, and it
+      simply stops. If you check the opening thirty seconds you will find nothing
+      wrong with a file that is missing its final third.</p>
+
+      <p><strong>The discussion check catches a whole category.</strong>
+      Instructure's own documentation of the offline export says that
+      <a class="src" href="https://community.instructure.com/en/kb/articles/661316-how-do-i-view-course-content-offline-as-an-html-file-as-a-student" target="_blank" rel="noopener">"discussions
+      and quizzes only include the description"</a>, and that replies are
+      treated as submissions that must be viewed online. So an export can look
+      complete and contain none of the actual conversation.</p>
+
+      <p><strong>Do all of it while you still have access.</strong> That is what
+      turns a gap into something you can fix in ten minutes rather than something
+      you discover in March.</p>
+
+      <h2 id="when">When to do this, if you want one date</h2>
+
+      <p>Part 1 today, whenever today is. It costs five minutes and it is the
+      part that decides whether the rest is possible at all.</p>
+
+      <p>Part 2 in the <strong>last two weeks of teaching</strong>, not the last
+      two weeks of term. Assessment periods are when you have least time and most
+      to lose, and lecture recordings from a module that finished early can
+      disappear before the module you are still sitting exams for.</p>
+
+      <p><strong>The one date to actually diarise is the day after your last
+      class of the first module that ends</strong>, because concluding is per
+      course. Waiting for the semester to be over means waiting past several
+      separate deadlines that already went.</p>
+
+      <div class="note">
+        <p><strong>Print it.</strong> This page is set up to print as the
+        checklist alone, without the navigation, the explanations or the
+        footer, with the source links written out so they can still be checked
+        on paper. Ctrl+P, or Cmd+P on a Mac.</p>
+      </div>
+
+      <div class="cta-box">
+        <h3>Part 2 of that list, for every course at once</h3>
+        <p>Canvas Downloader does the downloading half. Tick the courses and it
+        brings down the Panopto lecture recordings, as video, as audio or as a
+        searchable transcript made on your own machine, along with the quizzes
+        and their questions, the feedback you were given with its rubrics and
+        comments, the Pages, the announcements, the discussions and the files.
+        It converts as it goes, so what lands in the folder still opens in five
+        years without Canvas.</p>
+        <p>It also remembers. Run it again next term and it fetches only what
+        changed, and it never overwrites a file you have annotated.</p>
+        <div class="cta-row">
+          <a href="releases.html" class="btn-nav">Download</a>
+          <a href="index.html#features" class="btn-nav-ghost"><span>See it in action</span></a>
+        </div>
+      </div>
+"""
+
+P13_FAQ = [
+    ("When should I start saving my Canvas courses?",
+     'Check the five settings today, whenever today is, because they decide '
+     'what is possible and take about five minutes. Do the downloading in the '
+     'last two weeks of teaching rather than the last two weeks of term. The '
+     'date that matters is the end of the first course to conclude, not the end '
+     'of the semester, because courses conclude one at a time.'),
+    ("What should I download from Canvas first?",
+     'Lecture recordings, then quizzes and your answers, then assignment '
+     'feedback, then Pages and discussions, and the Files tab last. That is the '
+     'reverse of the order most people use. Files are the best-protected '
+     'category, since Canvas has a bulk button for them and other people on your '
+     'course have copies. Recordings have the shortest deadline, take the '
+     'longest to fetch, and nobody else has them.'),
+    ("Why can I not find the Export Course Content button?",
+     'It is an administrator setting that is absent at many institutions, it is '
+     'also enabled per course on top of that, and it lives on the Modules page '
+     'rather than anywhere labelled download. Check for it in each course '
+     'separately. If it is not there, ask a lecturer to run a course export for '
+     'you, which takes them about a minute.'),
+    ("My course has no Files link. Can I still download the files?",
+     'Yes, but not in bulk through Canvas. Hiding Files in course navigation is '
+     'a normal instructor choice and it removes the Download as Zip route '
+     'entirely. The files themselves are still reachable through the modules one '
+     'at a time, and through the Canvas API. In 33 courses measured for this '
+     'site, 3 of the 11 that held material refused the Files listing, and those '
+     'three held 246 files.'),
+    ("Can I download lecture recordings if my lecturer disabled it?",
+     'Not the video, no, and that is a permission rather than a technical '
+     'obstacle. Ask them, because it is one checkbox and asking during term is a '
+     'different conversation from asking afterwards. Check the captions '
+     'separately though: the transcript is a different permission and is often '
+     'left available when the download is not.'),
+    ("Is it too late if my course has already concluded?",
+     'Partly. A concluded course usually stays readable in Past Enrolments, so '
+     'files and pages you can still open you can still save. What closes is '
+     'Canvas offline export, which Instructure states cannot be run once a '
+     'course is concluded, and often the lecture recordings, which follow their '
+     'own retention policy. Check what you can still open before assuming '
+     'either way.'),
+    ("Do I need software to do any of this?",
+     'No. Every item on the list has a route through Canvas itself, and this '
+     'page gives them. Software is worth it when the manual version does not '
+     'scale, which is at about the point where you are doing seven courses by '
+     'hand or want the categories Canvas has no bulk export for at all.'),
+    ("How do I know the download actually worked?",
+     'Open three files at random, one big, one small, one old. Play a recording '
+     'from its last minute rather than its first, because a truncated video '
+     'looks healthy until you reach the end. Click into a discussion in the '
+     'offline export and look for the replies, which are usually left online '
+     'only. Then sort the folder by size and look at the bottom for zero-byte '
+     'files.'),
+]
+
+
 PAGES = [
     dict(
         slug="how-to-download-all-canvas-files.html",
@@ -4089,29 +4557,29 @@ PAGES = [
     dict(
         slug="download-lecture-videos-from-canvas.html",
         answer="""        <p>Canvas almost never stores the recording. It embeds a player
-        belonging to one of <strong>five</strong> other systems: Canvas Studio,
-        Panopto, Kaltura (often called My Media or Media Gallery), a plain video
-        file in the Files tab, or an external link. Which one you have decides
-        everything.</p>
+        belonging to one of <strong>six</strong> other systems: Canvas Studio,
+        Panopto, Kaltura (often called My Media or Media Gallery), Echo360, a
+        plain video file in the Files tab, or an external link. Which one you
+        have decides everything.</p>
         <p>In both Studio and Panopto, downloading is <strong>off by
         default</strong> and a lecturer switches it on. On Kaltura the download
         button belongs to the player, and the default player does not have one.
         A plain file in the Files tab downloads like any other file. So the first
-        step is not a download tool. It is working out which of the five you are
+        step is not a download tool. It is working out which of the six you are
         looking at, then checking the transcript, which is a separate permission
         and is often left open when the video is not.</p>
 """,
-        title="How to Download Lecture Videos From Canvas (All 5 Systems)",
-        description=("Canvas embeds video from five different systems, each with "
+        title="How to Download Lecture Videos From Canvas (All 6 Systems)",
+        description=("Canvas embeds video from six different systems, each with "
                      "its own rules. How to tell which you have, and what works "
-                     "for Studio, Panopto, Kaltura."),
+                     "for Studio, Panopto, Kaltura and Echo360."),
         h1="How to download lecture videos from Canvas",
-        lede=("Canvas does not store your lecture recordings. Five other systems "
+        lede=("Canvas does not store your lecture recordings. Six other systems "
               "do, they behave nothing alike, and telling them apart is the "
               "whole job."),
         crumb="How to download lecture videos from Canvas",
         body=P6_BODY, faq=P6_FAQ, extra_nodes=[],
-        published="2026-08-27", modified="2026-08-27",
+        published="2026-08-27", modified="2026-08-29",
     ),
     dict(
         slug="panopto-lecture-transcript.html",
@@ -4281,5 +4749,36 @@ PAGES = [
         crumb="What Download as Zip misses",
         body=P12_BODY, faq=P12_FAQ, extra_nodes=[],
         published="2026-08-27", modified="2026-08-27",
+    ),
+    dict(
+        slug="canvas-end-of-semester-checklist.html",
+        answer="""        <p>Check five things today, in about five minutes: whether Account
+        then Settings offers a <strong>+ New Access Token</strong> button,
+        whether a course's <strong>Modules</strong> page has <strong>Export
+        Course Content</strong>, whether <strong>Files</strong> is in the course
+        navigation, whether a lecture recording offers a download, and whether
+        its captions are available even when the video is not. Every one of
+        those is a setting somebody else chose, and none of them can be checked
+        once you are locked out.</p>
+        <p>Then download in the order the doors close, which is the reverse of
+        the obvious one: <strong>lecture recordings first</strong>, because they
+        usually expire first and nobody else has a copy, and the <strong>Files
+        tab last</strong>, because it is the best-protected category on the
+        list. Canvas's own offline export
+        <a href="save-canvas-pages-quizzes-discussions.html">stops working once
+        a course is concluded</a>, so the checking has to happen while the
+        course is still open.</p>
+""",
+        title="The End-of-Semester Canvas Checklist (Printable)",
+        description=("A printable checklist for saving your Canvas courses before "
+                     "access ends: the five settings to check today, what to "
+                     "download in which order, and how to verify it worked."),
+        h1="The end-of-semester Canvas checklist",
+        lede=("Five settings decide what you are allowed to save, and you can only "
+              "check them while you are still enrolled. Here they are, with what "
+              "to download in the order the doors actually close."),
+        crumb="The end-of-semester Canvas checklist",
+        body=P13_BODY, faq=P13_FAQ, extra_nodes=[], page_css=P13_CSS,
+        published="2026-08-29", modified="2026-08-29",
     ),
 ]
