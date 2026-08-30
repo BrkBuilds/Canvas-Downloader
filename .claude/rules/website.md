@@ -730,3 +730,59 @@ viewports.
   1200w file for a 637 device px mobile render (178.5 -> 68.3 KiB via a
   600/900/1200 `srcset`). The 1200w stays: the visual track is ~726 CSS px on a
   wide screen, which needs 1452 device px at 2x DPR.
+
+## Round 2, measured on the LIVE fixed site (2026-08-30 23:29-23:32)
+Confirms the round-1 diagnosis and surfaces three things one page could not show.
+
+- **index.html: Accessibility 92 -> 100, Agentic Browsing 67 -> 100, mobile
+  Performance 95 -> 97, TBT 40ms -> 0, LCP 2.6s -> 2.0s.** Desktop LCP element
+  render delay **1,018ms -> 146ms**, which is the `.reveal` diagnosis confirmed.
+- **Mobile element render delay is still 2,000ms and is NOT yet explained.**
+  Desktop fell 86%, mobile only 26%, so something else dominates under the 4x CPU
+  throttle. Untested candidates, in order: `decoding="async"` on the LCP image
+  (it permits the browser to paint without it), the `drop-shadow` filter on a
+  600x600 alpha image, and the still-`.reveal` hero heading beside it. **Do not
+  "fix" any of these without measuring first** - the last confident guess in this
+  file cost a broken JS bridge.
+- **SEO 100 -> 92 with `canonical` scoring 0 is a TEST-URL ARTIFACT, not a
+  regression.** The run was on `https://canvasdownloader.app/index.html` while the
+  canonical says `https://canvasdownloader.app/`, and Lighthouse fails a non-root
+  page whose canonical points at the site root. The round-1 run on
+  `canvasdownloader.app/` scored SEO 100 on the same markup. **Always test the
+  homepage as `/`, never as `/index.html`.**
+- **`link-in-text-block` failed on every article-shell page and the colour route
+  is arithmetically dead.** `.art a` was `text-decoration: none` with underline on
+  hover only, so at rest a prose link was distinguished by colour alone. axe needs
+  **3.0:1 between the link and the surrounding TEXT**; measured `--cyan #38bdf8`
+  against body `--txt2 #bfc3c9` is **1.21:1**, and no cyan reaches 3:1 (`#67e8f9`
+  1.22:1, `#a5f3fc` 1.42:1) because both are light colours on a dark ground.
+  Compute that ratio before proposing a colour tweak. Fixed with an underline
+  scoped to `.art p a, .art li a`, with `.toc`, `.cta-row` and `.byline` opted
+  back out: a TOC is a list of links, not a text block.
+- **`target-size` failed on the compact footer, 19 pages.** 13px links with only
+  `margin: 0 12px` gave a ~18px tall box against a 24px minimum. `display:
+  inline-block; padding: 6px 0` takes it to 33px and moves no text. The big
+  footer on index/guide/engine already passed, so the census is the RULE string,
+  not the tag.
+- **Three pages wrote their link rule three different ways** (`.art a { colour;
+  text-decoration: none }` on the 13 articles, `.art a { colour }` on canvas-data,
+  a bare `a { ... }` on the directory), so a single-string replacement would have
+  reached 13 of 15. Same failure mode as the `nav .btn-nav-ghost span` sweep.
+
+## `lastmod` is about the FILE; "Updated" is a claim to the READER (2026-08-31)
+After a 27-page accessibility pass, `scripts/sync_sitemap_lastmod.py --write`
+moved 24 sitemap entries to 2026-08-31 while every article still says *Updated 27
+August 2026* in its byline and its JSON-LD `dateModified`. **That disagreement is
+correct and must be left alone.**
+- The change was `aria-label`s, a `<main>` wrapper, heading levels and a link
+  underline. **Not one word of any article changed.** Bumping the visible byline
+  would tell a reader the piece was revised when it was not, which is the same
+  class of untruth as an invented install count.
+- `dateModified` is what a search engine may print beside the result. Inflating it
+  on a markup-only change is what trains an engine to stop trusting the field, and
+  this site's measured constraint is already indexing rather than crawling.
+- `lastmod` makes a different claim - this RESOURCE changed, so re-fetch it - and
+  that is true. Google treats it as a hint and ignores it when it looks
+  untrustworthy, so it is worth being able to say what actually changed.
+- **The rule: bump the byline and `dateModified` only when the PROSE changes.**
+  Markup, CSS and accessibility passes move `lastmod` alone.

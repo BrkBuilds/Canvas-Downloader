@@ -424,7 +424,11 @@
     .done-strip a { color: var(--cyan); text-decoration: none; }
 
     footer { margin-top: auto; padding: 36px 0 40px; text-align: center; color: var(--txt3); font-size: 13px; }
-    footer a { color: var(--txt2); text-decoration: none; margin: 0 12px; }
+    footer a { color: var(--txt2); text-decoration: none; margin: 0 12px;
+      /* Lighthouse target-size: the box was ~18px tall, under the 24px
+         minimum. Padding grows the TARGET only - inline-block is what
+         makes vertical padding count, and the text does not move. */
+      display: inline-block; padding: 6px 0; }
     footer a:hover { color: var(--txt); }
     footer .meta { margin-top: 10px; }
   
@@ -459,6 +463,20 @@
     .art strong { color: var(--txt); font-weight: 700; }
     .art a { color: var(--cyan); text-decoration: none; }
     .art a:hover { text-decoration: underline; }
+    /* WCAG 1.4.1 / Lighthouse link-in-text-block: at rest these links were told
+       apart from the sentence around them by COLOUR ALONE. Measured 2026-08-31:
+       --cyan #38bdf8 against body --txt2 #bfc3c9 is 1.21:1 and axe needs 3.0:1 to
+       pass on colour, which no cyan reaches - the lightest tried, #a5f3fc, is
+       1.42:1 - because both are light colours on a dark ground. So the cue has to
+       be non-colour, and an underline is it. Scoped to PROSE on purpose: a TOC is
+       a list of links rather than a text block, and the CTA row and the nav
+       buttons are buttons, so all three keep their own treatment below. */
+    .art p a, .art li a {
+      text-decoration: underline;
+      text-underline-offset: 0.18em;
+      text-decoration-thickness: 1px;
+    }
+    .art .toc a, .art .cta-row a, .art .byline a { text-decoration: none; }
 
     /* ...and that rule reaches INTO the CTA box, where the two buttons are also
        anchors. They lost the colours the shell gives them everywhere else on the
@@ -964,7 +982,7 @@
       <p>It also counts a different population. A star is a developer bookmarking
       a repository. Nobody stars an app they installed from the Microsoft Store,
       because most people who install one have never opened GitHub in their
-      lives. Against those 2 stars, this app has been installed over 900 times.
+      lives. Against those 2 stars, this app has been installed over 1,100 times.
       The two numbers count different people, and those two groups are exactly
       the audiences the two shapes were built for. I would rather show you both
       than pick the flattering one.</p>

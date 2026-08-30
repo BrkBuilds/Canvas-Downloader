@@ -176,7 +176,11 @@
     }
 
     footer { margin-top: auto; padding: 36px 0 40px; text-align: center; color: var(--txt2); font-size: 13px; opacity: 0.6; }
-    footer a { color: var(--txt2); text-decoration: none; margin: 0 12px; }
+    footer a { color: var(--txt2); text-decoration: none; margin: 0 12px;
+      /* Lighthouse target-size: the box was ~18px tall, under the 24px
+         minimum. Padding grows the TARGET only - inline-block is what
+         makes vertical padding count, and the text does not move. */
+      display: inline-block; padding: 6px 0; }
     footer a:hover { color: var(--txt); }
     footer .meta { margin-top: 10px; }
     

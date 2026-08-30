@@ -76,6 +76,20 @@ PAGE_CSS = """
        verified by diffing every one of the 4,775 anchors' computed colour
        before and after. */
     a { color: var(--cyan); text-decoration: none; }
+    /* WCAG 1.4.1 / Lighthouse link-in-text-block: at rest these links were told
+       apart from the sentence around them by COLOUR ALONE. Measured 2026-08-31:
+       --cyan #38bdf8 against body --txt2 #bfc3c9 is 1.21:1 and axe needs 3.0:1 to
+       pass on colour, which no cyan reaches - the lightest tried, #a5f3fc, is
+       1.42:1 - because both are light colours on a dark ground. So the cue has to
+       be non-colour, and an underline is it. Scoped to PROSE on purpose: a TOC is
+       a list of links rather than a text block, and the CTA row and the nav
+       buttons are buttons, so all three keep their own treatment below. */
+    .art p a, .art li a {
+      text-decoration: underline;
+      text-underline-offset: 0.18em;
+      text-decoration-thickness: 1px;
+    }
+    .art .toc a, .art .cta-row a, .art .byline a { text-decoration: none; }
     a:hover { text-decoration: underline; }
     #dirq { flex: 1 1 260px; min-width: 220px; padding: 10px 14px;
       border-radius: 10px; border: 1px solid rgba(255,255,255,.14);

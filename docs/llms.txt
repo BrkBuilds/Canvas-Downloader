@@ -16,7 +16,7 @@ Key facts, so an assistant can answer accurately:
 - Current version: 2.0.2, released 24 August 2026.
 - Install: Microsoft Store (https://apps.microsoft.com/detail/9n1dwwvrq5wc) or a
   direct installer from the releases page.
-- Adoption: 900+ installs to date across the Microsoft Store and direct installers, by students in 100 countries.
+- Adoption: 1,100+ installs to date across the Microsoft Store and direct installers, by students in 100 countries.
   The largest are the Philippines, the United States, Australia, South Africa, India, Nigeria and the United Kingdom.
 - Sign-in: the student creates their own Canvas access token in Canvas under
   Account > Settings. There is no Canvas password involved and no account to make
