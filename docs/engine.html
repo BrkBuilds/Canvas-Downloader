@@ -317,13 +317,13 @@
     .step-n { font-family: var(--mono); font-size: 13px; font-weight: 600; line-height: 1.6;
       color: var(--txt3); text-align: center; position: relative; z-index: 1; }
     .step-n::after { content: "."; }
-    .step-b h4 { font-size: 14.5px; font-weight: 700; margin-bottom: 4px; }
+    .step-b h3 { font-size: 14.5px; font-weight: 700; margin-bottom: 4px; }
     .step-b p { font-size: 13.5px; color: var(--txt2); line-height: 1.65; margin: 0; }
 
     /* ---- KV CARDS ---- */
     .kv { display: grid; grid-template-columns: repeat(auto-fit,minmax(210px,1fr)); gap: 10px; margin: 18px 0 22px; }
     .kv-c { border: 1px solid var(--border); border-radius: var(--rad); background: var(--surf); padding: 14px 15px; }
-    .kv-c h5 { font-size: 13px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 9px; }
+    .kv-c h3 { font-size: 13px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 9px; }
     .kv-c p { font-size: 12.5px; color: var(--txt2); line-height: 1.6; margin: 0; }
     .kv-c .num { font-family: var(--mono); font-size: 15px; font-weight: 700; }
     .kv-c .num.amb { color: var(--amber); } .kv-c .num.org { color: var(--orange); } .kv-c .num.red { color: var(--red); }
@@ -400,20 +400,20 @@
   <div class="container">
     <div class="nav-inner">
       <a href="index.html" class="nav-logo">
-        <img src="icon.png" alt="Canvas Downloader" />
+        <img src="assets/icon-128.webp" width="128" height="128" alt="" />
         Canvas Downloader
       </a>
       <div class="nav-right">
         <a href="mac-setup.html" class="nav-link" data-setup-link><span class="setup-full">How to set up</span><span class="setup-short">Setup</span></a>
         <a href="guide.html" class="nav-link active">How It Works</a>
-        <a href="index.html#get" class="btn-nav">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <a href="index.html#get" class="btn-nav" aria-label="Download">
+          <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           <span>Download</span>
         </a>
-        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener" class="btn-nav-ghost">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" /></svg>
+        <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener" class="btn-nav-ghost" aria-label="Canvas Downloader on GitHub, 100% open source">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" /></svg>
           <span>100% Open Source</span>
         </a>
       </div>
@@ -492,15 +492,15 @@
 
         <div class="kv">
           <div class="kv-c">
-            <h5><svg class="kvi" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>It lives in your folder</h5>
+            <h3><svg class="kvi" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>It lives in your folder</h3>
             <p>The record travels with your files. Move the folder, rename it, put it on a USB stick - sync still knows what's what.</p>
           </div>
           <div class="kv-c">
-            <h5><svg class="kvi" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>It's yours to delete</h5>
+            <h3><svg class="kvi" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>It's yours to delete</h3>
             <p>Delete the folder and every trace goes with it. Nothing about your courses is stored anywhere else.</p>
           </div>
           <div class="kv-c">
-            <h5><svg class="kvi" viewBox="0 0 24 24"><path d="M12 3v18M5 8l7-5 7 5"/><path d="M3 21h18"/></svg>It settles arguments</h5>
+            <h3><svg class="kvi" viewBox="0 0 24 24"><path d="M12 3v18M5 8l7-5 7 5"/><path d="M3 21h18"/></svg>It settles arguments</h3>
             <p>When Canvas and your disk disagree, this record decides whether a file is new, changed, or one you deleted on purpose.</p>
           </div>
         </div>
@@ -525,7 +525,7 @@
           <div class="step">
             <div class="step-n">1</div>
             <div class="step-b">
-              <h4>Canvas content first</h4>
+              <h3>Canvas content first</h3>
               <p>Assignments, pages, announcements and the rest are fetched before anything else. This ordering is
                 deliberate - see the note below.</p>
             </div>
@@ -533,14 +533,14 @@
           <div class="step">
             <div class="step-n">2</div>
             <div class="step-b">
-              <h4>The Files tab</h4>
+              <h3>The Files tab</h3>
               <p>The plain listing, when the teacher has left it enabled.</p>
             </div>
           </div>
           <div class="step">
             <div class="step-n">3</div>
             <div class="step-b">
-              <h4>Every module, item by item</h4>
+              <h3>Every module, item by item</h3>
               <p>The app walks the course modules and picks up files attached to them. On a course with the Files tab
                 switched off, this is where <em>everything</em> comes from.</p>
             </div>
@@ -548,7 +548,7 @@
           <div class="step">
             <div class="step-n">4</div>
             <div class="step-b">
-              <h4>Links inside page text</h4>
+              <h3>Links inside page text</h3>
               <p>Teachers often link a PDF inside the body of an assignment or page rather than attaching it. Those
                 links are read out of the text and followed, so the file comes down with everything else.</p>
             </div>
@@ -575,12 +575,12 @@
 
         <div class="kv">
           <div class="kv-c">
-            <h5><img decoding="async" loading="lazy" class="ti" src="assets/icon_subfolders.png" alt="" />With Subfolders</h5>
+            <h3><img decoding="async" loading="lazy" class="ti" src="assets/icon_subfolders.png" alt="" />With Subfolders</h3>
             <p>Mirrors the course's module structure - <code>Module 1</code>, <code>Module 2</code>, and so on. Best
               if you think in weeks or topics.</p>
           </div>
           <div class="kv-c">
-            <h5><img decoding="async" loading="lazy" class="ti" src="assets/icon_flat.png" alt="" />All in One Folder</h5>
+            <h3><img decoding="async" loading="lazy" class="ti" src="assets/icon_flat.png" alt="" />All in One Folder</h3>
             <p>Every file sits directly in the course folder. Best if you search rather than browse, or you're
               feeding the folder to something else.</p>
           </div>
@@ -874,15 +874,15 @@
 
         <div class="kv">
           <div class="kv-c">
-            <h5><span class="num amb">21,824</span>files came out</h5>
+            <h3><span class="num amb">21,824</span>files came out</h3>
             <p>of a single archive - a JavaScript project with its dependency folder included.</p>
           </div>
           <div class="kv-c">
-            <h5><span class="num org">11,818</span>would be rewritten</h5>
+            <h3><span class="num org">11,818</span>would be rewritten</h3>
             <p>by the code conversion alone, each one renamed and its original deleted.</p>
           </div>
           <div class="kv-c">
-            <h5><span class="num red">9,730</span>would break</h5>
+            <h3><span class="num red">9,730</span>would break</h3>
             <p>by landing on paths past Windows' 260-character limit - because converting a name makes it longer.</p>
           </div>
         </div>
@@ -1160,12 +1160,12 @@
 
         <div class="kv">
           <div class="kv-c">
-            <h5><img decoding="async" loading="lazy" class="ti" src="assets/icon_sync_review.png" alt="" />Analyze, Review &amp; Sync</h5>
+            <h3><img decoding="async" loading="lazy" class="ti" src="assets/icon_sync_review.png" alt="" />Analyze, Review &amp; Sync</h3>
             <p>Scans, then shows you every change grouped by category. You tick and untick, optionally sweep things
               into Ignored, and confirm. Nothing is written until you say so.</p>
           </div>
           <div class="kv-c">
-            <h5><img decoding="async" loading="lazy" class="ti" src="assets/icon_sync_quick.png" alt="" />Quick Sync</h5>
+            <h3><img decoding="async" loading="lazy" class="ti" src="assets/icon_sync_quick.png" alt="" />Quick Sync</h3>
             <p>Skips the review screen and applies the safe defaults: new files and clean updates only.</p>
           </div>
         </div>
@@ -1187,29 +1187,29 @@
 
         <div class="kv">
           <div class="kv-c">
-            <h5><svg class="kvi grn" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M2 2l20 20"/></svg>Never deletes your files</h5>
+            <h3><svg class="kvi grn" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M2 2l20 20"/></svg>Never deletes your files</h3>
             <p>Not when the teacher removes something from Canvas, not when a file is unrecognised, not ever. Removal
               from your disk is always your action.</p>
           </div>
           <div class="kv-c">
-            <h5><svg class="kvi grn" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>Never overwrites your edits</h5>
+            <h3><svg class="kvi grn" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>Never overwrites your edits</h3>
             <p>An edited file gets a <code>_NewVersion</code> sibling. Your bytes stay yours.</p>
           </div>
           <div class="kv-c">
-            <h5><svg class="kvi grn" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Never touches files it didn't create</h5>
+            <h3><svg class="kvi grn" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Never touches files it didn't create</h3>
             <p>Your own notes, your own folders, a PDF you dropped in yourself - all invisible to sync and left
               completely alone.</p>
           </div>
           <div class="kv-c">
-            <h5><svg class="kvi grn" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M12 3v12M7 10l5 5 5-5"/></svg>Never uploads anything</h5>
+            <h3><svg class="kvi grn" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M12 3v12M7 10l5 5 5-5"/></svg>Never uploads anything</h3>
             <p>Nothing leaves your machine. The app reads from Canvas and writes to your disk, in that direction only.</p>
           </div>
           <div class="kv-c">
-            <h5><svg class="kvi grn" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>Never restructures a folder</h5>
+            <h3><svg class="kvi grn" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>Never restructures a folder</h3>
             <p>The layout you chose at download time is the layout you keep.</p>
           </div>
           <div class="kv-c">
-            <h5><svg class="kvi grn" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg>Never syncs silently</h5>
+            <h3><svg class="kvi grn" viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h9"/></svg>Never syncs silently</h3>
             <p>Every run ends on a screen listing what changed, with a link straight to each file.</p>
           </div>
         </div>

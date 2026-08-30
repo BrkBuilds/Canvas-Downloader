@@ -3373,15 +3373,19 @@
     <div class="container">
       <div class="nav-inner">
         <a href="index.html" class="nav-logo">
-          <img src="icon.png" alt="Canvas Downloader" />
+          <img src="assets/icon-128.webp" width="128" height="128" alt="" />
           Canvas Downloader
         </a>
         <div class="nav-right">
           <a href="mac-setup.html" class="nav-link" data-setup-link><span class="setup-full">How to set up</span><span
               class="setup-short">Setup</span></a>
           <a href="guide.html" class="nav-link">How It Works</a>
-          <a href="#get" class="btn-nav">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          <!-- aria-label: below 900px the label span is display:none (see the nav
+               rules above), which left this an icon-only link with no accessible
+               name. Lighthouse link-name scored 0 on mobile and 1 on desktop for
+               exactly that reason. -->
+          <a href="#get" class="btn-nav" aria-label="Download">
+            <svg width="13" height="13" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
@@ -3390,8 +3394,8 @@
             <span style="margin-left: 6px;">Download</span>
           </a>
           <a href="https://github.com/BrkBuilds/Canvas-Downloader" target="_blank" rel="noopener"
-            class="btn-nav-ghost">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            class="btn-nav-ghost" aria-label="Canvas Downloader on GitHub, 100% open source">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path
                 d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
             </svg>
@@ -3403,6 +3407,14 @@
   </nav>
 
 
+  <!-- Primary landmark. The page had none, which failed landmark-one-main on BOTH
+       form factors and was the only Accessibility deduction desktop still carried.
+       It wraps every section and stops before the footer. Presentation is
+       untouched: the element has no default styling beyond display:block, and no
+       selector on this page depends on a section being a direct child of body.
+       The tag name is spelled out rather than written in angle brackets so a
+       census counting the real tag does not also count this comment. -->
+  <main>
 
   <!-- Section 1: HERO -->
   <section class="hero">
@@ -3477,13 +3489,37 @@
              Until the file exists, the placeholder below shows instead - so the
              live site never displays a broken-image icon.
              ═══════════════════════════════════════════════════════════════ -->
-        <div class="hero-visual reveal">
+        <!-- NO .reveal here, deliberately. This div holds the LCP element on both
+             form factors (div.hero-visual > div.hero-gif-wrap > div.hero-media >
+             img.hero-media-img). .reveal starts at opacity:0, and an element at
+             opacity 0 is not a paint, so LCP could not register until the script
+             parsed, the IntersectionObserver fired, the sibling transitionDelay
+             ladder elapsed and the 0.55s fade finished. Measured 2026-08-30,
+             Lighthouse 13.4.1: element render delay was 2,710ms of a 2.6s mobile
+             LCP and 1,018ms of the desktop LCP path, against a 250ms/148ms image
+             download that had already completed. The hero is above the fold on
+             every viewport, so it was never waiting to be scrolled into view -
+             it was waiting only on its own animation. -->
+        <div class="hero-visual">
           <div class="hero-gif-wrap">
             <div class="hero-icon-glow"
               style="inset: -32px; background: radial-gradient(circle, rgba(59, 113, 184, 0.3) 0%, transparent 70%); z-index: -1;">
             </div>
             <div class="hero-media">
+              <!-- srcset, because this one file was 178.5 KiB for a picture the
+                   mobile run displayed at 637 device px (Lighthouse 13.4.1,
+                   2026-08-30: "larger than necessary (1200x1200) against the
+                   displayed 637x637", 128.2 KiB of the 176 KiB image-delivery
+                   saving). The 1200w stays for 2x desktop: the visual track is
+                   1.3/2.3 of a 1108px container plus up to 100px of bleed, so
+                   ~726 CSS px, which needs 1452 device px on a retina screen
+                   and 1200 is already the conservative side of that.
+                   sizes mirrors the layout: the grid stacks below 769px. -->
               <img src="assets/CanvasDownloaderHero.webp" alt="Canvas Downloader turning a Canvas course into an organised folder of files"
+                srcset="assets/CanvasDownloaderHero-600.webp 600w,
+                        assets/CanvasDownloaderHero-900.webp 900w,
+                        assets/CanvasDownloaderHero.webp 1200w"
+                sizes="(max-width: 768px) 92vw, (max-width: 1200px) 56vw, 726px"
                 class="hero-media-img" width="1200" height="1200" fetchpriority="high" decoding="async"
                 onerror="this.closest('.hero-media').classList.add('is-empty'); this.remove();" />
               <div class="hero-media-fallback" aria-hidden="true">
@@ -3535,12 +3571,18 @@
       <div class="reveal"
         style="margin-top: 20px; background: var(--surf); border: 1px solid var(--border); padding: 24px; border-radius: var(--rad-l); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);">
         <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-          <img src="assets/icon_website_brk.webp" alt="Birk" width="240" height="240" loading="lazy" decoding="async"
+          <!-- 160, not 240: the box is 72 CSS px, so 160 covers 2x DPR with room
+               to spare. The 240 was 9.4 KiB for a 119 device px render. -->
+          <img src="assets/icon_website_brk-160.webp" alt="Birk" width="160" height="160" loading="lazy" decoding="async"
             style="width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2.5px solid rgba(59, 113, 184, 0.5); flex-shrink: 0;" />
           <div style="flex: 1; min-width: 240px;">
-            <h4
+            <!-- h2, not h4: the only heading above this in the document is the
+                 hero h1, so h4 skipped two levels and failed heading-order on
+                 BOTH form factors. The styling is inline and unchanged, so the
+                 level carries semantics only. -->
+            <h2
               style="font-size: 16px; font-weight: 800; color: var(--txt); margin: 0 0 6px 0; font-family: 'Inter', sans-serif; letter-spacing: -0.01em;">
-              Hi, I'm Birk.</h4>
+              Hi, I'm Birk.</h2>
             <p style="font-size: 13.5px; color: var(--txt2); line-height: 1.55; margin: 0;">I'm studying BSc in Business
               Administration and Information Systems at <strong>Copenhagen Business School</strong>. <br>I got tired of
               manually downloading my course files from Canvas and converting them to AI-ready formats, so i decided to
@@ -4987,12 +5029,14 @@
     </div>
   </section>
 
+  </main>
+
 
   <!-- FOOTER -->
   <footer>
     <div class="container">
       <div class="foot-logo">
-        <img src="icon.png" alt="Canvas Downloader" />
+        <img src="assets/icon-128.webp" width="128" height="128" alt="" />
         Canvas Downloader
       </div>
       <p>Built by a student, for students. Free and open source.</p>

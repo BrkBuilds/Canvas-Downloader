@@ -49,7 +49,7 @@ DOCS = ROOT / "docs"
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from build_guide_pages import _shell, SITE, OG, OG_ALT  # noqa: E402
+from site_shell import _shell, SITE, OG, OG_ALT  # noqa: E402
 from shared.institutions import DATA, COUNT  # noqa: E402
 
 SLUG = "canvas-url-directory.html"
@@ -220,6 +220,8 @@ def build() -> pathlib.Path:
 <body>
 {nav}
 
+  <main>
+
   <div class="hero">
     <div class="container wide">
       <h1>{H1}</h1>
@@ -286,6 +288,8 @@ def build() -> pathlib.Path:
       files from Canvas</a>.</p>
     </div>
   </div>
+
+  </main>
 
 {foot}
 

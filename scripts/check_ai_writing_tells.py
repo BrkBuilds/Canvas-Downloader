@@ -11,17 +11,20 @@ across all eight and that is the honest reading.
 """
 import re
 import statistics
-import sys
 import pathlib
 
 DOCS = pathlib.Path(__file__).resolve().parent.parent / 'docs'
 
 def _slugs() -> list[str]:
-    """Read the article list from the generator, so a new page is covered
-    without anyone remembering to extend this file."""
-    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-    from guide_pages_content import PAGES
-    return [p['slug'] for p in PAGES]
+    """Read the article list from the PAGES THEMSELVES, so a new one is covered
+    without anyone remembering to extend this file.
+
+    This used to import PAGES from the generator that rebuilt the articles.
+    That generator was deleted 2026-08-31 (an article is a document, not a
+    build artifact), so the marker is now the author box every article ends
+    with and no other page carries."""
+    return sorted(p.name for p in DOCS.glob('*.html')
+                  if 'class="author-box"' in p.read_text(encoding='utf-8'))
 
 
 SLUGS = _slugs()

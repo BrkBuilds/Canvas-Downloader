@@ -15,8 +15,10 @@ written twenty-five times and drifts independently. Measured before the fix:
 **four different `--txt2` values and five different `--txt3` values**, i.e. the
 same paragraph rendered at a different brightness depending on which page it was
 on. The ramp is now `--txt #e9ebee` / `--txt2 #bfc3c9` / `--txt3 #9599a1`, plus
-`--rad-s: 5px`, identical everywhere, guarded per page by
-`tests/test_website_reading_hygiene.py` (21/21 mutants caught).
+`--rad-s: 5px`, identical everywhere. It WAS guarded per page by
+`tests/test_website_reading_hygiene.py`; that test was deleted 2026-08-31 with
+the rest of the editorial website tests (see the note at the end of this file),
+so the ramp is now a convention to follow, not a rule that is enforced.
 - **The complaint was "bold stands out too much", and the cause was the BODY.**
   Seventeen pages set `--txt2: #94a3b8` = **7.61:1**, with `<strong>` at
   `--txt`'s 15.82:1 - so bold was **2.08x** the contrast of the sentence around
@@ -141,8 +143,8 @@ all twelve article pages, where "See it in action" / "Compare all methods" /
   and engine's 900px variant); a single-string replacement reached 21 of 24.
 
 ## A heredoc turns `\b` into a literal backspace, and the regex still LOOKS right (2026-08-28)
-Two checks in `tests/test_website_reading_hygiene.py` were written through a
-shell heredoc and silently compiled to `outline:\s*(none|0)\x08` - a pattern
+Two checks in `tests/test_website_reading_hygiene.py` (since deleted) were
+written through a shell heredoc and silently compiled to `outline:\s*(none|0)\x08` - a pattern
 nothing can match. Both read correctly in `grep`, in `sed`, and in
 `inspect.getsource`; the only way to see it was `f.__code__.co_consts`. Both
 checks passed on every page while testing nothing, and the mutation pass is what
@@ -320,11 +322,10 @@ re-crawl.
   not from the sitemap, so Bing got the correct list on the same push. Two engines were being told
   different things and only one of them the truth.
 - **Fix:** `python scripts/sync_sitemap_lastmod.py --write`, committed in the SAME commit as the
-  page change. `tests/test_sitemap_lastmod.py` fails when any entry is older than its file's last
-  commit, and also when a `<loc>` has no file behind it, which is a 404 announced to two engines.
-- **The test skips rather than fails when git history is absent.** CI clones with
-  `fetch-depth: 1` by default, where `git log` for a path is legitimately empty; a guard that
-  cannot see history must say so instead of reporting all 22 pages as stale.
+  page change. The script is still here and still correct; `tests/test_sitemap_lastmod.py` was
+  deleted 2026-08-31, so running it is now a habit rather than something CI insists on.
+  `test_website_internal_links.py` survives and still fails when a `<loc>` has no file behind it,
+  which is the 404-announced-to-two-engines half of what that test covered.
 - Mutation-checked three ways: a reverted date, a deleted `<lastmod>` tag, and a `<loc>` pointed
   at a file that does not exist. All three fail as they should.
 
@@ -415,24 +416,38 @@ builds, not by reading anything.
 | `build_guide_pages.py` `ARTICLE_CSS` | the step marker as an inline-block CHARACTER (reverted to the round cyan circle the pill entry retired), `margin-left: 12px` on the FAQ `summary::after`, `.short-answer` label and body at `--txt`, `.toc p` and `.toc li` at `--txt` - **four documented fixes, on all twelve article pages at once** |
 | `build_guide_pages.py` `build_index` | `.post { color: var(--txt) }` on `blog.html`, whose cards are each one big `<a>` |
 
-- **The tests caught two of the three and they caught them because they enumerate
-  by GLOB.** `test_website_reading_hygiene.py` globs `docs/*.html`, so it had no
-  opinion about which page was being edited. A guard written against a named page
-  would have passed. The `ARTICLE_CSS` reversion was caught by *reading the diff*
-  of a page nobody had touched, which is the cheaper habit: **after running any
-  build script, `git diff` a file you did not intend to change.**
-- **The fix is always into the generator, never back into `docs/`.** Restoring the
-  HTML would leave the landmine armed for the next person who runs a build for an
-  unrelated reason. All three are ported.
-- **The rule this gives:** before editing anything under `docs/`, check whether a
-  script writes it - `grep -l "<filename>" scripts/*.py`. `docs/` holds 13
-  generated article pages, `blog.html`, `canvas-url-directory.html` and
-  `canvas-data.html`; only `index.html`, `guide.html`, `engine.html`, the setup
-  and legal pages are hand-maintained.
-- One genuine improvement fell out of it: the deployed pages carried a
-  **duplicated** `/* Steps a reader follows... */` comment, because the hand-edit
-  inserted the long version without deleting the short one. The generator emits
-  one. That is the single-line diff on ten of the article pages.
+- **The `ARTICLE_CSS` reversion was caught by *reading the diff* of a page nobody
+  had touched**, which is the cheap habit: after running any build script,
+  `git diff` a file you did not intend to change.
+
+### RESOLVED 2026-08-31 by DELETING the article generator. Do not reintroduce it.
+`scripts/build_guide_pages.py` (719 lines) and `scripts/guide_pages_content.py`
+(4,784 lines) are gone. The entry above is why: a script that rebuilds prose from
+a Python file has no way to know which of the two copies is newer, so every run
+is a coin flip on somebody's hand-edit, and it had already lost that flip twice.
+
+**An article is a document, not a build artifact.** The thirteen articles,
+`blog.html`, and every other page under `docs/` are now hand-maintained, edited
+in place like any other file. Nothing regenerates them. Stated by the product
+owner 2026-08-31: *"an article is an article, and does not need to be regenerated
+at any point in time. Edited, yes, rebuilt from the ground up multiple times,
+NO."*
+
+- **TWO generators remain and they are a different thing**:
+  `build_institution_directory.py` and `build_data_exports.py`. Those bodies are
+  4,757 rows derived from `shared/institutions.py` - a table, not writing - so
+  they must be built. They now take the shell from `scripts/site_shell.py`, which
+  is the only thing salvaged from the deleted script.
+- **`site_shell.py` still lifts the nav, footer and stylesheet from
+  `docs/win-setup.html`**, so a nav change there reaches the two data pages on
+  the next build. Every other page needs the edit applied to it directly.
+- **The ARTICLE_CSS that the deleted generator injected now lives only in the
+  thirteen pages themselves**, which is correct: it is their stylesheet and they
+  are the source of truth for it. A CSS change across the articles is now a
+  13-file edit and there is no second copy to drift from.
+- The old rule "before editing anything under `docs/`, check whether a script
+  writes it" now has a two-file answer: `canvas-url-directory.html` and
+  `canvas-data.html`. Everything else is hand-maintained.
 
 ## The checklist page is a different SHAPE, and that is the whole experiment (2026-08-29)
 `canvas-end-of-semester-checklist.html`, the thirteenth article and the first that
@@ -622,3 +637,96 @@ three-line title. Page height went **3,271px to 1,918px** at 1680px wide.
 - **`.blog-tools` closes a real gap**, not just a layout one: `canvas-url-directory.html`
   and `canvas-data.html` were the only two pages with NO path from any page Google
   has chosen to index. One centred line at the foot of the index gives them one.
+
+## Tests are for the APPLICATION. The website gets health checks and nothing else (2026-08-31)
+Stated by the product owner: *"Tests are meant in 99% of cases FOR THE
+APPLICATION, NOT for the website, other than critical website health stuff if we
+really need it."* The example he gave is the shape to avoid: a guard that fires
+because he edited an install count by hand, on his own site, is asserting that
+the writer is wrong and the test is right, which is backwards for prose.
+
+**Deleted 2026-08-31** (761 lines): `test_website_login_claims.py` (policed what
+pages may say about the login screen), `test_website_reading_hygiene.py` (policed
+design tokens and link colours across 25 pages), `test_sitemap_lastmod.py` (tied
+CI to a sitemap-freshness workflow).
+
+**Kept, and the line between them is "is the site broken" versus "is the site
+written the way some session decided"**:
+
+| Kept | Why it is health |
+|---|---|
+| `test_website_internal_links.py` | a link that resolves to nothing is a 404 for a real visitor, and a `<loc>` with no file behind it is a 404 announced to two search engines |
+| `test_website_download_links.py` | the two installers must be reachable from static markup - this is the conversion path, and it broke once already when the version only appeared via JS |
+| `test_website_noscript_content.py` | the `html:not(.js) .reveal` rule; without it 75-97% of a page's words are `opacity: 0` to a crawler that runs no JS |
+| `test_website_advertises_shipped_version.py` | a download URL pointing at a release that does not exist is a dead button |
+
+**Do not add a website test that asserts wording, a number a human types, or a
+colour.** If a page says something wrong, fix the page.
+
+## PageSpeed Insights, 2026-08-30: the LCP element was being ANIMATED IN
+Lighthouse 13.4.1 on `canvasdownloader.app/`. Mobile **95 / 92 / 100 / 100** and
+Agentic Browsing **2/3**; desktop **100 / 96 / 100 / 100** and Agentic **100**.
+Everything below was fixed 2026-08-31 and verified in a real browser at both
+viewports.
+
+- **The single biggest number was not in any of PSI's "opportunities".** LCP
+  subparts, mobile: TTFB 10ms, resource load delay 280ms, resource load duration
+  250ms, **element render delay 2,710ms**; desktop 5 / 153 / 148 / **1,018ms**.
+  The hero image had its bytes after ~540ms and could not become the LCP for
+  another 2.7 seconds, because it sat inside `<div class="hero-visual reveal">`
+  and **`.reveal` starts at `opacity: 0`** - an element at opacity 0 is not a
+  paint. So LCP waited on script parse, the IntersectionObserver, the sibling
+  `transitionDelay` ladder and a 0.55s fade. **Above-the-fold content must never
+  carry `.reveal`**: it is never waiting to be scrolled into view, only waiting
+  on its own animation. Speed Index 4.2s against a 1.1s FCP was the same
+  mechanism showing up twice.
+- **`link-name` scored 0 on mobile and 1 on desktop, and the difference IS the
+  diagnosis.** Below the nav breakpoint `nav .btn-nav span` is `display: none`,
+  so both nav buttons became icon-only links with no accessible name. Desktop
+  never hits that CSS, so a desktop-only run says the site is fine. **The same
+  failure was the only thing costing the Agentic Browsing point** - one
+  `aria-label` on each fixed both categories.
+- **A form factor is not a page.** PSI tested `index.html` only, and the census
+  found the class everywhere: **25 pages** with unlabelled nav buttons, **22**
+  with no `<main>`, **26** with a redundant logo `alt`. Always census the class
+  across `docs/` before calling a PSI finding fixed.
+- **`heading-order` and `landmark-one-main` failed on BOTH form factors** and
+  were the only Accessibility deductions desktop still carried, i.e. the two
+  cheapest fixes were the highest-value ones. The homepage jumped `h1 -> h4`
+  ("Hi, I'm Birk."), `win-setup.html` had no `<h2>` at all, `canvas-data.html`
+  jumped `h1 -> h3`. All three rules were SCOPED selectors (`.setup-card h3`,
+  `.dl-card h3`), so the tag swap moves the selector with it and is
+  presentation-identical.
+- **`engine.html` and `guide.html` had 8 more jumps; fixed the same day, and the
+  METHOD is the transferable part.** Their levels carry styling through scoped
+  selectors, so a tag swap silently unstyles the heading unless the selector moves
+  with it. The safe procedure, run in a browser before touching anything: for every
+  heading, record `getComputedStyle` AND enumerate which stylesheet rules match it
+  (`el.matches(rule.selectorText)` over `document.styleSheets`). That census is what
+  proves a tag is safe to move - engine's 16 bare `h5` were ALL `.kv-c` matched by
+  one rule, its 4 bare `h4` all `.step-b`, and no bare `h3` rule existed to collide
+  with. Then re-measure after and require every value byte-identical.
+- **The tag is not the unit; the CONTAINER is.** guide has 15 `<h5>`: 8 in
+  `.step-card` correctly under an `h4`, and 7 in `.cat-card` under an `h3`. Only the
+  seven move, so the edit is scoped to that section of the file rather than applied
+  to the tag. A blanket `<h5>` -> `<h4>` would have broken the eight that were right.
+- **One `.info-card h4` sat under an `h2` while the other 19 correctly followed an
+  `h3`.** The rule became `.info-card h3, .info-card h4` rather than a second copy -
+  verified first that 0 `h3` existed inside any `.info-card`, so widening it cannot
+  restyle anything else.
+- **`python -m http.server` plus a browser CACHES the page**, and a stale render
+  reads exactly like a failed edit: the first post-change measurement found no `h3`
+  at all and the file was correct. Add a `?v=N` cache buster before believing a
+  negative.
+- **The redundant `alt` is a judgement, not a sweep.** `alt="Canvas Downloader"`
+  on the logo repeats the link text beside it on 26 pages, so it is decorative
+  and becomes `alt=""`. On `404.html` the same file is a standalone logo with no
+  text naming it, so its alt is CORRECT and was left. A blind replace would have
+  broken the one page that needed it.
+- **Cache TTL 10 minutes on all 257 KiB is GitHub Pages and cannot be fixed from
+  this repo.** Only a CDN in front changes it. Stop re-finding this.
+- Image delivery, 176 KiB: `icon.png` was **1024x1024 for a 28/24/64 CSS px**
+  render (41.9 KiB -> 2.8 KiB as `assets/icon-128.webp`), and the hero was one
+  1200w file for a 637 device px mobile render (178.5 -> 68.3 KiB via a
+  600/900/1200 `srcset`). The 1200w stays: the visual track is ~726 CSS px on a
+  wide screen, which needs 1452 device px at 2x DPR.

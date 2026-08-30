@@ -45,6 +45,9 @@ styles/           static CSS injected once per page via inject_css()
 scripts/          build + maintenance tooling (never bundled)
 tests/            ~4,500 tests, incl. tests/audit/ (live-audit harness + runbooks)
 docs/             THE PUBLISHED WEBSITE (canvasdownloader.app) - never put notes here
+                  HAND-MAINTAINED. Edit the pages. The two data pages
+                  (canvas-url-directory, canvas-data) are the only generated
+                  ones - see .claude/rules/website.md
 marketing/        launch, SEO and positioning register - LOCAL-ONLY, gitignored
 ```
 
@@ -106,6 +109,15 @@ newer work - before believing a failure that follows one, `git diff` the source.
 
 **Mutation-test new tests.** A passing suite is not evidence until you have flipped the real
 code and watched it fail. Most gaps found here were in the tests, not the product.
+
+**An article is a document, not a build artifact, and tests are for the APP.** A
+generator that rebuilt the thirteen articles and `blog.html` from a Python file was
+deleted 2026-08-31 after it twice reverted hand-edits made to the pages in between:
+a script cannot know which of two copies is newer. Edit the pages. Only
+`canvas-url-directory.html` and `canvas-data.html` are generated, because their
+bodies are 4,757 rows of data. Website tests are limited to health - links resolve,
+downloads reachable, content visible without JS - and never assert wording, a number
+a human typed, or a colour. Three such tests were deleted the same day.
 
 **Prose style**: no em dashes anywhere. Quote app copy character-exact rather than reflowing it.
 

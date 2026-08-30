@@ -53,7 +53,7 @@ DATA_DIR = DOCS / "data"
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from build_guide_pages import _shell, SITE, OG, OG_ALT  # noqa: E402
+from site_shell import _shell, SITE, OG, OG_ALT  # noqa: E402
 from shared.institutions import DATA, COUNT  # noqa: E402
 
 SLUG = "canvas-data.html"
@@ -163,7 +163,7 @@ PAGE_CSS = """
     .dl-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 22px; }
     .dl-card { flex: 1 1 240px; border: 1px solid rgba(255,255,255,.09);
       border-radius: 12px; padding: 16px 18px; background: rgba(255,255,255,.03); }
-    .dl-card h3 { margin: 0 0 4px; font-size: 16px; }
+    .dl-card h2 { margin: 0 0 4px; font-size: 16px; }
     .dl-card p { margin: 0 0 10px; font-size: 13px; color: var(--txt2); }
     .dl-card .sz { font-family: ui-monospace, Menlo, Consolas, monospace;
       font-size: 12px; color: var(--txt3); }
@@ -245,6 +245,8 @@ def build(csv_kb: float, json_kb: float, when: str) -> pathlib.Path:
 <body>
 {nav}
 
+  <main>
+
   <div class="hero">
     <div class="container wide">
       <h1>{H1}</h1>
@@ -262,12 +264,12 @@ def build(csv_kb: float, json_kb: float, when: str) -> pathlib.Path:
 
       <div class="dl-row">
         <div class="dl-card">
-          <h3><a href="{CSV_NAME}">canvas-hosts.csv</a></h3>
+          <h2><a href="{CSV_NAME}">canvas-hosts.csv</a></h2>
           <p>One row per institution, UTF-8, header row included.</p>
           <span class="sz">{csv_kb:.0f} KB &middot; {COUNT:,} rows</span>
         </div>
         <div class="dl-card">
-          <h3><a href="{JSON_NAME}">canvas-hosts.json</a></h3>
+          <h2><a href="{JSON_NAME}">canvas-hosts.json</a></h2>
           <p>The same rows, plus the licence, the method and the field notes.</p>
           <span class="sz">{json_kb:.0f} KB &middot; {COUNT:,} objects</span>
         </div>
@@ -344,6 +346,8 @@ def build(csv_kb: float, json_kb: float, when: str) -> pathlib.Path:
       welcome.</p>
     </div>
   </div>
+
+  </main>
 
 {foot}
 
