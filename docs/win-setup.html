@@ -262,6 +262,10 @@
     .setup-card li { margin-bottom: 8px; }
     .setup-card strong { color: var(--txt); }
     .setup-card a { color: var(--cyan); text-decoration: none; }
+    /* WCAG 1.4.1: colour alone did not distinguish these from the
+       sentence around them. Measured: --cyan #38bdf8 on body text
+       #bfc3c9 is 1.21:1 and axe needs 3.0:1, which no cyan reaches. */
+    .setup-card p a, .setup-card li a { text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
     .setup-card a:hover { text-decoration: underline; }
 
     /* --rad-s, not 100px: a fully-round tag is the one shape the app itself
@@ -386,7 +390,7 @@
         <li>Copy it straight away - Canvas shows it only once - and paste it in. The app then remembers it in Windows
           Credential Manager, so you are not typing it again. Canvas now puts a time limit on tokens, so it will ask
           you for a fresh one when yours runs out. Wondering what a token actually gives away?
-          <a href="canvas-access-token-explained.html" style="color: var(--cyan); text-decoration: none;">Here is what it can and cannot do</a>.</li>
+          <a href="canvas-access-token-explained.html" style="color: var(--cyan); text-decoration: underline; text-underline-offset: 0.18em;">Here is what it can and cannot do</a>.</li>
       </ol>
       <p style="margin-top: 12px;">Want it in pictures? The <a href="guide.html#api-token">step-by-step
         walkthrough</a> in the guide has the whole thing, clip included.</p>

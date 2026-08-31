@@ -54,7 +54,11 @@ DOCS = REPO / "docs"
 
 #: Every page that hides content behind ``.reveal``. Derived, not hand-listed -
 #: see ``test_the_page_list_is_derived_from_the_markup``.
-GATED_PAGES = ("index.html", "guide.html", "engine.html")
+# engine.html left this list on 2026-08-31: its only two .reveal elements were
+# the hero h1 and lede, removed because an element at opacity 0 is not a paint
+# and they were delaying LCP (4260 -> 3810 ms, measured n=2, spread 0). It now
+# has zero, so there is nothing on it for the no-JS rule to un-hide.
+GATED_PAGES = ("index.html", "guide.html")
 
 _COMMENT = re.compile(r"<!--.*?-->", re.S)
 
@@ -72,9 +76,21 @@ def _markup(name: str) -> str:
     return _COMMENT.sub("", _source(name))
 
 
+_REVEAL_CLASS = re.compile(r'class="[^"]*\breveal\b[^"]*"')
+
+
 def _pages_using_reveal():
+    """Pages carrying at least one element in the .reveal class.
+
+    This matched the PREFIX `class="reveal` until 2026-08-31, so it only saw
+    elements where reveal is the FIRST class. guide.html has 136 of the form
+    `class="body-text reveal"` and none of the first form, so removing its two
+    prefix-matching elements dropped the whole page out of the census while 136
+    gated elements were still on it. A guard that a class-attribute REORDER can
+    switch off is the exact failure its own docstring warns about.
+    """
     return sorted(p.name for p in DOCS.glob("*.html")
-                  if 'class="reveal' in _markup(p.name))
+                  if _REVEAL_CLASS.search(_markup(p.name)))
 
 
 _STYLE = re.compile(r"<style[^>]*>(.*?)</style>", re.S | re.I)

@@ -788,6 +788,10 @@
       color: var(--txt2);
       text-decoration: none;
       margin: 0 12px;
+      /* Lighthouse target-size: the box was ~18px tall against a 24px minimum.
+         inline-block is what makes the vertical padding count; no text moves. */
+      display: inline-block;
+      padding: 6px 0;
     }
 
     footer a:hover {

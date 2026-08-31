@@ -699,7 +699,7 @@
     .foot-links { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
     .foot-links a { font-size: 12px; color: var(--txt3); transition: color 0.15s; }
     .foot-links a:hover { color: var(--txt2); }
-    .foot-v { margin-top: 20px; font-size: 11px; color: var(--txt3); opacity: 0.45; }
+    .foot-v { margin-top: 20px; font-size: 11px; color: var(--txt3); }
 
     hr.div { border: none; border-top: 1px solid var(--border); }
 
@@ -835,8 +835,14 @@
   <div class="guide-hero-glow"></div>
   <div class="container">
     <div class="label">Complete Guide</div>
-    <h1 class="reveal">How <span>Canvas Downloader</span> Works</h1>
-    <p class="reveal">Everything you need to know - from your first download to keeping all your courses synced throughout the semester. Made for students, by a student.</p>
+    <!-- NO .reveal on the hero heading or lede, deliberately. These are the
+       above-the-fold elements and .reveal starts at opacity 0, which is not a
+       paint, so LCP could not register until the IntersectionObserver fired and
+       a 0.55s fade finished. Measured with Lighthouse 13.4.1, n=2, spread 0:
+       LCP 4410 -> 4110 ms, element render delay 1817 -> 1308 ms, perf 84 -> 86. Same fix as index.html's hero. Everything BELOW the fold keeps its
+       animation - it is genuinely waiting to be scrolled to. -->
+      <h1>How <span>Canvas Downloader</span> Works</h1>
+    <p>Everything you need to know - from your first download to keeping all your courses synced throughout the semester. Made for students, by a student.</p>
   </div>
 </section>
 

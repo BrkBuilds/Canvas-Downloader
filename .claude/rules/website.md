@@ -786,3 +786,113 @@ correct and must be left alone.**
   untrustworthy, so it is worth being able to say what actually changed.
 - **The rule: bump the byline and `dateModified` only when the PROSE changes.**
   Markup, CSS and accessibility passes move `lastmod` alone.
+
+
+## Run Lighthouse LOCALLY - it is the same binary PSI uses (2026-08-31)
+`npx lighthouse@13.4.1` is the exact version PageSpeed Insights runs, so the
+whole site can be measured in minutes instead of pasting URLs one at a time.
+`--form-factor=mobile --screenEmulation.mobile --throttling-method=simulate`
+reproduces the PSI mobile run: measured live index LCP 2218 ms against a local
+2310 ms, within 4%. **In simulated mode it is deterministic** - n=3 gave spread
+0 ms on every arm - so a difference of 300 ms between two arms is real and does
+not need repeats to believe. Single runs are still worth repeating once, because
+a stale working copy produces contradictions that look like effects.
+
+- **A local static server is NOT the live site until it gzips.**
+  `python -m http.server` sent index.html at **201 KiB where GitHub Pages sends
+  48 KiB**, total transfer 732 KiB against 233 KiB. Under simulated slow-4G that
+  is a different regime, and the first variant sweep ran entirely inside it: the
+  control showed a 110 ms LCP render delay against the live 1985 ms, so every
+  "no effect" result was worthless. A 30-line gzip handler fixed it and the
+  control then matched live. **Check transfer size against the live page before
+  trusting any local performance number.**
+- **Serve from the PARENT of the copy under test.** With the server's cwd inside
+  the directory, Windows refuses to delete it between runs (`WinError 32`), so
+  the harness silently reused a stale tree.
+- **The LCP SUBPART attribution does not survive the move to localhost, but the
+  LCP total does.** Live attributed 1985 ms to element render delay; the local
+  control attributed 110 ms with the same total, because the image is discovered
+  instantly. Optimise against the total; read the subparts only on the live run.
+
+## The 2s mobile render delay was mostly the FAVICON (2026-08-31)
+`docs/icon.ico` was **370 KB** - six frames up to 256x256, larger than the entire
+homepage document - and every one of the 27 pages requests it. Rebuilt at 16/32/48,
+the only sizes a browser tab uses: **361 KiB -> 4.9 KiB, 98.6% smaller.**
+Measured on the live headers: it is served `Cache-Control: max-age=600` WITH an
+ETag, so the saving lands on a COLD CACHE - a first visit, or one after the file
+was evicted. A returning visitor already revalidated to a 304 with no body and
+sees no change. Lighthouse always models a cold cache, so its scores state the
+best case; quote this one as a first-visit win, which is still the visit that
+decides whether a new student stays. It was found by reading the network table of the WORST page
+rather than the most important one: win-setup.html is a 6 KiB document that scored
+77, and the favicon was sixty times the page.
+
+- **`assets/icon.ico` at the repo root is a DIFFERENT file and must keep its large
+  frames** - `Canvas_Downloader.spec` uses it for the executable, where Windows
+  Explorer really does want 256x256. Only the `docs/` copy was shrunk.
+- Mobile performance after, measured locally: guide **86 -> 100**, engine 88 -> 99,
+  mac-setup 90 -> 99, blog 93 -> 100, canvas-data 93 -> 100, releases 81 -> 93,
+  thanks-win 81 -> 94, win-setup 77 -> 90.
+- **The other four candidates were all falsified.** Removing the hero
+  `drop-shadow`, dropping `decoding="async"` and un-revealing the hero heading
+  each moved index LCP by 1 ms or less once the harness was correct. Inlining
+  `fonts.css` is the only other real one: **2310 -> 2010 ms, n=3, spread 0**, and
+  it is NOT applied, because it would put 26 copies of the same `@font-face`
+  block in 26 files, which is the drift this file's first entry exists about.
+- **The hero `.reveal` fix DOES apply to guide and engine**, both of which opened
+  with `<h1 class="reveal">` plus a revealed lede: guide LCP 4410 -> 4110, engine
+  4260 -> 3810, render delay about -500 ms each, n=2 spread 0. engine.html now has
+  ZERO `.reveal` elements and left `GATED_PAGES` in the no-JS test.
+
+## Measure every page, because one page cannot show a class (2026-08-31)
+PSI covered three pages. Sweeping all thirteen shapes locally found failures on
+pages nobody had looked at, including two MISSES FROM MY OWN ROUND-2 FIXES:
+`mac-setup.html` and `releases.html` write the footer rule multi-line, so a fix
+keyed on the single-line string reached 19 pages and skipped those two. Third
+time this exact shape appears in this file.
+
+- **An opacity multiplier on top of `--txt3` is what fails colour contrast.**
+  `guide.html` was the only page with `.foot-v { opacity: 0.45 }` and
+  `releases.html` the only one with `opacity: 0.7` on the whole footer; every
+  other page declares the token and stops. Both removed. `thanks-win.html` also
+  carries `opacity: 0.6` and was LEFT, because its footer uses the brighter
+  `--txt2` and it scores 100 - do not restyle a page that passes.
+- **An inline `style="...text-decoration: none"` beats any stylesheet rule**, so
+  the round-3 prose-underline rule did not reach two links on `win-setup.html`
+  and `thanks-win.html`. Census the inline form separately: 19 exist across 6
+  pages, and only the 3 inside prose needed changing - Lighthouse is the oracle
+  for which ones are in a text block.
+- **Result: Accessibility 100 on all 13 page shapes.** The remaining reported
+  failures are all intentional or artefacts: `thanks-*` and `404` fail
+  `meta-description` and `is-crawlable` because they are deliberately noindex and
+  excluded from the sitemap, and `404`'s `errors-in-console` is the harness -
+  that page uses ROOT-relative paths by design, so `/fonts.css` and `/icon.ico`
+  404 when it is served under a subdirectory.
+
+## Two diagnostics lied this session; both were caught by a control (2026-08-31)
+Worth copying, because in both cases the RESULT looked clean and meant nothing.
+
+- **The reveal test reported "no effect" while editing nothing.** It sliced the
+  hero at the first `<div class="container">` after `</nav>`, but on guide and
+  engine the `h1` is INSIDE that container, so the slice ended before it. Adding
+  `assert removed == 2` turned a false negative into a real -300/-450 ms result.
+- **A heredoc turned `\b` into a literal backspace, again.** The widened
+  `_pages_using_reveal` regex compiled to `class="[^"]*\x08reveal\x08[^"]*"` and
+  matched nothing, so the guard reported that NO page uses `.reveal`. This file
+  already documents the hazard from 2026-08-28 and the rule was ignored anyway:
+  **any payload containing backslash escapes goes through the file tools or a
+  script FILE, never a heredoc.** Verified after the fix with a four-way control:
+  matches a compound class and a bare one, rejects `revealed` and an unrelated
+  class.
+- **`_pages_using_reveal` had a latent defect of its own**: it matched the PREFIX
+  `class="reveal`, so it only saw elements where `reveal` is the FIRST class.
+  `guide.html` has 136 of the form `class="body-text reveal"` and, once its two
+  prefix-matching elements were removed, the whole page dropped out of the census
+  while 136 gated elements were still on it. A guard a class REORDER can switch
+  off is exactly what its own docstring warns against. It is a token match now.
+- **Playwright element screenshots come back BLANK here.** `locator.screenshot()`
+  on a footer produced empty dark images on a page that renders correctly, and
+  the control - the same capture on a page that had not been touched - was blank
+  too. `elementFromPoint` confirmed the links were the topmost elements. Use
+  viewport screenshots, and always capture an untouched page before believing a
+  screenshot shows a regression.

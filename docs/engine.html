@@ -388,6 +388,10 @@
     footer { border-top: 1px solid var(--border); padding: 40px 0; text-align: center; }
     footer p { font-size: 13px; color: var(--txt3); }
     footer a { color: var(--txt2); }
+    /* WCAG 1.4.1: colour alone did not distinguish these from the
+       sentence around them. Measured: --cyan #38bdf8 on body text
+       #bfc3c9 is 1.21:1 and axe needs 3.0:1, which no cyan reaches. */
+    footer p a { text-decoration: underline; text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
     footer a:hover { color: var(--cyan); }
     .backlink { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--txt2);
       border: 1px solid var(--border); border-radius: 8px; padding: 8px 13px; transition: all 0.15s; margin-top: 20px; }
@@ -426,8 +430,14 @@
   <div class="guide-hero-glow"></div>
   <div class="container">
     <div class="label purp">The Engine, Explained</div>
-    <h1 class="reveal">What actually happens to <span>your files</span></h1>
-    <p class="reveal">
+    <!-- NO .reveal on the hero heading or lede, deliberately. These are the
+       above-the-fold elements and .reveal starts at opacity 0, which is not a
+       paint, so LCP could not register until the IntersectionObserver fired and
+       a 0.55s fade finished. Measured with Lighthouse 13.4.1, n=2, spread 0:
+       LCP 4260 -> 3810 ms, element render delay 1733 -> 1253 ms, perf 85 -> 88. Same fix as index.html's hero. Everything BELOW the fold keeps its
+       animation - it is genuinely waiting to be scrolled to. -->
+      <h1>What actually happens to <span>your files</span></h1>
+    <p>
       This page is the honest version. Not "it downloads your course" - but exactly how every file is found, where it
       lands, which ones get rewritten, which ones get deleted, and precisely what a sync will and will not touch.
       If you have ever wondered <em>why</em> the app did something, the answer is here.
